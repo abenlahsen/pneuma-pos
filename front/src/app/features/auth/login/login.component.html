@@ -1,0 +1,57 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1>Pneuma POS</h1>
+      <p>Connectez-vous à votre compte</p>
+    </div>
+
+    @if (error()) {
+      <div class="alert alert-error">
+        {{ error() }}
+      </div>
+    }
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          placeholder="votre@email.com"
+          [class.invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+        />
+        @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
+          <span class="error-text">Veuillez entrer un email valide</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="password">Mot de passe</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          placeholder="••••••••"
+          [class.invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+        />
+        @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+          <span class="error-text">Le mot de passe est requis</span>
+        }
+      </div>
+
+      <button type="submit" [disabled]="loginForm.invalid || loading()" class="btn btn-primary">
+        @if (loading()) {
+          <span>Connexion...</span>
+        } @else {
+          <span>Se connecter</span>
+        }
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <p>Pas encore de compte ? <a routerLink="/register">Créer un compte</a></p>
+    </div>
+  </div>
+</div>
+
