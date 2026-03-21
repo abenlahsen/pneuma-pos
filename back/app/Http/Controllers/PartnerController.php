@@ -38,6 +38,8 @@ class PartnerController extends Controller
             'name' => 'required|string|max:255',
             'city' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:255',
+            'mobile' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:500',
             'montage_price' => 'nullable|numeric|min:0',
             'alignment_price' => 'nullable|numeric|min:0',
         ]);
@@ -57,6 +59,8 @@ class PartnerController extends Controller
             'name' => 'sometimes|required|string|max:255',
             'city' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:255',
+            'mobile' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:500',
             'montage_price' => 'nullable|numeric|min:0',
             'alignment_price' => 'nullable|numeric|min:0',
         ]);

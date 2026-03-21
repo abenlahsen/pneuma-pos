@@ -3,6 +3,8 @@ export interface Partner {
   name: string;
   city?: string;
   phone?: string;
+  mobile?: string;
+  address?: string;
   montage_price?: number;
   alignment_price?: number;
   created_at?: string;

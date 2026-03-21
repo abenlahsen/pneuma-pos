@@ -14,6 +14,8 @@ class Partner extends Model
         'name',
         'city',
         'phone',
+        'mobile',
+        'address',
         'montage_price',
         'alignment_price',
         'user_id'

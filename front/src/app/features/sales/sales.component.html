@@ -6,10 +6,7 @@
     </div>
     <div class="actions">
       <button class="btn btn-primary" (click)="openAddForm()">
-        <i class="icon-plus"></i> Nouvelle Vente
-      </button>
-      <button class="btn btn-icon" (click)="logout()" title="Déconnexion">
-        <i class="icon-logout"></i>
+        Nouvelle Vente
       </button>
     </div>
   </div>
@@ -17,9 +14,7 @@
   <!-- Summary Cards -->
   <div class="summary-cards">
     <div class="card summary-card income">
-      <div class="card-icon">
-        <i class="icon-trending-up"></i>
-      </div>
+      <div class="card-icon">📈</div>
       <div class="card-content">
         <p class="card-label">Total Ventes</p>
         <h3 class="card-value">{{ summary().total_sale | number:'1.2-2' }} DH</h3>
@@ -27,9 +22,7 @@
     </div>
     
     <div class="card summary-card expense">
-      <div class="card-icon">
-        <i class="icon-trending-down"></i>
-      </div>
+      <div class="card-icon">📉</div>
       <div class="card-content">
         <p class="card-label">Total Achats</p>
         <h3 class="card-value">{{ summary().total_purchase | number:'1.2-2' }} DH</h3>
@@ -37,9 +30,7 @@
     </div>
     
     <div class="card summary-card balance" [class.negative]="summary().margin < 0">
-      <div class="card-icon">
-        <i class="icon-activity"></i>
-      </div>
+      <div class="card-icon">📊</div>
       <div class="card-content">
         <p class="card-label">Marge Nette</p>
         <h3 class="card-value">{{ summary().margin | number:'1.2-2' }} DH</h3>
@@ -158,12 +149,8 @@
               </span>
             </td>
             <td class="text-center actions-cell">
-              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(sale)" title="Modifier">
-                <i class="icon-edit"></i>
-              </button>
-              <button class="btn-icon btn-sm text-danger" (click)="deleteSale(sale)" title="Supprimer">
-                <i class="icon-trash"></i>
-              </button>
+              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(sale)" title="Modifier">✏️</button>
+              <button class="btn-icon btn-sm text-danger" (click)="deleteSale(sale)" title="Supprimer">🗑️</button>
             </td>
           </tr>
         </tbody>
@@ -202,7 +189,7 @@
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>{{ editingSale() ? 'Modifier la vente' : 'Nouvelle vente' }}</h2>
-      <button class="btn-icon" (click)="closeForm()"><i class="icon-x"></i></button>
+      <button class="btn-icon" (click)="closeForm()">✕</button>
     </div>
     <div class="modal-body">
       <app-sale-form 

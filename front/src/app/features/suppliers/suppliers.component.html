@@ -6,10 +6,7 @@
     </div>
     <div class="actions">
       <button class="btn btn-primary" (click)="openAddForm()">
-        <i class="icon-plus"></i> Nouveau Fournisseur
-      </button>
-      <button class="btn btn-icon" (click)="logout()" title="Déconnexion">
-        <i class="icon-logout"></i>
+        Nouveau Fournisseur
       </button>
     </div>
   </div>
@@ -62,12 +59,8 @@
             <td>{{ supplier.email || '-' }}</td>
             <td><div class="desc-col">{{ supplier.address || '-' }}</div></td>
             <td class="text-center actions-cell">
-              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(supplier)" title="Modifier">
-                <i class="icon-edit"></i>
-              </button>
-              <button class="btn-icon btn-sm text-danger" (click)="deleteSupplier(supplier)" title="Supprimer">
-                <i class="icon-trash"></i>
-              </button>
+              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(supplier)" title="Modifier">✏️</button>
+              <button class="btn-icon btn-sm text-danger" (click)="deleteSupplier(supplier)" title="Supprimer">🗑️</button>
             </td>
           </tr>
         </tbody>

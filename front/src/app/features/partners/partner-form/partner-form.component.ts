@@ -19,6 +19,8 @@ export class PartnerFormComponent implements OnInit {
     name: '',
     city: '',
     phone: '',
+    mobile: '',
+    address: '',
     montage_price: undefined,
     alignment_price: undefined
   };
