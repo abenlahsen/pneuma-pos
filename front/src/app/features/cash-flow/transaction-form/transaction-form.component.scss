@@ -1,0 +1,219 @@
+$primary: #667eea;
+$primary-dark: #764ba2;
+$income-color: #48bb78;
+$expense-color: #f56565;
+$text-dark: #2d3748;
+$text-muted: #718096;
+$text-light: #a0aec0;
+$bg-body: #f7fafc;
+$border-color: #e2e8f0;
+
+/* ---------- Modal Overlay ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.25s ease;
+}
+
+/* ---------- Modal Header ---------- */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid $border-color;
+
+  h2 {
+    margin: 0;
+    font-size: 1.15rem;
+    color: $text-dark;
+  }
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: $text-light;
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  transition: all 0.15s;
+
+  &:hover {
+    background: $bg-body;
+    color: $text-dark;
+  }
+}
+
+/* ---------- Modal Body ---------- */
+.modal-body {
+  padding: 1.5rem;
+}
+
+/* ---------- Type Toggle ---------- */
+.type-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.toggle-btn {
+  flex: 1;
+  padding: 0.65rem;
+  border: 2px solid $border-color;
+  border-radius: 10px;
+  background: $bg-body;
+  color: $text-muted;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &.active {
+    border-color: $primary;
+    background: linear-gradient(135deg, rgba($primary, 0.08), rgba($primary-dark, 0.08));
+    color: $primary-dark;
+  }
+
+  &:hover:not(.active) {
+    border-color: $text-light;
+    background: #fff;
+  }
+}
+
+/* ---------- Form ---------- */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+
+  label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    color: $text-light;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  input,
+  textarea,
+  select {
+    padding: 0.55rem 0.75rem;
+    border: 1.5px solid $border-color;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: $text-dark;
+    background: #fff;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+
+    &:focus {
+      border-color: $primary;
+      box-shadow: 0 0 0 3px rgba($primary, 0.1);
+    }
+
+    &::placeholder {
+      color: $text-light;
+    }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 72px;
+  }
+}
+
+/* ---------- Modal Footer ---------- */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid $border-color;
+  margin-top: 0.5rem;
+  padding-top: 1.25rem;
+}
+
+.btn-cancel {
+  background: $bg-body;
+  color: $text-muted;
+  border: 1px solid $border-color;
+  padding: 0.55rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    background: $border-color;
+  }
+}
+
+.btn-submit {
+  background: linear-gradient(135deg, $primary, $primary-dark);
+  color: #fff;
+  border: none;
+  padding: 0.55rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 4px 12px rgba($primary, 0.35);
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 560px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-content {
+    max-height: 95vh;
+  }
+}

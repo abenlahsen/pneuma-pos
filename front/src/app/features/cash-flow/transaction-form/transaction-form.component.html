@@ -1,0 +1,80 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ isEdit() ? '✏️ Modifier' : '➕ Nouvelle' }} Transaction</h2>
+      <button (click)="onCancel()" class="btn-close">✕</button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-body">
+      <!-- Type toggle -->
+      <div class="type-toggle">
+        <button type="button"
+          class="toggle-btn"
+          [class.active]="form.get('type')?.value === 'income'"
+          (click)="form.get('type')?.setValue('income')">
+          📈 Revenu
+        </button>
+        <button type="button"
+          class="toggle-btn"
+          [class.active]="form.get('type')?.value === 'expense'"
+          (click)="form.get('type')?.setValue('expense')">
+          📉 Dépense
+        </button>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="txn-date">Date *</label>
+          <input type="date" id="txn-date" formControlName="date" />
+        </div>
+        <div class="form-group">
+          <label for="txn-amount">Montant (DH) *</label>
+          <input type="number" id="txn-amount" formControlName="amount" step="0.01" min="0" placeholder="0.00" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="txn-category">Catégorie</label>
+          <input type="text" id="txn-category" formControlName="category" list="category-list" placeholder="Ex: SERVICE, PRODUIT..." />
+          <datalist id="category-list">
+            @for (cat of filterOptions.categories; track cat) {
+              <option [value]="cat"></option>
+            }
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label for="txn-person">Personne</label>
+          <input type="text" id="txn-person" formControlName="person" list="person-list" placeholder="Ex: AHMED, MOHAMED..." />
+          <datalist id="person-list">
+            @for (p of filterOptions.persons; track p) {
+              <option [value]="p"></option>
+            }
+          </datalist>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="txn-partner">Partenaire</label>
+        <input type="text" id="txn-partner" formControlName="partner" list="partner-list" placeholder="Ex: DAS TANGER, MARKET RABAT..." />
+        <datalist id="partner-list">
+          @for (p of filterOptions.partners; track p) {
+            <option [value]="p"></option>
+          }
+        </datalist>
+      </div>
+
+      <div class="form-group">
+        <label for="txn-description">Description *</label>
+        <textarea id="txn-description" formControlName="description" rows="3" placeholder="Détail de la transaction..."></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" (click)="onCancel()" class="btn btn-cancel">Annuler</button>
+        <button type="submit" [disabled]="form.invalid" class="btn btn-submit">
+          {{ isEdit() ? 'Mettre à jour' : 'Ajouter' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

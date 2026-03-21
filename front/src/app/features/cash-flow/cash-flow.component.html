@@ -1,0 +1,183 @@
+<div class="cash-flow-container">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-left">
+        <a routerLink="/dashboard" class="back-link">← Tableau de bord</a>
+        <h1>💰 Flux de Trésorerie</h1>
+      </div>
+      <div class="header-right">
+        <button (click)="openAddForm()" class="btn btn-add" id="btn-add-transaction">
+          + Nouvelle Transaction
+        </button>
+        <button (click)="logout()" class="btn btn-logout">Déconnexion</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-main">
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+      <div class="summary-card income-card">
+        <div class="card-icon">📈</div>
+        <div class="card-content">
+          <span class="card-label">Revenus</span>
+          <span class="card-value">{{ summary().income | number:'1.2-2' }} DH</span>
+        </div>
+      </div>
+      <div class="summary-card expense-card">
+        <div class="card-icon">📉</div>
+        <div class="card-content">
+          <span class="card-label">Dépenses</span>
+          <span class="card-value">{{ summary().expenses | number:'1.2-2' }} DH</span>
+        </div>
+      </div>
+      <div class="summary-card balance-card" [class.positive]="summary().balance >= 0" [class.negative]="summary().balance < 0">
+        <div class="card-icon">💎</div>
+        <div class="card-content">
+          <span class="card-label">Solde</span>
+          <span class="card-value">{{ summary().balance | number:'1.2-2' }} DH</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-bar">
+      <div class="filters-row">
+        <div class="filter-group">
+          <label>Type</label>
+          <select [ngModel]="filterType()" (ngModelChange)="filterType.set($event); applyFilters()" id="filter-type">
+            <option value="">Tous</option>
+            <option value="income">Revenus</option>
+            <option value="expense">Dépenses</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Catégorie</label>
+          <select [ngModel]="filterCategory()" (ngModelChange)="filterCategory.set($event); applyFilters()" id="filter-category">
+            <option value="">Toutes</option>
+            @for (cat of filterOptions().categories; track cat) {
+              <option [value]="cat">{{ cat }}</option>
+            }
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Personne</label>
+          <select [ngModel]="filterPerson()" (ngModelChange)="filterPerson.set($event); applyFilters()" id="filter-person">
+            <option value="">Toutes</option>
+            @for (person of filterOptions().persons; track person) {
+              <option [value]="person">{{ person }}</option>
+            }
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Du</label>
+          <input type="date" [ngModel]="filterDateFrom()" (ngModelChange)="filterDateFrom.set($event); applyFilters()" id="filter-date-from" />
+        </div>
+        <div class="filter-group">
+          <label>Au</label>
+          <input type="date" [ngModel]="filterDateTo()" (ngModelChange)="filterDateTo.set($event); applyFilters()" id="filter-date-to" />
+        </div>
+        <div class="filter-group search-group">
+          <label>Rechercher</label>
+          <input type="text" [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event)" placeholder="Description..." (keyup.enter)="applyFilters()" id="filter-search" />
+        </div>
+        <div class="filter-actions">
+          <button (click)="applyFilters()" class="btn btn-filter" id="btn-apply-filters">🔍</button>
+          <button (click)="resetFilters()" class="btn btn-reset" id="btn-reset-filters">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+      @if (loading()) {
+        <div class="loading-overlay">
+          <div class="spinner"></div>
+          <span>Chargement...</span>
+        </div>
+      }
+
+      <table class="data-table" id="transactions-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Montant</th>
+            <th>Type</th>
+            <th>Catégorie</th>
+            <th class="desc-col">Description</th>
+            <th>Personne</th>
+            <th>Partenaire</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of transactions(); track t.id) {
+            <tr [class.income-row]="t.type === 'income'" [class.expense-row]="t.type === 'expense'">
+              <td class="date-cell">{{ t.date | date:'dd/MM/yyyy' }}</td>
+              <td class="amount-cell">
+                <span [class.amount-income]="t.type === 'income'" [class.amount-expense]="t.type === 'expense'">
+                  {{ t.type === 'expense' ? '-' : '+' }}{{ t.amount | number:'1.2-2' }} DH
+                </span>
+              </td>
+              <td>
+                <span class="badge" [class.badge-income]="t.type === 'income'" [class.badge-expense]="t.type === 'expense'">
+                  {{ t.type === 'income' ? 'Revenu' : 'Dépense' }}
+                </span>
+              </td>
+              <td>{{ t.category || '—' }}</td>
+              <td class="desc-col" [title]="t.description">{{ t.description }}</td>
+              <td>{{ t.person || '—' }}</td>
+              <td>{{ t.partner || '—' }}</td>
+              <td class="actions-cell">
+                <button (click)="openEditForm(t)" class="btn-icon btn-edit" title="Modifier">✏️</button>
+                <button (click)="deleteTransaction(t)" class="btn-icon btn-delete" title="Supprimer">🗑️</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="empty-state">
+                @if (!loading()) {
+                  <span>Aucune transaction trouvée.</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (lastPage() > 1) {
+      <div class="pagination" id="pagination-controls">
+        <button (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1" class="btn btn-page">
+          ← Précédent
+        </button>
+        <div class="page-numbers">
+          @for (page of pages; track page) {
+            <button
+              (click)="goToPage(page)"
+              class="btn btn-page"
+              [class.active]="page === currentPage()">
+              {{ page }}
+            </button>
+          }
+        </div>
+        <span class="page-info">{{ total() }} résultats</span>
+        <button (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === lastPage()" class="btn btn-page">
+          Suivant →
+        </button>
+      </div>
+    }
+  </main>
+
+  <!-- Transaction Form Modal -->
+  @if (showForm()) {
+    <app-transaction-form
+      [transaction]="editingTransaction()"
+      [filterOptions]="filterOptions()"
+      (submitted)="onFormSubmit($event)"
+      (cancelled)="closeForm()"
+    />
+  }
+</div>

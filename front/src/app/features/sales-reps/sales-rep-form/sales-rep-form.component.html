@@ -1,0 +1,26 @@
+<form (ngSubmit)="onSubmit()" #form="ngForm" class="form-container">
+  <div class="form-section">
+    <div class="form-grid">
+      <div class="form-control full-width">
+        <label>Nom du Commercial *</label>
+        <input type="text" name="name" [(ngModel)]="formData.name" required placeholder="Nom complet">
+      </div>
+      <div class="form-control">
+        <label>Téléphone</label>
+        <input type="text" name="phone" [(ngModel)]="formData.phone" placeholder="Numéro de téléphone">
+      </div>
+      <div class="form-control">
+        <label>Email</label>
+        <input type="email" name="email" [(ngModel)]="formData.email" placeholder="Adresse email">
+      </div>
+      <div class="form-control">
+        <label>Taux de Commission (%)</label>
+        <input type="number" name="commission_rate" [(ngModel)]="formData.commission_rate" step="0.01" min="0" max="100" placeholder="Ex: 5.00">
+      </div>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button type="button" class="btn btn-secondary" (click)="cancel.emit()">Annuler</button>
+    <button type="submit" class="btn btn-primary" [disabled]="!form.valid">Enregistrer</button>
+  </div>
+</form>

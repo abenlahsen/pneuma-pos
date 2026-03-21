@@ -1,0 +1,8 @@
+@import '../sales/sales.component.scss';
+
+.btn-secondary {
+  background: #f7fafc;
+  color: #2d3748;
+  border: 1px solid #e2e8f0;
+  &:hover { background: #e2e8f0; }
+}

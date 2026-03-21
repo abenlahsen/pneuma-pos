@@ -1,0 +1,174 @@
+<form (ngSubmit)="onSubmit()" #form="ngForm" class="form-container">
+  
+  <div class="form-section">
+    <h3 class="section-title">Informations Générales</h3>
+    <div class="form-grid">
+      <div class="form-control">
+        <label>Date *</label>
+        <input type="date" name="date" [(ngModel)]="formData.date" required>
+      </div>
+      <div class="form-control checkbox-control">
+        <label>Avec Facture</label>
+        <input type="checkbox" name="with_invoice" [(ngModel)]="formData.with_invoice">
+      </div>
+      <div class="form-control">
+        <label>Client</label>
+        <input type="text" name="client" [(ngModel)]="formData.client" placeholder="Nom du client">
+      </div>
+      <div class="form-control">
+        <label>Ville</label>
+        <input type="text" name="city" [(ngModel)]="formData.city" placeholder="Ville">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h3 class="section-title">Détails du Produit</h3>
+    <div class="form-grid">
+      <div class="form-control">
+        <label>Marque</label>
+        <input type="text" name="brand" [(ngModel)]="formData.brand" placeholder="Ex: Michelin">
+      </div>
+      <div class="form-control">
+        <label>Dimension</label>
+        <input type="text" name="dimension" [(ngModel)]="formData.dimension" placeholder="Ex: 225/55R17">
+      </div>
+      <div class="form-control">
+        <label>Profil</label>
+        <input type="text" name="profile" [(ngModel)]="formData.profile" placeholder="Ex: Primacy 4">
+      </div>
+      <div class="form-control">
+        <label>IC</label>
+        <input type="text" name="ic" [(ngModel)]="formData.ic">
+      </div>
+      <div class="form-control">
+        <label>IV</label>
+        <input type="text" name="iv" [(ngModel)]="formData.iv">
+      </div>
+      <div class="form-control">
+        <label>RFT (Runflat)</label>
+        <input type="text" name="rft" [(ngModel)]="formData.rft">
+      </div>
+      <div class="form-control">
+        <label>Quantité</label>
+        <input type="number" name="quantity" [(ngModel)]="formData.quantity" min="1" (change)="calculateTotals()">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h3 class="section-title">Finance & Tarification</h3>
+    <div class="form-grid">
+      <div class="form-control">
+        <label>Fournisseur</label>
+        <select name="supplier_id" [(ngModel)]="formData.supplier_id">
+          <option [ngValue]="null">-- Sélectionner --</option>
+          <option *ngFor="let s of suppliers" [ngValue]="s.id">{{ s.name }}</option>
+        </select>
+      </div>
+      <div class="form-control">
+        <label>PU Achat (DH)</label>
+        <input type="number" name="purchase_price" [(ngModel)]="formData.purchase_price" step="0.01" (change)="calculateTotals()">
+      </div>
+      <div class="form-control">
+        <label>PU Vente (DH)</label>
+        <input type="number" name="selling_price" [(ngModel)]="formData.selling_price" step="0.01" (change)="calculateTotals()">
+      </div>
+      <div class="form-control">
+        <label>Frais de Service (DH)</label>
+        <input type="number" name="service_fee" [(ngModel)]="formData.service_fee" step="0.01" (change)="calculateTotals()">
+      </div>
+    </div>
+    
+    <div class="totals-preview">
+      <div class="total-item">
+        <span class="label">Total Achat:</span>
+        <span class="value">{{ formData.total_purchase | number:'1.2-2' }} DH</span>
+      </div>
+      <div class="total-item">
+        <span class="label">Total Vente:</span>
+        <span class="value">{{ formData.total_sale | number:'1.2-2' }} DH</span>
+      </div>
+      <div class="total-item highlight">
+        <span class="label">Marge Prévue:</span>
+        <span class="value" [class.negative]="formData.margin < 0">{{ formData.margin | number:'1.2-2' }} DH</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h3 class="section-title">Logistique & Suivi</h3>
+    <div class="form-grid">
+      <div class="form-control">
+        <label>Transport</label>
+        <select name="carrier_id" [(ngModel)]="formData.carrier_id">
+          <option [ngValue]="null">-- Sélectionner --</option>
+          <option *ngFor="let c of carriers" [ngValue]="c.id">{{ c.name }}</option>
+        </select>
+      </div>
+      <div class="form-control">
+        <label>N° Suivi</label>
+        <input type="text" name="tracking_number" [(ngModel)]="formData.tracking_number" placeholder="Ex: TR-20260321-001">
+      </div>
+      <div class="form-control">
+        <label>Partenaire</label>
+        <select name="partner_id" [(ngModel)]="formData.partner_id">
+          <option [ngValue]="null">-- Sélectionner --</option>
+          <option *ngFor="let p of partners" [ngValue]="p.id">{{ p.name }} {{ p.city ? '(' + p.city + ')' : '' }}</option>
+        </select>
+      </div>
+      <div class="form-control">
+        <label>Service</label>
+        <input type="text" name="service" [(ngModel)]="formData.service">
+      </div>
+      <div class="form-control">
+        <label>Commercial</label>
+        <select name="sales_rep_id" [(ngModel)]="formData.sales_rep_id">
+          <option [ngValue]="null">-- Sélectionner --</option>
+          <option *ngFor="let r of salesReps" [ngValue]="r.id">{{ r.name }}</option>
+        </select>
+      </div>
+      <div class="form-control">
+        <label>Status Global</label>
+        <select name="status" [(ngModel)]="formData.status">
+          <option value="EN COURS">En cours</option>
+          <option value="LIVRE">Livré</option>
+          <option value="ANNULE">Annulé</option>
+          <option value="RETOUR">Retour</option>
+        </select>
+      </div>
+      <div class="form-control">
+        <label>Status Paiement</label>
+        <select name="payment_status" [(ngModel)]="formData.payment_status">
+          <option value="NON PAYE">Non Payé</option>
+          <option value="PARTIEL">Partiel</option>
+          <option value="PAYE">Payé</option>
+        </select>
+      </div>
+      <div class="form-control">
+        <label>Mode de Paiement</label>
+        <select name="payment_method" [(ngModel)]="formData.payment_method">
+          <option value="ESPECE">Espèce</option>
+          <option value="VIREMENT">Virement</option>
+          <option value="CHEQUE">Chèque</option>
+          <option value="TPE">TPE</option>
+          <option value="TRAITE">Traite</option>
+        </select>
+      </div>
+      <div class="form-control">
+        <label>Date de Livraison</label>
+        <input type="date" name="delivery_date" [(ngModel)]="formData.delivery_date">
+      </div>
+    </div>
+    
+    <div class="form-control full-width" style="margin-top: 1rem;">
+      <label>Commentaires</label>
+      <textarea name="comments" [(ngModel)]="formData.comments" rows="3" placeholder="Notes additionnelles..."></textarea>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="button" class="btn btn-secondary" (click)="cancel.emit()">Annuler</button>
+    <button type="submit" class="btn btn-primary" [disabled]="!form.valid">Enregistrer</button>
+  </div>
+</form>

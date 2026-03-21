@@ -1,0 +1,38 @@
+<form (ngSubmit)="onSubmit()" #form="ngForm" class="form-container">
+  <div class="form-section">
+    <h3 class="section-title">Informations</h3>
+    <div class="form-grid">
+      <div class="form-control">
+        <label>Nom du Partenaire *</label>
+        <input type="text" name="name" [(ngModel)]="formData.name" required placeholder="Ex: Garage Atlas">
+      </div>
+      <div class="form-control">
+        <label>Ville</label>
+        <input type="text" name="city" [(ngModel)]="formData.city" placeholder="Ex: Casablanca">
+      </div>
+      <div class="form-control">
+        <label>Téléphone</label>
+        <input type="text" name="phone" [(ngModel)]="formData.phone" placeholder="Numéro de téléphone">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h3 class="section-title">Tarification des Services</h3>
+    <div class="form-grid">
+      <div class="form-control">
+        <label>Montage + Equilibrage (DH/pneu)</label>
+        <input type="number" name="montage_price" [(ngModel)]="formData.montage_price" step="0.01" min="0" placeholder="Ex: 50.00">
+      </div>
+      <div class="form-control">
+        <label>Parallélisme (DH)</label>
+        <input type="number" name="alignment_price" [(ngModel)]="formData.alignment_price" step="0.01" min="0" placeholder="Ex: 150.00">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="button" class="btn btn-secondary" (click)="cancel.emit()">Annuler</button>
+    <button type="submit" class="btn btn-primary" [disabled]="!form.valid">Enregistrer</button>
+  </div>
+</form>

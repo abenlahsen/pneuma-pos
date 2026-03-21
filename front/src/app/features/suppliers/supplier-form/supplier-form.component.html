@@ -1,0 +1,36 @@
+<form (ngSubmit)="onSubmit()" #form="ngForm" class="form-container">
+  
+  <div class="form-section">
+    <div class="form-grid">
+      <div class="form-control full-width">
+        <label>Raison Sociale / Nom *</label>
+        <input type="text" name="name" [(ngModel)]="formData.name" required placeholder="Nom du fournisseur">
+      </div>
+      
+      <div class="form-control">
+        <label>Personne de Contact</label>
+        <input type="text" name="contact_person" [(ngModel)]="formData.contact_person" placeholder="Nom du contact">
+      </div>
+      
+      <div class="form-control">
+        <label>Téléphone</label>
+        <input type="text" name="phone" [(ngModel)]="formData.phone" placeholder="Numéro de téléphone">
+      </div>
+      
+      <div class="form-control full-width">
+        <label>Email</label>
+        <input type="email" name="email" [(ngModel)]="formData.email" placeholder="Adresse email">
+      </div>
+      
+      <div class="form-control full-width">
+        <label>Adresse physique</label>
+        <textarea name="address" [(ngModel)]="formData.address" rows="3" placeholder="Adresse complète..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="button" class="btn btn-secondary" (click)="cancel.emit()">Annuler</button>
+    <button type="submit" class="btn btn-primary" [disabled]="!form.valid">Enregistrer</button>
+  </div>
+</form>

@@ -96,3 +96,64 @@
   }
 }
 
+/* Quick Links */
+.quick-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.quick-link-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  text-decoration: none;
+  color: #2d3748;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    border-color: #667eea;
+  }
+}
+
+.ql-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.ql-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.ql-title {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.ql-desc {
+  font-size: 0.8rem;
+  color: #a0aec0;
+  margin-top: 0.15rem;
+}
+
+.ql-arrow {
+  font-size: 1.2rem;
+  color: #a0aec0;
+  transition: transform 0.2s;
+
+  .quick-link-card:hover & {
+    transform: translateX(3px);
+    color: #667eea;
+  }
+}
+

@@ -1,0 +1,77 @@
+<div class="page-container">
+  <div class="header">
+    <div class="title-section">
+      <h1>Partenaires</h1>
+      <p class="subtitle">Gérez vos partenaires de service (Montage, Equilibrage, Parallélisme)</p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" (click)="openAddForm()">Nouveau Partenaire</button>
+      <button class="btn btn-icon" (click)="logout()" title="Déconnexion">🚪</button>
+    </div>
+  </div>
+
+  <div class="card filters-section">
+    <div class="card-body" style="padding: 1rem 1.5rem">
+      <div style="display: flex; gap: 1rem; align-items: flex-end;">
+        <div class="form-group" style="flex: 1;">
+          <label>Rechercher</label>
+          <input type="text" class="form-control" [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event)" placeholder="Nom, ville ou téléphone..." (keyup.enter)="applyFilters()">
+        </div>
+        <button class="btn btn-primary" (click)="applyFilters()">Rechercher</button>
+        <button class="btn btn-secondary" (click)="resetFilters()">Réinitialiser</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card table-card">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Ville</th>
+            <th>Téléphone</th>
+            <th class="text-right">Montage+Equil. (DH)</th>
+            <th class="text-right">Parallélisme (DH)</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="loading()"><td colspan="6" class="text-center"><div class="spinner"></div> Chargement...</td></tr>
+          <tr *ngIf="!loading() && partners().length === 0"><td colspan="6" class="text-center text-muted">Aucun partenaire trouvé.</td></tr>
+          <tr *ngFor="let p of partners()">
+            <td class="fw-semibold">{{ p.name }}</td>
+            <td>{{ p.city || '-' }}</td>
+            <td>{{ p.phone || '-' }}</td>
+            <td class="text-right">{{ p.montage_price != null ? (p.montage_price | number:'1.2-2') : '-' }}</td>
+            <td class="text-right">{{ p.alignment_price != null ? (p.alignment_price | number:'1.2-2') : '-' }}</td>
+            <td class="text-center">
+              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(p)" title="Modifier">✏️</button>
+              <button class="btn-icon btn-sm text-danger" (click)="deletePartner(p)" title="Supprimer">🗑️</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination-wrapper" *ngIf="total() > 0">
+      <div class="pagination-info">{{ (currentPage()-1)*perPage()+1 }} à {{ (currentPage()*perPage()) > total() ? total() : (currentPage()*perPage()) }} sur {{ total() }}</div>
+      <div class="pagination">
+        <button class="btn-page" [disabled]="currentPage()===1" (click)="goToPage(currentPage()-1)">&laquo;</button>
+        <button class="btn-page" *ngFor="let pg of pages" [class.active]="pg===currentPage()" (click)="goToPage(pg)">{{ pg }}</button>
+        <button class="btn-page" [disabled]="currentPage()===lastPage()" (click)="goToPage(currentPage()+1)">&raquo;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showForm()" (click)="closeForm()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ editingPartner() ? 'Modifier Partenaire' : 'Nouveau Partenaire' }}</h2>
+      <button class="btn-icon" (click)="closeForm()">X</button>
+    </div>
+    <div class="modal-body">
+      <app-partner-form [partner]="editingPartner()" (save)="onFormSubmit($event)" (cancel)="closeForm()"></app-partner-form>
+    </div>
+  </div>
+</div>
