@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { PurchaseService } from '../../core/services/purchase.service';
 import { Purchase, PurchaseSummary } from '../../core/models/purchase.model';
 import { PurchaseFormComponent } from './purchase-form/purchase-form.component';
+import { PurchasePaymentsComponent } from './purchase-payments/purchase-payments.component';
 
 @Component({
   selector: 'app-purchases',
   standalone: true,
-  imports: [CommonModule, FormsModule, PurchaseFormComponent],
+  imports: [CommonModule, FormsModule, PurchaseFormComponent, PurchasePaymentsComponent],
   templateUrl: './purchases.component.html',
   styleUrls: ['./purchases.component.scss']
 })
@@ -29,6 +30,7 @@ export class PurchasesComponent implements OnInit {
 
   isFormOpen = signal<boolean>(false);
   selectedPurchase = signal<Purchase | null>(null);
+  paymentPurchase = signal<Purchase | null>(null);
 
   get pages(): number[] {
     const pages = [];
@@ -99,6 +101,15 @@ export class PurchasesComponent implements OnInit {
     this.loadData(this.currentPage());
   }
 
+  openPayments(purchase: Purchase): void {
+    this.paymentPurchase.set(purchase);
+  }
+
+  closePayments(): void {
+    this.paymentPurchase.set(null);
+    this.loadData(this.currentPage());
+  }
+
   updatePurchaseStatus(purchase: Purchase, target: any): void {
     const newStatus = target.value;
     if (purchase.status === newStatus) return;
@@ -107,7 +118,18 @@ export class PurchasesComponent implements OnInit {
     const oldStatus = purchase.status;
     purchase.status = newStatus;
     
-    this.purchaseService.updatePurchase(purchase.id, { status: newStatus } as any).subscribe({
+    const payload = {
+      date: purchase.date,
+      product: purchase.product,
+      supplier_id: purchase.supplier_id,
+      commercial_id: purchase.commercial_id,
+      quantity: purchase.quantity,
+      unit_price: purchase.unit_price,
+      status: newStatus,
+      payment_status: purchase.payment_status
+    };
+
+    this.purchaseService.updatePurchase(purchase.id, payload as any).subscribe({
       next: () => {
         // Updated confirmed
       },

@@ -56,38 +56,7 @@
     </div>
   </div>
 
-  <div class="row">
-    <div class="col-md-4 mb-4">
-      <div class="form-group">
-        <label>Statut de Paiement</label>
-        <select class="form-control" [(ngModel)]="formData.payment_status" name="payment_status" required>
-          <option value="NON PAYE">Non payé</option>
-          <option value="PARTIEL">Partiel</option>
-          <option value="PAYE">Payé</option>
-        </select>
-      </div>
-    </div>
-    <div class="col-md-4 mb-4" *ngIf="formData.payment_status !== 'NON PAYE'">
-      <div class="form-group">
-        <label>Mode de Paiement</label>
-        <select class="form-control" [(ngModel)]="formData.payment_method" name="payment_method">
-          <option [ngValue]="null">Sélectionner...</option>
-          <option value="Espèces">Espèces</option>
-          <option value="Virement">Virement</option>
-          <option value="Chèque">Chèque</option>
-        </select>
-      </div>
-      <small class="text-muted" *ngIf="formData.payment_status === 'PAYE' && formData.payment_method === 'Espèces'">
-        ⚡ Une dépense sera automatiquement ajoutée à la trésorerie (cash uniquement).
-      </small>
-    </div>
-    <div class="col-md-4 mb-4" *ngIf="formData.payment_status !== 'NON PAYE'">
-      <div class="form-group">
-        <label>Date de Paiement</label>
-        <input type="date" class="form-control" [(ngModel)]="formData.payment_date" name="payment_date">
-      </div>
-    </div>
-  </div>
+
 
   <div class="form-actions mt-4 text-right">
     <button type="button" class="btn btn-secondary mr-2" (click)="cancel.emit()" [disabled]="loading()">Annuler</button>

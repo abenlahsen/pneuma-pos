@@ -40,15 +40,9 @@ class PurchaseController extends Controller
             'unit_price' => 'required|numeric|min:0',
             'status' => 'required|string|in:EN COURS,RECU',
             'payment_status' => 'required|string|in:PAYE,NON PAYE,PARTIEL',
-            'payment_method' => 'nullable|string|in:Espèces,Virement,Chèque',
-            'payment_date' => 'nullable|date',
         ]);
 
         $purchase = Purchase::create($validated);
-
-        if ($purchase->payment_status === 'PAYE' && strtolower($purchase->payment_method ?? '') === 'espèces') {
-            $this->logCashFlowExpense($purchase);
-        }
 
         return response()->json($purchase->load(['supplier', 'commercial']), 201);
     }
@@ -69,16 +63,9 @@ class PurchaseController extends Controller
             'unit_price' => 'required|numeric|min:0',
             'status' => 'required|string|in:EN COURS,RECU',
             'payment_status' => 'required|string|in:PAYE,NON PAYE,PARTIEL',
-            'payment_method' => 'nullable|string|in:Espèces,Virement,Chèque',
-            'payment_date' => 'nullable|date',
         ]);
 
-        $wasNotPaid = $purchase->payment_status !== 'PAYE';
         $purchase->update($validated);
-
-        if ($wasNotPaid && $purchase->payment_status === 'PAYE' && strtolower($purchase->payment_method ?? '') === 'espèces') {
-            $this->logCashFlowExpense($purchase);
-        }
 
         return response()->json($purchase->load(['supplier', 'commercial']));
     }
@@ -102,16 +89,4 @@ class PurchaseController extends Controller
         ]);
     }
 
-    private function logCashFlowExpense(Purchase $purchase)
-    {
-        \App\Models\Transaction::create([
-            'date' => $purchase->payment_date ?? now()->toDateString(),
-            'description' => "Paiement achat #{$purchase->id} - {$purchase->product}",
-            'amount' => $purchase->total_price,
-            'type' => 'expense',
-            'category' => 'Achat Produit',
-            'payment_method' => 'Espèces',
-            'user_id' => auth()->id(),
-        ]);
-    }
 }

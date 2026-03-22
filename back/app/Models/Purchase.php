@@ -46,4 +46,9 @@ class Purchase extends Model
     {
         return $this->belongsTo(Personnel::class, 'commercial_id');
     }
+
+    public function payments()
+    {
+        return $this->hasMany(PurchasePayment::class);
+    }
 }

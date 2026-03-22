@@ -1,0 +1,252 @@
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.payment-modal {
+  background: #fff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 650px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #eee;
+
+  h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+  }
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #666;
+  &:hover { color: #333; }
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+/* Summary */
+.payment-summary {
+  background: linear-gradient(135deg, #f0f4ff 0%, #e8ecff 100%);
+  padding: 1.25rem;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+
+  .label {
+    color: #666;
+    font-size: 0.9rem;
+  }
+  .value {
+    font-weight: 600;
+    color: #333;
+    &.paid { color: #2e7d32; }
+    &.remaining { color: #e65100; }
+    &.remaining.zero { color: #2e7d32; }
+  }
+}
+
+.progress-bar-container {
+  background: #ddd;
+  border-radius: 8px;
+  height: 24px;
+  margin: 0.75rem 0 0.5rem;
+  overflow: hidden;
+}
+
+.progress-bar {
+  background: linear-gradient(90deg, #4caf50 0%, #66bb6a 100%);
+  height: 100%;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  transition: width 0.4s ease;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+
+  &.status-non-payé,
+  &.status-non-paye,
+  &.status-non\ payé,
+  &.status-non\ paye {
+    background: #ffebee;
+    color: #c62828;
+  }
+  &.status-partiel {
+    background: #fff3e0;
+    color: #e65100;
+  }
+  &.status-payé,
+  &.status-paye {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+}
+
+/* Payments list */
+.payments-list {
+  margin-bottom: 1.5rem;
+
+  h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #444;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 1.5rem;
+  color: #999;
+  font-style: italic;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th, td {
+    padding: 0.6rem 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    font-size: 0.85rem;
+  }
+  th {
+    color: #666;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+  }
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  &:hover { background: #fee; }
+}
+
+/* Add form */
+.add-payment-section {
+  text-align: center;
+  padding: 0.5rem 0;
+}
+
+.add-payment-form {
+  background: #fafafa;
+  padding: 1.25rem;
+  border-radius: 10px;
+  border: 1px solid #eee;
+
+  h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #444;
+  }
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+
+  label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #555;
+  }
+}
+
+.form-control {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  &:focus {
+    outline: none;
+    border-color: #5558c8;
+    box-shadow: 0 0 0 2px rgba(85, 88, 200, 0.15);
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3a3d8f, #5558c8);
+  color: #fff;
+  &:hover:not(:disabled) { opacity: 0.9; }
+}
+
+.btn-secondary {
+  background: #eee;
+  color: #555;
+  &:hover { background: #ddd; }
+}
+
+.fw-semibold { font-weight: 600; }
