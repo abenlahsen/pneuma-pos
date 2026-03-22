@@ -38,6 +38,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Purchases (Achats)
     Route::get('purchases-summary', [\App\Http\Controllers\PurchaseController::class, 'summary']);
     Route::apiResource('purchases', \App\Http\Controllers\PurchaseController::class);
+    
+    // Purchase Payments (nested under purchases)
+    Route::get('purchases/{purchase}/payments', [\App\Http\Controllers\PurchasePaymentController::class, 'index']);
+    Route::post('purchases/{purchase}/payments', [\App\Http\Controllers\PurchasePaymentController::class, 'store']);
+    Route::delete('purchases/{purchase}/payments/{payment}', [\App\Http\Controllers\PurchasePaymentController::class, 'destroy']);
 
     // Payments (nested under sales)
     Route::get('sales/{sale}/payments', [\App\Http\Controllers\PaymentController::class, 'index']);

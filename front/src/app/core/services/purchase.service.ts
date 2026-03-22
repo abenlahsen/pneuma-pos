@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Purchase, PurchasePayload, PurchaseSummary } from '../models/purchase.model';
+import { Purchase, PurchasePayload, PurchaseSummary, PurchasePayment, PurchasePaymentSummary } from '../models/purchase.model';
 
 @Injectable({
   providedIn: 'root'
@@ -36,5 +36,17 @@ export class PurchaseService {
 
   deletePurchase(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  getPurchasePayments(purchaseId: number): Observable<PurchasePaymentSummary> {
+    return this.http.get<PurchasePaymentSummary>(`${this.apiUrl}/${purchaseId}/payments`);
+  }
+
+  addPurchasePayment(purchaseId: number, data: any): Observable<PurchasePayment> {
+    return this.http.post<PurchasePayment>(`${this.apiUrl}/${purchaseId}/payments`, data);
+  }
+
+  deletePurchasePayment(purchaseId: number, paymentId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${purchaseId}/payments/${paymentId}`);
   }
 }

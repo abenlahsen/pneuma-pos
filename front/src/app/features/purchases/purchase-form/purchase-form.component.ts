@@ -37,8 +37,6 @@ export class PurchaseFormComponent implements OnInit {
     unit_price: 0,
     status: 'EN COURS',
     payment_status: 'NON PAYE',
-    payment_method: null,
-    payment_date: null
   };
 
   ngOnInit(): void {
@@ -55,8 +53,6 @@ export class PurchaseFormComponent implements OnInit {
         unit_price: this.purchase.unit_price,
         status: this.purchase.status,
         payment_status: this.purchase.payment_status,
-        payment_method: this.purchase.payment_method,
-        payment_date: this.purchase.payment_date
       };
     }
   }
@@ -82,13 +78,6 @@ export class PurchaseFormComponent implements OnInit {
     if (!this.formData.date || !this.formData.product || !this.formData.supplier_id || !this.formData.quantity || this.formData.unit_price === null) {
       alert('Veuillez remplir les champs obligatoires');
       return;
-    }
-
-    if (this.formData.payment_status === 'PAYE' && !this.formData.payment_date) {
-        this.formData.payment_date = new Date().toISOString().split('T')[0];
-    }
-    if (this.formData.payment_status === 'NON PAYE') {
-        this.formData.payment_date = null;
     }
 
     this.loading.set(true);
