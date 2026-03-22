@@ -11,7 +11,7 @@ import { CarrierFormComponent } from './carrier-form/carrier-form.component';
   standalone: true,
   imports: [CommonModule, FormsModule, CarrierFormComponent],
   templateUrl: './carriers.component.html',
-  styleUrl: './carriers.component.scss',
+  styleUrls: ['./carriers.component.scss'],
 })
 export class CarriersComponent implements OnInit {
   carriers = signal<Carrier[]>([]);

@@ -1,0 +1,110 @@
+<div class="modal-overlay" (click)="close()">
+  <div class="modal-container payment-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>💳 Paiements — {{ sale.client || 'Vente' }} #{{ sale.id }}</h2>
+      <button class="btn-close" (click)="close()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Summary -->
+      <div class="payment-summary">
+        <div class="summary-row">
+          <span class="label">Total vente :</span>
+          <span class="value">{{ totalSale() | number:'1.2-2' }} DH</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Total payé :</span>
+          <span class="value paid">{{ totalPaid() | number:'1.2-2' }} DH</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Reste :</span>
+          <span class="value remaining" [class.zero]="remaining() <= 0">{{ remaining() | number:'1.2-2' }} DH</span>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar" [style.width.%]="progressPercent">
+            {{ progressPercent | number:'1.0-0' }}%
+          </div>
+        </div>
+        <div class="status-badge" [class]="'status-' + paymentStatus().toLowerCase().replace(' ', '-')">
+          {{ paymentStatus() }}
+        </div>
+      </div>
+
+      <!-- Payments list -->
+      <div class="payments-list">
+        <h3>Historique des paiements</h3>
+
+        <div class="empty-state" *ngIf="!loading() && payments().length === 0">
+          Aucun paiement enregistré.
+        </div>
+
+        <table class="table" *ngIf="payments().length > 0">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Montant</th>
+              <th>Méthode</th>
+              <th>Référence</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of payments()">
+              <td>{{ p.date | date:'dd/MM/yyyy' }}</td>
+              <td class="fw-semibold">{{ p.amount | number:'1.2-2' }} DH</td>
+              <td>{{ p.method || '-' }}</td>
+              <td>{{ p.reference || '-' }}</td>
+              <td>
+                <button class="btn-icon btn-sm text-danger" (click)="deletePayment(p)" title="Supprimer">🗑️</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Add form -->
+      <div class="add-payment-section" *ngIf="!showAddForm">
+        <button class="btn btn-primary" (click)="openAddForm()" [disabled]="remaining() <= 0">
+          + Ajouter un paiement
+        </button>
+      </div>
+
+      <div class="add-payment-form" *ngIf="showAddForm">
+        <h3>Nouveau paiement</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Montant (DH) *</label>
+            <input type="number" class="form-control" [(ngModel)]="formData.amount" step="0.01" min="0.01">
+          </div>
+          <div class="form-group">
+            <label>Date *</label>
+            <input type="date" class="form-control" [(ngModel)]="formData.date">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Méthode</label>
+            <select class="form-control" [(ngModel)]="formData.method">
+              <option value="Espèces">Espèces</option>
+              <option value="Chèque">Chèque</option>
+              <option value="Virement">Virement</option>
+              <option value="Effet">Effet</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Référence</label>
+            <input type="text" class="form-control" [(ngModel)]="formData.reference" placeholder="N° chèque, virement...">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Notes</label>
+          <input type="text" class="form-control" [(ngModel)]="formData.notes" placeholder="Notes...">
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-secondary" (click)="showAddForm = false">Annuler</button>
+          <button class="btn btn-primary" (click)="submitPayment()" [disabled]="formData.amount <= 0">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

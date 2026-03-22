@@ -36,21 +36,24 @@
       <div class="form-row">
         <div class="form-group">
           <label for="txn-category">Catégorie</label>
-          <input type="text" id="txn-category" formControlName="category" list="category-list" placeholder="Ex: SERVICE, PRODUIT..." />
-          <datalist id="category-list">
-            @for (cat of filterOptions.categories; track cat) {
-              <option [value]="cat"></option>
-            }
-          </datalist>
+          <select id="txn-category" formControlName="category">
+            <option value="">-- Sélectionner --</option>
+            <option value="Charge">Charge</option>
+            <option value="Transport">Transport</option>
+            <option value="Produit">Produit</option>
+            <option value="Service">Service</option>
+          </select>
         </div>
         <div class="form-group">
           <label for="txn-person">Personne</label>
-          <input type="text" id="txn-person" formControlName="person" list="person-list" placeholder="Ex: AHMED, MOHAMED..." />
-          <datalist id="person-list">
-            @for (p of filterOptions.persons; track p) {
-              <option [value]="p"></option>
-            }
-          </datalist>
+          <select id="txn-person" formControlName="person">
+            <option value="">-- Sélectionner --</option>
+            <option value="Ahmed">Ahmed</option>
+            <option value="Azeddine">Azeddine</option>
+            <option value="Mariam">Mariam</option>
+            <option value="Mohammed">Mohammed</option>
+            <option value="Saad">Saad</option>
+          </select>
         </div>
       </div>
 
