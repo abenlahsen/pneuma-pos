@@ -12,11 +12,12 @@ import {
   PaginatedResponse,
 } from '../../core/models/sale.model';
 import { SaleFormComponent } from './sale-form/sale-form.component';
+import { PaymentPanelComponent } from './payment-panel/payment-panel.component';
 
 @Component({
   selector: 'app-sales',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, SaleFormComponent],
+  imports: [CommonModule, FormsModule, RouterLink, SaleFormComponent, PaymentPanelComponent],
   templateUrl: './sales.component.html',
   styleUrl: './sales.component.scss',
 })
@@ -24,7 +25,7 @@ export class SalesComponent implements OnInit {
   // Data
   sales = signal<Sale[]>([]);
   summary = signal<SaleSummary>({ total_purchase: 0, total_sale: 0, margin: 0 });
-  filterOptions = signal<SaleFilters>({ brands: [], clients: [], cities: [], statuses: [], partners: [] });
+  filterOptions = signal<SaleFilters>({ brands: [], clients: [], cities: [], statuses: [], partners: [], payment_statuses: [] });
 
   // Pagination
   currentPage = signal(1);
@@ -38,6 +39,7 @@ export class SalesComponent implements OnInit {
   filterClient = signal('');
   filterCity = signal('');
   filterStatus = signal('');
+  filterPaymentStatus = signal('');
   filterPartner = signal('');
   filterDateFrom = signal('');
   filterDateTo = signal('');
@@ -46,6 +48,7 @@ export class SalesComponent implements OnInit {
   loading = signal(false);
   showForm = signal(false);
   editingSale = signal<Sale | null>(null);
+  paymentSale = signal<Sale | null>(null);
 
   constructor(
     private saleService: SaleService,
@@ -92,6 +95,7 @@ export class SalesComponent implements OnInit {
       client: this.filterClient(),
       city: this.filterCity(),
       status: this.filterStatus(),
+      payment_status: this.filterPaymentStatus(),
       partner: this.filterPartner(),
       date_from: this.filterDateFrom(),
       date_to: this.filterDateTo(),
@@ -109,6 +113,7 @@ export class SalesComponent implements OnInit {
     this.filterClient.set('');
     this.filterCity.set('');
     this.filterStatus.set('');
+    this.filterPaymentStatus.set('');
     this.filterPartner.set('');
     this.filterDateFrom.set('');
     this.filterDateTo.set('');
@@ -173,6 +178,37 @@ export class SalesComponent implements OnInit {
 
   logout(): void {
     this.authService.logout();
+  }
+
+  openPayments(sale: Sale): void {
+    this.paymentSale.set(sale);
+  }
+
+  closePayments(): void {
+    this.paymentSale.set(null);
+    this.loadData();
+  }
+
+  updateSaleStatus(sale: Sale, target: any): void {
+    const newStatus = target.value;
+    if (sale.status === newStatus) return;
+    
+    // Optimistic update
+    const oldStatus = sale.status;
+    sale.status = newStatus;
+    
+    this.saleService.updateSale(sale.id, { status: newStatus } as any).subscribe({
+      next: () => {
+        // Reload data to reflect summary changes
+        this.loadData();
+      },
+      error: (err: any) => {
+        console.error('Failed to update status', err);
+        // Revert on failure
+        sale.status = oldStatus;
+        alert('Erreur lors de la mise à jour du statut');
+      }
+    });
   }
 
   get pages(): number[] {

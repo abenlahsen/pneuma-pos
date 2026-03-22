@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Sale extends Model
 {
@@ -34,7 +35,7 @@ class Sale extends Model
         'service_fee',
         'client',
         'payment_method',
-        'sales_rep_id',
+        'commercial_id',
         'status',
         'payment_status',
         'delivery_date',
@@ -66,9 +67,9 @@ class Sale extends Model
     /**
      * The sales representative (commercial) for this sale.
      */
-    public function salesRep(): BelongsTo
+    public function commercial(): BelongsTo
     {
-        return $this->belongsTo(SalesRep::class);
+        return $this->belongsTo(Personnel::class, 'commercial_id');
     }
 
     /**
@@ -94,5 +95,13 @@ class Sale extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Payments for this sale.
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 }

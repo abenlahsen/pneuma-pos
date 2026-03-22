@@ -89,10 +89,10 @@
         <span class="label">Total Vente:</span>
         <span class="value">{{ formData.total_sale | number:'1.2-2' }} DH</span>
       </div>
-      <div class="total-item highlight">
-        <span class="label">Marge Prévue:</span>
-        <span class="value" [class.negative]="formData.margin < 0">{{ formData.margin | number:'1.2-2' }} DH</span>
-      </div>
+        <div class="summary-item total-margin">
+          <span class="label">Marge Nette:</span>
+          <span class="value" [class.negative]="(formData.margin || 0) < 0">{{ formData.margin | number:'1.2-2' }} DH</span>
+        </div>
     </div>
   </div>
 
@@ -123,9 +123,9 @@
       </div>
       <div class="form-control">
         <label>Commercial</label>
-        <select name="sales_rep_id" [(ngModel)]="formData.sales_rep_id">
-          <option [ngValue]="null">-- Sélectionner --</option>
-          <option *ngFor="let r of salesReps" [ngValue]="r.id">{{ r.name }}</option>
+        <select name="commercial_id" [(ngModel)]="formData.commercial_id" class="form-control">
+          <option [ngValue]="null">-- Sélectionner un commercial --</option>
+          <option *ngFor="let rep of commercials" [ngValue]="rep.id">{{ rep.name }}</option>
         </select>
       </div>
       <div class="form-control">

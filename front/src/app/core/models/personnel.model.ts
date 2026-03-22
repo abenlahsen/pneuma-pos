@@ -1,6 +1,7 @@
-export interface SalesRep {
+export interface Personnel {
   id: number;
   name: string;
+  role: 'Commercial' | 'Chauffeur' | 'Technicien';
   phone?: string;
   email?: string;
   commission_rate?: number;
@@ -8,7 +9,13 @@ export interface SalesRep {
   updated_at?: string;
 }
 
-export interface SalesRepPayload extends Omit<SalesRep, 'id' | 'created_at' | 'updated_at'> {}
+export interface PersonnelPayload {
+  name: string;
+  role: 'Commercial' | 'Chauffeur' | 'Technicien';
+  phone?: string;
+  email?: string;
+  commission_rate?: number;
+}
 
 export interface PaginatedResponse<T> {
   current_page: number;

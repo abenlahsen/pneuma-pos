@@ -29,11 +29,18 @@ class SaleController extends Controller
         }
 
         // Filter by exact fields
-        $fields = ['brand', 'city', 'client', 'payment_method', 'status', 'partner'];
+        $fields = ['brand', 'city', 'client', 'payment_method', 'status', 'payment_status'];
         foreach ($fields as $field) {
             if ($request->filled($field)) {
                 $query->where($field, $request->$field);
             }
+        }
+
+        // Filter by partner relationship
+        if ($request->filled('partner')) {
+            $query->whereHas('partner', function($q) use ($request) {
+                $q->where('name', $request->partner);
+            });
         }
 
         // Filter by date range
@@ -99,11 +106,17 @@ class SaleController extends Controller
 
         // Apply same filters as index
         // Filter by exact fields
-        $fields = ['brand', 'city', 'client', 'payment_method', 'status', 'partner'];
+        $fields = ['brand', 'city', 'client', 'payment_method', 'status', 'payment_status'];
         foreach ($fields as $field) {
             if ($request->filled($field)) {
                 $query->where($field, $request->$field);
             }
+        }
+
+        if ($request->filled('partner')) {
+            $query->whereHas('partner', function($q) use ($request) {
+                $q->where('name', $request->partner);
+            });
         }
 
         if ($request->filled('date_from')) {
@@ -133,7 +146,8 @@ class SaleController extends Controller
             'clients' => Sale::distinct()->whereNotNull('client')->pluck('client')->sort()->values(),
             'cities' => Sale::distinct()->whereNotNull('city')->pluck('city')->sort()->values(),
             'statuses' => Sale::distinct()->whereNotNull('status')->pluck('status')->sort()->values(),
-            'partners' => Sale::distinct()->whereNotNull('partner')->pluck('partner')->sort()->values(),
+            'payment_statuses' => Sale::distinct()->whereNotNull('payment_status')->pluck('payment_status')->sort()->values(),
+            'partners' => \App\Models\Partner::pluck('name')->sort()->values(),
         ]);
     }
 }

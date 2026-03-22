@@ -44,10 +44,10 @@ export const routes: Routes = [
       import('./features/suppliers/suppliers.component').then((m) => m.SuppliersComponent),
   },
   {
-    path: 'sales-reps',
+    path: 'personnels',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./features/sales-reps/sales-reps.component').then((m) => m.SalesRepsComponent),
+      import('./features/personnels/personnels.component').then((m) => m.PersonnelsComponent),
   },
   {
     path: 'carriers',
@@ -60,6 +60,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () =>
       import('./features/partners/partners.component').then((m) => m.PartnersComponent),
+  },
+  {
+    path: 'achats',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/purchases/purchases.component').then((m) => m.PurchasesComponent),
   },
   {
     path: '**',

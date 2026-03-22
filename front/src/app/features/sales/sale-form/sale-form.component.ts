@@ -4,8 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Sale, SalePayload } from '../../../core/models/sale.model';
 import { Supplier } from '../../../core/models/supplier.model';
 import { SupplierService } from '../../../core/services/supplier.service';
-import { SalesRep } from '../../../core/models/sales-rep.model';
-import { SalesRepService } from '../../../core/services/sales-rep.service';
+import { PersonnelService } from '../../../core/services/personnel.service';
+import { Personnel } from '../../../core/models/personnel.model';
 import { Carrier } from '../../../core/models/carrier.model';
 import { CarrierService } from '../../../core/services/carrier.service';
 import { Partner } from '../../../core/models/partner.model';
@@ -23,7 +23,7 @@ export class SaleFormComponent implements OnInit {
   @Output() save = new EventEmitter<SalePayload>();
   @Output() cancel = new EventEmitter<void>();
 
-  formData: SalePayload = {
+  formData: Partial<SalePayload> = {
     date: new Date().toISOString().split('T')[0],
     with_invoice: false,
     quantity: 1,
@@ -47,7 +47,7 @@ export class SaleFormComponent implements OnInit {
     service_fee: 0,
     client: '',
     payment_method: 'ESPECE',
-    sales_rep_id: null,
+    commercial_id: null,
     status: 'EN COURS',
     payment_status: 'NON PAYE',
     delivery_date: '',
@@ -55,29 +55,29 @@ export class SaleFormComponent implements OnInit {
   };
 
   suppliers: Supplier[] = [];
-  salesReps: SalesRep[] = [];
+  commercials: Personnel[] = [];
   carriers: Carrier[] = [];
   partners: Partner[] = [];
 
   constructor(
     private supplierService: SupplierService,
-    private salesRepService: SalesRepService,
+    private personnelService: PersonnelService,
     private carrierService: CarrierService,
     private partnerService: PartnerService
   ) {}
 
   ngOnInit() {
     this.supplierService.getSuppliers({ all: true }).subscribe({
-      next: (res) => { this.suppliers = res as Supplier[]; }
+      next: (res: any) => { this.suppliers = res; }
     });
-    this.salesRepService.getSalesReps({ all: true }).subscribe({
-      next: (res) => { this.salesReps = res as SalesRep[]; }
+    this.personnelService.getAllPersonnels().subscribe({
+      next: (res) => { this.commercials = res.filter((p: Personnel) => p.role === 'Commercial'); }
     });
     this.carrierService.getCarriers({ all: true }).subscribe({
-      next: (res) => { this.carriers = res as Carrier[]; }
+      next: (res: any) => { this.carriers = res; }
     });
     this.partnerService.getPartners({ all: true }).subscribe({
-      next: (res) => { this.partners = res as Partner[]; }
+      next: (res: any) => { this.partners = res; }
     });
 
     if (this.sale) {
@@ -95,6 +95,6 @@ export class SaleFormComponent implements OnInit {
 
   onSubmit() {
     this.calculateTotals();
-    this.save.emit(this.formData);
+    this.save.emit(this.formData as SalePayload);
   }
 }

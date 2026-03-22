@@ -26,13 +26,22 @@ Route::middleware('auth:sanctum')->group(function () {
     // Suppliers
     Route::apiResource('suppliers', \App\Http\Controllers\SupplierController::class);
 
-    // Sales Reps (Commerciaux)
-    Route::apiResource('sales-reps', \App\Http\Controllers\SalesRepController::class);
+    // Personnels (Commerciaux, Chauffeurs, Techniciens)
+    Route::apiResource('personnels', \App\Http\Controllers\PersonnelController::class);
 
     // Carriers (Transporteurs)
     Route::apiResource('carriers', \App\Http\Controllers\CarrierController::class);
 
     // Partners (Partenaires)
     Route::apiResource('partners', \App\Http\Controllers\PartnerController::class);
+
+    // Purchases (Achats)
+    Route::get('purchases-summary', [\App\Http\Controllers\PurchaseController::class, 'summary']);
+    Route::apiResource('purchases', \App\Http\Controllers\PurchaseController::class);
+
+    // Payments (nested under sales)
+    Route::get('sales/{sale}/payments', [\App\Http\Controllers\PaymentController::class, 'index']);
+    Route::post('sales/{sale}/payments', [\App\Http\Controllers\PaymentController::class, 'store']);
+    Route::delete('sales/{sale}/payments/{payment}', [\App\Http\Controllers\PaymentController::class, 'destroy']);
 });
 

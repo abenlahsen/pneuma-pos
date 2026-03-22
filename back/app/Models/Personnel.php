@@ -6,12 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class SalesRep extends Model
+class Personnel extends Model
 {
     use HasFactory;
 
+    protected $table = 'personnels';
+
     protected $fillable = [
         'name',
+        'role',
         'phone',
         'email',
         'commission_rate',

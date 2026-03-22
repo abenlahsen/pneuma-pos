@@ -1,7 +1,7 @@
 <div class="page-container">
   <div class="header">
     <div class="title-section">
-      <h1>Ventes Pneus</h1>
+      <h1>Ventes</h1>
       <p class="subtitle">Gérez vos ventes et marges</p>
     </div>
     <div class="actions">
@@ -68,10 +68,18 @@
         </div>
 
         <div class="form-group">
-          <label>Status</label>
+          <label>Statut</label>
           <select class="form-control" [ngModel]="filterStatus()" (ngModelChange)="filterStatus.set($event)" (change)="applyFilters()">
             <option value="">Tous</option>
             <option *ngFor="let status of filterOptions().statuses" [value]="status">{{ status }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Statut Paiement</label>
+          <select class="form-control" [ngModel]="filterPaymentStatus()" (ngModelChange)="filterPaymentStatus.set($event)" (change)="applyFilters()">
+            <option value="">Tous</option>
+            <option *ngFor="let ps of filterOptions().payment_statuses" [value]="ps">{{ ps }}</option>
           </select>
         </div>
 
@@ -101,19 +109,20 @@
             <th>Qte</th>
             <th class="text-right">Total Vente</th>
             <th class="text-right">Marge</th>
-            <th>Status</th>
+            <th>Paiement</th>
+            <th>Statut</th>
             <th class="text-center">Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngIf="loading()">
-            <td colspan="9" class="text-center py-4">
+            <td colspan="10" class="text-center py-4">
               <div class="spinner"></div> Chargement...
             </td>
           </tr>
           
           <tr *ngIf="!loading() && sales().length === 0">
-            <td colspan="9" class="text-center py-4 text-muted">
+            <td colspan="10" class="text-center py-4 text-muted">
               Aucune vente trouvée.
             </td>
           </tr>
@@ -144,11 +153,27 @@
               {{ sale.margin | number:'1.2-2' }}
             </td>
             <td>
-              <span class="badge pointer" [class.badge-success]="sale.status === 'LIVRE' || sale.status === 'PAYE'" [class.badge-warning]="sale.status === 'EN COURS'">
-                {{ sale.status || '-' }}
+              <span class="badge" 
+                [class.badge-danger]="sale.payment_status === 'NON PAYÉ' || sale.payment_status === 'NON PAYE' || !sale.payment_status"
+                [class.badge-warning]="sale.payment_status === 'PARTIEL'"
+                [class.badge-success]="sale.payment_status === 'PAYÉ' || sale.payment_status === 'PAYE'">
+                {{ sale.payment_status || 'NON PAYÉ' }}
               </span>
             </td>
+            <td class="status-cell">
+              <select class="status-select" 
+                      [class.bg-en-cours]="sale.status === 'EN COURS'"
+                      [class.bg-livre]="sale.status === 'LIVRE'"
+                      [class.bg-monte]="sale.status === 'MONTE'"
+                      [ngModel]="sale.status" 
+                      (change)="updateSaleStatus(sale, $event.target)">
+                <option value="EN COURS">En cours</option>
+                <option value="LIVRE">Livré</option>
+                <option value="MONTE">Monté</option>
+              </select>
+            </td>
             <td class="text-center actions-cell">
+              <button class="btn-icon btn-sm" (click)="openPayments(sale)" title="Paiements">💳</button>
               <button class="btn-icon btn-sm text-primary" (click)="openEditForm(sale)" title="Modifier">✏️</button>
               <button class="btn-icon btn-sm text-danger" (click)="deleteSale(sale)" title="Supprimer">🗑️</button>
             </td>
@@ -200,3 +225,6 @@
     </div>
   </div>
 </div>
+
+<!-- Payment Panel Modal -->
+<app-payment-panel *ngIf="paymentSale()" [sale]="paymentSale()!" (closed)="closePayments()" (statusChanged)="loadData()"></app-payment-panel>

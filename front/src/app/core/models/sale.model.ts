@@ -26,8 +26,7 @@ export interface Sale {
   service_fee: number;
   client: string;
   payment_method: string;
-  sales_rep_id: number | null;
-  sales_rep?: { id: number; name: string };
+  commercial_id?: number | null;
   status: string;
   payment_status: string;
   delivery_date: string;
@@ -49,6 +48,7 @@ export interface SaleFilters {
   clients: string[];
   cities: string[];
   statuses: string[];
+  payment_statuses: string[];
   partners: string[];
 }
 
