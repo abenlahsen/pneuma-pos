@@ -18,15 +18,23 @@ export class PurchasesComponent implements OnInit {
 
   purchases = signal<Purchase[]>([]);
   summary = signal<PurchaseSummary | null>(null);
+  filterOptions = signal<{ suppliers: { id: number; name: string }[]; commercials: { id: number; name: string }[] }>({ suppliers: [], commercials: [] });
   loading = signal<boolean>(false);
-  
+
   currentPage = signal<number>(1);
   lastPage = signal<number>(1);
   total = signal<number>(0);
-  perPage = signal<number>(10);
-  
-  filterSearch = signal<string>('');
-  filterStatus = signal<string>('');
+  perPage = signal<number>(100);
+
+  filterSearch = signal('');
+  filterStatus = signal('');
+  filterPaymentStatus = signal('');
+  filterSupplier = signal('');
+  filterCommercial = signal('');
+  filterDateFrom = signal('');
+  filterDateTo = signal('');
+  sortBy = signal('');
+  sortDirection = signal<'asc' | 'desc'>('asc');
 
   isFormOpen = signal<boolean>(false);
   selectedPurchase = signal<Purchase | null>(null);
@@ -41,48 +49,89 @@ export class PurchasesComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.loadFilters();
     this.loadData();
   }
 
-  loadData(page: number = 1): void {
-    this.loading.set(true);
-    this.purchaseService.getPurchases(page, this.filterSearch(), this.filterStatus())
-      .subscribe({
-        next: (response) => {
-          this.purchases.set(response.data);
-          this.currentPage.set(response.current_page);
-          this.lastPage.set(response.last_page);
-          this.total.set(response.total);
-          this.loading.set(false);
-          this.loadSummary();
-        },
-        error: (err) => {
-          console.error('Error loading purchases', err);
-          this.loading.set(false);
-        }
-      });
+  private buildFilters(): Record<string, string> {
+    return {
+      page: this.currentPage().toString(),
+      per_page: this.perPage().toString(),
+      search: this.filterSearch(),
+      status: this.filterStatus(),
+      payment_status: this.filterPaymentStatus(),
+      supplier_id: this.filterSupplier(),
+      commercial_id: this.filterCommercial(),
+      date_from: this.filterDateFrom(),
+      date_to: this.filterDateTo(),
+      sort_by: this.sortBy(),
+      sort_direction: this.sortDirection(),
+    };
   }
 
-  loadSummary(): void {
-    this.purchaseService.getSummary().subscribe({
+  loadData(): void {
+    this.loading.set(true);
+    const filters = this.buildFilters();
+
+    this.purchaseService.getPurchases(filters).subscribe({
+      next: (response) => {
+        this.purchases.set(response.data);
+        this.currentPage.set(response.current_page);
+        this.lastPage.set(response.last_page);
+        this.total.set(response.total);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Error loading purchases', err);
+        this.loading.set(false);
+      }
+    });
+
+    this.purchaseService.getSummary(filters).subscribe({
       next: (summary) => this.summary.set(summary),
-      error: (err) => console.error('Error loading summary', err)
+    });
+  }
+
+  loadFilters(): void {
+    this.purchaseService.getFilters().subscribe({
+      next: (filters) => this.filterOptions.set(filters),
     });
   }
 
   applyFilters(): void {
-    this.loadData(1);
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
+  toggleSort(column: string): void {
+    if (this.sortBy() === column) {
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortBy.set(column);
+      this.sortDirection.set('asc');
+    }
+    this.currentPage.set(1);
+    this.loadData();
   }
 
   resetFilters(): void {
     this.filterSearch.set('');
     this.filterStatus.set('');
-    this.loadData(1);
+    this.filterPaymentStatus.set('');
+    this.filterSupplier.set('');
+    this.filterCommercial.set('');
+    this.filterDateFrom.set('');
+    this.filterDateTo.set('');
+    this.sortBy.set('');
+    this.sortDirection.set('asc');
+    this.currentPage.set(1);
+    this.loadData();
   }
 
   goToPage(page: number): void {
     if (page >= 1 && page <= this.lastPage()) {
-      this.loadData(page);
+      this.currentPage.set(page);
+      this.loadData();
     }
   }
 
@@ -98,7 +147,8 @@ export class PurchasesComponent implements OnInit {
 
   onFormSaved(): void {
     this.closeForm();
-    this.loadData(this.currentPage());
+    this.loadData();
+    this.loadFilters();
   }
 
   openPayments(purchase: Purchase): void {
@@ -107,7 +157,7 @@ export class PurchasesComponent implements OnInit {
 
   closePayments(): void {
     this.paymentPurchase.set(null);
-    this.loadData(this.currentPage());
+    this.loadData();
   }
 
   updatePurchaseStatus(purchase: Purchase, target: any): void {
@@ -143,7 +193,7 @@ export class PurchasesComponent implements OnInit {
   deletePurchase(purchase: Purchase): void {
     if (confirm(`Êtes-vous sûr de vouloir supprimer l'achat de ${purchase.product} ?`)) {
       this.purchaseService.deletePurchase(purchase.id).subscribe({
-        next: () => this.loadData(this.currentPage()),
+        next: () => this.loadData(),
         error: (err) => {
           console.error('Error deleting purchase', err);
           alert('Erreur lors de la suppression.');

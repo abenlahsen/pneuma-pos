@@ -48,7 +48,7 @@
 
 /* Summary */
 .payment-summary {
-  background: linear-gradient(135deg, #f0f4ff 0%, #e8ecff 100%);
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%);
   padding: 1.25rem;
   border-radius: 10px;
   margin-bottom: 1.5rem;
@@ -211,8 +211,8 @@
   font-size: 0.9rem;
   &:focus {
     outline: none;
-    border-color: #5558c8;
-    box-shadow: 0 0 0 2px rgba(85, 88, 200, 0.15);
+    border-color: #ff2d37;
+    box-shadow: 0 0 0 2px rgba(255, 45, 55, 0.15);
   }
 }
 
@@ -235,7 +235,7 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #3a3d8f, #5558c8);
+  background: linear-gradient(135deg, #cc0a13, #ff2d37);
   color: #fff;
   &:hover:not(:disabled) { opacity: 0.9; }
 }

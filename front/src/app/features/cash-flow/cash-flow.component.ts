@@ -30,7 +30,7 @@ export class CashFlowComponent implements OnInit {
   currentPage = signal(1);
   lastPage = signal(1);
   total = signal(0);
-  perPage = signal(20);
+  perPage = signal(100);
 
   // Filters
   filterType = signal('');
@@ -39,6 +39,8 @@ export class CashFlowComponent implements OnInit {
   filterDateFrom = signal('');
   filterDateTo = signal('');
   filterSearch = signal('');
+  sortBy = signal('');
+  sortDirection = signal<'asc' | 'desc'>('asc');
 
   // UI state
   loading = signal(false);
@@ -91,10 +93,23 @@ export class CashFlowComponent implements OnInit {
       date_from: this.filterDateFrom(),
       date_to: this.filterDateTo(),
       search: this.filterSearch(),
+      sort_by: this.sortBy(),
+      sort_direction: this.sortDirection(),
     };
   }
 
   applyFilters(): void {
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
+  toggleSort(column: string): void {
+    if (this.sortBy() === column) {
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortBy.set(column);
+      this.sortDirection.set('asc');
+    }
     this.currentPage.set(1);
     this.loadData();
   }
@@ -106,6 +121,8 @@ export class CashFlowComponent implements OnInit {
     this.filterDateFrom.set('');
     this.filterDateTo.set('');
     this.filterSearch.set('');
+    this.sortBy.set('');
+    this.sortDirection.set('asc');
     this.currentPage.set(1);
     this.loadData();
   }

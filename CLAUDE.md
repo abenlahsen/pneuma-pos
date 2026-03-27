@@ -4,28 +4,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Pneuma POS is a Point of Sale system for a tire shop business. It uses:
-- **Backend**: Laravel 13 (PHP 8.3+) REST API with Sanctum token auth
-- **Frontend**: Angular 19+ SPA (standalone components, signals-based state)
-- **Database**: MySQL 8 (development default: SQLite)
+Pneuma POS is a Point of Sale system for a **tire shop** (pneus). The UI is in **French**. It uses:
+- **Backend**: Laravel 13 (PHP 8.4 FPM) REST API with Sanctum token auth
+- **Frontend**: Angular 19 SPA (standalone components, signals-based state)
+- **Database**: MySQL 8 (tests use in-memory SQLite)
 - **Infrastructure**: Docker Compose with Nginx reverse proxy
 
-Default admin credentials: `admin@pneuma.pos` / `password`
+Default admin credentials: `admin@pneuma.pos` / `password` (created by `DatabaseSeeder`)
 
 ## Development Commands
 
 ### Docker (recommended)
 ```bash
-docker-compose up --build        # Start all services
-docker-compose up                # Start without rebuild
-docker-compose down              # Stop services
-docker-compose exec php php artisan migrate --seed   # Run migrations + seed
-docker-compose exec php php artisan tinker           # Laravel REPL
+cp .env.example .env             # First time setup
+docker compose up --build        # Start all services
+docker compose up                # Start without rebuild
+docker compose down              # Stop services
+docker compose exec php php artisan migrate --seed   # Run migrations + seed
+docker compose exec php php artisan migrate:fresh --seed  # Reset DB completely
+docker compose exec php php artisan tinker           # Laravel REPL
+docker compose logs -f           # Tail logs
 ```
 
-Services run at:
-- Frontend (Angular dev): `http://localhost:4200`
-- Full app via Nginx: `http://localhost:8080`
+Services (ports configurable via `.env`):
+- Full app via Nginx: `http://localhost:8888`
+- Angular dev server (direct): `http://localhost:4200`
 - MySQL: `localhost:3307`
 
 ### Backend (Laravel)
@@ -34,7 +37,7 @@ cd back
 composer install
 php artisan migrate --seed       # Setup DB with default admin user
 php artisan serve                # Dev server on :8000
-php artisan test                 # Run PHPUnit tests
+php artisan test                 # Run PHPUnit tests (uses in-memory SQLite)
 php artisan test --filter=TestName   # Run a single test
 ./vendor/bin/pint                # Code style fixer (Laravel Pint)
 ```
@@ -43,7 +46,7 @@ php artisan test --filter=TestName   # Run a single test
 ```bash
 cd front
 npm install
-npm start        # Dev server on :4200 (proxies /api to nginx:80)
+npm start        # Dev server on :4200 (proxies /api to nginx:80 — only works inside Docker)
 npm run build    # Production build → dist/pneuma-pos/browser/
 npm test         # Run Karma tests
 ```
@@ -56,9 +59,10 @@ npm test         # Run Karma tests
 - Public: `POST /api/register`, `POST /api/login`
 - Protected (Sanctum): all other routes require `Authorization: Bearer {token}`
 - Resources: `sales`, `purchases`, `suppliers`, `personnels`, `carriers`, `partners`, `transactions`
-- Nested payment routes: `GET|POST|DELETE /api/sales/{sale}/payments`, same for purchases
+- Summary/filter endpoints: `GET /api/sales-summary`, `GET /api/sales-filters`, `GET /api/purchases-summary`, `GET /api/transactions-summary`, `GET /api/transactions-filters`
+- Nested payment routes: `GET|POST|DELETE /api/sales/{sale}/payments`, same pattern for `purchases/{purchase}/payments`
 
-**Controllers** (`back/app/Http/Controllers/`): Each resource has index/store/show/update/destroy. `SaleController` and `PurchaseController` also have `summary` and `filters` methods for dashboard aggregations.
+**Controllers** (`back/app/Http/Controllers/`): Each resource has standard CRUD (index/store/show/update/destroy). `SaleController`, `PurchaseController`, and `TransactionController` also have `summary` methods for dashboard aggregations.
 
 **Models** (`back/app/Models/`): Key models are `Sale` (44+ fillable fields for tire product details), `Purchase`, `Transaction` (cash flow), `Payment`/`PurchasePayment` (linked to transactions). Each payment creation auto-creates a corresponding `Transaction` record.
 
@@ -76,7 +80,7 @@ npm test         # Run Karma tests
 
 **State management**: Angular signals only (no NgRx). Components use `signal<T>` for local state and `computed()` for derived values. Auth state lives in `AuthService` with token in `localStorage` under key `auth_token`.
 
-**Routing** (`front/src/app/app.routes.ts`): All feature routes are lazy-loaded via `loadComponent()`. Root (`/`) redirects to `/dashboard`. Purchases route is `/achats`.
+**Routing** (`front/src/app/app.routes.ts`): All feature routes are lazy-loaded via `loadComponent()`. Root (`/`) redirects to `/dashboard`. Purchases route is `/achats` (French). Wildcard redirects to `/dashboard`.
 
 ### Docker Networking
 
@@ -88,4 +92,4 @@ The Angular dev proxy (`front/proxy.conf.json`) sends `/api` to `http://nginx:80
 
 ## Key Business Domain
 
-This is a tire shop POS. A `Sale` record captures: tire brand/reference/dimensions, quantity, unit price, supplier, commercial (personnel), carrier, partner (mounting/alignment shop), payment status, and many computed pricing fields. `Personnel` have roles (commercials earn commissions). `Partners` have `montage_price` and `alignment_price` fields.
+This is a **tire shop POS** (French: pneus). A `Sale` record captures: tire brand/reference/dimensions, quantity, unit price, supplier, commercial (personnel), carrier, partner (mounting/alignment shop), payment status, and many computed pricing fields. `Personnel` have roles (commercials earn commissions). `Partners` have `montage_price` and `alignment_price` fields. French terminology is used throughout the UI (e.g., "achats" = purchases, "fournisseurs" = suppliers, "transporteurs" = carriers).

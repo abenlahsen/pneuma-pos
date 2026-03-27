@@ -12,7 +12,16 @@ class SupplierController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Supplier::query()->latest('created_at');
+        $query = Supplier::query();
+
+        // Sorting
+        $sortable = ['name', 'contact_person', 'phone', 'email', 'created_at'];
+        if ($request->filled('sort_by') && in_array($request->sort_by, $sortable)) {
+            $direction = $request->get('sort_direction', 'asc') === 'desc' ? 'desc' : 'asc';
+            $query->orderBy($request->sort_by, $direction);
+        } else {
+            $query->latest('created_at');
+        }
 
         if ($request->filled('search')) {
             $search = $request->search;

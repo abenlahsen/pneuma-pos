@@ -16,8 +16,10 @@
           <label>Rechercher</label>
           <input type="text" class="form-control" [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event)" placeholder="Nom, ville ou téléphone..." (keyup.enter)="applyFilters()">
         </div>
-        <button class="btn btn-primary" (click)="applyFilters()">Rechercher</button>
-        <button class="btn btn-secondary" (click)="resetFilters()">Réinitialiser</button>
+        <div class="filter-actions">
+          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher">🔍</button>
+          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser">✕</button>
+        </div>
       </div>
     </div>
   </div>
@@ -27,11 +29,11 @@
       <table class="table">
         <thead>
           <tr>
-            <th>Nom</th>
-            <th>Ville</th>
-            <th>Téléphone</th>
-            <th class="text-right">Montage+Equil. (DH)</th>
-            <th class="text-right">Parallélisme (DH)</th>
+            <th class="sortable" (click)="toggleSort('name')">Nom <span class="sort-icon">{{ sortBy() === 'name' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th class="sortable" (click)="toggleSort('city')">Ville <span class="sort-icon">{{ sortBy() === 'city' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th class="sortable" (click)="toggleSort('phone')">Téléphone <span class="sort-icon">{{ sortBy() === 'phone' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th class="sortable text-right" (click)="toggleSort('montage_price')">Montage+Equil. (DH) <span class="sort-icon">{{ sortBy() === 'montage_price' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th class="sortable text-right" (click)="toggleSort('alignment_price')">Parallélisme (DH) <span class="sort-icon">{{ sortBy() === 'alignment_price' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="text-center">Actions</th>
           </tr>
         </thead>

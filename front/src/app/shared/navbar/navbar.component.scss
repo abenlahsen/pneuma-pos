@@ -2,7 +2,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: linear-gradient(135deg, #3a3d8f 0%, #5558c8 100%);
+  background: linear-gradient(135deg, #282828 0%, #3a3a3a 100%);
   padding: 0 1.5rem;
   height: 56px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
@@ -19,13 +19,16 @@
 
 .brand-link {
   color: #fff;
-  font-size: 1.15rem;
-  font-weight: 700;
   text-decoration: none;
-  letter-spacing: 0.3px;
-  white-space: nowrap;
+  display: flex;
+  align-items: center;
 
   &:hover { opacity: 0.9; }
+}
+
+.brand-logo {
+  height: 32px;
+  width: auto;
 }
 
 .menu-toggle {

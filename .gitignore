@@ -1,6 +1,7 @@
 .env
 .idea/
 .vscode/
+.claude/
 dist/
 deploy/
 env.production

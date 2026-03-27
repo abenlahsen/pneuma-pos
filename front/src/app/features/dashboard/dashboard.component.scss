@@ -4,7 +4,7 @@
 }
 
 .dashboard-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #282828 0%, #3a3a3a 100%);
   color: white;
   padding: 1rem 2rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -120,7 +120,7 @@
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-    border-color: #667eea;
+    border-color: #ff2d37;
   }
 }
 
@@ -153,7 +153,7 @@
 
   .quick-link-card:hover & {
     transform: translateX(3px);
-    color: #667eea;
+    color: #ff2d37;
   }
 }
 

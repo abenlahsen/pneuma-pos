@@ -20,10 +20,12 @@ export class SuppliersComponent implements OnInit {
   currentPage = signal(1);
   lastPage = signal(1);
   total = signal(0);
-  perPage = signal(20);
+  perPage = signal(100);
   
   filterSearch = signal('');
-  
+  sortBy = signal('');
+  sortDirection = signal<'asc' | 'desc'>('asc');
+
   loading = signal(false);
   showForm = signal(false);
   editingSupplier = signal<Supplier | null>(null);
@@ -42,7 +44,9 @@ export class SuppliersComponent implements OnInit {
     const filters = {
       page: this.currentPage().toString(),
       per_page: this.perPage().toString(),
-      search: this.filterSearch()
+      search: this.filterSearch(),
+      sort_by: this.sortBy(),
+      sort_direction: this.sortDirection(),
     };
 
     this.supplierService.getSuppliers(filters).subscribe({
@@ -63,8 +67,21 @@ export class SuppliersComponent implements OnInit {
     this.loadData();
   }
 
+  toggleSort(column: string): void {
+    if (this.sortBy() === column) {
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortBy.set(column);
+      this.sortDirection.set('asc');
+    }
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
   resetFilters(): void {
     this.filterSearch.set('');
+    this.sortBy.set('');
+    this.sortDirection.set('asc');
     this.currentPage.set(1);
     this.loadData();
   }

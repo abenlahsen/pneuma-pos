@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreSaleRequest;
 use App\Http\Requests\UpdateSaleRequest;
+use App\Models\Personnel;
 use App\Models\Sale;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,7 +16,16 @@ class SaleController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Sale::query()->latest('date');
+        $query = Sale::query()->with('commercial');
+
+        // Sorting
+        $sortable = ['date', 'client', 'brand', 'dimension', 'quantity', 'total_sale', 'margin', 'payment_status', 'status', 'created_at', 'updated_at'];
+        if ($request->filled('sort_by') && in_array($request->sort_by, $sortable)) {
+            $direction = $request->get('sort_direction', 'asc') === 'desc' ? 'desc' : 'asc';
+            $query->orderBy($request->sort_by, $direction);
+        } else {
+            $query->latest('id');
+        }
 
         // Filter by text search
         if ($request->filled('search')) {
@@ -29,11 +39,21 @@ class SaleController extends Controller
         }
 
         // Filter by exact fields
-        $fields = ['brand', 'city', 'client', 'payment_method', 'status', 'payment_status'];
+        $fields = ['brand', 'city', 'payment_method', 'status', 'payment_status'];
         foreach ($fields as $field) {
             if ($request->filled($field)) {
                 $query->where($field, $request->$field);
             }
+        }
+
+        // Filter by client (partial match)
+        if ($request->filled('client')) {
+            $query->where('client', 'like', '%' . $request->client . '%');
+        }
+
+        // Filter by commercial
+        if ($request->filled('commercial_id')) {
+            $query->where('commercial_id', $request->commercial_id);
         }
 
         // Filter by partner relationship
@@ -74,7 +94,7 @@ class SaleController extends Controller
      */
     public function show(Sale $sale): JsonResponse
     {
-        return response()->json($sale);
+        return response()->json($sale->load('commercial'));
     }
 
     /**
@@ -105,12 +125,15 @@ class SaleController extends Controller
         $query = Sale::query();
 
         // Apply same filters as index
-        // Filter by exact fields
-        $fields = ['brand', 'city', 'client', 'payment_method', 'status', 'payment_status'];
+        $fields = ['brand', 'city', 'payment_method', 'status', 'payment_status'];
         foreach ($fields as $field) {
             if ($request->filled($field)) {
                 $query->where($field, $request->$field);
             }
+        }
+
+        if ($request->filled('client')) {
+            $query->where('client', 'like', '%' . $request->client . '%');
         }
 
         if ($request->filled('partner')) {
@@ -148,6 +171,7 @@ class SaleController extends Controller
             'statuses' => Sale::distinct()->whereNotNull('status')->pluck('status')->sort()->values(),
             'payment_statuses' => Sale::distinct()->whereNotNull('payment_status')->pluck('payment_status')->sort()->values(),
             'partners' => \App\Models\Partner::pluck('name')->sort()->values(),
+            'commercials' => Personnel::where('role', 'Commercial')->orderBy('name')->get(['id', 'name']),
         ]);
     }
 }

@@ -27,6 +27,7 @@ export interface Sale {
   client: string;
   payment_method: string;
   commercial_id?: number | null;
+  commercial?: { id: number; name: string } | null;
   status: string;
   payment_status: string;
   delivery_date: string;
@@ -50,6 +51,7 @@ export interface SaleFilters {
   statuses: string[];
   payment_statuses: string[];
   partners: string[];
+  commercials: { id: number; name: string }[];
 }
 
 export interface PaginatedResponse<T> {

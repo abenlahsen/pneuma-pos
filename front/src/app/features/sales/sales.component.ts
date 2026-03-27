@@ -25,13 +25,13 @@ export class SalesComponent implements OnInit {
   // Data
   sales = signal<Sale[]>([]);
   summary = signal<SaleSummary>({ total_purchase: 0, total_sale: 0, margin: 0 });
-  filterOptions = signal<SaleFilters>({ brands: [], clients: [], cities: [], statuses: [], partners: [], payment_statuses: [] });
+  filterOptions = signal<SaleFilters>({ brands: [], clients: [], cities: [], statuses: [], partners: [], payment_statuses: [], commercials: [] });
 
   // Pagination
   currentPage = signal(1);
   lastPage = signal(1);
   total = signal(0);
-  perPage = signal(20);
+  perPage = signal(100);
 
   // Filters
   filterSearch = signal('');
@@ -41,8 +41,11 @@ export class SalesComponent implements OnInit {
   filterStatus = signal('');
   filterPaymentStatus = signal('');
   filterPartner = signal('');
+  filterCommercial = signal<string>('');
   filterDateFrom = signal('');
   filterDateTo = signal('');
+  sortBy = signal('');
+  sortDirection = signal<'asc' | 'desc'>('asc');
 
   // UI state
   loading = signal(false);
@@ -97,12 +100,26 @@ export class SalesComponent implements OnInit {
       status: this.filterStatus(),
       payment_status: this.filterPaymentStatus(),
       partner: this.filterPartner(),
+      commercial_id: this.filterCommercial(),
       date_from: this.filterDateFrom(),
       date_to: this.filterDateTo(),
+      sort_by: this.sortBy(),
+      sort_direction: this.sortDirection(),
     };
   }
 
   applyFilters(): void {
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
+  toggleSort(column: string): void {
+    if (this.sortBy() === column) {
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortBy.set(column);
+      this.sortDirection.set('asc');
+    }
     this.currentPage.set(1);
     this.loadData();
   }
@@ -115,8 +132,11 @@ export class SalesComponent implements OnInit {
     this.filterStatus.set('');
     this.filterPaymentStatus.set('');
     this.filterPartner.set('');
+    this.filterCommercial.set('');
     this.filterDateFrom.set('');
     this.filterDateTo.set('');
+    this.sortBy.set('');
+    this.sortDirection.set('asc');
     this.currentPage.set(1);
     this.loadData();
   }

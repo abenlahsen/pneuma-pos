@@ -10,16 +10,24 @@ export class PurchaseService {
   private http = inject(HttpClient);
   private apiUrl = '/api/purchases';
 
-  getPurchases(page: number = 1, search: string = '', paymentStatus: string = ''): Observable<{ data: Purchase[], current_page: number, last_page: number, total: number }> {
-    let params = new HttpParams().set('page', page);
-    if (search) params = params.set('search', search);
-    if (paymentStatus) params = params.set('payment_status', paymentStatus);
-
+  getPurchases(filters: Record<string, string> = {}): Observable<{ data: Purchase[], current_page: number, last_page: number, total: number }> {
+    let params = new HttpParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) params = params.set(key, value);
+    });
     return this.http.get<{ data: Purchase[], current_page: number, last_page: number, total: number }>(this.apiUrl, { params });
   }
 
-  getSummary(): Observable<PurchaseSummary> {
-    return this.http.get<PurchaseSummary>('/api/purchases-summary');
+  getSummary(filters: Record<string, string> = {}): Observable<PurchaseSummary> {
+    let params = new HttpParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) params = params.set(key, value);
+    });
+    return this.http.get<PurchaseSummary>('/api/purchases-summary', { params });
+  }
+
+  getFilters(): Observable<{ suppliers: { id: number; name: string }[]; commercials: { id: number; name: string }[] }> {
+    return this.http.get<{ suppliers: { id: number; name: string }[]; commercials: { id: number; name: string }[] }>('/api/purchases-filters');
   }
 
   getPurchase(id: number): Observable<Purchase> {

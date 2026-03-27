@@ -4,29 +4,61 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Purchase;
+use App\Models\Personnel;
+use App\Models\Supplier;
 
 class PurchaseController extends Controller
 {
     public function index(Request $request)
     {
         $query = Purchase::with(['supplier', 'commercial']);
-        
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where('product', 'like', "%{$search}%")
-                  ->orWhereHas('supplier', function ($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('commercial', function ($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  });
-        }
-        
-        if ($request->has('payment_status')) {
-            $query->where('payment_status', $request->payment_status);
+
+        // Sorting
+        $sortable = ['date', 'product', 'quantity', 'unit_price', 'payment_status', 'status', 'created_at', 'updated_at'];
+        if ($request->filled('sort_by') && in_array($request->sort_by, $sortable)) {
+            $direction = $request->get('sort_direction', 'asc') === 'desc' ? 'desc' : 'asc';
+            $query->orderBy($request->sort_by, $direction);
+        } else {
+            $query->latest();
         }
 
-        return $query->latest()->paginate(10);
+        // Text search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('product', 'like', "%{$search}%")
+                  ->orWhereHas('supplier', function ($q2) use ($search) {
+                      $q2->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('commercial', function ($q2) use ($search) {
+                      $q2->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Exact field filters
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', $request->payment_status);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('supplier_id')) {
+            $query->where('supplier_id', $request->supplier_id);
+        }
+        if ($request->filled('commercial_id')) {
+            $query->where('commercial_id', $request->commercial_id);
+        }
+
+        // Date range
+        if ($request->filled('date_from')) {
+            $query->where('date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->where('date', '<=', $request->date_to);
+        }
+
+        return $query->paginate($request->get('per_page', 20));
     }
 
     public function store(Request $request)
@@ -76,17 +108,45 @@ class PurchaseController extends Controller
         return response()->json(null, 204);
     }
 
-    public function summary()
+    public function summary(Request $request)
     {
-        $totalAchats = Purchase::selectRaw('SUM(unit_price * quantity) as total')->value('total') ?? 0;
-        $totalPaye = Purchase::where('payment_status', 'PAYE')->selectRaw('SUM(unit_price * quantity) as total')->value('total') ?? 0;
+        $query = Purchase::query();
+
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', $request->payment_status);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('supplier_id')) {
+            $query->where('supplier_id', $request->supplier_id);
+        }
+        if ($request->filled('commercial_id')) {
+            $query->where('commercial_id', $request->commercial_id);
+        }
+        if ($request->filled('date_from')) {
+            $query->where('date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->where('date', '<=', $request->date_to);
+        }
+
+        $totalAchats = (clone $query)->selectRaw('SUM(unit_price * quantity) as total')->value('total') ?? 0;
+        $totalPaye = (clone $query)->where('payment_status', 'PAYE')->selectRaw('SUM(unit_price * quantity) as total')->value('total') ?? 0;
         $resteAPayer = $totalAchats - $totalPaye;
 
         return response()->json([
-            'total_achats' => $totalAchats,
-            'total_paye' => $totalPaye,
-            'reste_a_payer' => $resteAPayer,
+            'total_achats' => round($totalAchats, 2),
+            'total_paye' => round($totalPaye, 2),
+            'reste_a_payer' => round($resteAPayer, 2),
         ]);
     }
 
+    public function filters()
+    {
+        return response()->json([
+            'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
+            'commercials' => Personnel::where('role', 'Commercial')->orderBy('name')->get(['id', 'name']),
+        ]);
+    }
 }
