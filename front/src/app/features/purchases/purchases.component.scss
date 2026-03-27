@@ -1,7 +1,7 @@
 @use 'sass:color';
 
-$primary: #667eea;
-$primary-dark: #764ba2;
+$primary: #ff2d37;
+$primary-dark: #cc0a13;
 $income-color: #48bb78;
 $expense-color: #f56565;
 $text-dark: #2d3748;
@@ -16,9 +16,9 @@ $radius: 12px;
 $radius-sm: 8px;
 
 .page-container {
-  max-width: 1400px;
+  max-width: 100%;
   margin: 1.5rem auto;
-  padding: 0 2rem;
+  padding: 0 1rem;
 }
 
 .header {
@@ -70,6 +70,18 @@ $radius-sm: 8px;
     background: none;
     color: $primary;
     &:hover { text-decoration: underline; }
+  }
+
+  &-reset-icon {
+    background: none;
+    border: 1px solid $border-color;
+    color: $text-muted;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0.25rem 0.5rem;
+    border-radius: $radius-sm;
+    cursor: pointer;
+    &:hover { background: $bg-body; color: $expense-color; border-color: $expense-color; }
   }
   
   &-sm {
@@ -183,6 +195,33 @@ $radius-sm: 8px;
   }
 }
 
+.filter-actions {
+  display: flex;
+  gap: 0.35rem;
+  align-self: flex-end;
+}
+
+.btn-filter {
+  background: $primary;
+  color: #fff;
+  padding: 0.45rem 0.75rem;
+
+  &:hover {
+    background: color.adjust($primary, $lightness: -8%);
+  }
+}
+
+.btn-reset {
+  background: $bg-body;
+  color: $text-muted;
+  border: 1px solid $border-color;
+  padding: 0.45rem 0.7rem;
+
+  &:hover {
+    background: $border-color;
+  }
+}
+
 /* Table */
 .table-card {
   overflow: hidden;
@@ -197,9 +236,11 @@ $radius-sm: 8px;
   border-collapse: collapse;
   
   th, td {
-    padding: 1rem 1.5rem;
+    padding: 0.5rem 0.75rem;
     text-align: left;
     border-bottom: 1px solid $border-color;
+    white-space: nowrap;
+    font-size: 0.8125rem;
   }
 
   th {
@@ -208,6 +249,26 @@ $radius-sm: 8px;
     font-size: 0.875rem;
     color: $text-muted;
     text-transform: uppercase;
+
+    &.sortable {
+      cursor: pointer;
+      user-select: none;
+
+      &:hover {
+        color: $text-dark;
+        background: darken($bg-body, 3%);
+      }
+
+      .sort-icon {
+        font-size: 0.7rem;
+        margin-left: 0.25rem;
+        opacity: 0.4;
+      }
+
+      &:hover .sort-icon {
+        opacity: 0.7;
+      }
+    }
   }
 
   tr:last-child td {

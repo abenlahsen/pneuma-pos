@@ -18,8 +18,10 @@
           <label>Rechercher un fournisseur</label>
           <input type="text" class="form-control" [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event)" placeholder="Nom, contact ou email..." (keyup.enter)="applyFilters()">
         </div>
-        <button class="btn btn-primary" (click)="applyFilters()">Rechercher</button>
-        <button class="btn btn-secondary" (click)="resetFilters()">Réinitialiser</button>
+        <div class="filter-actions">
+          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher">🔍</button>
+          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser">✕</button>
+        </div>
       </div>
     </div>
   </div>
@@ -29,10 +31,10 @@
       <table class="table">
         <thead>
           <tr>
-            <th>Nom du Fournisseur</th>
-            <th>Contact</th>
-            <th>Téléphone</th>
-            <th>Email</th>
+            <th class="sortable" (click)="toggleSort('name')">Nom du Fournisseur <span class="sort-icon">{{ sortBy() === 'name' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th class="sortable" (click)="toggleSort('contact_person')">Contact <span class="sort-icon">{{ sortBy() === 'contact_person' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th class="sortable" (click)="toggleSort('phone')">Téléphone <span class="sort-icon">{{ sortBy() === 'phone' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th class="sortable" (click)="toggleSort('email')">Email <span class="sort-icon">{{ sortBy() === 'email' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th>Adresse</th>
             <th class="text-center">Actions</th>
           </tr>

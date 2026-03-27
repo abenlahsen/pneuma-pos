@@ -15,7 +15,16 @@ class TransactionController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Transaction::query()->latest('date');
+        $query = Transaction::query();
+
+        // Sorting
+        $sortable = ['date', 'amount', 'type', 'category', 'description', 'person', 'partner', 'created_at'];
+        if ($request->filled('sort_by') && in_array($request->sort_by, $sortable)) {
+            $direction = $request->get('sort_direction', 'asc') === 'desc' ? 'desc' : 'asc';
+            $query->orderBy($request->sort_by, $direction);
+        } else {
+            $query->latest('date');
+        }
 
         // Filter by type
         if ($request->filled('type')) {

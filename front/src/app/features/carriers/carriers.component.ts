@@ -18,8 +18,10 @@ export class CarriersComponent implements OnInit {
   currentPage = signal(1);
   lastPage = signal(1);
   total = signal(0);
-  perPage = signal(20);
+  perPage = signal(100);
   filterSearch = signal('');
+  sortBy = signal('');
+  sortDirection = signal<'asc' | 'desc'>('asc');
   loading = signal(false);
   showForm = signal(false);
   editingCarrier = signal<Carrier | null>(null);
@@ -34,6 +36,8 @@ export class CarriersComponent implements OnInit {
       page: this.currentPage().toString(),
       per_page: this.perPage().toString(),
       search: this.filterSearch(),
+      sort_by: this.sortBy(),
+      sort_direction: this.sortDirection(),
     }).subscribe({
       next: (res) => {
         const p = res as PaginatedResponse<Carrier>;
@@ -48,7 +52,17 @@ export class CarriersComponent implements OnInit {
   }
 
   applyFilters(): void { this.currentPage.set(1); this.loadData(); }
-  resetFilters(): void { this.filterSearch.set(''); this.currentPage.set(1); this.loadData(); }
+  toggleSort(column: string): void {
+    if (this.sortBy() === column) {
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortBy.set(column);
+      this.sortDirection.set('asc');
+    }
+    this.currentPage.set(1);
+    this.loadData();
+  }
+  resetFilters(): void { this.filterSearch.set(''); this.sortBy.set(''); this.sortDirection.set('asc'); this.currentPage.set(1); this.loadData(); }
   goToPage(page: number): void { if (page >= 1 && page <= this.lastPage()) { this.currentPage.set(page); this.loadData(); } }
   openAddForm(): void { this.editingCarrier.set(null); this.showForm.set(true); }
   openEditForm(c: Carrier): void { this.editingCarrier.set(c); this.showForm.set(true); }

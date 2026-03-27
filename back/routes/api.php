@@ -37,6 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Purchases (Achats)
     Route::get('purchases-summary', [\App\Http\Controllers\PurchaseController::class, 'summary']);
+    Route::get('purchases-filters', [\App\Http\Controllers\PurchaseController::class, 'filters']);
     Route::apiResource('purchases', \App\Http\Controllers\PurchaseController::class);
     
     // Purchase Payments (nested under purchases)

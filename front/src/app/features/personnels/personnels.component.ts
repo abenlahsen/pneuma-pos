@@ -18,8 +18,10 @@ export class PersonnelsComponent implements OnInit {
   currentPage = signal(1);
   lastPage = signal(1);
   total = signal(0);
-  perPage = signal(20);
-  filterSearch = signal(''); // Renamed from filterSearch to searchQuery in the provided snippet, but keeping filterSearch as it's used consistently in the original and the new snippet's resetFilters.
+  perPage = signal(100);
+  filterSearch = signal('');
+  sortBy = signal('');
+  sortDirection = signal<'asc' | 'desc'>('asc');
   loading = signal(false);
   isFormOpen = signal(false); // Renamed from showForm
   selectedPersonnel = signal<Personnel | null>(null);
@@ -35,7 +37,9 @@ export class PersonnelsComponent implements OnInit {
     const params = {
       page: this.currentPage().toString(),
       per_page: this.perPage().toString(),
-      search: this.filterSearch(), // Using filterSearch as it's consistent with resetFilters
+      search: this.filterSearch(),
+      sort_by: this.sortBy(),
+      sort_direction: this.sortDirection(),
     };
 
     this.personnelService.getPersonnels(params).subscribe({ // New service method
@@ -52,7 +56,17 @@ export class PersonnelsComponent implements OnInit {
   }
 
   applyFilters(): void { this.currentPage.set(1); this.loadData(); }
-  resetFilters(): void { this.filterSearch.set(''); this.currentPage.set(1); this.loadData(); }
+  toggleSort(column: string): void {
+    if (this.sortBy() === column) {
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortBy.set(column);
+      this.sortDirection.set('asc');
+    }
+    this.currentPage.set(1);
+    this.loadData();
+  }
+  resetFilters(): void { this.filterSearch.set(''); this.sortBy.set(''); this.sortDirection.set('asc'); this.currentPage.set(1); this.loadData(); }
   goToPage(page: number): void {
     if (page >= 1 && page <= this.lastPage()) {
       this.currentPage.set(page);
