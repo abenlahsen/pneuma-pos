@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output, signal } from '@angular
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PaymentService } from '../../../core/services/payment.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Payment, PaymentPayload, PaymentSummary } from '../../../core/models/payment.model';
 import { Sale } from '../../../core/models/sale.model';
 
@@ -33,7 +34,7 @@ export class PaymentPanelComponent implements OnInit {
     notes: '',
   };
 
-  constructor(private paymentService: PaymentService) {}
+  constructor(private paymentService: PaymentService, public authService: AuthService) {}
 
   ngOnInit() {
     this.loadPayments();

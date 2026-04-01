@@ -91,10 +91,22 @@
   white-space: nowrap;
 }
 
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.2;
+}
+
 .user-name {
   color: rgba(255, 255, 255, 0.85);
   font-size: 0.85rem;
   font-weight: 500;
+}
+
+.user-role {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.7rem;
 }
 
 .btn-logout {

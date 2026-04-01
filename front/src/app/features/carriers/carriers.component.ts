@@ -26,7 +26,7 @@ export class CarriersComponent implements OnInit {
   showForm = signal(false);
   editingCarrier = signal<Carrier | null>(null);
 
-  constructor(private service: CarrierService, private authService: AuthService) {}
+  constructor(private service: CarrierService, public authService: AuthService) {}
 
   ngOnInit(): void { this.loadData(); }
 

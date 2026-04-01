@@ -5,7 +5,7 @@
       <p class="subtitle">Gérez vos fournisseurs et partenaires</p>
     </div>
     <div class="actions">
-      <button class="btn btn-primary" (click)="openAddForm()">
+      <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create suppliers')">
         Nouveau Fournisseur
       </button>
     </div>
@@ -61,8 +61,8 @@
             <td>{{ supplier.email || '-' }}</td>
             <td><div class="desc-col">{{ supplier.address || '-' }}</div></td>
             <td class="text-center actions-cell">
-              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(supplier)" title="Modifier">✏️</button>
-              <button class="btn-icon btn-sm text-danger" (click)="deleteSupplier(supplier)" title="Supprimer">🗑️</button>
+              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(supplier)" title="Modifier" *ngIf="authService.hasPermission('edit suppliers')">✏️</button>
+              <button class="btn-icon btn-sm text-danger" (click)="deleteSupplier(supplier)" title="Supprimer" *ngIf="authService.hasPermission('delete suppliers')">🗑️</button>
             </td>
           </tr>
         </tbody>

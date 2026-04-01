@@ -5,7 +5,7 @@
       <p class="subtitle">Gérez vos sociétés de transport</p>
     </div>
     <div class="actions">
-      <button class="btn btn-primary" (click)="openAddForm()">Nouveau Transporteur</button>
+      <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create carriers')">Nouveau Transporteur</button>
     </div>
   </div>
 
@@ -43,8 +43,8 @@
             <td>{{ c.phone || '-' }}</td>
             <td>{{ c.email || '-' }}</td>
             <td class="text-center">
-              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(c)" title="Modifier">✏️</button>
-              <button class="btn-icon btn-sm text-danger" (click)="deleteCarrier(c)" title="Supprimer">🗑️</button>
+              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(c)" title="Modifier" *ngIf="authService.hasPermission('edit carriers')">✏️</button>
+              <button class="btn-icon btn-sm text-danger" (click)="deleteCarrier(c)" title="Supprimer" *ngIf="authService.hasPermission('delete carriers')">🗑️</button>
             </td>
           </tr>
         </tbody>

@@ -37,7 +37,7 @@ class UpdateSaleRequest extends FormRequest
             'service_fee' => 'nullable|numeric|min:0',
             'client' => 'nullable|string|max:255',
             'payment_method' => 'nullable|string|max:255',
-            'commercial_id' => 'nullable|integer|exists:personnels,id',
+            'commercial_id' => 'nullable|integer|exists:users,id',
             'status' => 'nullable|string|max:255',
             'payment_status' => 'nullable|string|max:255',
             'delivery_date' => 'nullable|date',

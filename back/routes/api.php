@@ -1,7 +1,10 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -14,40 +17,86 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     // Cash Flow / Transactions
-    Route::get('/transactions-summary', [TransactionController::class, 'summary']);
-    Route::get('/transactions-filters', [TransactionController::class, 'filters']);
-    Route::apiResource('transactions', TransactionController::class);
+    Route::middleware('permission:view cash-flow')->group(function () {
+        Route::get('/transactions-summary', [TransactionController::class, 'summary']);
+        Route::get('/transactions-filters', [TransactionController::class, 'filters']);
+        Route::get('transactions', [TransactionController::class, 'index']);
+        Route::get('transactions/{transaction}', [TransactionController::class, 'show']);
+    });
+    Route::post('transactions', [TransactionController::class, 'store'])->middleware('permission:create cash-flow');
+    Route::put('transactions/{transaction}', [TransactionController::class, 'update'])->middleware('permission:edit cash-flow');
+    Route::delete('transactions/{transaction}', [TransactionController::class, 'destroy'])->middleware('permission:delete cash-flow');
 
     // Sales
-    Route::get('/sales-summary', [\App\Http\Controllers\SaleController::class, 'summary']);
-    Route::get('/sales-filters', [\App\Http\Controllers\SaleController::class, 'filters']);
-    Route::apiResource('sales', \App\Http\Controllers\SaleController::class);
+    Route::middleware('permission:view sales')->group(function () {
+        Route::get('/sales-summary', [\App\Http\Controllers\SaleController::class, 'summary']);
+        Route::get('/sales-filters', [\App\Http\Controllers\SaleController::class, 'filters']);
+        Route::get('sales', [\App\Http\Controllers\SaleController::class, 'index']);
+        Route::get('sales/{sale}', [\App\Http\Controllers\SaleController::class, 'show']);
+    });
+    Route::post('sales', [\App\Http\Controllers\SaleController::class, 'store'])->middleware('permission:create sales');
+    Route::put('sales/{sale}', [\App\Http\Controllers\SaleController::class, 'update'])->middleware('permission:edit sales');
+    Route::delete('sales/{sale}', [\App\Http\Controllers\SaleController::class, 'destroy'])->middleware('permission:delete sales');
+
+    // Sale Payments
+    Route::get('sales/{sale}/payments', [\App\Http\Controllers\PaymentController::class, 'index'])->middleware('permission:view sales');
+    Route::post('sales/{sale}/payments', [\App\Http\Controllers\PaymentController::class, 'store'])->middleware('permission:manage sale-payments');
+    Route::delete('sales/{sale}/payments/{payment}', [\App\Http\Controllers\PaymentController::class, 'destroy'])->middleware('permission:manage sale-payments');
 
     // Suppliers
-    Route::apiResource('suppliers', \App\Http\Controllers\SupplierController::class);
-
-    // Personnels (Commerciaux, Chauffeurs, Techniciens)
-    Route::apiResource('personnels', \App\Http\Controllers\PersonnelController::class);
+    Route::get('suppliers', [\App\Http\Controllers\SupplierController::class, 'index'])->middleware('permission:view suppliers');
+    Route::get('suppliers/{supplier}', [\App\Http\Controllers\SupplierController::class, 'show'])->middleware('permission:view suppliers');
+    Route::post('suppliers', [\App\Http\Controllers\SupplierController::class, 'store'])->middleware('permission:create suppliers');
+    Route::put('suppliers/{supplier}', [\App\Http\Controllers\SupplierController::class, 'update'])->middleware('permission:edit suppliers');
+    Route::delete('suppliers/{supplier}', [\App\Http\Controllers\SupplierController::class, 'destroy'])->middleware('permission:delete suppliers');
 
     // Carriers (Transporteurs)
-    Route::apiResource('carriers', \App\Http\Controllers\CarrierController::class);
+    Route::get('carriers', [\App\Http\Controllers\CarrierController::class, 'index'])->middleware('permission:view carriers');
+    Route::get('carriers/{carrier}', [\App\Http\Controllers\CarrierController::class, 'show'])->middleware('permission:view carriers');
+    Route::post('carriers', [\App\Http\Controllers\CarrierController::class, 'store'])->middleware('permission:create carriers');
+    Route::put('carriers/{carrier}', [\App\Http\Controllers\CarrierController::class, 'update'])->middleware('permission:edit carriers');
+    Route::delete('carriers/{carrier}', [\App\Http\Controllers\CarrierController::class, 'destroy'])->middleware('permission:delete carriers');
 
     // Partners (Partenaires)
-    Route::apiResource('partners', \App\Http\Controllers\PartnerController::class);
+    Route::get('partners', [\App\Http\Controllers\PartnerController::class, 'index'])->middleware('permission:view partners');
+    Route::get('partners/{partner}', [\App\Http\Controllers\PartnerController::class, 'show'])->middleware('permission:view partners');
+    Route::post('partners', [\App\Http\Controllers\PartnerController::class, 'store'])->middleware('permission:create partners');
+    Route::put('partners/{partner}', [\App\Http\Controllers\PartnerController::class, 'update'])->middleware('permission:edit partners');
+    Route::delete('partners/{partner}', [\App\Http\Controllers\PartnerController::class, 'destroy'])->middleware('permission:delete partners');
 
     // Purchases (Achats)
-    Route::get('purchases-summary', [\App\Http\Controllers\PurchaseController::class, 'summary']);
-    Route::get('purchases-filters', [\App\Http\Controllers\PurchaseController::class, 'filters']);
-    Route::apiResource('purchases', \App\Http\Controllers\PurchaseController::class);
-    
-    // Purchase Payments (nested under purchases)
-    Route::get('purchases/{purchase}/payments', [\App\Http\Controllers\PurchasePaymentController::class, 'index']);
-    Route::post('purchases/{purchase}/payments', [\App\Http\Controllers\PurchasePaymentController::class, 'store']);
-    Route::delete('purchases/{purchase}/payments/{payment}', [\App\Http\Controllers\PurchasePaymentController::class, 'destroy']);
+    Route::middleware('permission:view purchases')->group(function () {
+        Route::get('purchases-summary', [\App\Http\Controllers\PurchaseController::class, 'summary']);
+        Route::get('purchases-filters', [\App\Http\Controllers\PurchaseController::class, 'filters']);
+        Route::get('purchases', [\App\Http\Controllers\PurchaseController::class, 'index']);
+        Route::get('purchases/{purchase}', [\App\Http\Controllers\PurchaseController::class, 'show']);
+    });
+    Route::post('purchases', [\App\Http\Controllers\PurchaseController::class, 'store'])->middleware('permission:create purchases');
+    Route::put('purchases/{purchase}', [\App\Http\Controllers\PurchaseController::class, 'update'])->middleware('permission:edit purchases');
+    Route::delete('purchases/{purchase}', [\App\Http\Controllers\PurchaseController::class, 'destroy'])->middleware('permission:delete purchases');
 
-    // Payments (nested under sales)
-    Route::get('sales/{sale}/payments', [\App\Http\Controllers\PaymentController::class, 'index']);
-    Route::post('sales/{sale}/payments', [\App\Http\Controllers\PaymentController::class, 'store']);
-    Route::delete('sales/{sale}/payments/{payment}', [\App\Http\Controllers\PaymentController::class, 'destroy']);
+    // Purchase Payments
+    Route::get('purchases/{purchase}/payments', [\App\Http\Controllers\PurchasePaymentController::class, 'index'])->middleware('permission:view purchases');
+    Route::post('purchases/{purchase}/payments', [\App\Http\Controllers\PurchasePaymentController::class, 'store'])->middleware('permission:manage purchase-payments');
+    Route::delete('purchases/{purchase}/payments/{payment}', [\App\Http\Controllers\PurchasePaymentController::class, 'destroy'])->middleware('permission:manage purchase-payments');
+
+    // ACL: Roles & Permissions
+    Route::middleware('permission:view roles')->group(function () {
+        Route::get('roles', [RoleController::class, 'index']);
+        Route::get('roles/{role}', [RoleController::class, 'show']);
+        Route::get('permissions', [PermissionController::class, 'index']);
+    });
+    Route::post('roles', [RoleController::class, 'store'])->middleware('permission:create roles');
+    Route::put('roles/{role}', [RoleController::class, 'update'])->middleware('permission:edit roles');
+    Route::put('roles/{role}/permissions', [RoleController::class, 'assignPermissions'])->middleware('permission:edit roles');
+    Route::delete('roles/{role}', [RoleController::class, 'destroy'])->middleware('permission:delete roles');
+    Route::post('permissions', [PermissionController::class, 'store'])->middleware('permission:create roles');
+    Route::delete('permissions/{permission}', [PermissionController::class, 'destroy'])->middleware('permission:delete roles');
+
+    // Users management
+    Route::get('users', [UserController::class, 'index'])->middleware('permission:view users');
+    Route::get('users/{user}', [UserController::class, 'show'])->middleware('permission:view users');
+    Route::post('users', [UserController::class, 'store'])->middleware('permission:create users');
+    Route::put('users/{user}', [UserController::class, 'update'])->middleware('permission:edit users');
+    Route::delete('users/{user}', [UserController::class, 'destroy'])->middleware('permission:delete users');
 });
-

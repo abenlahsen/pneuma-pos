@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output, signal } from '@angular
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PurchaseService } from '../../../core/services/purchase.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Purchase, PurchasePayment, PurchasePaymentSummary } from '../../../core/models/purchase.model';
 
 @Component({
@@ -31,7 +32,7 @@ export class PurchasePaymentsComponent implements OnInit {
     notes: '',
   };
 
-  constructor(private purchaseService: PurchaseService) {}
+  constructor(private purchaseService: PurchaseService, public authService: AuthService) {}
 
   ngOnInit() {
     this.loadPayments();

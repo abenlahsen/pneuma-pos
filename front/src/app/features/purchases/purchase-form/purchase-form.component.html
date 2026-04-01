@@ -29,7 +29,7 @@
         <label>Commercial (Optionnel)</label>
         <select class="form-control" [(ngModel)]="formData.commercial_id" name="commercial_id">
           <option [ngValue]="null">Général / Aucun</option>
-          <option *ngFor="let comm of commercials()" [value]="comm.id">{{ comm.name }} ({{ comm.role }})</option>
+          <option *ngFor="let comm of commercials()" [value]="comm.id">{{ comm.name }}</option>
         </select>
       </div>
     </div>

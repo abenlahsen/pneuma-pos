@@ -4,9 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { Purchase, PurchasePayload } from '../../../core/models/purchase.model';
 import { PurchaseService } from '../../../core/services/purchase.service';
 import { SupplierService } from '../../../core/services/supplier.service';
-import { PersonnelService } from '../../../core/services/personnel.service';
+import { UserService } from '../../../core/services/user.service';
 import { Supplier } from '../../../core/models/supplier.model';
-import { Personnel } from '../../../core/models/personnel.model';
+import { ManagedUser } from '../../../core/models/user-manage.model';
 
 @Component({
   selector: 'app-purchase-form',
@@ -22,11 +22,11 @@ export class PurchaseFormComponent implements OnInit {
 
   private purchaseService = inject(PurchaseService);
   private supplierService = inject(SupplierService);
-  private personnelService = inject(PersonnelService);
+  private userService = inject(UserService);
 
   loading = signal<boolean>(false);
   suppliers = signal<Supplier[]>([]);
-  commercials = signal<Personnel[]>([]);
+  commercials = signal<ManagedUser[]>([]);
 
   formData: PurchasePayload = {
     date: new Date().toISOString().split('T')[0],
@@ -67,9 +67,10 @@ export class PurchaseFormComponent implements OnInit {
   }
 
   loadCommercials(): void {
-    this.personnelService.getAllPersonnels().subscribe({
-      next: (res) => {
-        this.commercials.set(res);
+    this.userService.getUsers({ all: true }).subscribe({
+      next: (res: any) => {
+        const data = Array.isArray(res) ? res : res.data;
+        this.commercials.set(data);
       }
     });
   }

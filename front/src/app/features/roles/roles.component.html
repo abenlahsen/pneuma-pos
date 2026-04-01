@@ -1,0 +1,151 @@
+<div class="page-container">
+  <div class="header">
+    <div class="title-section">
+      <h1>Gestion des Rôles</h1>
+      <p class="subtitle">Gérez les rôles et leurs permissions d'accès</p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-secondary" (click)="openPermissionForm()" *ngIf="authService.hasPermission('create roles')">
+        Nouvelle Permission
+      </button>
+      <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create roles')">
+        Nouveau Rôle
+      </button>
+    </div>
+  </div>
+
+  <!-- Roles list -->
+  <div class="card table-card">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Nom du Rôle</th>
+            <th>Permissions</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="loading()">
+            <td colspan="3" class="text-center py-4">
+              <div class="spinner"></div> Chargement...
+            </td>
+          </tr>
+          <tr *ngIf="!loading() && roles().length === 0">
+            <td colspan="3" class="text-center py-4 text-muted">
+              Aucun rôle trouvé.
+            </td>
+          </tr>
+          <tr *ngFor="let role of roles()">
+            <td>
+              <div class="fw-semibold">{{ role.name }}</div>
+            </td>
+            <td>
+              <div class="permissions-tags">
+                <span class="tag" *ngFor="let perm of role.permissions">
+                  {{ perm.name }}
+                </span>
+                <span class="text-muted" *ngIf="role.permissions.length === 0">Aucune permission</span>
+              </div>
+            </td>
+            <td class="text-center actions-cell">
+              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(role)" title="Modifier" *ngIf="authService.hasPermission('edit roles')">✏️</button>
+              <button class="btn-icon btn-sm text-danger" (click)="deleteRole(role)" title="Supprimer" *ngIf="authService.hasPermission('delete roles')">🗑️</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Permissions list -->
+  <div class="card" style="margin-top: 2rem;">
+    <div class="card-header">
+      <h2>Permissions</h2>
+    </div>
+    <div class="card-body">
+      <div class="permissions-grid">
+        <div class="permission-group" *ngFor="let entry of groupedPermissions() | keyvalue">
+          <h3 class="group-title">{{ getResourceLabel(entry.key) }}</h3>
+          <div class="group-perms">
+            <div class="perm-item" *ngFor="let perm of entry.value">
+              <span class="perm-name">{{ perm.name }}</span>
+              <button class="btn-icon btn-xs text-danger" (click)="deletePermission(perm)" title="Supprimer" *ngIf="authService.hasPermission('delete roles')">🗑️</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Role Form Modal -->
+<div class="modal-overlay" *ngIf="showForm()" (click)="closeForm()">
+  <div class="modal-container modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ editingRole() ? 'Modifier le Rôle' : 'Nouveau Rôle' }}</h2>
+      <button class="btn-icon" (click)="closeForm()">X</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Nom du rôle</label>
+        <input type="text" class="form-control" [ngModel]="formName()" (ngModelChange)="formName.set($event)" placeholder="Ex: Manager">
+      </div>
+
+      <div class="permissions-section">
+        <div class="permissions-header">
+          <h3>Permissions</h3>
+          <div class="bulk-actions">
+            <button class="btn btn-xs btn-outline" (click)="selectAll()">Tout sélectionner</button>
+            <button class="btn btn-xs btn-outline" (click)="deselectAll()">Tout désélectionner</button>
+          </div>
+        </div>
+
+        <div class="permissions-matrix">
+          <div class="matrix-group" *ngFor="let entry of groupedPermissions() | keyvalue">
+            <div class="matrix-group-header">
+              <label class="checkbox-label">
+                <input type="checkbox" [checked]="isAllSelectedForResource(entry.key)" (change)="toggleAllForResource(entry.key)">
+                <span class="fw-semibold">{{ getResourceLabel(entry.key) }}</span>
+              </label>
+            </div>
+            <div class="matrix-group-perms">
+              <label class="checkbox-label" *ngFor="let perm of entry.value">
+                <input type="checkbox" [checked]="hasPermission(perm.id)" (change)="togglePermission(perm.id)">
+                {{ getActionLabel(perm.name) }}
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-secondary" (click)="closeForm()">Annuler</button>
+        <button class="btn btn-primary" (click)="saveRole()" [disabled]="!formName()">
+          {{ editingRole() ? 'Mettre à jour' : 'Créer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Permission Form Modal -->
+<div class="modal-overlay" *ngIf="showPermissionForm()" (click)="closePermissionForm()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Nouvelle Permission</h2>
+      <button class="btn-icon" (click)="closePermissionForm()">X</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Nom de la permission</label>
+        <input type="text" class="form-control" [ngModel]="newPermissionName()" (ngModelChange)="newPermissionName.set($event)" placeholder="Ex: view dashboard" (keyup.enter)="addPermission()">
+        <small class="text-muted">Format recommandé : action ressource (ex: view sales, edit purchases)</small>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-secondary" (click)="closePermissionForm()">Annuler</button>
+        <button class="btn btn-primary" (click)="addPermission()" [disabled]="!newPermissionName()">Créer</button>
+      </div>
+    </div>
+  </div>
+</div>

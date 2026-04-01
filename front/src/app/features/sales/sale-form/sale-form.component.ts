@@ -4,8 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Sale, SalePayload } from '../../../core/models/sale.model';
 import { Supplier } from '../../../core/models/supplier.model';
 import { SupplierService } from '../../../core/services/supplier.service';
-import { PersonnelService } from '../../../core/services/personnel.service';
-import { Personnel } from '../../../core/models/personnel.model';
+import { UserService } from '../../../core/services/user.service';
+import { ManagedUser } from '../../../core/models/user-manage.model';
 import { Carrier } from '../../../core/models/carrier.model';
 import { CarrierService } from '../../../core/services/carrier.service';
 import { Partner } from '../../../core/models/partner.model';
@@ -55,13 +55,13 @@ export class SaleFormComponent implements OnInit {
   };
 
   suppliers: Supplier[] = [];
-  commercials: Personnel[] = [];
+  commercials: ManagedUser[] = [];
   carriers: Carrier[] = [];
   partners: Partner[] = [];
 
   constructor(
     private supplierService: SupplierService,
-    private personnelService: PersonnelService,
+    private userService: UserService,
     private carrierService: CarrierService,
     private partnerService: PartnerService
   ) {}
@@ -70,8 +70,8 @@ export class SaleFormComponent implements OnInit {
     this.supplierService.getSuppliers({ all: true }).subscribe({
       next: (res: any) => { this.suppliers = res; }
     });
-    this.personnelService.getAllPersonnels().subscribe({
-      next: (res) => { this.commercials = res.filter((p: Personnel) => p.role === 'Commercial'); }
+    this.userService.getUsers({ all: true }).subscribe({
+      next: (res: any) => { this.commercials = Array.isArray(res) ? res : res.data; }
     });
     this.carrierService.getCarriers({ all: true }).subscribe({
       next: (res: any) => { this.carriers = res; }

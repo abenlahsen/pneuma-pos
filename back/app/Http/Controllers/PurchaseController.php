@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Purchase;
-use App\Models\Personnel;
 use App\Models\Supplier;
+use App\Models\User;
 
 class PurchaseController extends Controller
 {
@@ -67,7 +67,7 @@ class PurchaseController extends Controller
             'date' => 'required|date',
             'product' => 'required|string|max:255',
             'supplier_id' => 'required|exists:suppliers,id',
-            'commercial_id' => 'nullable|exists:personnels,id',
+            'commercial_id' => 'nullable|exists:users,id',
             'quantity' => 'required|integer|min:1',
             'unit_price' => 'required|numeric|min:0',
             'status' => 'required|string|in:EN COURS,RECU',
@@ -90,7 +90,7 @@ class PurchaseController extends Controller
             'date' => 'required|date',
             'product' => 'required|string|max:255',
             'supplier_id' => 'required|exists:suppliers,id',
-            'commercial_id' => 'nullable|exists:personnels,id',
+            'commercial_id' => 'nullable|exists:users,id',
             'quantity' => 'required|integer|min:1',
             'unit_price' => 'required|numeric|min:0',
             'status' => 'required|string|in:EN COURS,RECU',
@@ -146,7 +146,7 @@ class PurchaseController extends Controller
     {
         return response()->json([
             'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
-            'commercials' => Personnel::where('role', 'Commercial')->orderBy('name')->get(['id', 'name']),
+            'commercials' => User::role('Commercial')->orderBy('name')->get(['id', 'name']),
         ]);
     }
 }

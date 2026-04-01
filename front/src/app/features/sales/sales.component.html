@@ -5,7 +5,7 @@
       <p class="subtitle">Gérez vos ventes et marges</p>
     </div>
     <div class="actions">
-      <button class="btn btn-primary" (click)="openAddForm()">
+      <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create sales')">
         Nouvelle Vente
       </button>
     </div>
@@ -180,8 +180,8 @@
             <td>{{ sale.updated_at | date:'dd/MM/yyyy HH:mm' }}</td>
             <td class="text-center actions-cell">
               <button class="btn-icon btn-sm" (click)="openPayments(sale)" title="Paiements">💳</button>
-              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(sale)" title="Modifier">✏️</button>
-              <button class="btn-icon btn-sm text-danger" (click)="deleteSale(sale)" title="Supprimer">🗑️</button>
+              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(sale)" title="Modifier" *ngIf="authService.hasPermission('edit sales')">✏️</button>
+              <button class="btn-icon btn-sm text-danger" (click)="deleteSale(sale)" title="Supprimer" *ngIf="authService.hasPermission('delete sales')">🗑️</button>
             </td>
           </tr>
         </tbody>

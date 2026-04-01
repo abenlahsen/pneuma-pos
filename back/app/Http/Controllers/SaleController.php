@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreSaleRequest;
 use App\Http\Requests\UpdateSaleRequest;
-use App\Models\Personnel;
 use App\Models\Sale;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -171,7 +171,7 @@ class SaleController extends Controller
             'statuses' => Sale::distinct()->whereNotNull('status')->pluck('status')->sort()->values(),
             'payment_statuses' => Sale::distinct()->whereNotNull('payment_status')->pluck('payment_status')->sort()->values(),
             'partners' => \App\Models\Partner::pluck('name')->sort()->values(),
-            'commercials' => Personnel::where('role', 'Commercial')->orderBy('name')->get(['id', 'name']),
+            'commercials' => User::role('Commercial')->orderBy('name')->get(['id', 'name']),
         ]);
     }
 }

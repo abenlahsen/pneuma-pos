@@ -69,7 +69,7 @@ class Sale extends Model
      */
     public function commercial(): BelongsTo
     {
-        return $this->belongsTo(Personnel::class, 'commercial_id');
+        return $this->belongsTo(User::class, 'commercial_id');
     }
 
     /**

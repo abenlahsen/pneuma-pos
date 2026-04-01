@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Personnel;
 use App\Models\Supplier;
+use App\Models\User;
 
 class Purchase extends Model
 {
@@ -44,7 +44,7 @@ class Purchase extends Model
 
     public function commercial()
     {
-        return $this->belongsTo(Personnel::class, 'commercial_id');
+        return $this->belongsTo(User::class, 'commercial_id');
     }
 
     public function payments()

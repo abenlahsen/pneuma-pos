@@ -1,0 +1,138 @@
+<div class="page-container">
+  <div class="header">
+    <div class="title-section">
+      <h1>Gestion des Utilisateurs</h1>
+      <p class="subtitle">Gérez les utilisateurs et leurs rôles d'accès</p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create users')">
+        Nouvel Utilisateur
+      </button>
+    </div>
+  </div>
+
+  <div class="card filters-section">
+    <div class="card-body" style="padding: 1rem 1.5rem">
+      <div class="filters-grid" style="display: flex; gap: 1rem; align-items: flex-end;">
+        <div class="form-group" style="flex: 1;">
+          <label>Rechercher un utilisateur</label>
+          <input type="text" class="form-control" [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event)" placeholder="Nom ou email..." (keyup.enter)="applyFilters()">
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher">🔍</button>
+          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser">✕</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card table-card">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Email</th>
+            <th>Téléphone</th>
+            <th>Commission (%)</th>
+            <th>Rôle</th>
+            <th>Date de création</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="loading()">
+            <td colspan="7" class="text-center py-4">
+              <div class="spinner"></div> Chargement...
+            </td>
+          </tr>
+          <tr *ngIf="!loading() && users().length === 0">
+            <td colspan="7" class="text-center py-4 text-muted">
+              Aucun utilisateur trouvé.
+            </td>
+          </tr>
+          <tr *ngFor="let user of users()">
+            <td>
+              <div class="fw-semibold">{{ user.name }}</div>
+            </td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.phone || '—' }}</td>
+            <td>{{ user.commission_rate != null ? user.commission_rate + '%' : '—' }}</td>
+            <td>
+              <span class="role-badge" *ngFor="let role of user.roles">{{ role.name }}</span>
+              <span class="text-muted" *ngIf="user.roles.length === 0">Aucun rôle</span>
+            </td>
+            <td>{{ user.created_at | date:'dd/MM/yyyy' }}</td>
+            <td class="text-center actions-cell">
+              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(user)" title="Modifier" *ngIf="authService.hasPermission('edit users')">✏️</button>
+              <button class="btn-icon btn-sm text-danger" (click)="deleteUser(user)" title="Supprimer" *ngIf="authService.hasPermission('delete users')">🗑️</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination-wrapper" *ngIf="total() > 0">
+      <div class="pagination-info">
+        Affichage de {{ (currentPage() - 1) * perPage() + 1 }} à
+        {{ (currentPage() * perPage()) > total() ? total() : (currentPage() * perPage()) }}
+        sur {{ total() }} entrées
+      </div>
+      <div class="pagination">
+        <button class="btn-page" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">&laquo;</button>
+        <button class="btn-page" *ngFor="let page of pages" [class.active]="page === currentPage()" (click)="goToPage(page)">{{ page }}</button>
+        <button class="btn-page" [disabled]="currentPage() === lastPage()" (click)="goToPage(currentPage() + 1)">&raquo;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- User Form Modal -->
+<div class="modal-overlay" *ngIf="showForm()" (click)="closeForm()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ editingUser() ? 'Modifier Utilisateur' : 'Nouvel Utilisateur' }}</h2>
+      <button class="btn-icon" (click)="closeForm()">X</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Nom</label>
+        <input type="text" class="form-control" [ngModel]="formName()" (ngModelChange)="formName.set($event)" placeholder="Nom complet">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" class="form-control" [ngModel]="formEmail()" (ngModelChange)="formEmail.set($event)" placeholder="email@example.com">
+      </div>
+      <div class="form-group">
+        <label>{{ editingUser() ? 'Nouveau mot de passe (laisser vide pour ne pas changer)' : 'Mot de passe' }}</label>
+        <input type="password" class="form-control" [ngModel]="formPassword()" (ngModelChange)="formPassword.set($event)" placeholder="••••••">
+      </div>
+      <div class="form-group" *ngIf="formPassword()">
+        <label>Confirmation du mot de passe</label>
+        <input type="password" class="form-control" [class.input-error]="formPassword() && formPasswordConfirmation() && !passwordsMatch()" [ngModel]="formPasswordConfirmation()" (ngModelChange)="formPasswordConfirmation.set($event)" placeholder="••••••">
+        <small class="text-danger" *ngIf="formPassword() && formPasswordConfirmation() && !passwordsMatch()">Les mots de passe ne correspondent pas</small>
+      </div>
+      <div class="form-group">
+        <label>Téléphone</label>
+        <input type="text" class="form-control" [ngModel]="formPhone()" (ngModelChange)="formPhone.set($event)" placeholder="06 00 00 00 00">
+      </div>
+      <div class="form-group">
+        <label>Taux de commission (%)</label>
+        <input type="number" class="form-control" [ngModel]="formCommissionRate()" (ngModelChange)="formCommissionRate.set($event)" placeholder="0" min="0" max="100" step="0.5">
+      </div>
+      <div class="form-group">
+        <label>Rôle</label>
+        <select class="form-control" [ngModel]="formRole()" (ngModelChange)="formRole.set($event)">
+          <option value="">-- Aucun rôle --</option>
+          <option *ngFor="let role of roles()" [value]="role.name">{{ role.name }}</option>
+        </select>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-secondary" (click)="closeForm()">Annuler</button>
+        <button class="btn btn-primary" (click)="saveUser()" [disabled]="!formName() || !formEmail() || (!editingUser() && !formPassword()) || (formPassword() && !passwordsMatch())">
+          {{ editingUser() ? 'Mettre à jour' : 'Créer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,9 +1,9 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AuthResponse, LoginPayload, RegisterPayload, User } from '../models/auth.model';
+import { AuthResponse, LoginPayload, RegisterPayload, User, UserResponse } from '../models/auth.model';
 
 @Injectable({
   providedIn: 'root',
@@ -11,9 +11,12 @@ import { AuthResponse, LoginPayload, RegisterPayload, User } from '../models/aut
 export class AuthService {
   private readonly apiUrl = environment.apiUrl;
   private readonly currentUser = signal<User | null>(null);
+  private readonly userPermissions = signal<string[]>([]);
   private readonly tokenKey = 'auth_token';
+  private userLoaded: Promise<void> | null = null;
 
   readonly user = this.currentUser.asReadonly();
+  readonly permissions = this.userPermissions.asReadonly();
   readonly isAuthenticated = computed(() => !!this.currentUser());
 
   constructor(
@@ -26,10 +29,16 @@ export class AuthService {
   private loadUserFromStorage(): void {
     const token = this.getToken();
     if (token) {
-      this.fetchUser().subscribe({
-        error: () => this.clearAuth(),
-      });
+      this.userLoaded = firstValueFrom(this.fetchUser()).then(
+        () => {},
+        () => this.clearAuth(),
+      );
     }
+  }
+
+  /** Resolves once user + permissions are loaded (used by guards) */
+  whenReady(): Promise<void> {
+    return this.userLoaded ?? Promise.resolve();
   }
 
   register(payload: RegisterPayload): Observable<AuthResponse> {
@@ -37,6 +46,7 @@ export class AuthService {
       tap((response) => {
         this.setToken(response.token);
         this.currentUser.set(response.user);
+        this.userPermissions.set(response.permissions || []);
       }),
     );
   }
@@ -46,6 +56,7 @@ export class AuthService {
       tap((response) => {
         this.setToken(response.token);
         this.currentUser.set(response.user);
+        this.userPermissions.set(response.permissions || []);
       }),
     );
   }
@@ -63,10 +74,25 @@ export class AuthService {
     });
   }
 
-  fetchUser(): Observable<User> {
-    return this.http.get<User>(`${this.apiUrl}/user`).pipe(
-      tap((user) => this.currentUser.set(user)),
+  fetchUser(): Observable<UserResponse> {
+    return this.http.get<UserResponse>(`${this.apiUrl}/user`).pipe(
+      tap((response) => {
+        this.currentUser.set(response.user);
+        this.userPermissions.set(response.permissions || []);
+      }),
     );
+  }
+
+  hasPermission(permission: string): boolean {
+    return this.userPermissions().includes(permission);
+  }
+
+  hasAnyPermission(permissions: string[]): boolean {
+    return permissions.some(p => this.userPermissions().includes(p));
+  }
+
+  hasRole(role: string): boolean {
+    return this.currentUser()?.roles?.some(r => r.name === role) || false;
   }
 
   getToken(): string | null {
@@ -80,6 +106,6 @@ export class AuthService {
   private clearAuth(): void {
     localStorage.removeItem(this.tokenKey);
     this.currentUser.set(null);
+    this.userPermissions.set([]);
   }
 }
-
