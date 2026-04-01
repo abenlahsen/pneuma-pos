@@ -12,11 +12,13 @@ export class AuthService {
   private readonly apiUrl = environment.apiUrl;
   private readonly currentUser = signal<User | null>(null);
   private readonly userPermissions = signal<string[]>([]);
+  private readonly _mustChangePassword = signal<boolean>(false);
   private readonly tokenKey = 'auth_token';
   private userLoaded: Promise<void> | null = null;
 
   readonly user = this.currentUser.asReadonly();
   readonly permissions = this.userPermissions.asReadonly();
+  readonly mustChangePassword = this._mustChangePassword.asReadonly();
   readonly isAuthenticated = computed(() => !!this.currentUser());
 
   constructor(
@@ -57,6 +59,7 @@ export class AuthService {
         this.setToken(response.token);
         this.currentUser.set(response.user);
         this.userPermissions.set(response.permissions || []);
+        this._mustChangePassword.set(response.must_change_password || false);
       }),
     );
   }
@@ -79,6 +82,15 @@ export class AuthService {
       tap((response) => {
         this.currentUser.set(response.user);
         this.userPermissions.set(response.permissions || []);
+        this._mustChangePassword.set(response.must_change_password || false);
+      }),
+    );
+  }
+
+  changePassword(payload: { current_password: string; password: string; password_confirmation: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/change-password`, payload).pipe(
+      tap(() => {
+        this._mustChangePassword.set(false);
       }),
     );
   }
@@ -107,5 +119,6 @@ export class AuthService {
     localStorage.removeItem(this.tokenKey);
     this.currentUser.set(null);
     this.userPermissions.set([]);
+    this._mustChangePassword.set(false);
   }
 }
