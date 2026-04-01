@@ -49,7 +49,7 @@ export class CashFlowComponent implements OnInit {
 
   constructor(
     private cashFlowService: CashFlowService,
-    private authService: AuthService,
+    public authService: AuthService,
   ) {}
 
   ngOnInit(): void {

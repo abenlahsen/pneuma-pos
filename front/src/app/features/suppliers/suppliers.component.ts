@@ -32,7 +32,7 @@ export class SuppliersComponent implements OnInit {
 
   constructor(
     private supplierService: SupplierService,
-    private authService: AuthService,
+    public authService: AuthService,
   ) {}
 
   ngOnInit(): void {

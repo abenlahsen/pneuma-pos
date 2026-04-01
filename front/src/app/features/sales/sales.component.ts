@@ -55,7 +55,7 @@ export class SalesComponent implements OnInit {
 
   constructor(
     private saleService: SaleService,
-    private authService: AuthService,
+    public authService: AuthService,
   ) {}
 
   ngOnInit(): void {

@@ -1,6 +1,4 @@
 import { Supplier } from './supplier.model';
-import { Personnel } from './personnel.model';
-
 export interface Purchase {
   id: number;
   date: string;
@@ -13,7 +11,7 @@ export interface Purchase {
   status: 'EN COURS' | 'RECU';
   payment_status: 'PAYE' | 'NON PAYE' | 'PARTIEL';
   supplier?: Supplier;
-  commercial?: Personnel;
+  commercial?: { id: number; name: string } | null;
   created_at?: string;
   updated_at?: string;
 }

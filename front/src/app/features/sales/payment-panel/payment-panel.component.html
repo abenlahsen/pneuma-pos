@@ -55,7 +55,7 @@
               <td>{{ p.method || '-' }}</td>
               <td>{{ p.reference || '-' }}</td>
               <td>
-                <button class="btn-icon btn-sm text-danger" (click)="deletePayment(p)" title="Supprimer">🗑️</button>
+                <button class="btn-icon btn-sm text-danger" (click)="deletePayment(p)" title="Supprimer" *ngIf="authService.hasPermission('manage sale-payments')">🗑️</button>
               </td>
             </tr>
           </tbody>
@@ -63,13 +63,13 @@
       </div>
 
       <!-- Add form -->
-      <div class="add-payment-section" *ngIf="!showAddForm">
+      <div class="add-payment-section" *ngIf="!showAddForm && authService.hasPermission('manage sale-payments')">
         <button class="btn btn-primary" (click)="openAddForm()" [disabled]="remaining() <= 0">
           + Ajouter un paiement
         </button>
       </div>
 
-      <div class="add-payment-form" *ngIf="showAddForm">
+      <div class="add-payment-form" *ngIf="showAddForm && authService.hasPermission('manage sale-payments')">
         <h3>Nouveau paiement</h3>
         <div class="form-row">
           <div class="form-group">

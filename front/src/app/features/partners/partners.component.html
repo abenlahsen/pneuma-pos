@@ -5,7 +5,7 @@
       <p class="subtitle">Gérez vos partenaires de service (Montage, Equilibrage, Parallélisme)</p>
     </div>
     <div class="actions">
-      <button class="btn btn-primary" (click)="openAddForm()">Nouveau Partenaire</button>
+      <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create partners')">Nouveau Partenaire</button>
     </div>
   </div>
 
@@ -47,8 +47,8 @@
             <td class="text-right">{{ p.montage_price != null ? (p.montage_price | number:'1.2-2') : '-' }}</td>
             <td class="text-right">{{ p.alignment_price != null ? (p.alignment_price | number:'1.2-2') : '-' }}</td>
             <td class="text-center">
-              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(p)" title="Modifier">✏️</button>
-              <button class="btn-icon btn-sm text-danger" (click)="deletePartner(p)" title="Supprimer">🗑️</button>
+              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(p)" title="Modifier" *ngIf="authService.hasPermission('edit partners')">✏️</button>
+              <button class="btn-icon btn-sm text-danger" (click)="deletePartner(p)" title="Supprimer" *ngIf="authService.hasPermission('delete partners')">🗑️</button>
             </td>
           </tr>
         </tbody>

@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PurchaseService } from '../../core/services/purchase.service';
+import { AuthService } from '../../core/services/auth.service';
 import { Purchase, PurchaseSummary } from '../../core/models/purchase.model';
 import { PurchaseFormComponent } from './purchase-form/purchase-form.component';
 import { PurchasePaymentsComponent } from './purchase-payments/purchase-payments.component';
@@ -15,6 +16,7 @@ import { PurchasePaymentsComponent } from './purchase-payments/purchase-payments
 })
 export class PurchasesComponent implements OnInit {
   private purchaseService = inject(PurchaseService);
+  public authService = inject(AuthService);
 
   purchases = signal<Purchase[]>([]);
   summary = signal<PurchaseSummary | null>(null);

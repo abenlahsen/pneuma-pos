@@ -58,7 +58,7 @@ npm test         # Run Karma tests
 **API Routes** (`back/routes/api.php`):
 - Public: `POST /api/register`, `POST /api/login`
 - Protected (Sanctum): all other routes require `Authorization: Bearer {token}`
-- Resources: `sales`, `purchases`, `suppliers`, `personnels`, `carriers`, `partners`, `transactions`
+- Resources: `sales`, `purchases`, `suppliers`, `users`, `carriers`, `partners`, `transactions`
 - Summary/filter endpoints: `GET /api/sales-summary`, `GET /api/sales-filters`, `GET /api/purchases-summary`, `GET /api/transactions-summary`, `GET /api/transactions-filters`
 - Nested payment routes: `GET|POST|DELETE /api/sales/{sale}/payments`, same pattern for `purchases/{purchase}/payments`
 
@@ -70,7 +70,7 @@ npm test         # Run Karma tests
 
 ### Frontend Structure
 
-**Feature modules** (`front/src/app/features/`): Each business domain (sales, purchases, cash-flow, suppliers, personnels, carriers, partners) has a lazy-loaded standalone component plus a `-form/` subcomponent and optional payment panel.
+**Feature modules** (`front/src/app/features/`): Each business domain (sales, purchases, cash-flow, suppliers, users, carriers, partners) has a lazy-loaded standalone component plus a `-form/` subcomponent and optional payment panel.
 
 **Core** (`front/src/app/core/`):
 - `services/` — HTTP services, one per backend resource
@@ -92,4 +92,4 @@ The Angular dev proxy (`front/proxy.conf.json`) sends `/api` to `http://nginx:80
 
 ## Key Business Domain
 
-This is a **tire shop POS** (French: pneus). A `Sale` record captures: tire brand/reference/dimensions, quantity, unit price, supplier, commercial (personnel), carrier, partner (mounting/alignment shop), payment status, and many computed pricing fields. `Personnel` have roles (commercials earn commissions). `Partners` have `montage_price` and `alignment_price` fields. French terminology is used throughout the UI (e.g., "achats" = purchases, "fournisseurs" = suppliers, "transporteurs" = carriers).
+This is a **tire shop POS** (French: pneus). A `Sale` record captures: tire brand/reference/dimensions, quantity, unit price, supplier, commercial (personnel), carrier, partner (mounting/alignment shop), payment status, and many computed pricing fields. `User` records can have roles (commercials earn commissions). `Partners` have `montage_price` and `alignment_price` fields. French terminology is used throughout the UI (e.g., "achats" = purchases, "fournisseurs" = suppliers, "transporteurs" = carriers).

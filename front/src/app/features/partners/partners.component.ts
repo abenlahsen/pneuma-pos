@@ -26,7 +26,7 @@ export class PartnersComponent implements OnInit {
   showForm = signal(false);
   editingPartner = signal<Partner | null>(null);
 
-  constructor(private service: PartnerService, private authService: AuthService) {}
+  constructor(private service: PartnerService, public authService: AuthService) {}
 
   ngOnInit(): void { this.loadData(); }
 

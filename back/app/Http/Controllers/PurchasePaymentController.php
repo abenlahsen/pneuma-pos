@@ -42,7 +42,7 @@ class PurchasePaymentController extends Controller
                 'amount' => $validated['amount'],
                 'type' => 'expense',
                 'category' => 'Produit',
-                'description' => "Paiement achat #{$purchase->id} - {$purchase->product}",
+                'description' => "Paiement achat #{$purchase->id} - {$purchase->quantity} X {$purchase->product}",
                 'person' => '',
                 'partner' => $purchase->supplier->name ?? '',
                 'user_id' => $request->user()->id,

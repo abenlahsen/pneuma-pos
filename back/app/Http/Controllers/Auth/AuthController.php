@@ -26,7 +26,8 @@ class AuthController extends Controller
         $token = $user->createToken('auth-token')->plainTextToken;
 
         return response()->json([
-            'user' => $user,
+            'user' => $user->load('roles:id,name'),
+            'permissions' => $user->getAllPermissions()->pluck('name'),
             'token' => $token,
         ], 201);
     }
@@ -50,7 +51,8 @@ class AuthController extends Controller
         $token = $user->createToken('auth-token')->plainTextToken;
 
         return response()->json([
-            'user' => $user,
+            'user' => $user->load('roles:id,name'),
+            'permissions' => $user->getAllPermissions()->pluck('name'),
             'token' => $token,
         ]);
     }
@@ -60,7 +62,12 @@ class AuthController extends Controller
      */
     public function user(Request $request): JsonResponse
     {
-        return response()->json($request->user());
+        $user = $request->user();
+
+        return response()->json([
+            'user' => $user->load('roles:id,name'),
+            'permissions' => $user->getAllPermissions()->pluck('name'),
+        ]);
     }
 
     /**

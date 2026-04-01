@@ -1,15 +1,29 @@
+export interface UserRole {
+  id: number;
+  name: string;
+}
+
 export interface User {
   id: number;
   name: string;
   email: string;
   email_verified_at: string | null;
+  phone: string | null;
+  commission_rate: number | null;
+  roles: UserRole[];
   created_at: string;
   updated_at: string;
 }
 
 export interface AuthResponse {
   user: User;
+  permissions: string[];
   token: string;
+}
+
+export interface UserResponse {
+  user: User;
+  permissions: string[];
 }
 
 export interface LoginPayload {

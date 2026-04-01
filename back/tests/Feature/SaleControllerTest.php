@@ -2,10 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Models\Personnel;
 use App\Models\Sale;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class SaleControllerTest extends TestCase
@@ -17,7 +18,17 @@ class SaleControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Create roles and permissions needed for sales routes
+        foreach (['view sales', 'create sales', 'edit sales', 'delete sales'] as $perm) {
+            Permission::firstOrCreate(['name' => $perm, 'guard_name' => 'web']);
+        }
+        Role::firstOrCreate(['name' => 'Commercial', 'guard_name' => 'web']);
+        $admin = Role::firstOrCreate(['name' => 'Administrator', 'guard_name' => 'web']);
+        $admin->syncPermissions(Permission::all());
+
         $this->user = User::factory()->create();
+        $this->user->assignRole($admin);
     }
 
     private function authHeaders(): array
@@ -47,12 +58,10 @@ class SaleControllerTest extends TestCase
         ], $attributes));
     }
 
-    private function createCommercial(string $name = 'Ali Commercial'): Personnel
+    private function createCommercial(string $name = 'Ali Commercial'): User
     {
-        return Personnel::create([
+        return User::factory()->create([
             'name' => $name,
-            'role' => 'Commercial',
-            'user_id' => $this->user->id,
         ]);
     }
 
@@ -195,10 +204,12 @@ class SaleControllerTest extends TestCase
 
     public function test_filters_returns_commercials_list(): void
     {
-        $this->createCommercial('Youssef');
-        $this->createCommercial('Ali');
-        // Non-commercial should be excluded
-        Personnel::create(['name' => 'Karim', 'role' => 'Chauffeur', 'user_id' => $this->user->id]);
+        $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Commercial', 'guard_name' => 'web']);
+
+        $youssef = $this->createCommercial('Youssef');
+        $youssef->assignRole($role);
+        $ali = $this->createCommercial('Ali');
+        $ali->assignRole($role);
 
         $response = $this->getJson('/api/sales-filters', $this->authHeaders());
 
