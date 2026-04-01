@@ -54,6 +54,7 @@ class AuthController extends Controller
             'user' => $user->load('roles:id,name'),
             'permissions' => $user->getAllPermissions()->pluck('name'),
             'token' => $token,
+            'must_change_password' => (bool) $user->must_change_password,
         ]);
     }
 
@@ -67,6 +68,35 @@ class AuthController extends Controller
         return response()->json([
             'user' => $user->load('roles:id,name'),
             'permissions' => $user->getAllPermissions()->pluck('name'),
+            'must_change_password' => (bool) $user->must_change_password,
+        ]);
+    }
+
+    /**
+     * Change password (used for forced password change on first login).
+     */
+    public function changePassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $user = $request->user();
+
+        if (! Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'message' => 'Le mot de passe actuel est incorrect.',
+            ], 422);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password),
+            'must_change_password' => false,
+        ]);
+
+        return response()->json([
+            'message' => 'Mot de passe modifié avec succès.',
         ]);
     }
 

@@ -2,20 +2,26 @@ import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 
-export const authGuard: CanActivateFn = () => {
+export const authGuard: CanActivateFn = async (route) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (authService.isAuthenticated()) {
-    return true;
+  if (!authService.isAuthenticated() && !authService.getToken()) {
+    return router.createUrlTree(['/login']);
   }
 
-  // Check if there's a token in storage (page refresh case)
-  if (authService.getToken()) {
-    return true;
+  // Wait for user data to be loaded (handles page refresh)
+  await authService.whenReady();
+
+  // If user must change password, only allow the change-password route
+  if (authService.mustChangePassword()) {
+    const targetPath = route.routeConfig?.path;
+    if (targetPath !== 'change-password') {
+      return router.createUrlTree(['/change-password']);
+    }
   }
 
-  return router.createUrlTree(['/login']);
+  return true;
 };
 
 export const guestGuard: CanActivateFn = () => {
@@ -28,4 +34,3 @@ export const guestGuard: CanActivateFn = () => {
 
   return router.createUrlTree(['/dashboard']);
 };
-

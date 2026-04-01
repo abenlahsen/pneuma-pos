@@ -11,13 +11,14 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->string('phone')->nullable()->after('email');
             $table->decimal('commission_rate', 5, 2)->nullable()->after('phone');
+            $table->boolean('must_change_password')->default(false)->after('commission_rate');
         });
     }
 
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['phone', 'commission_rate']);
+            $table->dropColumn(['phone', 'commission_rate', 'must_change_password']);
         });
     }
 };

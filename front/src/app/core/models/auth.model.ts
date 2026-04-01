@@ -19,11 +19,13 @@ export interface AuthResponse {
   user: User;
   permissions: string[];
   token: string;
+  must_change_password?: boolean;
 }
 
 export interface UserResponse {
   user: User;
   permissions: string[];
+  must_change_password?: boolean;
 }
 
 export interface LoginPayload {
