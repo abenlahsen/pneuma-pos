@@ -68,3 +68,21 @@ $radius-sm: 8px;
   h2 { margin: 0; font-size: 1.25rem; color: $text-dark; }
 }
 .modal-body { padding: 1.5rem; overflow-y: auto; }
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .page-container { margin: 1rem auto; padding: 0 0.5rem; }
+  .header { flex-direction: column; align-items: flex-start; gap: 0.75rem; margin-bottom: 1.25rem;
+    .title-section h1 { font-size: 1.4rem; }
+    .actions { width: 100%; .btn { flex: 1; text-align: center; font-size: 0.8rem; } }
+  }
+  .table { th, td { padding: 0.5rem 0.75rem; font-size: 0.75rem; } th { font-size: 0.7rem; } }
+  .pagination-wrapper { flex-direction: column; gap: 0.75rem; padding: 0.75rem; align-items: center;
+    .pagination-info { font-size: 0.75rem; }
+  }
+  .btn-page { padding: 0.35rem 0.6rem; font-size: 0.8rem; }
+  .modal-overlay { padding: 0.5rem; }
+  .modal-container { max-height: 95vh; }
+  .modal-header { padding: 1rem; h2 { font-size: 1.1rem; } }
+  .modal-body { padding: 0.75rem; }
+}

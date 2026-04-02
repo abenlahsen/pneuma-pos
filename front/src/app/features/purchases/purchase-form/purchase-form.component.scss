@@ -43,3 +43,19 @@ $border-color: #e2e8f0;
     }
   }
 }
+
+@media (max-width: 768px) {
+  .col-md-6, .col-md-4 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+
+    .btn {
+      width: 100%;
+      text-align: center;
+    }
+  }
+}

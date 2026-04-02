@@ -250,3 +250,44 @@
 }
 
 .fw-semibold { font-weight: 600; }
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .payment-modal {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .modal-header {
+    padding: 0.75rem 1rem;
+    h2 { font-size: 1rem; }
+  }
+
+  .modal-body {
+    padding: 0.75rem;
+  }
+
+  .payment-summary {
+    padding: 0.75rem;
+  }
+
+  .summary-row {
+    .label { font-size: 0.8rem; }
+    .value { font-size: 0.85rem; }
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+    .btn { width: 100%; text-align: center; }
+  }
+
+  .table {
+    th, td { padding: 0.4rem 0.5rem; font-size: 0.75rem; }
+    th { font-size: 0.7rem; }
+  }
+}

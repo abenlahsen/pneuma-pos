@@ -157,3 +157,48 @@
   }
 }
 
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .dashboard-main {
+    padding: 0 0.75rem;
+    margin: 1rem auto;
+  }
+
+  .welcome-card {
+    padding: 1.25rem;
+
+    h2 { font-size: 1.2rem; }
+  }
+
+  .user-details {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-links {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .quick-link-card {
+    padding: 1rem;
+  }
+
+  .ql-icon {
+    font-size: 1.5rem;
+  }
+
+  .ql-title {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .header-content h1 {
+    font-size: 1.2rem;
+  }
+}
+
