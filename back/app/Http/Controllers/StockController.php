@@ -193,7 +193,7 @@ class StockController extends Controller
 
                 $dimension = trim($row['C'] ?? '');
                 $parsed = Stock::parseDimension($dimension);
-                $qty = is_numeric($row['M'] ?? null) ? (int) $row['M'] : 0;
+                $qty = is_numeric($row['K'] ?? null) ? (int) $row['K'] : 0;
 
                 $records[] = [
                     'brand' => $brand,
@@ -205,16 +205,16 @@ class StockController extends Controller
                     'ic' => isset($row['D']) ? trim((string) $row['D']) ?: null : null,
                     'iv' => isset($row['E']) ? trim((string) $row['E']) ?: null : null,
                     'rft' => ! empty($row['F']),
-                    'reinforced' => ! empty($row['G']),
-                    'marking' => trim($row['H'] ?? '') ?: null,
-                    'made_in' => trim($row['I'] ?? '') ?: null,
-                    'dot' => isset($row['J']) ? trim((string) $row['J']) ?: null : null,
-                    'depot' => self::normalizeDepot($row['K'] ?? ''),
-                    'zone' => trim($row['L'] ?? '') ?: null,
+                    'reinforced' => false,
+                    'marking' => null,
+                    'made_in' => trim($row['G'] ?? '') ?: null,
+                    'dot' => isset($row['H']) ? trim((string) $row['H']) ?: null : null,
+                    'depot' => self::normalizeDepot($row['I'] ?? ''),
+                    'zone' => trim($row['J'] ?? '') ?: null,
                     'quantity' => $qty,
-                    'purchase_price' => is_numeric($row['N'] ?? null) ? round((float) $row['N'], 2) : null,
-                    'selling_price' => is_numeric($row['P'] ?? null) ? round((float) $row['P'], 2) : null,
-                    'special_price' => is_numeric($row['Q'] ?? null) ? round((float) $row['Q'], 2) : null,
+                    'purchase_price' => is_numeric($row['M'] ?? null) ? round((float) $row['M'], 2) : null,
+                    'selling_price' => is_numeric($row['O'] ?? null) ? round((float) $row['O'], 2) : null,
+                    'special_price' => is_numeric($row['P'] ?? null) ? round((float) $row['P'], 2) : null,
                     'user_id' => $userId,
                     'created_at' => now(),
                     'updated_at' => now(),
