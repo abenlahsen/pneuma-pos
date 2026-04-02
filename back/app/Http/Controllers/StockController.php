@@ -57,7 +57,7 @@ class StockController extends Controller
             $direction = $request->get('sort_direction', 'asc') === 'desc' ? 'desc' : 'asc';
             $query->orderBy($request->sort_by, $direction);
         } else {
-            $query->orderByRaw('brand IS NULL, brand ASC')->orderByDesc('quantity')->orderByDesc('id');
+            $query->orderByDesc('quantity')->orderByRaw('brand IS NULL, brand ASC')->orderByDesc('id');
         }
 
         return response()->json($query->paginate($request->get('per_page', 50)));
