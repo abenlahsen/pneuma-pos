@@ -75,6 +75,13 @@ export const routes: Routes = [
       import('./features/purchases/purchases.component').then((m) => m.PurchasesComponent),
   },
   {
+    path: 'stock',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'view stock' },
+    loadComponent: () =>
+      import('./features/stock/stock.component').then((m) => m.StockComponent),
+  },
+  {
     path: 'roles',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view roles' },

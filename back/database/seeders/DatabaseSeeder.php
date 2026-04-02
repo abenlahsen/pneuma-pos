@@ -17,11 +17,13 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RolesAndPermissionsSeeder::class);
 
-        $admin = User::factory()->create([
-            'name' => 'Admin POS',
-            'email' => 'admin@pneuma.pos',
-            'password' => bcrypt('password'),
-        ]);
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@pneuma.pos'],
+            [
+                'name' => 'Admin POS',
+                'password' => bcrypt('password'),
+            ]
+        );
 
         $admin->assignRole('Administrator');
     }
