@@ -106,6 +106,8 @@ export class StockComponent implements OnInit {
 
   search(): void {
     this.currentPage.set(1);
+    this.sortBy.set('');
+    this.sortDirection.set('asc');
     this.loadData();
   }
 

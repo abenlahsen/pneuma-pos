@@ -34,38 +34,49 @@ class RolesAndPermissionsSeeder extends Seeder
             }
         }
 
-        // Create roles and assign permissions
+        // Create roles and assign default permissions (only on first creation)
         $admin = Role::firstOrCreate(['name' => 'Administrator', 'guard_name' => 'web']);
-        $admin->syncPermissions(Permission::all());
+        if ($admin->wasRecentlyCreated) {
+            $admin->syncPermissions(Permission::all());
+        } else {
+            // Always give admin any new permissions
+            $admin->givePermissionTo(Permission::all());
+        }
 
         $commercial = Role::firstOrCreate(['name' => 'Commercial', 'guard_name' => 'web']);
-        $commercial->syncPermissions([
-            'view sales', 'create sales',
-            'manage sale-payments',
-            'view suppliers',
-            'view carriers',
-            'view partners',
-        ]);
+        if ($commercial->wasRecentlyCreated) {
+            $commercial->syncPermissions([
+                'view sales', 'create sales',
+                'manage sale-payments',
+                'view suppliers',
+                'view carriers',
+                'view partners',
+            ]);
+        }
 
         $manager = Role::firstOrCreate(['name' => 'Manager', 'guard_name' => 'web']);
-        $manager->syncPermissions([
-            'view sales', 'create sales', 'edit sales', 'delete sales',
-            'manage sale-payments',
-            'view purchases', 'create purchases', 'edit purchases', 'delete purchases',
-            'manage purchase-payments',
-            'view suppliers', 'create suppliers', 'edit suppliers',
-            'view users',
-            'view carriers', 'create carriers', 'edit carriers',
-            'view partners', 'create partners', 'edit partners',
-            'view cash-flow',
-            'view stock',
-        ]);
+        if ($manager->wasRecentlyCreated) {
+            $manager->syncPermissions([
+                'view sales', 'create sales', 'edit sales', 'delete sales',
+                'manage sale-payments',
+                'view purchases', 'create purchases', 'edit purchases', 'delete purchases',
+                'manage purchase-payments',
+                'view suppliers', 'create suppliers', 'edit suppliers',
+                'view users',
+                'view carriers', 'create carriers', 'edit carriers',
+                'view partners', 'create partners', 'edit partners',
+                'view cash-flow',
+                'view stock',
+            ]);
+        }
 
         $driver = Role::firstOrCreate(['name' => 'Driver', 'guard_name' => 'web']);
-        $driver->syncPermissions([
-            'view sales',
-            'view carriers',
-        ]);
+        if ($driver->wasRecentlyCreated) {
+            $driver->syncPermissions([
+                'view sales',
+                'view carriers',
+            ]);
+        }
 
         // Assign Administrator role to admin user if exists
         $adminUser = \App\Models\User::where('email', 'admin@pneuma.pos')->first();
