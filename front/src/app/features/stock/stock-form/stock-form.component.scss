@@ -1,0 +1,14 @@
+@import '../../sales/sale-form/sale-form.component.scss';
+
+.checkbox-inline {
+  display: flex;
+  align-items: flex-end;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-weight: 500;
+  }
+}

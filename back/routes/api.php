@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\StockController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -93,6 +94,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('roles/{role}', [RoleController::class, 'destroy'])->middleware('permission:delete roles');
     Route::post('permissions', [PermissionController::class, 'store'])->middleware('permission:create roles');
     Route::delete('permissions/{permission}', [PermissionController::class, 'destroy'])->middleware('permission:delete roles');
+
+    // Stock
+    Route::middleware('permission:view stock')->group(function () {
+        Route::get('stocks-summary', [StockController::class, 'summary']);
+        Route::get('stocks-filters', [StockController::class, 'filters']);
+        Route::get('stocks', [StockController::class, 'index']);
+        Route::get('stocks/{stock}', [StockController::class, 'show']);
+    });
+    Route::post('stocks', [StockController::class, 'store'])->middleware('permission:create stock');
+    Route::put('stocks/{stock}', [StockController::class, 'update'])->middleware('permission:edit stock');
+    Route::delete('stocks/{stock}', [StockController::class, 'destroy'])->middleware('permission:delete stock');
+    Route::post('stocks/import', [StockController::class, 'import'])->middleware('permission:import stock');
 
     // Users management
     Route::get('users', [UserController::class, 'index'])->middleware('permission:view users');

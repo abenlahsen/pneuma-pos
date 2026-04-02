@@ -24,6 +24,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'cash-flow' => ['view', 'create', 'edit', 'delete'],
             'users' => ['view', 'create', 'edit', 'delete'],
             'roles' => ['view', 'create', 'edit', 'delete'],
+            'stock' => ['view', 'create', 'edit', 'delete', 'import'],
         ];
 
         // Create permissions
@@ -57,6 +58,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view carriers', 'create carriers', 'edit carriers',
             'view partners', 'create partners', 'edit partners',
             'view cash-flow',
+            'view stock',
         ]);
 
         $driver = Role::firstOrCreate(['name' => 'Driver', 'guard_name' => 'web']);
@@ -64,5 +66,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'view sales',
             'view carriers',
         ]);
+
+        // Assign Administrator role to admin user if exists
+        $adminUser = \App\Models\User::where('email', 'admin@pneuma.pos')->first();
+        if ($adminUser && !$adminUser->hasRole('Administrator')) {
+            $adminUser->assignRole('Administrator');
+        }
     }
 }

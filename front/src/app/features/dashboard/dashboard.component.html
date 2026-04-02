@@ -20,7 +20,7 @@
     </div>
 
     <div class="quick-links">
-      <a routerLink="/sales" class="quick-link-card" id="link-sales">
+      <a routerLink="/sales" class="quick-link-card" id="link-sales" *ngIf="authService.hasPermission('view sales')">
         <span class="ql-icon">🏷️</span>
         <div class="ql-text">
           <span class="ql-title">Ventes</span>
@@ -29,7 +29,7 @@
         <span class="ql-arrow">→</span>
       </a>
 
-      <a routerLink="/suppliers" class="quick-link-card" id="link-suppliers">
+      <a routerLink="/suppliers" class="quick-link-card" id="link-suppliers" *ngIf="authService.hasPermission('view suppliers')">
         <span class="ql-icon">🏢</span>
         <div class="ql-text">
           <span class="ql-title">Fournisseurs</span>
@@ -38,7 +38,7 @@
         <span class="ql-arrow">→</span>
       </a>
 
-      <a routerLink="/users" class="quick-link-card" id="link-users">
+      <a routerLink="/users" class="quick-link-card" id="link-users" *ngIf="authService.hasPermission('view users')">
         <span class="ql-icon">👥</span>
         <div class="ql-text">
           <span class="ql-title">Utilisateurs</span>
@@ -47,7 +47,7 @@
         <span class="ql-arrow">→</span>
       </a>
 
-      <a routerLink="/achats" class="quick-link-card" id="link-purchases">
+      <a routerLink="/achats" class="quick-link-card" id="link-purchases" *ngIf="authService.hasPermission('view purchases')">
         <span class="ql-icon">📦</span>
         <div class="ql-text">
           <span class="ql-title">Achats</span>
@@ -56,7 +56,7 @@
         <span class="ql-arrow">→</span>
       </a>
 
-      <a routerLink="/carriers" class="quick-link-card" id="link-carriers">
+      <a routerLink="/carriers" class="quick-link-card" id="link-carriers" *ngIf="authService.hasPermission('view carriers')">
         <span class="ql-icon">🚚</span>
         <div class="ql-text">
           <span class="ql-title">Transporteurs</span>
@@ -65,7 +65,7 @@
         <span class="ql-arrow">→</span>
       </a>
 
-      <a routerLink="/partners" class="quick-link-card" id="link-partners">
+      <a routerLink="/partners" class="quick-link-card" id="link-partners" *ngIf="authService.hasPermission('view partners')">
         <span class="ql-icon">🤝</span>
         <div class="ql-text">
           <span class="ql-title">Partenaires</span>
@@ -74,11 +74,29 @@
         <span class="ql-arrow">→</span>
       </a>
 
-      <a routerLink="/cash-flow" class="quick-link-card" id="link-cash-flow">
+      <a routerLink="/cash-flow" class="quick-link-card" id="link-cash-flow" *ngIf="authService.hasPermission('view cash-flow')">
         <span class="ql-icon">💰</span>
         <div class="ql-text">
           <span class="ql-title">Flux de Trésorerie</span>
           <span class="ql-desc">Revenus, dépenses et solde</span>
+        </div>
+        <span class="ql-arrow">→</span>
+      </a>
+
+      <a routerLink="/stock" class="quick-link-card" id="link-stock" *ngIf="authService.hasPermission('view stock')">
+        <span class="ql-icon">📋</span>
+        <div class="ql-text">
+          <span class="ql-title">Stock</span>
+          <span class="ql-desc">Inventaire des pneus</span>
+        </div>
+        <span class="ql-arrow">→</span>
+      </a>
+
+      <a routerLink="/roles" class="quick-link-card" id="link-roles" *ngIf="authService.hasPermission('view roles')">
+        <span class="ql-icon">🔐</span>
+        <div class="ql-text">
+          <span class="ql-title">Rôles</span>
+          <span class="ql-desc">Gérer les rôles et permissions</span>
         </div>
         <span class="ql-arrow">→</span>
       </a>

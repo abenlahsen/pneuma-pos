@@ -14,7 +14,7 @@ import { User } from '../../core/models/auth.model';
 export class DashboardComponent implements OnInit {
   user = signal<User | null>(null);
 
-  constructor(private authService: AuthService) {}
+  constructor(public authService: AuthService) {}
 
   ngOnInit(): void {
     this.authService.fetchUser().subscribe({
