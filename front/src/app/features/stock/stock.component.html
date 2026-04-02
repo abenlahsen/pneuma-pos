@@ -105,6 +105,13 @@
           </label>
         </div>
 
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" [ngModel]="filterRft()" (ngModelChange)="filterRft.set($event); applyFilters()">
+            Run Flat uniquement
+          </label>
+        </div>
+
         <div class="filter-actions">
           <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser">&#10005;</button>
         </div>

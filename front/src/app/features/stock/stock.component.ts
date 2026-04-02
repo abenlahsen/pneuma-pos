@@ -32,6 +32,7 @@ export class StockComponent implements OnInit {
   filterDepot = signal('');
   filterMadeIn = signal('');
   filterInStock = signal(false);
+  filterRft = signal(false);
   sortBy = signal('');
   sortDirection = signal<'asc' | 'desc'>('asc');
 
@@ -101,6 +102,7 @@ export class StockComponent implements OnInit {
     if (this.filterDepot()) filters['depot'] = this.filterDepot();
     if (this.filterMadeIn()) filters['made_in'] = this.filterMadeIn();
     if (this.filterInStock()) filters['in_stock'] = '1';
+    if (this.filterRft()) filters['rft'] = '1';
     return filters;
   }
 
@@ -135,6 +137,7 @@ export class StockComponent implements OnInit {
     this.filterDepot.set('');
     this.filterMadeIn.set('');
     this.filterInStock.set(false);
+    this.filterRft.set(false);
     this.sortBy.set('');
     this.sortDirection.set('asc');
     this.currentPage.set(1);

@@ -50,6 +50,9 @@ class StockController extends Controller
         if ($request->boolean('in_stock')) {
             $query->where('quantity', '>', 0);
         }
+        if ($request->boolean('rft')) {
+            $query->where('rft', true);
+        }
 
         // Sorting
         $sortable = ['brand', 'dimension', 'profile', 'quantity', 'purchase_price', 'selling_price', 'depot', 'created_at'];
@@ -150,6 +153,7 @@ class StockController extends Controller
         if ($request->filled('brand')) $query->where('brand', $request->brand);
         if ($request->filled('depot')) $query->where('depot', $request->depot);
         if ($request->boolean('in_stock')) $query->where('quantity', '>', 0);
+        if ($request->boolean('rft')) $query->where('rft', true);
 
         return response()->json([
             'total_articles' => (clone $query)->count(),
