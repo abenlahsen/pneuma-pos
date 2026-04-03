@@ -1,0 +1,30 @@
+<form (ngSubmit)="onSubmit()" #form="ngForm" class="form-container">
+
+  <div class="form-section">
+    <h3>Informations</h3>
+    <div class="form-grid">
+      <div class="form-control">
+        <label>Nom *</label>
+        <input type="text" name="name" [(ngModel)]="formData.name" required placeholder="Ex: MICHELIN">
+      </div>
+
+      <div class="form-control">
+        <label>Logo</label>
+        <input type="file" accept="image/*" (change)="onFileChange($event)">
+        <img *ngIf="logoPreview" [src]="logoPreview" alt="Aperçu" class="logo-preview">
+      </div>
+
+      <div class="form-control checkbox-inline">
+        <label>
+          <input type="checkbox" name="is_active" [(ngModel)]="formData.is_active">
+          Actif
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="button" class="btn btn-secondary" (click)="cancel.emit()">Annuler</button>
+    <button type="submit" class="btn btn-primary" [disabled]="!form.valid">Enregistrer</button>
+  </div>
+</form>

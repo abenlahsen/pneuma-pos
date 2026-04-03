@@ -1,0 +1,176 @@
+<form (ngSubmit)="onSubmit()" #form="ngForm" class="form-container">
+
+  <div class="form-section">
+    <h3>Informations générales</h3>
+    <div class="form-grid">
+      <div class="form-control">
+        <label>Référence / SKU</label>
+        <input type="text" name="reference" [(ngModel)]="formData.reference" placeholder="Ex: MIC-PR4-2055516">
+      </div>
+
+      <div class="form-control">
+        <label>Type *</label>
+        <select name="type" [(ngModel)]="formData.type" required>
+          <option value="tyre">Pneu</option>
+          <option value="part">Pièce</option>
+        </select>
+      </div>
+
+      <div class="form-control">
+        <label>Marque</label>
+        <select name="brand_id" [(ngModel)]="formData.brand_id">
+          <option [ngValue]="null">-- Aucune --</option>
+          <option *ngFor="let brand of brands" [ngValue]="brand.id">{{ brand.name }}</option>
+        </select>
+      </div>
+
+      <div class="form-control">
+        <label>Unité</label>
+        <select name="unit" [(ngModel)]="formData.unit">
+          <option value="piece">Pièce</option>
+          <option value="set">Jeu</option>
+          <option value="pair">Paire</option>
+          <option value="meter">Mètre</option>
+          <option value="liter">Litre</option>
+        </select>
+      </div>
+
+      <div class="form-control checkbox-inline">
+        <label>
+          <input type="checkbox" name="is_active" [(ngModel)]="formData.is_active">
+          Actif
+        </label>
+      </div>
+
+      <div class="form-control full-width">
+        <label>Description</label>
+        <textarea name="description" [(ngModel)]="formData.description" rows="2" placeholder="Description du produit..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section" *ngIf="isTyre">
+    <h3>Caractéristiques pneu</h3>
+    <div class="form-grid">
+      <div class="form-control">
+        <label>Profil</label>
+        <input type="text" name="profile" [(ngModel)]="formData.profile" placeholder="Ex: PRIMACY 4">
+      </div>
+
+      <div class="form-control">
+        <label>Largeur (mm)</label>
+        <input type="number" name="tire_width" [(ngModel)]="formData.tire_width" min="0" placeholder="Ex: 205">
+      </div>
+
+      <div class="form-control">
+        <label>Hauteur (%)</label>
+        <input type="number" name="tire_height" [(ngModel)]="formData.tire_height" min="0" placeholder="Ex: 55">
+      </div>
+
+      <div class="form-control">
+        <label>Diamètre jante (pouces)</label>
+        <input type="number" name="tire_diameter" [(ngModel)]="formData.tire_diameter" min="0" placeholder="Ex: 16">
+      </div>
+
+      <div class="form-control">
+        <label>Indice de charge</label>
+        <input type="text" name="tire_load_index" [(ngModel)]="formData.tire_load_index" placeholder="Ex: 91">
+      </div>
+
+      <div class="form-control">
+        <label>Indice de vitesse</label>
+        <input type="text" name="tire_speed_index" [(ngModel)]="formData.tire_speed_index" placeholder="Ex: V">
+      </div>
+
+      <div class="form-control">
+        <label>Saison</label>
+        <select name="tire_season" [(ngModel)]="formData.tire_season">
+          <option [ngValue]="null">-- Aucune --</option>
+          <option value="summer">Été</option>
+          <option value="winter">Hiver</option>
+          <option value="all_season">4 Saisons</option>
+        </select>
+      </div>
+
+      <div class="form-control checkbox-inline">
+        <label>
+          <input type="checkbox" name="tire_runflat" [(ngModel)]="formData.tire_runflat">
+          Run Flat (RFT)
+        </label>
+      </div>
+
+      <div class="form-control checkbox-inline">
+        <label>
+          <input type="checkbox" name="tire_reinforced" [(ngModel)]="formData.tire_reinforced">
+          Renforcé (XL)
+        </label>
+      </div>
+
+      <div class="form-control">
+        <label>Marquage</label>
+        <input type="text" name="tire_marking" [(ngModel)]="formData.tire_marking" placeholder="Ex: MO, AO, *, PNCS, LR...">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section" *ngIf="isTyre">
+    <h3>Étiquetage européen</h3>
+    <div class="form-grid">
+      <div class="form-control">
+        <label>Efficacité énergétique</label>
+        <select name="eu_fuel" [(ngModel)]="formData.eu_fuel">
+          <option [ngValue]="null">--</option>
+          <option *ngFor="let g of ['A','B','C','D','E','F','G']" [value]="g">{{ g }}</option>
+        </select>
+      </div>
+
+      <div class="form-control">
+        <label>Adhérence sur sol mouillé</label>
+        <select name="eu_wet_grip" [(ngModel)]="formData.eu_wet_grip">
+          <option [ngValue]="null">--</option>
+          <option *ngFor="let g of ['A','B','C','D','E','F','G']" [value]="g">{{ g }}</option>
+        </select>
+      </div>
+
+      <div class="form-control">
+        <label>Bruit extérieur (dB)</label>
+        <input type="number" name="eu_noise_db" [(ngModel)]="formData.eu_noise_db" min="0" max="999" placeholder="Ex: 71">
+      </div>
+
+      <div class="form-control">
+        <label>Classe de bruit</label>
+        <select name="eu_noise_class" [(ngModel)]="formData.eu_noise_class">
+          <option [ngValue]="null">--</option>
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h3>Prix</h3>
+    <div class="form-grid">
+      <div class="form-control">
+        <label>Prix d'achat (DH)</label>
+        <input type="number" name="price" [(ngModel)]="formData.price" min="0" step="0.01" placeholder="0.00">
+      </div>
+
+      <div class="form-control">
+        <label>Prix de vente (DH)</label>
+        <input type="number" name="selling_price" [(ngModel)]="formData.selling_price" min="0" step="0.01" placeholder="0.00">
+      </div>
+
+      <div class="form-control">
+        <label>Prix spécial (DH)</label>
+        <input type="number" name="special_selling_price" [(ngModel)]="formData.special_selling_price" min="0" step="0.01" placeholder="0.00">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="button" class="btn btn-secondary" (click)="cancel.emit()">Annuler</button>
+    <button type="submit" class="btn btn-primary" [disabled]="!form.valid">Enregistrer</button>
+  </div>
+</form>

@@ -26,6 +26,34 @@
     <h3 class="section-title">Détails du Produit</h3>
     <div class="form-grid">
       <div class="form-control">
+        <label>Rechercher un produit</label>
+        <input type="text" [ngModel]="productSearch()" (ngModelChange)="productSearch.set($event)" (input)="searchProducts()" name="productSearch" placeholder="Rechercher par marque, dimension, profil..." autocomplete="off">
+      </div>
+      <div class="form-control">
+        <label>Produit *</label>
+        <select [ngModel]="formData.product_id" (change)="onProductSelected($event)" name="product_id" required>
+          <option [value]="0" disabled>-- Sélectionner un produit --</option>
+          <option *ngFor="let p of products()" [value]="p.id">{{ formatProductLabel(p) }}</option>
+        </select>
+        <span class="text-small text-muted" *ngIf="loadingProducts()">Chargement...</span>
+      </div>
+      <div class="form-control">
+        <label>Quantité</label>
+        <input type="number" name="quantity" [(ngModel)]="formData.quantity" min="1" (change)="calculateTotals()">
+      </div>
+      <div class="form-control" *ngIf="formData.product_id">
+        <label>Stock (Dépôt / Zone / DOT) *</label>
+        <select name="stock_id" [(ngModel)]="formData.stock_id" [required]="!sale">
+          <option [ngValue]="null" disabled>-- Sélectionner un stock --</option>
+          <option *ngFor="let s of stocks()" [ngValue]="s.id">{{ formatStockLabel(s) }}</option>
+        </select>
+        <span class="text-small text-muted" *ngIf="loadingStocks()">Chargement...</span>
+        <span class="text-small text-danger" *ngIf="noStockAvailable() && !loadingStocks()">Aucun stock disponible pour ce produit.</span>
+        <span class="text-small text-danger" *ngIf="stockInsufficient">Quantité demandée ({{ formData.quantity }}) supérieure au stock disponible ({{ selectedStock?.quantity }}).</span>
+      </div>
+    </div>
+    <div class="form-grid" style="margin-top: 0.5rem;">
+      <div class="form-control">
         <label>Marque</label>
         <input type="text" name="brand" [(ngModel)]="formData.brand" placeholder="Ex: Michelin">
       </div>
@@ -49,10 +77,6 @@
         <label>RFT (Runflat)</label>
         <input type="text" name="rft" [(ngModel)]="formData.rft">
       </div>
-      <div class="form-control">
-        <label>Quantité</label>
-        <input type="number" name="quantity" [(ngModel)]="formData.quantity" min="1" (change)="calculateTotals()">
-      </div>
     </div>
   </div>
 
@@ -63,7 +87,7 @@
         <label>Fournisseur</label>
         <select name="supplier_id" [(ngModel)]="formData.supplier_id">
           <option [ngValue]="null">-- Sélectionner --</option>
-          <option *ngFor="let s of suppliers" [ngValue]="s.id">{{ s.name }}</option>
+          <option *ngFor="let s of suppliers()" [ngValue]="s.id">{{ s.name }}</option>
         </select>
       </div>
       <div class="form-control">
@@ -103,7 +127,7 @@
         <label>Transport</label>
         <select name="carrier_id" [(ngModel)]="formData.carrier_id">
           <option [ngValue]="null">-- Sélectionner --</option>
-          <option *ngFor="let c of carriers" [ngValue]="c.id">{{ c.name }}</option>
+          <option *ngFor="let c of carriers()" [ngValue]="c.id">{{ c.name }}</option>
         </select>
       </div>
       <div class="form-control">
@@ -114,7 +138,7 @@
         <label>Partenaire</label>
         <select name="partner_id" [(ngModel)]="formData.partner_id">
           <option [ngValue]="null">-- Sélectionner --</option>
-          <option *ngFor="let p of partners" [ngValue]="p.id">{{ p.name }} {{ p.city ? '(' + p.city + ')' : '' }}</option>
+          <option *ngFor="let p of partners()" [ngValue]="p.id">{{ p.name }} {{ p.city ? '(' + p.city + ')' : '' }}</option>
         </select>
       </div>
       <div class="form-control">
@@ -125,7 +149,7 @@
         <label>Commercial</label>
         <select name="commercial_id" [(ngModel)]="formData.commercial_id" class="form-control">
           <option [ngValue]="null">-- Sélectionner un commercial --</option>
-          <option *ngFor="let rep of commercials" [ngValue]="rep.id">{{ rep.name }}</option>
+          <option *ngFor="let rep of commercials()" [ngValue]="rep.id">{{ rep.name }}</option>
         </select>
       </div>
       <div class="form-control">
@@ -133,8 +157,8 @@
         <select name="status" [(ngModel)]="formData.status">
           <option value="EN COURS">En cours</option>
           <option value="LIVRE">Livré</option>
+          <option value="MONTE">Monté</option>
           <option value="ANNULE">Annulé</option>
-          <option value="RETOUR">Retour</option>
         </select>
       </div>
       <div class="form-control">
@@ -169,6 +193,6 @@
 
   <div class="form-actions">
     <button type="button" class="btn btn-secondary" (click)="cancel.emit()">Annuler</button>
-    <button type="submit" class="btn btn-primary" [disabled]="!form.valid">Enregistrer</button>
+    <button type="submit" class="btn btn-primary" [disabled]="!form.valid || (!sale && (noStockAvailable() || stockInsufficient))">Enregistrer</button>
   </div>
 </form>

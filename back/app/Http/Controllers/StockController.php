@@ -11,35 +11,44 @@ class StockController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Stock::query();
+        $query = Stock::with('product.brand');
 
-        // Smart search
+        // Smart search — queries product fields
         if ($request->filled('search')) {
             $parsed = Stock::parseSearchQuery($request->search);
 
-            if ($parsed['width']) {
-                $query->where('width', $parsed['width']);
+            if ($parsed['width'] || $parsed['height'] || $parsed['diameter']) {
+                $query->whereHas('product', function ($pq) use ($parsed) {
+                    if ($parsed['width']) $pq->where('tire_width', $parsed['width']);
+                    if ($parsed['height']) $pq->where('tire_height', $parsed['height']);
+                    if ($parsed['diameter']) $pq->where('tire_diameter', $parsed['diameter']);
+                });
             }
-            if ($parsed['height']) {
-                $query->where('height', $parsed['height']);
-            }
-            if ($parsed['diameter']) {
-                $query->where('diameter', $parsed['diameter']);
-            }
+
             foreach ($parsed['text'] as $term) {
                 $query->where(function ($q) use ($term) {
-                    $q->where('brand', 'like', "%{$term}%")
-                      ->orWhere('profile', 'like', "%{$term}%")
-                      ->orWhere('dimension', 'like', "%{$term}%")
-                      ->orWhere('marking', 'like', "%{$term}%")
-                      ->orWhere('depot', 'like', "%{$term}%");
+                    $q->where('depot', 'like', "%{$term}%")
+                      ->orWhereHas('product', function ($pq) use ($term) {
+                          $pq->where('profile', 'like', "%{$term}%")
+                            ->orWhere('tire_marking', 'like', "%{$term}%")
+                            ->orWhereHas('brand', function ($bq) use ($term) {
+                                $bq->where('name', 'like', "%{$term}%");
+                            });
+                      });
                 });
             }
         }
 
+        // Filter by product_id
+        if ($request->filled('product_id')) {
+            $query->where('product_id', $request->product_id);
+        }
+
         // Filters
         if ($request->filled('brand')) {
-            $query->where('brand', $request->brand);
+            $query->whereHas('product.brand', function ($bq) use ($request) {
+                $bq->where('name', $request->brand);
+            });
         }
         if ($request->filled('depot')) {
             $query->where('depot', $request->depot);
@@ -51,16 +60,18 @@ class StockController extends Controller
             $query->where('quantity', '>', 0);
         }
         if ($request->boolean('rft')) {
-            $query->where('rft', true);
+            $query->whereHas('product', function ($pq) {
+                $pq->where('tire_runflat', true);
+            });
         }
 
         // Sorting
-        $sortable = ['brand', 'dimension', 'profile', 'quantity', 'purchase_price', 'selling_price', 'depot', 'created_at'];
-        if ($request->filled('sort_by') && in_array($request->sort_by, $sortable)) {
+        $stockSortable = ['quantity', 'purchase_price', 'depot', 'created_at'];
+        if ($request->filled('sort_by') && in_array($request->sort_by, $stockSortable)) {
             $direction = $request->get('sort_direction', 'asc') === 'desc' ? 'desc' : 'asc';
             $query->orderBy($request->sort_by, $direction);
         } else {
-            $query->orderByDesc('quantity')->orderByRaw('brand IS NULL, brand ASC')->orderByDesc('id');
+            $query->orderByDesc('quantity')->orderByDesc('id');
         }
 
         return response()->json($query->paginate($request->get('per_page', 50)));
@@ -69,58 +80,44 @@ class StockController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'brand' => 'nullable|string|max:255',
-            'profile' => 'nullable|string|max:255',
-            'dimension' => 'nullable|string|max:100',
-            'ic' => 'nullable|string|max:50',
-            'iv' => 'nullable|string|max:10',
-            'rft' => 'nullable|boolean',
-            'reinforced' => 'nullable|boolean',
-            'marking' => 'nullable|string|max:255',
+            'product_id' => 'required|exists:products,id',
             'made_in' => 'nullable|string|max:100',
             'dot' => 'nullable|string|max:50',
             'depot' => 'nullable|string|max:100',
             'zone' => 'nullable|string|max:50',
             'quantity' => 'required|integer|min:0',
             'purchase_price' => 'nullable|numeric|min:0',
-            'selling_price' => 'nullable|numeric|min:0',
-            'special_price' => 'nullable|numeric|min:0',
         ]);
 
         $validated['user_id'] = $request->user()->id;
 
         $stock = Stock::create($validated);
+        $stock->load('product.brand');
 
         return response()->json($stock, 201);
     }
 
     public function show(Stock $stock): JsonResponse
     {
+        $stock->load('product.brand');
+
         return response()->json($stock);
     }
 
     public function update(Request $request, Stock $stock): JsonResponse
     {
         $validated = $request->validate([
-            'brand' => 'nullable|string|max:255',
-            'profile' => 'nullable|string|max:255',
-            'dimension' => 'nullable|string|max:100',
-            'ic' => 'nullable|string|max:50',
-            'iv' => 'nullable|string|max:10',
-            'rft' => 'nullable|boolean',
-            'reinforced' => 'nullable|boolean',
-            'marking' => 'nullable|string|max:255',
+            'product_id' => 'sometimes|exists:products,id',
             'made_in' => 'nullable|string|max:100',
             'dot' => 'nullable|string|max:50',
             'depot' => 'nullable|string|max:100',
             'zone' => 'nullable|string|max:50',
             'quantity' => 'sometimes|integer|min:0',
             'purchase_price' => 'nullable|numeric|min:0',
-            'selling_price' => 'nullable|numeric|min:0',
-            'special_price' => 'nullable|numeric|min:0',
         ]);
 
         $stock->update($validated);
+        $stock->load('product.brand');
 
         return response()->json($stock);
     }
@@ -138,35 +135,55 @@ class StockController extends Controller
 
         if ($request->filled('search')) {
             $parsed = Stock::parseSearchQuery($request->search);
-            if ($parsed['width']) $query->where('width', $parsed['width']);
-            if ($parsed['height']) $query->where('height', $parsed['height']);
-            if ($parsed['diameter']) $query->where('diameter', $parsed['diameter']);
+            if ($parsed['width'] || $parsed['height'] || $parsed['diameter']) {
+                $query->whereHas('product', function ($pq) use ($parsed) {
+                    if ($parsed['width']) $pq->where('tire_width', $parsed['width']);
+                    if ($parsed['height']) $pq->where('tire_height', $parsed['height']);
+                    if ($parsed['diameter']) $pq->where('tire_diameter', $parsed['diameter']);
+                });
+            }
             foreach ($parsed['text'] as $term) {
                 $query->where(function ($q) use ($term) {
-                    $q->where('brand', 'like', "%{$term}%")
-                      ->orWhere('profile', 'like', "%{$term}%")
-                      ->orWhere('dimension', 'like', "%{$term}%");
+                    $q->whereHas('product', function ($pq) use ($term) {
+                        $pq->where('profile', 'like', "%{$term}%");
+                    });
                 });
             }
         }
 
-        if ($request->filled('brand')) $query->where('brand', $request->brand);
+        if ($request->filled('brand')) {
+            $query->whereHas('product.brand', fn ($bq) => $bq->where('name', $request->brand));
+        }
         if ($request->filled('depot')) $query->where('depot', $request->depot);
         if ($request->boolean('in_stock')) $query->where('quantity', '>', 0);
-        if ($request->boolean('rft')) $query->where('rft', true);
+        if ($request->boolean('rft')) {
+            $query->whereHas('product', fn ($pq) => $pq->where('tire_runflat', true));
+        }
+
+        // selling_price now comes from product via join
+        $baseQuery = clone $query;
 
         return response()->json([
             'total_articles' => (clone $query)->count(),
             'total_quantity' => (int) (clone $query)->sum('quantity'),
             'total_purchase_value' => round((clone $query)->selectRaw('SUM(quantity * purchase_price) as total')->value('total') ?? 0, 2),
-            'total_selling_value' => round((clone $query)->selectRaw('SUM(quantity * selling_price) as total')->value('total') ?? 0, 2),
+            'total_selling_value' => round(
+                $baseQuery->join('products', 'stocks.product_id', '=', 'products.id')
+                    ->selectRaw('SUM(stocks.quantity * products.selling_price) as total')
+                    ->value('total') ?? 0,
+                2
+            ),
         ]);
     }
 
     public function filters(): JsonResponse
     {
+        $stockProductIds = Stock::distinct()->pluck('product_id')->filter();
+
         return response()->json([
-            'brands' => Stock::distinct()->whereNotNull('brand')->where('brand', '!=', '')->pluck('brand')->sort()->values(),
+            'brands' => \App\Models\Brand::whereHas('products', function ($q) use ($stockProductIds) {
+                $q->whereIn('id', $stockProductIds);
+            })->orderBy('name')->pluck('name')->values(),
             'depots' => Stock::distinct()->whereNotNull('depot')->where('depot', '!=', '')->pluck('depot')->sort()->values(),
             'zones' => Stock::distinct()->whereNotNull('zone')->where('zone', '!=', '')->pluck('zone')->sort()->values(),
             'countries' => Stock::distinct()->whereNotNull('made_in')->where('made_in', '!=', '')->pluck('made_in')->sort()->values(),
@@ -195,30 +212,16 @@ class StockController extends Controller
                 $brand = trim($row['A'] ?? '');
                 if ($brand === '') continue;
 
-                $dimension = trim($row['C'] ?? '');
-                $parsed = Stock::parseDimension($dimension);
                 $qty = is_numeric($row['K'] ?? null) ? (int) $row['K'] : 0;
 
                 $records[] = [
-                    'brand' => $brand,
-                    'profile' => trim($row['B'] ?? '') ?: null,
-                    'dimension' => $dimension ?: null,
-                    'width' => $parsed['width'],
-                    'height' => $parsed['height'],
-                    'diameter' => $parsed['diameter'],
-                    'ic' => isset($row['D']) ? trim((string) $row['D']) ?: null : null,
-                    'iv' => isset($row['E']) ? trim((string) $row['E']) ?: null : null,
-                    'rft' => ! empty($row['F']),
-                    'reinforced' => false,
-                    'marking' => null,
+                    'product_id' => null, // Import keeps as-is for now
                     'made_in' => trim($row['G'] ?? '') ?: null,
                     'dot' => isset($row['H']) ? trim((string) $row['H']) ?: null : null,
                     'depot' => self::normalizeDepot($row['I'] ?? ''),
                     'zone' => trim($row['J'] ?? '') ?: null,
                     'quantity' => $qty,
                     'purchase_price' => is_numeric($row['M'] ?? null) ? round((float) $row['M'], 2) : null,
-                    'selling_price' => is_numeric($row['O'] ?? null) ? round((float) $row['O'], 2) : null,
-                    'special_price' => is_numeric($row['P'] ?? null) ? round((float) $row['P'], 2) : null,
                     'user_id' => $userId,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -239,8 +242,7 @@ class StockController extends Controller
         $v = trim($value);
         if ($v === '') return null;
 
-        // Normalize: "depot1", "DEPOT1", "Depot1", "depot 1" → "Depot1"
-        $v = preg_replace('/\s+/', '', $v); // remove spaces
+        $v = preg_replace('/\s+/', '', $v);
         return ucfirst(strtolower($v));
     }
 }

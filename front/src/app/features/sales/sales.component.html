@@ -107,6 +107,7 @@
       <table class="table">
         <thead>
           <tr>
+            <th class="text-center">Actions</th>
             <th class="sortable" (click)="toggleSort('date')">Date <span class="sort-icon">{{ sortBy() === 'date' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('client')">Client <span class="sort-icon">{{ sortBy() === 'client' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th>Commercial</th>
@@ -119,7 +120,6 @@
             <th class="sortable" (click)="toggleSort('status')">Statut <span class="sort-icon">{{ sortBy() === 'status' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('created_at')">Créé le <span class="sort-icon">{{ sortBy() === 'created_at' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('updated_at')">Modifié le <span class="sort-icon">{{ sortBy() === 'updated_at' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
-            <th class="text-center">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -136,6 +136,11 @@
           </tr>
           
           <tr *ngFor="let sale of sales()">
+            <td class="text-center actions-cell">
+              <button class="btn-icon btn-sm" (click)="openPayments(sale)" title="Paiements">💳</button>
+              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(sale)" title="Modifier" *ngIf="authService.hasPermission('edit sales')">✏️</button>
+              <button class="btn-icon btn-sm text-danger" (click)="deleteSale(sale)" title="Supprimer" *ngIf="authService.hasPermission('delete sales')">🗑️</button>
+            </td>
             <td>{{ sale.date | date:'dd/MM/yyyy' }}</td>
             <td>
               <div class="fw-medium">{{ sale.client || '-' }}</div>
@@ -143,11 +148,16 @@
             </td>
             <td>{{ sale.commercial?.name || '-' }}</td>
             <td>
-              <span class="badge badge-primary">{{ sale.brand || '-' }}</span>
+              <span class="badge badge-primary" *ngIf="sale.linked_product?.brand">{{ sale.linked_product!.brand!.name }}</span>
+              <span class="badge badge-primary" *ngIf="!sale.linked_product?.brand">{{ sale.brand || '-' }}</span>
             </td>
             <td>
-              <div class="fw-medium">{{ sale.dimension || '-' }}</div>
-              <div class="text-small text-muted">{{ sale.profile || '' }}</div>
+              <div class="fw-medium" *ngIf="sale.linked_product">
+                <span *ngIf="sale.linked_product.tire_width">{{ sale.linked_product.tire_width }}/{{ sale.linked_product.tire_height }}R{{ sale.linked_product.tire_diameter }}</span>
+                <span *ngIf="!sale.linked_product.tire_width">{{ sale.linked_product.reference || sale.dimension || '-' }}</span>
+              </div>
+              <div class="fw-medium" *ngIf="!sale.linked_product">{{ sale.dimension || '-' }}</div>
+              <div class="text-small text-muted">{{ sale.linked_product?.profile || sale.profile || '' }}</div>
             </td>
             <td>{{ sale.quantity }}</td>
             <td class="text-right fw-semibold">
@@ -174,15 +184,11 @@
                 <option value="EN COURS">En cours</option>
                 <option value="LIVRE">Livré</option>
                 <option value="MONTE">Monté</option>
+                <option value="ANNULE">Annulé</option>
               </select>
             </td>
             <td>{{ sale.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
             <td>{{ sale.updated_at | date:'dd/MM/yyyy HH:mm' }}</td>
-            <td class="text-center actions-cell">
-              <button class="btn-icon btn-sm" (click)="openPayments(sale)" title="Paiements">💳</button>
-              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(sale)" title="Modifier" *ngIf="authService.hasPermission('edit sales')">✏️</button>
-              <button class="btn-icon btn-sm text-danger" (click)="deleteSale(sale)" title="Supprimer" *ngIf="authService.hasPermission('delete sales')">🗑️</button>
-            </td>
           </tr>
         </tbody>
       </table>

@@ -31,6 +31,8 @@ export class NavbarComponent {
     { label: '📦 Achats', route: '/achats', permission: 'view purchases' },
     { label: '💰 Cash Flow', route: '/cash-flow', permission: 'view cash-flow' },
     { label: '📋 Stock', route: '/stock', permission: 'view stock' },
+    { label: '📦 Produits', route: '/products', permission: 'view products' },
+    { label: '🏭 Marques', route: '/brands', permission: 'view brands' },
     { label: '🏢 Fournisseurs', route: '/suppliers', permission: 'view suppliers' },
     { label: '🚚 Transporteurs', route: '/carriers', permission: 'view carriers' },
     { label: '🤝 Partenaires', route: '/partners', permission: 'view partners' },

@@ -1,14 +1,18 @@
+import { Product } from './product.model';
 import { Supplier } from './supplier.model';
 export interface Purchase {
   id: number;
   date: string;
   product: string;
+  product_id: number | null;
+  stock_id: number | null;
+  linked_product?: Product;
   supplier_id: number;
   commercial_id?: number | null;
   quantity: number;
   unit_price: number;
   total_price?: number;
-  status: 'EN COURS' | 'RECU';
+  status: 'EN COURS' | 'RECU' | 'ANNULE' | 'RETOUR';
   payment_status: 'PAYE' | 'NON PAYE' | 'PARTIEL';
   supplier?: Supplier;
   commercial?: { id: number; name: string } | null;
@@ -19,11 +23,13 @@ export interface Purchase {
 export interface PurchasePayload {
   date: string;
   product: string;
+  product_id: number;
+  stock_id: number | null;
   supplier_id: number;
   commercial_id?: number | null;
   quantity: number;
   unit_price: number;
-  status: 'EN COURS' | 'RECU';
+  status: 'EN COURS' | 'RECU' | 'ANNULE' | 'RETOUR';
   payment_status: 'PAYE' | 'NON PAYE' | 'PARTIEL';
 }
 

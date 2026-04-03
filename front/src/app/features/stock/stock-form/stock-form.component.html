@@ -1,50 +1,35 @@
 <form (ngSubmit)="onSubmit()" #form="ngForm" class="form-container">
 
   <div class="form-section">
-    <h3>Identification</h3>
+    <h3>Produit</h3>
     <div class="form-grid">
-      <div class="form-control">
-        <label>Marque</label>
-        <input type="text" name="brand" [(ngModel)]="formData.brand" placeholder="Ex: MICHELIN">
+      <div class="form-control full-width">
+        <label>Rechercher un produit</label>
+        <input
+          type="text"
+          [ngModel]="productSearch()"
+          (ngModelChange)="productSearch.set($event)"
+          (input)="searchProducts()"
+          name="productSearch"
+          placeholder="Rechercher par marque, dimension, profil..."
+          autocomplete="off"
+        >
       </div>
 
-      <div class="form-control">
-        <label>Profil</label>
-        <input type="text" name="profile" [(ngModel)]="formData.profile" placeholder="Ex: PRIMACY 4">
-      </div>
-
-      <div class="form-control">
-        <label>Dimension</label>
-        <input type="text" name="dimension" [(ngModel)]="formData.dimension" placeholder="Ex: 205/55R16">
-      </div>
-
-      <div class="form-control">
-        <label>IC</label>
-        <input type="text" name="ic" [(ngModel)]="formData.ic" placeholder="Indice de charge">
-      </div>
-
-      <div class="form-control">
-        <label>IV</label>
-        <input type="text" name="iv" [(ngModel)]="formData.iv" placeholder="Indice de vitesse">
-      </div>
-
-      <div class="form-control">
-        <label>Marquage</label>
-        <input type="text" name="marking" [(ngModel)]="formData.marking" placeholder="Ex: M+S, *">
-      </div>
-
-      <div class="form-control checkbox-inline">
-        <label>
-          <input type="checkbox" name="rft" [(ngModel)]="formData.rft">
-          Run Flat (RFT)
-        </label>
-      </div>
-
-      <div class="form-control checkbox-inline">
-        <label>
-          <input type="checkbox" name="reinforced" [(ngModel)]="formData.reinforced">
-          Renforcé (XL)
-        </label>
+      <div class="form-control full-width">
+        <label>Produit *</label>
+        <select
+          name="product_id"
+          [ngModel]="formData.product_id"
+          (change)="onProductSelected($event)"
+          required
+        >
+          <option [value]="0" disabled>-- Sélectionner un produit --</option>
+          <option *ngFor="let p of products()" [value]="p.id">
+            {{ formatProductLabel(p) }}
+          </option>
+        </select>
+        <span class="hint" *ngIf="loadingProducts()">Chargement...</span>
       </div>
     </div>
   </div>
@@ -86,21 +71,11 @@
         <label>Prix d'achat (DH)</label>
         <input type="number" name="purchase_price" [(ngModel)]="formData.purchase_price" min="0" step="0.01" placeholder="0.00">
       </div>
-
-      <div class="form-control">
-        <label>Prix de vente (DH)</label>
-        <input type="number" name="selling_price" [(ngModel)]="formData.selling_price" min="0" step="0.01" placeholder="0.00">
-      </div>
-
-      <div class="form-control">
-        <label>Prix spécial (DH)</label>
-        <input type="number" name="special_price" [(ngModel)]="formData.special_price" min="0" step="0.01" placeholder="0.00">
-      </div>
     </div>
   </div>
 
   <div class="form-actions">
     <button type="button" class="btn btn-secondary" (click)="cancel.emit()">Annuler</button>
-    <button type="submit" class="btn btn-primary" [disabled]="!form.valid">Enregistrer</button>
+    <button type="submit" class="btn btn-primary" [disabled]="!form.valid || formData.product_id === 0">Enregistrer</button>
   </div>
 </form>

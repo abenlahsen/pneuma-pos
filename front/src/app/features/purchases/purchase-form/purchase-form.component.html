@@ -8,8 +8,40 @@
     </div>
     <div class="col-md-6 mb-4">
       <div class="form-group">
-        <label>Produit / Pneus</label>
-        <input type="text" class="form-control" [(ngModel)]="formData.product" name="product" placeholder="ex: 225/40R18 BRIDGESTONE..." required>
+        <label>Rechercher un produit</label>
+        <input type="text" class="form-control" [ngModel]="productSearch()" (ngModelChange)="productSearch.set($event)" (input)="searchProducts()" name="productSearch" placeholder="Rechercher par marque, dimension, profil..." autocomplete="off">
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-4">
+      <div class="form-group">
+        <label>Produit *</label>
+        <select class="form-control" [ngModel]="formData.product_id" (change)="onProductSelected($event)" name="product_id" required>
+          <option [value]="0" disabled>-- Sélectionner un produit --</option>
+          <option *ngFor="let p of products()" [value]="p.id">{{ formatProductLabel(p) }}</option>
+        </select>
+        <span class="text-small text-muted" *ngIf="loadingProducts()">Chargement...</span>
+      </div>
+    </div>
+    <div class="col-md-6 mb-4">
+      <div class="form-group">
+        <label>Ancien champ produit</label>
+        <input type="text" class="form-control" [(ngModel)]="formData.product" name="product" placeholder="(ancien champ texte)">
+      </div>
+    </div>
+  </div>
+
+  <div class="row" *ngIf="formData.product_id">
+    <div class="col-md-12 mb-4">
+      <div class="form-group">
+        <label>Stock (Dépôt / Zone / DOT)</label>
+        <select class="form-control" [(ngModel)]="formData.stock_id" name="stock_id">
+          <option [ngValue]="null">-- Sélectionner un stock --</option>
+          <option *ngFor="let s of stocks()" [ngValue]="s.id">{{ formatStockLabel(s) }}</option>
+        </select>
+        <span class="text-small text-muted" *ngIf="loadingStocks()">Chargement...</span>
       </div>
     </div>
   </div>
@@ -57,6 +89,30 @@
   </div>
 
 
+
+  <div class="row">
+    <div class="col-md-6 mb-4">
+      <div class="form-group">
+        <label>Statut</label>
+        <select class="form-control" [(ngModel)]="formData.status" name="status">
+          <option value="EN COURS">En cours</option>
+          <option value="RECU">Reçu</option>
+          <option value="ANNULE">Annulé</option>
+          <option value="RETOUR">Retour</option>
+        </select>
+      </div>
+    </div>
+    <div class="col-md-6 mb-4">
+      <div class="form-group">
+        <label>Statut Paiement</label>
+        <select class="form-control" [(ngModel)]="formData.payment_status" name="payment_status">
+          <option value="NON PAYE">Non Payé</option>
+          <option value="PARTIEL">Partiel</option>
+          <option value="PAYE">Payé</option>
+        </select>
+      </div>
+    </div>
+  </div>
 
   <div class="form-actions mt-4 text-right">
     <button type="button" class="btn btn-secondary mr-2" (click)="cancel.emit()" [disabled]="loading()">Annuler</button>

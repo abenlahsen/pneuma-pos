@@ -21,6 +21,8 @@ class Sale extends Model
         'rft',
         'brand',
         'profile',
+        'product_id',
+        'stock_id',
         'purchase_price',
         'total_purchase',
         'selling_price',
@@ -55,6 +57,19 @@ class Sale extends Model
         'service_fee' => 'decimal:2',
         'delivery_date' => 'date:Y-m-d',
     ];
+
+    /**
+     * The linked product record.
+     */
+    public function linkedProduct(): BelongsTo
+    {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
+
+    public function stock(): BelongsTo
+    {
+        return $this->belongsTo(Stock::class);
+    }
 
     /**
      * The provider of the products supplied for this sale.

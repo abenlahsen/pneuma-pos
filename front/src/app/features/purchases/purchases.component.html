@@ -65,6 +65,8 @@
             <option value="">Tous</option>
             <option value="EN COURS">En cours</option>
             <option value="RECU">Reçu</option>
+            <option value="ANNULE">Annulé</option>
+            <option value="RETOUR">Retour</option>
           </select>
         </div>
 
@@ -101,6 +103,7 @@
       <table class="table">
         <thead>
           <tr>
+            <th class="text-center">Actions</th>
             <th class="sortable" (click)="toggleSort('date')">Date <span class="sort-icon">{{ sortBy() === 'date' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('product')">Produit <span class="sort-icon">{{ sortBy() === 'product' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th>Fournisseur / Commercial</th>
@@ -111,7 +114,6 @@
             <th class="sortable" (click)="toggleSort('status')">Statut <span class="sort-icon">{{ sortBy() === 'status' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('created_at')">Créé le <span class="sort-icon">{{ sortBy() === 'created_at' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('updated_at')">Modifié le <span class="sort-icon">{{ sortBy() === 'updated_at' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
-            <th class="text-center">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -128,9 +130,19 @@
           </tr>
           
           <tr *ngFor="let purchase of purchases()">
+            <td class="text-center actions-cell">
+              <button class="btn-icon btn-sm" (click)="openPayments(purchase)" title="Paiements">💳</button>
+              <button class="btn-icon btn-sm text-primary" (click)="openForm(purchase)" title="Modifier" *ngIf="authService.hasPermission('edit purchases')">✏️</button>
+              <button class="btn-icon btn-sm text-danger" (click)="deletePurchase(purchase)" title="Supprimer" *ngIf="authService.hasPermission('delete purchases')">🗑️</button>
+            </td>
             <td>{{ purchase.date | date:'dd/MM/yyyy' }}</td>
             <td>
-              <div class="fw-medium">{{ purchase.product }}</div>
+              <div class="fw-medium" *ngIf="purchase.linked_product">
+                <span class="badge badge-primary" *ngIf="purchase.linked_product.brand">{{ purchase.linked_product.brand!.name }}</span>
+                {{ purchase.linked_product.reference || '' }}
+                <span *ngIf="purchase.linked_product.tire_width"> {{ purchase.linked_product.tire_width }}/{{ purchase.linked_product.tire_height }}R{{ purchase.linked_product.tire_diameter }}</span>
+              </div>
+              <div class="fw-medium" *ngIf="!purchase.linked_product">{{ purchase.product || '-' }}</div>
             </td>
             <td>
               <div class="fw-medium">{{ purchase.supplier?.name || '-' }}</div>
@@ -152,22 +164,21 @@
               </span>
             </td>
             <td class="status-cell">
-              <select class="status-select" 
+              <select class="status-select"
                       [class.bg-en-cours]="purchase.status === 'EN COURS'"
                       [class.bg-recu]="purchase.status === 'RECU'"
-                      [ngModel]="purchase.status" 
+                      [class.bg-annule]="purchase.status === 'ANNULE'"
+                      [class.bg-retour]="purchase.status === 'RETOUR'"
+                      [ngModel]="purchase.status"
                       (change)="updatePurchaseStatus(purchase, $event.target)">
                 <option value="EN COURS">En cours</option>
                 <option value="RECU">Reçu</option>
+                <option value="ANNULE">Annulé</option>
+                <option value="RETOUR">Retour</option>
               </select>
             </td>
             <td>{{ purchase.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
             <td>{{ purchase.updated_at | date:'dd/MM/yyyy HH:mm' }}</td>
-            <td class="text-center actions-cell">
-              <button class="btn-icon btn-sm" (click)="openPayments(purchase)" title="Paiements">💳</button>
-              <button class="btn-icon btn-sm text-primary" (click)="openForm(purchase)" title="Modifier" *ngIf="authService.hasPermission('edit purchases')">✏️</button>
-              <button class="btn-icon btn-sm text-danger" (click)="deletePurchase(purchase)" title="Supprimer" *ngIf="authService.hasPermission('delete purchases')">🗑️</button>
-            </td>
           </tr>
         </tbody>
       </table>
