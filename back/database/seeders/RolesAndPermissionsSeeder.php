@@ -25,6 +25,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'users' => ['view', 'create', 'edit', 'delete'],
             'roles' => ['view', 'create', 'edit', 'delete'],
             'stock' => ['view', 'create', 'edit', 'delete', 'import'],
+            'brands' => ['view', 'create', 'edit', 'delete'],
+            'products' => ['view', 'create', 'edit', 'delete'],
         ];
 
         // Create permissions

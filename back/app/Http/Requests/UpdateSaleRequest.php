@@ -14,6 +14,8 @@ class UpdateSaleRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'product_id' => 'nullable|exists:products,id',
+            'stock_id' => 'nullable|exists:stocks,id',
             'date' => 'nullable|date',
             'with_invoice' => 'boolean',
             'quantity' => 'nullable|integer',

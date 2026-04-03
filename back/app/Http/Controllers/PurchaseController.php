@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Purchase;
+use App\Models\Stock;
 use App\Models\Supplier;
 use App\Models\User;
 
@@ -11,7 +12,7 @@ class PurchaseController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Purchase::with(['supplier', 'commercial']);
+        $query = Purchase::with(['supplier', 'commercial', 'linkedProduct.brand']);
 
         // Sorting
         $sortable = ['date', 'product', 'quantity', 'unit_price', 'payment_status', 'status', 'created_at', 'updated_at'];
@@ -32,6 +33,13 @@ class PurchaseController extends Controller
                   })
                   ->orWhereHas('commercial', function ($q2) use ($search) {
                       $q2->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('linkedProduct', function ($q2) use ($search) {
+                      $q2->where('profile', 'like', "%{$search}%")
+                        ->orWhere('reference', 'like', "%{$search}%")
+                        ->orWhereHas('brand', function ($q3) use ($search) {
+                            $q3->where('name', 'like', "%{$search}%");
+                        });
                   });
             });
         }
@@ -65,41 +73,56 @@ class PurchaseController extends Controller
     {
         $validated = $request->validate([
             'date' => 'required|date',
-            'product' => 'required|string|max:255',
+            'product' => 'nullable|string|max:255',
+            'product_id' => 'required|exists:products,id',
+            'stock_id' => 'nullable|exists:stocks,id',
             'supplier_id' => 'required|exists:suppliers,id',
             'commercial_id' => 'nullable|exists:users,id',
             'quantity' => 'required|integer|min:1',
             'unit_price' => 'required|numeric|min:0',
-            'status' => 'required|string|in:EN COURS,RECU',
+            'status' => 'required|string|in:EN COURS,RECU,ANNULE,RETOUR',
             'payment_status' => 'required|string|in:PAYE,NON PAYE,PARTIEL',
         ]);
 
         $purchase = Purchase::create($validated);
 
-        return response()->json($purchase->load(['supplier', 'commercial']), 201);
+        // Increase stock quantity
+        if ($purchase->stock_id) {
+            Stock::where('id', $purchase->stock_id)->increment('quantity', $purchase->quantity ?? 0);
+        }
+
+        return response()->json($purchase->load(['supplier', 'commercial', 'linkedProduct.brand']), 201);
     }
 
     public function show(Purchase $purchase)
     {
-        return response()->json($purchase->load(['supplier', 'commercial']));
+        return response()->json($purchase->load(['supplier', 'commercial', 'linkedProduct.brand']));
     }
 
     public function update(Request $request, Purchase $purchase)
     {
         $validated = $request->validate([
-            'date' => 'required|date',
-            'product' => 'required|string|max:255',
-            'supplier_id' => 'required|exists:suppliers,id',
+            'date' => 'nullable|date',
+            'product' => 'nullable|string|max:255',
+            'product_id' => 'nullable|exists:products,id',
+            'stock_id' => 'nullable|exists:stocks,id',
+            'supplier_id' => 'nullable|exists:suppliers,id',
             'commercial_id' => 'nullable|exists:users,id',
-            'quantity' => 'required|integer|min:1',
-            'unit_price' => 'required|numeric|min:0',
-            'status' => 'required|string|in:EN COURS,RECU',
-            'payment_status' => 'required|string|in:PAYE,NON PAYE,PARTIEL',
+            'quantity' => 'nullable|integer|min:1',
+            'unit_price' => 'nullable|numeric|min:0',
+            'status' => 'nullable|string|in:EN COURS,RECU,ANNULE,RETOUR',
+            'payment_status' => 'nullable|string|in:PAYE,NON PAYE,PARTIEL',
         ]);
 
+        $oldStatus = $purchase->status;
         $purchase->update($validated);
 
-        return response()->json($purchase->load(['supplier', 'commercial']));
+        // Remove stock if status changed to ANNULE or RETOUR (and wasn't already)
+        if ($purchase->stock_id && in_array($purchase->status, ['ANNULE', 'RETOUR']) && !in_array($oldStatus, ['ANNULE', 'RETOUR'])) {
+            Stock::where('id', $purchase->stock_id)->decrement('quantity', $purchase->quantity ?? 0);
+        }
+
+        return response()->json($purchase->load(['supplier', 'commercial', 'linkedProduct.brand']));
     }
 
     public function destroy(Purchase $purchase)

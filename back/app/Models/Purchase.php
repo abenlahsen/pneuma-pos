@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Product;
 use App\Models\Supplier;
 use App\Models\User;
 
@@ -14,6 +15,8 @@ class Purchase extends Model
     protected $fillable = [
         'date',
         'product',
+        'product_id',
+        'stock_id',
         'supplier_id',
         'commercial_id',
         'quantity',
@@ -35,6 +38,16 @@ class Purchase extends Model
     public function getTotalPriceAttribute(): float
     {
         return round($this->quantity * $this->unit_price, 2);
+    }
+
+    public function linkedProduct()
+    {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
+
+    public function stock()
+    {
+        return $this->belongsTo(Stock::class);
     }
 
     public function supplier()

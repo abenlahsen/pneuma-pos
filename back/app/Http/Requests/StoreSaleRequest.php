@@ -14,6 +14,8 @@ class StoreSaleRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'product_id' => 'required|exists:products,id',
+            'stock_id' => 'required|exists:stocks,id',
             'date' => 'nullable|date',
             'with_invoice' => 'boolean',
             'quantity' => 'nullable|integer',

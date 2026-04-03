@@ -190,7 +190,11 @@ export class StockComponent implements OnInit {
   }
 
   deleteStock(stock: Stock): void {
-    if (confirm(`Supprimer cet article ?\n${stock.brand} ${stock.dimension}`)) {
+    const label = stock.product
+      ? [stock.product.brand?.name, stock.product.profile, stock.product.tire_width ? `${stock.product.tire_width}/${stock.product.tire_height}R${stock.product.tire_diameter}` : ''].filter(Boolean).join(' — ')
+      : `Stock #${stock.id}`;
+    const name = label || `Stock #${stock.id}`;
+    if (confirm(`Supprimer cet article ?\n${name}`)) {
       this.stockService.deleteStock(stock.id).subscribe({
         next: () => {
           this.loadData();

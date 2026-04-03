@@ -1,3 +1,5 @@
+import { Product } from './product.model';
+
 export interface Sale {
   id: number;
   date: string;
@@ -9,6 +11,9 @@ export interface Sale {
   rft: string;
   brand: string;
   profile: string;
+  product_id: number | null;
+  stock_id: number | null;
+  linked_product?: Product;
   purchase_price: number;
   total_purchase: number;
   selling_price: number;

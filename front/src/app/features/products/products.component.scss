@@ -1,0 +1,35 @@
+@import '../sales/sales.component.scss';
+
+.inactive-row {
+  opacity: 0.5;
+}
+
+.badge-muted {
+  background: rgba(113, 128, 150, 0.1);
+  color: #718096;
+}
+
+.tag {
+  display: inline-block;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  margin-left: 0.25rem;
+  vertical-align: middle;
+
+  &-season {
+    background: rgba(72, 187, 120, 0.15);
+    color: #276749;
+  }
+
+  &-rft {
+    background: rgba(66, 153, 225, 0.15);
+    color: #2b6cb0;
+  }
+
+  &-xl {
+    background: rgba(159, 122, 234, 0.15);
+    color: #6b46c1;
+  }
+}

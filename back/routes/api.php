@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\BrandController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\TransactionController;
@@ -106,6 +108,27 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('stocks/{stock}', [StockController::class, 'update'])->middleware('permission:edit stock');
     Route::delete('stocks/{stock}', [StockController::class, 'destroy'])->middleware('permission:delete stock');
     Route::post('stocks/import', [StockController::class, 'import'])->middleware('permission:import stock');
+
+    // Brands
+    Route::middleware('permission:view brands')->group(function () {
+        Route::get('brands', [BrandController::class, 'index']);
+        Route::get('brands/{brand}', [BrandController::class, 'show']);
+    });
+    Route::post('brands', [BrandController::class, 'store'])->middleware('permission:create brands');
+    Route::put('brands/{brand}', [BrandController::class, 'update'])->middleware('permission:edit brands');
+    Route::patch('brands/{brand}/toggle-active', [BrandController::class, 'toggleActive'])->middleware('permission:edit brands');
+    Route::delete('brands/{brand}', [BrandController::class, 'destroy'])->middleware('permission:delete brands');
+
+    // Products
+    Route::middleware('permission:view products')->group(function () {
+        Route::get('products', [ProductController::class, 'index']);
+        Route::get('products-filters', [ProductController::class, 'filters']);
+        Route::get('products/{product}', [ProductController::class, 'show']);
+    });
+    Route::post('products', [ProductController::class, 'store'])->middleware('permission:create products');
+    Route::put('products/{product}', [ProductController::class, 'update'])->middleware('permission:edit products');
+    Route::patch('products/{product}/toggle-active', [ProductController::class, 'toggleActive'])->middleware('permission:edit products');
+    Route::delete('products/{product}', [ProductController::class, 'destroy'])->middleware('permission:delete products');
 
     // Users management
     Route::get('users', [UserController::class, 'index'])->middleware('permission:view users');

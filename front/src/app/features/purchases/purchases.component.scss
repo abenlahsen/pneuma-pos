@@ -334,6 +334,8 @@ $radius-sm: 8px;
 
 .bg-en-cours { background-color: rgba(#ed8936, 0.1); color: #c05621; text-transform: uppercase; }
 .bg-recu { background-color: rgba($income-color, 0.1); color: $income-color; text-transform: uppercase; }
+.bg-annule { background-color: rgba(#e53e3e, 0.1); color: #c53030; text-transform: uppercase; }
+.bg-retour { background-color: rgba(#805ad5, 0.1); color: #6b46c1; text-transform: uppercase; }
 
 .spinner {
   width: 1.5rem;

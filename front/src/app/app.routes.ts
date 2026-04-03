@@ -82,6 +82,20 @@ export const routes: Routes = [
       import('./features/stock/stock.component').then((m) => m.StockComponent),
   },
   {
+    path: 'products',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'view products' },
+    loadComponent: () =>
+      import('./features/products/products.component').then((m) => m.ProductsComponent),
+  },
+  {
+    path: 'brands',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'view brands' },
+    loadComponent: () =>
+      import('./features/brands/brands.component').then((m) => m.BrandsComponent),
+  },
+  {
     path: 'roles',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view roles' },

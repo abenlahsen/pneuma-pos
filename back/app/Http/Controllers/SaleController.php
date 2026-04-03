@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreSaleRequest;
 use App\Http\Requests\UpdateSaleRequest;
 use App\Models\Sale;
+use App\Models\Stock;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,7 +17,7 @@ class SaleController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Sale::query()->with('commercial');
+        $query = Sale::query()->with(['commercial', 'linkedProduct.brand']);
 
         // Sorting
         $sortable = ['date', 'client', 'brand', 'dimension', 'quantity', 'total_sale', 'margin', 'payment_status', 'status', 'created_at', 'updated_at'];
@@ -34,7 +35,14 @@ class SaleController extends Controller
                 $q->where('client', 'like', "%{$search}%")
                   ->orWhere('brand', 'like', "%{$search}%")
                   ->orWhere('dimension', 'like', "%{$search}%")
-                  ->orWhere('comments', 'like', "%{$search}%");
+                  ->orWhere('comments', 'like', "%{$search}%")
+                  ->orWhereHas('linkedProduct', function ($q2) use ($search) {
+                      $q2->where('profile', 'like', "%{$search}%")
+                        ->orWhere('reference', 'like', "%{$search}%")
+                        ->orWhereHas('brand', function ($q3) use ($search) {
+                            $q3->where('name', 'like', "%{$search}%");
+                        });
+                  });
             });
         }
 
@@ -81,12 +89,31 @@ class SaleController extends Controller
      */
     public function store(StoreSaleRequest $request): JsonResponse
     {
+        // Validate stock availability
+        if ($request->stock_id) {
+            $stock = Stock::find($request->stock_id);
+            if (!$stock || $stock->quantity < ($request->quantity ?? 0)) {
+                return response()->json([
+                    'message' => 'Quantité insuffisante en stock.',
+                    'errors' => ['stock_id' => ['Quantité insuffisante en stock. Disponible: ' . ($stock->quantity ?? 0)]],
+                ], 422);
+            }
+        } else {
+            return response()->json([
+                'message' => 'Veuillez sélectionner un stock.',
+                'errors' => ['stock_id' => ['Le stock est obligatoire pour créer une vente.']],
+            ], 422);
+        }
+
         $sale = Sale::create(array_merge(
             $request->validated(),
             ['user_id' => $request->user()->id],
         ));
 
-        return response()->json($sale, 201);
+        // Decrease stock quantity
+        Stock::where('id', $sale->stock_id)->decrement('quantity', $sale->quantity ?? 0);
+
+        return response()->json($sale->load('linkedProduct.brand'), 201);
     }
 
     /**
@@ -94,7 +121,7 @@ class SaleController extends Controller
      */
     public function show(Sale $sale): JsonResponse
     {
-        return response()->json($sale->load('commercial'));
+        return response()->json($sale->load(['commercial', 'linkedProduct.brand']));
     }
 
     /**
@@ -102,9 +129,15 @@ class SaleController extends Controller
      */
     public function update(UpdateSaleRequest $request, Sale $sale): JsonResponse
     {
+        $oldStatus = $sale->status;
         $sale->update($request->validated());
 
-        return response()->json($sale);
+        // Restore stock if status changed to ANNULE (and wasn't already)
+        if ($sale->stock_id && $sale->status === 'ANNULE' && $oldStatus !== 'ANNULE') {
+            Stock::where('id', $sale->stock_id)->increment('quantity', $sale->quantity ?? 0);
+        }
+
+        return response()->json($sale->load('linkedProduct.brand'));
     }
 
     /**
