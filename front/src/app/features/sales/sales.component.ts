@@ -12,12 +12,13 @@ import {
   PaginatedResponse,
 } from '../../core/models/sale.model';
 import { SaleFormComponent } from './sale-form/sale-form.component';
+import { SaleDetailComponent } from './sale-detail/sale-detail.component';
 import { PaymentPanelComponent } from './payment-panel/payment-panel.component';
 
 @Component({
   selector: 'app-sales',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, SaleFormComponent, PaymentPanelComponent],
+  imports: [CommonModule, FormsModule, RouterLink, SaleFormComponent, SaleDetailComponent, PaymentPanelComponent],
   templateUrl: './sales.component.html',
   styleUrl: './sales.component.scss',
 })
@@ -51,6 +52,7 @@ export class SalesComponent implements OnInit {
   loading = signal(false);
   showForm = signal(false);
   editingSale = signal<Sale | null>(null);
+  detailSale = signal<Sale | null>(null);
   paymentSale = signal<Sale | null>(null);
 
   constructor(
@@ -146,6 +148,14 @@ export class SalesComponent implements OnInit {
       this.currentPage.set(page);
       this.loadData();
     }
+  }
+
+  openDetail(sale: Sale): void {
+    this.detailSale.set(sale);
+  }
+
+  closeDetail(): void {
+    this.detailSale.set(null);
   }
 
   openAddForm(): void {

@@ -25,12 +25,20 @@ class StockController extends Controller
                 });
             }
 
+            if ($parsed['brand_prefix']) {
+                $prefix = $parsed['brand_prefix'];
+                $query->whereHas('product.brand', function ($bq) use ($prefix) {
+                    $bq->where('name', 'like', "{$prefix}%");
+                });
+            }
+
             foreach ($parsed['text'] as $term) {
                 $query->where(function ($q) use ($term) {
                     $q->where('depot', 'like', "%{$term}%")
                       ->orWhereHas('product', function ($pq) use ($term) {
                           $pq->where('profile', 'like', "%{$term}%")
                             ->orWhere('tire_marking', 'like', "%{$term}%")
+                            ->orWhere('reference', 'like', "%{$term}%")
                             ->orWhereHas('brand', function ($bq) use ($term) {
                                 $bq->where('name', 'like', "%{$term}%");
                             });
@@ -140,6 +148,12 @@ class StockController extends Controller
                     if ($parsed['width']) $pq->where('tire_width', $parsed['width']);
                     if ($parsed['height']) $pq->where('tire_height', $parsed['height']);
                     if ($parsed['diameter']) $pq->where('tire_diameter', $parsed['diameter']);
+                });
+            }
+            if ($parsed['brand_prefix']) {
+                $prefix = $parsed['brand_prefix'];
+                $query->whereHas('product.brand', function ($bq) use ($prefix) {
+                    $bq->where('name', 'like', "{$prefix}%");
                 });
             }
             foreach ($parsed['text'] as $term) {

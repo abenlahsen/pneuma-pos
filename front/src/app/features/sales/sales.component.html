@@ -142,8 +142,8 @@
               <button class="btn-icon btn-sm text-danger" (click)="deleteSale(sale)" title="Supprimer" *ngIf="authService.hasPermission('delete sales')">🗑️</button>
             </td>
             <td>{{ sale.date | date:'dd/MM/yyyy' }}</td>
-            <td>
-              <div class="fw-medium">{{ sale.client || '-' }}</div>
+            <td class="clickable-cell" (click)="openDetail(sale)">
+              <div class="fw-medium link-text">{{ sale.client || '-' }}</div>
               <div class="text-small text-muted">{{ sale.city || '' }}</div>
             </td>
             <td>{{ sale.commercial?.name || '-' }}</td>
@@ -237,6 +237,9 @@
     </div>
   </div>
 </div>
+
+<!-- Sale Detail Modal -->
+<app-sale-detail *ngIf="detailSale()" [sale]="detailSale()!" (close)="closeDetail()"></app-sale-detail>
 
 <!-- Payment Panel Modal -->
 <app-payment-panel *ngIf="paymentSale()" [sale]="paymentSale()!" (closed)="closePayments()" (statusChanged)="loadData()"></app-payment-panel>

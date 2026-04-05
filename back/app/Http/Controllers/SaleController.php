@@ -6,6 +6,7 @@ use App\Http\Requests\StoreSaleRequest;
 use App\Http\Requests\UpdateSaleRequest;
 use App\Models\Sale;
 use App\Models\Stock;
+use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,7 @@ class SaleController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Sale::query()->with(['commercial', 'linkedProduct.brand']);
+        $query = Sale::query()->with(['commercial', 'linkedProduct.brand', 'creator', 'updater']);
 
         // Sorting
         $sortable = ['date', 'client', 'brand', 'dimension', 'quantity', 'total_sale', 'margin', 'payment_status', 'status', 'created_at', 'updated_at'];
@@ -107,7 +108,7 @@ class SaleController extends Controller
 
         $sale = Sale::create(array_merge(
             $request->validated(),
-            ['user_id' => $request->user()->id],
+            ['created_by' => $request->user()->id],
         ));
 
         // Decrease stock quantity
@@ -121,7 +122,7 @@ class SaleController extends Controller
      */
     public function show(Sale $sale): JsonResponse
     {
-        return response()->json($sale->load(['commercial', 'linkedProduct.brand']));
+        return response()->json($sale->load(['commercial', 'linkedProduct.brand', 'creator', 'updater']));
     }
 
     /**
@@ -130,7 +131,10 @@ class SaleController extends Controller
     public function update(UpdateSaleRequest $request, Sale $sale): JsonResponse
     {
         $oldStatus = $sale->status;
-        $sale->update($request->validated());
+        $sale->update(array_merge(
+            $request->validated(),
+            ['updated_by' => $request->user()->id],
+        ));
 
         // Restore stock if status changed to ANNULE (and wasn't already)
         if ($sale->stock_id && $sale->status === 'ANNULE' && $oldStatus !== 'ANNULE') {
@@ -145,6 +149,18 @@ class SaleController extends Controller
      */
     public function destroy(Sale $sale): JsonResponse
     {
+        // Restore stock quantity (unless sale was already cancelled, which already restored stock)
+        if ($sale->stock_id && $sale->status !== 'ANNULE') {
+            Stock::where('id', $sale->stock_id)->increment('quantity', $sale->quantity ?? 0);
+        }
+
+        // Delete linked transactions and payments
+        $transactionIds = $sale->payments()->whereNotNull('transaction_id')->pluck('transaction_id');
+        $sale->payments()->delete();
+        if ($transactionIds->isNotEmpty()) {
+            Transaction::whereIn('id', $transactionIds)->delete();
+        }
+
         $sale->delete();
 
         return response()->json(null, 204);

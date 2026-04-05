@@ -280,6 +280,11 @@ $radius-sm: 8px;
   }
 }
 
+.clickable-cell {
+  cursor: pointer;
+  .link-text { color: $primary; &:hover { text-decoration: underline; } }
+}
+
 .text-right { text-align: right !important; }
 .text-center { text-align: center !important; }
 .fw-medium { font-weight: 500; }

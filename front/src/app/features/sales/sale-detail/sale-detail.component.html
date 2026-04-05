@@ -1,0 +1,168 @@
+<div class="modal-overlay" (click)="close.emit()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Détail de la vente</h2>
+      <button class="btn-close" (click)="close.emit()">✕</button>
+    </div>
+
+    <div class="detail-body">
+      <div class="detail-section">
+        <h3 class="section-title">Informations Générales</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="label">Date</span>
+            <span class="value">{{ sale.date | date:'dd/MM/yyyy' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Client</span>
+            <span class="value">{{ sale.client || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Ville</span>
+            <span class="value">{{ sale.city || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Facture</span>
+            <span class="value">{{ sale.with_invoice ? 'Oui' : 'Non' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <h3 class="section-title">Produit</h3>
+        <div class="detail-grid">
+          <div class="detail-item full">
+            <span class="label">Produit</span>
+            <span class="value">{{ productLabel }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Marque</span>
+            <span class="value">{{ sale.linked_product?.brand?.name || sale.brand || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Dimension</span>
+            <span class="value" *ngIf="sale.linked_product?.tire_width">{{ sale.linked_product!.tire_width }}/{{ sale.linked_product!.tire_height }}R{{ sale.linked_product!.tire_diameter }}</span>
+            <span class="value" *ngIf="!sale.linked_product?.tire_width">{{ sale.dimension || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Profil</span>
+            <span class="value">{{ sale.linked_product?.profile || sale.profile || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Quantité</span>
+            <span class="value">{{ sale.quantity }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">IC</span>
+            <span class="value">{{ sale.ic || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">IV</span>
+            <span class="value">{{ sale.iv || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">RFT</span>
+            <span class="value">{{ sale.rft || '-' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <h3 class="section-title">Finance</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="label">Fournisseur</span>
+            <span class="value">{{ sale.supplier?.name || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">PU Achat</span>
+            <span class="value">{{ sale.purchase_price | number:'1.2-2' }} DH</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Total Achat</span>
+            <span class="value">{{ sale.total_purchase | number:'1.2-2' }} DH</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">PU Vente</span>
+            <span class="value">{{ sale.selling_price | number:'1.2-2' }} DH</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Total Vente</span>
+            <span class="value fw-semibold">{{ sale.total_sale | number:'1.2-2' }} DH</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Frais Service</span>
+            <span class="value">{{ sale.service_fee | number:'1.2-2' }} DH</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Marge</span>
+            <span class="value fw-semibold" [class.text-success]="sale.margin > 0" [class.text-danger]="sale.margin < 0">{{ sale.margin | number:'1.2-2' }} DH</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <h3 class="section-title">Logistique & Suivi</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="label">Transport</span>
+            <span class="value">{{ sale.carrier?.name || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">N° Suivi</span>
+            <span class="value">{{ sale.tracking_number || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Partenaire</span>
+            <span class="value">{{ sale.partner?.name || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Service</span>
+            <span class="value">{{ sale.service || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Commercial</span>
+            <span class="value">{{ sale.commercial?.name || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Mode Paiement</span>
+            <span class="value">{{ sale.payment_method || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Statut</span>
+            <span class="value badge" [class.badge-success]="sale.status === 'LIVRE' || sale.status === 'MONTE'" [class.badge-warning]="sale.status === 'EN COURS'" [class.badge-danger]="sale.status === 'ANNULE'">{{ sale.status }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Paiement</span>
+            <span class="value badge" [class.badge-success]="sale.payment_status === 'PAYE' || sale.payment_status === 'PAYÉ'" [class.badge-warning]="sale.payment_status === 'PARTIEL'" [class.badge-danger]="sale.payment_status === 'NON PAYE' || sale.payment_status === 'NON PAYÉ'">{{ sale.payment_status }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Date Livraison</span>
+            <span class="value">{{ sale.delivery_date ? (sale.delivery_date | date:'dd/MM/yyyy') : '-' }}</span>
+          </div>
+          <div class="detail-item full" *ngIf="sale.comments">
+            <span class="label">Commentaires</span>
+            <span class="value">{{ sale.comments }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-section meta">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="label">Créé le</span>
+            <span class="value text-muted">{{ sale.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Modifié le</span>
+            <span class="value text-muted">{{ sale.updated_at | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="close.emit()">Fermer</button>
+    </div>
+  </div>
+</div>

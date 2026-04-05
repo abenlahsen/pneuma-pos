@@ -5,12 +5,13 @@ import { PurchaseService } from '../../core/services/purchase.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Purchase, PurchaseSummary } from '../../core/models/purchase.model';
 import { PurchaseFormComponent } from './purchase-form/purchase-form.component';
+import { PurchaseDetailComponent } from './purchase-detail/purchase-detail.component';
 import { PurchasePaymentsComponent } from './purchase-payments/purchase-payments.component';
 
 @Component({
   selector: 'app-purchases',
   standalone: true,
-  imports: [CommonModule, FormsModule, PurchaseFormComponent, PurchasePaymentsComponent],
+  imports: [CommonModule, FormsModule, PurchaseFormComponent, PurchaseDetailComponent, PurchasePaymentsComponent],
   templateUrl: './purchases.component.html',
   styleUrls: ['./purchases.component.scss']
 })
@@ -40,6 +41,7 @@ export class PurchasesComponent implements OnInit {
 
   isFormOpen = signal<boolean>(false);
   selectedPurchase = signal<Purchase | null>(null);
+  detailPurchase = signal<Purchase | null>(null);
   paymentPurchase = signal<Purchase | null>(null);
 
   get pages(): number[] {
@@ -135,6 +137,14 @@ export class PurchasesComponent implements OnInit {
       this.currentPage.set(page);
       this.loadData();
     }
+  }
+
+  openDetail(purchase: Purchase): void {
+    this.detailPurchase.set(purchase);
+  }
+
+  closeDetail(): void {
+    this.detailPurchase.set(null);
   }
 
   openForm(purchase: Purchase | null = null): void {

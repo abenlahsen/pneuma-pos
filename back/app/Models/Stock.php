@@ -43,11 +43,12 @@ class Stock extends Model
     public static function parseSearchQuery(string $input): array
     {
         $tokens = preg_split('/\s+/', trim($input));
-        $result = ['width' => null, 'height' => null, 'diameter' => null, 'text' => []];
+        $result = ['width' => null, 'height' => null, 'diameter' => null, 'brand_prefix' => null, 'text' => []];
 
         foreach ($tokens as $token) {
             if ($token === '') continue;
 
+            // Standard dimension format: 205/55R16, 225/45R17, etc.
             if (preg_match('/^(\d{2,3})\/?(\d{2,3})?[A-Z]*R(\d{2,3})/i', $token, $m)) {
                 $result['width'] = (int) $m[1];
                 $result['height'] = isset($m[2]) && $m[2] !== '' ? (int) $m[2] : null;
@@ -55,6 +56,23 @@ class Stock extends Model
                 continue;
             }
 
+            // Reference-style: letter(s) + digits, e.g. M2055516, B1856515
+            if (preg_match('/^([A-Za-z]+)(\d{5,})$/', $token, $m)) {
+                $result['brand_prefix'] = $m[1];
+                $digits = $m[2];
+                $len = strlen($digits);
+                if ($len >= 7) {
+                    $result['width'] = (int) substr($digits, 0, 3);
+                    $result['height'] = (int) substr($digits, 3, 2);
+                    $result['diameter'] = (int) substr($digits, 5);
+                } elseif ($len >= 5) {
+                    $result['width'] = (int) substr($digits, 0, 3);
+                    $result['height'] = (int) substr($digits, 3, 2);
+                }
+                continue;
+            }
+
+            // Pure digits: dimension shorthand
             if (preg_match('/^\d+$/', $token)) {
                 $len = strlen($token);
                 if ($len >= 7) {

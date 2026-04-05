@@ -42,7 +42,8 @@ class Sale extends Model
         'payment_status',
         'delivery_date',
         'comments',
-        'user_id',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [
@@ -105,11 +106,19 @@ class Sale extends Model
 
 
     /**
-     * The user who recorded the sale.
+     * The user who created the sale.
      */
-    public function user(): BelongsTo
+    public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * The user who last updated the sale.
+     */
+    public function updater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     /**
