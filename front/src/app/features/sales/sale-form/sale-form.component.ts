@@ -199,11 +199,11 @@ export class SaleFormComponent implements OnInit {
   }
 
   onSubmit() {
-    if (!this.sale && !this.formData.stock_id) {
+    if (!this.formData.stock_id) {
       alert('Veuillez sélectionner un stock pour ce produit.');
       return;
     }
-    if (!this.sale && this.stockInsufficient) {
+    if (this.stockInsufficient) {
       alert('Quantité insuffisante en stock.');
       return;
     }

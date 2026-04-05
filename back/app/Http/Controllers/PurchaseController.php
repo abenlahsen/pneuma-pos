@@ -6,13 +6,14 @@ use Illuminate\Http\Request;
 use App\Models\Purchase;
 use App\Models\Stock;
 use App\Models\Supplier;
+use App\Models\Transaction;
 use App\Models\User;
 
 class PurchaseController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Purchase::with(['supplier', 'commercial', 'linkedProduct.brand']);
+        $query = Purchase::with(['supplier', 'commercial', 'linkedProduct.brand', 'creator', 'updater']);
 
         // Sorting
         $sortable = ['date', 'product', 'quantity', 'unit_price', 'payment_status', 'status', 'created_at', 'updated_at'];
@@ -75,7 +76,7 @@ class PurchaseController extends Controller
             'date' => 'required|date',
             'product' => 'nullable|string|max:255',
             'product_id' => 'required|exists:products,id',
-            'stock_id' => 'nullable|exists:stocks,id',
+            'stock_id' => 'required|exists:stocks,id',
             'supplier_id' => 'required|exists:suppliers,id',
             'commercial_id' => 'nullable|exists:users,id',
             'quantity' => 'required|integer|min:1',
@@ -84,7 +85,9 @@ class PurchaseController extends Controller
             'payment_status' => 'required|string|in:PAYE,NON PAYE,PARTIEL',
         ]);
 
-        $purchase = Purchase::create($validated);
+        $purchase = Purchase::create(array_merge($validated, [
+            'created_by' => $request->user()->id,
+        ]));
 
         // Increase stock quantity
         if ($purchase->stock_id) {
@@ -115,7 +118,9 @@ class PurchaseController extends Controller
         ]);
 
         $oldStatus = $purchase->status;
-        $purchase->update($validated);
+        $purchase->update(array_merge($validated, [
+            'updated_by' => $request->user()->id,
+        ]));
 
         // Remove stock if status changed to ANNULE or RETOUR (and wasn't already)
         if ($purchase->stock_id && in_array($purchase->status, ['ANNULE', 'RETOUR']) && !in_array($oldStatus, ['ANNULE', 'RETOUR'])) {
@@ -127,6 +132,18 @@ class PurchaseController extends Controller
 
     public function destroy(Purchase $purchase)
     {
+        // Remove from stock (unless already cancelled/returned, which already decremented stock)
+        if ($purchase->stock_id && !in_array($purchase->status, ['ANNULE', 'RETOUR'])) {
+            Stock::where('id', $purchase->stock_id)->decrement('quantity', $purchase->quantity ?? 0);
+        }
+
+        // Delete linked transactions and payments
+        $transactionIds = $purchase->payments()->whereNotNull('transaction_id')->pluck('transaction_id');
+        $purchase->payments()->delete();
+        if ($transactionIds->isNotEmpty()) {
+            Transaction::whereIn('id', $transactionIds)->delete();
+        }
+
         $purchase->delete();
         return response()->json(null, 204);
     }

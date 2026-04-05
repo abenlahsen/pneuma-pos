@@ -51,34 +51,43 @@
       <table class="table">
         <thead>
           <tr>
+            <th class="text-center">Actions</th>
             <th class="sortable" (click)="toggleSort('reference')">Référence <span class="sort-icon">{{ sortBy() === 'reference' ? (sortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span></th>
             <th class="sortable" (click)="toggleSort('type')">Type <span class="sort-icon">{{ sortBy() === 'type' ? (sortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span></th>
             <th>Marque</th>
             <th>Profil</th>
             <th>Dimension</th>
+            <th>IC</th>
+            <th>IV</th>
             <th>Saison</th>
             <th>Marquage</th>
             <th class="sortable text-right" (click)="toggleSort('price')">P. Achat <span class="sort-icon">{{ sortBy() === 'price' ? (sortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span></th>
             <th class="sortable text-right" (click)="toggleSort('selling_price')">P. Vente <span class="sort-icon">{{ sortBy() === 'selling_price' ? (sortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span></th>
             <th class="text-right">P. Spécial</th>
             <th class="text-center">Statut</th>
-            <th class="text-center">Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngIf="loading()">
-            <td colspan="12" class="text-center py-4">
+            <td colspan="14" class="text-center py-4">
               <div class="spinner"></div> Chargement...
             </td>
           </tr>
 
           <tr *ngIf="!loading() && products().length === 0">
-            <td colspan="12" class="text-center py-4 text-muted">
+            <td colspan="14" class="text-center py-4 text-muted">
               Aucun produit trouvé.
             </td>
           </tr>
 
           <tr *ngFor="let product of products()" [class.inactive-row]="!product.is_active">
+            <td class="text-center actions-cell">
+              <button class="btn-icon btn-sm text-primary" (click)="toggleActive(product)" [title]="product.is_active ? 'Désactiver' : 'Activer'" *ngIf="authService.hasPermission('edit products')">
+                {{ product.is_active ? '&#10003;' : '&#9675;' }}
+              </button>
+              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(product)" title="Modifier" *ngIf="authService.hasPermission('edit products')">&#9998;&#65039;</button>
+              <button class="btn-icon btn-sm text-danger" (click)="deleteProduct(product)" title="Supprimer" *ngIf="authService.hasPermission('delete products')">&#128465;&#65039;</button>
+            </td>
             <td>{{ product.reference || '-' }}</td>
             <td>
               <span class="badge" [class.badge-primary]="product.type === 'tyre'" [class.badge-warning]="product.type === 'part'">
@@ -96,6 +105,8 @@
               </span>
               <span *ngIf="product.type !== 'tyre' || !product.tire_width">-</span>
             </td>
+            <td>{{ product.tire_load_index || '-' }}</td>
+            <td>{{ product.tire_speed_index || '-' }}</td>
             <td>
               <span *ngIf="product.type === 'tyre' && product.tire_season" class="tag tag-season">{{ seasonLabel(product.tire_season) }}</span>
               <span *ngIf="product.type !== 'tyre' || !product.tire_season">-</span>
@@ -113,13 +124,6 @@
               <span class="badge" [class.badge-success]="product.is_active" [class.badge-muted]="!product.is_active">
                 {{ product.is_active ? 'Actif' : 'Inactif' }}
               </span>
-            </td>
-            <td class="text-center actions-cell">
-              <button class="btn-icon btn-sm text-primary" (click)="toggleActive(product)" [title]="product.is_active ? 'Désactiver' : 'Activer'" *ngIf="authService.hasPermission('edit products')">
-                {{ product.is_active ? '&#10003;' : '&#9675;' }}
-              </button>
-              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(product)" title="Modifier" *ngIf="authService.hasPermission('edit products')">&#9998;&#65039;</button>
-              <button class="btn-icon btn-sm text-danger" (click)="deleteProduct(product)" title="Supprimer" *ngIf="authService.hasPermission('delete products')">&#128465;&#65039;</button>
             </td>
           </tr>
         </tbody>

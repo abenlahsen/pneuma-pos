@@ -23,6 +23,8 @@ return new class extends Migration
             $table->string('payment_status')->default('NON PAYE');
             $table->string('payment_method')->nullable();
             $table->date('payment_date')->nullable();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
     }

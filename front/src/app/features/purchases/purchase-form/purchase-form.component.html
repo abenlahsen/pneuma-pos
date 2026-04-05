@@ -36,9 +36,9 @@
   <div class="row" *ngIf="formData.product_id">
     <div class="col-md-12 mb-4">
       <div class="form-group">
-        <label>Stock (Dépôt / Zone / DOT)</label>
-        <select class="form-control" [(ngModel)]="formData.stock_id" name="stock_id">
-          <option [ngValue]="null">-- Sélectionner un stock --</option>
+        <label>Stock (Dépôt / Zone / DOT) *</label>
+        <select class="form-control" [(ngModel)]="formData.stock_id" name="stock_id" required>
+          <option [ngValue]="null" disabled>-- Sélectionner un stock --</option>
           <option *ngFor="let s of stocks()" [ngValue]="s.id">{{ formatStockLabel(s) }}</option>
         </select>
         <span class="text-small text-muted" *ngIf="loadingStocks()">Chargement...</span>

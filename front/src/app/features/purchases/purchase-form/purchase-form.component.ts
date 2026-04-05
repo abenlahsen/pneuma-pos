@@ -162,6 +162,10 @@ export class PurchaseFormComponent implements OnInit {
       alert('Veuillez remplir les champs obligatoires');
       return;
     }
+    if (!this.formData.stock_id) {
+      alert('Veuillez sélectionner un stock pour ce produit.');
+      return;
+    }
 
     this.loading.set(true);
 

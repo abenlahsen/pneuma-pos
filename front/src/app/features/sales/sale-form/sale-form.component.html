@@ -43,7 +43,7 @@
       </div>
       <div class="form-control" *ngIf="formData.product_id">
         <label>Stock (Dépôt / Zone / DOT) *</label>
-        <select name="stock_id" [(ngModel)]="formData.stock_id" [required]="!sale">
+        <select name="stock_id" [(ngModel)]="formData.stock_id" required>
           <option [ngValue]="null" disabled>-- Sélectionner un stock --</option>
           <option *ngFor="let s of stocks()" [ngValue]="s.id">{{ formatStockLabel(s) }}</option>
         </select>
@@ -193,6 +193,6 @@
 
   <div class="form-actions">
     <button type="button" class="btn btn-secondary" (click)="cancel.emit()">Annuler</button>
-    <button type="submit" class="btn btn-primary" [disabled]="!form.valid || (!sale && (noStockAvailable() || stockInsufficient))">Enregistrer</button>
+    <button type="submit" class="btn btn-primary" [disabled]="!form.valid || noStockAvailable() || stockInsufficient">Enregistrer</button>
   </div>
 </form>

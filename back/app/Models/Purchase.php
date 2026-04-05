@@ -25,6 +25,8 @@ class Purchase extends Model
         'payment_status',
         'payment_method',
         'payment_date',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [
@@ -58,6 +60,16 @@ class Purchase extends Model
     public function commercial()
     {
         return $this->belongsTo(User::class, 'commercial_id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     public function payments()

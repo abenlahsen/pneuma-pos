@@ -40,7 +40,8 @@ return new class extends Migration
             $table->string('payment_status')->nullable();
             $table->date('delivery_date')->nullable();
             $table->text('comments')->nullable();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
     }
