@@ -83,6 +83,15 @@
         <span class="ql-arrow">→</span>
       </a>
 
+      <a routerLink="/products" class="quick-link-card" id="link-products" *ngIf="authService.hasPermission('view products')">
+        <span class="ql-icon">🛞</span>
+        <div class="ql-text">
+          <span class="ql-title">Produits</span>
+          <span class="ql-desc">Catalogue des produits</span>
+        </div>
+        <span class="ql-arrow">→</span>
+      </a>
+
       <a routerLink="/stock" class="quick-link-card" id="link-stock" *ngIf="authService.hasPermission('view stock')">
         <span class="ql-icon">📋</span>
         <div class="ql-text">

@@ -84,8 +84,9 @@
     <h3 class="section-title">Finance & Tarification</h3>
     <div class="form-grid">
       <div class="form-control">
-        <label>PU Achat (DH)</label>
+        <label>PU Achat Moyen (DH)</label>
         <input type="number" name="purchase_price" [(ngModel)]="formData.purchase_price" step="0.01" (change)="calculateTotals()">
+        <span class="text-small text-muted" *ngIf="formData.purchase_price && !sale">Moyenne pondérée du stock</span>
       </div>
       <div class="form-control">
         <label>PU Vente (DH)</label>

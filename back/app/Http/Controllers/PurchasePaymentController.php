@@ -42,7 +42,7 @@ class PurchasePaymentController extends Controller
                 'amount' => $validated['amount'],
                 'type' => 'expense',
                 'category' => 'Produit',
-                'description' => "Paiement achat #{$purchase->id} - {$purchase->quantity} X {$purchase->product}",
+                'description' => "Paiement achat #{$purchase->id} - {$purchase->quantity} X " . ($purchase->linkedProduct ? trim("{$purchase->linkedProduct->brand?->name} {$purchase->linkedProduct->profile} {$purchase->linkedProduct->tire_width}/{$purchase->linkedProduct->tire_height}R{$purchase->linkedProduct->tire_diameter}") : $purchase->product),
                 'person' => '',
                 'partner' => $purchase->supplier->name ?? '',
                 'user_id' => $request->user()->id,

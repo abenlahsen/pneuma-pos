@@ -83,7 +83,9 @@ export class StockFormComponent implements OnInit {
     const brand = p.brand?.name || '';
     const dim = p.tire_width ? `${p.tire_width}/${p.tire_height}R${p.tire_diameter}` : '';
     const profile = p.profile || '';
-    return [brand, dim, profile].filter(Boolean).join(' — ');
+    const ref = p.reference || '';
+    const indexes = [p.tire_load_index, p.tire_speed_index].filter(Boolean).join('');
+    return [brand, dim, profile, indexes, ref].filter(Boolean).join(' — ');
   }
 
   onSubmit() {

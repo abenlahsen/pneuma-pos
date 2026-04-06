@@ -36,6 +36,38 @@
         <h3 class="card-value">{{ summary().margin | number:'1.2-2' }} DH</h3>
       </div>
     </div>
+
+    <div class="card summary-card info">
+      <div class="card-icon">🛞</div>
+      <div class="card-content">
+        <p class="card-label">Pneus vendus ce mois</p>
+        <h3 class="card-value">{{ summary().tyres_this_month }}</h3>
+      </div>
+    </div>
+
+    <div class="card summary-card info">
+      <div class="card-icon">⏳</div>
+      <div class="card-content">
+        <p class="card-label">Pneus en cours</p>
+        <h3 class="card-value">{{ summary().tyres_en_cours }}</h3>
+      </div>
+    </div>
+
+    <div class="card summary-card info">
+      <div class="card-icon">📋</div>
+      <div class="card-content">
+        <p class="card-label">Ventes en cours</p>
+        <h3 class="card-value">{{ summary().sales_en_cours }}</h3>
+      </div>
+    </div>
+
+    <div class="card summary-card expense">
+      <div class="card-icon">💸</div>
+      <div class="card-content">
+        <p class="card-label">Montant impayé</p>
+        <h3 class="card-value">{{ summary().total_unpaid | number:'1.2-2' }} DH</h3>
+      </div>
+    </div>
   </div>
 
   <!-- Filters -->

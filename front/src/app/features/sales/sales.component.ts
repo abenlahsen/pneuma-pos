@@ -25,7 +25,7 @@ import { PaymentPanelComponent } from './payment-panel/payment-panel.component';
 export class SalesComponent implements OnInit {
   // Data
   sales = signal<Sale[]>([]);
-  summary = signal<SaleSummary>({ total_purchase: 0, total_sale: 0, margin: 0 });
+  summary = signal<SaleSummary>({ total_purchase: 0, total_sale: 0, margin: 0, tyres_this_month: 0, tyres_en_cours: 0, sales_en_cours: 0, total_unpaid: 0 });
   filterOptions = signal<SaleFilters>({ brands: [], clients: [], cities: [], statuses: [], partners: [], payment_statuses: [], commercials: [] });
 
   // Pagination

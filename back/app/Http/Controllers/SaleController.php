@@ -201,10 +201,27 @@ class SaleController extends Controller
         $totalPurchase = (clone $query)->sum('total_purchase');
         $totalSale = (clone $query)->sum('total_sale');
 
+        // Monthly tyres sold (current month, unfiltered)
+        $tyresThisMonth = Sale::whereYear('date', now()->year)
+            ->whereMonth('date', now()->month)
+            ->sum('quantity');
+
+        // EN COURS stats (unfiltered)
+        $enCoursQuery = Sale::where('status', 'EN COURS');
+        $tyresEnCours = (clone $enCoursQuery)->sum('quantity');
+        $salesEnCours = (clone $enCoursQuery)->count();
+
+        // Unpaid total (unfiltered)
+        $totalUnpaid = Sale::where('payment_status', 'NON PAYE')->sum('total_sale');
+
         return response()->json([
             'total_purchase' => round($totalPurchase, 2),
             'total_sale' => round($totalSale, 2),
             'margin' => round($totalSale - $totalPurchase, 2),
+            'tyres_this_month' => (int) $tyresThisMonth,
+            'tyres_en_cours' => (int) $tyresEnCours,
+            'sales_en_cours' => (int) $salesEnCours,
+            'total_unpaid' => round($totalUnpaid, 2),
         ]);
     }
 
