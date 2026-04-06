@@ -17,7 +17,7 @@ import { StockFormComponent } from './stock-form/stock-form.component';
 export class StockComponent implements OnInit {
   // Data
   stocks = signal<Stock[]>([]);
-  summary = signal<StockSummary>({ total_articles: 0, total_quantity: 0, total_purchase_value: 0, total_selling_value: 0 });
+  summary = signal<StockSummary>({ total_articles: 0, total_quantity: 0, total_purchase_value: 0 });
   filterOptions = signal<StockFilters>({ brands: [], depots: [], zones: [], countries: [] });
 
   // Pagination

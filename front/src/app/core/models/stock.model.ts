@@ -29,7 +29,6 @@ export interface StockSummary {
   total_articles: number;
   total_quantity: number;
   total_purchase_value: number;
-  total_selling_value: number;
 }
 
 export interface StockFilters {

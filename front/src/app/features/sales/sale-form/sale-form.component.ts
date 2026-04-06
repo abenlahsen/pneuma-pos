@@ -59,7 +59,6 @@ export class SaleFormComponent implements OnInit {
     tracking_number: '',
     partner_id: null,
     service: '',
-    service_fee: 0,
     client: '',
     payment_method: 'ESPECE',
     commercial_id: null,
@@ -203,8 +202,7 @@ export class SaleFormComponent implements OnInit {
     const qte = this.formData.quantity || 0;
     this.formData.total_purchase = (this.formData.purchase_price || 0) * qte;
     this.formData.total_sale = (this.formData.selling_price || 0) * qte;
-    const frais = this.formData.service_fee || 0;
-    this.formData.margin = this.formData.total_sale - this.formData.total_purchase - frais;
+    this.formData.margin = this.formData.total_sale - this.formData.total_purchase;
   }
 
   onSubmit() {

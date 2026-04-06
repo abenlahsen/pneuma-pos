@@ -8,9 +8,6 @@ export interface Product {
   brand_id: number | null;
   brand?: Brand;
   description: string | null;
-  price: number | null;
-  selling_price: number | null;
-  special_selling_price: number | null;
   unit: string;
   is_active: boolean;
   // Tyre-specific
@@ -37,9 +34,6 @@ export interface ProductPayload {
   type: 'tyre' | 'part';
   brand_id?: number | null;
   description?: string | null;
-  price?: number | null;
-  selling_price?: number | null;
-  special_selling_price?: number | null;
   unit?: string;
   is_active?: boolean;
   // Tyre-specific

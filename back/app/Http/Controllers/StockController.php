@@ -181,12 +181,6 @@ class StockController extends Controller
             'total_articles' => (clone $query)->count(),
             'total_quantity' => (int) (clone $query)->sum('quantity'),
             'total_purchase_value' => round((clone $query)->selectRaw('SUM(quantity * purchase_price) as total')->value('total') ?? 0, 2),
-            'total_selling_value' => round(
-                $baseQuery->join('products', 'stocks.product_id', '=', 'products.id')
-                    ->selectRaw('SUM(stocks.quantity * products.selling_price) as total')
-                    ->value('total') ?? 0,
-                2
-            ),
         ]);
     }
 
