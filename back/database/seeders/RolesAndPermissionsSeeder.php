@@ -53,6 +53,13 @@ class RolesAndPermissionsSeeder extends Seeder
                 'view suppliers',
                 'view carriers',
                 'view partners',
+                'view products',
+                'view brands',
+            ]);
+        } else {
+            $commercial->givePermissionTo([
+                'view products',
+                'view brands',
             ]);
         }
 
@@ -69,6 +76,14 @@ class RolesAndPermissionsSeeder extends Seeder
                 'view partners', 'create partners', 'edit partners',
                 'view cash-flow',
                 'view stock',
+                'view products', 'create products', 'edit products', 'delete products',
+                'view brands', 'create brands', 'edit brands', 'delete brands',
+            ]);
+        } else {
+            // Ensure Manager gets new permissions added after initial creation
+            $manager->givePermissionTo([
+                'view products', 'create products', 'edit products', 'delete products',
+                'view brands', 'create brands', 'edit brands', 'delete brands',
             ]);
         }
 
