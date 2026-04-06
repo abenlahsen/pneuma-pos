@@ -28,7 +28,7 @@ class Sale extends Model
         'selling_price',
         'total_sale',
         'margin',
-        'supplier_id',
+
         'city',
         'carrier_id',
         'tracking_number',
@@ -70,14 +70,6 @@ class Sale extends Model
     public function stock(): BelongsTo
     {
         return $this->belongsTo(Stock::class);
-    }
-
-    /**
-     * The provider of the products supplied for this sale.
-     */
-    public function supplier(): BelongsTo
-    {
-        return $this->belongsTo(Supplier::class);
     }
 
     /**

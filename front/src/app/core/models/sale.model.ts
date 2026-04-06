@@ -19,8 +19,7 @@ export interface Sale {
   selling_price: number;
   total_sale: number;
   margin: number;
-  supplier_id: number | null;
-  supplier?: { id: number; name: string };
+
   city: string;
   carrier_id: number | null;
   carrier?: { id: number; name: string };

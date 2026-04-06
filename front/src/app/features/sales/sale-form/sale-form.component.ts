@@ -3,8 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Sale, SalePayload } from '../../../core/models/sale.model';
 import { Product } from '../../../core/models/product.model';
-import { Supplier } from '../../../core/models/supplier.model';
-import { SupplierService } from '../../../core/services/supplier.service';
+
 import { ProductService } from '../../../core/services/product.service';
 import { UserService } from '../../../core/services/user.service';
 import { ManagedUser } from '../../../core/models/user-manage.model';
@@ -54,7 +53,7 @@ export class SaleFormComponent implements OnInit {
     selling_price: 0,
     total_sale: 0,
     margin: 0,
-    supplier_id: null,
+
     city: '',
     carrier_id: null,
     tracking_number: '',
@@ -70,20 +69,18 @@ export class SaleFormComponent implements OnInit {
     comments: ''
   };
 
-  suppliers = signal<Supplier[]>([]);
+
   commercials = signal<ManagedUser[]>([]);
   carriers = signal<Carrier[]>([]);
   partners = signal<Partner[]>([]);
 
-  private supplierService = inject(SupplierService);
+
   private userService = inject(UserService);
   private carrierService = inject(CarrierService);
   private partnerService = inject(PartnerService);
 
   ngOnInit() {
-    this.supplierService.getSuppliers({ all: true }).subscribe({
-      next: (res: any) => { this.suppliers.set(Array.isArray(res) ? res : res.data); }
-    });
+
     this.userService.getUsers({ all: true }).subscribe({
       next: (res: any) => { this.commercials.set(Array.isArray(res) ? res : res.data); }
     });
