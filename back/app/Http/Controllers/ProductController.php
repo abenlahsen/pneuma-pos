@@ -40,7 +40,7 @@ class ProductController extends Controller
         }
 
         // Sorting
-        $sortable = ['reference', 'type', 'price', 'selling_price', 'created_at'];
+        $sortable = ['reference', 'type', 'created_at'];
         if ($request->filled('sort_by') && in_array($request->sort_by, $sortable)) {
             $direction = $request->get('sort_direction', 'asc') === 'desc' ? 'desc' : 'asc';
             $query->orderBy($request->sort_by, $direction);
@@ -111,9 +111,6 @@ class ProductController extends Controller
             'type' => 'required|in:tyre,part',
             'brand_id' => 'nullable|exists:brands,id',
             'description' => 'nullable|string',
-            'price' => 'nullable|numeric|min:0',
-            'selling_price' => 'nullable|numeric|min:0',
-            'special_selling_price' => 'nullable|numeric|min:0',
             'unit' => 'nullable|string|max:50',
             'is_active' => 'nullable|boolean',
             // Tyre-specific

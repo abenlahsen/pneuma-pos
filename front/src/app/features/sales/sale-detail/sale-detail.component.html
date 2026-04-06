@@ -87,10 +87,6 @@
             <span class="value fw-semibold">{{ sale.total_sale | number:'1.2-2' }} DH</span>
           </div>
           <div class="detail-item">
-            <span class="label">Frais Service</span>
-            <span class="value">{{ sale.service_fee | number:'1.2-2' }} DH</span>
-          </div>
-          <div class="detail-item">
             <span class="label">Marge</span>
             <span class="value fw-semibold" [class.text-success]="sale.margin > 0" [class.text-danger]="sale.margin < 0">{{ sale.margin | number:'1.2-2' }} DH</span>
           </div>

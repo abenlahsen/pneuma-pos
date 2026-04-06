@@ -27,7 +27,6 @@ export interface Sale {
   partner_id: number | null;
   partner?: { id: number; name: string; city?: string; montage_price?: number; alignment_price?: number };
   service: string;
-  service_fee: number;
   client: string;
   payment_method: string;
   commercial_id?: number | null;

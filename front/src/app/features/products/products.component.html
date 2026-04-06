@@ -61,21 +61,18 @@
             <th>IV</th>
             <th>Saison</th>
             <th>Marquage</th>
-            <th class="sortable text-right" (click)="toggleSort('price')">P. Achat <span class="sort-icon">{{ sortBy() === 'price' ? (sortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span></th>
-            <th class="sortable text-right" (click)="toggleSort('selling_price')">P. Vente <span class="sort-icon">{{ sortBy() === 'selling_price' ? (sortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span></th>
-            <th class="text-right">P. Spécial</th>
             <th class="text-center">Statut</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngIf="loading()">
-            <td colspan="14" class="text-center py-4">
+            <td colspan="11" class="text-center py-4">
               <div class="spinner"></div> Chargement...
             </td>
           </tr>
 
           <tr *ngIf="!loading() && products().length === 0">
-            <td colspan="14" class="text-center py-4 text-muted">
+            <td colspan="11" class="text-center py-4 text-muted">
               Aucun produit trouvé.
             </td>
           </tr>
@@ -117,9 +114,6 @@
               <span *ngIf="product.tire_reinforced" class="tag tag-xl" title="Renforcé">XL</span>
               <span *ngIf="!product.tire_marking && !product.tire_runflat && !product.tire_reinforced">-</span>
             </td>
-            <td class="text-right">{{ product.price ? (product.price | number:'1.2-2') : '-' }}</td>
-            <td class="text-right fw-semibold">{{ product.selling_price ? (product.selling_price | number:'1.2-2') : '-' }}</td>
-            <td class="text-right">{{ product.special_selling_price ? (product.special_selling_price | number:'1.2-2') : '-' }}</td>
             <td class="text-center">
               <span class="badge" [class.badge-success]="product.is_active" [class.badge-muted]="!product.is_active">
                 {{ product.is_active ? 'Actif' : 'Inactif' }}
