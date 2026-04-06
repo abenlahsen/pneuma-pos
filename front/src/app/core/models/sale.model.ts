@@ -46,6 +46,10 @@ export interface SaleSummary {
   total_purchase: number;
   total_sale: number;
   margin: number;
+  tyres_this_month: number;
+  tyres_en_cours: number;
+  sales_en_cours: number;
+  total_unpaid: number;
 }
 
 export interface SaleFilters {

@@ -45,7 +45,7 @@ class ProductController extends Controller
             $direction = $request->get('sort_direction', 'asc') === 'desc' ? 'desc' : 'asc';
             $query->orderBy($request->sort_by, $direction);
         } else {
-            $query->latest('created_at');
+            $query->orderBy('id', 'desc');
         }
 
         return response()->json($query->paginate($request->get('per_page', 20)));

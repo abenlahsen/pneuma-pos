@@ -154,6 +154,18 @@ export class SaleFormComponent implements OnInit {
         this.stocks.set(res.data);
         this.noStockAvailable.set(res.data.length === 0);
         this.loadingStocks.set(false);
+        // Auto-fill weighted average purchase price for new sales
+        if (!this.sale && res.data.length > 0) {
+          const withPrice = res.data.filter(s => s.purchase_price != null && s.quantity > 0);
+          if (withPrice.length > 0) {
+            const totalValue = withPrice.reduce((sum, s) => sum + (s.purchase_price! * s.quantity), 0);
+            const totalQty = withPrice.reduce((sum, s) => sum + s.quantity, 0);
+            this.formData.purchase_price = Math.round((totalValue / totalQty) * 100) / 100;
+          } else {
+            this.formData.purchase_price = 0;
+          }
+          this.calculateTotals();
+        }
       },
       error: () => this.loadingStocks.set(false),
     });

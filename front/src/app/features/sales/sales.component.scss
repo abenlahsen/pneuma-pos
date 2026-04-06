@@ -113,6 +113,7 @@ $radius-sm: 8px;
   &.income .card-icon { color: $primary; background: rgba($primary, 0.1); }
   &.expense .card-icon { color: $expense-color; background: rgba($expense-color, 0.1); }
   &.balance .card-icon { color: $income-color; background: rgba($income-color, 0.1); }
+  &.info .card-icon { color: #5b6abf; background: rgba(#5b6abf, 0.1); }
   &.balance.negative .card-icon { color: $expense-color; background: rgba($expense-color, 0.1); }
 
   .card-icon {
