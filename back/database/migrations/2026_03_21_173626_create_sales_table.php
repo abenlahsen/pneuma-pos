@@ -27,7 +27,7 @@ return new class extends Migration
             $table->decimal('selling_price', 10, 2)->nullable();
             $table->decimal('total_sale', 12, 2)->nullable();
             $table->decimal('margin', 8, 2)->nullable();
-            $table->string('supplier')->nullable();
+
             $table->string('city')->nullable();
             $table->string('transport')->nullable();
             $table->string('partner')->nullable();

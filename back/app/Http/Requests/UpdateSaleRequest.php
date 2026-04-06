@@ -30,7 +30,7 @@ class UpdateSaleRequest extends FormRequest
             'selling_price' => 'nullable|numeric|min:0',
             'total_sale' => 'nullable|numeric|min:0',
             'margin' => 'nullable|numeric',
-            'supplier_id' => 'nullable|integer|exists:suppliers,id',
+
             'city' => 'nullable|string|max:255',
             'carrier_id' => 'nullable|integer|exists:carriers,id',
             'tracking_number' => 'nullable|string|max:255',

@@ -84,13 +84,6 @@
     <h3 class="section-title">Finance & Tarification</h3>
     <div class="form-grid">
       <div class="form-control">
-        <label>Fournisseur</label>
-        <select name="supplier_id" [(ngModel)]="formData.supplier_id">
-          <option [ngValue]="null">-- Sélectionner --</option>
-          <option *ngFor="let s of suppliers()" [ngValue]="s.id">{{ s.name }}</option>
-        </select>
-      </div>
-      <div class="form-control">
         <label>PU Achat (DH)</label>
         <input type="number" name="purchase_price" [(ngModel)]="formData.purchase_price" step="0.01" (change)="calculateTotals()">
       </div>
