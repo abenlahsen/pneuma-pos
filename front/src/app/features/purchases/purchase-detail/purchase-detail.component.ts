@@ -7,7 +7,7 @@ import { Purchase } from '../../../core/models/purchase.model';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './purchase-detail.component.html',
-  styleUrl: './purchase-detail.component.scss'
+  styleUrls: ['../../sales/sale-detail/sale-detail.component.scss', './purchase-detail.component.scss']
 })
 export class PurchaseDetailComponent {
   @Input({ required: true }) purchase!: Purchase;

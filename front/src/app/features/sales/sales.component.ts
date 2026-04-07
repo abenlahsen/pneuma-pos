@@ -1,7 +1,6 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { SaleService } from '../../core/services/sale.service';
 import { AuthService } from '../../core/services/auth.service';
 import {
@@ -18,7 +17,7 @@ import { PaymentPanelComponent } from './payment-panel/payment-panel.component';
 @Component({
   selector: 'app-sales',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, SaleFormComponent, SaleDetailComponent, PaymentPanelComponent],
+  imports: [CommonModule, FormsModule, SaleFormComponent, SaleDetailComponent, PaymentPanelComponent],
   templateUrl: './sales.component.html',
   styleUrl: './sales.component.scss',
 })

@@ -8,7 +8,7 @@ import { Product, ProductPayload } from '../../../core/models/product.model';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './product-form.component.html',
-  styleUrl: './product-form.component.scss'
+  styleUrls: ['../../sales/sale-form/sale-form.component.scss', './product-form.component.scss']
 })
 export class ProductFormComponent implements OnInit {
   @Input() product: Product | null = null;

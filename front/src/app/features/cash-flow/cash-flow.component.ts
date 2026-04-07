@@ -1,7 +1,6 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { CashFlowService } from '../../core/services/cash-flow.service';
 import { AuthService } from '../../core/services/auth.service';
 import {
@@ -16,9 +15,9 @@ import { TransactionFormComponent } from './transaction-form/transaction-form.co
 @Component({
   selector: 'app-cash-flow',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TransactionFormComponent],
+  imports: [CommonModule, FormsModule, TransactionFormComponent],
   templateUrl: './cash-flow.component.html',
-  styleUrl: './cash-flow.component.scss',
+  styleUrls: ['../sales/sales.component.scss', './cash-flow.component.scss'],
 })
 export class CashFlowComponent implements OnInit {
   // Data

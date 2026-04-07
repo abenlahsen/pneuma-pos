@@ -12,7 +12,7 @@ import { Role } from '../../core/models/role.model';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './users.component.html',
-  styleUrl: './users.component.scss',
+  styleUrls: ['../sales/sales.component.scss', './users.component.scss'],
 })
 export class UsersComponent implements OnInit {
   users = signal<ManagedUser[]>([]);

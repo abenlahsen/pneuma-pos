@@ -1,14 +1,5 @@
 @use 'sass:color';
-
-$primary: #ff2d37;
-$border-color: #e2e8f0;
-$text-dark: #2d3748;
-$text-muted: #718096;
-$bg-body: #f7fafc;
-$bg-card: #ffffff;
-$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-$radius: 12px;
-$radius-sm: 8px;
+@use '../variables' as *;
 
 .page-container { max-width: 100%; margin: 1.5rem auto; padding: 0 2rem; }
 .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;
@@ -37,7 +28,7 @@ $radius-sm: 8px;
   th, td { padding: 1rem 1.5rem; text-align: left; border-bottom: 1px solid $border-color; }
   th { background: $bg-body; font-weight: 600; font-size: 0.875rem; color: $text-muted; text-transform: uppercase;
     &.sortable { cursor: pointer; user-select: none;
-      &:hover { color: $text-dark; background: darken($bg-body, 3%); }
+      &:hover { color: $text-dark; background: color.adjust($bg-body, $lightness: -3%); }
       .sort-icon { font-size: 0.7rem; margin-left: 0.25rem; opacity: 0.4; }
       &:hover .sort-icon { opacity: 0.7; }
     }

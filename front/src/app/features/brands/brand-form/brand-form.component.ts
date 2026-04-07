@@ -8,7 +8,7 @@ import { Brand, BrandPayload } from '../../../core/models/brand.model';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './brand-form.component.html',
-  styleUrl: './brand-form.component.scss'
+  styleUrls: ['../../sales/sale-form/sale-form.component.scss', './brand-form.component.scss']
 })
 export class BrandFormComponent implements OnInit {
   @Input() brand: Brand | null = null;

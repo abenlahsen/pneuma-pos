@@ -10,7 +10,7 @@ import { ProductService } from '../../../core/services/product.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './stock-form.component.html',
-  styleUrl: './stock-form.component.scss'
+  styleUrls: ['../../sales/sale-form/sale-form.component.scss', './stock-form.component.scss']
 })
 export class StockFormComponent implements OnInit {
   @Input() stock: Stock | null = null;

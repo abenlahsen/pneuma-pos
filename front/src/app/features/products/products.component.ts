@@ -11,7 +11,7 @@ import { ProductFormComponent } from './product-form/product-form.component';
   standalone: true,
   imports: [CommonModule, FormsModule, ProductFormComponent],
   templateUrl: './products.component.html',
-  styleUrl: './products.component.scss',
+  styleUrls: ['../sales/sales.component.scss', './products.component.scss'],
 })
 export class ProductsComponent implements OnInit {
   products = signal<Product[]>([]);

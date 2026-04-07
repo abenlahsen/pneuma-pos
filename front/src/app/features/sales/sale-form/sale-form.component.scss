@@ -1,9 +1,5 @@
-$primary: #ff2d37;
-$border-color: #e2e8f0;
-$text-dark: #2d3748;
-$text-muted: #718096;
-$bg-body: #f7fafc;
-$radius: 8px;
+@use 'sass:color';
+@use '../../variables' as *;
 
 .form-container {
   display: flex;
@@ -144,14 +140,14 @@ $radius: 8px;
     color: $text-dark;
     border: 1px solid $border-color;
 
-    &:hover { background: darken($bg-body, 5%); }
+    &:hover { background: color.adjust($bg-body, $lightness: -5%); }
   }
 
   .btn-primary {
     background: $primary;
     color: white;
 
-    &:hover { background: darken($primary, 5%); }
+    &:hover { background: color.adjust($primary, $lightness: -5%); }
     &:disabled { opacity: 0.5; cursor: not-allowed; }
   }
 }
