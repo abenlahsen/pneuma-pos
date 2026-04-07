@@ -11,7 +11,7 @@ import { PartnerFormComponent } from './partner-form/partner-form.component';
   standalone: true,
   imports: [CommonModule, FormsModule, PartnerFormComponent],
   templateUrl: './partners.component.html',
-  styleUrl: './partners.component.scss',
+  styleUrls: ['../sales/sales.component.scss', '../users/users.component.scss', './partners.component.scss'],
 })
 export class PartnersComponent implements OnInit {
   partners = signal<Partner[]>([]);

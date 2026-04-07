@@ -11,7 +11,7 @@ import { BrandFormComponent } from './brand-form/brand-form.component';
   standalone: true,
   imports: [CommonModule, FormsModule, BrandFormComponent],
   templateUrl: './brands.component.html',
-  styleUrl: './brands.component.scss',
+  styleUrls: ['../sales/sales.component.scss', './brands.component.scss'],
 })
 export class BrandsComponent implements OnInit {
   brands = signal<Brand[]>([]);

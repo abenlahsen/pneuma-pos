@@ -8,7 +8,7 @@ import { Partner, PartnerPayload } from '../../../core/models/partner.model';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './partner-form.component.html',
-  styleUrl: './partner-form.component.scss'
+  styleUrls: ['../../sales/sale-form/sale-form.component.scss', './partner-form.component.scss']
 })
 export class PartnerFormComponent implements OnInit {
   @Input() partner: Partner | null = null;

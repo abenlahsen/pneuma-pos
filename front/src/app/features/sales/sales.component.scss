@@ -1,19 +1,5 @@
 @use 'sass:color';
-
-$primary: #ff2d37;
-$primary-dark: #cc0a13;
-$income-color: #48bb78;
-$expense-color: #f56565;
-$text-dark: #2d3748;
-$text-muted: #718096;
-$text-light: #a0aec0;
-$bg-body: #f7fafc;
-$bg-card: #ffffff;
-$border-color: #e2e8f0;
-$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-$radius: 12px;
-$radius-sm: 8px;
+@use '../variables' as *;
 
 .page-container {
   max-width: 100%;
@@ -257,7 +243,7 @@ $radius-sm: 8px;
 
       &:hover {
         color: $text-dark;
-        background: darken($bg-body, 3%);
+        background: color.adjust($bg-body, $lightness: -3%);
       }
 
       .sort-icon {

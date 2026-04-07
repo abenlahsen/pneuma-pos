@@ -131,7 +131,6 @@
             <th>Origine</th>
             <th>DOT</th>
             <th class="sortable text-right" (click)="toggleSort('purchase_price')">P. Achat <span class="sort-icon">{{ sortBy() === 'purchase_price' ? (sortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span></th>
-            <th class="text-right">P. Vente</th>
           </tr>
         </thead>
         <tbody>
@@ -186,7 +185,6 @@
             <td>{{ item.made_in || '-' }}</td>
             <td>{{ item.dot || '-' }}</td>
             <td class="text-right">{{ item.purchase_price ? (item.purchase_price | number:'1.2-2') : '-' }}</td>
-            <td class="text-right fw-semibold">{{ item.product?.selling_price ? (item.product!.selling_price | number:'1.2-2') : '-' }}</td>
           </tr>
         </tbody>
       </table>

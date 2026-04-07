@@ -1,7 +1,6 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { SupplierService } from '../../core/services/supplier.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Supplier, SupplierPayload, PaginatedResponse } from '../../core/models/supplier.model';
@@ -10,9 +9,9 @@ import { SupplierFormComponent } from './supplier-form/supplier-form.component';
 @Component({
   selector: 'app-suppliers',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, SupplierFormComponent],
+  imports: [CommonModule, FormsModule, SupplierFormComponent],
   templateUrl: './suppliers.component.html',
-  styleUrl: './suppliers.component.scss',
+  styleUrls: ['../sales/sales.component.scss', './suppliers.component.scss'],
 })
 export class SuppliersComponent implements OnInit {
   suppliers = signal<Supplier[]>([]);

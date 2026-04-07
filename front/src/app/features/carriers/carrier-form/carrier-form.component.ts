@@ -8,7 +8,7 @@ import { Carrier, CarrierPayload } from '../../../core/models/carrier.model';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './carrier-form.component.html',
-  styleUrl: './carrier-form.component.scss'
+  styleUrls: ['../../sales/sale-form/sale-form.component.scss', './carrier-form.component.scss']
 })
 export class CarrierFormComponent implements OnInit {
   @Input() carrier: Carrier | null = null;

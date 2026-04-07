@@ -12,7 +12,7 @@ import { StockFormComponent } from './stock-form/stock-form.component';
   standalone: true,
   imports: [CommonModule, FormsModule, StockFormComponent],
   templateUrl: './stock.component.html',
-  styleUrl: './stock.component.scss',
+  styleUrls: ['../sales/sales.component.scss', './stock.component.scss'],
 })
 export class StockComponent implements OnInit {
   // Data

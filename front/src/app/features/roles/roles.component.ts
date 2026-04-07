@@ -10,7 +10,7 @@ import { Role, Permission } from '../../core/models/role.model';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './roles.component.html',
-  styleUrl: './roles.component.scss',
+  styleUrls: ['../sales/sales.component.scss', './roles.component.scss'],
 })
 export class RolesComponent implements OnInit {
   roles = signal<Role[]>([]);

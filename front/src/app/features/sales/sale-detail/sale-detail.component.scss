@@ -1,8 +1,5 @@
-$primary: #ff2d37;
-$border-color: #e2e8f0;
-$text-dark: #2d3748;
-$text-muted: #718096;
-$bg-body: #f7fafc;
+@use 'sass:color';
+@use '../../variables' as *;
 
 .modal-overlay {
   position: fixed;
@@ -123,6 +120,6 @@ $bg-body: #f7fafc;
     color: $text-dark;
     cursor: pointer;
     font-weight: 500;
-    &:hover { background: darken($bg-body, 3%); }
+    &:hover { background: color.adjust($bg-body, $lightness: -3%); }
   }
 }

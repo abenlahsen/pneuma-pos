@@ -1,7 +1,4 @@
-@import '../sales/sales.component.scss';
-
-$income-color: #48bb78;
-$expense-color: #f56565;
+@use '../variables' as *;
 
 /* ---------- Cash-flow specific ---------- */
 .summary-card.income { border-left-color: $income-color; }

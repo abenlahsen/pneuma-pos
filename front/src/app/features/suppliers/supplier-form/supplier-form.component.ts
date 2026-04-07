@@ -8,7 +8,7 @@ import { Supplier, SupplierPayload } from '../../../core/models/supplier.model';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './supplier-form.component.html',
-  styleUrl: './supplier-form.component.scss'
+  styleUrls: ['../../sales/sale-form/sale-form.component.scss', './supplier-form.component.scss']
 })
 export class SupplierFormComponent implements OnInit {
   @Input() supplier: Supplier | null = null;
