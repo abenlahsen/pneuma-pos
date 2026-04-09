@@ -10,4 +10,10 @@ export interface DashboardKpi {
   unpaid_sales: number;
   unpaid_purchases: number;
   cash_balance: number;
+  sales_by_commercial: {
+    commercial_name: string;
+    total_sales: number;
+    sales_count: number;
+    total_margin: number;
+  }[];
 }

@@ -5,93 +5,120 @@
       <h2>Bienvenue{{ user() ? ', ' + user()?.name : '' }} !</h2>
       <p>Votre point de vente est prêt à être utilisé.</p>
 
-      @if (user()) {
-        <div class="user-details">
-          <div class="detail-item">
-            <span class="label">Email</span>
-            <span class="value">{{ user()?.email }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Membre depuis</span>
-            <span class="value">{{ user()?.created_at | date:'dd/MM/yyyy' }}</span>
-          </div>
-        </div>
-      }
+
     </div>
 
-    <div class="kpi-section" *ngIf="authService.hasRole('Administrator') && kpi() as k">
-      <h3 class="kpi-title">Tableau de bord KPI</h3>
-      <table class="kpi-table">
-        <tbody>
-          <tr class="kpi-section-row">
-            <th colspan="2">Aujourd'hui</th>
-          </tr>
-          <tr>
-            <td>Chiffre d'affaires</td>
-            <td class="kpi-value">{{ k.sales_today_amount | number:'1.2-2' }} DH</td>
-          </tr>
-          <tr>
-            <td>Pneus vendus</td>
-            <td class="kpi-value">{{ k.tyres_today }}</td>
-          </tr>
-        </tbody>
-        <tbody>
-          <tr class="kpi-section-row">
-            <th colspan="2">Ce mois</th>
-          </tr>
-          <tr>
-            <td>Chiffre d'affaires</td>
-            <td class="kpi-value">{{ k.sales_month_amount | number:'1.2-2' }} DH</td>
-          </tr>
-          <tr>
-            <td>Achats</td>
-            <td class="kpi-value">{{ k.purchases_month_amount | number:'1.2-2' }} DH</td>
-          </tr>
-          <tr>
-            <td>Marge nette</td>
-            <td class="kpi-value" [class.kpi-negative]="k.margin_month < 0">{{ k.margin_month | number:'1.2-2' }} DH</td>
-          </tr>
-          <tr>
-            <td>Pneus vendus</td>
-            <td class="kpi-value">{{ k.tyres_month }}</td>
-          </tr>
-        </tbody>
-        <tbody>
-          <tr class="kpi-section-row">
-            <th colspan="2">Stock</th>
-          </tr>
-          <tr>
-            <td>Quantité en stock</td>
-            <td class="kpi-value">{{ k.stock_quantity }}</td>
-          </tr>
-          <tr>
-            <td>Valeur du stock</td>
-            <td class="kpi-value">{{ k.stock_value | number:'1.2-2' }} DH</td>
-          </tr>
-        </tbody>
-        <tbody>
-          <tr class="kpi-section-row">
-            <th colspan="2">Encours</th>
-          </tr>
-          <tr>
-            <td>Impayés clients</td>
-            <td class="kpi-value">{{ k.unpaid_sales | number:'1.2-2' }} DH</td>
-          </tr>
-          <tr>
-            <td>Reste à payer fournisseurs</td>
-            <td class="kpi-value">{{ k.unpaid_purchases | number:'1.2-2' }} DH</td>
-          </tr>
-        </tbody>
-        <tbody>
-          <tr class="kpi-section-row">
-            <th colspan="2">Caisse</th>
-          </tr>
-          <tr>
-            <td>Solde de caisse</td>
-            <td class="kpi-value" [class.kpi-negative]="k.cash_balance < 0">{{ k.cash_balance | number:'1.2-2' }} DH</td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="kpi-dashboard" *ngIf="authService.hasRole('Administrator') && kpi() as k">
+      <h3 class="section-title">Tableau de bord KPI</h3>
+      
+      <div class="kpi-grid">
+        <!-- Aujourd'hui -->
+        <div class="kpi-card highlight-red">
+          <div class="kpi-icon">📅</div>
+          <div class="kpi-info">
+            <span class="kpi-label">CA Aujourd'hui</span>
+            <span class="kpi-val">{{ k.sales_today_amount | number:'1.2-2' }} <small>DH</small></span>
+          </div>
+          <div class="kpi-badge">{{ k.tyres_today }} Pneus vendus</div>
+        </div>
+
+        <!-- Ce mois -->
+        <div class="kpi-card highlight-blue">
+          <div class="kpi-icon">📊</div>
+          <div class="kpi-info">
+            <span class="kpi-label">CA Mois</span>
+            <span class="kpi-val">{{ k.sales_month_amount | number:'1.2-2' }} <small>DH</small></span>
+          </div>
+          <div class="kpi-badge">{{ k.tyres_month }} Pneus vendus</div>
+        </div>
+
+        <!-- Marge -->
+        <div class="kpi-card" [class.negative-card]="k.margin_month < 0">
+          <div class="kpi-icon">💸</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Marge Nette (Mois)</span>
+            <span class="kpi-val">{{ k.margin_month | number:'1.2-2' }} <small>DH</small></span>
+          </div>
+        </div>
+
+        <!-- Achats -->
+        <div class="kpi-card">
+          <div class="kpi-icon">🛒</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Achats (Mois)</span>
+            <span class="kpi-val">{{ k.purchases_month_amount | number:'1.2-2' }} <small>DH</small></span>
+          </div>
+        </div>
+
+        <!-- Stock -->
+        <div class="kpi-card">
+          <div class="kpi-icon">📦</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Valeur du Stock</span>
+            <span class="kpi-val">{{ k.stock_value | number:'1.2-2' }} <small>DH</small></span>
+          </div>
+          <div class="kpi-badge">{{ k.stock_quantity }} Qté en stock</div>
+        </div>
+
+        <!-- Encours Clients -->
+        <div class="kpi-card warning-card">
+          <div class="kpi-icon">⏳</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Impayés Clients</span>
+            <span class="kpi-val">{{ k.unpaid_sales | number:'1.2-2' }} <small>DH</small></span>
+          </div>
+        </div>
+
+        <!-- Encours Frs -->
+        <div class="kpi-card warning-card">
+          <div class="kpi-icon">⚠️</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Reste à payer (Frs)</span>
+            <span class="kpi-val">{{ k.unpaid_purchases | number:'1.2-2' }} <small>DH</small></span>
+          </div>
+        </div>
+
+        <!-- Caisse -->
+        <div class="kpi-card" [class.negative-card]="k.cash_balance < 0">
+          <div class="kpi-icon">💵</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Solde de Caisse</span>
+            <span class="kpi-val">{{ k.cash_balance | number:'1.2-2' }} <small>DH</small></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="commercials-section" *ngIf="k.sales_by_commercial && k.sales_by_commercial.length > 0">
+        <h3 class="section-title">Performances Commerciaux (Ce mois)</h3>
+        
+        <div class="modern-table-container">
+          <table class="modern-table">
+            <thead>
+              <tr>
+                <th>Commercial</th>
+                <th>Nombre de Ventes</th>
+                <th>Chiffre d'Affaires</th>
+                <th>Marge Nette</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let com of k.sales_by_commercial">
+                <td>
+                  <div class="user-cell">
+                    <div class="avatar">{{ com.commercial_name.charAt(0) | uppercase }}</div>
+                    <span class="user-name">{{ com.commercial_name }}</span>
+                  </div>
+                </td>
+                <td class="font-numeric">{{ com.sales_count }}</td>
+                <td class="font-numeric">{{ com.total_sales | number:'1.2-2' }} <small>DH</small></td>
+                <td class="font-numeric" [class.negative]="com.total_margin < 0">
+                  {{ com.total_margin | number:'1.2-2' }} <small>DH</small>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <div class="quick-links">
