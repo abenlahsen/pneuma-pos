@@ -7,6 +7,7 @@ use App\Models\Sale;
 use App\Models\Stock;
 use App\Models\Transaction;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -26,6 +27,23 @@ class DashboardController extends Controller
         $purchasesTotalLifetime = (float) Purchase::sum('total_price');
         $purchasesPaidLifetime = (float) Purchase::where('payment_status', 'PAYE')->sum('total_price');
 
+        $salesByCommercial = DB::table('sales')
+            ->leftJoin('users', 'sales.commercial_id', '=', 'users.id')
+            ->whereBetween('sales.date', [$monthStart, $monthEnd])
+            ->selectRaw('users.name as commercial_name, SUM(sales.total_sale) as total_sales, COUNT(*) as sales_count, SUM(sales.margin) as total_margin')
+            ->groupBy('sales.commercial_id', 'users.name')
+            ->orderByDesc('total_sales')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'commercial_name' => $item->commercial_name ?? 'Non assigné',
+                    'total_sales' => round((float) $item->total_sales, 2),
+                    'sales_count' => (int) $item->sales_count,
+                    'total_margin' => round((float) $item->total_margin, 2),
+                ];
+            })
+            ->toArray();
+
         return response()->json([
             // Today
             'sales_today_amount' => round((clone $salesToday)->sum('total_sale'), 2),
@@ -36,6 +54,9 @@ class DashboardController extends Controller
             'purchases_month_amount' => round((clone $purchasesMonth)->sum('total_price'), 2),
             'margin_month' => round((clone $salesMonth)->sum('margin'), 2),
             'tyres_month' => (int) (clone $salesMonth)->sum('total_quantity'),
+
+            // Sales by Commercial (This Month)
+            'sales_by_commercial' => $salesByCommercial,
 
             // Stock
             'stock_quantity' => (int) Stock::sum('quantity'),
