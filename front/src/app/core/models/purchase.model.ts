@@ -1,17 +1,26 @@
 import { Product } from './product.model';
 import { Supplier } from './supplier.model';
-export interface Purchase {
-  id: number;
-  date: string;
-  product: string;
-  product_id: number | null;
-  stock_id: number | null;
-  linked_product?: Product;
-  supplier_id: number;
-  commercial_id?: number | null;
+import { Stock } from './stock.model';
+
+export interface PurchaseItem {
+  id?: number;
+  purchase_id?: number;
+  product_id: number;
+  stock_id: number;
   quantity: number;
   unit_price: number;
   total_price?: number;
+  linkedProduct?: Product;
+  linked_product?: Product;
+  stock?: Stock;
+}
+export interface Purchase {
+  id: number;
+  date: string;
+  with_invoice: boolean;
+  total_quantity?: number;
+  total_price?: number;
+  items?: PurchaseItem[];
   status: 'EN COURS' | 'RECU' | 'ANNULE' | 'RETOUR';
   payment_status: 'PAYE' | 'NON PAYE' | 'PARTIEL';
   supplier?: Supplier;
@@ -22,15 +31,12 @@ export interface Purchase {
 
 export interface PurchasePayload {
   date: string;
-  product: string;
-  product_id: number;
-  stock_id: number | null;
+  with_invoice: boolean;
   supplier_id: number;
   commercial_id?: number | null;
-  quantity: number;
-  unit_price: number;
   status: 'EN COURS' | 'RECU' | 'ANNULE' | 'RETOUR';
   payment_status: 'PAYE' | 'NON PAYE' | 'PARTIEL';
+  items: PurchaseItem[];
 }
 
 export interface PurchaseSummary {

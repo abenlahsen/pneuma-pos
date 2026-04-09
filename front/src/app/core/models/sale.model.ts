@@ -1,24 +1,30 @@
 import { Product } from './product.model';
+import { Stock } from './stock.model';
 
+export interface SaleItem {
+  id?: number;
+  sale_id?: number;
+  product_id: number;
+  stock_id: number;
+  quantity: number;
+  purchase_price: number;
+  selling_price: number;
+  total_purchase?: number;
+  total_sale?: number;
+  margin?: number;
+  linkedProduct?: Product;
+  linked_product?: Product;
+  stock?: Stock;
+}
 export interface Sale {
   id: number;
   date: string;
   with_invoice: boolean;
-  quantity: number;
-  dimension: string;
-  ic: string;
-  iv: string;
-  rft: string;
-  brand: string;
-  profile: string;
-  product_id: number | null;
-  stock_id: number | null;
-  linked_product?: Product;
-  purchase_price: number;
-  total_purchase: number;
-  selling_price: number;
-  total_sale: number;
-  margin: number;
+  total_quantity?: number;
+  total_purchase?: number;
+  total_sale?: number;
+  margin?: number;
+  items?: SaleItem[];
 
   city: string;
   carrier_id: number | null;
@@ -28,6 +34,7 @@ export interface Sale {
   partner?: { id: number; name: string; city?: string; montage_price?: number; alignment_price?: number };
   service: string;
   client: string;
+  client_phone: string;
   payment_method: string;
   commercial_id?: number | null;
   commercial?: { id: number; name: string } | null;
@@ -39,13 +46,16 @@ export interface Sale {
   updated_at?: string;
 }
 
-export interface SalePayload extends Omit<Sale, 'id' | 'created_at' | 'updated_at'> {}
+export interface SalePayload extends Omit<Sale, 'id' | 'created_at' | 'updated_at' | 'items'> {
+  items: SaleItem[];
+}
 
 export interface SaleSummary {
   total_purchase: number;
   total_sale: number;
   margin: number;
   tyres_this_month: number;
+  tyres_today: number;
   tyres_en_cours: number;
   sales_en_cours: number;
   total_unpaid: number;

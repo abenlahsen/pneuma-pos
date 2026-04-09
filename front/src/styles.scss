@@ -21,3 +21,63 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
+
+/* ---- Print: only the .print-area is visible. Defined globally because
+   component-scoped styles can't reach `body *` due to view encapsulation.
+   Strategy: `display: none` everything, then re-show the ancestor chain of
+   the print area via `:has()` so the modal flows normally and page breaks
+   happen naturally (visibility: hidden would leave blank pages behind).
+   Any modal can opt in by tagging its overlay with .print-overlay and its
+   content with .print-area. ---- */
+@media print {
+  body * {
+    display: none !important;
+  }
+  body :has(.print-area),
+  .print-area,
+  .print-area * {
+    display: revert !important;
+  }
+  /* Tables need their original display values restored */
+  .print-area table { display: table !important; }
+  .print-area thead  { display: table-header-group !important; }
+  .print-area tbody  { display: table-row-group !important; }
+  .print-area tr     { display: table-row !important; }
+  .print-area th,
+  .print-area td     { display: table-cell !important; }
+
+  .print-overlay {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+  .print-area {
+    position: static !important;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  .print-area .btn-close,
+  .print-area .modal-header .btn,
+  .print-area .modal-footer,
+  .print-area .no-print,
+  .print-area .no-print * {
+    display: none !important;
+  }
+  .print-area .badge {
+    border: 1px solid #ccc;
+    color: #000 !important;
+    background: #fff !important;
+  }
+  html, body {
+    height: auto !important;
+    background: #fff !important;
+    overflow: visible !important;
+  }
+}

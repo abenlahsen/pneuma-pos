@@ -24,6 +24,7 @@ class SaleControllerTest extends TestCase
             Permission::firstOrCreate(['name' => $perm, 'guard_name' => 'web']);
         }
         Role::firstOrCreate(['name' => 'Commercial', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'Manager', 'guard_name' => 'web']);
         $admin = Role::firstOrCreate(['name' => 'Administrator', 'guard_name' => 'web']);
         $admin->syncPermissions(Permission::all());
 
@@ -43,18 +44,14 @@ class SaleControllerTest extends TestCase
         return Sale::create(array_merge([
             'date' => '2026-03-01',
             'client' => 'Client Test',
-            'brand' => 'Michelin',
-            'dimension' => '205/55R16',
-            'quantity' => 4,
-            'purchase_price' => 100,
+            'total_quantity' => 4,
             'total_purchase' => 400,
-            'selling_price' => 150,
             'total_sale' => 600,
             'margin' => 200,
             'city' => 'Casablanca',
             'status' => 'EN COURS',
             'payment_status' => 'NON PAYÉ',
-            'user_id' => $this->user->id,
+            'created_by' => $this->user->id,
         ], $attributes));
     }
 
@@ -148,18 +145,6 @@ class SaleControllerTest extends TestCase
             ->assertJsonPath('data.0.client', 'Alpha Corp');
     }
 
-    public function test_index_filters_by_brand(): void
-    {
-        $this->createSale(['brand' => 'Michelin']);
-        $this->createSale(['brand' => 'Continental']);
-
-        $response = $this->getJson('/api/sales?brand=Continental', $this->authHeaders());
-
-        $response->assertOk()
-            ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.brand', 'Continental');
-    }
-
     public function test_index_filters_by_date_range(): void
     {
         $this->createSale(['date' => '2026-01-15']);
@@ -213,12 +198,17 @@ class SaleControllerTest extends TestCase
 
         $response = $this->getJson('/api/sales-filters', $this->authHeaders());
 
-        $response->assertOk()
-            ->assertJsonCount(2, 'commercials');
+        $response->assertOk();
 
         $names = collect($response->json('commercials'))->pluck('name')->toArray();
-        // Should be ordered by name
-        $this->assertEquals(['Ali', 'Youssef'], $names);
+        // The filter returns Commercial, Manager, and Administrator roles. The test admin
+        // user is created in setUp() with the Administrator role, so it's included too.
+        $this->assertContains('Ali', $names);
+        $this->assertContains('Youssef', $names);
+        // Ensure ordering by name is preserved
+        $sorted = $names;
+        sort($sorted);
+        $this->assertEquals($sorted, $names);
     }
 
     public function test_filters_returns_all_expected_keys(): void
@@ -243,20 +233,44 @@ class SaleControllerTest extends TestCase
 
     public function test_store_creates_sale(): void
     {
+        $brand = \App\Models\Brand::create(['name' => 'TestBrand', 'is_active' => true]);
+        $product = \App\Models\Product::create([
+            'reference' => 'REF-1',
+            'type' => 'tyre',
+            'brand_id' => $brand->id,
+            'is_active' => true,
+            'tire_width' => 205,
+            'tire_height' => 55,
+            'tire_diameter' => 16,
+        ]);
+        $stock = \App\Models\Stock::create([
+            'product_id' => $product->id,
+            'quantity' => 10,
+            'purchase_price' => 100,
+            'user_id' => $this->user->id,
+        ]);
+
         $payload = [
             'date' => '2026-03-15',
             'client' => 'New Client',
-            'brand' => 'Goodyear',
-            'quantity' => 2,
-            'selling_price' => 200,
-            'total_sale' => 400,
+            'commercial_id' => $this->user->id,
+            'items' => [[
+                'product_id' => $product->id,
+                'stock_id' => $stock->id,
+                'quantity' => 2,
+                'purchase_price' => 100,
+                'selling_price' => 200,
+            ]],
         ];
 
         $response = $this->postJson('/api/sales', $payload, $this->authHeaders());
 
         $response->assertStatus(201)
-            ->assertJsonPath('client', 'New Client');
+            ->assertJsonPath('client', 'New Client')
+            ->assertJsonPath('total_quantity', 2)
+            ->assertJsonPath('total_sale', '400.00');
         $this->assertDatabaseHas('sales', ['client' => 'New Client']);
+        $this->assertDatabaseHas('sale_items', ['product_id' => $product->id, 'quantity' => 2]);
     }
 
     public function test_destroy_deletes_sale(): void

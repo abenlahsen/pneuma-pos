@@ -20,6 +20,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/change-password', [AuthController::class, 'changePassword']);
 
+    // Admin dashboard KPI snapshot
+    Route::get('/dashboard-kpi', [\App\Http\Controllers\DashboardController::class, 'kpi'])
+        ->middleware('role:Administrator');
+
     // Cash Flow / Transactions
     Route::middleware('permission:view cash-flow')->group(function () {
         Route::get('/transactions-summary', [TransactionController::class, 'summary']);

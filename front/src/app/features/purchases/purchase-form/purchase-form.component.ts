@@ -38,17 +38,22 @@ export class PurchaseFormComponent implements OnInit {
   loadingProducts = signal(false);
   stocks = signal<Stock[]>([]);
   loadingStocks = signal(false);
-  private editingProduct: Product | null = null;
+
+  currentItem: any = {
+    product_id: 0,
+    stock_id: null,
+    quantity: 1,
+    unit_price: 0,
+    linkedProduct: null,
+    stock: null
+  };
 
   formData: PurchasePayload = {
     date: new Date().toISOString().split('T')[0],
-    product: '',
-    product_id: 0,
-    stock_id: null,
+    with_invoice: false,
     supplier_id: 0,
     commercial_id: null,
-    quantity: 1,
-    unit_price: 0,
+    items: [],
     status: 'EN COURS',
     payment_status: 'NON PAYE',
   };
@@ -61,23 +66,13 @@ export class PurchaseFormComponent implements OnInit {
     if (this.purchase) {
       this.formData = {
         date: this.purchase.date?.substring(0, 10) || '',
-        product: this.purchase.product || '',
-        product_id: this.purchase.product_id || 0,
-        stock_id: this.purchase.stock_id || null,
-        supplier_id: this.purchase.supplier_id,
-        commercial_id: this.purchase.commercial_id,
-        quantity: this.purchase.quantity,
-        unit_price: this.purchase.unit_price,
+        with_invoice: !!this.purchase.with_invoice,
+        supplier_id: this.purchase.supplier?.id || 0,
+        commercial_id: this.purchase.commercial?.id || null,
+        items: this.purchase.items ? JSON.parse(JSON.stringify(this.purchase.items)) : [],
         status: this.purchase.status,
         payment_status: this.purchase.payment_status,
       };
-      if (this.purchase.linked_product) {
-        this.editingProduct = this.purchase.linked_product;
-        this.products.set([this.purchase.linked_product]);
-      }
-      if (this.purchase.product_id) {
-        this.loadStocksForProduct(this.purchase.product_id);
-      }
     }
   }
 
@@ -90,9 +85,6 @@ export class PurchaseFormComponent implements OnInit {
     this.productService.getProducts(filters).subscribe({
       next: (res) => {
         let list = res.data;
-        if (this.editingProduct && !list.find(p => p.id === this.editingProduct!.id)) {
-          list = [this.editingProduct, ...list];
-        }
         this.products.set(list);
         this.loadingProducts.set(false);
       },
@@ -102,13 +94,54 @@ export class PurchaseFormComponent implements OnInit {
 
   onProductSelected(event: Event): void {
     const id = +(event.target as HTMLSelectElement).value;
-    this.formData.product_id = id;
-    this.formData.stock_id = null;
+    this.currentItem.product_id = id;
+    this.currentItem.stock_id = null;
+    const product = this.products().find(p => p.id === id);
+    if (product) {
+      this.currentItem.linkedProduct = product;
+    }
     if (id) {
       this.loadStocksForProduct(id);
     } else {
       this.stocks.set([]);
     }
+  }
+
+  getProduct(item: any): any {
+    return item.linkedProduct || item.linked_product;
+  }
+
+  onStockSelected(): void {
+    const stock = this.stocks().find(s => s.id === this.currentItem.stock_id);
+    if (stock) {
+      this.currentItem.stock = stock;
+    }
+  }
+
+  addItem() {
+    if (!this.currentItem.product_id || !this.currentItem.stock_id || !this.currentItem.quantity || this.currentItem.unit_price == null) {
+      alert('Veuillez remplir les informations de l\'article.');
+      return;
+    }
+    this.formData.items.push({ ...this.currentItem });
+    
+    // reset
+    this.currentItem = {
+      product_id: 0,
+      stock_id: null,
+      quantity: 1,
+      unit_price: 0,
+      linkedProduct: null,
+      stock: null
+    };
+  }
+
+  removeItem(index: number) {
+    this.formData.items.splice(index, 1);
+  }
+
+  get totalAmount(): number {
+    return this.formData.items.reduce((acc: number, item: any) => acc + (item.quantity * item.unit_price), 0);
   }
 
   loadStocksForProduct(productId: number): void {
@@ -158,12 +191,12 @@ export class PurchaseFormComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (!this.formData.date || !this.formData.product_id || !this.formData.supplier_id || !this.formData.quantity || this.formData.unit_price === null) {
+    if (!this.formData.date || !this.formData.supplier_id) {
       alert('Veuillez remplir les champs obligatoires');
       return;
     }
-    if (!this.formData.stock_id) {
-      alert('Veuillez sélectionner un stock pour ce produit.');
+    if (!this.formData.items || this.formData.items.length === 0) {
+      alert('Veuillez ajouter au moins un produit.');
       return;
     }
 

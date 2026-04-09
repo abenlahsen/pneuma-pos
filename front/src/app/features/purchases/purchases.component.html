@@ -105,10 +105,8 @@
           <tr>
             <th class="text-center">Actions</th>
             <th class="sortable" (click)="toggleSort('date')">Date <span class="sort-icon">{{ sortBy() === 'date' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
-            <th class="sortable" (click)="toggleSort('product')">Produit <span class="sort-icon">{{ sortBy() === 'product' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th>Fournisseur / Commercial</th>
-            <th class="sortable" (click)="toggleSort('quantity')">Qté <span class="sort-icon">{{ sortBy() === 'quantity' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
-            <th class="sortable text-right" (click)="toggleSort('unit_price')">PU Achat <span class="sort-icon">{{ sortBy() === 'unit_price' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th class="sortable" (click)="toggleSort('total_quantity')">Qté <span class="sort-icon">{{ sortBy() === 'total_quantity' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="text-right">Total Achat</th>
             <th class="sortable" (click)="toggleSort('payment_status')">Paiement <span class="sort-icon">{{ sortBy() === 'payment_status' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('status')">Statut <span class="sort-icon">{{ sortBy() === 'status' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
@@ -118,13 +116,13 @@
         </thead>
         <tbody>
           <tr *ngIf="loading()">
-            <td colspan="11" class="text-center py-4">
+            <td colspan="9" class="text-center py-4">
               <div class="spinner"></div> Chargement...
             </td>
           </tr>
           
           <tr *ngIf="!loading() && purchases().length === 0">
-            <td colspan="11" class="text-center py-4 text-muted">
+            <td colspan="9" class="text-center py-4 text-muted">
               Aucun achat trouvé.
             </td>
           </tr>
@@ -137,21 +135,10 @@
             </td>
             <td>{{ purchase.date | date:'dd/MM/yyyy' }}</td>
             <td class="clickable-cell" (click)="openDetail(purchase)">
-              <div class="fw-medium link-text" *ngIf="purchase.linked_product">
-                <span class="badge badge-primary" *ngIf="purchase.linked_product.brand">{{ purchase.linked_product.brand!.name }}</span>
-                {{ purchase.linked_product.reference || '' }}
-                <span *ngIf="purchase.linked_product.tire_width"> {{ purchase.linked_product.tire_width }}/{{ purchase.linked_product.tire_height }}R{{ purchase.linked_product.tire_diameter }}</span>
-              </div>
-              <div class="fw-medium link-text" *ngIf="!purchase.linked_product">{{ purchase.product || '-' }}</div>
-            </td>
-            <td>
               <div class="fw-medium">{{ purchase.supplier?.name || '-' }}</div>
               <div class="text-small text-muted">{{ purchase.commercial?.name || '-' }}</div>
             </td>
-            <td>{{ purchase.quantity }}</td>
-            <td class="text-right">
-              {{ purchase.unit_price | number:'1.2-2' }} 
-            </td>
+            <td>{{ purchase.total_quantity }}</td>
             <td class="text-right fw-semibold">
               {{ purchase.total_price | number:'1.2-2' }}
             </td>
@@ -211,7 +198,7 @@
   </div>
 </div>
 
-<div class="modal-overlay" *ngIf="isFormOpen()" (click)="closeForm()">
+<div class="modal-overlay" *ngIf="isFormOpen()">
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>{{ selectedPurchase() ? 'Modifier Achat' : 'Nouvel Achat' }}</h2>

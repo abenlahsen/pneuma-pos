@@ -182,11 +182,9 @@ export class PurchasesComponent implements OnInit {
     
     const payload = {
       date: purchase.date,
-      product: purchase.product,
-      supplier_id: purchase.supplier_id,
-      commercial_id: purchase.commercial_id,
-      quantity: purchase.quantity,
-      unit_price: purchase.unit_price,
+      supplier_id: purchase.supplier?.id || 0,
+      commercial_id: purchase.commercial?.id || null,
+      items: purchase.items,
       status: newStatus,
       payment_status: purchase.payment_status
     };
@@ -203,7 +201,7 @@ export class PurchasesComponent implements OnInit {
   }
 
   deletePurchase(purchase: Purchase): void {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer l'achat de ${purchase.product} ?`)) {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer l'achat (${purchase.total_quantity} articles) ?`)) {
       this.purchaseService.deletePurchase(purchase.id).subscribe({
         next: () => this.loadData(),
         error: (err) => {
