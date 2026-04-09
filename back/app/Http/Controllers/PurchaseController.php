@@ -13,10 +13,10 @@ class PurchaseController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Purchase::with(['supplier', 'commercial', 'linkedProduct.brand', 'creator', 'updater']);
+        $query = Purchase::with(['supplier', 'commercial', 'items.linkedProduct.brand', 'creator', 'updater']);
 
         // Sorting
-        $sortable = ['date', 'product', 'quantity', 'unit_price', 'payment_status', 'status', 'created_at', 'updated_at'];
+        $sortable = ['date', 'total_quantity', 'total_price', 'payment_status', 'status', 'created_at', 'updated_at'];
         if ($request->filled('sort_by') && in_array($request->sort_by, $sortable)) {
             $direction = $request->get('sort_direction', 'asc') === 'desc' ? 'desc' : 'asc';
             $query->orderBy($request->sort_by, $direction);
@@ -28,14 +28,13 @@ class PurchaseController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('product', 'like', "%{$search}%")
-                  ->orWhereHas('supplier', function ($q2) use ($search) {
+                $q->whereHas('supplier', function ($q2) use ($search) {
                       $q2->where('name', 'like', "%{$search}%");
                   })
                   ->orWhereHas('commercial', function ($q2) use ($search) {
                       $q2->where('name', 'like', "%{$search}%");
                   })
-                  ->orWhereHas('linkedProduct', function ($q2) use ($search) {
+                  ->orWhereHas('items.linkedProduct', function ($q2) use ($search) {
                       $q2->where('profile', 'like', "%{$search}%")
                         ->orWhere('reference', 'like', "%{$search}%")
                         ->orWhereHas('brand', function ($q3) use ($search) {
@@ -74,67 +73,148 @@ class PurchaseController extends Controller
     {
         $validated = $request->validate([
             'date' => 'required|date',
-            'product' => 'nullable|string|max:255',
-            'product_id' => 'required|exists:products,id',
-            'stock_id' => 'required|exists:stocks,id',
+            'with_invoice' => 'boolean',
             'supplier_id' => 'required|exists:suppliers,id',
-            'commercial_id' => 'nullable|exists:users,id',
-            'quantity' => 'required|integer|min:1',
-            'unit_price' => 'required|numeric|min:0',
+            'commercial_id' => 'required|exists:users,id',
             'status' => 'required|string|in:EN COURS,RECU,ANNULE,RETOUR',
             'payment_status' => 'required|string|in:PAYE,NON PAYE,PARTIEL',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.stock_id' => 'required|exists:stocks,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.unit_price' => 'required|numeric|min:0',
         ]);
 
-        $purchase = Purchase::create(array_merge($validated, [
-            'created_by' => $request->user()->id,
-        ]));
+        $purchaseData = $request->except('items');
+        $itemsData = $request->items;
 
-        // Increase stock quantity
-        if ($purchase->stock_id) {
-            Stock::where('id', $purchase->stock_id)->increment('quantity', $purchase->quantity ?? 0);
-        }
+        $purchase = \Illuminate\Support\Facades\DB::transaction(function () use ($purchaseData, $itemsData, $request) {
+            $totalQuantity = 0;
+            $totalPrice = 0;
 
-        return response()->json($purchase->load(['supplier', 'commercial', 'linkedProduct.brand']), 201);
+            foreach ($itemsData as $itemData) {
+                $q = $itemData['quantity'] ?? 1;
+                $up = floatval($itemData['unit_price'] ?? 0);
+                $totalQuantity += $q;
+                $totalPrice += ($up * $q);
+            }
+
+            $purchase = Purchase::create(array_merge($purchaseData, [
+                'total_quantity' => $totalQuantity,
+                'total_price' => $totalPrice,
+                'created_by' => $request->user()->id,
+            ]));
+
+            foreach ($itemsData as $itemData) {
+                $q = $itemData['quantity'] ?? 1;
+                $up = floatval($itemData['unit_price'] ?? 0);
+                
+                $purchase->items()->create([
+                    'product_id' => $itemData['product_id'],
+                    'stock_id' => $itemData['stock_id'],
+                    'quantity' => $q,
+                    'unit_price' => $up,
+                ]);
+
+                // Increase stock quantity
+                Stock::where('id', $itemData['stock_id'])->increment('quantity', $q);
+            }
+
+            return $purchase;
+        });
+
+        return response()->json($purchase->load(['items.linkedProduct.brand', 'supplier', 'commercial']), 201);
     }
 
     public function show(Purchase $purchase)
     {
-        return response()->json($purchase->load(['supplier', 'commercial', 'linkedProduct.brand']));
+        return response()->json($purchase->load(['items.linkedProduct.brand', 'supplier', 'commercial']));
     }
 
     public function update(Request $request, Purchase $purchase)
     {
         $validated = $request->validate([
-            'date' => 'nullable|date',
-            'product' => 'nullable|string|max:255',
-            'product_id' => 'nullable|exists:products,id',
-            'stock_id' => 'nullable|exists:stocks,id',
-            'supplier_id' => 'nullable|exists:suppliers,id',
-            'commercial_id' => 'nullable|exists:users,id',
-            'quantity' => 'nullable|integer|min:1',
-            'unit_price' => 'nullable|numeric|min:0',
-            'status' => 'nullable|string|in:EN COURS,RECU,ANNULE,RETOUR',
-            'payment_status' => 'nullable|string|in:PAYE,NON PAYE,PARTIEL',
+            'date' => 'required|date',
+            'with_invoice' => 'boolean',
+            'supplier_id' => 'required|exists:suppliers,id',
+            'commercial_id' => 'required|exists:users,id',
+            'status' => 'required|string|in:EN COURS,RECU,ANNULE,RETOUR',
+            'payment_status' => 'required|string|in:PAYE,NON PAYE,PARTIEL',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.stock_id' => 'required|exists:stocks,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.unit_price' => 'required|numeric|min:0',
         ]);
 
         $oldStatus = $purchase->status;
-        $purchase->update(array_merge($validated, [
-            'updated_by' => $request->user()->id,
-        ]));
+        $itemsData = $request->items;
 
-        // Remove stock if status changed to ANNULE or RETOUR (and wasn't already)
-        if ($purchase->stock_id && in_array($purchase->status, ['ANNULE', 'RETOUR']) && !in_array($oldStatus, ['ANNULE', 'RETOUR'])) {
-            Stock::where('id', $purchase->stock_id)->decrement('quantity', $purchase->quantity ?? 0);
-        }
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $purchase, $itemsData, $oldStatus) {
+            // Revert stock for existing items if they weren't cancelled/returned previously
+            if (!in_array($oldStatus, ['ANNULE', 'RETOUR'])) {
+                foreach ($purchase->items as $existingItem) {
+                    if ($existingItem->stock_id) {
+                        Stock::where('id', $existingItem->stock_id)->decrement('quantity', $existingItem->quantity);
+                    }
+                }
+            }
 
-        return response()->json($purchase->load(['supplier', 'commercial', 'linkedProduct.brand']));
+            // Delete old items
+            $purchase->items()->delete();
+
+            $totalQuantity = 0;
+            $totalPrice = 0;
+
+            foreach ($itemsData as $itemData) {
+                $q = $itemData['quantity'] ?? 1;
+                $up = floatval($itemData['unit_price'] ?? 0);
+                $totalQuantity += $q;
+                $totalPrice += ($up * $q);
+            }
+
+            $purchaseData = array_merge(
+                $request->except('items'),
+                [
+                    'total_quantity' => $totalQuantity,
+                    'total_price' => $totalPrice,
+                    'updated_by' => $request->user()->id,
+                ]
+            );
+
+            $purchase->update($purchaseData);
+            $newStatus = $request->input('status', $oldStatus);
+
+            foreach ($itemsData as $itemData) {
+                $q = $itemData['quantity'] ?? 1;
+                $up = floatval($itemData['unit_price'] ?? 0);
+                
+                $purchase->items()->create([
+                    'product_id' => $itemData['product_id'],
+                    'stock_id' => $itemData['stock_id'],
+                    'quantity' => $q,
+                    'unit_price' => $up,
+                ]);
+
+                // Increase stock quantity unless cancelled/returned
+                if (!in_array($newStatus, ['ANNULE', 'RETOUR'])) {
+                    Stock::where('id', $itemData['stock_id'])->increment('quantity', $q);
+                }
+            }
+        });
+
+        return response()->json($purchase->load(['items.linkedProduct.brand', 'supplier', 'commercial']));
     }
 
     public function destroy(Purchase $purchase)
     {
         // Remove from stock (unless already cancelled/returned, which already decremented stock)
-        if ($purchase->stock_id && !in_array($purchase->status, ['ANNULE', 'RETOUR'])) {
-            Stock::where('id', $purchase->stock_id)->decrement('quantity', $purchase->quantity ?? 0);
+        if (!in_array($purchase->status, ['ANNULE', 'RETOUR'])) {
+            foreach ($purchase->items as $item) {
+                if ($item->stock_id) {
+                    Stock::where('id', $item->stock_id)->decrement('quantity', $item->quantity);
+                }
+            }
         }
 
         // Delete linked transactions and payments
@@ -171,8 +251,8 @@ class PurchaseController extends Controller
             $query->where('date', '<=', $request->date_to);
         }
 
-        $totalAchats = (clone $query)->selectRaw('SUM(unit_price * quantity) as total')->value('total') ?? 0;
-        $totalPaye = (clone $query)->where('payment_status', 'PAYE')->selectRaw('SUM(unit_price * quantity) as total')->value('total') ?? 0;
+        $totalAchats = (clone $query)->sum('total_price') ?? 0;
+        $totalPaye = (clone $query)->where('payment_status', 'PAYE')->sum('total_price') ?? 0;
         $resteAPayer = $totalAchats - $totalPaye;
 
         return response()->json([
@@ -186,7 +266,7 @@ class PurchaseController extends Controller
     {
         return response()->json([
             'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
-            'commercials' => User::role('Commercial')->orderBy('name')->get(['id', 'name']),
+            'commercials' => User::role(['Commercial', 'Manager', 'Administrator'])->orderBy('name')->get(['id', 'name']),
         ]);
     }
 }

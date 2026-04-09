@@ -42,7 +42,7 @@ class PurchasePaymentController extends Controller
                 'amount' => $validated['amount'],
                 'type' => 'expense',
                 'category' => 'Produit',
-                'description' => "Paiement achat #{$purchase->id} - {$purchase->quantity} X " . ($purchase->linkedProduct ? trim("{$purchase->linkedProduct->brand?->name} {$purchase->linkedProduct->profile} {$purchase->linkedProduct->tire_width}/{$purchase->linkedProduct->tire_height}R{$purchase->linkedProduct->tire_diameter}") : $purchase->product),
+                'description' => "Paiement achat #{$purchase->id} - {$purchase->total_quantity} X " . $this->describePurchaseProduct($purchase),
                 'person' => '',
                 'partner' => $purchase->supplier->name ?? '',
                 'user_id' => $request->user()->id,
@@ -70,6 +70,30 @@ class PurchasePaymentController extends Controller
         $this->updatePaymentStatus($purchase);
 
         return response()->json(null, 204);
+    }
+
+    /**
+     * Build a human-readable description of the products in a purchase (joined for multi-item purchases).
+     */
+    private function describePurchaseProduct(Purchase $purchase): string
+    {
+        $purchase->loadMissing('items.linkedProduct.brand');
+
+        $parts = $purchase->items->map(function ($item) {
+            $product = $item->linkedProduct;
+            if (!$product) {
+                return null;
+            }
+            $brand = $product->brand?->name ?? '';
+            $dimension = $product->tire_width
+                ? "{$product->tire_width}/{$product->tire_height}R{$product->tire_diameter}"
+                : '';
+            $profile = $product->profile ?? '';
+
+            return trim(implode(' ', array_filter([$brand, $profile, $dimension])));
+        })->filter()->values();
+
+        return $parts->implode(' + ');
     }
 
     private function updatePaymentStatus(Purchase $purchase): void

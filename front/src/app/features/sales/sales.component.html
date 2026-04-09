@@ -13,27 +13,35 @@
 
   <!-- Summary Cards -->
   <div class="summary-cards">
-    <div class="card summary-card income">
+    <div class="card summary-card income" *ngIf="authService.hasRole('Administrator')">
       <div class="card-icon">📈</div>
       <div class="card-content">
         <p class="card-label">Total Ventes</p>
         <h3 class="card-value">{{ summary().total_sale | number:'1.2-2' }} DH</h3>
       </div>
     </div>
-    
-    <div class="card summary-card expense">
+
+    <div class="card summary-card expense" *ngIf="authService.hasRole('Administrator')">
       <div class="card-icon">📉</div>
       <div class="card-content">
         <p class="card-label">Total Achats</p>
         <h3 class="card-value">{{ summary().total_purchase | number:'1.2-2' }} DH</h3>
       </div>
     </div>
-    
-    <div class="card summary-card balance" [class.negative]="summary().margin < 0">
+
+    <div class="card summary-card balance" [class.negative]="summary().margin < 0" *ngIf="authService.hasRole('Administrator')">
       <div class="card-icon">📊</div>
       <div class="card-content">
         <p class="card-label">Marge Nette</p>
         <h3 class="card-value">{{ summary().margin | number:'1.2-2' }} DH</h3>
+      </div>
+    </div>
+
+    <div class="card summary-card info">
+      <div class="card-icon">📅</div>
+      <div class="card-content">
+        <p class="card-label">Pneus vendus aujourd'hui</p>
+        <h3 class="card-value">{{ summary().tyres_today }}</h3>
       </div>
     </div>
 
@@ -143,9 +151,7 @@
             <th class="sortable" (click)="toggleSort('date')">Date <span class="sort-icon">{{ sortBy() === 'date' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('client')">Client <span class="sort-icon">{{ sortBy() === 'client' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th>Commercial</th>
-            <th class="sortable" (click)="toggleSort('brand')">Marque <span class="sort-icon">{{ sortBy() === 'brand' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
-            <th class="sortable" (click)="toggleSort('dimension')">Dimension / Profil <span class="sort-icon">{{ sortBy() === 'dimension' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
-            <th class="sortable" (click)="toggleSort('quantity')">Qte <span class="sort-icon">{{ sortBy() === 'quantity' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th class="sortable" (click)="toggleSort('total_quantity')">Qte <span class="sort-icon">{{ sortBy() === 'total_quantity' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable text-right" (click)="toggleSort('total_sale')">Total Vente <span class="sort-icon">{{ sortBy() === 'total_sale' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable text-right" (click)="toggleSort('margin')">Marge <span class="sort-icon">{{ sortBy() === 'margin' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('payment_status')">Paiement <span class="sort-icon">{{ sortBy() === 'payment_status' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
@@ -156,13 +162,13 @@
         </thead>
         <tbody>
           <tr *ngIf="loading()">
-            <td colspan="13" class="text-center py-4">
+            <td colspan="11" class="text-center py-4">
               <div class="spinner"></div> Chargement...
             </td>
           </tr>
           
           <tr *ngIf="!loading() && sales().length === 0">
-            <td colspan="13" class="text-center py-4 text-muted">
+            <td colspan="11" class="text-center py-4 text-muted">
               Aucune vente trouvée.
             </td>
           </tr>
@@ -176,27 +182,15 @@
             <td>{{ sale.date | date:'dd/MM/yyyy' }}</td>
             <td class="clickable-cell" (click)="openDetail(sale)">
               <div class="fw-medium link-text">{{ sale.client || '-' }}</div>
-              <div class="text-small text-muted">{{ sale.city || '' }}</div>
+              <div class="text-small text-muted">{{ sale.client_phone || '' }}{{ sale.client_phone && sale.city ? ' — ' : '' }}{{ sale.city || '' }}</div>
             </td>
             <td>{{ sale.commercial?.name || '-' }}</td>
-            <td>
-              <span class="badge badge-primary" *ngIf="sale.linked_product?.brand">{{ sale.linked_product!.brand!.name }}</span>
-              <span class="badge badge-primary" *ngIf="!sale.linked_product?.brand">{{ sale.brand || '-' }}</span>
-            </td>
-            <td>
-              <div class="fw-medium" *ngIf="sale.linked_product">
-                <span *ngIf="sale.linked_product.tire_width">{{ sale.linked_product.tire_width }}/{{ sale.linked_product.tire_height }}R{{ sale.linked_product.tire_diameter }}</span>
-                <span *ngIf="!sale.linked_product.tire_width">{{ sale.linked_product.reference || sale.dimension || '-' }}</span>
-              </div>
-              <div class="fw-medium" *ngIf="!sale.linked_product">{{ sale.dimension || '-' }}</div>
-              <div class="text-small text-muted">{{ sale.linked_product?.profile || sale.profile || '' }}</div>
-            </td>
-            <td>{{ sale.quantity }}</td>
+            <td>{{ sale.total_quantity }}</td>
             <td class="text-right fw-semibold">
               {{ sale.total_sale | number:'1.2-2' }}
             </td>
-            <td class="text-right" [class.text-success]="sale.margin > 0" [class.text-danger]="sale.margin < 0">
-              {{ sale.margin | number:'1.2-2' }}
+            <td class="text-right fw-semibold" [class.text-success]="(sale.margin || 0) > 0" [class.text-danger]="(sale.margin || 0) < 0">
+              {{ sale.margin | number:'1.2-2' }} 
             </td>
             <td>
               <span class="badge" 
@@ -254,7 +248,7 @@
 </div>
 
 <!-- Form Modal -->
-<div class="modal-overlay" *ngIf="showForm()" (click)="closeForm()">
+<div class="modal-overlay" *ngIf="showForm()">
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>{{ editingSale() ? 'Modifier la vente' : 'Nouvelle vente' }}</h2>

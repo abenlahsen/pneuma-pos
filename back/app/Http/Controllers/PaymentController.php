@@ -51,7 +51,7 @@ class PaymentController extends Controller
                 'amount' => $validated['amount'],
                 'type' => 'income',
                 'category' => 'Produit',
-                'description' => "Paiement vente #{$sale->id} - {$sale->quantity} X {$sale->brand} {$sale->profile} {$sale->dimension} POUR {$sale->client}",
+                'description' => "Paiement vente #{$sale->id} - {$sale->total_quantity} X " . $this->describeSaleProduct($sale) . " POUR {$sale->client}",
                 'person' => '',
                 'partner' => $sale->client ?? '',
                 'user_id' => $request->user()->id,
@@ -87,6 +87,30 @@ class PaymentController extends Controller
         $this->updatePaymentStatus($sale);
 
         return response()->json(null, 204);
+    }
+
+    /**
+     * Build a human-readable description of the products in a sale (joined for multi-item sales).
+     */
+    private function describeSaleProduct(Sale $sale): string
+    {
+        $sale->loadMissing('items.linkedProduct.brand');
+
+        $parts = $sale->items->map(function ($item) {
+            $product = $item->linkedProduct;
+            if (!$product) {
+                return null;
+            }
+            $brand = $product->brand?->name ?? '';
+            $dimension = $product->tire_width
+                ? "{$product->tire_width}/{$product->tire_height}R{$product->tire_diameter}"
+                : '';
+            $profile = $product->profile ?? '';
+
+            return trim(implode(' ', array_filter([$brand, $profile, $dimension])));
+        })->filter()->values();
+
+        return $parts->implode(' + ');
     }
 
     /**

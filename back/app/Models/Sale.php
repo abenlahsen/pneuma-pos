@@ -14,18 +14,8 @@ class Sale extends Model
     protected $fillable = [
         'date',
         'with_invoice',
-        'quantity',
-        'dimension',
-        'ic',
-        'iv',
-        'rft',
-        'brand',
-        'profile',
-        'product_id',
-        'stock_id',
-        'purchase_price',
+        'total_quantity',
         'total_purchase',
-        'selling_price',
         'total_sale',
         'margin',
 
@@ -36,6 +26,7 @@ class Sale extends Model
         'service',
         'service_fee',
         'client',
+        'client_phone',
         'payment_method',
         'commercial_id',
         'status',
@@ -49,10 +40,8 @@ class Sale extends Model
     protected $casts = [
         'date' => 'date:Y-m-d',
         'with_invoice' => 'boolean',
-        'quantity' => 'integer',
-        'purchase_price' => 'decimal:2',
+        'total_quantity' => 'integer',
         'total_purchase' => 'decimal:2',
-        'selling_price' => 'decimal:2',
         'total_sale' => 'decimal:2',
         'margin' => 'decimal:2',
         'service_fee' => 'decimal:2',
@@ -60,16 +49,11 @@ class Sale extends Model
     ];
 
     /**
-     * The linked product record.
+     * The items for this sale.
      */
-    public function linkedProduct(): BelongsTo
+    public function items(): HasMany
     {
-        return $this->belongsTo(Product::class, 'product_id');
-    }
-
-    public function stock(): BelongsTo
-    {
-        return $this->belongsTo(Stock::class);
+        return $this->hasMany(SaleItem::class);
     }
 
     /**

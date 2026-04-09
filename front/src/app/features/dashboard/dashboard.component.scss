@@ -96,6 +96,63 @@
   }
 }
 
+/* KPI Section */
+.kpi-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  margin-top: 1.5rem;
+}
+
+.kpi-title {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  color: #2d3748;
+  border-bottom: 2px solid rgba(255, 45, 55, 0.2);
+  padding-bottom: 0.5rem;
+}
+
+.kpi-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+
+  tbody + tbody {
+    border-top: 1px solid #e2e8f0;
+  }
+
+  td, th {
+    padding: 0.55rem 0.75rem;
+    text-align: left;
+  }
+
+  tbody tr:not(.kpi-section-row):nth-child(even) {
+    background: #f7fafc;
+  }
+
+  .kpi-section-row th {
+    background: #fff5f5;
+    color: #ff2d37;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    padding: 0.4rem 0.75rem;
+  }
+
+  .kpi-value {
+    text-align: right;
+    font-weight: 600;
+    color: #2d3748;
+    font-variant-numeric: tabular-nums;
+
+    &.kpi-negative {
+      color: #e53e3e;
+    }
+  }
+}
+
 /* Quick Links */
 .quick-links {
   display: grid;

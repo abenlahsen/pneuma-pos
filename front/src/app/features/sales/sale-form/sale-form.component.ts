@@ -34,23 +34,11 @@ export class SaleFormComponent implements OnInit {
   stocks = signal<Stock[]>([]);
   loadingStocks = signal(false);
   noStockAvailable = signal(false);
-  private editingProduct: Product | null = null;
-
   formData: Partial<SalePayload> = {
     date: new Date().toISOString().split('T')[0],
     with_invoice: false,
-    product_id: 0,
-    stock_id: null,
-    quantity: 1,
-    dimension: '',
-    ic: '',
-    iv: '',
-    rft: '',
-    brand: '',
-    profile: '',
-    purchase_price: 0,
+    items: [],
     total_purchase: 0,
-    selling_price: 0,
     total_sale: 0,
     margin: 0,
 
@@ -60,12 +48,23 @@ export class SaleFormComponent implements OnInit {
     partner_id: null,
     service: '',
     client: '',
+    client_phone: '',
     payment_method: 'ESPECE',
     commercial_id: null,
     status: 'EN COURS',
     payment_status: 'NON PAYE',
     delivery_date: '',
     comments: ''
+  };
+
+  currentItem: any = {
+    product_id: 0,
+    stock_id: null,
+    quantity: 1,
+    purchase_price: 0,
+    selling_price: 0,
+    linkedProduct: null,
+    stock: null
   };
 
 
@@ -95,15 +94,9 @@ export class SaleFormComponent implements OnInit {
       this.formData = { ...this.sale };
       this.formData.date = this.sale.date?.substring(0, 10) || '';
       this.formData.delivery_date = this.sale.delivery_date?.substring(0, 10) || '';
-      this.formData.product_id = this.sale.product_id || 0;
-      this.formData.stock_id = this.sale.stock_id || null;
-      if (this.sale.linked_product) {
-        this.editingProduct = this.sale.linked_product;
-        this.products.set([this.sale.linked_product]);
-      }
-      if (this.sale.product_id) {
-        this.loadStocksForProduct(this.sale.product_id);
-      }
+      this.formData.items = this.sale.items ? JSON.parse(JSON.stringify(this.sale.items)) : [];
+      
+      // Load products for all items so they display correctly if we wanted to edit, but for now we just show them in the table.
     }
   }
 
@@ -116,9 +109,6 @@ export class SaleFormComponent implements OnInit {
     this.productService.getProducts(filters).subscribe({
       next: (res) => {
         let list = res.data;
-        if (this.editingProduct && !list.find(p => p.id === this.editingProduct!.id)) {
-          list = [this.editingProduct, ...list];
-        }
         this.products.set(list);
         this.loadingProducts.set(false);
       },
@@ -128,17 +118,11 @@ export class SaleFormComponent implements OnInit {
 
   onProductSelected(event: Event): void {
     const id = +(event.target as HTMLSelectElement).value;
-    this.formData.product_id = id;
-    this.formData.stock_id = null;
+    this.currentItem.product_id = id;
+    this.currentItem.stock_id = null;
     const product = this.products().find(p => p.id === id);
     if (product) {
-      this.formData.brand = product.brand?.name || '';
-      const dim = product.tire_width ? `${product.tire_width}/${product.tire_height}R${product.tire_diameter}` : '';
-      this.formData.dimension = dim;
-      this.formData.profile = product.profile || '';
-      this.formData.ic = product.tire_load_index || '';
-      this.formData.iv = product.tire_speed_index || '';
-      this.formData.rft = product.tire_runflat ? 'OUI' : '';
+      this.currentItem.linkedProduct = product;
       this.loadStocksForProduct(id);
     } else {
       this.stocks.set([]);
@@ -153,32 +137,60 @@ export class SaleFormComponent implements OnInit {
         this.stocks.set(res.data);
         this.noStockAvailable.set(res.data.length === 0);
         this.loadingStocks.set(false);
-        // Auto-fill weighted average purchase price for new sales
-        if (!this.sale && res.data.length > 0) {
-          const withPrice = res.data.filter(s => s.purchase_price != null && s.quantity > 0);
-          if (withPrice.length > 0) {
-            const totalValue = withPrice.reduce((sum, s) => sum + (s.purchase_price! * s.quantity), 0);
-            const totalQty = withPrice.reduce((sum, s) => sum + s.quantity, 0);
-            this.formData.purchase_price = Math.round((totalValue / totalQty) * 100) / 100;
-          } else {
-            this.formData.purchase_price = 0;
-          }
-          this.calculateTotals();
-        }
       },
       error: () => this.loadingStocks.set(false),
     });
   }
 
+  onStockSelected(): void {
+    const stock = this.selectedStock;
+    if (stock) {
+      this.currentItem.stock = stock;
+      if (stock.purchase_price != null) {
+        this.currentItem.purchase_price = Number(stock.purchase_price);
+      }
+    }
+  }
+
   get selectedStock(): Stock | null {
-    if (!this.formData.stock_id) return null;
-    return this.stocks().find(s => s.id === this.formData.stock_id) || null;
+    if (!this.currentItem.stock_id) return null;
+    return this.stocks().find(s => s.id === this.currentItem.stock_id) || null;
   }
 
   get stockInsufficient(): boolean {
     const stock = this.selectedStock;
     if (!stock) return false;
-    return (this.formData.quantity || 0) > stock.quantity;
+    return (this.currentItem.quantity || 0) > stock.quantity;
+  }
+
+  addItem() {
+    if (!this.currentItem.product_id || !this.currentItem.stock_id) return;
+    if (this.stockInsufficient) {
+      alert('Quantité insuffisante en stock.');
+      return;
+    }
+    
+    this.formData.items!.push({ ...this.currentItem });
+    this.calculateTotals();
+
+    // Reset current item
+    this.currentItem = {
+      product_id: 0,
+      stock_id: null,
+      quantity: 1,
+      purchase_price: 0,
+      selling_price: 0,
+      linkedProduct: null,
+      stock: null
+    };
+    this.productSearch.set('');
+    this.products.set([]);
+    this.stocks.set([]);
+  }
+
+  removeItem(index: number) {
+    this.formData.items!.splice(index, 1);
+    this.calculateTotals();
   }
 
   formatStockLabel(s: Stock): string {
@@ -198,22 +210,28 @@ export class SaleFormComponent implements OnInit {
     return [ref, brand, dim, profile].filter(Boolean).join(' — ');
   }
 
+  getProduct(item: any): any {
+    return item.linkedProduct || item.linked_product;
+  }
+
   calculateTotals() {
-    const qte = this.formData.quantity || 0;
-    this.formData.total_purchase = (this.formData.purchase_price || 0) * qte;
-    this.formData.total_sale = (this.formData.selling_price || 0) * qte;
-    this.formData.margin = this.formData.total_sale - this.formData.total_purchase;
+    let tp = 0;
+    let ts = 0;
+    for (const item of this.formData.items!) {
+      tp += (item.purchase_price || 0) * (item.quantity || 1);
+      ts += (item.selling_price || 0) * (item.quantity || 1);
+    }
+    this.formData.total_purchase = tp;
+    this.formData.total_sale = ts;
+    this.formData.margin = ts - tp;
   }
 
   onSubmit() {
-    if (!this.formData.stock_id) {
-      alert('Veuillez sélectionner un stock pour ce produit.');
+    if (!this.formData.items || this.formData.items.length === 0) {
+      alert('Veuillez ajouter au moins un produit.');
       return;
     }
-    if (this.stockInsufficient) {
-      alert('Quantité insuffisante en stock.');
-      return;
-    }
+    
     this.calculateTotals();
     this.save.emit(this.formData as SalePayload);
   }

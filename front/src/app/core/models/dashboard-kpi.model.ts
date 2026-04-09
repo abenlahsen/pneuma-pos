@@ -1,0 +1,13 @@
+export interface DashboardKpi {
+  sales_today_amount: number;
+  tyres_today: number;
+  sales_month_amount: number;
+  purchases_month_amount: number;
+  margin_month: number;
+  tyres_month: number;
+  stock_quantity: number;
+  stock_value: number;
+  unpaid_sales: number;
+  unpaid_purchases: number;
+  cash_balance: number;
+}

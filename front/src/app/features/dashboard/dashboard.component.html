@@ -19,6 +19,81 @@
       }
     </div>
 
+    <div class="kpi-section" *ngIf="authService.hasRole('Administrator') && kpi() as k">
+      <h3 class="kpi-title">Tableau de bord KPI</h3>
+      <table class="kpi-table">
+        <tbody>
+          <tr class="kpi-section-row">
+            <th colspan="2">Aujourd'hui</th>
+          </tr>
+          <tr>
+            <td>Chiffre d'affaires</td>
+            <td class="kpi-value">{{ k.sales_today_amount | number:'1.2-2' }} DH</td>
+          </tr>
+          <tr>
+            <td>Pneus vendus</td>
+            <td class="kpi-value">{{ k.tyres_today }}</td>
+          </tr>
+        </tbody>
+        <tbody>
+          <tr class="kpi-section-row">
+            <th colspan="2">Ce mois</th>
+          </tr>
+          <tr>
+            <td>Chiffre d'affaires</td>
+            <td class="kpi-value">{{ k.sales_month_amount | number:'1.2-2' }} DH</td>
+          </tr>
+          <tr>
+            <td>Achats</td>
+            <td class="kpi-value">{{ k.purchases_month_amount | number:'1.2-2' }} DH</td>
+          </tr>
+          <tr>
+            <td>Marge nette</td>
+            <td class="kpi-value" [class.kpi-negative]="k.margin_month < 0">{{ k.margin_month | number:'1.2-2' }} DH</td>
+          </tr>
+          <tr>
+            <td>Pneus vendus</td>
+            <td class="kpi-value">{{ k.tyres_month }}</td>
+          </tr>
+        </tbody>
+        <tbody>
+          <tr class="kpi-section-row">
+            <th colspan="2">Stock</th>
+          </tr>
+          <tr>
+            <td>Quantité en stock</td>
+            <td class="kpi-value">{{ k.stock_quantity }}</td>
+          </tr>
+          <tr>
+            <td>Valeur du stock</td>
+            <td class="kpi-value">{{ k.stock_value | number:'1.2-2' }} DH</td>
+          </tr>
+        </tbody>
+        <tbody>
+          <tr class="kpi-section-row">
+            <th colspan="2">Encours</th>
+          </tr>
+          <tr>
+            <td>Impayés clients</td>
+            <td class="kpi-value">{{ k.unpaid_sales | number:'1.2-2' }} DH</td>
+          </tr>
+          <tr>
+            <td>Reste à payer fournisseurs</td>
+            <td class="kpi-value">{{ k.unpaid_purchases | number:'1.2-2' }} DH</td>
+          </tr>
+        </tbody>
+        <tbody>
+          <tr class="kpi-section-row">
+            <th colspan="2">Caisse</th>
+          </tr>
+          <tr>
+            <td>Solde de caisse</td>
+            <td class="kpi-value" [class.kpi-negative]="k.cash_balance < 0">{{ k.cash_balance | number:'1.2-2' }} DH</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
     <div class="quick-links">
       <a routerLink="/sales" class="quick-link-card" id="link-sales" *ngIf="authService.hasPermission('view sales')">
         <span class="ql-icon">🏷️</span>

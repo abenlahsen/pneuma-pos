@@ -14,13 +14,11 @@ class Purchase extends Model
 
     protected $fillable = [
         'date',
-        'product',
-        'product_id',
-        'stock_id',
+        'with_invoice',
+        'total_quantity',
+        'total_price',
         'supplier_id',
         'commercial_id',
-        'quantity',
-        'unit_price',
         'status',
         'payment_status',
         'payment_method',
@@ -32,24 +30,16 @@ class Purchase extends Model
     protected $casts = [
         'date' => 'date',
         'payment_date' => 'date',
-        'unit_price' => 'decimal:2',
+        'with_invoice' => 'boolean',
+        'total_quantity' => 'integer',
+        'total_price' => 'decimal:2',
     ];
 
-    protected $appends = ['total_price'];
+    // Removed appended total_price because it is now a real DB column.
 
-    public function getTotalPriceAttribute(): float
+    public function items()
     {
-        return round($this->quantity * $this->unit_price, 2);
-    }
-
-    public function linkedProduct()
-    {
-        return $this->belongsTo(Product::class, 'product_id');
-    }
-
-    public function stock()
-    {
-        return $this->belongsTo(Stock::class);
+        return $this->hasMany(PurchaseItem::class);
     }
 
     public function supplier()

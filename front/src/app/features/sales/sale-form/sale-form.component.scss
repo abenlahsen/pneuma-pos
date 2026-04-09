@@ -44,6 +44,7 @@
   }
 
   input[type="text"],
+  input[type="tel"],
   input[type="number"],
   input[type="date"],
   select,
@@ -64,6 +65,16 @@
 
   textarea {
     resize: vertical;
+  }
+
+  .form-static {
+    padding: 0.5rem 0.75rem;
+    border: 1px dashed $border-color;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    background: $bg-body;
+    color: $text-dark;
+    font-weight: 600;
   }
 }
 
@@ -151,6 +162,21 @@
     &:disabled { opacity: 0.5; cursor: not-allowed; }
   }
 }
+
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  color: inherit;
+  transition: all 0.2s;
+  
+  &:hover { background: #fee; }
+}
+
+.text-danger { color: #e53e3e; }
 
 /* ---- Responsive ---- */
 @media (max-width: 768px) {

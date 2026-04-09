@@ -1,8 +1,11 @@
-<div class="modal-overlay" (click)="close.emit()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
+<div class="modal-overlay print-overlay">
+  <div class="modal-content print-area" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>Détail de l'achat</h2>
-      <button class="btn-close" (click)="close.emit()">✕</button>
+      <div>
+        <button class="btn btn-primary btn-sm mr-2" (click)="printDocument()">🖨️ Imprimer</button>
+        <button class="btn-close" (click)="close.emit()">✕</button>
+      </div>
     </div>
 
     <div class="detail-body">
@@ -25,28 +28,34 @@
       </div>
 
       <div class="detail-section">
-        <h3 class="section-title">Produit</h3>
-        <div class="detail-grid">
-          <div class="detail-item full">
-            <span class="label">Produit</span>
-            <span class="value">{{ productLabel }}</span>
-          </div>
-          <div class="detail-item" *ngIf="purchase.linked_product?.brand">
-            <span class="label">Marque</span>
-            <span class="value">{{ purchase.linked_product!.brand!.name }}</span>
-          </div>
-          <div class="detail-item" *ngIf="purchase.linked_product?.tire_width">
-            <span class="label">Dimension</span>
-            <span class="value">{{ purchase.linked_product!.tire_width }}/{{ purchase.linked_product!.tire_height }}R{{ purchase.linked_product!.tire_diameter }}</span>
-          </div>
-          <div class="detail-item" *ngIf="purchase.linked_product?.profile">
-            <span class="label">Profil</span>
-            <span class="value">{{ purchase.linked_product!.profile }}</span>
-          </div>
-          <div class="detail-item" *ngIf="purchase.product">
-            <span class="label">Ancien champ produit</span>
-            <span class="value">{{ purchase.product }}</span>
-          </div>
+        <h3 class="section-title">Articles ({{ purchase.total_quantity }})</h3>
+        <div class="table-responsive mt-3">
+          <table class="table table-sm text-left">
+            <thead>
+              <tr>
+                <th class="col-produit">Produit</th>
+                <th>Qté</th>
+                <th>Prix</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of purchase.items">
+                <td class="col-produit">
+                  <span class="badge badge-primary mr-1" *ngIf="getProduct(item)?.brand">{{ getProduct(item)!.brand!.name }}</span>
+                  <span class="fw-medium">{{ getProduct(item)?.reference || 'Produit #' + item.product_id }}</span>
+                  <span class="text-muted ml-1" *ngIf="getProduct(item)?.tire_width">{{ getProduct(item)!.tire_width }}/{{ getProduct(item)!.tire_height }}R{{ getProduct(item)!.tire_diameter }}</span>
+                  <span class="text-muted ml-1" *ngIf="getProduct(item)?.profile">— {{ getProduct(item)!.profile }}</span>
+                </td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.unit_price | number:'1.2-2' }}</td>
+                <td>{{ (item.unit_price * item.quantity) | number:'1.2-2' }}</td>
+              </tr>
+              <tr *ngIf="!purchase.items || purchase.items.length === 0">
+                <td colspan="4" class="text-center text-muted">Aucun article.</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -54,12 +63,8 @@
         <h3 class="section-title">Finance</h3>
         <div class="detail-grid">
           <div class="detail-item">
-            <span class="label">Quantité</span>
-            <span class="value">{{ purchase.quantity }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">PU Achat</span>
-            <span class="value">{{ purchase.unit_price | number:'1.2-2' }} DH</span>
+            <span class="label">Total Articles</span>
+            <span class="value">{{ purchase.total_quantity }}</span>
           </div>
           <div class="detail-item">
             <span class="label">Total Achat</span>
@@ -108,6 +113,7 @@
     </div>
 
     <div class="modal-footer">
+      <button class="btn btn-primary mr-2" (click)="printDocument()">Imprimer</button>
       <button class="btn btn-secondary" (click)="close.emit()">Fermer</button>
     </div>
   </div>

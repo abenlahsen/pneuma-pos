@@ -1,97 +1,30 @@
 <form (ngSubmit)="onSubmit()" #form="ngForm" class="p-6">
-  <div class="row">
-    <div class="col-md-6 mb-4">
+
+  <div class="form-section">
+    <h3 class="section-title">Informations Générales</h3>
+    <div class="info-grid">
       <div class="form-group">
-        <label>Date de l'achat</label>
+        <label>Date *</label>
         <input type="date" class="form-control" [(ngModel)]="formData.date" name="date" required>
       </div>
-    </div>
-    <div class="col-md-6 mb-4">
-      <div class="form-group">
-        <label>Rechercher un produit</label>
-        <input type="text" class="form-control" [ngModel]="productSearch()" (ngModelChange)="productSearch.set($event)" (input)="searchProducts()" name="productSearch" placeholder="Rechercher par marque, dimension, profil..." autocomplete="off">
+      <div class="form-group checkbox-control">
+        <label>Avec Facture</label>
+        <input type="checkbox" name="with_invoice" [(ngModel)]="formData.with_invoice">
       </div>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-md-6 mb-4">
       <div class="form-group">
-        <label>Produit *</label>
-        <select class="form-control" [ngModel]="formData.product_id" (change)="onProductSelected($event)" name="product_id" required>
-          <option [value]="0" disabled>-- Sélectionner un produit --</option>
-          <option *ngFor="let p of products()" [value]="p.id">{{ formatProductLabel(p) }}</option>
-        </select>
-        <span class="text-small text-muted" *ngIf="loadingProducts()">Chargement...</span>
-      </div>
-    </div>
-    <div class="col-md-6 mb-4">
-      <div class="form-group">
-        <label>Ancien champ produit</label>
-        <input type="text" class="form-control" [(ngModel)]="formData.product" name="product" placeholder="(ancien champ texte)">
-      </div>
-    </div>
-  </div>
-
-  <div class="row" *ngIf="formData.product_id">
-    <div class="col-md-12 mb-4">
-      <div class="form-group">
-        <label>Stock (Dépôt / Zone / DOT) *</label>
-        <select class="form-control" [(ngModel)]="formData.stock_id" name="stock_id" required>
-          <option [ngValue]="null" disabled>-- Sélectionner un stock --</option>
-          <option *ngFor="let s of stocks()" [ngValue]="s.id">{{ formatStockLabel(s) }}</option>
-        </select>
-        <span class="text-small text-muted" *ngIf="loadingStocks()">Chargement...</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-md-6 mb-4">
-      <div class="form-group">
-        <label>Fournisseur</label>
+        <label>Fournisseur *</label>
         <select class="form-control" [(ngModel)]="formData.supplier_id" name="supplier_id" required>
-          <option [value]="0" disabled>Sélectionner un fournisseur...</option>
-          <option *ngFor="let sup of suppliers()" [value]="sup.id">{{ sup.name }}</option>
+          <option [ngValue]="null">-- Sélectionner un fournisseur --</option>
+          <option *ngFor="let sup of suppliers()" [ngValue]="sup.id">{{ sup.name }}</option>
         </select>
       </div>
-    </div>
-    <div class="col-md-6 mb-4">
       <div class="form-group">
-        <label>Commercial (Optionnel)</label>
-        <select class="form-control" [(ngModel)]="formData.commercial_id" name="commercial_id">
-          <option [ngValue]="null">Général / Aucun</option>
-          <option *ngFor="let comm of commercials()" [value]="comm.id">{{ comm.name }}</option>
+        <label>Commercial *</label>
+        <select class="form-control" [(ngModel)]="formData.commercial_id" name="commercial_id" required>
+          <option [ngValue]="null">-- Sélectionner un commercial --</option>
+          <option *ngFor="let comm of commercials()" [ngValue]="comm.id">{{ comm.name }}</option>
         </select>
       </div>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-md-4 mb-4">
-      <div class="form-group">
-        <label>Quantité</label>
-        <input type="number" class="form-control" [(ngModel)]="formData.quantity" name="quantity" min="1" required>
-      </div>
-    </div>
-    <div class="col-md-4 mb-4">
-      <div class="form-group">
-        <label>PU Achat (DH)</label>
-        <input type="number" class="form-control" [(ngModel)]="formData.unit_price" name="unit_price" min="0" step="0.01" required>
-      </div>
-    </div>
-    <div class="col-md-4 mb-4">
-      <div class="form-group">
-        <label>Total (DH)</label>
-        <input type="text" class="form-control" [value]="(formData.quantity * formData.unit_price) | number:'1.2-2'" readonly style="background: #f7fafc; font-weight: 600;">
-      </div>
-    </div>
-  </div>
-
-
-
-  <div class="row">
-    <div class="col-md-6 mb-4">
       <div class="form-group">
         <label>Statut</label>
         <select class="form-control" [(ngModel)]="formData.status" name="status">
@@ -101,8 +34,6 @@
           <option value="RETOUR">Retour</option>
         </select>
       </div>
-    </div>
-    <div class="col-md-6 mb-4">
       <div class="form-group">
         <label>Statut Paiement</label>
         <select class="form-control" [(ngModel)]="formData.payment_status" name="payment_status">
@@ -114,9 +45,89 @@
     </div>
   </div>
 
+  <div class="row">
+    <div class="col-md-12 mb-4">
+      <div class="form-section">
+        <h3 class="section-title">Produits</h3>
+        
+        <div class="items-table mb-3" *ngIf="formData.items && formData.items.length > 0">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Produit</th>
+                <th>Stock</th>
+                <th>Qté</th>
+                <th>PU Achat</th>
+                <th>Total Achat</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of formData.items; let i = index">
+                <td>{{ getProduct(item) ? formatProductLabel(getProduct(item)) : 'Produit #' + item.product_id }}</td>
+                <td>{{ item.stock ? formatStockLabel(item.stock) : 'Stock #' + item.stock_id }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.unit_price | number:'1.2-2' }}</td>
+                <td>{{ (item.unit_price * item.quantity) | number:'1.2-2' }}</td>
+                <td><button type="button" class="btn-icon text-danger" (click)="removeItem(i)">✕</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="text-right mt-2 font-weight-bold">
+            Sous-total : {{ totalAmount | number:'1.2-2' }} DH
+          </div>
+        </div>
+
+        <div class="item-adder">
+          <div class="row align-items-end">
+            <div class="col-md-2 mb-2">
+              <div class="form-group">
+                <label>Recherche produit</label>
+                <input type="text" class="form-control" [ngModel]="productSearch()" (ngModelChange)="productSearch.set($event)" (input)="searchProducts()" name="productSearch" placeholder="Recherche..." autocomplete="off">
+              </div>
+            </div>
+            <div class="col-md-3 mb-2">
+              <div class="form-group">
+                <label>Produit</label>
+                <select class="form-control" [(ngModel)]="currentItem.product_id" (change)="onProductSelected($event)" name="cur_product_id">
+                  <option [value]="0">-- Sélectionner --</option>
+                  <option *ngFor="let p of products()" [value]="p.id">{{ formatProductLabel(p) }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-3 mb-2">
+              <div class="form-group">
+                <label>Stock</label>
+                <select class="form-control" name="cur_stock_id" [(ngModel)]="currentItem.stock_id" (ngModelChange)="onStockSelected()">
+                  <option [ngValue]="null">-- Sélectionner --</option>
+                  <option *ngFor="let s of stocks()" [ngValue]="s.id">{{ formatStockLabel(s) }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-1 mb-2">
+              <div class="form-group">
+                <label>Qté</label>
+                <input type="number" class="form-control" name="cur_quantity" [(ngModel)]="currentItem.quantity" min="1">
+              </div>
+            </div>
+            <div class="col-md-2 mb-2">
+              <div class="form-group">
+                <label>PU Achat (DH)</label>
+                <input type="number" class="form-control" name="cur_unit_price" [(ngModel)]="currentItem.unit_price" step="0.01">
+              </div>
+            </div>
+            <div class="col-md-1 mb-2">
+              <button type="button" class="btn btn-primary w-100" style="height: 38px; padding: 0.375rem 0.5rem; margin-bottom: 2px;" [disabled]="!currentItem.product_id || !currentItem.stock_id" (click)="addItem()">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="form-actions mt-4 text-right">
     <button type="button" class="btn btn-secondary mr-2" (click)="cancel.emit()" [disabled]="loading()">Annuler</button>
-    <button type="submit" class="btn btn-primary" [disabled]="loading()">
+    <button type="submit" class="btn btn-primary" [disabled]="loading() || !formData.items || formData.items.length === 0">
       {{ loading() ? 'Enregistrement...' : 'Enregistrer' }}
     </button>
   </div>
