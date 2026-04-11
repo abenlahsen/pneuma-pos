@@ -4,5 +4,6 @@
 .vscode/
 .claude/
 dist/
-deploy/
+deploy/deploy.env
+deploy/deploy2.env
 env.production
