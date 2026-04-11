@@ -70,6 +70,7 @@ export class SaleFormComponent implements OnInit {
   editingItemIndex: number | null = null;
   /** Quantity of the item when we started editing it — added back to stock.quantity for the insufficient check */
   editingOriginalQuantity = 0;
+  logisticsCollapsed = signal(true);
 
 
   commercials = signal<ManagedUser[]>([]);
