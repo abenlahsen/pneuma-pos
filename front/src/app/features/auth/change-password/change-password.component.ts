@@ -23,7 +23,7 @@ export class ChangePasswordComponent {
   ) {
     this.form = this.fb.group({
       current_password: ['', [Validators.required]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
+      password: ['', [Validators.required, Validators.minLength(8)]],
       password_confirmation: ['', [Validators.required]],
     });
   }

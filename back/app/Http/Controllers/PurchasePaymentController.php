@@ -61,6 +61,9 @@ class PurchasePaymentController extends Controller
 
     public function destroy(Purchase $purchase, PurchasePayment $payment): JsonResponse
     {
+        // IDOR guard: the payment must belong to the purchase in the URL.
+        abort_unless($payment->purchase_id === $purchase->id, 404);
+
         if ($payment->transaction_id) {
             Transaction::where('id', $payment->transaction_id)->delete();
         }

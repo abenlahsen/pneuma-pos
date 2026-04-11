@@ -44,14 +44,16 @@ docker compose exec php php artisan migrate --seed
 # http://localhost:8888
 ```
 
-## Compte par defaut
+## Compte administrateur initial
 
-| Champ            | Valeur             |
-|------------------|--------------------|
-| **Email**        | `admin@pneuma.pos` |
-| **Mot de passe** | `password`         |
+Lors du premier `php artisan migrate --seed`, un compte Administrateur est cree a partir des variables d'environnement :
 
-Ce compte Administrateur est cree par le seeder. Il a tous les droits.
+| Variable                  | Role                                                                                  |
+|---------------------------|---------------------------------------------------------------------------------------|
+| `ADMIN_EMAIL`             | Email du compte (defaut : `admin@pneuma.pos`)                                         |
+| `ADMIN_INITIAL_PASSWORD`  | Mot de passe initial. Si vide, le seeder en genere un aleatoire et l'affiche en log.  |
+
+Le compte a le drapeau `must_change_password = true` : le frontend force le changement du mot de passe lors de la premiere connexion. Le mot de passe initial ne doit jamais etre reutilise.
 
 ## Deploiement en production (VPS)
 

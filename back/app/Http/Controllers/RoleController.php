@@ -49,6 +49,12 @@ class RoleController extends Controller
             'permissions.*' => 'integer|exists:permissions,id',
         ]);
 
+        if ($role->name === 'Administrator' && $request->name !== 'Administrator') {
+            return response()->json([
+                'message' => 'Le rôle Administrator ne peut pas être renommé.',
+            ], 422);
+        }
+
         $role->update(['name' => $request->name]);
 
         if ($request->has('permissions')) {
@@ -60,6 +66,18 @@ class RoleController extends Controller
 
     public function destroy(Role $role): JsonResponse
     {
+        if ($role->name === 'Administrator') {
+            return response()->json([
+                'message' => 'Le rôle Administrator ne peut pas être supprimé.',
+            ], 422);
+        }
+
+        if ($role->users()->exists()) {
+            return response()->json([
+                'message' => 'Ce rôle est attribué à un ou plusieurs utilisateurs.',
+            ], 422);
+        }
+
         $role->delete();
         return response()->json(null, 204);
     }
