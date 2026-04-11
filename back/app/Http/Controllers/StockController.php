@@ -266,7 +266,8 @@ class StockController extends Controller
     public function import(Request $request): JsonResponse
     {
         $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls',
+            // max:5120 KB = 5 MB, enough for ~50k rows in practice
+            'file' => 'required|file|mimes:xlsx,xls|max:5120',
         ]);
 
         $spreadsheet = IOFactory::load($request->file('file')->getPathname());
@@ -275,6 +276,14 @@ class StockController extends Controller
 
         // Remove header row
         $header = array_shift($rows);
+
+        // Hard row cap to protect DB rollback segment and PHP memory even
+        // when the file is under the size cap but densely packed.
+        if (count($rows) > 10000) {
+            return response()->json([
+                'message' => 'Fichier trop volumineux (maximum 10 000 lignes).',
+            ], 422);
+        }
 
         $count = 0;
         $userId = $request->user()->id;

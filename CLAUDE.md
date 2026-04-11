@@ -10,7 +10,7 @@ Pneuma POS is a Point of Sale system for a **tire shop** (pneus). The UI is in *
 - **Database**: MySQL 8 (tests use in-memory SQLite)
 - **Infrastructure**: Docker Compose with Nginx reverse proxy
 
-Default admin credentials: `admin@pneuma.pos` / `password` (created by `DatabaseSeeder`)
+Initial admin account is seeded from `ADMIN_EMAIL` / `ADMIN_INITIAL_PASSWORD` env vars (see `back/.env.example`). If `ADMIN_INITIAL_PASSWORD` is empty, the seeder generates a random password and prints it once on stdout. The admin is always forced to change their password on first login (`must_change_password = true`).
 
 ## Security Guidelines
 - Always validate and sanitize user inputs

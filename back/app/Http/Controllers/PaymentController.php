@@ -74,6 +74,9 @@ class PaymentController extends Controller
      */
     public function destroy(Sale $sale, Payment $payment): JsonResponse
     {
+        // IDOR guard: the payment must belong to the sale in the URL.
+        abort_unless($payment->sale_id === $sale->id, 404);
+
         // Delete linked transaction if exists
         if ($payment->transaction_id) {
             Transaction::where('id', $payment->transaction_id)->delete();
