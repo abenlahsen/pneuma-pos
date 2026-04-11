@@ -52,6 +52,7 @@ class DashboardController extends Controller
             // Today
             'sales_today_amount' => round((clone $salesToday)->sum('total_sale'), 2),
             'tyres_today' => (int) (clone $salesToday)->sum('total_quantity'),
+            'margin_today' => round((clone $salesToday)->sum('margin'), 2),
 
             // This month
             'sales_month_amount' => round((clone $salesMonth)->sum('total_sale'), 2),
@@ -61,6 +62,7 @@ class DashboardController extends Controller
             'total_sale_year' => round((clone $salesYear)->sum('total_sale'), 2),
             'total_purchase_year' => round((clone $purchasesYear)->sum('total_price'), 2),
             'tyres_month' => (int) (clone $salesMonth)->sum('total_quantity'),
+            'tyres_year' => (int) (clone $salesYear)->sum('total_quantity'),
 
             // Sales by Commercial (This Month)
             'sales_by_commercial' => $salesByCommercial,

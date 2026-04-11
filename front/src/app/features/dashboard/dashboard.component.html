@@ -36,9 +36,10 @@
         <div class="kpi-card">
           <div class="kpi-icon">📈</div>
           <div class="kpi-info">
-            <span class="kpi-label">Total Ventes (Année)</span>
+            <span class="kpi-label">CA Année</span>
             <span class="kpi-val">{{ k.total_sale_year | number:'1.2-2' }} <small>DH</small></span>
           </div>
+          <div class="kpi-badge">{{ k.tyres_year }} Pneus vendus</div>
         </div>
 
         <!-- Total Achats Année -->
@@ -47,6 +48,15 @@
           <div class="kpi-info">
             <span class="kpi-label">Total Achats (Année)</span>
             <span class="kpi-val">{{ k.total_purchase_year | number:'1.2-2' }} <small>DH</small></span>
+          </div>
+        </div>
+
+        <!-- Marge Aujourd'hui -->
+        <div class="kpi-card" [class.negative-card]="k.margin_today < 0">
+          <div class="kpi-icon">💰</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Marge Nette (Aujourd'hui)</span>
+            <span class="kpi-val">{{ k.margin_today | number:'1.2-2' }} <small>DH</small></span>
           </div>
         </div>
 
