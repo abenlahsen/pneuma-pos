@@ -124,7 +124,11 @@
   </div>
 
   <div class="form-section">
-    <h3 class="section-title">Logistique & Suivi</h3>
+    <h3 class="section-title collapsible" (click)="logisticsCollapsed.set(!logisticsCollapsed())" style="cursor: pointer; user-select: none;">
+      <span>Logistique & Suivi</span>
+      <span class="collapse-indicator" style="float: right;">{{ logisticsCollapsed() ? '▸' : '▾' }}</span>
+    </h3>
+    <div *ngIf="!logisticsCollapsed()">
     <div class="form-grid">
       <div class="form-control">
         <label>Transport</label>
@@ -191,6 +195,7 @@
     <div class="form-control full-width" style="margin-top: 1rem;">
       <label>Commentaires</label>
       <textarea name="comments" [(ngModel)]="formData.comments" rows="3" placeholder="Notes additionnelles..."></textarea>
+    </div>
     </div>
   </div>
 
