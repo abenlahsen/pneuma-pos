@@ -26,6 +26,7 @@
             <option value="">Tous</option>
             <option value="tyre">Pneu</option>
             <option value="part">Pièce</option>
+            <option value="service">Service</option>
           </select>
         </div>
 
@@ -87,7 +88,10 @@
             </td>
             <td>{{ product.reference || '-' }}</td>
             <td>
-              <span class="badge" [class.badge-primary]="product.type === 'tyre'" [class.badge-warning]="product.type === 'part'">
+              <span class="badge"
+                    [class.badge-primary]="product.type === 'tyre'"
+                    [class.badge-warning]="product.type === 'part'"
+                    [class.badge-info]="product.type === 'service'">
                 {{ typeLabel(product.type) }}
               </span>
             </td>
@@ -97,22 +101,26 @@
             </td>
             <td>{{ product.profile || '-' }}</td>
             <td>
-              <span *ngIf="product.type === 'tyre' && product.tire_width">
-                {{ product.tire_width }}/{{ product.tire_height }}R{{ product.tire_diameter }}
+              <span *ngIf="product.type === 'tyre' && product.tyre?.tire_width">
+                {{ product.tyre?.tire_width }}/{{ product.tyre?.tire_height }}R{{ product.tyre?.tire_diameter }}
               </span>
-              <span *ngIf="product.type !== 'tyre' || !product.tire_width">-</span>
+              <span *ngIf="product.type === 'part' && product.part?.category" class="tag">{{ partCategoryLabel(product.part?.category) }}</span>
+              <span *ngIf="product.type === 'service' && product.service?.category" class="tag">{{ serviceCategoryLabel(product.service?.category) }}</span>
+              <span *ngIf="(product.type === 'tyre' && !product.tyre?.tire_width) || (product.type === 'part' && !product.part?.category) || (product.type === 'service' && !product.service?.category)">-</span>
             </td>
-            <td>{{ product.tire_load_index || '-' }}</td>
-            <td>{{ product.tire_speed_index || '-' }}</td>
+            <td>{{ product.tyre?.tire_load_index || '-' }}</td>
+            <td>{{ product.tyre?.tire_speed_index || '-' }}</td>
             <td>
-              <span *ngIf="product.type === 'tyre' && product.tire_season" class="tag tag-season">{{ seasonLabel(product.tire_season) }}</span>
-              <span *ngIf="product.type !== 'tyre' || !product.tire_season">-</span>
+              <span *ngIf="product.type === 'tyre' && product.tyre?.tire_season" class="tag tag-season">{{ seasonLabel(product.tyre?.tire_season) }}</span>
+              <span *ngIf="product.type === 'service' && product.service?.duration_minutes">{{ product.service?.duration_minutes }} min</span>
+              <span *ngIf="!(product.type === 'tyre' && product.tyre?.tire_season) && !(product.type === 'service' && product.service?.duration_minutes)">-</span>
             </td>
             <td>
-              {{ product.tire_marking || '' }}
-              <span *ngIf="product.tire_runflat" class="tag tag-rft" title="Run Flat">RFT</span>
-              <span *ngIf="product.tire_reinforced" class="tag tag-xl" title="Renforcé">XL</span>
-              <span *ngIf="!product.tire_marking && !product.tire_runflat && !product.tire_reinforced">-</span>
+              {{ product.tyre?.tire_marking || '' }}
+              <span *ngIf="product.tyre?.tire_runflat" class="tag tag-rft" title="Run Flat">RFT</span>
+              <span *ngIf="product.tyre?.tire_reinforced" class="tag tag-xl" title="Renforcé">XL</span>
+              <span *ngIf="product.type === 'part' && product.part?.oem_reference" class="text-small">{{ product.part?.oem_reference }}</span>
+              <span *ngIf="!product.tyre?.tire_marking && !product.tyre?.tire_runflat && !product.tyre?.tire_reinforced && !(product.type === 'part' && product.part?.oem_reference)">-</span>
             </td>
             <td class="text-center">
               <span class="badge" [class.badge-success]="product.is_active" [class.badge-muted]="!product.is_active">

@@ -43,14 +43,20 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let item of formData.items; let i = index">
+          <tr *ngFor="let item of formData.items; let i = index" [class.table-active]="editingItemIndex === i">
             <td>{{ getProduct(item) ? formatProductLabel(getProduct(item)) : 'Produit #' + item.product_id }}</td>
-            <td>{{ item.stock ? formatStockLabel(item.stock) : 'Stock #' + item.stock_id }}</td>
+            <td>
+              <ng-container *ngIf="item.stock_id; else serviceLine">{{ item.stock ? formatStockLabel(item.stock) : 'Stock #' + item.stock_id }}</ng-container>
+              <ng-template #serviceLine><span class="text-muted">—</span></ng-template>
+            </td>
             <td>{{ item.quantity }}</td>
             <td>{{ item.purchase_price | number:'1.2-2' }}</td>
             <td>{{ item.selling_price | number:'1.2-2' }}</td>
             <td>{{ (item.selling_price * item.quantity) | number:'1.2-2' }}</td>
-            <td><button type="button" class="btn-icon text-danger" (click)="removeItem(i)">✕</button></td>
+            <td>
+              <button type="button" class="btn-icon text-primary mr-1" title="Modifier" (click)="editItem(i)">✏️</button>
+              <button type="button" class="btn-icon text-danger" title="Supprimer" (click)="removeItem(i)">🗑️</button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -70,12 +76,12 @@
           </select>
         </div>
         <div class="form-control">
-          <label>Stock</label>
-          <select name="cur_stock_id" [(ngModel)]="currentItem.stock_id" (ngModelChange)="onStockSelected()">
-            <option [ngValue]="null">-- Sélectionner --</option>
+          <label>Stock {{ isStockOptional ? '(facultatif)' : '' }}</label>
+          <select name="cur_stock_id" [(ngModel)]="currentItem.stock_id" (ngModelChange)="onStockSelected()" [disabled]="isCurrentService">
+            <option [ngValue]="null">{{ isCurrentService ? '— (service)' : '-- Sélectionner --' }}</option>
             <option *ngFor="let s of stocks()" [ngValue]="s.id">{{ formatStockLabel(s) }}</option>
           </select>
-          <span class="text-small text-danger" *ngIf="noStockAvailable() && !loadingStocks()">Aucun stock</span>
+          <span class="text-small text-danger" *ngIf="noStockAvailable() && !loadingStocks() && !isStockOptional">Aucun stock</span>
         </div>
         <div class="form-control">
           <label>Qté</label>
@@ -90,7 +96,10 @@
           <input type="number" name="cur_selling_price" [(ngModel)]="currentItem.selling_price" step="0.01">
         </div>
         <div class="form-control">
-          <button type="button" class="btn btn-primary" style="height: 42px;" [disabled]="!currentItem.product_id || !currentItem.stock_id || stockInsufficient" (click)="addItem()">Ajouter</button>
+          <button type="button" class="btn btn-primary" style="height: 42px;" [disabled]="!currentItem.product_id || (!isStockOptional && !currentItem.stock_id) || (currentItem.stock_id && stockInsufficient)" (click)="addItem()">{{ editingItemIndex !== null ? 'Mettre à jour' : 'Ajouter' }}</button>
+        </div>
+        <div class="form-control" *ngIf="editingItemIndex !== null">
+          <button type="button" class="btn btn-secondary" style="height: 42px;" (click)="cancelItemEdit()">Annuler</button>
         </div>
       </div>
     </div>

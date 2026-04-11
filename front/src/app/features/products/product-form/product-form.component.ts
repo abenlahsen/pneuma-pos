@@ -29,6 +29,7 @@ export class ProductFormComponent implements OnInit {
     description: '',
     unit: 'piece',
     is_active: true,
+    // Tyre-specific
     tire_width: null,
     tire_height: null,
     tire_diameter: null,
@@ -42,6 +43,14 @@ export class ProductFormComponent implements OnInit {
     eu_wet_grip: null,
     eu_noise_db: null,
     eu_noise_class: null,
+    // Part-specific
+    part_category: null,
+    oem_reference: '',
+    compatibility: '',
+    // Service-specific
+    service_category: null,
+    duration_minutes: null,
+    selling_price: null,
   };
 
   // ── Inventory ──
@@ -72,6 +81,10 @@ export class ProductFormComponent implements OnInit {
 
   ngOnInit() {
     if (this.product) {
+      const tyre = this.product.tyre ?? null;
+      const part = this.product.part ?? null;
+      const service = this.product.service ?? null;
+
       this.formData = {
         profile: this.product.profile || '',
         reference: this.product.reference || '',
@@ -80,26 +93,47 @@ export class ProductFormComponent implements OnInit {
         description: this.product.description || '',
         unit: this.product.unit || 'piece',
         is_active: this.product.is_active,
-        tire_width: this.product.tire_width,
-        tire_height: this.product.tire_height,
-        tire_diameter: this.product.tire_diameter,
-        tire_load_index: this.product.tire_load_index || '',
-        tire_speed_index: this.product.tire_speed_index || '',
-        tire_season: this.product.tire_season,
-        tire_runflat: this.product.tire_runflat,
-        tire_reinforced: this.product.tire_reinforced,
-        tire_marking: this.product.tire_marking || '',
-        eu_fuel: this.product.eu_fuel,
-        eu_wet_grip: this.product.eu_wet_grip,
-        eu_noise_db: this.product.eu_noise_db,
-        eu_noise_class: this.product.eu_noise_class,
+        // Tyre-specific
+        tire_width: tyre?.tire_width ?? null,
+        tire_height: tyre?.tire_height ?? null,
+        tire_diameter: tyre?.tire_diameter ?? null,
+        tire_load_index: tyre?.tire_load_index || '',
+        tire_speed_index: tyre?.tire_speed_index || '',
+        tire_season: tyre?.tire_season ?? null,
+        tire_runflat: tyre?.tire_runflat ?? false,
+        tire_reinforced: tyre?.tire_reinforced ?? false,
+        tire_marking: tyre?.tire_marking || '',
+        eu_fuel: tyre?.eu_fuel ?? null,
+        eu_wet_grip: tyre?.eu_wet_grip ?? null,
+        eu_noise_db: tyre?.eu_noise_db ?? null,
+        eu_noise_class: tyre?.eu_noise_class ?? null,
+        // Part-specific
+        part_category: part?.category ?? null,
+        oem_reference: part?.oem_reference || '',
+        compatibility: part?.compatibility || '',
+        // Service-specific
+        service_category: service?.category ?? null,
+        duration_minutes: service?.duration_minutes ?? null,
+        selling_price: service?.selling_price ?? null,
       };
-      this.loadStock();
+
+      // Services have no stock
+      if (this.product.type !== 'service') {
+        this.loadStock();
+      }
     }
   }
 
   get isTyre(): boolean {
     return this.formData.type === 'tyre';
+  }
+
+  get isPart(): boolean {
+    return this.formData.type === 'part';
+  }
+
+  get isService(): boolean {
+    return this.formData.type === 'service';
   }
 
   get isEditing(): boolean {

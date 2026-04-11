@@ -13,6 +13,7 @@
         <select name="type" [(ngModel)]="formData.type" required>
           <option value="tyre">Pneu</option>
           <option value="part">Pièce</option>
+          <option value="service">Service</option>
         </select>
       </div>
 
@@ -149,8 +150,80 @@
     </div>
   </div>
 
-  <!-- ── Inventory Section (only when editing) ── -->
-  <div class="form-section inventory-section" *ngIf="isEditing">
+  <!-- ── Part-specific section ── -->
+  <div class="form-section" *ngIf="isPart">
+    <h3>Caractéristiques pièce</h3>
+    <div class="form-grid">
+      <div class="form-control">
+        <label>Nom / Libellé</label>
+        <input type="text" name="profile" [(ngModel)]="formData.profile" placeholder="Ex: Plaquettes de frein AV">
+      </div>
+
+      <div class="form-control">
+        <label>Catégorie *</label>
+        <select name="part_category" [(ngModel)]="formData.part_category" required>
+          <option [ngValue]="null">-- Choisir --</option>
+          <option value="brakes">Freinage</option>
+          <option value="lubricants">Lubrifiants</option>
+          <option value="engine">Moteur</option>
+          <option value="suspension">Suspension</option>
+          <option value="filters">Filtres</option>
+          <option value="electrical">Électrique</option>
+          <option value="body">Carrosserie</option>
+          <option value="other">Autre</option>
+        </select>
+      </div>
+
+      <div class="form-control">
+        <label>Référence OEM / Constructeur</label>
+        <input type="text" name="oem_reference" [(ngModel)]="formData.oem_reference" placeholder="Ex: 7701210115">
+      </div>
+
+      <div class="form-control full-width">
+        <label>Compatibilité véhicules</label>
+        <textarea name="compatibility" [(ngModel)]="formData.compatibility" rows="2"
+                  placeholder="Ex: Renault Clio IV (2012-2019), Peugeot 208 (2012-2019)..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Service-specific section ── -->
+  <div class="form-section" *ngIf="isService">
+    <h3>Caractéristiques service</h3>
+    <div class="form-grid">
+      <div class="form-control">
+        <label>Nom du service *</label>
+        <input type="text" name="profile" [(ngModel)]="formData.profile" required
+               placeholder="Ex: Vidange moteur, Changement plaquettes AV">
+      </div>
+
+      <div class="form-control">
+        <label>Catégorie *</label>
+        <select name="service_category" [(ngModel)]="formData.service_category" required>
+          <option [ngValue]="null">-- Choisir --</option>
+          <option value="mechanical">Mécanique</option>
+          <option value="oil">Vidange / Huile</option>
+          <option value="tires">Pneumatique</option>
+          <option value="bodywork">Carrosserie</option>
+          <option value="diagnostic">Diagnostic</option>
+          <option value="other">Autre</option>
+        </select>
+      </div>
+
+      <div class="form-control">
+        <label>Durée estimée (minutes)</label>
+        <input type="number" name="duration_minutes" [(ngModel)]="formData.duration_minutes" min="0" placeholder="Ex: 30">
+      </div>
+
+      <div class="form-control">
+        <label>Prix de vente par défaut (DH)</label>
+        <input type="number" name="selling_price" [(ngModel)]="formData.selling_price" min="0" step="0.01" placeholder="Ex: 250">
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Inventory Section (only when editing a non-service product) ── -->
+  <div class="form-section inventory-section" *ngIf="isEditing && !isService">
     <div class="inventory-header">
       <h3>📦 Inventaire <span class="stock-total" *ngIf="totalStock > 0">({{ totalStock }} en stock)</span></h3>
       <button type="button" class="btn btn-sm btn-add-stock" (click)="openAddStock()" *ngIf="!showStockRow() && authService.hasPermission('create stock')">
@@ -248,8 +321,8 @@
     </div>
   </div>
 
-  <!-- ── Stock Movements History (only when editing) ── -->
-  <div class="form-section movements-section" *ngIf="isEditing && authService.hasPermission('view stock-movements')">
+  <!-- ── Stock Movements History (only when editing a non-service product) ── -->
+  <div class="form-section movements-section" *ngIf="isEditing && !isService && authService.hasPermission('view stock-movements')">
     <div class="movements-header" (click)="toggleMovements()">
       <h3>
         <span class="toggle-icon">{{ showMovements() ? '▼' : '▶' }}</span>

@@ -17,7 +17,7 @@ class UpdateSaleRequest extends FormRequest
             'items' => 'required|array|min:1',
             'items.*.id' => 'nullable|exists:sale_items,id',
             'items.*.product_id' => 'required|exists:products,id',
-            'items.*.stock_id' => 'required|exists:stocks,id',
+            'items.*.stock_id' => 'nullable|exists:stocks,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.purchase_price' => 'numeric|min:0',
             'items.*.selling_price' => 'numeric|min:0',

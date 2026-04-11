@@ -67,6 +67,10 @@ export class SaleFormComponent implements OnInit {
     stock: null
   };
 
+  editingItemIndex: number | null = null;
+  /** Quantity of the item when we started editing it — added back to stock.quantity for the insufficient check */
+  editingOriginalQuantity = 0;
+
 
   commercials = signal<ManagedUser[]>([]);
   carriers = signal<Carrier[]>([]);
@@ -120,22 +124,55 @@ export class SaleFormComponent implements OnInit {
     const id = +(event.target as HTMLSelectElement).value;
     this.currentItem.product_id = id;
     this.currentItem.stock_id = null;
+    this.currentItem.stock = null;
     const product = this.products().find(p => p.id === id);
     if (product) {
       this.currentItem.linkedProduct = product;
-      this.loadStocksForProduct(id);
+      if (product.type === 'service') {
+        // Services have no stock — pre-fill price from service default, purchase = 0
+        this.stocks.set([]);
+        this.noStockAvailable.set(false);
+        this.currentItem.purchase_price = 0;
+        this.currentItem.selling_price = Number(product.service?.selling_price ?? 0);
+      } else {
+        // Tyres and parts: load stocks. Parts can still be sold without a stock row.
+        this.loadStocksForProduct(id);
+      }
     } else {
+      this.currentItem.linkedProduct = null;
       this.stocks.set([]);
     }
   }
 
-  loadStocksForProduct(productId: number): void {
+  get isCurrentService(): boolean {
+    return this.currentItem.linkedProduct?.type === 'service';
+  }
+
+  /** True when the current product line doesn't require a stock row (service or part). */
+  get isStockOptional(): boolean {
+    const type = this.currentItem.linkedProduct?.type;
+    return type === 'service' || type === 'part';
+  }
+
+  loadStocksForProduct(productId: number, includeEmpty = false): void {
     this.loadingStocks.set(true);
     this.noStockAvailable.set(false);
-    this.stockService.getStocks({ product_id: String(productId), per_page: '100', in_stock: '1' }).subscribe({
+    const filters: Record<string, string> = { product_id: String(productId), per_page: '100' };
+    if (!includeEmpty) {
+      filters['in_stock'] = '1';
+    }
+    this.stockService.getStocks(filters).subscribe({
       next: (res) => {
-        this.stocks.set(res.data);
-        this.noStockAvailable.set(res.data.length === 0);
+        let list = res.data;
+        // If we're editing an existing item, make sure its stock row is in the list
+        // even if the API filtered it out.
+        const currentStock = this.currentItem.stock;
+        const currentStockId = this.currentItem.stock_id;
+        if (currentStockId && !list.find(s => s.id === currentStockId) && currentStock) {
+          list = [currentStock, ...list];
+        }
+        this.stocks.set(list);
+        this.noStockAvailable.set(list.length === 0);
         this.loadingStocks.set(false);
       },
       error: () => this.loadingStocks.set(false),
@@ -160,20 +197,72 @@ export class SaleFormComponent implements OnInit {
   get stockInsufficient(): boolean {
     const stock = this.selectedStock;
     if (!stock) return false;
-    return (this.currentItem.quantity || 0) > stock.quantity;
+    // When editing an existing line, the backend will revert that line's
+    // previous quantity back into stock before re-applying the new quantity,
+    // so the true available amount is stock.quantity + original quantity
+    // (only if we're still editing the same stock row).
+    let available = stock.quantity;
+    if (this.editingItemIndex !== null) {
+      const original: any = this.sale?.items?.[this.editingItemIndex];
+      if (original && original.stock_id === stock.id) {
+        available += Number(this.editingOriginalQuantity) || 0;
+      }
+    }
+    return (this.currentItem.quantity || 0) > available;
   }
 
   addItem() {
-    if (!this.currentItem.product_id || !this.currentItem.stock_id) return;
-    if (this.stockInsufficient) {
+    if (!this.currentItem.product_id) return;
+    const stockOptional = this.isStockOptional;
+    if (!stockOptional && !this.currentItem.stock_id) return;
+    // Only check sufficiency when a stock row is actually selected
+    if (this.currentItem.stock_id && this.stockInsufficient) {
       alert('Quantité insuffisante en stock.');
       return;
     }
-    
-    this.formData.items!.push({ ...this.currentItem });
-    this.calculateTotals();
 
-    // Reset current item
+    if (this.editingItemIndex !== null) {
+      this.formData.items![this.editingItemIndex] = { ...this.currentItem };
+    } else {
+      this.formData.items!.push({ ...this.currentItem });
+    }
+    this.calculateTotals();
+    this.resetCurrentItem();
+  }
+
+  editItem(index: number) {
+    const item: any = this.formData.items![index];
+    const product = item.linkedProduct || item.linked_product || item.product || null;
+    this.editingOriginalQuantity = Number(item.quantity) || 0;
+    this.currentItem = {
+      product_id: item.product_id || product?.id || 0,
+      stock_id: item.stock_id ?? null,
+      quantity: item.quantity || 1,
+      purchase_price: item.purchase_price ?? 0,
+      selling_price: item.selling_price ?? 0,
+      linkedProduct: product,
+      stock: item.stock || null
+    };
+    // Ensure the product appears in the dropdown
+    if (product && !this.products().find(p => p.id === product.id)) {
+      this.products.set([product, ...this.products()]);
+    }
+    // Load stocks for non-service products so the stock dropdown is populated.
+    // Include empty stocks so the row being edited (whose stock may now be 0
+    // because it was already consumed by this sale) still appears.
+    if (product && product.type !== 'service' && this.currentItem.product_id) {
+      this.loadStocksForProduct(this.currentItem.product_id, true);
+    } else {
+      this.stocks.set([]);
+    }
+    this.editingItemIndex = index;
+  }
+
+  cancelItemEdit() {
+    this.resetCurrentItem();
+  }
+
+  private resetCurrentItem() {
     this.currentItem = {
       product_id: 0,
       stock_id: null,
@@ -183,12 +272,19 @@ export class SaleFormComponent implements OnInit {
       linkedProduct: null,
       stock: null
     };
+    this.editingItemIndex = null;
+    this.editingOriginalQuantity = 0;
     this.productSearch.set('');
     this.products.set([]);
     this.stocks.set([]);
   }
 
   removeItem(index: number) {
+    if (this.editingItemIndex === index) {
+      this.resetCurrentItem();
+    } else if (this.editingItemIndex !== null && this.editingItemIndex > index) {
+      this.editingItemIndex--;
+    }
     this.formData.items!.splice(index, 1);
     this.calculateTotals();
   }
@@ -203,11 +299,19 @@ export class SaleFormComponent implements OnInit {
   }
 
   formatProductLabel(p: Product): string {
+    const typeTag = p.type === 'tyre' ? '[Pneu]' : p.type === 'part' ? '[Pièce]' : '[Service]';
     const brand = p.brand?.name || '';
-    const dim = p.tire_width ? `${p.tire_width}/${p.tire_height}R${p.tire_diameter}` : '';
-    const profile = p.profile || '';
     const ref = p.reference || '';
-    return [ref, brand, dim, profile].filter(Boolean).join(' — ');
+    const profile = p.profile || '';
+    let detail = '';
+    if (p.type === 'tyre' && p.tyre?.tire_width) {
+      detail = `${p.tyre.tire_width}/${p.tyre.tire_height}R${p.tyre.tire_diameter}`;
+    } else if (p.type === 'part' && p.part?.category) {
+      detail = p.part.category;
+    } else if (p.type === 'service' && p.service?.category) {
+      detail = p.service.category;
+    }
+    return [typeTag, ref, brand, detail, profile].filter(Boolean).join(' — ');
   }
 
   getProduct(item: any): any {

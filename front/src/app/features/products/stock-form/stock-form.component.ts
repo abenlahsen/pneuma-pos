@@ -100,10 +100,10 @@ export class StockFormComponent implements OnInit {
 
   formatProductLabel(p: Product): string {
     const brand = p.brand?.name || '';
-    const dim = p.tire_width ? `${p.tire_width}/${p.tire_height}R${p.tire_diameter}` : '';
+    const dim = p.tyre?.tire_width ? `${p.tyre.tire_width}/${p.tyre.tire_height}R${p.tyre.tire_diameter}` : '';
     const profile = p.profile || '';
     const ref = p.reference || '';
-    const indexes = [p.tire_load_index, p.tire_speed_index].filter(Boolean).join('');
+    const indexes = [p.tyre?.tire_load_index, p.tyre?.tire_speed_index].filter(Boolean).join('');
     return [brand, dim, profile, indexes, ref].filter(Boolean).join(' — ');
   }
 

@@ -63,13 +63,16 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let item of formData.items; let i = index">
+              <tr *ngFor="let item of formData.items; let i = index" [class.table-active]="editingItemIndex === i">
                 <td>{{ getProduct(item) ? formatProductLabel(getProduct(item)) : 'Produit #' + item.product_id }}</td>
                 <td>{{ item.stock ? formatStockLabel(item.stock) : 'Stock #' + item.stock_id }}</td>
                 <td>{{ item.quantity }}</td>
                 <td>{{ item.unit_price | number:'1.2-2' }}</td>
                 <td>{{ (item.unit_price * item.quantity) | number:'1.2-2' }}</td>
-                <td><button type="button" class="btn-icon text-danger" (click)="removeItem(i)">✕</button></td>
+                <td>
+                  <button type="button" class="btn-icon text-primary mr-1" title="Modifier" (click)="editItem(i)">✏️</button>
+                  <button type="button" class="btn-icon text-danger" title="Supprimer" (click)="removeItem(i)">🗑️</button>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -117,7 +120,10 @@
               </div>
             </div>
             <div class="col-md-1 mb-2">
-              <button type="button" class="btn btn-primary w-100" style="height: 38px; padding: 0.375rem 0.5rem; margin-bottom: 2px;" [disabled]="!currentItem.product_id || !currentItem.stock_id" (click)="addItem()">+</button>
+              <button type="button" class="btn btn-primary w-100" style="height: 38px; padding: 0.375rem 0.5rem; margin-bottom: 2px;" [disabled]="!currentItem.product_id || !currentItem.stock_id" (click)="addItem()">{{ editingItemIndex !== null ? '✓' : '+' }}</button>
+            </div>
+            <div class="col-md-1 mb-2" *ngIf="editingItemIndex !== null">
+              <button type="button" class="btn btn-secondary w-100" style="height: 38px; padding: 0.375rem 0.5rem; margin-bottom: 2px;" (click)="cancelItemEdit()">✕</button>
             </div>
           </div>
         </div>
