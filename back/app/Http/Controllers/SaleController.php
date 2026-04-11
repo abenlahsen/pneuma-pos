@@ -23,7 +23,7 @@ class SaleController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Sale::query()->with(['commercial', 'items.linkedProduct.brand', 'items.stock', 'creator', 'updater']);
+        $query = Sale::query()->with(['commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'items.linkedProduct.part', 'items.linkedProduct.service', 'items.stock', 'creator', 'updater']);
 
         // Sorting
         $sortable = ['date', 'client', 'total_quantity', 'total_sale', 'margin', 'payment_status', 'status', 'created_at', 'updated_at'];
@@ -52,7 +52,7 @@ class SaleController extends Controller
 
         // Filter by brand (via linked product)
         if ($request->filled('brand')) {
-            $query->whereHas('items.linkedProduct.brand', function ($q) use ($request) {
+            $query->whereHas('items.linkedProduct.brand', 'items.linkedProduct.tyre', 'items.linkedProduct.part', 'items.linkedProduct.service', function ($q) use ($request) {
                 $q->where('name', $request->brand);
             });
         }
@@ -100,9 +100,13 @@ class SaleController extends Controller
      */
     public function store(StoreSaleRequest $request): JsonResponse
     {
-        // 1. Validate all stocks first
+        // 1. Validate all stocks first (only for items that track stock)
         $itemsData = $request->items;
         foreach ($itemsData as $itemIndex => $itemData) {
+            if (empty($itemData['stock_id'])) {
+                // Service lines (or stockless items) — skip stock validation
+                continue;
+            }
             $stock = Stock::find($itemData['stock_id']);
             if (!$stock || $stock->quantity < ($itemData['quantity'] ?? 1)) {
                 return response()->json([
@@ -153,7 +157,7 @@ class SaleController extends Controller
 
                 $sale->items()->create([
                     'product_id' => $itemData['product_id'],
-                    'stock_id' => $itemData['stock_id'],
+                    'stock_id' => $itemData['stock_id'] ?? null,
                     'quantity' => $qte,
                     'purchase_price' => $purchP,
                     'selling_price' => $sellP,
@@ -161,6 +165,11 @@ class SaleController extends Controller
                     'total_sale' => $sellP * $qte,
                     'margin' => ($sellP * $qte) - ($purchP * $qte),
                 ]);
+
+                // Skip stock decrement for stockless items (services)
+                if (empty($itemData['stock_id'])) {
+                    continue;
+                }
 
                 $stock = Stock::lockForUpdate()->find($itemData['stock_id']);
                 $before = (int) $stock->quantity;
@@ -179,7 +188,7 @@ class SaleController extends Controller
             return $sale;
         });
 
-        return response()->json($sale->load(['items.linkedProduct.brand', 'items.stock']), 201);
+        return response()->json($sale->load(['items.linkedProduct.brand', 'items.linkedProduct.tyre', 'items.linkedProduct.part', 'items.linkedProduct.service', 'items.stock']), 201);
     }
 
     /**
@@ -187,7 +196,7 @@ class SaleController extends Controller
      */
     public function show(Sale $sale): JsonResponse
     {
-        return response()->json($sale->load(['commercial', 'items.linkedProduct.brand', 'items.stock', 'creator', 'updater']));
+        return response()->json($sale->load(['commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'items.linkedProduct.part', 'items.linkedProduct.service', 'items.stock', 'creator', 'updater']));
     }
 
     /**
@@ -265,7 +274,7 @@ class SaleController extends Controller
 
                 $sale->items()->create([
                     'product_id' => $itemData['product_id'],
-                    'stock_id' => $itemData['stock_id'],
+                    'stock_id' => $itemData['stock_id'] ?? null,
                     'quantity' => $qte,
                     'purchase_price' => $purchP,
                     'selling_price' => $sellP,
@@ -274,7 +283,7 @@ class SaleController extends Controller
                     'margin' => ($sellP * $qte) - ($purchP * $qte),
                 ]);
 
-                if ($newStatus !== 'ANNULE') {
+                if ($newStatus !== 'ANNULE' && !empty($itemData['stock_id'])) {
                     $stock = Stock::lockForUpdate()->find($itemData['stock_id']);
                     $before = (int) $stock->quantity;
                     $stock->quantity = $before - $qte;
@@ -291,7 +300,7 @@ class SaleController extends Controller
             }
         });
 
-        return response()->json($sale->load(['items.linkedProduct.brand', 'items.stock']));
+        return response()->json($sale->load(['items.linkedProduct.brand', 'items.linkedProduct.tyre', 'items.linkedProduct.part', 'items.linkedProduct.service', 'items.stock']));
     }
 
     /**

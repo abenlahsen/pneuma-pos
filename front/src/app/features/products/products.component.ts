@@ -15,7 +15,7 @@ import { ProductFormComponent } from './product-form/product-form.component';
 })
 export class ProductsComponent implements OnInit {
   products = signal<Product[]>([]);
-  prodFilterOptions = signal<ProductFilters>({ brands: [], types: [], seasons: [], units: [] });
+  prodFilterOptions = signal<ProductFilters>({ brands: [], types: [], seasons: [], units: [], part_categories: [], service_categories: [] });
   prodCurrentPage = signal(1);
   prodLastPage = signal(1);
   prodTotal = signal(0);
@@ -160,7 +160,7 @@ export class ProductsComponent implements OnInit {
     }
   }
 
-  seasonLabel(season: string | null): string {
+  seasonLabel(season: string | null | undefined): string {
     switch (season) {
       case 'summer': return 'Été';
       case 'winter': return 'Hiver';
@@ -170,7 +170,38 @@ export class ProductsComponent implements OnInit {
   }
 
   typeLabel(type: string): string {
-    return type === 'tyre' ? 'Pneu' : 'Pièce';
+    switch (type) {
+      case 'tyre': return 'Pneu';
+      case 'part': return 'Pièce';
+      case 'service': return 'Service';
+      default: return type;
+    }
+  }
+
+  partCategoryLabel(category: string | null | undefined): string {
+    switch (category) {
+      case 'brakes': return 'Freinage';
+      case 'lubricants': return 'Lubrifiants';
+      case 'engine': return 'Moteur';
+      case 'suspension': return 'Suspension';
+      case 'filters': return 'Filtres';
+      case 'electrical': return 'Électrique';
+      case 'body': return 'Carrosserie';
+      case 'other': return 'Autre';
+      default: return category || '-';
+    }
+  }
+
+  serviceCategoryLabel(category: string | null | undefined): string {
+    switch (category) {
+      case 'mechanical': return 'Mécanique';
+      case 'oil': return 'Vidange';
+      case 'tires': return 'Pneumatique';
+      case 'bodywork': return 'Carrosserie';
+      case 'diagnostic': return 'Diagnostic';
+      case 'other': return 'Autre';
+      default: return category || '-';
+    }
   }
 
   get prodPages(): number[] {

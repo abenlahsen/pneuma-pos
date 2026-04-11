@@ -174,7 +174,7 @@ export class StockComponent implements OnInit {
 
   deleteStock(stock: Stock): void {
     const label = stock.product
-      ? [stock.product.brand?.name, stock.product.profile, stock.product.tire_width ? `${stock.product.tire_width}/${stock.product.tire_height}R${stock.product.tire_diameter}` : ''].filter(Boolean).join(' — ')
+      ? [stock.product.brand?.name, stock.product.profile, stock.product.tyre?.tire_width ? `${stock.product.tyre.tire_width}/${stock.product.tyre.tire_height}R${stock.product.tyre.tire_diameter}` : ''].filter(Boolean).join(' — ')
       : `Stock #${stock.id}`;
     const name = label || `Stock #${stock.id}`;
     if (confirm(`Supprimer cet article ?\n${name}`)) {

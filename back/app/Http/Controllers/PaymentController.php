@@ -92,7 +92,7 @@ class PaymentController extends Controller
      */
     private function describeSaleProduct(Sale $sale): string
     {
-        $sale->loadMissing('items.linkedProduct.brand');
+        $sale->loadMissing('items.linkedProduct.brand', 'items.linkedProduct.tyre');
 
         $parts = $sale->items->map(function ($item) {
             $product = $item->linkedProduct;
@@ -100,8 +100,9 @@ class PaymentController extends Controller
                 return null;
             }
             $brand = $product->brand?->name ?? '';
-            $dimension = $product->tire_width
-                ? "{$product->tire_width}/{$product->tire_height}R{$product->tire_diameter}"
+            $tyre = $product->tyre;
+            $dimension = $tyre && $tyre->tire_width
+                ? "{$tyre->tire_width}/{$tyre->tire_height}R{$tyre->tire_diameter}"
                 : '';
             $profile = $product->profile ?? '';
 

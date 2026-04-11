@@ -379,7 +379,7 @@ Toutes les routes protegees necessitent le header `Authorization: Bearer {token}
 
 | Ressource       | Endpoints                                                      |
 |-----------------|----------------------------------------------------------------|
-| Auth            | `POST /api/login`, `POST /api/register`, `POST /api/logout`   |
+| Auth            | `POST /api/login`, `POST /api/logout`                          |
 | Ventes          | `GET\|POST /api/sales`, `GET\|PUT\|DELETE /api/sales/{id}`        |
 | Paiements vente | `GET\|POST /api/sales/{id}/payments`                            |
 | Achats          | `GET\|POST /api/purchases`, `GET\|PUT\|DELETE /api/purchases/{id}` |

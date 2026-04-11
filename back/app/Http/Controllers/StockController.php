@@ -17,14 +17,19 @@ class StockController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = Stock::with('product.brand');
+        $query = Stock::with('product.brand', 'product.tyre');
+
+        // Services never appear in inventory
+        $query->whereHas('product', function ($pq) {
+            $pq->whereIn('type', ['tyre', 'part']);
+        });
 
         // Smart search — queries product fields
         if ($request->filled('search')) {
             $parsed = Stock::parseSearchQuery($request->search);
 
             if ($parsed['width'] || $parsed['height'] || $parsed['diameter']) {
-                $query->whereHas('product', function ($pq) use ($parsed) {
+                $query->whereHas('product.tyre', function ($pq) use ($parsed) {
                     if ($parsed['width']) $pq->where('tire_width', $parsed['width']);
                     if ($parsed['height']) $pq->where('tire_height', $parsed['height']);
                     if ($parsed['diameter']) $pq->where('tire_diameter', $parsed['diameter']);
@@ -43,8 +48,10 @@ class StockController extends Controller
                     $q->where('depot', 'like', "%{$term}%")
                       ->orWhereHas('product', function ($pq) use ($term) {
                           $pq->where('profile', 'like', "%{$term}%")
-                            ->orWhere('tire_marking', 'like', "%{$term}%")
                             ->orWhere('reference', 'like', "%{$term}%")
+                            ->orWhereHas('tyre', function ($tq) use ($term) {
+                                $tq->where('tire_marking', 'like', "%{$term}%");
+                            })
                             ->orWhereHas('brand', function ($bq) use ($term) {
                                 $bq->where('name', 'like', "%{$term}%");
                             });
@@ -74,8 +81,8 @@ class StockController extends Controller
             $query->where('quantity', '>', 0);
         }
         if ($request->boolean('rft')) {
-            $query->whereHas('product', function ($pq) {
-                $pq->where('tire_runflat', true);
+            $query->whereHas('product.tyre', function ($tq) {
+                $tq->where('tire_runflat', true);
             });
         }
 
@@ -102,6 +109,15 @@ class StockController extends Controller
             'quantity' => 'required|integer|min:0',
             'purchase_price' => 'nullable|numeric|min:0',
         ]);
+
+        // Services don't have stock
+        $product = \App\Models\Product::find($validated['product_id']);
+        if ($product && $product->type === 'service') {
+            return response()->json([
+                'message' => 'Les services ne peuvent pas avoir de stock.',
+                'errors' => ['product_id' => ['Les services ne gèrent pas d\'inventaire.']],
+            ], 422);
+        }
 
         $userId = $request->user()->id;
         $validated['user_id'] = $userId;
@@ -185,10 +201,15 @@ class StockController extends Controller
     {
         $query = Stock::query();
 
+        // Services never appear in inventory
+        $query->whereHas('product', function ($pq) {
+            $pq->whereIn('type', ['tyre', 'part']);
+        });
+
         if ($request->filled('search')) {
             $parsed = Stock::parseSearchQuery($request->search);
             if ($parsed['width'] || $parsed['height'] || $parsed['diameter']) {
-                $query->whereHas('product', function ($pq) use ($parsed) {
+                $query->whereHas('product.tyre', function ($pq) use ($parsed) {
                     if ($parsed['width']) $pq->where('tire_width', $parsed['width']);
                     if ($parsed['height']) $pq->where('tire_height', $parsed['height']);
                     if ($parsed['diameter']) $pq->where('tire_diameter', $parsed['diameter']);
@@ -215,7 +236,7 @@ class StockController extends Controller
         if ($request->filled('depot')) $query->where('depot', $request->depot);
         if ($request->boolean('in_stock')) $query->where('quantity', '>', 0);
         if ($request->boolean('rft')) {
-            $query->whereHas('product', fn ($pq) => $pq->where('tire_runflat', true));
+            $query->whereHas('product.tyre', fn ($tq) => $tq->where('tire_runflat', true));
         }
 
         // selling_price now comes from product via join

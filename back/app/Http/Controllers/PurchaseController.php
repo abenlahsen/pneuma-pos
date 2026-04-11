@@ -18,7 +18,7 @@ class PurchaseController extends Controller
 
     public function index(Request $request)
     {
-        $query = Purchase::with(['supplier', 'commercial', 'items.linkedProduct.brand', 'creator', 'updater']);
+        $query = Purchase::with(['supplier', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'items.linkedProduct.part', 'items.linkedProduct.service', 'creator', 'updater']);
 
         // Sorting
         $sortable = ['date', 'total_quantity', 'total_price', 'payment_status', 'status', 'created_at', 'updated_at'];
@@ -90,6 +90,10 @@ class PurchaseController extends Controller
             'items.*.unit_price' => 'required|numeric|min:0',
         ]);
 
+        if ($error = $this->rejectServicePurchases($request->items)) {
+            return $error;
+        }
+
         $purchaseData = $request->except('items');
         $itemsData = $request->items;
         $userId = $request->user()->id;
@@ -140,12 +144,12 @@ class PurchaseController extends Controller
             return $purchase;
         });
 
-        return response()->json($purchase->load(['items.linkedProduct.brand', 'supplier', 'commercial']), 201);
+        return response()->json($purchase->load(['items.linkedProduct.brand', 'items.linkedProduct.tyre', 'items.linkedProduct.part', 'items.linkedProduct.service', 'supplier', 'commercial']), 201);
     }
 
     public function show(Purchase $purchase)
     {
-        return response()->json($purchase->load(['items.linkedProduct.brand', 'supplier', 'commercial']));
+        return response()->json($purchase->load(['items.linkedProduct.brand', 'items.linkedProduct.tyre', 'items.linkedProduct.part', 'items.linkedProduct.service', 'supplier', 'commercial']));
     }
 
     public function update(Request $request, Purchase $purchase)
@@ -163,6 +167,10 @@ class PurchaseController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
         ]);
+
+        if ($error = $this->rejectServicePurchases($request->items)) {
+            return $error;
+        }
 
         $oldStatus = $purchase->status;
         $itemsData = $request->items;
@@ -245,7 +253,7 @@ class PurchaseController extends Controller
             }
         });
 
-        return response()->json($purchase->load(['items.linkedProduct.brand', 'supplier', 'commercial']));
+        return response()->json($purchase->load(['items.linkedProduct.brand', 'items.linkedProduct.tyre', 'items.linkedProduct.part', 'items.linkedProduct.service', 'supplier', 'commercial']));
     }
 
     public function destroy(Request $request, Purchase $purchase)
@@ -328,5 +336,33 @@ class PurchaseController extends Controller
             'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
             'commercials' => User::role(['Commercial', 'Manager', 'Administrator'])->orderBy('name')->get(['id', 'name']),
         ]);
+    }
+
+    /**
+     * Services cannot be purchased — they represent labor, not inventory.
+     * Returns a 422 JsonResponse if any item references a service product, otherwise null.
+     */
+    private function rejectServicePurchases(array $items): ?\Illuminate\Http\JsonResponse
+    {
+        $productIds = collect($items)->pluck('product_id')->filter()->unique()->values();
+        $serviceIds = \App\Models\Product::whereIn('id', $productIds)
+            ->where('type', 'service')
+            ->pluck('id');
+
+        if ($serviceIds->isEmpty()) {
+            return null;
+        }
+
+        $errors = [];
+        foreach ($items as $i => $item) {
+            if ($serviceIds->contains($item['product_id'] ?? null)) {
+                $errors["items.{$i}.product_id"] = ['Les services ne peuvent pas être achetés.'];
+            }
+        }
+
+        return response()->json([
+            'message' => 'Les services ne peuvent pas figurer dans un achat.',
+            'errors' => $errors,
+        ], 422);
     }
 }

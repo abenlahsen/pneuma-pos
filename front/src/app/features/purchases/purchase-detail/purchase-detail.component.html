@@ -44,7 +44,7 @@
                 <td class="col-produit">
                   <span class="badge badge-primary mr-1" *ngIf="getProduct(item)?.brand">{{ getProduct(item)!.brand!.name }}</span>
                   <span class="fw-medium">{{ getProduct(item)?.reference || 'Produit #' + item.product_id }}</span>
-                  <span class="text-muted ml-1" *ngIf="getProduct(item)?.tire_width">{{ getProduct(item)!.tire_width }}/{{ getProduct(item)!.tire_height }}R{{ getProduct(item)!.tire_diameter }}</span>
+                  <span class="text-muted ml-1" *ngIf="getProduct(item)?.tyre?.tire_width">{{ getProduct(item)!.tyre!.tire_width }}/{{ getProduct(item)!.tyre!.tire_height }}R{{ getProduct(item)!.tyre!.tire_diameter }}</span>
                   <span class="text-muted ml-1" *ngIf="getProduct(item)?.profile">— {{ getProduct(item)!.profile }}</span>
                 </td>
                 <td>{{ item.quantity }}</td>

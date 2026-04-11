@@ -12,6 +12,14 @@ Pneuma POS is a Point of Sale system for a **tire shop** (pneus). The UI is in *
 
 Default admin credentials: `admin@pneuma.pos` / `password` (created by `DatabaseSeeder`)
 
+## Security Guidelines
+- Always validate and sanitize user inputs
+- Never hardcode secrets, keys, or passwords — use environment variables
+- Use parameterized queries for all database operations
+- Apply the principle of least privilege
+- Flag any code that could introduce XSS, CSRF, or injection vulnerabilities
+- Before finishing any task, check if the changes introduced new security risks
+
 ## Development Commands
 
 ### Docker (recommended)
@@ -56,7 +64,7 @@ npm test         # Run Karma tests
 ### Backend Structure
 
 **API Routes** (`back/routes/api.php`):
-- Public: `POST /api/register`, `POST /api/login`
+- Public: `POST /api/login`
 - Protected (Sanctum): all other routes require `Authorization: Bearer {token}`
 - Resources: `sales`, `purchases`, `suppliers`, `users`, `carriers`, `partners`, `transactions`, `stocks`
 - Summary/filter endpoints: `GET /api/sales-summary`, `GET /api/sales-filters`, `GET /api/purchases-summary`, `GET /api/transactions-summary`, `GET /api/transactions-filters`, `GET /api/stocks-summary`, `GET /api/stocks-filters`

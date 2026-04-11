@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap, firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AuthResponse, LoginPayload, RegisterPayload, User, UserResponse } from '../models/auth.model';
+import { AuthResponse, LoginPayload, User, UserResponse } from '../models/auth.model';
 
 @Injectable({
   providedIn: 'root',
@@ -41,16 +41,6 @@ export class AuthService {
   /** Resolves once user + permissions are loaded (used by guards) */
   whenReady(): Promise<void> {
     return this.userLoaded ?? Promise.resolve();
-  }
-
-  register(payload: RegisterPayload): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, payload).pipe(
-      tap((response) => {
-        this.setToken(response.token);
-        this.currentUser.set(response.user);
-        this.userPermissions.set(response.permissions || []);
-      }),
-    );
   }
 
   login(payload: LoginPayload): Observable<AuthResponse> {

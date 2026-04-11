@@ -156,23 +156,23 @@
               <span *ngIf="!item.product?.brand">-</span>
             </td>
             <td>
-              <div class="fw-medium" *ngIf="item.product?.tire_width">
-                {{ item.product!.tire_width }}/{{ item.product!.tire_height }}R{{ item.product!.tire_diameter }}
+              <div class="fw-medium" *ngIf="item.product?.tyre?.tire_width">
+                {{ item.product!.tyre!.tire_width }}/{{ item.product!.tyre!.tire_height }}R{{ item.product!.tyre!.tire_diameter }}
               </div>
-              <span *ngIf="!item.product?.tire_width">-</span>
+              <span *ngIf="!item.product?.tyre?.tire_width">-</span>
             </td>
             <td>{{ item.product?.profile || '-' }}</td>
             <td>
-              <span *ngIf="item.product?.tire_load_index">{{ item.product!.tire_load_index }}</span>
-              <span *ngIf="item.product?.tire_load_index && item.product?.tire_speed_index"> / </span>
-              <span *ngIf="item.product?.tire_speed_index">{{ item.product!.tire_speed_index }}</span>
-              <span *ngIf="!item.product?.tire_load_index && !item.product?.tire_speed_index">-</span>
+              <span *ngIf="item.product?.tyre?.tire_load_index">{{ item.product!.tyre!.tire_load_index }}</span>
+              <span *ngIf="item.product?.tyre?.tire_load_index && item.product?.tyre?.tire_speed_index"> / </span>
+              <span *ngIf="item.product?.tyre?.tire_speed_index">{{ item.product!.tyre!.tire_speed_index }}</span>
+              <span *ngIf="!item.product?.tyre?.tire_load_index && !item.product?.tyre?.tire_speed_index">-</span>
             </td>
             <td>
-              {{ item.product?.tire_marking || '' }}
-              <span *ngIf="item.product?.tire_runflat" class="tag tag-rft" title="Run Flat">RFT</span>
-              <span *ngIf="item.product?.tire_reinforced" class="tag tag-xl" title="Renforcé">XL</span>
-              <span *ngIf="!item.product?.tire_marking && !item.product?.tire_runflat && !item.product?.tire_reinforced">-</span>
+              {{ item.product?.tyre?.tire_marking || '' }}
+              <span *ngIf="item.product?.tyre?.tire_runflat" class="tag tag-rft" title="Run Flat">RFT</span>
+              <span *ngIf="item.product?.tyre?.tire_reinforced" class="tag tag-xl" title="Renforcé">XL</span>
+              <span *ngIf="!item.product?.tyre?.tire_marking && !item.product?.tyre?.tire_runflat && !item.product?.tyre?.tire_reinforced">-</span>
             </td>
             <td class="text-center">
               <span class="qty-badge" [class.qty-zero]="item.quantity === 0" [class.qty-low]="item.quantity > 0 && item.quantity <= 2">

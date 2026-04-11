@@ -48,6 +48,8 @@ export class PurchaseFormComponent implements OnInit {
     stock: null
   };
 
+  editingItemIndex: number | null = null;
+
   formData: PurchasePayload = {
     date: new Date().toISOString().split('T')[0],
     with_invoice: false,
@@ -123,9 +125,41 @@ export class PurchaseFormComponent implements OnInit {
       alert('Veuillez remplir les informations de l\'article.');
       return;
     }
-    this.formData.items.push({ ...this.currentItem });
-    
-    // reset
+    if (this.editingItemIndex !== null) {
+      this.formData.items[this.editingItemIndex] = { ...this.currentItem };
+    } else {
+      this.formData.items.push({ ...this.currentItem });
+    }
+    this.resetCurrentItem();
+  }
+
+  editItem(index: number) {
+    const item: any = this.formData.items[index];
+    const product = item.linkedProduct || item.linked_product || item.product || null;
+    this.currentItem = {
+      product_id: item.product_id || product?.id || 0,
+      stock_id: item.stock_id ?? null,
+      quantity: item.quantity || 1,
+      unit_price: item.unit_price ?? 0,
+      linkedProduct: product,
+      stock: item.stock || null
+    };
+    if (product && !this.products().find(p => p.id === product.id)) {
+      this.products.set([product, ...this.products()]);
+    }
+    if (this.currentItem.product_id) {
+      this.loadStocksForProduct(this.currentItem.product_id);
+    } else {
+      this.stocks.set([]);
+    }
+    this.editingItemIndex = index;
+  }
+
+  cancelItemEdit() {
+    this.resetCurrentItem();
+  }
+
+  private resetCurrentItem() {
     this.currentItem = {
       product_id: 0,
       stock_id: null,
@@ -134,9 +168,18 @@ export class PurchaseFormComponent implements OnInit {
       linkedProduct: null,
       stock: null
     };
+    this.editingItemIndex = null;
+    this.productSearch.set('');
+    this.products.set([]);
+    this.stocks.set([]);
   }
 
   removeItem(index: number) {
+    if (this.editingItemIndex === index) {
+      this.resetCurrentItem();
+    } else if (this.editingItemIndex !== null && this.editingItemIndex > index) {
+      this.editingItemIndex--;
+    }
     this.formData.items.splice(index, 1);
   }
 
@@ -165,11 +208,17 @@ export class PurchaseFormComponent implements OnInit {
   }
 
   formatProductLabel(p: Product): string {
+    const typeTag = p.type === 'tyre' ? '[Pneu]' : p.type === 'part' ? '[Pièce]' : '[Service]';
     const brand = p.brand?.name || '';
-    const dim = p.tire_width ? `${p.tire_width}/${p.tire_height}R${p.tire_diameter}` : '';
-    const profile = p.profile || '';
     const ref = p.reference || '';
-    return [ref, brand, dim, profile].filter(Boolean).join(' — ');
+    const profile = p.profile || '';
+    let detail = '';
+    if (p.type === 'tyre' && p.tyre?.tire_width) {
+      detail = `${p.tyre.tire_width}/${p.tyre.tire_height}R${p.tyre.tire_diameter}`;
+    } else if (p.type === 'part' && p.part?.category) {
+      detail = p.part.category;
+    }
+    return [typeTag, ref, brand, detail, profile].filter(Boolean).join(' — ');
   }
 
   loadSuppliers(): void {

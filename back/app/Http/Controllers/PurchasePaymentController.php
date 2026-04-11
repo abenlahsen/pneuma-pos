@@ -76,7 +76,7 @@ class PurchasePaymentController extends Controller
      */
     private function describePurchaseProduct(Purchase $purchase): string
     {
-        $purchase->loadMissing('items.linkedProduct.brand');
+        $purchase->loadMissing('items.linkedProduct.brand', 'items.linkedProduct.tyre');
 
         $parts = $purchase->items->map(function ($item) {
             $product = $item->linkedProduct;
@@ -84,8 +84,9 @@ class PurchasePaymentController extends Controller
                 return null;
             }
             $brand = $product->brand?->name ?? '';
-            $dimension = $product->tire_width
-                ? "{$product->tire_width}/{$product->tire_height}R{$product->tire_diameter}"
+            $tyre = $product->tyre;
+            $dimension = $tyre && $tyre->tire_width
+                ? "{$tyre->tire_width}/{$tyre->tire_height}R{$tyre->tire_diameter}"
                 : '';
             $profile = $product->profile ?? '';
 
