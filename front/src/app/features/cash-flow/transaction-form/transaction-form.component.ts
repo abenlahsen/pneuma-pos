@@ -12,7 +12,7 @@ import { Transaction, TransactionPayload, TransactionFilters } from '../../../co
 })
 export class TransactionFormComponent implements OnInit {
   @Input() transaction: Transaction | null = null;
-  @Input() filterOptions: TransactionFilters = { categories: [], persons: [], partners: [] };
+  @Input() filterOptions: TransactionFilters = { categories: [], persons: [], partners: [], accounts: [] };
   @Output() submitted = new EventEmitter<TransactionPayload>();
   @Output() cancelled = new EventEmitter<void>();
 
@@ -27,6 +27,7 @@ export class TransactionFormComponent implements OnInit {
     this.form = this.fb.group({
       date: [this.transaction?.date || this.todayDate(), [Validators.required]],
       amount: [this.transaction?.amount || null, [Validators.required, Validators.min(0.01)]],
+      account_id: [this.transaction?.account_id || (this.filterOptions.accounts.length > 0 ? this.filterOptions.accounts[0].id : null), [Validators.required]],
       type: [this.transaction?.type || 'expense', [Validators.required]],
       category: [this.transaction?.category || ''],
       description: [this.transaction?.description || '', [Validators.required]],

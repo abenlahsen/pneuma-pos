@@ -51,9 +51,6 @@ export interface SalePayload extends Omit<Sale, 'id' | 'created_at' | 'updated_a
 }
 
 export interface SaleSummary {
-  total_purchase: number;
-  total_sale: number;
-  margin: number;
   tyres_this_month: number;
   tyres_today: number;
   tyres_en_cours: number;

@@ -3,12 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Stock;
+use App\Services\StockMovementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class StockController extends Controller
 {
+    public function __construct(private readonly StockMovementService $movements)
+    {
+    }
+
     public function index(Request $request): JsonResponse
     {
         $query = Stock::with('product.brand');
@@ -97,9 +103,15 @@ class StockController extends Controller
             'purchase_price' => 'nullable|numeric|min:0',
         ]);
 
-        $validated['user_id'] = $request->user()->id;
+        $userId = $request->user()->id;
+        $validated['user_id'] = $userId;
 
-        $stock = Stock::create($validated);
+        $stock = DB::transaction(function () use ($validated, $userId) {
+            $stock = Stock::create($validated);
+            $this->movements->recordInitial($stock, $userId);
+            return $stock;
+        });
+
         $stock->load('product.brand');
 
         return response()->json($stock, 201);
@@ -114,7 +126,7 @@ class StockController extends Controller
 
     public function update(Request $request, Stock $stock): JsonResponse
     {
-        $validated = $request->validate([
+        $rules = [
             'product_id' => 'sometimes|exists:products,id',
             'made_in' => 'nullable|string|max:100',
             'dot' => 'nullable|string|max:50',
@@ -122,17 +134,49 @@ class StockController extends Controller
             'zone' => 'nullable|string|max:50',
             'quantity' => 'sometimes|integer|min:0',
             'purchase_price' => 'nullable|numeric|min:0',
-        ]);
+            'reason' => 'nullable|string|max:1000',
+        ];
 
-        $stock->update($validated);
+        $before = (int) $stock->quantity;
+        $quantityChanged = $request->has('quantity') && (int) $request->input('quantity') !== $before;
+
+        if ($quantityChanged) {
+            $rules['reason'] = 'required|string|min:3|max:1000';
+        }
+
+        $validated = $request->validate($rules);
+        $reason = $validated['reason'] ?? null;
+        unset($validated['reason']);
+
+        $userId = $request->user()->id;
+
+        DB::transaction(function () use ($stock, $validated, $quantityChanged, $before, $reason, $userId) {
+            $stock->update($validated);
+
+            if ($quantityChanged) {
+                $this->movements->recordAdjustment(
+                    $stock,
+                    $before,
+                    (int) $stock->quantity,
+                    $reason ?? '',
+                    $userId
+                );
+            }
+        });
+
         $stock->load('product.brand');
 
         return response()->json($stock);
     }
 
-    public function destroy(Stock $stock): JsonResponse
+    public function destroy(Request $request, Stock $stock): JsonResponse
     {
-        $stock->delete();
+        $userId = $request->user()?->id;
+
+        DB::transaction(function () use ($stock, $userId) {
+            $this->movements->recordDeletion($stock, $userId);
+            $stock->delete();
+        });
 
         return response()->json(null, 204);
     }
@@ -214,15 +258,14 @@ class StockController extends Controller
         $count = 0;
         $userId = $request->user()->id;
 
-        foreach (array_chunk($rows, 100) as $chunk) {
-            $records = [];
-            foreach ($chunk as $row) {
+        DB::transaction(function () use ($rows, $userId, &$count) {
+            foreach ($rows as $row) {
                 $brand = trim($row['A'] ?? '');
                 if ($brand === '') continue;
 
                 $qty = is_numeric($row['K'] ?? null) ? (int) $row['K'] : 0;
 
-                $records[] = [
+                $stock = Stock::create([
                     'product_id' => null, // Import keeps as-is for now
                     'made_in' => trim($row['G'] ?? '') ?: null,
                     'dot' => isset($row['H']) ? trim((string) $row['H']) ?: null : null,
@@ -231,13 +274,12 @@ class StockController extends Controller
                     'quantity' => $qty,
                     'purchase_price' => is_numeric($row['M'] ?? null) ? round((float) $row['M'], 2) : null,
                     'user_id' => $userId,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
+                ]);
+
+                $this->movements->recordImport($stock, $qty, $userId);
                 $count++;
             }
-            Stock::insert($records);
-        }
+        });
 
         return response()->json([
             'message' => "{$count} articles importés avec succès.",

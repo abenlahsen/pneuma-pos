@@ -23,7 +23,7 @@ export class CashFlowComponent implements OnInit {
   // Data
   transactions = signal<Transaction[]>([]);
   summary = signal<TransactionSummary>({ income: 0, expenses: 0, balance: 0 });
-  filterOptions = signal<TransactionFilters>({ categories: [], persons: [], partners: [] });
+  filterOptions = signal<TransactionFilters>({ categories: [], persons: [], partners: [], accounts: [] });
 
   // Pagination
   currentPage = signal(1);
@@ -34,6 +34,7 @@ export class CashFlowComponent implements OnInit {
   // Filters
   filterType = signal('');
   filterCategory = signal('');
+  filterAccount = signal('');
   filterPerson = signal('');
   filterDateFrom = signal('');
   filterDateTo = signal('');
@@ -87,6 +88,7 @@ export class CashFlowComponent implements OnInit {
       page: this.currentPage().toString(),
       per_page: this.perPage().toString(),
       type: this.filterType(),
+      account_id: this.filterAccount(),
       category: this.filterCategory(),
       person: this.filterPerson(),
       date_from: this.filterDateFrom(),
@@ -115,6 +117,7 @@ export class CashFlowComponent implements OnInit {
 
   resetFilters(): void {
     this.filterType.set('');
+    this.filterAccount.set('');
     this.filterCategory.set('');
     this.filterPerson.set('');
     this.filterDateFrom.set('');

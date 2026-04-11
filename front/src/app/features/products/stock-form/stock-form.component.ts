@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output, signal } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Stock, StockPayload } from '../../../core/models/stock.model';
@@ -20,6 +20,17 @@ export class StockFormComponent implements OnInit {
   products = signal<Product[]>([]);
   productSearch = signal('');
   loadingProducts = signal(false);
+
+  // Track original quantity to detect changes and require a reason
+  private originalQuantity = signal<number | null>(null);
+  currentQuantity = signal<number>(0);
+  reason = signal<string>('');
+
+  isEditing = computed(() => this.originalQuantity() !== null);
+  quantityChanged = computed(() =>
+    this.isEditing() && this.currentQuantity() !== this.originalQuantity()
+  );
+  reasonRequired = computed(() => this.quantityChanged());
 
   formData: StockPayload = {
     product_id: 0,
@@ -46,12 +57,20 @@ export class StockFormComponent implements OnInit {
         quantity: this.stock.quantity,
         purchase_price: this.stock.purchase_price,
       };
+      this.originalQuantity.set(this.stock.quantity);
+      this.currentQuantity.set(this.stock.quantity);
       if (this.stock.product) {
         this.editingProduct = this.stock.product;
         this.products.set([this.stock.product]);
       }
     }
     this.searchProducts();
+  }
+
+  onQuantityChange(value: number | string): void {
+    const n = typeof value === 'string' ? parseInt(value, 10) : value;
+    this.formData.quantity = Number.isFinite(n) ? n : 0;
+    this.currentQuantity.set(this.formData.quantity);
   }
 
   searchProducts(): void {
@@ -89,6 +108,13 @@ export class StockFormComponent implements OnInit {
   }
 
   onSubmit() {
-    this.save.emit(this.formData);
+    if (this.reasonRequired() && this.reason().trim().length < 3) {
+      return;
+    }
+    const payload: StockPayload = { ...this.formData };
+    if (this.quantityChanged()) {
+      payload.reason = this.reason().trim();
+    }
+    this.save.emit(payload);
   }
 }

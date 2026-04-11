@@ -2,10 +2,10 @@
   <div class="header">
     <div class="title-section">
       <h1>Produits</h1>
-      <p class="subtitle">Catalogue de pneus et pièces</p>
+      <p class="subtitle">Catalogue des pneus</p>
     </div>
     <div class="actions">
-      <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create products')">
+      <button class="btn btn-primary" (click)="openAddProductForm()" *ngIf="authService.hasPermission('create products')">
         Nouveau Produit
       </button>
     </div>
@@ -17,12 +17,12 @@
       <div class="filters-grid">
         <div class="form-group" style="grid-column: span 2;">
           <label>Rechercher</label>
-          <input type="text" class="form-control" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" placeholder="Nom, référence, marque..." (keyup.enter)="search()">
+          <input type="text" class="form-control" [ngModel]="prodSearchQuery()" (ngModelChange)="prodSearchQuery.set($event)" placeholder="Nom, référence, marque..." (keyup.enter)="prodSearch()">
         </div>
 
         <div class="form-group">
           <label>Type</label>
-          <select class="form-control" [ngModel]="filterType()" (ngModelChange)="filterType.set($event); applyFilters()">
+          <select class="form-control" [ngModel]="prodFilterType()" (ngModelChange)="prodFilterType.set($event); prodApplyFilters()">
             <option value="">Tous</option>
             <option value="tyre">Pneu</option>
             <option value="part">Pièce</option>
@@ -31,15 +31,15 @@
 
         <div class="form-group">
           <label>Marque</label>
-          <select class="form-control" [ngModel]="filterBrand()" (ngModelChange)="filterBrand.set($event); applyFilters()">
+          <select class="form-control" [ngModel]="prodFilterBrand()" (ngModelChange)="prodFilterBrand.set($event); prodApplyFilters()">
             <option value="">Toutes</option>
-            <option *ngFor="let brand of filterOptions().brands" [value]="brand.id">{{ brand.name }}</option>
+            <option *ngFor="let brand of prodFilterOptions().brands" [value]="brand.id">{{ brand.name }}</option>
           </select>
         </div>
 
         <div class="filter-actions">
-          <button class="btn btn-filter" (click)="search()" title="Rechercher">&#128269;</button>
-          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser">&#10005;</button>
+          <button class="btn btn-filter" (click)="prodSearch()" title="Rechercher">&#128269;</button>
+          <button class="btn btn-reset" (click)="prodResetFilters()" title="Réinitialiser">&#10005;</button>
         </div>
       </div>
     </div>
@@ -52,8 +52,8 @@
         <thead>
           <tr>
             <th class="text-center">Actions</th>
-            <th class="sortable" (click)="toggleSort('reference')">Référence <span class="sort-icon">{{ sortBy() === 'reference' ? (sortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span></th>
-            <th class="sortable" (click)="toggleSort('type')">Type <span class="sort-icon">{{ sortBy() === 'type' ? (sortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span></th>
+            <th class="sortable" (click)="prodToggleSort('reference')">Référence <span class="sort-icon">{{ prodSortBy() === 'reference' ? (prodSortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span></th>
+            <th class="sortable" (click)="prodToggleSort('type')">Type <span class="sort-icon">{{ prodSortBy() === 'type' ? (prodSortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span></th>
             <th>Marque</th>
             <th>Profil</th>
             <th>Dimension</th>
@@ -65,13 +65,13 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngIf="loading()">
+          <tr *ngIf="prodLoading()">
             <td colspan="11" class="text-center py-4">
               <div class="spinner"></div> Chargement...
             </td>
           </tr>
 
-          <tr *ngIf="!loading() && products().length === 0">
+          <tr *ngIf="!prodLoading() && products().length === 0">
             <td colspan="11" class="text-center py-4 text-muted">
               Aucun produit trouvé.
             </td>
@@ -82,7 +82,7 @@
               <button class="btn-icon btn-sm text-primary" (click)="toggleActive(product)" [title]="product.is_active ? 'Désactiver' : 'Activer'" *ngIf="authService.hasPermission('edit products')">
                 {{ product.is_active ? '&#10003;' : '&#9675;' }}
               </button>
-              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(product)" title="Modifier" *ngIf="authService.hasPermission('edit products')">&#9998;&#65039;</button>
+              <button class="btn-icon btn-sm text-primary" (click)="openEditProductForm(product)" title="Modifier" *ngIf="authService.hasPermission('edit products')">&#9998;&#65039;</button>
               <button class="btn-icon btn-sm text-danger" (click)="deleteProduct(product)" title="Supprimer" *ngIf="authService.hasPermission('delete products')">&#128465;&#65039;</button>
             </td>
             <td>{{ product.reference || '-' }}</td>
@@ -124,34 +124,34 @@
       </table>
     </div>
 
-    <div class="pagination-wrapper" *ngIf="total() > 0">
+    <div class="pagination-wrapper" *ngIf="prodTotal() > 0">
       <div class="pagination-info">
-        Affichage de {{ (currentPage() - 1) * perPage() + 1 }} à
-        {{ (currentPage() * perPage()) > total() ? total() : (currentPage() * perPage()) }}
-        sur {{ total() }} entrées
+        Affichage de {{ (prodCurrentPage() - 1) * prodPerPage() + 1 }} à
+        {{ (prodCurrentPage() * prodPerPage()) > prodTotal() ? prodTotal() : (prodCurrentPage() * prodPerPage()) }}
+        sur {{ prodTotal() }} entrées
       </div>
       <div class="pagination">
-        <button class="btn-page" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">&laquo;</button>
-        <button class="btn-page" *ngFor="let page of pages" [class.active]="page === currentPage()" (click)="goToPage(page)">{{ page }}</button>
-        <button class="btn-page" [disabled]="currentPage() === lastPage()" (click)="goToPage(currentPage() + 1)">&raquo;</button>
+        <button class="btn-page" [disabled]="prodCurrentPage() === 1" (click)="prodGoToPage(prodCurrentPage() - 1)">&laquo;</button>
+        <button class="btn-page" *ngFor="let page of prodPages" [class.active]="page === prodCurrentPage()" (click)="prodGoToPage(page)">{{ page }}</button>
+        <button class="btn-page" [disabled]="prodCurrentPage() === prodLastPage()" (click)="prodGoToPage(prodCurrentPage() + 1)">&raquo;</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Form Modal -->
-<div class="modal-overlay" *ngIf="showForm()" (click)="closeForm()">
+<!-- Product Form Modal -->
+<div class="modal-overlay" *ngIf="showProductForm()" (click)="closeProductForm()">
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>{{ editingProduct() ? 'Modifier le produit' : 'Nouveau produit' }}</h2>
-      <button class="btn-icon" (click)="closeForm()">&#10005;</button>
+      <button class="btn-icon" (click)="closeProductForm()">&#10005;</button>
     </div>
     <div class="modal-body">
       <app-product-form
         [product]="editingProduct()"
-        [brands]="filterOptions().brands"
-        (save)="onFormSubmit($event)"
-        (cancel)="closeForm()">
+        [brands]="prodFilterOptions().brands"
+        (save)="onProductFormSubmit($event)"
+        (cancel)="closeProductForm()">
       </app-product-form>
     </div>
   </div>

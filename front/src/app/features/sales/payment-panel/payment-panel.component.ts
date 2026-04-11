@@ -5,6 +5,8 @@ import { PaymentService } from '../../../core/services/payment.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Payment, PaymentPayload, PaymentSummary } from '../../../core/models/payment.model';
 import { Sale } from '../../../core/models/sale.model';
+import { Account } from '../../../core/models/account.model';
+import { AccountService } from '../../../core/services/account.service';
 
 @Component({
   selector: 'app-payment-panel',
@@ -24,6 +26,7 @@ export class PaymentPanelComponent implements OnInit {
   remaining = signal(0);
   paymentStatus = signal('');
   loading = signal(true);
+  accounts = signal<Account[]>([]);
 
   showAddForm = false;
   formData: PaymentPayload = {
@@ -32,12 +35,30 @@ export class PaymentPanelComponent implements OnInit {
     method: 'Espèces',
     reference: '',
     notes: '',
+    account_id: 0,
   };
 
-  constructor(private paymentService: PaymentService, public authService: AuthService) {}
+  constructor(
+    private paymentService: PaymentService,
+    private accountService: AccountService,
+    public authService: AuthService
+  ) {}
 
   ngOnInit() {
     this.loadPayments();
+    this.loadAccounts();
+  }
+
+  loadAccounts() {
+    this.accountService.getAccounts().subscribe({
+      next: (data) => {
+        const activeAccounts = data.filter(a => a.is_active);
+        this.accounts.set(activeAccounts);
+        if (activeAccounts.length > 0) {
+          this.formData.account_id = activeAccounts[0].id;
+        }
+      }
+    });
   }
 
   loadPayments() {
@@ -66,6 +87,7 @@ export class PaymentPanelComponent implements OnInit {
       method: 'Espèces',
       reference: '',
       notes: '',
+      account_id: this.accounts().length > 0 ? this.accounts()[0].id : 0,
     };
     this.showAddForm = true;
   }

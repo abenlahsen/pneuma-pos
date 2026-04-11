@@ -3,11 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Stock;
+use App\Services\StockMovementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
+    public function __construct(private readonly StockMovementService $movements)
+    {
+    }
+
     public function index(Request $request): JsonResponse
     {
         $query = Product::with('brand');
@@ -55,7 +61,19 @@ class ProductController extends Controller
     {
         $validated = $request->validate($this->validationRules());
 
+        $userId = $request->user()?->id;
+
         $product = Product::create($validated);
+
+        // Auto-create an initial empty stock row for the new product
+        $stock = Stock::create([
+            'product_id' => $product->id,
+            'quantity' => 0,
+            'user_id' => $userId,
+        ]);
+
+        $this->movements->recordAutoCreate($stock, $userId);
+
         $product->load('brand');
 
         return response()->json($product, 201);

@@ -82,6 +82,86 @@
       font-weight: 600;
     }
   }
+
+  .nav-dropdown {
+    position: relative;
+    display: inline-block;
+
+    /* Invisible bridge to keep hover contiguous between the toggle and the menu */
+    &::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      height: 0.5rem;
+      pointer-events: auto;
+    }
+
+    .dropdown-toggle {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 0.4rem 0.7rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+
+      &:hover, &:focus {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.12);
+      }
+    }
+
+    .dropdown-menu {
+      visibility: hidden;
+      opacity: 0;
+      transform: translateY(-4px);
+      pointer-events: none;
+      transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s linear 0.25s;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 0.4rem;
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      min-width: 180px;
+      padding: 0.5rem;
+      z-index: 1050;
+
+      a {
+        color: #333;
+        display: block;
+        padding: 0.5rem 0.75rem;
+        border-radius: 4px;
+        font-weight: 500;
+
+        &:hover {
+          background: #f1f3f5;
+          color: #1a1a1a;
+        }
+
+        &.active {
+          background: #ffe3e5;
+          color: #cc0a13;
+          font-weight: 600;
+        }
+      }
+    }
+
+    &:hover .dropdown-menu,
+    &:focus-within .dropdown-menu {
+      visibility: visible;
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+      transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s linear 0s;
+    }
+  }
 }
 
 .navbar-user {
@@ -156,5 +236,44 @@
   .navbar-user {
     margin-left: auto;
     .user-name { display: none; }
+  }
+
+  .nav-dropdown {
+    width: 100%;
+    
+    .dropdown-toggle {
+      width: 100%;
+      text-align: left;
+      padding: 0.6rem 0.75rem;
+    }
+
+    .dropdown-menu {
+      position: static;
+      display: none; /* Can be handled by JS or just kept visible/toggled */
+      box-shadow: none;
+      background: rgba(255, 255, 255, 0.05);
+      margin: 0;
+      padding: 0.25rem 0 0.25rem 1rem;
+      
+      a {
+        color: rgba(255, 255, 255, 0.8);
+        padding: 0.5rem 0.75rem;
+        
+        &:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: #fff;
+        }
+        
+        &.active {
+          background: rgba(255, 255, 255, 0.15);
+          color: #fff;
+        }
+      }
+    }
+    
+    &:hover .dropdown-menu,
+    &:focus-within .dropdown-menu {
+      display: block;
+    }
   }
 }

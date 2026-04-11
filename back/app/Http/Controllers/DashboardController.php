@@ -19,10 +19,14 @@ class DashboardController extends Controller
         $today = now()->toDateString();
         $monthStart = now()->startOfMonth()->toDateString();
         $monthEnd = now()->endOfMonth()->toDateString();
+        $yearStart = now()->startOfYear()->toDateString();
+        $yearEnd = now()->endOfYear()->toDateString();
 
         $salesToday = Sale::whereDate('date', $today);
         $salesMonth = Sale::whereBetween('date', [$monthStart, $monthEnd]);
+        $salesYear = Sale::whereBetween('date', [$yearStart, $yearEnd]);
         $purchasesMonth = Purchase::whereBetween('date', [$monthStart, $monthEnd]);
+        $purchasesYear = Purchase::whereBetween('date', [$yearStart, $yearEnd]);
 
         $purchasesTotalLifetime = (float) Purchase::sum('total_price');
         $purchasesPaidLifetime = (float) Purchase::where('payment_status', 'PAYE')->sum('total_price');
@@ -53,6 +57,9 @@ class DashboardController extends Controller
             'sales_month_amount' => round((clone $salesMonth)->sum('total_sale'), 2),
             'purchases_month_amount' => round((clone $purchasesMonth)->sum('total_price'), 2),
             'margin_month' => round((clone $salesMonth)->sum('margin'), 2),
+            'margin_year' => round((clone $salesYear)->sum('margin'), 2),
+            'total_sale_year' => round((clone $salesYear)->sum('total_sale'), 2),
+            'total_purchase_year' => round((clone $purchasesYear)->sum('total_price'), 2),
             'tyres_month' => (int) (clone $salesMonth)->sum('total_quantity'),
 
             // Sales by Commercial (This Month)

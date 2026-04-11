@@ -40,6 +40,13 @@ export const routes: Routes = [
       import('./features/cash-flow/cash-flow.component').then((m) => m.CashFlowComponent),
   },
   {
+    path: 'accounts',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'view accounts' },
+    loadComponent: () =>
+      import('./features/accounts/accounts.component').then((m) => m.AccountsComponent),
+  },
+  {
     path: 'sales',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view sales' },

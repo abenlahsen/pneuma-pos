@@ -27,6 +27,7 @@ class StoreTransactionRequest extends FormRequest
             'description' => ['required', 'string', 'max:1000'],
             'person' => ['nullable', 'string', 'max:100'],
             'partner' => ['nullable', 'string', 'max:255'],
+            'account_id' => ['required', 'exists:accounts,id'],
         ];
     }
 

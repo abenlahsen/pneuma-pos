@@ -8,9 +8,14 @@ use App\Models\Stock;
 use App\Models\Supplier;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\StockMovementService;
 
 class PurchaseController extends Controller
 {
+    public function __construct(private readonly StockMovementService $movements)
+    {
+    }
+
     public function index(Request $request)
     {
         $query = Purchase::with(['supplier', 'commercial', 'items.linkedProduct.brand', 'creator', 'updater']);
@@ -87,8 +92,9 @@ class PurchaseController extends Controller
 
         $purchaseData = $request->except('items');
         $itemsData = $request->items;
+        $userId = $request->user()->id;
 
-        $purchase = \Illuminate\Support\Facades\DB::transaction(function () use ($purchaseData, $itemsData, $request) {
+        $purchase = \Illuminate\Support\Facades\DB::transaction(function () use ($purchaseData, $itemsData, $userId) {
             $totalQuantity = 0;
             $totalPrice = 0;
 
@@ -102,13 +108,13 @@ class PurchaseController extends Controller
             $purchase = Purchase::create(array_merge($purchaseData, [
                 'total_quantity' => $totalQuantity,
                 'total_price' => $totalPrice,
-                'created_by' => $request->user()->id,
+                'created_by' => $userId,
             ]));
 
             foreach ($itemsData as $itemData) {
                 $q = $itemData['quantity'] ?? 1;
                 $up = floatval($itemData['unit_price'] ?? 0);
-                
+
                 $purchase->items()->create([
                     'product_id' => $itemData['product_id'],
                     'stock_id' => $itemData['stock_id'],
@@ -117,7 +123,18 @@ class PurchaseController extends Controller
                 ]);
 
                 // Increase stock quantity
-                Stock::where('id', $itemData['stock_id'])->increment('quantity', $q);
+                $stock = Stock::lockForUpdate()->find($itemData['stock_id']);
+                $before = (int) $stock->quantity;
+                $stock->quantity = $before + $q;
+                $stock->save();
+                $this->movements->recordPurchaseIn(
+                    $stock->id,
+                    $stock->product_id,
+                    $before,
+                    (int) $stock->quantity,
+                    $purchase->id,
+                    $userId
+                );
             }
 
             return $purchase;
@@ -149,13 +166,27 @@ class PurchaseController extends Controller
 
         $oldStatus = $purchase->status;
         $itemsData = $request->items;
+        $userId = $request->user()->id;
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $purchase, $itemsData, $oldStatus) {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $purchase, $itemsData, $oldStatus, $userId) {
             // Revert stock for existing items if they weren't cancelled/returned previously
             if (!in_array($oldStatus, ['ANNULE', 'RETOUR'])) {
                 foreach ($purchase->items as $existingItem) {
                     if ($existingItem->stock_id) {
-                        Stock::where('id', $existingItem->stock_id)->decrement('quantity', $existingItem->quantity);
+                        $stock = Stock::lockForUpdate()->find($existingItem->stock_id);
+                        if ($stock) {
+                            $before = (int) $stock->quantity;
+                            $stock->quantity = $before - (int) $existingItem->quantity;
+                            $stock->save();
+                            $this->movements->recordPurchaseOut(
+                                $stock->id,
+                                $stock->product_id,
+                                $before,
+                                (int) $stock->quantity,
+                                $purchase->id,
+                                $userId
+                            );
+                        }
                     }
                 }
             }
@@ -178,7 +209,7 @@ class PurchaseController extends Controller
                 [
                     'total_quantity' => $totalQuantity,
                     'total_price' => $totalPrice,
-                    'updated_by' => $request->user()->id,
+                    'updated_by' => $userId,
                 ]
             );
 
@@ -198,7 +229,18 @@ class PurchaseController extends Controller
 
                 // Increase stock quantity unless cancelled/returned
                 if (!in_array($newStatus, ['ANNULE', 'RETOUR'])) {
-                    Stock::where('id', $itemData['stock_id'])->increment('quantity', $q);
+                    $stock = Stock::lockForUpdate()->find($itemData['stock_id']);
+                    $before = (int) $stock->quantity;
+                    $stock->quantity = $before + $q;
+                    $stock->save();
+                    $this->movements->recordPurchaseIn(
+                        $stock->id,
+                        $stock->product_id,
+                        $before,
+                        (int) $stock->quantity,
+                        $purchase->id,
+                        $userId
+                    );
                 }
             }
         });
@@ -206,25 +248,43 @@ class PurchaseController extends Controller
         return response()->json($purchase->load(['items.linkedProduct.brand', 'supplier', 'commercial']));
     }
 
-    public function destroy(Purchase $purchase)
+    public function destroy(Request $request, Purchase $purchase)
     {
-        // Remove from stock (unless already cancelled/returned, which already decremented stock)
-        if (!in_array($purchase->status, ['ANNULE', 'RETOUR'])) {
-            foreach ($purchase->items as $item) {
-                if ($item->stock_id) {
-                    Stock::where('id', $item->stock_id)->decrement('quantity', $item->quantity);
+        $userId = $request->user()?->id;
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($purchase, $userId) {
+            // Remove from stock (unless already cancelled/returned, which already decremented stock)
+            if (!in_array($purchase->status, ['ANNULE', 'RETOUR'])) {
+                foreach ($purchase->items as $item) {
+                    if ($item->stock_id) {
+                        $stock = Stock::lockForUpdate()->find($item->stock_id);
+                        if ($stock) {
+                            $before = (int) $stock->quantity;
+                            $stock->quantity = $before - (int) $item->quantity;
+                            $stock->save();
+                            $this->movements->recordPurchaseOut(
+                                $stock->id,
+                                $stock->product_id,
+                                $before,
+                                (int) $stock->quantity,
+                                $purchase->id,
+                                $userId
+                            );
+                        }
+                    }
                 }
             }
-        }
 
-        // Delete linked transactions and payments
-        $transactionIds = $purchase->payments()->whereNotNull('transaction_id')->pluck('transaction_id');
-        $purchase->payments()->delete();
-        if ($transactionIds->isNotEmpty()) {
-            Transaction::whereIn('id', $transactionIds)->delete();
-        }
+            // Delete linked transactions and payments
+            $transactionIds = $purchase->payments()->whereNotNull('transaction_id')->pluck('transaction_id');
+            $purchase->payments()->delete();
+            if ($transactionIds->isNotEmpty()) {
+                Transaction::whereIn('id', $transactionIds)->delete();
+            }
 
-        $purchase->delete();
+            $purchase->delete();
+        });
+
         return response()->json(null, 204);
     }
 

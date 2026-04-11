@@ -1,0 +1,51 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ isEdit() ? '✏️ Modifier' : '➕ Nouveau' }} Compte</h2>
+      <button (click)="onCancel()" class="btn-close">✕</button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="acc-name">Nom du compte *</label>
+          <input type="text" id="acc-name" formControlName="name" placeholder="ex: Caisse principale" />
+        </div>
+        <div class="form-group">
+          <label for="acc-type">Type *</label>
+          <select id="acc-type" formControlName="type">
+            <option value="cash">💵 Caisse</option>
+            <option value="bank">🏦 Banque</option>
+            <option value="person">👤 Personne</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="acc-balance">Solde initial (DH) *</label>
+          <input type="number" id="acc-balance" formControlName="initial_balance" step="0.01" />
+          <small class="text-muted" *ngIf="isEdit()">Le solde initial ne peut pas être modifié.</small>
+        </div>
+        <div class="form-group" style="display: flex; align-items: center; margin-top: 1.5rem;">
+          <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox" formControlName="is_active" style="width: auto; height: auto;" />
+            Compte actif
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="acc-desc">Description</label>
+        <textarea id="acc-desc" formControlName="description" rows="2" placeholder="Notes..."></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" (click)="onCancel()" class="btn btn-cancel">Annuler</button>
+        <button type="submit" [disabled]="form.invalid" class="btn btn-submit">
+          {{ isEdit() ? 'Mettre à jour' : 'Ajouter' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
