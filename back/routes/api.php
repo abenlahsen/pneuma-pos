@@ -1,11 +1,13 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StockController;
+use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +25,16 @@ Route::middleware('auth:sanctum')->group(function () {
     // Admin dashboard KPI snapshot
     Route::get('/dashboard-kpi', [\App\Http\Controllers\DashboardController::class, 'kpi'])
         ->middleware('role:Administrator');
+
+    // Accounts
+    Route::middleware('permission:view accounts')->group(function () {
+        Route::get('accounts', [AccountController::class, 'index']);
+        Route::get('accounts/{account}', [AccountController::class, 'show']);
+    });
+    Route::post('accounts', [AccountController::class, 'store'])->middleware('permission:create accounts');
+    Route::put('accounts/{account}', [AccountController::class, 'update'])->middleware('permission:edit accounts');
+    Route::delete('accounts/{account}', [AccountController::class, 'destroy'])->middleware('permission:delete accounts');
+    Route::post('accounts/transfer', [AccountController::class, 'transfer'])->middleware('permission:transfer accounts');
 
     // Cash Flow / Transactions
     Route::middleware('permission:view cash-flow')->group(function () {
@@ -112,6 +124,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('stocks/{stock}', [StockController::class, 'update'])->middleware('permission:edit stock');
     Route::delete('stocks/{stock}', [StockController::class, 'destroy'])->middleware('permission:delete stock');
     Route::post('stocks/import', [StockController::class, 'import'])->middleware('permission:import stock');
+
+    // Stock Movements (audit trail)
+    Route::get('stock-movements', [StockMovementController::class, 'index'])->middleware('permission:view stock-movements');
 
     // Brands
     Route::middleware('permission:view brands')->group(function () {

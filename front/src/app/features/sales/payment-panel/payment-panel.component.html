@@ -43,6 +43,7 @@
             <tr>
               <th>Date</th>
               <th>Montant</th>
+              <th>Compte</th>
               <th>Méthode</th>
               <th>Référence</th>
               <th>Actions</th>
@@ -52,6 +53,7 @@
             <tr *ngFor="let p of payments()">
               <td>{{ p.date | date:'dd/MM/yyyy' }}</td>
               <td class="fw-semibold">{{ p.amount | number:'1.2-2' }} DH</td>
+              <td>{{ p.transaction_id ? $any(p).transaction?.account?.name : '-' }}</td>
               <td>{{ p.method || '-' }}</td>
               <td>{{ p.reference || '-' }}</td>
               <td>
@@ -82,6 +84,12 @@
           </div>
         </div>
         <div class="form-row">
+          <div class="form-group">
+            <label>Compte *</label>
+            <select class="form-control" [(ngModel)]="formData.account_id">
+              <option *ngFor="let acc of accounts()" [value]="acc.id">{{ acc.name }}</option>
+            </select>
+          </div>
           <div class="form-group">
             <label>Méthode</label>
             <select class="form-control" [(ngModel)]="formData.method">

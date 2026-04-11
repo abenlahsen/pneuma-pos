@@ -48,6 +48,15 @@
           </select>
         </div>
         <div class="form-group">
+          <label>Compte</label>
+          <select class="form-control" [ngModel]="filterAccount()" (ngModelChange)="filterAccount.set($event); applyFilters()">
+            <option value="">Tous</option>
+            @for (acc of filterOptions().accounts; track acc.id) {
+              <option [value]="acc.id">{{ acc.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
           <label>Catégorie</label>
           <select class="form-control" [ngModel]="filterCategory()" (ngModelChange)="filterCategory.set($event); applyFilters()">
             <option value="">Toutes</option>
@@ -95,6 +104,7 @@
             <th class="sortable" (click)="toggleSort('date')">Date <span class="sort-icon">{{ sortBy() === 'date' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('amount')">Montant <span class="sort-icon">{{ sortBy() === 'amount' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('type')">Type <span class="sort-icon">{{ sortBy() === 'type' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th>Compte</th>
             <th class="sortable" (click)="toggleSort('category')">Catégorie <span class="sort-icon">{{ sortBy() === 'category' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable desc-col" (click)="toggleSort('description')">Description <span class="sort-icon">{{ sortBy() === 'description' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('person')">Personne <span class="sort-icon">{{ sortBy() === 'person' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
@@ -125,6 +135,7 @@
                   {{ t.type === 'income' ? 'Revenu' : 'Dépense' }}
                 </span>
               </td>
+              <td>{{ t.account?.name || '—' }}</td>
               <td>{{ t.category || '—' }}</td>
               <td class="desc-col" [title]="t.description">{{ t.description }}</td>
               <td>{{ t.person || '—' }}</td>
@@ -132,8 +143,8 @@
               <td>{{ t.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
             </tr>
           } @empty {
-            <tr>
-              <td colspan="9" class="empty-state">
+            <tr *ngIf="transactions().length === 0">
+              <td colspan="10" class="empty-state">
                 @if (!loading()) {
                   <span>Aucune transaction trouvée.</span>
                 }

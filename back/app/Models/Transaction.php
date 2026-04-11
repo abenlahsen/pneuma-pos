@@ -19,6 +19,8 @@ class Transaction extends Model
         'person',
         'partner',
         'user_id',
+        'account_id',
+        'transfer_id',
     ];
 
     protected $casts = [
@@ -32,6 +34,14 @@ class Transaction extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * The account this transaction belongs to.
+     */
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(Account::class);
     }
 
     /**

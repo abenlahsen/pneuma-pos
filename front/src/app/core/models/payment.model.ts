@@ -17,6 +17,7 @@ export interface PaymentPayload {
   method: string;
   reference?: string;
   notes?: string;
+  account_id: number;
 }
 
 export interface PaymentSummary {

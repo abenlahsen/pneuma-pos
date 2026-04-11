@@ -1,15 +1,15 @@
 <div class="page-container">
   <div class="header">
     <div class="title-section">
-      <h1>Stock</h1>
-      <p class="subtitle">Inventaire des pneus</p>
+      <h1>Inventaire</h1>
+      <p class="subtitle">Stock des pneus</p>
     </div>
     <div class="actions">
       <label class="btn btn-secondary" *ngIf="authService.hasPermission('import stock')">
         <input type="file" accept=".xlsx,.xls" (change)="onImportFile($event)" hidden>
         {{ importing() ? 'Import en cours...' : 'Importer Excel' }}
       </label>
-      <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create stock')">
+      <button class="btn btn-primary" (click)="openAddStockForm()" *ngIf="authService.hasPermission('create stock')">
         Nouvel Article
       </button>
     </div>
@@ -23,15 +23,15 @@
         type="text"
         class="search-input"
         placeholder="Rechercher par dimension (ex: 2055516, 205/55R16), marque, profil..."
-        [ngModel]="searchQuery()"
-        (ngModelChange)="searchQuery.set($event)"
-        (keyup.enter)="search()"
+        [ngModel]="stockSearchQuery()"
+        (ngModelChange)="stockSearchQuery.set($event)"
+        (keyup.enter)="stockSearch()"
       >
-      <button class="search-btn" (click)="search()">Rechercher</button>
-      <button class="reset-btn" (click)="resetFilters()" title="Réinitialiser">&#10005;</button>
+      <button class="search-btn" (click)="stockSearch()">Rechercher</button>
+      <button class="reset-btn" (click)="stockResetFilters()" title="Réinitialiser">&#10005;</button>
     </div>
-    <div class="search-hint" *ngIf="searchHint()">
-      {{ searchHint() }}
+    <div class="search-hint" *ngIf="stockSearchHint()">
+      {{ stockSearchHint() }}
     </div>
   </div>
 
@@ -41,7 +41,7 @@
       <div class="card-icon">&#128220;</div>
       <div class="card-content">
         <p class="card-label">Articles</p>
-        <h3 class="card-value">{{ summary().total_articles | number }}</h3>
+        <h3 class="card-value">{{ stockSummary().total_articles | number }}</h3>
       </div>
     </div>
 
@@ -49,7 +49,7 @@
       <div class="card-icon">&#128230;</div>
       <div class="card-content">
         <p class="card-label">Quantité Totale</p>
-        <h3 class="card-value">{{ summary().total_quantity | number }}</h3>
+        <h3 class="card-value">{{ stockSummary().total_quantity | number }}</h3>
       </div>
     </div>
 
@@ -57,10 +57,9 @@
       <div class="card-icon">&#128181;</div>
       <div class="card-content">
         <p class="card-label">Valeur d'Achat</p>
-        <h3 class="card-value">{{ summary().total_purchase_value | number:'1.2-2' }} DH</h3>
+        <h3 class="card-value">{{ stockSummary().total_purchase_value | number:'1.2-2' }} DH</h3>
       </div>
     </div>
-
   </div>
 
   <!-- Filters -->
@@ -69,44 +68,44 @@
       <div class="filters-grid">
         <div class="form-group">
           <label>Marque</label>
-          <select class="form-control" [ngModel]="filterBrand()" (ngModelChange)="filterBrand.set($event); applyFilters()">
+          <select class="form-control" [ngModel]="stockFilterBrand()" (ngModelChange)="stockFilterBrand.set($event); stockApplyFilters()">
             <option value="">Toutes</option>
-            <option *ngFor="let brand of filterOptions().brands" [value]="brand">{{ brand }}</option>
+            <option *ngFor="let brand of stockFilterOptions().brands" [value]="brand">{{ brand }}</option>
           </select>
         </div>
 
         <div class="form-group">
           <label>Dépôt</label>
-          <select class="form-control" [ngModel]="filterDepot()" (ngModelChange)="filterDepot.set($event); applyFilters()">
+          <select class="form-control" [ngModel]="stockFilterDepot()" (ngModelChange)="stockFilterDepot.set($event); stockApplyFilters()">
             <option value="">Tous</option>
-            <option *ngFor="let depot of filterOptions().depots" [value]="depot">{{ depot }}</option>
+            <option *ngFor="let depot of stockFilterOptions().depots" [value]="depot">{{ depot }}</option>
           </select>
         </div>
 
         <div class="form-group">
           <label>Origine</label>
-          <select class="form-control" [ngModel]="filterMadeIn()" (ngModelChange)="filterMadeIn.set($event); applyFilters()">
+          <select class="form-control" [ngModel]="stockFilterMadeIn()" (ngModelChange)="stockFilterMadeIn.set($event); stockApplyFilters()">
             <option value="">Toutes</option>
-            <option *ngFor="let country of filterOptions().countries" [value]="country">{{ country }}</option>
+            <option *ngFor="let country of stockFilterOptions().countries" [value]="country">{{ country }}</option>
           </select>
         </div>
 
         <div class="form-group checkbox-group">
           <label>
-            <input type="checkbox" [ngModel]="filterInStock()" (ngModelChange)="filterInStock.set($event); applyFilters()">
+            <input type="checkbox" [ngModel]="stockFilterInStock()" (ngModelChange)="stockFilterInStock.set($event); stockApplyFilters()">
             En stock uniquement
           </label>
         </div>
 
         <div class="form-group checkbox-group">
           <label>
-            <input type="checkbox" [ngModel]="filterRft()" (ngModelChange)="filterRft.set($event); applyFilters()">
+            <input type="checkbox" [ngModel]="stockFilterRft()" (ngModelChange)="stockFilterRft.set($event); stockApplyFilters()">
             Run Flat uniquement
           </label>
         </div>
 
         <div class="filter-actions">
-          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser">&#10005;</button>
+          <button class="btn btn-reset" (click)="stockResetFilters()" title="Réinitialiser">&#10005;</button>
         </div>
       </div>
     </div>
@@ -125,22 +124,22 @@
             <th>Profil</th>
             <th>IC/IV</th>
             <th>Marquage</th>
-            <th class="sortable text-center" (click)="toggleSort('quantity')">Qté <span class="sort-icon">{{ sortBy() === 'quantity' ? (sortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span></th>
-            <th class="sortable" (click)="toggleSort('depot')">Dépôt <span class="sort-icon">{{ sortBy() === 'depot' ? (sortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span></th>
+            <th class="sortable text-center" (click)="stockToggleSort('quantity')">Qté <span class="sort-icon">{{ stockSortBy() === 'quantity' ? (stockSortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span></th>
+            <th class="sortable" (click)="stockToggleSort('depot')">Dépôt <span class="sort-icon">{{ stockSortBy() === 'depot' ? (stockSortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span></th>
             <th>Zone</th>
             <th>Origine</th>
             <th>DOT</th>
-            <th class="sortable text-right" (click)="toggleSort('purchase_price')">P. Achat <span class="sort-icon">{{ sortBy() === 'purchase_price' ? (sortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span></th>
+            <th class="sortable text-right" (click)="stockToggleSort('purchase_price')">P. Achat <span class="sort-icon">{{ stockSortBy() === 'purchase_price' ? (stockSortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span></th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngIf="loading()">
+          <tr *ngIf="stockLoading()">
             <td colspan="14" class="text-center py-4">
               <div class="spinner"></div> Chargement...
             </td>
           </tr>
 
-          <tr *ngIf="!loading() && stocks().length === 0">
+          <tr *ngIf="!stockLoading() && stocks().length === 0">
             <td colspan="14" class="text-center py-4 text-muted">
               Aucun article trouvé.
             </td>
@@ -148,7 +147,7 @@
 
           <tr *ngFor="let item of stocks()" [class.out-of-stock]="item.quantity === 0">
             <td class="text-center actions-cell">
-              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(item)" title="Modifier" *ngIf="authService.hasPermission('edit stock')">&#9998;&#65039;</button>
+              <button class="btn-icon btn-sm text-primary" (click)="openEditStockForm(item)" title="Modifier" *ngIf="authService.hasPermission('edit stock')">&#9998;&#65039;</button>
               <button class="btn-icon btn-sm text-danger" (click)="deleteStock(item)" title="Supprimer" *ngIf="authService.hasPermission('delete stock')">&#128465;&#65039;</button>
             </td>
             <td>{{ item.product?.reference || '-' }}</td>
@@ -191,25 +190,23 @@
     </div>
 
     <!-- Pagination -->
-    <div class="pagination-wrapper" *ngIf="total() > 0">
+    <div class="pagination-wrapper" *ngIf="stockTotal() > 0">
       <div class="pagination-info">
-        Affichage de {{ (currentPage() - 1) * perPage() + 1 }} à
-        {{ (currentPage() * perPage()) > total() ? total() : (currentPage() * perPage()) }}
-        sur {{ total() }} entrées
+        Affichage de {{ (stockCurrentPage() - 1) * stockPerPage() + 1 }} à
+        {{ (stockCurrentPage() * stockPerPage()) > stockTotal() ? stockTotal() : (stockCurrentPage() * stockPerPage()) }}
+        sur {{ stockTotal() }} entrées
       </div>
       <div class="pagination">
-        <button class="btn-page" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">
+        <button class="btn-page" [disabled]="stockCurrentPage() === 1" (click)="stockGoToPage(stockCurrentPage() - 1)">
           &laquo;
         </button>
-
         <button class="btn-page"
-                *ngFor="let page of pages"
-                [class.active]="page === currentPage()"
-                (click)="goToPage(page)">
+                *ngFor="let page of stockPages"
+                [class.active]="page === stockCurrentPage()"
+                (click)="stockGoToPage(page)">
           {{ page }}
         </button>
-
-        <button class="btn-page" [disabled]="currentPage() === lastPage()" (click)="goToPage(currentPage() + 1)">
+        <button class="btn-page" [disabled]="stockCurrentPage() === stockLastPage()" (click)="stockGoToPage(stockCurrentPage() + 1)">
           &raquo;
         </button>
       </div>
@@ -217,18 +214,18 @@
   </div>
 </div>
 
-<!-- Form Modal -->
-<div class="modal-overlay" *ngIf="showForm()" (click)="closeForm()">
+<!-- Stock Form Modal -->
+<div class="modal-overlay" *ngIf="showStockForm()" (click)="closeStockForm()">
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>{{ editingStock() ? 'Modifier l\'article' : 'Nouvel article' }}</h2>
-      <button class="btn-icon" (click)="closeForm()">&#10005;</button>
+      <button class="btn-icon" (click)="closeStockForm()">&#10005;</button>
     </div>
     <div class="modal-body">
       <app-stock-form
         [stock]="editingStock()"
-        (save)="onFormSubmit($event)"
-        (cancel)="closeForm()">
+        (save)="onStockFormSubmit($event)"
+        (cancel)="closeStockForm()">
       </app-stock-form>
     </div>
   </div>

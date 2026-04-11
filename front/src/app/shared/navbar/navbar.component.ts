@@ -5,9 +5,10 @@ import { AuthService } from '../../core/services/auth.service';
 
 interface NavItem {
   label: string;
-  route: string;
+  route?: string;
   permission?: string;
   exact?: boolean;
+  children?: NavItem[];
 }
 
 @Component({
@@ -30,21 +31,44 @@ export class NavbarComponent {
     { label: '🏷️ Ventes', route: '/sales', permission: 'view sales' },
     { label: '📦 Achats', route: '/achats', permission: 'view purchases' },
     { label: '💰 Cash Flow', route: '/cash-flow', permission: 'view cash-flow' },
-    { label: '📋 Stock', route: '/stock', permission: 'view stock' },
-    { label: '📦 Produits', route: '/products', permission: 'view products' },
-    { label: '🏭 Marques', route: '/brands', permission: 'view brands' },
-    { label: '🏢 Fournisseurs', route: '/suppliers', permission: 'view suppliers' },
-    { label: '🚚 Transporteurs', route: '/carriers', permission: 'view carriers' },
-    { label: '🤝 Partenaires', route: '/partners', permission: 'view partners' },
+    { label: '🏦 Comptes', route: '/accounts', permission: 'view accounts' },
+    {
+      label: '🛞 Produits & Stock',
+      children: [
+        { label: '🛞 Produits', route: '/products', permission: 'view products' },
+        { label: '📋 Inventaire', route: '/stock', permission: 'view stock' },
+        { label: '🏭 Marques', route: '/brands', permission: 'view brands' },
+      ]
+    },
+    {
+      label: '🤝 Tiers',
+      children: [
+        { label: '🏢 Fournisseurs', route: '/suppliers', permission: 'view suppliers' },
+        { label: '🚚 Transporteurs', route: '/carriers', permission: 'view carriers' },
+        { label: '🤝 Partenaires', route: '/partners', permission: 'view partners' },
+      ]
+    },
     { label: '👥 Utilisateurs', route: '/users', permission: 'view users' },
     { label: '🔐 Rôles', route: '/roles', permission: 'view roles' },
   ];
 
-  visibleNavItems = computed(() =>
-    this.allNavItems.filter(item =>
-      !item.permission || this.authService.hasPermission(item.permission)
-    )
-  );
+  visibleNavItems = computed(() => {
+    return this.allNavItems
+      .map(item => {
+        if (item.children) {
+          const visibleChildren = item.children.filter(child => !child.permission || this.authService.hasPermission(child.permission));
+          if (visibleChildren.length > 0) {
+            return { ...item, children: visibleChildren };
+          }
+          return null;
+        }
+        if (!item.permission || this.authService.hasPermission(item.permission)) {
+          return item;
+        }
+        return null;
+      })
+      .filter((item): item is NavItem => item !== null);
+  });
 
   constructor(private authService: AuthService) {}
 

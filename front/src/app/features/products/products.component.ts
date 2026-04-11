@@ -15,23 +15,20 @@ import { ProductFormComponent } from './product-form/product-form.component';
 })
 export class ProductsComponent implements OnInit {
   products = signal<Product[]>([]);
-  filterOptions = signal<ProductFilters>({ brands: [], types: [], seasons: [], units: [] });
-
-  currentPage = signal(1);
-  lastPage = signal(1);
-  total = signal(0);
-  perPage = signal(20);
-
-  searchQuery = signal('');
-  filterType = signal('');
-  filterBrand = signal('');
-  sortBy = signal('');
-  sortDirection = signal<'asc' | 'desc'>('asc');
-
-  loading = signal(false);
-  showForm = signal(false);
+  prodFilterOptions = signal<ProductFilters>({ brands: [], types: [], seasons: [], units: [] });
+  prodCurrentPage = signal(1);
+  prodLastPage = signal(1);
+  prodTotal = signal(0);
+  prodPerPage = signal(20);
+  prodSearchQuery = signal('');
+  prodFilterType = signal('');
+  prodFilterBrand = signal('');
+  prodSortBy = signal('');
+  prodSortDirection = signal<'asc' | 'desc'>('asc');
+  prodLoading = signal(false);
+  showProductForm = signal(false);
   editingProduct = signal<Product | null>(null);
-  private resetting = false;
+  private prodResetting = false;
 
   constructor(
     private productService: ProductService,
@@ -39,127 +36,118 @@ export class ProductsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadFilters();
-    this.loadData();
+    this.loadProductFilters();
+    this.loadProductData();
   }
 
-  loadData(): void {
-    this.loading.set(true);
-    const filters = this.buildFilters();
-
+  loadProductData(): void {
+    this.prodLoading.set(true);
+    const filters = this.buildProductFilters();
     this.productService.getProducts(filters).subscribe({
       next: (response) => {
         this.products.set(response.data);
-        this.currentPage.set(response.current_page);
-        this.lastPage.set(response.last_page);
-        this.total.set(response.total);
-        this.loading.set(false);
+        this.prodCurrentPage.set(response.current_page);
+        this.prodLastPage.set(response.last_page);
+        this.prodTotal.set(response.total);
+        this.prodLoading.set(false);
       },
-      error: () => this.loading.set(false),
+      error: () => this.prodLoading.set(false),
     });
   }
 
-  loadFilters(): void {
+  loadProductFilters(): void {
     this.productService.getFilters().subscribe({
-      next: (filters) => this.filterOptions.set(filters),
+      next: (filters) => this.prodFilterOptions.set(filters),
     });
   }
 
-  private buildFilters(): Record<string, string> {
+  private buildProductFilters(): Record<string, string> {
     const filters: Record<string, string> = {
-      page: this.currentPage().toString(),
-      per_page: this.perPage().toString(),
-      sort_by: this.sortBy(),
-      sort_direction: this.sortDirection(),
+      page: this.prodCurrentPage().toString(),
+      per_page: this.prodPerPage().toString(),
+      sort_by: this.prodSortBy(),
+      sort_direction: this.prodSortDirection(),
     };
-    if (this.searchQuery()) filters['search'] = this.searchQuery();
-    if (this.filterType()) filters['type'] = this.filterType();
-    if (this.filterBrand()) filters['brand_id'] = this.filterBrand();
+    if (this.prodSearchQuery()) filters['search'] = this.prodSearchQuery();
+    if (this.prodFilterType()) filters['type'] = this.prodFilterType();
+    if (this.prodFilterBrand()) filters['brand_id'] = this.prodFilterBrand();
     return filters;
   }
 
-  search(): void {
-    this.currentPage.set(1);
-    this.sortBy.set('');
-    this.sortDirection.set('asc');
-    this.loadData();
+  prodSearch(): void {
+    this.prodCurrentPage.set(1);
+    this.prodSortBy.set('');
+    this.prodSortDirection.set('asc');
+    this.loadProductData();
   }
 
-  applyFilters(): void {
-    if (this.resetting) return;
-    this.currentPage.set(1);
-    this.loadData();
+  prodApplyFilters(): void {
+    if (this.prodResetting) return;
+    this.prodCurrentPage.set(1);
+    this.loadProductData();
   }
 
-  toggleSort(column: string): void {
-    if (this.sortBy() === column) {
-      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+  prodToggleSort(column: string): void {
+    if (this.prodSortBy() === column) {
+      this.prodSortDirection.set(this.prodSortDirection() === 'asc' ? 'desc' : 'asc');
     } else {
-      this.sortBy.set(column);
-      this.sortDirection.set('asc');
+      this.prodSortBy.set(column);
+      this.prodSortDirection.set('asc');
     }
-    this.currentPage.set(1);
-    this.loadData();
+    this.prodCurrentPage.set(1);
+    this.loadProductData();
   }
 
-  resetFilters(): void {
-    this.resetting = true;
-    this.searchQuery.set('');
-    this.filterType.set('');
-    this.filterBrand.set('');
-    this.sortBy.set('');
-    this.sortDirection.set('asc');
-    this.currentPage.set(1);
-    this.resetting = false;
-    this.loadData();
+  prodResetFilters(): void {
+    this.prodResetting = true;
+    this.prodSearchQuery.set('');
+    this.prodFilterType.set('');
+    this.prodFilterBrand.set('');
+    this.prodSortBy.set('');
+    this.prodSortDirection.set('asc');
+    this.prodCurrentPage.set(1);
+    this.prodResetting = false;
+    this.loadProductData();
   }
 
-  goToPage(page: number): void {
-    if (page >= 1 && page <= this.lastPage()) {
-      this.currentPage.set(page);
-      this.loadData();
+  prodGoToPage(page: number): void {
+    if (page >= 1 && page <= this.prodLastPage()) {
+      this.prodCurrentPage.set(page);
+      this.loadProductData();
     }
   }
 
-  openAddForm(): void {
+  openAddProductForm(): void {
     this.editingProduct.set(null);
-    this.showForm.set(true);
+    this.showProductForm.set(true);
   }
 
-  openEditForm(product: Product): void {
+  openEditProductForm(product: Product): void {
     this.editingProduct.set(product);
-    this.showForm.set(true);
+    this.showProductForm.set(true);
   }
 
-  closeForm(): void {
-    this.showForm.set(false);
+  closeProductForm(): void {
+    this.showProductForm.set(false);
     this.editingProduct.set(null);
   }
 
-  onFormSubmit(payload: ProductPayload): void {
+  onProductFormSubmit(payload: ProductPayload): void {
     const editing = this.editingProduct();
     if (editing) {
       this.productService.updateProduct(editing.id, payload).subscribe({
-        next: () => {
-          this.closeForm();
-          this.loadData();
-          this.loadFilters();
-        },
+        next: () => { this.closeProductForm(); this.loadProductData(); this.loadProductFilters(); },
       });
     } else {
       this.productService.createProduct(payload).subscribe({
-        next: () => {
-          this.closeForm();
-          this.loadData();
-          this.loadFilters();
-        },
+        next: () => { this.closeProductForm(); this.loadProductData(); this.loadProductFilters(); },
       });
     }
   }
 
   toggleActive(product: Product): void {
     this.productService.toggleActive(product.id).subscribe({
-      next: () => this.loadData(),
+      next: () => this.loadProductData(),
     });
   }
 
@@ -167,10 +155,7 @@ export class ProductsComponent implements OnInit {
     const label = [product.brand?.name, product.profile, product.reference].filter(Boolean).join(' — ') || `Produit #${product.id}`;
     if (confirm(`Supprimer le produit "${label}" ?`)) {
       this.productService.deleteProduct(product.id).subscribe({
-        next: () => {
-          this.loadData();
-          this.loadFilters();
-        },
+        next: () => { this.loadProductData(); this.loadProductFilters(); },
       });
     }
   }
@@ -188,15 +173,13 @@ export class ProductsComponent implements OnInit {
     return type === 'tyre' ? 'Pneu' : 'Pièce';
   }
 
-  get pages(): number[] {
-    const total = this.lastPage();
-    const current = this.currentPage();
+  get prodPages(): number[] {
+    const total = this.prodLastPage();
+    const current = this.prodCurrentPage();
     const pages: number[] = [];
     const start = Math.max(1, current - 2);
     const end = Math.min(total, current + 2);
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
+    for (let i = start; i <= end; i++) pages.push(i);
     return pages;
   }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\UpdateTransactionRequest;
+use App\Models\Account;
 use App\Models\Transaction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,7 +16,7 @@ class TransactionController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Transaction::query();
+        $query = Transaction::with('account');
 
         // Sorting
         $sortable = ['date', 'amount', 'type', 'category', 'description', 'person', 'partner', 'created_at'];
@@ -44,6 +45,11 @@ class TransactionController extends Controller
             $query->where('person', $request->person);
         }
 
+        // Filter by account
+        if ($request->filled('account_id')) {
+            $query->where('account_id', $request->account_id);
+        }
+
         // Search in description
         if ($request->filled('search')) {
             $query->where('description', 'like', '%' . $request->search . '%');
@@ -64,7 +70,7 @@ class TransactionController extends Controller
             ['user_id' => $request->user()->id],
         ));
 
-        return response()->json($transaction, 201);
+        return response()->json($transaction->load('account'), 201);
     }
 
     /**
@@ -72,7 +78,7 @@ class TransactionController extends Controller
      */
     public function show(Transaction $transaction): JsonResponse
     {
-        return response()->json($transaction);
+        return response()->json($transaction->load('account'));
     }
 
     /**
@@ -82,7 +88,7 @@ class TransactionController extends Controller
     {
         $transaction->update($request->validated());
 
-        return response()->json($transaction);
+        return response()->json($transaction->fresh()->load('account'));
     }
 
     /**
@@ -110,6 +116,9 @@ class TransactionController extends Controller
         if ($request->filled('person')) {
             $query->where('person', $request->person);
         }
+        if ($request->filled('account_id')) {
+            $query->where('account_id', $request->account_id);
+        }
 
         $income = (clone $query)->ofType('income')->sum('amount');
         $expenses = (clone $query)->ofType('expense')->sum('amount');
@@ -130,6 +139,7 @@ class TransactionController extends Controller
             'categories' => Transaction::distinct()->whereNotNull('category')->pluck('category')->sort()->values(),
             'persons' => Transaction::distinct()->whereNotNull('person')->pluck('person')->sort()->values(),
             'partners' => Transaction::distinct()->whereNotNull('partner')->pluck('partner')->sort()->values(),
+            'accounts' => Account::active()->orderBy('name')->get(['id', 'name', 'type']),
         ]);
     }
 }

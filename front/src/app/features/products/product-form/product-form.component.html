@@ -149,6 +149,161 @@
     </div>
   </div>
 
+  <!-- ── Inventory Section (only when editing) ── -->
+  <div class="form-section inventory-section" *ngIf="isEditing">
+    <div class="inventory-header">
+      <h3>📦 Inventaire <span class="stock-total" *ngIf="totalStock > 0">({{ totalStock }} en stock)</span></h3>
+      <button type="button" class="btn btn-sm btn-add-stock" (click)="openAddStock()" *ngIf="!showStockRow() && authService.hasPermission('create stock')">
+        + Ajouter
+      </button>
+    </div>
+
+    <div class="inventory-table-wrap" *ngIf="stockLoading()">
+      <p class="text-muted text-center">Chargement...</p>
+    </div>
+
+    <div class="inventory-table-wrap" *ngIf="!stockLoading()">
+      <table class="inventory-table" *ngIf="stockItems().length > 0 || showStockRow()">
+        <thead>
+          <tr>
+            <th>Dépôt</th>
+            <th>Zone</th>
+            <th>Origine</th>
+            <th>DOT</th>
+            <th class="text-center">Qté</th>
+            <th class="text-right">P. Achat</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Existing rows -->
+          <ng-container *ngFor="let item of stockItems()">
+            <tr *ngIf="editingStockId() !== item.id">
+              <td>{{ item.depot || '-' }}</td>
+              <td>{{ item.zone || '-' }}</td>
+              <td>{{ item.made_in || '-' }}</td>
+              <td>{{ item.dot || '-' }}</td>
+              <td class="text-center">
+                <span class="inv-qty" [class.inv-qty-zero]="item.quantity === 0">{{ item.quantity }}</span>
+              </td>
+              <td class="text-right">{{ item.purchase_price ? (item.purchase_price | number:'1.2-2') : '-' }}</td>
+              <td class="text-center actions-cell">
+                <button type="button" class="btn-icon-sm" (click)="editStock(item)" title="Modifier" *ngIf="authService.hasPermission('edit stock')">✏️</button>
+                <button type="button" class="btn-icon-sm text-danger" (click)="deleteStock(item)" title="Supprimer" *ngIf="authService.hasPermission('delete stock')">🗑️</button>
+              </td>
+            </tr>
+            <!-- Inline edit row -->
+            <tr class="edit-row" *ngIf="editingStockId() === item.id">
+              <td><input type="text" [(ngModel)]="stockForm.depot" name="edit_depot" placeholder="Dépôt" class="inv-input"></td>
+              <td><input type="text" [(ngModel)]="stockForm.zone" name="edit_zone" placeholder="Zone" class="inv-input"></td>
+              <td><input type="text" [(ngModel)]="stockForm.made_in" name="edit_made_in" placeholder="Origine" class="inv-input"></td>
+              <td><input type="text" [(ngModel)]="stockForm.dot" name="edit_dot" placeholder="DOT" class="inv-input"></td>
+              <td><input type="number" [(ngModel)]="stockForm.quantity" name="edit_qty" min="0" class="inv-input text-center" style="width:60px"></td>
+              <td><input type="number" [(ngModel)]="stockForm.purchase_price" name="edit_price" min="0" step="0.01" class="inv-input text-right" style="width:80px"></td>
+              <td class="text-center actions-cell">
+                <button type="button" class="btn-icon-sm text-success" (click)="saveStock()" title="Enregistrer">✅</button>
+                <button type="button" class="btn-icon-sm" (click)="cancelStockEdit()" title="Annuler">❌</button>
+              </td>
+            </tr>
+            <!-- Mandatory reason row when editing and quantity changed -->
+            <tr class="reason-row" *ngIf="editingStockId() === item.id && stockQuantityChanged()">
+              <td colspan="7">
+                <label class="reason-label">
+                  Motif du changement de quantité * <span class="hint">(requis)</span>
+                </label>
+                <input
+                  type="text"
+                  [ngModel]="stockReason()"
+                  (ngModelChange)="stockReason.set($event)"
+                  name="edit_reason"
+                  placeholder="Ex: Inventaire physique, casse, correction d'erreur..."
+                  class="inv-input reason-input"
+                  minlength="3"
+                  maxlength="1000"
+                  required
+                >
+              </td>
+            </tr>
+          </ng-container>
+
+          <!-- New row -->
+          <tr class="edit-row" *ngIf="showStockRow() && !editingStockId()">
+            <td><input type="text" [(ngModel)]="stockForm.depot" name="new_depot" placeholder="Dépôt" class="inv-input"></td>
+            <td><input type="text" [(ngModel)]="stockForm.zone" name="new_zone" placeholder="Zone" class="inv-input"></td>
+            <td><input type="text" [(ngModel)]="stockForm.made_in" name="new_made_in" placeholder="Origine" class="inv-input"></td>
+            <td><input type="text" [(ngModel)]="stockForm.dot" name="new_dot" placeholder="DOT" class="inv-input"></td>
+            <td><input type="number" [(ngModel)]="stockForm.quantity" name="new_qty" min="0" class="inv-input text-center" style="width:60px"></td>
+            <td><input type="number" [(ngModel)]="stockForm.purchase_price" name="new_price" min="0" step="0.01" class="inv-input text-right" style="width:80px"></td>
+            <td class="text-center actions-cell">
+              <button type="button" class="btn-icon-sm text-success" (click)="saveStock()" title="Enregistrer">✅</button>
+              <button type="button" class="btn-icon-sm" (click)="cancelStockEdit()" title="Annuler">❌</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="text-muted text-center" *ngIf="stockItems().length === 0 && !showStockRow()">
+        Aucun article en stock pour ce produit.
+      </p>
+    </div>
+  </div>
+
+  <!-- ── Stock Movements History (only when editing) ── -->
+  <div class="form-section movements-section" *ngIf="isEditing && authService.hasPermission('view stock-movements')">
+    <div class="movements-header" (click)="toggleMovements()">
+      <h3>
+        <span class="toggle-icon">{{ showMovements() ? '▼' : '▶' }}</span>
+        📜 Historique des mouvements
+        <span class="mv-count" *ngIf="movements().length > 0">({{ movements().length }})</span>
+      </h3>
+    </div>
+
+    <div *ngIf="showMovements()">
+      <p class="text-muted text-center" *ngIf="movementsLoading()">Chargement...</p>
+
+      <div class="movements-table-wrap" *ngIf="!movementsLoading()">
+        <table class="movements-table" *ngIf="movements().length > 0">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Dépôt</th>
+              <th class="text-center">Avant</th>
+              <th class="text-center">Après</th>
+              <th class="text-center">Δ</th>
+              <th>Utilisateur</th>
+              <th>Motif</th>
+              <th>Référence</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let m of movements()">
+              <td class="mv-date">{{ m.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>
+                <span class="mv-chip" [ngClass]="movementTypeClass(m.type)">
+                  {{ movementTypeLabel(m.type) }}
+                </span>
+              </td>
+              <td>{{ m.stock?.depot || '-' }}</td>
+              <td class="text-center">{{ m.quantity_before }}</td>
+              <td class="text-center">{{ m.quantity_after }}</td>
+              <td class="text-center mv-delta" [class.mv-delta-pos]="m.delta > 0" [class.mv-delta-neg]="m.delta < 0">
+                {{ m.delta > 0 ? '+' : '' }}{{ m.delta }}
+              </td>
+              <td>{{ m.user?.name || '-' }}</td>
+              <td class="mv-reason">{{ m.reason || '-' }}</td>
+              <td>{{ movementReferenceLabel(m) }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p class="text-muted text-center" *ngIf="movements().length === 0">
+          Aucun mouvement enregistré.
+        </p>
+      </div>
+    </div>
+  </div>
+
   <div class="form-actions">
     <button type="button" class="btn btn-secondary" (click)="cancel.emit()">Annuler</button>
     <button type="submit" class="btn btn-primary" [disabled]="!form.valid">Enregistrer</button>

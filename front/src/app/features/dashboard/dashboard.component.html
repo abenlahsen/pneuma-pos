@@ -32,12 +32,39 @@
           <div class="kpi-badge">{{ k.tyres_month }} Pneus vendus</div>
         </div>
 
-        <!-- Marge -->
+        <!-- Total Ventes Année -->
+        <div class="kpi-card">
+          <div class="kpi-icon">📈</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Total Ventes (Année)</span>
+            <span class="kpi-val">{{ k.total_sale_year | number:'1.2-2' }} <small>DH</small></span>
+          </div>
+        </div>
+
+        <!-- Total Achats Année -->
+        <div class="kpi-card">
+          <div class="kpi-icon">📉</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Total Achats (Année)</span>
+            <span class="kpi-val">{{ k.total_purchase_year | number:'1.2-2' }} <small>DH</small></span>
+          </div>
+        </div>
+
+        <!-- Marge Mois -->
         <div class="kpi-card" [class.negative-card]="k.margin_month < 0">
           <div class="kpi-icon">💸</div>
           <div class="kpi-info">
             <span class="kpi-label">Marge Nette (Mois)</span>
             <span class="kpi-val">{{ k.margin_month | number:'1.2-2' }} <small>DH</small></span>
+          </div>
+        </div>
+
+        <!-- Marge Année -->
+        <div class="kpi-card" [class.negative-card]="k.margin_year < 0">
+          <div class="kpi-icon">📊</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Marge Nette (Année)</span>
+            <span class="kpi-val">{{ k.margin_year | number:'1.2-2' }} <small>DH</small></span>
           </div>
         </div>
 
@@ -158,24 +185,6 @@
         <span class="ql-arrow">→</span>
       </a>
 
-      <a routerLink="/carriers" class="quick-link-card" id="link-carriers" *ngIf="authService.hasPermission('view carriers')">
-        <span class="ql-icon">🚚</span>
-        <div class="ql-text">
-          <span class="ql-title">Transporteurs</span>
-          <span class="ql-desc">Sociétés de transport</span>
-        </div>
-        <span class="ql-arrow">→</span>
-      </a>
-
-      <a routerLink="/partners" class="quick-link-card" id="link-partners" *ngIf="authService.hasPermission('view partners')">
-        <span class="ql-icon">🤝</span>
-        <div class="ql-text">
-          <span class="ql-title">Partenaires</span>
-          <span class="ql-desc">Montage, Equilibrage, Parallélisme</span>
-        </div>
-        <span class="ql-arrow">→</span>
-      </a>
-
       <a routerLink="/cash-flow" class="quick-link-card" id="link-cash-flow" *ngIf="authService.hasPermission('view cash-flow')">
         <span class="ql-icon">💰</span>
         <div class="ql-text">
@@ -189,7 +198,7 @@
         <span class="ql-icon">🛞</span>
         <div class="ql-text">
           <span class="ql-title">Produits</span>
-          <span class="ql-desc">Catalogue des produits</span>
+          <span class="ql-desc">Catalogue des pneus</span>
         </div>
         <span class="ql-arrow">→</span>
       </a>
@@ -197,8 +206,17 @@
       <a routerLink="/stock" class="quick-link-card" id="link-stock" *ngIf="authService.hasPermission('view stock')">
         <span class="ql-icon">📋</span>
         <div class="ql-text">
-          <span class="ql-title">Stock</span>
-          <span class="ql-desc">Inventaire des pneus</span>
+          <span class="ql-title">Inventaire</span>
+          <span class="ql-desc">Stock des pneus</span>
+        </div>
+        <span class="ql-arrow">→</span>
+      </a>
+
+      <a routerLink="/brands" class="quick-link-card" id="link-brands" *ngIf="authService.hasPermission('view brands')">
+        <span class="ql-icon">🏭</span>
+        <div class="ql-text">
+          <span class="ql-title">Marques</span>
+          <span class="ql-desc">Gérer les marques de pneus</span>
         </div>
         <span class="ql-arrow">→</span>
       </a>

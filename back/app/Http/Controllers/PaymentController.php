@@ -15,7 +15,7 @@ class PaymentController extends Controller
      */
     public function index(Sale $sale): JsonResponse
     {
-        $payments = $sale->payments()->with('transaction')->latest('date')->get();
+        $payments = $sale->payments()->with('transaction.account')->latest('date')->get();
 
         $totalPaid = $sale->payments()->sum('amount');
 
@@ -30,7 +30,7 @@ class PaymentController extends Controller
 
     /**
      * Store a new payment for a sale.
-     * Also creates a Transaction (income) in Cash Flow.
+     * Always creates a Transaction (income) in the chosen account.
      */
     public function store(Request $request, Sale $sale): JsonResponse
     {
@@ -40,35 +40,33 @@ class PaymentController extends Controller
             'method' => 'nullable|string|max:100',
             'reference' => 'nullable|string|max:255',
             'notes' => 'nullable|string|max:1000',
+            'account_id' => 'required|exists:accounts,id',
         ]);
 
-        // Create the income Transaction in Cash Flow ONLY for cash payments
-        $transaction = null;
-        $method = $validated['method'] ?? '';
-        if (strtolower($method) === 'espèces' || strtolower($method) === 'especes') {
-            $transaction = Transaction::create([
-                'date' => $validated['date'],
-                'amount' => $validated['amount'],
-                'type' => 'income',
-                'category' => 'Produit',
-                'description' => "Paiement vente #{$sale->id} - {$sale->total_quantity} X " . $this->describeSaleProduct($sale) . " POUR {$sale->client}",
-                'person' => '',
-                'partner' => $sale->client ?? '',
-                'user_id' => $request->user()->id,
-            ]);
-        }
+        // Create the income Transaction in the chosen account
+        $transaction = Transaction::create([
+            'date' => $validated['date'],
+            'amount' => $validated['amount'],
+            'type' => 'income',
+            'category' => 'Produit',
+            'description' => "Paiement vente #{$sale->id} - {$sale->total_quantity} X " . $this->describeSaleProduct($sale) . " POUR {$sale->client}",
+            'person' => '',
+            'partner' => $sale->client ?? '',
+            'user_id' => $request->user()->id,
+            'account_id' => $validated['account_id'],
+        ]);
 
         // Create the Payment
         $payment = Payment::create(array_merge($validated, [
             'sale_id' => $sale->id,
-            'transaction_id' => $transaction ? $transaction->id : null,
+            'transaction_id' => $transaction->id,
             'user_id' => $request->user()->id,
         ]));
 
         // Update sale payment status
         $this->updatePaymentStatus($sale);
 
-        return response()->json($payment->load('transaction'), 201);
+        return response()->json($payment->load('transaction.account'), 201);
     }
 
     /**

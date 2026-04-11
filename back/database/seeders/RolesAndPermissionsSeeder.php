@@ -22,9 +22,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'carriers' => ['view', 'create', 'edit', 'delete'],
             'partners' => ['view', 'create', 'edit', 'delete'],
             'cash-flow' => ['view', 'create', 'edit', 'delete'],
+            'accounts' => ['view', 'create', 'edit', 'delete', 'transfer'],
             'users' => ['view', 'create', 'edit', 'delete'],
             'roles' => ['view', 'create', 'edit', 'delete'],
             'stock' => ['view', 'create', 'edit', 'delete', 'import'],
+            'stock-movements' => ['view'],
             'brands' => ['view', 'create', 'edit', 'delete'],
             'products' => ['view', 'create', 'edit', 'delete'],
         ];
@@ -75,7 +77,9 @@ class RolesAndPermissionsSeeder extends Seeder
                 'view carriers', 'create carriers', 'edit carriers',
                 'view partners', 'create partners', 'edit partners',
                 'view cash-flow',
+                'view accounts',
                 'view stock',
+                'view stock-movements',
                 'view products', 'create products', 'edit products', 'delete products',
                 'view brands', 'create brands', 'edit brands', 'delete brands',
             ]);
@@ -84,6 +88,8 @@ class RolesAndPermissionsSeeder extends Seeder
             $manager->givePermissionTo([
                 'view products', 'create products', 'edit products', 'delete products',
                 'view brands', 'create brands', 'edit brands', 'delete brands',
+                'view stock-movements',
+                'view accounts', 'create accounts', 'edit accounts', 'delete accounts', 'transfer accounts',
             ]);
         }
 

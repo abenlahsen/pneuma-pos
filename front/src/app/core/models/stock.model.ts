@@ -23,6 +23,7 @@ export interface StockPayload {
   zone?: string | null;
   quantity: number;
   purchase_price?: number | null;
+  reason?: string | null;
 }
 
 export interface StockSummary {

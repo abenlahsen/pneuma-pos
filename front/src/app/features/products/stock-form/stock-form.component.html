@@ -64,7 +64,14 @@
     <div class="form-grid">
       <div class="form-control">
         <label>Quantité *</label>
-        <input type="number" name="quantity" [(ngModel)]="formData.quantity" required min="0">
+        <input
+          type="number"
+          name="quantity"
+          [ngModel]="formData.quantity"
+          (ngModelChange)="onQuantityChange($event)"
+          required
+          min="0"
+        >
       </div>
 
       <div class="form-control">
@@ -74,8 +81,31 @@
     </div>
   </div>
 
+  <div class="form-section" *ngIf="reasonRequired()">
+    <h3>Motif de l'ajustement</h3>
+    <div class="form-grid">
+      <div class="form-control full-width">
+        <label>Motif * <span class="hint">(requis car la quantité a changé)</span></label>
+        <textarea
+          name="reason"
+          [ngModel]="reason()"
+          (ngModelChange)="reason.set($event)"
+          rows="3"
+          minlength="3"
+          maxlength="1000"
+          required
+          placeholder="Ex: Inventaire physique, casse, correction d'erreur..."
+        ></textarea>
+      </div>
+    </div>
+  </div>
+
   <div class="form-actions">
     <button type="button" class="btn btn-secondary" (click)="cancel.emit()">Annuler</button>
-    <button type="submit" class="btn btn-primary" [disabled]="!form.valid || formData.product_id === 0">Enregistrer</button>
+    <button
+      type="submit"
+      class="btn btn-primary"
+      [disabled]="!form.valid || formData.product_id === 0 || (reasonRequired() && reason().trim().length < 3)"
+    >Enregistrer</button>
   </div>
 </form>

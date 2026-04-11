@@ -12,7 +12,7 @@ class PurchasePaymentController extends Controller
 {
     public function index(Purchase $purchase): JsonResponse
     {
-        $payments = $purchase->payments()->with('transaction')->latest('date')->get();
+        $payments = $purchase->payments()->with('transaction.account')->latest('date')->get();
         $totalPaid = $purchase->payments()->sum('amount');
 
         return response()->json([
@@ -32,32 +32,31 @@ class PurchasePaymentController extends Controller
             'method' => 'nullable|string|max:100',
             'reference' => 'nullable|string|max:255',
             'notes' => 'nullable|string|max:1000',
+            'account_id' => 'required|exists:accounts,id',
         ]);
 
-        $transaction = null;
-        $method = $validated['method'] ?? '';
-        if (strtolower($method) === 'espèces' || strtolower($method) === 'especes') {
-            $transaction = Transaction::create([
-                'date' => $validated['date'],
-                'amount' => $validated['amount'],
-                'type' => 'expense',
-                'category' => 'Produit',
-                'description' => "Paiement achat #{$purchase->id} - {$purchase->total_quantity} X " . $this->describePurchaseProduct($purchase),
-                'person' => '',
-                'partner' => $purchase->supplier->name ?? '',
-                'user_id' => $request->user()->id,
-            ]);
-        }
+        // Create the expense Transaction in the chosen account
+        $transaction = Transaction::create([
+            'date' => $validated['date'],
+            'amount' => $validated['amount'],
+            'type' => 'expense',
+            'category' => 'Produit',
+            'description' => "Paiement achat #{$purchase->id} - {$purchase->total_quantity} X " . $this->describePurchaseProduct($purchase),
+            'person' => '',
+            'partner' => $purchase->supplier->name ?? '',
+            'user_id' => $request->user()->id,
+            'account_id' => $validated['account_id'],
+        ]);
 
         $payment = PurchasePayment::create(array_merge($validated, [
             'purchase_id' => $purchase->id,
-            'transaction_id' => $transaction ? $transaction->id : null,
+            'transaction_id' => $transaction->id,
             'user_id' => $request->user()->id,
         ]));
 
         $this->updatePaymentStatus($purchase);
 
-        return response()->json($payment->load('transaction'), 201);
+        return response()->json($payment->load('transaction.account'), 201);
     }
 
     public function destroy(Purchase $purchase, PurchasePayment $payment): JsonResponse

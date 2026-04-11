@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { PurchaseService } from '../../../core/services/purchase.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Purchase, PurchasePayment, PurchasePaymentSummary } from '../../../core/models/purchase.model';
+import { Account } from '../../../core/models/account.model';
+import { AccountService } from '../../../core/services/account.service';
 
 @Component({
   selector: 'app-purchase-payments',
@@ -23,6 +25,7 @@ export class PurchasePaymentsComponent implements OnInit {
   remaining = signal(0);
   paymentStatus = signal('');
   loading = signal(true);
+  accounts = signal<Account[]>([]);
 
   showAddForm = false;
   formData: any = {
@@ -30,12 +33,30 @@ export class PurchasePaymentsComponent implements OnInit {
     date: new Date().toISOString().slice(0, 10),
     method: 'Espèces',
     notes: '',
+    account_id: 0,
   };
 
-  constructor(private purchaseService: PurchaseService, public authService: AuthService) {}
+  constructor(
+    private purchaseService: PurchaseService,
+    private accountService: AccountService,
+    public authService: AuthService
+  ) {}
 
   ngOnInit() {
     this.loadPayments();
+    this.loadAccounts();
+  }
+
+  loadAccounts() {
+    this.accountService.getAccounts().subscribe({
+      next: (data) => {
+        const activeAccounts = data.filter(a => a.is_active);
+        this.accounts.set(activeAccounts);
+        if (activeAccounts.length > 0) {
+          this.formData.account_id = activeAccounts[0].id;
+        }
+      }
+    });
   }
 
   loadPayments() {
@@ -63,6 +84,7 @@ export class PurchasePaymentsComponent implements OnInit {
       date: new Date().toISOString().slice(0, 10),
       method: 'Espèces',
       notes: '',
+      account_id: this.accounts().length > 0 ? this.accounts()[0].id : 0,
     };
     this.showAddForm = true;
   }

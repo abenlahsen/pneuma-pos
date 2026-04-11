@@ -1,0 +1,54 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>🔄 Nouveau Transfert</h2>
+      <button (click)="onCancel()" class="btn-close">✕</button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="tf-source">De (Compte source) *</label>
+          <select id="tf-source" formControlName="source_account_id">
+            <option value="">-- Sélectionner --</option>
+            @for (acc of activeAccounts; track acc.id) {
+              <option [value]="acc.id">{{ acc.name }} ({{ acc.current_balance }} DH)</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="tf-dest">Vers (Compte destination) *</label>
+          <select id="tf-dest" formControlName="destination_account_id">
+            <option value="">-- Sélectionner --</option>
+            @for (acc of activeAccounts; track acc.id) {
+              <option [value]="acc.id">{{ acc.name }} ({{ acc.current_balance }} DH)</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="tf-amount">Montant (DH) *</label>
+          <input type="number" id="tf-amount" formControlName="amount" step="0.01" min="0.01" />
+        </div>
+        <div class="form-group">
+          <label for="tf-date">Date *</label>
+          <input type="date" id="tf-date" formControlName="date" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="tf-desc">Description</label>
+        <textarea id="tf-desc" formControlName="description" rows="2" placeholder="Ex: Transfert de caisse vers banque..."></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" (click)="onCancel()" class="btn btn-cancel">Annuler</button>
+        <button type="submit" [disabled]="form.invalid" class="btn btn-submit">
+          Effectuer le transfert
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

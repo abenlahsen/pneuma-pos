@@ -7,11 +7,25 @@
   </div>
 
   <div class="navbar-links" [class.open]="menuOpen">
-    <a *ngFor="let item of visibleNavItems()"
-       [routerLink]="item.route"
-       routerLinkActive="active"
-       [routerLinkActiveOptions]="{exact: !!item.exact}"
-       (click)="closeMenu()">{{ item.label }}</a>
+    <ng-container *ngFor="let item of visibleNavItems()">
+      
+      <a *ngIf="!item.children"
+         [routerLink]="item.route"
+         routerLinkActive="active"
+         [routerLinkActiveOptions]="{exact: !!item.exact}"
+         (click)="closeMenu()">{{ item.label }}</a>
+
+      <div class="nav-dropdown" *ngIf="item.children && item.children.length > 0">
+        <button class="dropdown-toggle">{{ item.label }} ▾</button>
+        <div class="dropdown-menu">
+          <a *ngFor="let child of item.children"
+             [routerLink]="child.route"
+             routerLinkActive="active"
+             (click)="closeMenu()">{{ child.label }}</a>
+        </div>
+      </div>
+      
+    </ng-container>
   </div>
 
   <div class="navbar-user">

@@ -48,11 +48,13 @@ export interface PurchaseSummary {
 export interface PurchasePayment {
   id: number;
   purchase_id: number;
+  transaction_id: string | number | null;
   amount: number;
   date: string;
   method?: string | null;
   reference?: string | null;
   notes?: string | null;
+  account_id: number;
   created_at?: string;
 }
 

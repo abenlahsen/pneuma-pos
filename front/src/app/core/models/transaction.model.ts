@@ -8,6 +8,9 @@ export interface Transaction {
   person: string | null;
   partner: string | null;
   user_id: number;
+  account_id: number;
+  transfer_id: string | null;
+  account?: { id: number, name: string, type: string };
   created_at: string;
   updated_at: string;
 }
@@ -20,6 +23,7 @@ export interface TransactionPayload {
   description: string;
   person?: string;
   partner?: string;
+  account_id: number;
 }
 
 export interface TransactionSummary {
@@ -32,6 +36,7 @@ export interface TransactionFilters {
   categories: string[];
   persons: string[];
   partners: string[];
+  accounts: { id: number, name: string, type: string }[];
 }
 
 export interface PaginatedResponse<T> {
