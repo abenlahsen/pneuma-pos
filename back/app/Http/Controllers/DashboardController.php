@@ -34,7 +34,7 @@ class DashboardController extends Controller
         $salesByCommercial = DB::table('sales')
             ->leftJoin('users', 'sales.commercial_id', '=', 'users.id')
             ->whereBetween('sales.date', [$monthStart, $monthEnd])
-            ->selectRaw('users.name as commercial_name, SUM(sales.total_sale) as total_sales, COUNT(*) as sales_count, SUM(sales.margin) as total_margin')
+            ->selectRaw('users.name as commercial_name, SUM(sales.total_sale) as total_sales, SUM(sales.total_quantity) as total_tyres, SUM(sales.margin) as total_margin')
             ->groupBy('sales.commercial_id', 'users.name')
             ->orderByDesc('total_sales')
             ->get()
@@ -42,7 +42,7 @@ class DashboardController extends Controller
                 return [
                     'commercial_name' => $item->commercial_name ?? 'Non assigné',
                     'total_sales' => round((float) $item->total_sales, 2),
-                    'sales_count' => (int) $item->sales_count,
+                    'total_tyres' => (int) $item->total_tyres,
                     'total_margin' => round((float) $item->total_margin, 2),
                 ];
             })

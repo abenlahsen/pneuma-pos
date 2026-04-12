@@ -123,26 +123,8 @@ mkdir -p "\$BACKUP_DIR"
 # ── Backup database ─────────────────────────────────────────
 echo "  → Backing up database..."
 
-# Write the MySQL credentials to a temp defaults-file so they never appear
-# in the command line / /proc/*/cmdline. The file is chmod 600 and removed
-# on any script exit via trap.
-CNF=\$(mktemp)
-chmod 600 "\$CNF"
-trap 'rm -f "\$CNF"' EXIT
-# Inner delimiter is single-quoted so the REMOTE shell does not re-expand
-# any \$ / backticks in the password. Local shell still substitutes
-# \$DB_HOST/\$DB_USERNAME/\$DB_PASSWORD before the heredoc is sent over ssh.
-# The password is wrapped in double quotes because MySQL's option-file
-# parser treats unquoted '#' / ';' as the start of an inline comment —
-# any password containing those characters gets silently truncated.
-cat > "\$CNF" <<'MYCNF'
-[client]
-host=$DB_HOST
-user=$DB_USERNAME
-password="$DB_PASSWORD"
-MYCNF
-
-mysqldump --defaults-extra-file="\$CNF" \
+DUMP_CMD=\$(command -v mariadb-dump 2>/dev/null || command -v mysqldump)
+\$DUMP_CMD --user='$DB_USERNAME' --password='$DB_PASSWORD' --host='$DB_HOST' \
   --single-transaction --routines --triggers \
   "$DB_DATABASE" | gzip > "\$BACKUP_DIR/db_${DB_DATABASE}.sql.gz"
 echo "  ✓ Database backup: \$BACKUP_DIR/db_${DB_DATABASE}.sql.gz"

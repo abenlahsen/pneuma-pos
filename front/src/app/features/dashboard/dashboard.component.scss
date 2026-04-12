@@ -111,10 +111,26 @@
   padding-left: 0.75rem;
 }
 
+.kpi-group-title {
+  margin: 2rem 0 1rem;
+  font-size: 1.05rem;
+  color: #4a5568;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.kpi-group-title:first-of-type {
+  margin-top: 0.5rem;
+}
+
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .kpi-card {
@@ -165,12 +181,20 @@
     font-weight: 700;
     color: #2d3748;
     font-variant-numeric: tabular-nums;
-    
+
     small {
       font-size: 1rem;
       color: #a0aec0;
       font-weight: 500;
     }
+  }
+
+  .kpi-sub {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.8rem;
+    color: #718096;
+    font-weight: 500;
   }
 
   .kpi-badge {

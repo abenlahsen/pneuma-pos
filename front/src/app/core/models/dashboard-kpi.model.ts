@@ -18,7 +18,7 @@ export interface DashboardKpi {
   sales_by_commercial: {
     commercial_name: string;
     total_sales: number;
-    sales_count: number;
+    total_tyres: number;
     total_margin: number;
   }[];
 }
