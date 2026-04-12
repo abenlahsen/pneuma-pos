@@ -1,6 +1,5 @@
 export const environment = {
-  production: false,
+  production: true,
   apiUrl: '/api',
-  appTitle: 'PNEU.MA POS',
+  appTitle: 'EAS POS',
 };
-

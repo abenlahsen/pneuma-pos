@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Pneuma POS is a Point of Sale system for a **tire shop** (pneus). The UI is in **French**. It uses:
 - **Backend**: Laravel 13 (PHP 8.4 FPM) REST API with Sanctum token auth
-- **Frontend**: Angular 19 SPA (standalone components, signals-based state)
+- **Frontend**: Angular 21 SPA (standalone components, signals-based state)
 - **Database**: MySQL 8 (tests use in-memory SQLite)
 - **Infrastructure**: Docker Compose with Nginx reverse proxy
 
@@ -93,6 +93,8 @@ npm test         # Run Karma tests
 
 **Routing** (`front/src/app/app.routes.ts`): All feature routes are lazy-loaded via `loadComponent()`. Root (`/`) redirects to `/dashboard`. Purchases route is `/achats` (French). Wildcard redirects to `/dashboard`.
 
+**Environments** (`front/src/environments/`): `environment.ts` (dev), `environment.prod.ts` (default production — "PNEU.MA POS"), `environment.eas.ts` (secondary deployment — "EAS POS"). Each exports `{ production, apiUrl, appTitle }`. The document title is set from `environment.appTitle` in `App.ngOnInit()` via `Title` service. `angular.json` has two production configurations: `production` (default) and `production-eas` (uses `fileReplacements` to swap in `environment.eas.ts`).
+
 ### Docker Networking
 
 Nginx is the single entry point. It routes:
@@ -107,4 +109,11 @@ This is a **tire shop POS** (French: pneus). A `Sale` record captures: tire bran
 
 ## Deployment
 
-Production deployment uses `deploy/deploy.sh` (run from WSL Ubuntu-24.04). It builds Angular locally, backs up DB + source on VPS, transfers files via rsync, runs `composer install`, migrations, `RolesAndPermissionsSeeder`, and caches Laravel config/routes/views. See `deploy/deploy.env.example` for configuration.
+Two deploy scripts, both run from WSL Ubuntu-24.04:
+
+- **`deploy/deploy.sh`** — primary VPS. Builds Angular with `--configuration=production`, backs up DB + source, transfers via rsync, runs `composer install`, migrations, `RolesAndPermissionsSeeder`, caches Laravel config/routes/views, configures Nginx, and restarts PHP-FPM. Config: `deploy/deploy.env`.
+- **`deploy/deploy2.sh`** — secondary VPS (no web server or PHP-FPM config). Builds Angular with `--configuration=production-eas` (different app title), output to `dist/eas-pos/browser/`. Config: `deploy/deploy2.env`. Supports `--skip-build` to re-deploy an existing build.
+
+**DB backup**: Both scripts use `mariadb-dump` (falls back to `mysqldump`) with credentials passed via `--user`/`--password`/`--host` flags. The `--defaults-extra-file` approach was removed because it fails on MariaDB 11.4 with passwords containing `@` or similar characters.
+
+**Dashboard KPIs** (`DashboardController::kpi`): returns today/month/year sales amounts, tyres sold counts, margins, stock value, unpaid sales/purchases, cash balance, and `sales_by_commercial` (grouped by commercial with `total_sales`, `total_tyres`, `total_margin`). Only visible to Administrator role.

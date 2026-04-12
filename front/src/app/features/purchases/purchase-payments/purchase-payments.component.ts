@@ -32,6 +32,7 @@ export class PurchasePaymentsComponent implements OnInit {
     amount: 0,
     date: new Date().toISOString().slice(0, 10),
     method: 'Espèces',
+    reference: '',
     notes: '',
     account_id: 0,
   };
@@ -83,6 +84,7 @@ export class PurchasePaymentsComponent implements OnInit {
       amount: this.remaining() > 0 ? this.remaining() : 0,
       date: new Date().toISOString().slice(0, 10),
       method: 'Espèces',
+      reference: '',
       notes: '',
       account_id: this.accounts().length > 0 ? this.accounts()[0].id : 0,
     };

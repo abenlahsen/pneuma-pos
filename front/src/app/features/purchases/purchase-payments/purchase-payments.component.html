@@ -45,6 +45,7 @@
               <th>Montant</th>
               <th>Compte</th>
               <th>Méthode</th>
+              <th>Référence</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -54,6 +55,7 @@
               <td class="fw-semibold">{{ p.amount | number:'1.2-2' }} DH</td>
               <td>{{ $any(p).transaction_id ? $any(p).transaction?.account?.name : '-' }}</td>
               <td>{{ p.method || '-' }}</td>
+              <td>{{ $any(p).reference || '-' }}</td>
               <td>
                 <button class="btn-icon btn-sm text-danger" (click)="deletePayment(p)" title="Supprimer" *ngIf="authService.hasPermission('manage purchase-payments')">🗑️</button>
               </td>
@@ -92,7 +94,14 @@
             <label>Méthode</label>
             <select class="form-control" [(ngModel)]="formData.method">
               <option value="Espèces">Espèces</option>
+              <option value="Chèque">Chèque</option>
+              <option value="Virement">Virement</option>
+              <option value="Effet">Effet</option>
             </select>
+          </div>
+          <div class="form-group">
+            <label>Référence</label>
+            <input type="text" class="form-control" [(ngModel)]="formData.reference" placeholder="N° chèque, virement...">
           </div>
         </div>
         <div class="form-group">
