@@ -182,13 +182,7 @@
     .actions {
       display: flex;
       gap: 0.25rem;
-      opacity: 0;
-      transition: opacity 0.2s;
     }
-  }
-
-  &:hover .actions {
-    opacity: 1;
   }
 
   .card-body {
@@ -251,6 +245,32 @@
   &.income { border-left-color: $income-color; }
   &.expense { border-left-color: $expense-color; }
   &.balance { border-left-color: $income-color; &.negative { border-left-color: $expense-color; } }
+  &.expected { border-left-color: #f59e0b; }
+
+  .card-hint {
+    margin: 0.25rem 0 0;
+    font-size: 0.75rem;
+    color: $text-muted;
+    font-style: italic;
+  }
+}
+
+.kpi-sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: #b45309;
+  font-weight: 500;
+}
+
+.badge-pending {
+  background: rgba(#f59e0b, 0.15);
+  color: #b45309;
+  margin-left: 0.5rem;
+}
+
+.pending-row {
+  background: rgba(#f59e0b, 0.04);
+  font-style: italic;
 }
 
 .amount-income { color: $income-color; font-weight: 600; font-variant-numeric: tabular-nums; }

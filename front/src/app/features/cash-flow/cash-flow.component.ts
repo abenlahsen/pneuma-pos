@@ -22,7 +22,7 @@ import { TransactionFormComponent } from './transaction-form/transaction-form.co
 export class CashFlowComponent implements OnInit {
   // Data
   transactions = signal<Transaction[]>([]);
-  summary = signal<TransactionSummary>({ income: 0, expenses: 0, balance: 0 });
+  summary = signal<TransactionSummary>({ income: 0, expenses: 0, balance: 0, pending_income: 0, pending_expense: 0 });
   filterOptions = signal<TransactionFilters>({ categories: [], persons: [], partners: [], accounts: [] });
 
   // Pagination

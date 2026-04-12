@@ -27,7 +27,7 @@ export class AccountFormComponent implements OnInit {
       name: [this.account?.name || '', [Validators.required, Validators.maxLength(100)]],
       type: [this.account?.type || 'cash', [Validators.required]],
       description: [this.account?.description || '', [Validators.maxLength(1000)]],
-      initial_balance: [{ value: this.account?.initial_balance || 0, disabled: this.isEdit() }, [Validators.required]],
+      initial_balance: [this.account?.initial_balance ?? 0, [Validators.required]],
       is_active: [this.account ? this.account.is_active : true]
     });
   }

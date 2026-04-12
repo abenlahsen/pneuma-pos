@@ -49,6 +49,7 @@ class PaymentController extends Controller
             'amount' => $validated['amount'],
             'type' => 'income',
             'category' => 'Produit',
+            'method' => $validated['method'] ?? null,
             'description' => "Paiement vente #{$sale->id} - {$sale->total_quantity} X " . $this->describeSaleProduct($sale) . " POUR {$sale->client}",
             'person' => '',
             'partner' => $sale->client ?? '',

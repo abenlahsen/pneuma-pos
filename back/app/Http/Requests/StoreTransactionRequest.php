@@ -24,6 +24,7 @@ class StoreTransactionRequest extends FormRequest
             'amount' => ['required', 'numeric', 'min:0.01'],
             'type' => ['required', 'in:income,expense'],
             'category' => ['nullable', 'string', 'max:100'],
+            'method' => ['nullable', 'string', 'max:50'],
             'description' => ['required', 'string', 'max:1000'],
             'person' => ['nullable', 'string', 'max:100'],
             'partner' => ['nullable', 'string', 'max:255'],

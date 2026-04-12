@@ -120,13 +120,17 @@ class TransactionController extends Controller
             $query->where('account_id', $request->account_id);
         }
 
-        $income = (clone $query)->ofType('income')->sum('amount');
-        $expenses = (clone $query)->ofType('expense')->sum('amount');
+        $income = (clone $query)->settled()->ofType('income')->sum('amount');
+        $expenses = (clone $query)->settled()->ofType('expense')->sum('amount');
+        $pendingIncome = (clone $query)->pending()->ofType('income')->sum('amount');
+        $pendingExpense = (clone $query)->pending()->ofType('expense')->sum('amount');
 
         return response()->json([
             'income' => round($income, 2),
             'expenses' => round($expenses, 2),
             'balance' => round($income - $expenses, 2),
+            'pending_income' => round($pendingIncome, 2),
+            'pending_expense' => round($pendingExpense, 2),
         ]);
     }
 

@@ -15,6 +15,7 @@ class Transaction extends Model
         'amount',
         'type',
         'category',
+        'method',
         'description',
         'person',
         'partner',
@@ -58,6 +59,28 @@ class Transaction extends Model
     public function scopeOfCategory($query, string $category)
     {
         return $query->where('category', $category);
+    }
+
+    /**
+     * Scope: only "settled" transactions — i.e., everything except future-dated
+     * Chèque/Effet payments which are considered pending until their écheance.
+     */
+    public function scopeSettled($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNotIn('method', ['Chèque', 'Effet'])
+                ->orWhereNull('method')
+                ->orWhere('date', '<=', now()->toDateString());
+        });
+    }
+
+    /**
+     * Scope: only pending (future-dated Chèque/Effet) transactions.
+     */
+    public function scopePending($query)
+    {
+        return $query->whereIn('method', ['Chèque', 'Effet'])
+            ->where('date', '>', now()->toDateString());
     }
 
     /**

@@ -55,6 +55,16 @@
           </select>
         </div>
         <div class="form-group">
+          <label for="txn-method">Méthode</label>
+          <select id="txn-method" formControlName="method">
+            <option value="">-- Sélectionner --</option>
+            <option value="Espèces">Espèces</option>
+            <option value="Chèque">Chèque</option>
+            <option value="Effet">Effet</option>
+            <option value="Virement">Virement</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label for="txn-person">Personne</label>
           <select id="txn-person" formControlName="person">
             <option value="">-- Sélectionner --</option>

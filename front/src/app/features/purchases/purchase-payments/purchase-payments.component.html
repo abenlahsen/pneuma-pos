@@ -81,6 +81,9 @@
           <div class="form-group">
             <label>Date *</label>
             <input type="date" class="form-control" [(ngModel)]="formData.date">
+            <small class="form-hint" *ngIf="(formData.method === 'Chèque' || formData.method === 'Effet')">
+              Date d'échéance — ce paiement sera intégré au solde à cette date.
+            </small>
           </div>
         </div>
         <div class="form-row">

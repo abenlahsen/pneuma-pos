@@ -30,6 +30,7 @@ export class TransactionFormComponent implements OnInit {
       account_id: [this.transaction?.account_id || (this.filterOptions.accounts.length > 0 ? this.filterOptions.accounts[0].id : null), [Validators.required]],
       type: [this.transaction?.type || 'expense', [Validators.required]],
       category: [this.transaction?.category || ''],
+      method: [this.transaction?.method || ''],
       description: [this.transaction?.description || '', [Validators.required]],
       person: [this.transaction?.person || ''],
       partner: [this.transaction?.partner || ''],

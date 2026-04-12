@@ -5,6 +5,7 @@ export interface Account {
   description: string | null;
   initial_balance: number;
   current_balance: number;
+  expected_balance: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;

@@ -24,6 +24,7 @@ class UpdateTransactionRequest extends FormRequest
             'amount' => ['sometimes', 'required', 'numeric', 'min:0.01'],
             'type' => ['sometimes', 'required', 'in:income,expense'],
             'category' => ['nullable', 'string', 'max:100'],
+            'method' => ['nullable', 'string', 'max:50'],
             'description' => ['sometimes', 'required', 'string', 'max:1000'],
             'person' => ['nullable', 'string', 'max:100'],
             'partner' => ['nullable', 'string', 'max:255'],
