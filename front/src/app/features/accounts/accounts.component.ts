@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AccountService } from '../../core/services/account.service';
@@ -28,8 +28,23 @@ export class AccountsComponent implements OnInit {
   // Detail View
   selectedAccount = signal<Account | null>(null);
   accountTransactions = signal<Transaction[]>([]);
-  accountSummary = signal<TransactionSummary>({ income: 0, expenses: 0, balance: 0 });
+  accountSummary = signal<TransactionSummary>({ income: 0, expenses: 0, balance: 0, pending_income: 0, pending_expense: 0 });
   loadingTransactions = signal(false);
+
+  // Split transactions into pending (future Chèque/Effet) and settled
+  pendingTransactions = computed(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return this.accountTransactions().filter(t =>
+      (t.method === 'Chèque' || t.method === 'Effet') && t.date > today
+    );
+  });
+
+  settledTransactions = computed(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return this.accountTransactions().filter(t =>
+      !((t.method === 'Chèque' || t.method === 'Effet') && t.date > today)
+    );
+  });
 
   constructor(
     private accountService: AccountService,

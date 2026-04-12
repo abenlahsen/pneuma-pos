@@ -78,10 +78,10 @@ class DashboardController extends Controller
             'unpaid_sales' => round(Sale::where('payment_status', 'NON PAYE')->sum('total_sale'), 2),
             'unpaid_purchases' => round($purchasesTotalLifetime - $purchasesPaidLifetime, 2),
 
-            // Cash flow lifetime balance
+            // Cash flow lifetime balance — excludes future-dated Chèque/Effet
             'cash_balance' => round(
-                Transaction::where('type', 'income')->sum('amount')
-                - Transaction::where('type', 'expense')->sum('amount'),
+                Transaction::settled()->where('type', 'income')->sum('amount')
+                - Transaction::settled()->where('type', 'expense')->sum('amount'),
                 2
             ),
         ]);

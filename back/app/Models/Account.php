@@ -23,7 +23,7 @@ class Account extends Model
         'is_active' => 'boolean',
     ];
 
-    protected $appends = ['current_balance'];
+    protected $appends = ['current_balance', 'expected_balance'];
 
     /**
      * Transactions belonging to this account.
@@ -34,14 +34,26 @@ class Account extends Model
     }
 
     /**
-     * Computed current balance: initial_balance + income - expenses.
+     * Computed current balance: initial_balance + settled income - settled expenses.
+     * Excludes future-dated Chèque/Effet payments (écheance not yet reached).
      */
     public function getCurrentBalanceAttribute(): float
     {
-        $income = $this->transactions()->where('type', 'income')->sum('amount');
-        $expense = $this->transactions()->where('type', 'expense')->sum('amount');
+        $income = $this->transactions()->settled()->where('type', 'income')->sum('amount');
+        $expense = $this->transactions()->settled()->where('type', 'expense')->sum('amount');
 
         return round((float) $this->initial_balance + $income - $expense, 2);
+    }
+
+    /**
+     * Expected balance: current balance + pending (future Chèque/Effet) net flow.
+     */
+    public function getExpectedBalanceAttribute(): float
+    {
+        $pendingIncome = $this->transactions()->pending()->where('type', 'income')->sum('amount');
+        $pendingExpense = $this->transactions()->pending()->where('type', 'expense')->sum('amount');
+
+        return round($this->current_balance + $pendingIncome - $pendingExpense, 2);
     }
 
     /**

@@ -41,6 +41,7 @@ class PurchasePaymentController extends Controller
             'amount' => $validated['amount'],
             'type' => 'expense',
             'category' => 'Produit',
+            'method' => $validated['method'] ?? null,
             'description' => "Paiement achat #{$purchase->id} - {$purchase->total_quantity} X " . $this->describePurchaseProduct($purchase),
             'person' => '',
             'partner' => $purchase->supplier->name ?? '',
