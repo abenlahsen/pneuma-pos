@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Account;
 use App\Models\Purchase;
 use App\Models\Sale;
 use App\Models\Stock;
@@ -63,6 +64,7 @@ class DashboardController extends Controller
             'total_purchase_year' => round((clone $purchasesYear)->sum('total_price'), 2),
             'tyres_month' => (int) (clone $salesMonth)->sum('total_quantity'),
             'tyres_year' => (int) (clone $salesYear)->sum('total_quantity'),
+            'tyres_purchased_month' => (int) (clone $purchasesMonth)->sum('total_quantity'),
 
             // Sales by Commercial (This Month)
             'sales_by_commercial' => $salesByCommercial,
@@ -78,10 +80,9 @@ class DashboardController extends Controller
             'unpaid_sales' => round(Sale::where('payment_status', 'NON PAYE')->sum('total_sale'), 2),
             'unpaid_purchases' => round($purchasesTotalLifetime - $purchasesPaidLifetime, 2),
 
-            // Cash flow lifetime balance — excludes future-dated Chèque/Effet
+            // Solde de caisse — cash accounts only (excludes future-dated Chèque/Effet)
             'cash_balance' => round(
-                Transaction::settled()->where('type', 'income')->sum('amount')
-                - Transaction::settled()->where('type', 'expense')->sum('amount'),
+                Account::where('type', 'cash')->get()->sum('current_balance'),
                 2
             ),
         ]);

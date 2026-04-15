@@ -77,14 +77,6 @@
         </div>
 
         <div class="form-group">
-          <label>Marque</label>
-          <select class="form-control" [ngModel]="filterBrand()" (ngModelChange)="filterBrand.set($event); applyFilters()">
-            <option value="">Toutes</option>
-            <option *ngFor="let brand of filterOptions().brands" [value]="brand">{{ brand }}</option>
-          </select>
-        </div>
-
-        <div class="form-group">
           <label>Statut</label>
           <select class="form-control" [ngModel]="filterStatus()" (ngModelChange)="filterStatus.set($event); applyFilters()">
             <option value="">Tous</option>
@@ -97,6 +89,22 @@
           <select class="form-control" [ngModel]="filterPaymentStatus()" (ngModelChange)="filterPaymentStatus.set($event); applyFilters()">
             <option value="">Tous</option>
             <option *ngFor="let ps of filterOptions().payment_statuses" [value]="ps">{{ ps }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Partenaire</label>
+          <select class="form-control" [ngModel]="filterPartner()" (ngModelChange)="filterPartner.set($event); applyFilters()">
+            <option value="">Tous</option>
+            <option *ngFor="let p of filterOptions().partners" [value]="p">{{ p }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Ville</label>
+          <select class="form-control" [ngModel]="filterCity()" (ngModelChange)="filterCity.set($event); applyFilters()">
+            <option value="">Toutes</option>
+            <option *ngFor="let v of filterOptions().cities" [value]="v">{{ v }}</option>
           </select>
         </div>
 

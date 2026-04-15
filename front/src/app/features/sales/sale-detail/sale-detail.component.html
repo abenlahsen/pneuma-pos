@@ -45,6 +45,7 @@
                 <th>Qté</th>
                 <th class="no-print">Achat</th>
                 <th>Prix</th>
+                <th>Remise</th>
                 <th>Total</th>
                 <th class="no-print">Marge</th>
               </tr>
@@ -60,11 +61,12 @@
                 <td>{{ item.quantity }}</td>
                 <td class="no-print">{{ item.purchase_price | number:'1.2-2' }}</td>
                 <td>{{ item.selling_price | number:'1.2-2' }}</td>
-                <td>{{ (item.selling_price * item.quantity) | number:'1.2-2' }}</td>
-                <td class="no-print" [class.text-success]="((item.selling_price - item.purchase_price) * item.quantity) > 0" [class.text-danger]="((item.selling_price - item.purchase_price) * item.quantity) < 0">{{ ((item.selling_price - item.purchase_price) * item.quantity) | number:'1.2-2' }}</td>
+                <td>{{ (item.discount || 0) | number:'1.0-2' }}%</td>
+                <td>{{ lineTotal(item) | number:'1.2-2' }}</td>
+                <td class="no-print" [class.text-success]="(lineTotal(item) - item.purchase_price * item.quantity) > 0" [class.text-danger]="(lineTotal(item) - item.purchase_price * item.quantity) < 0">{{ (lineTotal(item) - item.purchase_price * item.quantity) | number:'1.2-2' }}</td>
               </tr>
               <tr *ngIf="!sale.items || sale.items.length === 0">
-                <td colspan="6" class="text-center text-muted">Aucun article.</td>
+                <td colspan="7" class="text-center text-muted">Aucun article.</td>
               </tr>
             </tbody>
           </table>

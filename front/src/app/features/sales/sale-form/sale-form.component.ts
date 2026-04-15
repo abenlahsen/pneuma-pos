@@ -63,6 +63,7 @@ export class SaleFormComponent implements OnInit {
     quantity: 1,
     purchase_price: 0,
     selling_price: 0,
+    discount: 0,
     linkedProduct: null,
     stock: null
   };
@@ -241,6 +242,7 @@ export class SaleFormComponent implements OnInit {
       quantity: item.quantity || 1,
       purchase_price: item.purchase_price ?? 0,
       selling_price: item.selling_price ?? 0,
+      discount: Number(item.discount ?? 0),
       linkedProduct: product,
       stock: item.stock || null
     };
@@ -270,6 +272,7 @@ export class SaleFormComponent implements OnInit {
       quantity: 1,
       purchase_price: 0,
       selling_price: 0,
+      discount: 0,
       linkedProduct: null,
       stock: null
     };
@@ -319,12 +322,19 @@ export class SaleFormComponent implements OnInit {
     return item.linkedProduct || item.linked_product;
   }
 
+  lineTotal(item: any): number {
+    const qte = item.quantity || 1;
+    const sell = item.selling_price || 0;
+    const discount = Math.max(0, Math.min(100, Number(item.discount) || 0));
+    return sell * qte * (1 - discount / 100);
+  }
+
   calculateTotals() {
     let tp = 0;
     let ts = 0;
     for (const item of this.formData.items!) {
       tp += (item.purchase_price || 0) * (item.quantity || 1);
-      ts += (item.selling_price || 0) * (item.quantity || 1);
+      ts += this.lineTotal(item);
     }
     this.formData.total_purchase = tp;
     this.formData.total_sale = ts;

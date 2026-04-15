@@ -38,6 +38,7 @@
             <th>Qté</th>
             <th>PU Achat</th>
             <th>PU Vente</th>
+            <th>Remise %</th>
             <th>Total Vente</th>
             <th>Action</th>
           </tr>
@@ -52,7 +53,8 @@
             <td>{{ item.quantity }}</td>
             <td>{{ item.purchase_price | number:'1.2-2' }}</td>
             <td>{{ item.selling_price | number:'1.2-2' }}</td>
-            <td>{{ (item.selling_price * item.quantity) | number:'1.2-2' }}</td>
+            <td>{{ (item.discount || 0) | number:'1.0-2' }}%</td>
+            <td>{{ lineTotal(item) | number:'1.2-2' }}</td>
             <td>
               <button type="button" class="btn-icon text-primary mr-1" title="Modifier" (click)="editItem(i)">✏️</button>
               <button type="button" class="btn-icon text-danger" title="Supprimer" (click)="removeItem(i)">🗑️</button>
@@ -94,6 +96,10 @@
         <div class="form-control">
           <label>PU Vente (DH)</label>
           <input type="number" name="cur_selling_price" [(ngModel)]="currentItem.selling_price" step="0.01">
+        </div>
+        <div class="form-control">
+          <label>Remise (%)</label>
+          <input type="number" name="cur_discount" [(ngModel)]="currentItem.discount" min="0" max="100" step="0.01">
         </div>
         <div class="form-control">
           <button type="button" class="btn btn-primary" style="height: 42px;" [disabled]="!currentItem.product_id || (!isStockOptional && !currentItem.stock_id) || (currentItem.stock_id && stockInsufficient)" (click)="addItem()">{{ editingItemIndex !== null ? 'Mettre à jour' : 'Ajouter' }}</button>
