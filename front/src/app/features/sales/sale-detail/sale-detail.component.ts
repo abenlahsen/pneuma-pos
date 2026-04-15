@@ -20,4 +20,9 @@ export class SaleDetailComponent {
   getProduct(item: any): any {
     return item.linkedProduct || item.linked_product;
   }
+
+  lineTotal(item: any): number {
+    const discount = Math.max(0, Math.min(100, Number(item.discount) || 0));
+    return (item.selling_price || 0) * (item.quantity || 0) * (1 - discount / 100);
+  }
 }

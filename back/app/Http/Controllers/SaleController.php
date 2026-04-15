@@ -23,7 +23,7 @@ class SaleController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Sale::query()->with(['commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'items.linkedProduct.part', 'items.linkedProduct.service', 'items.stock', 'creator', 'updater']);
+        $query = Sale::query()->with(['commercial', 'carrier', 'partner', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'items.linkedProduct.part', 'items.linkedProduct.service', 'items.stock', 'creator', 'updater']);
 
         // Sorting
         $sortable = ['date', 'client', 'total_quantity', 'total_sale', 'margin', 'payment_status', 'status', 'created_at', 'updated_at'];
@@ -128,10 +128,12 @@ class SaleController extends Controller
                 $qte = $itemData['quantity'] ?? 1;
                 $purchP = floatval($itemData['purchase_price'] ?? 0);
                 $sellP = floatval($itemData['selling_price'] ?? 0);
+                $discount = max(0.0, min(100.0, floatval($itemData['discount'] ?? 0)));
+                $lineSale = $sellP * $qte * (1 - $discount / 100);
 
                 $totalQuantity += $qte;
                 $totalPurchase += ($purchP * $qte);
-                $totalSale += ($sellP * $qte);
+                $totalSale += $lineSale;
             }
 
             $margin = $totalSale - $totalPurchase;
@@ -154,6 +156,8 @@ class SaleController extends Controller
                 $qte = $itemData['quantity'] ?? 1;
                 $purchP = floatval($itemData['purchase_price'] ?? 0);
                 $sellP = floatval($itemData['selling_price'] ?? 0);
+                $discount = max(0.0, min(100.0, floatval($itemData['discount'] ?? 0)));
+                $lineSale = $sellP * $qte * (1 - $discount / 100);
 
                 $sale->items()->create([
                     'product_id' => $itemData['product_id'],
@@ -161,9 +165,10 @@ class SaleController extends Controller
                     'quantity' => $qte,
                     'purchase_price' => $purchP,
                     'selling_price' => $sellP,
+                    'discount' => $discount,
                     'total_purchase' => $purchP * $qte,
-                    'total_sale' => $sellP * $qte,
-                    'margin' => ($sellP * $qte) - ($purchP * $qte),
+                    'total_sale' => $lineSale,
+                    'margin' => $lineSale - ($purchP * $qte),
                 ]);
 
                 // Skip stock decrement for stockless items (services)
@@ -196,7 +201,7 @@ class SaleController extends Controller
      */
     public function show(Sale $sale): JsonResponse
     {
-        return response()->json($sale->load(['commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'items.linkedProduct.part', 'items.linkedProduct.service', 'items.stock', 'creator', 'updater']));
+        return response()->json($sale->load(['commercial', 'carrier', 'partner', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'items.linkedProduct.part', 'items.linkedProduct.service', 'items.stock', 'creator', 'updater']));
     }
 
     /**
@@ -243,10 +248,12 @@ class SaleController extends Controller
                 $qte = $itemData['quantity'] ?? 1;
                 $purchP = floatval($itemData['purchase_price'] ?? 0);
                 $sellP = floatval($itemData['selling_price'] ?? 0);
+                $discount = max(0.0, min(100.0, floatval($itemData['discount'] ?? 0)));
+                $lineSale = $sellP * $qte * (1 - $discount / 100);
 
                 $totalQuantity += $qte;
                 $totalPurchase += ($purchP * $qte);
-                $totalSale += ($sellP * $qte);
+                $totalSale += $lineSale;
             }
 
             $margin = $totalSale - $totalPurchase;
@@ -271,6 +278,8 @@ class SaleController extends Controller
                 $qte = $itemData['quantity'] ?? 1;
                 $purchP = floatval($itemData['purchase_price'] ?? 0);
                 $sellP = floatval($itemData['selling_price'] ?? 0);
+                $discount = max(0.0, min(100.0, floatval($itemData['discount'] ?? 0)));
+                $lineSale = $sellP * $qte * (1 - $discount / 100);
 
                 $sale->items()->create([
                     'product_id' => $itemData['product_id'],
@@ -278,9 +287,10 @@ class SaleController extends Controller
                     'quantity' => $qte,
                     'purchase_price' => $purchP,
                     'selling_price' => $sellP,
+                    'discount' => $discount,
                     'total_purchase' => $purchP * $qte,
-                    'total_sale' => $sellP * $qte,
-                    'margin' => ($sellP * $qte) - ($purchP * $qte),
+                    'total_sale' => $lineSale,
+                    'margin' => $lineSale - ($purchP * $qte),
                 ]);
 
                 if ($newStatus !== 'ANNULE' && !empty($itemData['stock_id'])) {

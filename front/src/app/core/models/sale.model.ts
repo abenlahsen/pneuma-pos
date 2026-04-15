@@ -9,6 +9,7 @@ export interface SaleItem {
   quantity: number;
   purchase_price: number;
   selling_price: number;
+  discount?: number;
   total_purchase?: number;
   total_sale?: number;
   margin?: number;

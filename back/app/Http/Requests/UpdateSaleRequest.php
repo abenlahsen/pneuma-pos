@@ -21,6 +21,7 @@ class UpdateSaleRequest extends FormRequest
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.purchase_price' => 'numeric|min:0',
             'items.*.selling_price' => 'numeric|min:0',
+            'items.*.discount' => 'nullable|numeric|min:0|max:100',
             
             'date' => 'nullable|date',
             'with_invoice' => 'boolean',

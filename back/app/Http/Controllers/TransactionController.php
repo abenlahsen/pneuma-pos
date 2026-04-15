@@ -125,10 +125,13 @@ class TransactionController extends Controller
         $pendingIncome = (clone $query)->pending()->ofType('income')->sum('amount');
         $pendingExpense = (clone $query)->pending()->ofType('expense')->sum('amount');
 
+        // Solde = cash accounts only (includes initial balances, excludes pending)
+        $cashBalance = Account::where('type', 'cash')->get()->sum('current_balance');
+
         return response()->json([
             'income' => round($income, 2),
             'expenses' => round($expenses, 2),
-            'balance' => round($income - $expenses, 2),
+            'balance' => round($cashBalance, 2),
             'pending_income' => round($pendingIncome, 2),
             'pending_expense' => round($pendingExpense, 2),
         ]);
