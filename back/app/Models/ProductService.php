@@ -22,7 +22,7 @@ class ProductService extends Model
         'selling_price' => 'decimal:2',
     ];
 
-    public function product(): BelongsTo
+    public function product()
     {
         return $this->belongsTo(Product::class);
     }

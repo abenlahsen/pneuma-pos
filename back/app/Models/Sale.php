@@ -51,7 +51,7 @@ class Sale extends Model
     /**
      * The items for this sale.
      */
-    public function items(): HasMany
+    public function items()
     {
         return $this->hasMany(SaleItem::class);
     }
@@ -59,7 +59,7 @@ class Sale extends Model
     /**
      * The sales representative (commercial) for this sale.
      */
-    public function commercial(): BelongsTo
+    public function commercial()
     {
         return $this->belongsTo(User::class, 'commercial_id');
     }
@@ -67,7 +67,7 @@ class Sale extends Model
     /**
      * The transport carrier for this sale.
      */
-    public function carrier(): BelongsTo
+    public function carrier()
     {
         return $this->belongsTo(Carrier::class);
     }
@@ -75,7 +75,7 @@ class Sale extends Model
     /**
      * The service partner for this sale.
      */
-    public function partner(): BelongsTo
+    public function partner()
     {
         return $this->belongsTo(Partner::class);
     }
@@ -84,7 +84,7 @@ class Sale extends Model
     /**
      * The user who created the sale.
      */
-    public function creator(): BelongsTo
+    public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
     }
@@ -92,7 +92,7 @@ class Sale extends Model
     /**
      * The user who last updated the sale.
      */
-    public function updater(): BelongsTo
+    public function updater()
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
@@ -100,7 +100,7 @@ class Sale extends Model
     /**
      * Payments for this sale.
      */
-    public function payments(): HasMany
+    public function payments()
     {
         return $this->hasMany(Payment::class);
     }

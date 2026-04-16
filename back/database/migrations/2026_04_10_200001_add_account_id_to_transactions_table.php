@@ -10,7 +10,7 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
         // 1. Add nullable account_id and transfer_id columns
         Schema::table('transactions', function (Blueprint $table) {
@@ -41,7 +41,7 @@ return new class extends Migration
     /**
      * Reverse the migrations.
      */
-    public function down(): void
+    public function down()
     {
         Schema::table('transactions', function (Blueprint $table) {
             $table->dropForeign(['account_id']);

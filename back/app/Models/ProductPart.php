@@ -17,7 +17,7 @@ class ProductPart extends Model
         'compatibility',
     ];
 
-    public function product(): BelongsTo
+    public function product()
     {
         return $this->belongsTo(Product::class);
     }

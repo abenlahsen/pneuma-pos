@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database.
      */
-    public function run(): void
+    public function run()
     {
         $this->call(RolesAndPermissionsSeeder::class);
 
@@ -41,10 +41,14 @@ class DatabaseSeeder extends Seeder
         $admin->assignRole('Administrator');
 
         if (! $existed && $generated !== null) {
-            $this->command?->warn("Initial admin password for {$email}: {$generated}");
-            $this->command?->warn('This password must be changed on first login.');
+            if ($this->command) {
+                $this->command->warn("Initial admin password for {$email}: {$generated}");
+                $this->command->warn('This password must be changed on first login.');
+            }
         } elseif (! $existed) {
-            $this->command?->info("Admin user {$email} created with ADMIN_INITIAL_PASSWORD from env.");
+            if ($this->command) {
+                $this->command->info("Admin user {$email} created with ADMIN_INITIAL_PASSWORD from env.");
+            }
         }
     }
 }

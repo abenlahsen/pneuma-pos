@@ -2,18 +2,44 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Partners\PartnerService;
+use App\Http\Requests\Partners\StorePartnerRequest;
+use App\Http\Requests\Partners\UpdatePartnerRequest;
+use App\Http\Resources\Partners\PartnerResource;
 use App\Models\Partner;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PartnerController extends Controller
 {
+    /**
+     * @var PartnerService
+     */
+    private $partnerService;
+
+    /**
+     * @param PartnerService $partnerService
+     */
+    public function __construct(PartnerService $partnerService)
+    {
+        $this->partnerService = $partnerService;
+    }
+    
     public function index(Request $request): JsonResponse
     {
         $query = Partner::query();
 
-        // Sorting
-        $sortable = ['name', 'city', 'phone', 'montage_price', 'alignment_price', 'created_at'];
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('city', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('mobile', 'like', "%{$search}%");
+            });
+        }
+
+        $sortable = ['name', 'city', 'phone', 'mobile', 'created_at'];
         if ($request->filled('sort_by') && in_array($request->sort_by, $sortable)) {
             $direction = $request->get('sort_direction', 'asc') === 'desc' ? 'desc' : 'asc';
             $query->orderBy($request->sort_by, $direction);
@@ -21,66 +47,55 @@ class PartnerController extends Controller
             $query->latest('created_at');
         }
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('city', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('city')) {
-            $query->where('city', $request->city);
-        }
-
         if ($request->boolean('all')) {
-            return response()->json($query->get());
+            return response()->json(PartnerResource::collection($query->get())->resolve($request));
         }
 
-        return response()->json($query->paginate($request->get('per_page', 20)));
+        $paginated = $query->paginate($request->get('per_page', 20));
+
+        return response()->json([
+            'current_page' => $paginated->currentPage(),
+            'data' => PartnerResource::collection($paginated->items())->resolve($request),
+            'first_page_url' => $paginated->url(1),
+            'from' => $paginated->firstItem(),
+            'last_page' => $paginated->lastPage(),
+            'last_page_url' => $paginated->url($paginated->lastPage()),
+            'links' => $paginated->linkCollection()->toArray(),
+            'next_page_url' => $paginated->nextPageUrl(),
+            'path' => $paginated->path(),
+            'per_page' => $paginated->perPage(),
+            'prev_page_url' => $paginated->previousPageUrl(),
+            'to' => $paginated->lastItem(),
+            'total' => $paginated->total(),
+        ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StorePartnerRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'city' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:255',
-            'mobile' => 'nullable|string|max:255',
-            'address' => 'nullable|string|max:500',
-            'montage_price' => 'nullable|numeric|min:0',
-            'alignment_price' => 'nullable|numeric|min:0',
-        ]);
+        $partner = $this->partnerService->create(
+            $request->validated(),
+            $request->user(),
+        );
 
-        $partner = Partner::create(array_merge($validated, ['user_id' => $request->user()->id]));
-        return response()->json($partner, 201);
+        return response()->json((new PartnerResource($partner))->resolve($request), 201);
     }
 
     public function show(Partner $partner): JsonResponse
     {
-        return response()->json($partner);
+        return response()->json((new PartnerResource($partner))->resolve(request()));
     }
 
-    public function update(Request $request, Partner $partner): JsonResponse
+    public function update(UpdatePartnerRequest $request, Partner $partner): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'city' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:255',
-            'mobile' => 'nullable|string|max:255',
-            'address' => 'nullable|string|max:500',
-            'montage_price' => 'nullable|numeric|min:0',
-            'alignment_price' => 'nullable|numeric|min:0',
-        ]);
+        $partner = $this->partnerService->update($partner, $request->validated());
 
-        $partner->update($validated);
-        return response()->json($partner);
+        return response()->json((new PartnerResource($partner))->resolve($request));
     }
 
     public function destroy(Partner $partner): JsonResponse
     {
-        $partner->delete();
+        $this->partnerService->delete($partner);
+
         return response()->json(null, 204);
     }
 }

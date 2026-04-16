@@ -28,7 +28,7 @@ class Account extends Model
     /**
      * Transactions belonging to this account.
      */
-    public function transactions(): HasMany
+    public function transactions()
     {
         return $this->hasMany(Transaction::class);
     }
@@ -37,7 +37,7 @@ class Account extends Model
      * Computed current balance: initial_balance + settled income - settled expenses.
      * Excludes future-dated Chèque/Effet payments (écheance not yet reached).
      */
-    public function getCurrentBalanceAttribute(): float
+    public function getCurrentBalanceAttribute()
     {
         $income = $this->transactions()->settled()->where('type', 'income')->sum('amount');
         $expense = $this->transactions()->settled()->where('type', 'expense')->sum('amount');
@@ -48,7 +48,7 @@ class Account extends Model
     /**
      * Expected balance: current balance + pending (future Chèque/Effet) net flow.
      */
-    public function getExpectedBalanceAttribute(): float
+    public function getExpectedBalanceAttribute()
     {
         $pendingIncome = $this->transactions()->pending()->where('type', 'income')->sum('amount');
         $pendingExpense = $this->transactions()->pending()->where('type', 'expense')->sum('amount');

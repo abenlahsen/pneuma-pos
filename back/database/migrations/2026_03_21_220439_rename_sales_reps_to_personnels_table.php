@@ -9,7 +9,7 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
         Schema::rename('sales_reps', 'personnels');
 
@@ -21,7 +21,7 @@ return new class extends Migration
     /**
      * Reverse the migrations.
      */
-    public function down(): void
+    public function down()
     {
         Schema::table('personnels', function (Blueprint $table) {
             //

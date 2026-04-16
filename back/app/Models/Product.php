@@ -23,27 +23,27 @@ class Product extends Model
         'is_active' => 'boolean',
     ];
 
-    public function brand(): BelongsTo
+    public function brand()
     {
         return $this->belongsTo(Brand::class);
     }
 
-    public function stocks(): HasMany
+    public function stocks()
     {
         return $this->hasMany(Stock::class);
     }
 
-    public function tyre(): HasOne
+    public function tyre()
     {
         return $this->hasOne(ProductTyre::class);
     }
 
-    public function part(): HasOne
+    public function part()
     {
         return $this->hasOne(ProductPart::class);
     }
 
-    public function service(): HasOne
+    public function service()
     {
         return $this->hasOne(ProductService::class);
     }
@@ -51,13 +51,17 @@ class Product extends Model
     /**
      * Return the sub-model matching this product's type.
      */
-    public function details(): ?Model
+    public function details()
     {
-        return match ($this->type) {
-            'tyre' => $this->tyre,
-            'part' => $this->part,
-            'service' => $this->service,
-            default => null,
-        };
+        switch ($this->type) {
+            case 'tyre':
+                return $this->tyre;
+            case 'part':
+                return $this->part;
+            case 'service':
+                return $this->service;
+            default:
+                return null;
+        }
     }
 }

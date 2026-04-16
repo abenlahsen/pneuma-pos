@@ -49,10 +49,10 @@ class PaymentController extends Controller
             'amount' => $validated['amount'],
             'type' => 'income',
             'category' => 'Produit',
-            'method' => $validated['method'] ?? null,
+            'method' => isset($validated['method']) ? $validated['method'] : null,
             'description' => "Paiement vente #{$sale->id} - {$sale->total_quantity} X " . $this->describeSaleProduct($sale) . " POUR {$sale->client}",
             'person' => '',
-            'partner' => $sale->client ?? '',
+            'partner' => isset($sale->client) ? $sale->client : '',
             'user_id' => $request->user()->id,
             'account_id' => $validated['account_id'],
         ]);
@@ -94,7 +94,7 @@ class PaymentController extends Controller
     /**
      * Build a human-readable description of the products in a sale (joined for multi-item sales).
      */
-    private function describeSaleProduct(Sale $sale): string
+    private function describeSaleProduct(Sale $sale)
     {
         $sale->loadMissing('items.linkedProduct.brand', 'items.linkedProduct.tyre');
 
@@ -103,12 +103,12 @@ class PaymentController extends Controller
             if (!$product) {
                 return null;
             }
-            $brand = $product->brand?->name ?? '';
+            $brand = $product->brand ? $product->brand->name : '';
             $tyre = $product->tyre;
             $dimension = $tyre && $tyre->tire_width
                 ? "{$tyre->tire_width}/{$tyre->tire_height}R{$tyre->tire_diameter}"
                 : '';
-            $profile = $product->profile ?? '';
+            $profile = isset($product->profile) ? $product->profile : '';
 
             return trim(implode(' ', array_filter([$brand, $profile, $dimension])));
         })->filter()->values();

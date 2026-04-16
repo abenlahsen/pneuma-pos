@@ -12,7 +12,7 @@ class ImportStockCommand extends Command
 
     protected $description = 'Import stock from an Excel file';
 
-    public function handle(): int
+    public function handle()
     {
         $path = $this->argument('file');
 
@@ -71,7 +71,7 @@ class ImportStockCommand extends Command
         return self::SUCCESS;
     }
 
-    private static function normalizeDepot(string $value): ?string
+    private static function normalizeDepot($value)
     {
         $v = trim($value);
         if ($v === '') return null;

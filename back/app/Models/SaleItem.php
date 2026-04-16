@@ -33,17 +33,17 @@ class SaleItem extends Model
         'margin' => 'decimal:2',
     ];
 
-    public function sale(): BelongsTo
+    public function sale()
     {
         return $this->belongsTo(Sale::class);
     }
 
-    public function linkedProduct(): BelongsTo
+    public function linkedProduct()
     {
         return $this->belongsTo(Product::class, 'product_id');
     }
 
-    public function stock(): BelongsTo
+    public function stock()
     {
         return $this->belongsTo(Stock::class);
     }

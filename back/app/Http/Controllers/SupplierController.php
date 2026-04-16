@@ -2,19 +2,43 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreSupplierRequest;
-use App\Http\Requests\UpdateSupplierRequest;
+use App\Domain\Suppliers\SupplierService;
+use App\Http\Requests\Suppliers\StoreSupplierRequest;
+use App\Http\Requests\Suppliers\UpdateSupplierRequest;
+use App\Http\Resources\Suppliers\SupplierResource;
 use App\Models\Supplier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class SupplierController extends Controller
 {
+    /**
+     * @var SupplierService
+     */
+    private $supplierService;
+
+    /**
+     * @param SupplierService $supplierService
+     */
+    public function __construct(SupplierService $supplierService)
+    {
+        $this->supplierService = $supplierService;
+    }
+    
     public function index(Request $request): JsonResponse
     {
         $query = Supplier::query();
 
-        // Sorting
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('contact_person', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
         $sortable = ['name', 'contact_person', 'phone', 'email', 'created_at'];
         if ($request->filled('sort_by') && in_array($request->sort_by, $sortable)) {
             $direction = $request->get('sort_direction', 'asc') === 'desc' ? 'desc' : 'asc';
@@ -23,48 +47,55 @@ class SupplierController extends Controller
             $query->latest('created_at');
         }
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('contact_person', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
         if ($request->boolean('all')) {
-            return response()->json($query->get());
+            return response()->json(SupplierResource::collection($query->get())->resolve($request));
         }
 
-        $suppliers = $query->paginate($request->get('per_page', 20));
-        return response()->json($suppliers);
+        $paginated = $query->paginate($request->get('per_page', 20));
+
+        return response()->json([
+            'current_page' => $paginated->currentPage(),
+            'data' => SupplierResource::collection($paginated->items())->resolve($request),
+            'first_page_url' => $paginated->url(1),
+            'from' => $paginated->firstItem(),
+            'last_page' => $paginated->lastPage(),
+            'last_page_url' => $paginated->url($paginated->lastPage()),
+            'links' => $paginated->linkCollection()->toArray(),
+            'next_page_url' => $paginated->nextPageUrl(),
+            'path' => $paginated->path(),
+            'per_page' => $paginated->perPage(),
+            'prev_page_url' => $paginated->previousPageUrl(),
+            'to' => $paginated->lastItem(),
+            'total' => $paginated->total(),
+        ]);
     }
 
     public function store(StoreSupplierRequest $request): JsonResponse
     {
-        $supplier = Supplier::create(array_merge(
+        $supplier = $this->supplierService->create(
             $request->validated(),
-            ['user_id' => $request->user()->id]
-        ));
+            $request->user(),
+        );
 
-        return response()->json($supplier, 201);
+        return response()->json((new SupplierResource($supplier))->resolve($request), 201);
     }
 
     public function show(Supplier $supplier): JsonResponse
     {
-        return response()->json($supplier);
+        return response()->json((new SupplierResource($supplier))->resolve(request()));
     }
 
     public function update(UpdateSupplierRequest $request, Supplier $supplier): JsonResponse
     {
-        $supplier->update($request->validated());
-        return response()->json($supplier);
+        $supplier = $this->supplierService->update($supplier, $request->validated());
+
+        return response()->json((new SupplierResource($supplier))->resolve($request));
     }
 
     public function destroy(Supplier $supplier): JsonResponse
     {
-        $supplier->delete();
+        $this->supplierService->delete($supplier);
+
         return response()->json(null, 204);
     }
 }

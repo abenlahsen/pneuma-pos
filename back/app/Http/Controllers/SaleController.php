@@ -14,8 +14,17 @@ use Illuminate\Http\Request;
 
 class SaleController extends Controller
 {
-    public function __construct(private readonly StockMovementService $movements)
+    /**
+     * @var StockMovementService
+     */
+    private $movements;
+
+    /**
+     * @param StockMovementService $movements
+     */
+    public function __construct(StockMovementService $movements)
     {
+        $this->movements = $movements;
     }
 
     /**
@@ -37,7 +46,7 @@ class SaleController extends Controller
         // Filter by text search
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('client', 'like', "%{$search}%")
                   ->orWhere('comments', 'like', "%{$search}%")
                   ->orWhereHas('items.linkedProduct', function ($q2) use ($search) {
@@ -77,7 +86,7 @@ class SaleController extends Controller
 
         // Filter by partner relationship
         if ($request->filled('partner')) {
-            $query->whereHas('partner', function($q) use ($request) {
+            $query->whereHas('partner', function ($q) use ($request) {
                 $q->where('name', $request->partner);
             });
         }
@@ -318,7 +327,7 @@ class SaleController extends Controller
      */
     public function destroy(Request $request, Sale $sale): JsonResponse
     {
-        $userId = $request->user()?->id;
+        $userId = $request->user() ? $request->user()->id : null;
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($sale, $userId) {
             // Restore stock quantity for all items (unless sale was already cancelled)

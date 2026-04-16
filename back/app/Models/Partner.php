@@ -26,7 +26,7 @@ class Partner extends Model
         'alignment_price' => 'decimal:2',
     ];
 
-    public function user(): BelongsTo
+    public function user()
     {
         return $this->belongsTo(User::class);
     }

@@ -25,22 +25,22 @@ class PurchaseItem extends Model
 
     protected $appends = ['total_price'];
 
-    public function getTotalPriceAttribute(): float
+    public function getTotalPriceAttribute()
     {
         return round($this->quantity * $this->unit_price, 2);
     }
 
-    public function purchase(): BelongsTo
+    public function purchase()
     {
         return $this->belongsTo(Purchase::class);
     }
 
-    public function linkedProduct(): BelongsTo
+    public function linkedProduct()
     {
         return $this->belongsTo(Product::class, 'product_id');
     }
 
-    public function stock(): BelongsTo
+    public function stock()
     {
         return $this->belongsTo(Stock::class);
     }

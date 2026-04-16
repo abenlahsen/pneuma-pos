@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
@@ -63,7 +63,7 @@ return new class extends Migration
         });
     }
 
-    public function down(): void
+    public function down()
     {
         Schema::table('sales', function (Blueprint $table) {
             if (Schema::hasColumn('sales', 'stock_id')) {

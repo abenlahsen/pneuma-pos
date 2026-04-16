@@ -37,17 +37,17 @@ class StockMovement extends Model
         'reference_id' => 'integer',
     ];
 
-    public function stock(): BelongsTo
+    public function stock()
     {
         return $this->belongsTo(Stock::class);
     }
 
-    public function product(): BelongsTo
+    public function product()
     {
         return $this->belongsTo(Product::class);
     }
 
-    public function user(): BelongsTo
+    public function user()
     {
         return $this->belongsTo(User::class);
     }

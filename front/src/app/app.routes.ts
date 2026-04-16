@@ -52,21 +52,21 @@ export const routes: Routes = [
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view suppliers' },
     loadComponent: () =>
-      import('./features/suppliers/suppliers.component').then((m) => m.SuppliersComponent),
+      import('./features/suppliers/pages/suppliers-page.component').then((m) => m.SuppliersPageComponent),
   },
   {
     path: 'carriers',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view carriers' },
     loadComponent: () =>
-      import('./features/carriers/carriers.component').then((m) => m.CarriersComponent),
+      import('./features/carriers/pages/carriers-page.component').then((m) => m.CarriersPageComponent),
   },
   {
     path: 'partners',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view partners' },
     loadComponent: () =>
-      import('./features/partners/partners.component').then((m) => m.PartnersComponent),
+      import('./features/partners/pages/partners-page.component').then((m) => m.PartnersPageComponent),
   },
   {
     path: 'achats',
@@ -94,7 +94,7 @@ export const routes: Routes = [
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view brands' },
     loadComponent: () =>
-      import('./features/brands/brands.component').then((m) => m.BrandsComponent),
+      import('./features/brands/pages/brands-page.component').then((m) => m.BrandsPageComponent),
   },
   {
     path: 'roles',

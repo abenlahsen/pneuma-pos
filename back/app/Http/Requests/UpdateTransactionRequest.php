@@ -9,7 +9,7 @@ class UpdateTransactionRequest extends FormRequest
     /**
      * Determine if the user is authorized to make this request.
      */
-    public function authorize(): bool
+    public function authorize()
     {
         return true;
     }
@@ -17,34 +17,15 @@ class UpdateTransactionRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      */
-    public function rules(): array
+    public function rules()
     {
         return [
-            'date' => ['sometimes', 'required', 'date'],
-            'amount' => ['sometimes', 'required', 'numeric', 'min:0.01'],
-            'type' => ['sometimes', 'required', 'in:income,expense'],
-            'category' => ['nullable', 'string', 'max:100'],
-            'method' => ['nullable', 'string', 'max:50'],
-            'description' => ['sometimes', 'required', 'string', 'max:1000'],
-            'person' => ['nullable', 'string', 'max:100'],
-            'partner' => ['nullable', 'string', 'max:255'],
             'account_id' => ['sometimes', 'required', 'exists:accounts,id'],
-        ];
-    }
-
-    /**
-     * Custom attribute names for error messages.
-     */
-    public function attributes(): array
-    {
-        return [
-            'date' => 'date',
-            'amount' => 'montant',
-            'type' => 'type',
-            'category' => 'catégorie',
-            'description' => 'description',
-            'person' => 'personne',
-            'partner' => 'partenaire',
+            'type' => ['sometimes', 'required', 'in:credit,debit'],
+            'amount' => ['sometimes', 'required', 'numeric', 'min:0'],
+            'date' => ['sometimes', 'required', 'date'],
+            'description' => ['nullable', 'string'],
+            'reference' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

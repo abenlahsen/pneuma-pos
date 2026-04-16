@@ -36,7 +36,7 @@ class ProductTyre extends Model
         'eu_noise_db' => 'integer',
     ];
 
-    public function product(): BelongsTo
+    public function product()
     {
         return $this->belongsTo(Product::class);
     }

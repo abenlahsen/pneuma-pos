@@ -11,8 +11,17 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class StockController extends Controller
 {
-    public function __construct(private readonly StockMovementService $movements)
+    /**
+     * @var StockMovementService
+     */
+    private $movements;
+
+    /**
+     * @param StockMovementService $movements
+     */
+    public function __construct(StockMovementService $movements)
     {
+        $this->movements = $movements;
     }
 
     public function index(Request $request): JsonResponse
@@ -187,7 +196,7 @@ class StockController extends Controller
 
     public function destroy(Request $request, Stock $stock): JsonResponse
     {
-        $userId = $request->user()?->id;
+        $userId = $request->user() ? $request->user()->id : null;
 
         DB::transaction(function () use ($stock, $userId) {
             $this->movements->recordDeletion($stock, $userId);
@@ -231,12 +240,20 @@ class StockController extends Controller
         }
 
         if ($request->filled('brand')) {
-            $query->whereHas('product.brand', fn ($bq) => $bq->where('name', $request->brand));
+            $query->whereHas('product.brand', function ($bq) use ($request) {
+                $bq->where('name', $request->brand);
+            });
         }
-        if ($request->filled('depot')) $query->where('depot', $request->depot);
-        if ($request->boolean('in_stock')) $query->where('quantity', '>', 0);
+        if ($request->filled('depot')) {
+            $query->where('depot', $request->depot);
+        }
+        if ($request->boolean('in_stock')) {
+            $query->where('quantity', '>', 0);
+        }
         if ($request->boolean('rft')) {
-            $query->whereHas('product.tyre', fn ($tq) => $tq->where('tire_runflat', true));
+            $query->whereHas('product.tyre', function ($tq) {
+                $tq->where('tire_runflat', true);
+            });
         }
 
         // selling_price now comes from product via join
@@ -317,7 +334,11 @@ class StockController extends Controller
         ]);
     }
 
-    private static function normalizeDepot(string $value): ?string
+    /**
+     * @param string $value
+     * @return string|null
+     */
+    private static function normalizeDepot($value)
     {
         $v = trim($value);
         if ($v === '') return null;

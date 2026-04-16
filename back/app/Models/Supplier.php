@@ -22,7 +22,7 @@ class Supplier extends Model
     /**
      * The user who created this supplier.
      */
-    public function user(): BelongsTo
+    public function user()
     {
         return $this->belongsTo(User::class);
     }
