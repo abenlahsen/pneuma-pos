@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
         $jsonPath = database_path('data/stock_seed.json');
 
@@ -32,7 +32,7 @@ return new class extends Migration
         }
     }
 
-    public function down(): void
+    public function down()
     {
         // Only delete stock that has no user_id (seeded data)
         DB::table('stocks')->whereNull('user_id')->delete();

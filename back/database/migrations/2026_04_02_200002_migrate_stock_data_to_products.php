@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
         // 1. Auto-create Brand records from distinct stock brand strings
         $brands = DB::table('stocks')
@@ -48,7 +48,9 @@ return new class extends Migration
             if ($stock->iv) $ref .= strtoupper($stock->iv);
             if ($stock->rft) $ref .= 'RF';
             if ($stock->profile) {
-                $initials = implode('', array_map(fn($w) => strtoupper(mb_substr($w, 0, 1)), preg_split('/\s+/', trim($stock->profile))));
+                $initials = implode('', array_map(function ($w) {
+                    return strtoupper(mb_substr($w, 0, 1));
+                }, preg_split('/\s+/', trim($stock->profile))));
                 if ($initials) $ref .= '-' . $initials;
             }
 
@@ -110,7 +112,7 @@ return new class extends Migration
         });
     }
 
-    public function down(): void
+    public function down()
     {
         // Re-add dropped columns to stocks
         Schema::table('stocks', function (Blueprint $table) {
@@ -145,7 +147,7 @@ return new class extends Migration
             }
 
             DB::table('stocks')->where('id', $stock->id)->update([
-                'brand' => $brand?->name,
+                'brand' => $brand ? $brand->name : null,
                 'profile' => $product->profile,
                 'dimension' => $dimension ?: null,
                 'width' => $product->tire_width,

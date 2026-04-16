@@ -9,7 +9,7 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
         if (Schema::hasColumn('sales', 'supplier_id')) {
             Schema::table('sales', function (Blueprint $table) {
@@ -22,7 +22,7 @@ return new class extends Migration
     /**
      * Reverse the migrations.
      */
-    public function down(): void
+    public function down()
     {
         Schema::table('sales', function (Blueprint $table) {
             $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->nullOnDelete();

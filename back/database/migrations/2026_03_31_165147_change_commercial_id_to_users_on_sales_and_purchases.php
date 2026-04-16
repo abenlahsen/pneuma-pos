@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
         // Step 1: Drop old FK constraints first
         Schema::table('sales', function (Blueprint $table) {
@@ -72,7 +72,7 @@ return new class extends Migration
         });
     }
 
-    public function down(): void
+    public function down()
     {
         Schema::table('sales', function (Blueprint $table) {
             $table->dropForeign(['commercial_id']);

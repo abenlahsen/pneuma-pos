@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
         Schema::create('product_tyres', function (Blueprint $table) {
             $table->unsignedBigInteger('product_id')->primary();
@@ -75,7 +75,7 @@ return new class extends Migration
         });
     }
 
-    public function down(): void
+    public function down()
     {
         // Restore columns on products
         Schema::table('products', function (Blueprint $table) {

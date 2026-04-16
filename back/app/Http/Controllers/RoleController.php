@@ -2,12 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Roles\RoleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
+    /**
+     * @var RoleService
+     */
+    private $roleService;
+
+    /**
+     * @param RoleService $roleService
+     */
+    public function __construct(RoleService $roleService)
+    {
+        $this->roleService = $roleService;
+    }
+
     public function index(Request $request): JsonResponse
     {
         $query = Role::with('permissions');
@@ -27,13 +41,9 @@ class RoleController extends Controller
             'permissions.*' => 'integer|exists:permissions,id',
         ]);
 
-        $role = Role::create(['name' => $request->name, 'guard_name' => 'web']);
+        $role = $this->roleService->create($request);
 
-        if ($request->has('permissions')) {
-            $role->syncPermissions($request->permissions);
-        }
-
-        return response()->json($role->load('permissions'), 201);
+        return response()->json($role, 201);
     }
 
     public function show(Role $role): JsonResponse
@@ -49,36 +59,23 @@ class RoleController extends Controller
             'permissions.*' => 'integer|exists:permissions,id',
         ]);
 
-        if ($role->name === 'Administrator' && $request->name !== 'Administrator') {
-            return response()->json([
-                'message' => 'Le rôle Administrator ne peut pas être renommé.',
-            ], 422);
+        $updatedRole = $this->roleService->update($request, $role);
+
+        if ($updatedRole instanceof JsonResponse) {
+            return $updatedRole;
         }
 
-        $role->update(['name' => $request->name]);
-
-        if ($request->has('permissions')) {
-            $role->syncPermissions($request->permissions);
-        }
-
-        return response()->json($role->load('permissions'));
+        return response()->json($updatedRole);
     }
 
     public function destroy(Role $role): JsonResponse
     {
-        if ($role->name === 'Administrator') {
-            return response()->json([
-                'message' => 'Le rôle Administrator ne peut pas être supprimé.',
-            ], 422);
+        $response = $this->roleService->delete($role);
+
+        if ($response instanceof JsonResponse) {
+            return $response;
         }
 
-        if ($role->users()->exists()) {
-            return response()->json([
-                'message' => 'Ce rôle est attribué à un ou plusieurs utilisateurs.',
-            ], 422);
-        }
-
-        $role->delete();
         return response()->json(null, 204);
     }
 
@@ -89,8 +86,8 @@ class RoleController extends Controller
             'permissions.*' => 'integer|exists:permissions,id',
         ]);
 
-        $role->syncPermissions($request->permissions);
+        $updatedRole = $this->roleService->assignPermissions($request, $role);
 
-        return response()->json($role->load('permissions'));
+        return response()->json($updatedRole);
     }
 }

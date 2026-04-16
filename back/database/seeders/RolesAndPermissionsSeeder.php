@@ -8,7 +8,7 @@ use Spatie\Permission\Models\Role;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
-    public function run(): void
+    public function run()
     {
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
@@ -103,7 +103,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Assign Administrator role to admin user if exists
         $adminUser = \App\Models\User::where('email', 'admin@pneuma.pos')->first();
-        if ($adminUser && !$adminUser->hasRole('Administrator')) {
+        if ($adminUser && ! $adminUser->hasRole('Administrator')) {
             $adminUser->assignRole('Administrator');
         }
     }

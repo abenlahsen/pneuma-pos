@@ -9,7 +9,7 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
         Schema::table('products', function (Blueprint $table) {
             $table->dropColumn(['price', 'selling_price', 'special_selling_price']);
@@ -19,7 +19,7 @@ return new class extends Migration
     /**
      * Reverse the migrations.
      */
-    public function down(): void
+    public function down()
     {
         Schema::table('products', function (Blueprint $table) {
             $table->decimal('price', 10, 2)->nullable()->after('description');

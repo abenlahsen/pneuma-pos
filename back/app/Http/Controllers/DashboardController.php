@@ -15,7 +15,7 @@ class DashboardController extends Controller
     /**
      * Aggregated KPI snapshot for the admin dashboard.
      */
-    public function kpi(): JsonResponse
+    public function kpi()
     {
         $today = now()->toDateString();
         $monthStart = now()->startOfMonth()->toDateString();

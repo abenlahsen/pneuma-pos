@@ -9,7 +9,12 @@ use App\Models\StockMovement;
 
 class StockMovementService
 {
-    public function recordAutoCreate(Stock $stock, ?int $userId): void
+    /**
+     * @param  Stock  $stock
+     * @param  int|null  $userId
+     * @return void
+     */
+    public function recordAutoCreate($stock, $userId)
     {
         $this->insert([
             'stock_id' => $stock->id,
@@ -22,7 +27,12 @@ class StockMovementService
         ]);
     }
 
-    public function recordInitial(Stock $stock, ?int $userId): void
+    /**
+     * @param  Stock  $stock
+     * @param  int|null  $userId
+     * @return void
+     */
+    public function recordInitial($stock, $userId)
     {
         $after = (int) $stock->quantity;
 
@@ -37,7 +47,13 @@ class StockMovementService
         ]);
     }
 
-    public function recordImport(Stock $stock, int $qtyAfter, ?int $userId): void
+    /**
+     * @param  Stock  $stock
+     * @param  int  $qtyAfter
+     * @param  int|null  $userId
+     * @return void
+     */
+    public function recordImport($stock, $qtyAfter, $userId)
     {
         $this->insert([
             'stock_id' => $stock->id,
@@ -51,7 +67,15 @@ class StockMovementService
         ]);
     }
 
-    public function recordAdjustment(Stock $stock, int $before, int $after, string $reason, ?int $userId): void
+    /**
+     * @param  Stock  $stock
+     * @param  int  $before
+     * @param  int  $after
+     * @param  string  $reason
+     * @param  int|null  $userId
+     * @return void
+     */
+    public function recordAdjustment($stock, $before, $after, $reason, $userId)
     {
         $this->insert([
             'stock_id' => $stock->id,
@@ -65,7 +89,12 @@ class StockMovementService
         ]);
     }
 
-    public function recordDeletion(Stock $stock, ?int $userId): void
+    /**
+     * @param  Stock  $stock
+     * @param  int|null  $userId
+     * @return void
+     */
+    public function recordDeletion($stock, $userId)
     {
         $before = (int) $stock->quantity;
 
@@ -80,7 +109,16 @@ class StockMovementService
         ]);
     }
 
-    public function recordSaleOut(int $stockId, ?int $productId, int $before, int $after, int $saleId, ?int $userId): void
+    /**
+     * @param  int  $stockId
+     * @param  int|null  $productId
+     * @param  int  $before
+     * @param  int  $after
+     * @param  int  $saleId
+     * @param  int|null  $userId
+     * @return void
+     */
+    public function recordSaleOut($stockId, $productId, $before, $after, $saleId, $userId)
     {
         $this->insert([
             'stock_id' => $stockId,
@@ -95,7 +133,16 @@ class StockMovementService
         ]);
     }
 
-    public function recordSaleIn(int $stockId, ?int $productId, int $before, int $after, int $saleId, ?int $userId): void
+    /**
+     * @param  int  $stockId
+     * @param  int|null  $productId
+     * @param  int  $before
+     * @param  int  $after
+     * @param  int  $saleId
+     * @param  int|null  $userId
+     * @return void
+     */
+    public function recordSaleIn($stockId, $productId, $before, $after, $saleId, $userId)
     {
         $this->insert([
             'stock_id' => $stockId,
@@ -110,7 +157,16 @@ class StockMovementService
         ]);
     }
 
-    public function recordPurchaseIn(int $stockId, ?int $productId, int $before, int $after, int $purchaseId, ?int $userId): void
+    /**
+     * @param  int  $stockId
+     * @param  int|null  $productId
+     * @param  int  $before
+     * @param  int  $after
+     * @param  int  $purchaseId
+     * @param  int|null  $userId
+     * @return void
+     */
+    public function recordPurchaseIn($stockId, $productId, $before, $after, $purchaseId, $userId)
     {
         $this->insert([
             'stock_id' => $stockId,
@@ -125,7 +181,16 @@ class StockMovementService
         ]);
     }
 
-    public function recordPurchaseOut(int $stockId, ?int $productId, int $before, int $after, int $purchaseId, ?int $userId): void
+    /**
+     * @param  int  $stockId
+     * @param  int|null  $productId
+     * @param  int  $before
+     * @param  int  $after
+     * @param  int  $purchaseId
+     * @param  int|null  $userId
+     * @return void
+     */
+    public function recordPurchaseOut($stockId, $productId, $before, $after, $purchaseId, $userId)
     {
         $this->insert([
             'stock_id' => $stockId,
@@ -140,7 +205,11 @@ class StockMovementService
         ]);
     }
 
-    private function insert(array $attributes): void
+    /**
+     * @param  array<string, mixed>  $attributes
+     * @return void
+     */
+    private function insert($attributes)
     {
         StockMovement::create($attributes);
     }

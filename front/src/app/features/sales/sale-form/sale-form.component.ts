@@ -7,10 +7,10 @@ import { Product } from '../../../core/models/product.model';
 import { ProductService } from '../../../core/services/product.service';
 import { UserService } from '../../../core/services/user.service';
 import { ManagedUser } from '../../../core/models/user-manage.model';
-import { Carrier } from '../../../core/models/carrier.model';
-import { CarrierService } from '../../../core/services/carrier.service';
-import { Partner } from '../../../core/models/partner.model';
-import { PartnerService } from '../../../core/services/partner.service';
+import { Carrier } from '../../carriers/models/carrier.model';
+import { CarrierService } from '../../carriers/data-access/carrier.service';
+import { Partner } from '../../partners/models/partner.model';
+import { PartnerService } from '../../partners/data-access/partner.service';
 import { Stock } from '../../../core/models/stock.model';
 import { StockService } from '../../../core/services/stock.service';
 

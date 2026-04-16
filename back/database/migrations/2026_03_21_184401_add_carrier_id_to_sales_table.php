@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
         Schema::table('sales', function (Blueprint $table) {
             $table->dropColumn('transport');
@@ -15,7 +15,7 @@ return new class extends Migration
         });
     }
 
-    public function down(): void
+    public function down()
     {
         Schema::table('sales', function (Blueprint $table) {
             $table->dropForeign(['carrier_id']);

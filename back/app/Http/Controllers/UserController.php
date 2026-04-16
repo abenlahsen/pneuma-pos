@@ -2,13 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Users\UserService;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
+    /**
+     * @var UserService
+     */
+    private $userService;
+
+    /**
+     * @param UserService $userService
+     */
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
+    
     public function index(Request $request): JsonResponse
     {
         $query = User::with('roles');
@@ -39,26 +52,13 @@ class UserController extends Controller
             'role' => 'nullable|string|exists:roles,name',
         ]);
 
-        $actor = $request->user();
-        if ($request->filled('role') && $request->role === 'Administrator' && ! $actor->hasRole('Administrator')) {
-            return response()->json([
-                'message' => 'Seul un Administrateur peut attribuer le rôle Administrator.',
-            ], 403);
+        $user = $this->userService->create($request);
+
+        if ($user instanceof JsonResponse) {
+            return $user;
         }
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'phone' => $request->phone,
-            'commission_rate' => $request->commission_rate,
-        ]);
-
-        if ($request->filled('role')) {
-            $user->assignRole($request->role);
-        }
-
-        return response()->json($user->load('roles'), 201);
+        return response()->json($user, 201);
     }
 
     public function show(User $user): JsonResponse
@@ -77,71 +77,23 @@ class UserController extends Controller
             'role' => 'nullable|string|exists:roles,name',
         ]);
 
-        $actor = $request->user();
+        $updatedUser = $this->userService->update($request, $user);
 
-        // H1: Only an Administrator can change a user's role. Prevent privilege
-        // escalation and last-admin lockout when demoting an administrator.
-        if ($request->has('role')) {
-            if (! $actor->hasRole('Administrator')) {
-                return response()->json([
-                    'message' => 'Seul un Administrateur peut modifier les rôles.',
-                ], 403);
-            }
-
-            $newRole = $request->filled('role') ? $request->role : null;
-            $wasAdmin = $user->hasRole('Administrator');
-            $willBeAdmin = $newRole === 'Administrator';
-
-            if ($wasAdmin && ! $willBeAdmin) {
-                $otherAdmins = User::role('Administrator')->where('id', '!=', $user->id)->count();
-                if ($otherAdmins === 0) {
-                    return response()->json([
-                        'message' => 'Impossible de retirer le dernier Administrateur.',
-                    ], 422);
-                }
-            }
+        if ($updatedUser instanceof JsonResponse) {
+            return $updatedUser;
         }
 
-        $data = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'commission_rate' => $request->commission_rate,
-        ];
-
-        if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->password);
-        }
-
-        $user->update($data);
-
-        if ($request->has('role')) {
-            $user->syncRoles($request->filled('role') ? [$request->role] : []);
-        }
-
-        return response()->json($user->load('roles'));
+        return response()->json($updatedUser);
     }
 
     public function destroy(Request $request, User $user): JsonResponse
     {
-        $actor = $request->user();
+        $response = $this->userService->delete($request, $user);
 
-        if ($actor->id === $user->id) {
-            return response()->json([
-                'message' => 'Vous ne pouvez pas supprimer votre propre compte.',
-            ], 422);
+        if ($response instanceof JsonResponse) {
+            return $response;
         }
 
-        if ($user->hasRole('Administrator')) {
-            $otherAdmins = User::role('Administrator')->where('id', '!=', $user->id)->count();
-            if ($otherAdmins === 0) {
-                return response()->json([
-                    'message' => 'Impossible de supprimer le dernier Administrateur.',
-                ], 422);
-            }
-        }
-
-        $user->delete();
         return response()->json(null, 204);
     }
 }

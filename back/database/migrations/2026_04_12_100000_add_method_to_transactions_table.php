@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
         Schema::table('transactions', function (Blueprint $table) {
             $table->string('method', 50)->nullable()->after('category');
@@ -24,7 +24,7 @@ return new class extends Migration
             ->update(['method' => 'Virement']);
     }
 
-    public function down(): void
+    public function down()
     {
         Schema::table('transactions', function (Blueprint $table) {
             $table->dropColumn('method');

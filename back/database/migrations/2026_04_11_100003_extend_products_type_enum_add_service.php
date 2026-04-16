@@ -5,12 +5,12 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
         DB::statement("ALTER TABLE products MODIFY COLUMN type ENUM('tyre','part','service') NOT NULL");
     }
 
-    public function down(): void
+    public function down()
     {
         // Safety: do not allow rollback if any service products exist
         $count = (int) DB::table('products')->where('type', 'service')->count();

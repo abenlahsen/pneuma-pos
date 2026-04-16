@@ -6,14 +6,14 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
         Schema::table('purchases', function (Blueprint $table) {
             $table->boolean('with_invoice')->default(false)->after('date');
         });
     }
 
-    public function down(): void
+    public function down()
     {
         Schema::table('purchases', function (Blueprint $table) {
             $table->dropColumn('with_invoice');

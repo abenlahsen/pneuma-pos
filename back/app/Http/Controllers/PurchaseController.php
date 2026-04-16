@@ -9,11 +9,21 @@ use App\Models\Supplier;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\StockMovementService;
+use Illuminate\Http\JsonResponse;
 
 class PurchaseController extends Controller
 {
-    public function __construct(private readonly StockMovementService $movements)
+    /**
+     * @var StockMovementService
+     */
+    private $movements;
+
+    /**
+     * @param StockMovementService $movements
+     */
+    public function __construct(StockMovementService $movements)
     {
+        $this->movements = $movements;
     }
 
     public function index(Request $request)
@@ -32,7 +42,7 @@ class PurchaseController extends Controller
         // Text search
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->whereHas('supplier', function ($q2) use ($search) {
                       $q2->where('name', 'like', "%{$search}%");
                   })
@@ -74,7 +84,7 @@ class PurchaseController extends Controller
         return $query->paginate($request->get('per_page', 20));
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'date' => 'required|date',
@@ -147,12 +157,12 @@ class PurchaseController extends Controller
         return response()->json($purchase->load(['items.linkedProduct.brand', 'items.linkedProduct.tyre', 'items.linkedProduct.part', 'items.linkedProduct.service', 'supplier', 'commercial']), 201);
     }
 
-    public function show(Purchase $purchase)
+    public function show(Purchase $purchase): JsonResponse
     {
         return response()->json($purchase->load(['items.linkedProduct.brand', 'items.linkedProduct.tyre', 'items.linkedProduct.part', 'items.linkedProduct.service', 'supplier', 'commercial']));
     }
 
-    public function update(Request $request, Purchase $purchase)
+    public function update(Request $request, Purchase $purchase): JsonResponse
     {
         $validated = $request->validate([
             'date' => 'required|date',
@@ -227,7 +237,7 @@ class PurchaseController extends Controller
             foreach ($itemsData as $itemData) {
                 $q = $itemData['quantity'] ?? 1;
                 $up = floatval($itemData['unit_price'] ?? 0);
-                
+
                 $purchase->items()->create([
                     'product_id' => $itemData['product_id'],
                     'stock_id' => $itemData['stock_id'],
@@ -256,9 +266,9 @@ class PurchaseController extends Controller
         return response()->json($purchase->load(['items.linkedProduct.brand', 'items.linkedProduct.tyre', 'items.linkedProduct.part', 'items.linkedProduct.service', 'supplier', 'commercial']));
     }
 
-    public function destroy(Request $request, Purchase $purchase)
+    public function destroy(Request $request, Purchase $purchase): JsonResponse
     {
-        $userId = $request->user()?->id;
+        $userId = $request->user() ? $request->user()->id : null;
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($purchase, $userId) {
             // Remove from stock (unless already cancelled/returned, which already decremented stock)
@@ -296,7 +306,7 @@ class PurchaseController extends Controller
         return response()->json(null, 204);
     }
 
-    public function summary(Request $request)
+    public function summary(Request $request): JsonResponse
     {
         $query = Purchase::query();
 
@@ -330,7 +340,7 @@ class PurchaseController extends Controller
         ]);
     }
 
-    public function filters()
+    public function filters(): JsonResponse
     {
         return response()->json([
             'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
@@ -341,8 +351,11 @@ class PurchaseController extends Controller
     /**
      * Services cannot be purchased — they represent labor, not inventory.
      * Returns a 422 JsonResponse if any item references a service product, otherwise null.
+     *
+     * @param array $items
+     * @return \Illuminate\Http\JsonResponse|null
      */
-    private function rejectServicePurchases(array $items): ?\Illuminate\Http\JsonResponse
+    private function rejectServicePurchases(array $items): ?JsonResponse
     {
         $productIds = collect($items)->pluck('product_id')->filter()->unique()->values();
         $serviceIds = \App\Models\Product::whereIn('id', $productIds)

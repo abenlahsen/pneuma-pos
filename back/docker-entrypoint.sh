@@ -10,5 +10,7 @@ if [ -z "$(grep '^APP_KEY=base64:' /var/www/.env 2>/dev/null)" ]; then
     php artisan key:generate --force 2>/dev/null || true
 fi
 
-exec "$@"
+# Ensure public storage is exposed for uploaded files
+php artisan storage:link 2>/dev/null || true
 
+exec "$@"

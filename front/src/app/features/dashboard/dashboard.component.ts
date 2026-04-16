@@ -28,9 +28,7 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.authService.fetchUser().subscribe({
-      next: (response) => this.user.set(response.user),
-    });
+    this.user.set(this.authService.user());
 
     if (this.authService.hasRole('Administrator')) {
       timer(0, environment.dashboardRefreshIntervalMs)

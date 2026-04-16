@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
         Schema::table('partners', function (Blueprint $table) {
             $table->string('mobile')->nullable()->after('phone');
@@ -14,7 +14,7 @@ return new class extends Migration
         });
     }
 
-    public function down(): void
+    public function down()
     {
         Schema::table('partners', function (Blueprint $table) {
             $table->dropColumn(['mobile', 'address']);

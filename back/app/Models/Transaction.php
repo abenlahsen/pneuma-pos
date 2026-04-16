@@ -32,7 +32,7 @@ class Transaction extends Model
     /**
      * The user who created this transaction.
      */
-    public function user(): BelongsTo
+    public function user()
     {
         return $this->belongsTo(User::class);
     }
@@ -40,7 +40,7 @@ class Transaction extends Model
     /**
      * The account this transaction belongs to.
      */
-    public function account(): BelongsTo
+    public function account()
     {
         return $this->belongsTo(Account::class);
     }
@@ -48,7 +48,7 @@ class Transaction extends Model
     /**
      * Scope to filter by type.
      */
-    public function scopeOfType($query, string $type)
+    public function scopeOfType($query, $type)
     {
         return $query->where('type', $type);
     }
@@ -56,7 +56,7 @@ class Transaction extends Model
     /**
      * Scope to filter by category.
      */
-    public function scopeOfCategory($query, string $category)
+    public function scopeOfCategory($query, $category)
     {
         return $query->where('category', $category);
     }
@@ -86,7 +86,7 @@ class Transaction extends Model
     /**
      * Scope to filter by date range.
      */
-    public function scopeDateBetween($query, ?string $from, ?string $to)
+    public function scopeDateBetween($query, $from, $to)
     {
         if ($from) {
             $query->where('date', '>=', $from);

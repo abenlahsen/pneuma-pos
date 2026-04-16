@@ -26,12 +26,12 @@ class Stock extends Model
         'purchase_price' => 'decimal:2',
     ];
 
-    public function product(): BelongsTo
+    public function product()
     {
         return $this->belongsTo(Product::class);
     }
 
-    public function user(): BelongsTo
+    public function user()
     {
         return $this->belongsTo(User::class);
     }
@@ -40,7 +40,7 @@ class Stock extends Model
      * Parse a search query into dimension parts and text terms.
      * Used to search stock via product dimensions.
      */
-    public static function parseSearchQuery(string $input): array
+    public static function parseSearchQuery($input)
     {
         $tokens = preg_split('/\s+/', trim($input));
         $result = ['width' => null, 'height' => null, 'diameter' => null, 'brand_prefix' => null, 'text' => []];

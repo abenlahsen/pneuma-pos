@@ -11,8 +11,17 @@ use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
-    public function __construct(private readonly StockMovementService $movements)
+    /**
+     * @var StockMovementService
+     */
+    private $movements;
+
+    /**
+     * @param StockMovementService $movements
+     */
+    public function __construct(StockMovementService $movements)
     {
+        $this->movements = $movements;
     }
 
     public function index(Request $request): JsonResponse
@@ -78,7 +87,7 @@ class ProductController extends Controller
     {
         $validated = $request->validate($this->validationRules());
 
-        $userId = $request->user()?->id;
+        $userId = $request->user() ? $request->user()->id : null;
 
         $product = DB::transaction(function () use ($validated, $userId) {
             $product = Product::create([
@@ -170,6 +179,9 @@ class ProductController extends Controller
 
     /**
      * Create or update the type-specific sub-row for a product.
+     *
+     * @param Product $product
+     * @param array $validated
      */
     private function upsertDetails(Product $product, array $validated): void
     {

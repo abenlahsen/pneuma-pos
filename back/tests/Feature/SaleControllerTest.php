@@ -2,46 +2,402 @@
 
 namespace Tests\Feature;
 
+use App\Models\Brand;
+use App\Models\Product;
 use App\Models\Sale;
+use App\Models\Stock;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Laravel\Sanctum\PersonalAccessToken;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 class SaleControllerTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
-    private User $user;
+    private $user;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        // Create roles and permissions needed for sales routes
-        foreach (['view sales', 'create sales', 'edit sales', 'delete sales'] as $perm) {
-            Permission::firstOrCreate(['name' => $perm, 'guard_name' => 'web']);
-        }
-        Role::firstOrCreate(['name' => 'Commercial', 'guard_name' => 'web']);
-        Role::firstOrCreate(['name' => 'Manager', 'guard_name' => 'web']);
-        $admin = Role::firstOrCreate(['name' => 'Administrator', 'guard_name' => 'web']);
-        $admin->syncPermissions(Permission::all());
+        $this->ensureTestTablesExist();
 
-        $this->user = User::factory()->create();
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        foreach (['view sales', 'create sales', 'edit sales', 'delete sales'] as $perm) {
+            Permission::findOrCreate($perm, 'web');
+        }
+
+        Role::findOrCreate('Commercial', 'web');
+        Role::findOrCreate('Manager', 'web');
+        $admin = Role::findOrCreate('Administrator', 'web');
+        $admin->syncPermissions(Permission::query()->get());
+
+        $this->user = User::query()->create([
+            'name' => 'Admin User',
+            'email' => fake()->unique()->safeEmail(),
+            'password' => 'password',
+            'phone' => '0600000000',
+            'commission_rate' => 0,
+            'must_change_password' => false,
+        ]);
+
         $this->user->assignRole($admin);
     }
 
-    private function authHeaders(): array
+    protected function ensureTestTablesExist()
     {
+        $this->ensureUsersTableExists();
+        $this->ensurePersonalAccessTokensTableExists();
+        $this->ensurePermissionTablesExist();
+        $this->ensureBrandsTableExists();
+        $this->ensureProductsTableExists();
+        $this->ensureProductSubtypeTablesExist();
+        $this->ensureCarriersTableExists();
+        $this->ensurePartnersTableExists();
+        $this->ensureSalesTableExists();
+        $this->ensureStocksTableExists();
+        $this->ensureSaleItemsTableExists();
+        $this->ensureStockMovementsTableExists();
+        $this->ensureTransactionsTableExists();
+        $this->ensurePaymentsTableExists();
+    }
+
+    protected function ensureUsersTableExists()
+    {
+        if (! Schema::hasTable('users')) {
+            Schema::create('users', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('email')->unique();
+                $table->timestamp('email_verified_at')->nullable();
+                $table->string('password');
+                $table->string('phone')->nullable();
+                $table->decimal('commission_rate', 8, 2)->default(0);
+                $table->boolean('must_change_password')->default(false);
+                $table->rememberToken();
+                $table->timestamps();
+            });
+        }
+    }
+
+    protected function ensurePersonalAccessTokensTableExists()
+    {
+        if (! Schema::hasTable('personal_access_tokens')) {
+            Schema::create('personal_access_tokens', function (Blueprint $table) {
+                $table->id();
+                $table->morphs('tokenable');
+                $table->string('name');
+                $table->string('token', 64)->unique();
+                $table->text('abilities')->nullable();
+                $table->timestamp('last_used_at')->nullable();
+                $table->timestamp('expires_at')->nullable();
+                $table->timestamps();
+            });
+        }
+    }
+
+    protected function ensurePermissionTablesExist()
+    {
+        if (! Schema::hasTable('permissions')) {
+            Schema::create('permissions', function (Blueprint $table) {
+                $table->bigIncrements('id');
+                $table->string('name');
+                $table->string('guard_name');
+                $table->timestamps();
+                $table->unique(['name', 'guard_name']);
+            });
+        }
+
+        if (! Schema::hasTable('roles')) {
+            Schema::create('roles', function (Blueprint $table) {
+                $table->bigIncrements('id');
+                $table->string('name');
+                $table->string('guard_name');
+                $table->timestamps();
+                $table->unique(['name', 'guard_name']);
+            });
+        }
+
+        if (! Schema::hasTable('model_has_permissions')) {
+            Schema::create('model_has_permissions', function (Blueprint $table) {
+                $table->unsignedBigInteger('permission_id');
+                $table->string('model_type');
+                $table->unsignedBigInteger('model_id');
+                $table->index(['model_id', 'model_type'], 'model_has_permissions_model_id_model_type_index');
+                $table->foreign('permission_id')
+                    ->references('id')
+                    ->on('permissions')
+                    ->onDelete('cascade');
+                $table->primary(['permission_id', 'model_id', 'model_type'], 'model_has_permissions_permission_model_type_primary');
+            });
+        }
+
+        if (! Schema::hasTable('model_has_roles')) {
+            Schema::create('model_has_roles', function (Blueprint $table) {
+                $table->unsignedBigInteger('role_id');
+                $table->string('model_type');
+                $table->unsignedBigInteger('model_id');
+                $table->index(['model_id', 'model_type'], 'model_has_roles_model_id_model_type_index');
+                $table->foreign('role_id')
+                    ->references('id')
+                    ->on('roles')
+                    ->onDelete('cascade');
+                $table->primary(['role_id', 'model_id', 'model_type'], 'model_has_roles_role_model_type_primary');
+            });
+        }
+
+        if (! Schema::hasTable('role_has_permissions')) {
+            Schema::create('role_has_permissions', function (Blueprint $table) {
+                $table->unsignedBigInteger('permission_id');
+                $table->unsignedBigInteger('role_id');
+                $table->foreign('permission_id')
+                    ->references('id')
+                    ->on('permissions')
+                    ->onDelete('cascade');
+                $table->foreign('role_id')
+                    ->references('id')
+                    ->on('roles')
+                    ->onDelete('cascade');
+                $table->primary(['permission_id', 'role_id'], 'role_has_permissions_permission_id_role_id_primary');
+            });
+        }
+    }
+
+    protected function ensureBrandsTableExists()
+    {
+        if (! Schema::hasTable('brands')) {
+            Schema::create('brands', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('logo')->nullable();
+                $table->boolean('is_active')->default(true);
+                $table->timestamps();
+            });
+        }
+    }
+
+    protected function ensureProductsTableExists()
+    {
+        if (! Schema::hasTable('products')) {
+            Schema::create('products', function (Blueprint $table) {
+                $table->id();
+                $table->string('profile')->nullable();
+                $table->string('reference')->nullable();
+                $table->string('type')->nullable();
+                $table->unsignedBigInteger('brand_id')->nullable();
+                $table->text('description')->nullable();
+                $table->string('unit')->nullable();
+                $table->boolean('is_active')->default(true);
+                $table->timestamps();
+            });
+        }
+    }
+
+    protected function ensureProductSubtypeTablesExist()
+    {
+        if (! Schema::hasTable('product_tyres')) {
+            Schema::create('product_tyres', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('product_id');
+                $table->timestamps();
+            });
+        }
+
+        if (! Schema::hasTable('product_parts')) {
+            Schema::create('product_parts', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('product_id');
+                $table->timestamps();
+            });
+        }
+
+        if (! Schema::hasTable('product_services')) {
+            Schema::create('product_services', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('product_id');
+                $table->timestamps();
+            });
+        }
+    }
+
+    protected function ensureCarriersTableExists()
+    {
+        if (! Schema::hasTable('carriers')) {
+            Schema::create('carriers', function (Blueprint $table) {
+                $table->id();
+                $table->string('name')->nullable();
+                $table->timestamps();
+            });
+        }
+    }
+
+    protected function ensurePartnersTableExists()
+    {
+        if (! Schema::hasTable('partners')) {
+            Schema::create('partners', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('city')->nullable();
+                $table->string('phone')->nullable();
+                $table->string('mobile')->nullable();
+                $table->string('address')->nullable();
+                $table->decimal('montage_price', 10, 2)->nullable();
+                $table->decimal('alignment_price', 10, 2)->nullable();
+                $table->unsignedBigInteger('user_id')->nullable();
+                $table->timestamps();
+            });
+        }
+    }
+
+    protected function ensureSalesTableExists()
+    {
+        if (! Schema::hasTable('sales')) {
+            Schema::create('sales', function (Blueprint $table) {
+                $table->id();
+                $table->date('date')->nullable();
+                $table->boolean('with_invoice')->default(false);
+                $table->integer('total_quantity')->default(0);
+                $table->decimal('total_purchase', 12, 2)->default(0);
+                $table->decimal('total_sale', 12, 2)->default(0);
+                $table->decimal('margin', 12, 2)->default(0);
+                $table->string('city')->nullable();
+                $table->unsignedBigInteger('carrier_id')->nullable();
+                $table->string('tracking_number')->nullable();
+                $table->unsignedBigInteger('partner_id')->nullable();
+                $table->string('service')->nullable();
+                $table->decimal('service_fee', 12, 2)->default(0);
+                $table->string('client')->nullable();
+                $table->string('client_phone')->nullable();
+                $table->string('payment_method')->nullable();
+                $table->unsignedBigInteger('commercial_id')->nullable();
+                $table->string('status')->nullable();
+                $table->string('payment_status')->nullable();
+                $table->date('delivery_date')->nullable();
+                $table->text('comments')->nullable();
+                $table->unsignedBigInteger('created_by')->nullable();
+                $table->unsignedBigInteger('updated_by')->nullable();
+                $table->timestamps();
+            });
+        }
+    }
+
+    protected function ensureStocksTableExists()
+    {
+        if (! Schema::hasTable('stocks')) {
+            Schema::create('stocks', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('product_id');
+                $table->string('made_in')->nullable();
+                $table->string('dot')->nullable();
+                $table->string('depot')->nullable();
+                $table->string('zone')->nullable();
+                $table->integer('quantity')->default(0);
+                $table->decimal('purchase_price', 12, 2)->default(0);
+                $table->unsignedBigInteger('user_id')->nullable();
+                $table->timestamps();
+            });
+        }
+    }
+
+    protected function ensureSaleItemsTableExists()
+    {
+        if (! Schema::hasTable('sale_items')) {
+            Schema::create('sale_items', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('sale_id');
+                $table->unsignedBigInteger('product_id')->nullable();
+                $table->unsignedBigInteger('stock_id')->nullable();
+                $table->integer('quantity')->default(0);
+                $table->decimal('purchase_price', 12, 2)->default(0);
+                $table->decimal('selling_price', 12, 2)->default(0);
+                $table->decimal('discount', 8, 2)->default(0);
+                $table->decimal('total_purchase', 12, 2)->default(0);
+                $table->decimal('total_sale', 12, 2)->default(0);
+                $table->decimal('margin', 12, 2)->default(0);
+                $table->timestamps();
+            });
+        }
+    }
+
+    protected function ensureStockMovementsTableExists()
+    {
+        if (! Schema::hasTable('stock_movements')) {
+            Schema::create('stock_movements', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('stock_id');
+                $table->unsignedBigInteger('product_id')->nullable();
+                $table->string('type');
+                $table->integer('quantity_before')->default(0);
+                $table->integer('quantity_after')->default(0);
+                $table->integer('delta')->default(0);
+                $table->string('reference_type')->nullable();
+                $table->unsignedBigInteger('reference_id')->nullable();
+                $table->string('reason')->nullable();
+                $table->unsignedBigInteger('user_id')->nullable();
+                $table->timestamps();
+            });
+        }
+    }
+
+    protected function ensureTransactionsTableExists()
+    {
+        if (! Schema::hasTable('transactions')) {
+            Schema::create('transactions', function (Blueprint $table) {
+                $table->id();
+                $table->date('date')->nullable();
+                $table->decimal('amount', 12, 2)->default(0);
+                $table->string('type')->nullable();
+                $table->string('category')->nullable();
+                $table->string('method')->nullable();
+                $table->string('description')->nullable();
+                $table->string('person')->nullable();
+                $table->string('partner')->nullable();
+                $table->unsignedBigInteger('user_id')->nullable();
+                $table->unsignedBigInteger('account_id')->nullable();
+                $table->unsignedBigInteger('transfer_id')->nullable();
+                $table->timestamps();
+            });
+        }
+    }
+
+    protected function ensurePaymentsTableExists()
+    {
+        if (! Schema::hasTable('payments')) {
+            Schema::create('payments', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('sale_id');
+                $table->unsignedBigInteger('transaction_id')->nullable();
+                $table->decimal('amount', 12, 2)->default(0);
+                $table->date('date')->nullable();
+                $table->string('method')->nullable();
+                $table->string('reference')->nullable();
+                $table->text('notes')->nullable();
+                $table->unsignedBigInteger('user_id')->nullable();
+                $table->timestamps();
+            });
+        }
+    }
+
+    private function authHeaders()
+    {
+        PersonalAccessToken::query()->delete();
+
         $token = $this->user->createToken('test')->plainTextToken;
 
         return ['Authorization' => "Bearer {$token}"];
     }
 
-    private function createSale(array $attributes = []): Sale
+    private function createSale($attributes = [])
     {
-        return Sale::create(array_merge([
+        return Sale::query()->create(array_merge([
             'date' => '2026-03-01',
             'client' => 'Client Test',
             'total_quantity' => 4,
@@ -55,25 +411,26 @@ class SaleControllerTest extends TestCase
         ], $attributes));
     }
 
-    private function createCommercial(string $name = 'Ali Commercial'): User
+    private function createCommercial($name = 'Ali Commercial')
     {
-        return User::factory()->create([
+        return User::query()->create([
             'name' => $name,
+            'email' => fake()->unique()->safeEmail(),
+            'password' => 'password',
+            'phone' => '0611111111',
+            'commission_rate' => 0,
+            'must_change_password' => false,
         ]);
     }
 
-    // -------------------------------------------------------
-    // index()
-    // -------------------------------------------------------
-
-    public function test_index_requires_authentication(): void
+    public function test_index_requires_authentication()
     {
         $response = $this->getJson('/api/sales');
 
         $response->assertStatus(401);
     }
 
-    public function test_index_returns_paginated_sales(): void
+    public function test_index_returns_paginated_sales()
     {
         $this->createSale();
         $this->createSale(['client' => 'Client 2']);
@@ -85,7 +442,7 @@ class SaleControllerTest extends TestCase
             ->assertJsonCount(2, 'data');
     }
 
-    public function test_index_eager_loads_commercial_relationship(): void
+    public function test_index_eager_loads_commercial_relationship()
     {
         $commercial = $this->createCommercial();
         $this->createSale(['commercial_id' => $commercial->id]);
@@ -97,7 +454,7 @@ class SaleControllerTest extends TestCase
             ->assertJsonPath('data.0.commercial.name', 'Ali Commercial');
     }
 
-    public function test_index_returns_null_commercial_when_not_set(): void
+    public function test_index_returns_null_commercial_when_not_set()
     {
         $this->createSale(['commercial_id' => null]);
 
@@ -107,7 +464,7 @@ class SaleControllerTest extends TestCase
             ->assertJsonPath('data.0.commercial', null);
     }
 
-    public function test_index_orders_by_id_descending(): void
+    public function test_index_orders_by_id_descending()
     {
         $sale1 = $this->createSale(['client' => 'First']);
         $sale2 = $this->createSale(['client' => 'Second']);
@@ -120,7 +477,7 @@ class SaleControllerTest extends TestCase
         $this->assertEquals($sale1->id, $data[1]['id']);
     }
 
-    public function test_index_filters_by_commercial_id(): void
+    public function test_index_filters_by_commercial_id()
     {
         $commercial = $this->createCommercial();
         $this->createSale(['commercial_id' => $commercial->id, 'client' => 'With commercial']);
@@ -133,7 +490,7 @@ class SaleControllerTest extends TestCase
             ->assertJsonPath('data.0.client', 'With commercial');
     }
 
-    public function test_index_filters_by_search(): void
+    public function test_index_filters_by_search()
     {
         $this->createSale(['client' => 'Alpha Corp']);
         $this->createSale(['client' => 'Beta Inc']);
@@ -145,7 +502,7 @@ class SaleControllerTest extends TestCase
             ->assertJsonPath('data.0.client', 'Alpha Corp');
     }
 
-    public function test_index_filters_by_date_range(): void
+    public function test_index_filters_by_date_range()
     {
         $this->createSale(['date' => '2026-01-15']);
         $this->createSale(['date' => '2026-03-20']);
@@ -156,11 +513,7 @@ class SaleControllerTest extends TestCase
             ->assertJsonCount(1, 'data');
     }
 
-    // -------------------------------------------------------
-    // show()
-    // -------------------------------------------------------
-
-    public function test_show_returns_sale_with_commercial(): void
+    public function test_show_returns_sale_with_commercial()
     {
         $commercial = $this->createCommercial();
         $sale = $this->createSale(['commercial_id' => $commercial->id]);
@@ -173,7 +526,7 @@ class SaleControllerTest extends TestCase
             ->assertJsonPath('commercial.name', 'Ali Commercial');
     }
 
-    public function test_show_returns_null_commercial_when_not_set(): void
+    public function test_show_returns_null_commercial_when_not_set()
     {
         $sale = $this->createSale(['commercial_id' => null]);
 
@@ -183,13 +536,9 @@ class SaleControllerTest extends TestCase
             ->assertJsonPath('commercial', null);
     }
 
-    // -------------------------------------------------------
-    // filters()
-    // -------------------------------------------------------
-
-    public function test_filters_returns_commercials_list(): void
+    public function test_filters_returns_commercials_list()
     {
-        $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Commercial', 'guard_name' => 'web']);
+        $role = Role::findOrCreate('Commercial', 'web');
 
         $youssef = $this->createCommercial('Youssef');
         $youssef->assignRole($role);
@@ -201,17 +550,14 @@ class SaleControllerTest extends TestCase
         $response->assertOk();
 
         $names = collect($response->json('commercials'))->pluck('name')->toArray();
-        // The filter returns Commercial, Manager, and Administrator roles. The test admin
-        // user is created in setUp() with the Administrator role, so it's included too.
         $this->assertContains('Ali', $names);
         $this->assertContains('Youssef', $names);
-        // Ensure ordering by name is preserved
         $sorted = $names;
         sort($sorted);
         $this->assertEquals($sorted, $names);
     }
 
-    public function test_filters_returns_all_expected_keys(): void
+    public function test_filters_returns_all_expected_keys()
     {
         $response = $this->getJson('/api/sales-filters', $this->authHeaders());
 
@@ -227,23 +573,26 @@ class SaleControllerTest extends TestCase
             ]);
     }
 
-    // -------------------------------------------------------
-    // store() / update() / destroy()
-    // -------------------------------------------------------
-
-    public function test_store_creates_sale(): void
+    public function test_store_creates_sale()
     {
-        $brand = \App\Models\Brand::create(['name' => 'TestBrand', 'is_active' => true]);
-        $product = \App\Models\Product::create([
+        $brand = Brand::query()->create(['name' => 'TestBrand', 'is_active' => true]);
+        $product = Product::query()->create([
             'reference' => 'REF-1',
             'type' => 'tyre',
             'brand_id' => $brand->id,
             'is_active' => true,
-            'tire_width' => 205,
-            'tire_height' => 55,
-            'tire_diameter' => 16,
         ]);
-        $stock = \App\Models\Stock::create([
+
+        Schema::table('product_tyres', function (Blueprint $table) {
+        });
+
+        DB::table('product_tyres')->insert([
+            'product_id' => $product->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $stock = Stock::query()->create([
             'product_id' => $product->id,
             'quantity' => 10,
             'purchase_price' => 100,
@@ -269,11 +618,12 @@ class SaleControllerTest extends TestCase
             ->assertJsonPath('client', 'New Client')
             ->assertJsonPath('total_quantity', 2)
             ->assertJsonPath('total_sale', '400.00');
+
         $this->assertDatabaseHas('sales', ['client' => 'New Client']);
         $this->assertDatabaseHas('sale_items', ['product_id' => $product->id, 'quantity' => 2]);
     }
 
-    public function test_destroy_deletes_sale(): void
+    public function test_destroy_deletes_sale()
     {
         $sale = $this->createSale();
 

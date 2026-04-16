@@ -6,39 +6,37 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreSaleRequest extends FormRequest
 {
-    public function authorize(): bool
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize()
     {
         return true;
     }
 
-    public function rules(): array
+    /**
+     * Get the validation rules that apply to the request.
+     */
+    public function rules()
     {
         return [
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.stock_id' => 'nullable|exists:stocks,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.purchase_price' => 'numeric|min:0',
-            'items.*.selling_price' => 'numeric|min:0',
-            'items.*.discount' => 'nullable|numeric|min:0|max:100',
-            
-            'date' => 'nullable|date',
-            'with_invoice' => 'boolean',
-
-            'city' => 'nullable|string|max:255',
-            'carrier_id' => 'nullable|integer|exists:carriers,id',
-            'tracking_number' => 'nullable|string|max:255',
-            'partner_id' => 'nullable|integer|exists:partners,id',
-            'service' => 'nullable|string|max:255',
-            'service_fee' => 'nullable|numeric|min:0',
-            'client' => 'nullable|string|max:255',
-            'client_phone' => 'nullable|string|max:50',
-            'payment_method' => 'nullable|string|max:255',
-            'commercial_id' => 'required|integer|exists:users,id',
-            'status' => 'nullable|string|max:255',
-            'payment_status' => 'nullable|string|max:255',
-            'delivery_date' => 'nullable|date',
-            'comments' => 'nullable|string',
+            'date' => ['required', 'date'],
+            'client' => ['nullable', 'string'],
+            'commercial_id' => ['nullable', 'exists:users,id'],
+            'carrier_id' => ['nullable', 'exists:carriers,id'],
+            'partner_id' => ['nullable', 'exists:partners,id'],
+            'status' => ['nullable', 'string'],
+            'payment_status' => ['nullable', 'string'],
+            'city' => ['nullable', 'string'],
+            'payment_method' => ['nullable', 'string'],
+            'comments' => ['nullable', 'string'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['required', 'exists:products,id'],
+            'items.*.stock_id' => ['nullable', 'exists:stocks,id'],
+            'items.*.quantity' => ['required', 'numeric', 'min:0.01'],
+            'items.*.purchase_price' => ['nullable', 'numeric', 'min:0'],
+            'items.*.selling_price' => ['required', 'numeric', 'min:0'],
+            'items.*.discount' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ];
     }
 }

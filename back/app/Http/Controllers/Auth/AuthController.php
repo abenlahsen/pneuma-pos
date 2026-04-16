@@ -14,7 +14,7 @@ class AuthController extends Controller
     /**
      * Login an existing user.
      */
-    public function login(LoginRequest $request): JsonResponse
+    public function login($request)
     {
         $user = User::where('email', $request->email)->first();
 
@@ -40,9 +40,15 @@ class AuthController extends Controller
     /**
      * Get the authenticated user.
      */
-    public function user(Request $request): JsonResponse
+    public function user($request)
     {
         $user = $request->user();
+
+        if (! $user) {
+            return response()->json([
+                'message' => 'Non authentifié.',
+            ], 401);
+        }
 
         return response()->json([
             'user' => $user->load('roles:id,name'),
@@ -54,7 +60,7 @@ class AuthController extends Controller
     /**
      * Change password (used for forced password change on first login).
      */
-    public function changePassword(Request $request): JsonResponse
+    public function changePassword($request)
     {
         $request->validate([
             'current_password' => 'required|string',
@@ -82,13 +88,16 @@ class AuthController extends Controller
     /**
      * Logout the authenticated user.
      */
-    public function logout(Request $request): JsonResponse
+    public function logout($request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+
+        if ($user && $user->currentAccessToken()) {
+            $user->currentAccessToken()->delete();
+        }
 
         return response()->json([
             'message' => 'Déconnexion réussie.',
         ]);
     }
 }
-

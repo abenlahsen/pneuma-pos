@@ -49,6 +49,7 @@ class PermissionController extends Controller
     public function destroy(Permission $permission): JsonResponse
     {
         $permission->delete();
+
         return response()->json(null, 204);
     }
 }
