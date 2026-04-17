@@ -1,4 +1,3 @@
-@use 'sass:color';
 @use '../../variables' as *;
 
 .p-6 { padding: 1.5rem; }
@@ -12,8 +11,8 @@
 .btn {
   padding: 0.5rem 1rem; border-radius: 8px; border: none; font-weight: 500;
   cursor: pointer; transition: all 0.2s; font-size: 0.875rem;
-  &-primary { background: $primary; color: white; &:hover { background: color.adjust($primary, $lightness: -5%); } &:disabled { opacity: 0.6; cursor: not-allowed; } }
-  &-secondary { background: #f7fafc; color: #2d3748; border: 1px solid $border-color; &:hover { background: color.adjust(#f7fafc, $lightness: -3%); } }
+  &-primary { background: $primary; color: white; &:hover { filter: brightness(0.95); } &:disabled { opacity: 0.6; cursor: not-allowed; } }
+  &-secondary { background: #f7fafc; color: #2d3748; border: 1px solid $border-color; &:hover { background: #edf2f7; } }
 }
 
 .btn-icon {

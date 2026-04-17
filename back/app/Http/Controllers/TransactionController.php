@@ -2,62 +2,46 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreTransactionRequest;
-use App\Http\Requests\UpdateTransactionRequest;
-use App\Models\Account;
+use App\Domain\Transactions\TransactionService;
+use App\Http\Requests\Transactions\StoreTransactionRequest;
+use App\Http\Requests\Transactions\UpdateTransactionRequest;
+use App\Http\Resources\Transactions\TransactionResource;
 use App\Models\Transaction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class TransactionController extends Controller
 {
+    public function __construct(private TransactionService $transactionService)
+    {
+    }
+
     /**
      * Display a paginated list of transactions with filters.
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Transaction::with('account');
+        $paginated = $this->transactionService->list($request->all());
 
-        // Sorting
-        $sortable = ['date', 'amount', 'type', 'category', 'description', 'person', 'partner', 'created_at'];
-        if ($request->filled('sort_by') && in_array($request->sort_by, $sortable)) {
-            $direction = $request->get('sort_direction', 'asc') === 'desc' ? 'desc' : 'asc';
-            $query->orderBy($request->sort_by, $direction);
-        } else {
-            $query->latest('date');
+        if ($request->boolean('all')) {
+            return response()->json(TransactionResource::collection($paginated)->resolve($request));
         }
 
-        // Filter by type
-        if ($request->filled('type')) {
-            $query->ofType($request->type);
-        }
-
-        // Filter by category
-        if ($request->filled('category')) {
-            $query->ofCategory($request->category);
-        }
-
-        // Filter by date range
-        $query->dateBetween($request->date_from, $request->date_to);
-
-        // Filter by person
-        if ($request->filled('person')) {
-            $query->where('person', $request->person);
-        }
-
-        // Filter by account
-        if ($request->filled('account_id')) {
-            $query->where('account_id', $request->account_id);
-        }
-
-        // Search in description
-        if ($request->filled('search')) {
-            $query->where('description', 'like', '%' . $request->search . '%');
-        }
-
-        $transactions = $query->paginate($request->get('per_page', 20));
-
-        return response()->json($transactions);
+        return response()->json([
+            'current_page' => $paginated->currentPage(),
+            'data' => TransactionResource::collection($paginated->items())->resolve($request),
+            'first_page_url' => $paginated->url(1),
+            'from' => $paginated->firstItem(),
+            'last_page' => $paginated->lastPage(),
+            'last_page_url' => $paginated->url($paginated->lastPage()),
+            'links' => $paginated->linkCollection()->toArray(),
+            'next_page_url' => $paginated->nextPageUrl(),
+            'path' => $paginated->path(),
+            'per_page' => $paginated->perPage(),
+            'prev_page_url' => $paginated->previousPageUrl(),
+            'to' => $paginated->lastItem(),
+            'total' => $paginated->total(),
+        ]);
     }
 
     /**
@@ -65,12 +49,9 @@ class TransactionController extends Controller
      */
     public function store(StoreTransactionRequest $request): JsonResponse
     {
-        $transaction = Transaction::create(array_merge(
-            $request->validated(),
-            ['user_id' => $request->user()->id],
-        ));
+        $transaction = $this->transactionService->create($request->validated(), $request->user());
 
-        return response()->json($transaction->load('account'), 201);
+        return response()->json((new TransactionResource($transaction))->resolve($request), 201);
     }
 
     /**
@@ -78,7 +59,7 @@ class TransactionController extends Controller
      */
     public function show(Transaction $transaction): JsonResponse
     {
-        return response()->json($transaction->load('account'));
+        return response()->json((new TransactionResource($transaction->load('account')))->resolve(request()));
     }
 
     /**
@@ -86,9 +67,9 @@ class TransactionController extends Controller
      */
     public function update(UpdateTransactionRequest $request, Transaction $transaction): JsonResponse
     {
-        $transaction->update($request->validated());
+        $transaction = $this->transactionService->update($transaction, $request->validated());
 
-        return response()->json($transaction->fresh()->load('account'));
+        return response()->json((new TransactionResource($transaction))->resolve($request));
     }
 
     /**
@@ -96,7 +77,7 @@ class TransactionController extends Controller
      */
     public function destroy(Transaction $transaction): JsonResponse
     {
-        $transaction->delete();
+        $this->transactionService->delete($transaction);
 
         return response()->json(null, 204);
     }
@@ -106,35 +87,7 @@ class TransactionController extends Controller
      */
     public function summary(Request $request): JsonResponse
     {
-        $query = Transaction::query();
-
-        // Apply same filters as index
-        if ($request->filled('category')) {
-            $query->ofCategory($request->category);
-        }
-        $query->dateBetween($request->date_from, $request->date_to);
-        if ($request->filled('person')) {
-            $query->where('person', $request->person);
-        }
-        if ($request->filled('account_id')) {
-            $query->where('account_id', $request->account_id);
-        }
-
-        $income = (clone $query)->settled()->ofType('income')->sum('amount');
-        $expenses = (clone $query)->settled()->ofType('expense')->sum('amount');
-        $pendingIncome = (clone $query)->pending()->ofType('income')->sum('amount');
-        $pendingExpense = (clone $query)->pending()->ofType('expense')->sum('amount');
-
-        // Solde = cash accounts only (includes initial balances, excludes pending)
-        $cashBalance = Account::where('type', 'cash')->get()->sum('current_balance');
-
-        return response()->json([
-            'income' => round($income, 2),
-            'expenses' => round($expenses, 2),
-            'balance' => round($cashBalance, 2),
-            'pending_income' => round($pendingIncome, 2),
-            'pending_expense' => round($pendingExpense, 2),
-        ]);
+        return response()->json($this->transactionService->summary($request->all()));
     }
 
     /**
@@ -142,11 +95,6 @@ class TransactionController extends Controller
      */
     public function filters(): JsonResponse
     {
-        return response()->json([
-            'categories' => Transaction::distinct()->whereNotNull('category')->pluck('category')->sort()->values(),
-            'persons' => Transaction::distinct()->whereNotNull('person')->pluck('person')->sort()->values(),
-            'partners' => Transaction::distinct()->whereNotNull('partner')->pluck('partner')->sort()->values(),
-            'accounts' => Account::active()->orderBy('name')->get(['id', 'name', 'type']),
-        ]);
+        return response()->json($this->transactionService->filters());
     }
 }

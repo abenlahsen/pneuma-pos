@@ -9,6 +9,7 @@ Route::middleware('permission:view stock')->group(function () {
     Route::get('stocks-summary', [StockController::class, 'summary']);
     Route::get('stocks-filters', [StockController::class, 'filters']);
     Route::get('stocks', [StockController::class, 'index']);
+    Route::get('stocks/export', [StockController::class, 'export']);
     Route::get('stocks/{stock}', [StockController::class, 'show']);
 });
 Route::post('stocks', [StockController::class, 'store'])->middleware('permission:create stock');

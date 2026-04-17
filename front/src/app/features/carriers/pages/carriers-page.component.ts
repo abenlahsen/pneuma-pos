@@ -23,6 +23,7 @@ export class CarriersPageComponent implements OnInit {
   sortBy = signal('');
   sortDirection = signal<'asc' | 'desc'>('asc');
   loading = signal(false);
+  deletingCarrierId = signal<number | null>(null);
   showForm = signal(false);
   editingCarrier = signal<Carrier | null>(null);
 
@@ -116,9 +117,21 @@ export class CarriersPageComponent implements OnInit {
   }
 
   deleteCarrier(c: Carrier): void {
-    if (confirm(`Supprimer le transporteur "${c.name}" ?`)) {
-      this.service.deleteCarrier(c.id).subscribe({ next: () => this.loadData() });
+    if (!confirm(`Supprimer le transporteur "${c.name}" ?`)) {
+      return;
     }
+
+    this.deletingCarrierId.set(c.id);
+
+    this.service.deleteCarrier(c.id).subscribe({
+      next: () => {
+        this.deletingCarrierId.set(null);
+        this.loadData();
+      },
+      error: () => {
+        this.deletingCarrierId.set(null);
+      },
+    });
   }
 
   logout(): void {

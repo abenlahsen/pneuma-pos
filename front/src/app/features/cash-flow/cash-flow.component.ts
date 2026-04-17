@@ -17,7 +17,7 @@ import { TransactionFormComponent } from './transaction-form/transaction-form.co
   standalone: true,
   imports: [CommonModule, FormsModule, TransactionFormComponent],
   templateUrl: './cash-flow.component.html',
-  styleUrls: ['../sales/sales.component.scss', './cash-flow.component.scss'],
+  styleUrls: ['./cash-flow.component.scss'],
 })
 export class CashFlowComponent implements OnInit {
   // Data

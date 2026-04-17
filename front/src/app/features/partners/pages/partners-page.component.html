@@ -85,6 +85,7 @@
                 (click)="openEditForm(p)"
                 title="Modifier"
                 *ngIf="authService.hasPermission('edit partners')"
+                [disabled]="deletingPartnerId() === p.id"
               >
                 ✏️
               </button>
@@ -93,8 +94,10 @@
                 (click)="deletePartner(p)"
                 title="Supprimer"
                 *ngIf="authService.hasPermission('delete partners')"
+                [disabled]="deletingPartnerId() === p.id"
               >
-                🗑️
+                <span *ngIf="deletingPartnerId() !== p.id">🗑️</span>
+                <span *ngIf="deletingPartnerId() === p.id" class="inline-spinner"></span>
               </button>
             </td>
           </tr>

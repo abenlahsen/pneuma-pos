@@ -31,21 +31,21 @@ export const routes: Routes = [
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view cash-flow' },
     loadComponent: () =>
-      import('./features/cash-flow/cash-flow.component').then((m) => m.CashFlowComponent),
+      import('./features/cash-flow/pages/cash-flow-page.component').then((m) => m.CashFlowPageComponent),
   },
   {
     path: 'accounts',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view accounts' },
     loadComponent: () =>
-      import('./features/accounts/accounts.component').then((m) => m.AccountsComponent),
+      import('./features/accounts/pages/accounts-page.component').then((m) => m.AccountsPageComponent),
   },
   {
     path: 'sales',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view sales' },
     loadComponent: () =>
-      import('./features/sales/sales.component').then((m) => m.SalesComponent),
+      import('./features/sales/pages/sales-page.component').then((m) => m.SalesPageComponent),
   },
   {
     path: 'suppliers',
@@ -73,21 +73,21 @@ export const routes: Routes = [
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view purchases' },
     loadComponent: () =>
-      import('./features/purchases/purchases.component').then((m) => m.PurchasesComponent),
+      import('./features/purchases/pages/purchases-page.component').then((m) => m.PurchasesPageComponent),
   },
   {
     path: 'stock',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view stock' },
     loadComponent: () =>
-      import('./features/stock/stock.component').then((m) => m.StockComponent),
+      import('./features/stock/pages/stock-page.component').then((m) => m.StockPageComponent),
   },
   {
     path: 'products',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view products' },
     loadComponent: () =>
-      import('./features/products/products.component').then((m) => m.ProductsComponent),
+      import('./features/products/pages/products-page.component').then((m) => m.ProductsPageComponent),
   },
   {
     path: 'brands',
@@ -101,14 +101,14 @@ export const routes: Routes = [
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view roles' },
     loadComponent: () =>
-      import('./features/roles/roles.component').then((m) => m.RolesComponent),
+      import('./features/roles/pages/roles-page.component').then((m) => m.RolesPageComponent),
   },
   {
     path: 'users',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view users' },
     loadComponent: () =>
-      import('./features/users/users.component').then((m) => m.UsersComponent),
+      import('./features/users/pages/users-page.component').then((m) => m.UsersPageComponent),
   },
   {
     path: '**',

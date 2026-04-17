@@ -23,6 +23,7 @@ export class PartnersPageComponent implements OnInit {
   sortBy = signal('');
   sortDirection = signal<'asc' | 'desc'>('asc');
   loading = signal(false);
+  deletingPartnerId = signal<number | null>(null);
   showForm = signal(false);
   editingPartner = signal<Partner | null>(null);
 
@@ -116,9 +117,21 @@ export class PartnersPageComponent implements OnInit {
   }
 
   deletePartner(p: Partner): void {
-    if (confirm(`Supprimer le partenaire "${p.name}" ?`)) {
-      this.service.deletePartner(p.id).subscribe({ next: () => this.loadData() });
+    if (!confirm(`Supprimer le partenaire "${p.name}" ?`)) {
+      return;
     }
+
+    this.deletingPartnerId.set(p.id);
+
+    this.service.deletePartner(p.id).subscribe({
+      next: () => {
+        this.deletingPartnerId.set(null);
+        this.loadData();
+      },
+      error: () => {
+        this.deletingPartnerId.set(null);
+      },
+    });
   }
 
   logout(): void {

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\ChangePasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Resources\Auth\AuthSessionResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,7 +16,7 @@ class AuthController extends Controller
     /**
      * Login an existing user.
      */
-    public function login($request)
+    public function login(LoginRequest $request): JsonResponse
     {
         $user = User::where('email', $request->email)->first();
 
@@ -29,18 +31,18 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
-        return response()->json([
+        return response()->json((new AuthSessionResource([
             'user' => $user->load('roles:id,name'),
             'permissions' => $user->getAllPermissions()->pluck('name'),
             'token' => $token,
             'must_change_password' => (bool) $user->must_change_password,
-        ]);
+        ]))->resolve($request));
     }
 
     /**
      * Get the authenticated user.
      */
-    public function user($request)
+    public function user(Request $request): JsonResponse
     {
         $user = $request->user();
 
@@ -50,23 +52,18 @@ class AuthController extends Controller
             ], 401);
         }
 
-        return response()->json([
+        return response()->json((new AuthSessionResource([
             'user' => $user->load('roles:id,name'),
             'permissions' => $user->getAllPermissions()->pluck('name'),
             'must_change_password' => (bool) $user->must_change_password,
-        ]);
+        ]))->resolve($request));
     }
 
     /**
      * Change password (used for forced password change on first login).
      */
-    public function changePassword($request)
+    public function changePassword(ChangePasswordRequest $request): JsonResponse
     {
-        $request->validate([
-            'current_password' => 'required|string',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-
         $user = $request->user();
 
         if (! Hash::check($request->current_password, $user->password)) {
@@ -88,7 +85,7 @@ class AuthController extends Controller
     /**
      * Logout the authenticated user.
      */
-    public function logout($request)
+    public function logout(Request $request): JsonResponse
     {
         $user = $request->user();
 
