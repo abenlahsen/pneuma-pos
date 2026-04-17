@@ -9,6 +9,7 @@ use App\Http\Resources\Partners\PartnerResource;
 use App\Models\Partner;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class PartnerController extends Controller
 {
@@ -27,46 +28,26 @@ class PartnerController extends Controller
     
     public function index(Request $request): JsonResponse
     {
-        $query = Partner::query();
+        $partners = $this->partnerService->list($request->all());
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('city', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhere('mobile', 'like', "%{$search}%");
-            });
+        if (!($partners instanceof LengthAwarePaginator)) {
+            return response()->json(PartnerResource::collection($partners)->resolve($request));
         }
-
-        $sortable = ['name', 'city', 'phone', 'mobile', 'created_at'];
-        if ($request->filled('sort_by') && in_array($request->sort_by, $sortable)) {
-            $direction = $request->get('sort_direction', 'asc') === 'desc' ? 'desc' : 'asc';
-            $query->orderBy($request->sort_by, $direction);
-        } else {
-            $query->latest('created_at');
-        }
-
-        if ($request->boolean('all')) {
-            return response()->json(PartnerResource::collection($query->get())->resolve($request));
-        }
-
-        $paginated = $query->paginate($request->get('per_page', 20));
 
         return response()->json([
-            'current_page' => $paginated->currentPage(),
-            'data' => PartnerResource::collection($paginated->items())->resolve($request),
-            'first_page_url' => $paginated->url(1),
-            'from' => $paginated->firstItem(),
-            'last_page' => $paginated->lastPage(),
-            'last_page_url' => $paginated->url($paginated->lastPage()),
-            'links' => $paginated->linkCollection()->toArray(),
-            'next_page_url' => $paginated->nextPageUrl(),
-            'path' => $paginated->path(),
-            'per_page' => $paginated->perPage(),
-            'prev_page_url' => $paginated->previousPageUrl(),
-            'to' => $paginated->lastItem(),
-            'total' => $paginated->total(),
+            'current_page' => $partners->currentPage(),
+            'data' => PartnerResource::collection($partners->items())->resolve($request),
+            'first_page_url' => $partners->url(1),
+            'from' => $partners->firstItem(),
+            'last_page' => $partners->lastPage(),
+            'last_page_url' => $partners->url($partners->lastPage()),
+            'links' => $partners->linkCollection()->toArray(),
+            'next_page_url' => $partners->nextPageUrl(),
+            'path' => $partners->path(),
+            'per_page' => $partners->perPage(),
+            'prev_page_url' => $partners->previousPageUrl(),
+            'to' => $partners->lastItem(),
+            'total' => $partners->total(),
         ]);
     }
 

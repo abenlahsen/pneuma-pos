@@ -2,43 +2,38 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\StockMovement;
+use App\Domain\Stock\StockService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class StockMovementController extends Controller
 {
+    public function __construct(private StockService $stockService)
+    {
+    }
+
     public function index(Request $request): JsonResponse
     {
-        $query = StockMovement::query()
-            ->with(['user:id,name', 'stock:id,depot,zone'])
-            ->orderByDesc('created_at')
-            ->orderByDesc('id');
+        $paginated = $this->stockService->movementList($request->all());
 
-        if ($request->filled('stock_id')) {
-            $query->where('stock_id', $request->stock_id);
+        if ($request->boolean('all')) {
+            return response()->json($paginated);
         }
 
-        if ($request->filled('product_id')) {
-            $query->where('product_id', $request->product_id);
-        }
-
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
-
-        if ($request->filled('user_id')) {
-            $query->where('user_id', $request->user_id);
-        }
-
-        if ($request->filled('from')) {
-            $query->where('created_at', '>=', $request->from);
-        }
-
-        if ($request->filled('to')) {
-            $query->where('created_at', '<=', $request->to);
-        }
-
-        return response()->json($query->paginate($request->get('per_page', 50)));
+        return response()->json([
+            'current_page' => $paginated->currentPage(),
+            'data' => $paginated->items(),
+            'first_page_url' => $paginated->url(1),
+            'from' => $paginated->firstItem(),
+            'last_page' => $paginated->lastPage(),
+            'last_page_url' => $paginated->url($paginated->lastPage()),
+            'links' => $paginated->linkCollection()->toArray(),
+            'next_page_url' => $paginated->nextPageUrl(),
+            'path' => $paginated->path(),
+            'per_page' => $paginated->perPage(),
+            'prev_page_url' => $paginated->previousPageUrl(),
+            'to' => $paginated->lastItem(),
+            'total' => $paginated->total(),
+        ]);
     }
 }

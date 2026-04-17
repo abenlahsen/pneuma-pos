@@ -7,6 +7,28 @@
   color: #718096;
 }
 
+.inline-spinner {
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 2px solid rgba(245, 101, 101, 0.2);
+  border-top-color: #f56565;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.btn-icon[disabled] {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .brand-logo {
   max-width: 80px;
   max-height: 36px;

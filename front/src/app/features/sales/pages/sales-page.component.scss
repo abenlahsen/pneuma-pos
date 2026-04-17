@@ -1,0 +1,611 @@
+@use '../variables' as *;
+
+.page-container {
+  max-width: 100%;
+  margin: 1.5rem auto;
+  padding: 0 1rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+
+  .title-section {
+    h1 {
+      margin: 0;
+      color: $text-dark;
+      font-size: 1.8rem;
+    }
+
+    .subtitle {
+      margin: 0.2rem 0 0;
+      color: $text-muted;
+    }
+  }
+
+  .actions {
+    display: flex;
+    gap: 1rem;
+  }
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: $radius-sm;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &-primary {
+    background: $primary;
+    color: white;
+
+    &:hover {
+      filter: brightness(0.95);
+    }
+  }
+
+  &-icon {
+    background: white;
+    border: 1px solid $border-color;
+    padding: 0.5rem;
+
+    &:hover {
+      background: $bg-body;
+    }
+  }
+
+  &-text {
+    background: none;
+    color: $primary;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &-reset-icon {
+    background: none;
+    border: 1px solid $border-color;
+    color: $text-muted;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0.25rem 0.5rem;
+    border-radius: $radius-sm;
+    cursor: pointer;
+
+    &:hover {
+      background: $bg-body;
+      color: $expense-color;
+      border-color: $expense-color;
+    }
+  }
+
+  &-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: $bg-card;
+  border-radius: $radius;
+  box-shadow: $shadow-sm;
+}
+
+.summary-card {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+
+  &.income .card-icon {
+    color: $primary;
+    background: rgba($primary, 0.1);
+  }
+
+  &.expense .card-icon {
+    color: $expense-color;
+    background: rgba($expense-color, 0.1);
+  }
+
+  &.balance .card-icon {
+    color: $income-color;
+    background: rgba($income-color, 0.1);
+  }
+
+  &.info .card-icon {
+    color: #5b6abf;
+    background: rgba(#5b6abf, 0.1);
+  }
+
+  &.balance.negative .card-icon {
+    color: $expense-color;
+    background: rgba($expense-color, 0.1);
+  }
+
+  .card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+  }
+
+  .card-label {
+    margin: 0;
+    font-size: 0.875rem;
+    color: $text-muted;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .card-value {
+    margin: 0.25rem 0 0;
+    font-size: 1.5rem;
+    color: $text-dark;
+  }
+}
+
+.filters-section {
+  margin-bottom: 2rem;
+
+  .card-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid $border-color;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: $text-dark;
+    }
+  }
+
+  .card-body {
+    padding: 1.5rem;
+  }
+
+  .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: $text-dark;
+  }
+
+  .form-control {
+    padding: 0.5rem;
+    border: 1px solid $border-color;
+    border-radius: $radius-sm;
+    font-size: 0.875rem;
+    color: $text-dark;
+
+    &:focus {
+      outline: none;
+      border-color: $primary;
+      box-shadow: 0 0 0 3px rgba($primary, 0.1);
+    }
+  }
+}
+
+.filter-actions {
+  display: flex;
+  gap: 0.35rem;
+  align-self: flex-end;
+}
+
+.btn-filter {
+  background: $primary;
+  color: #fff;
+  padding: 0.45rem 0.75rem;
+
+  &:hover {
+    filter: brightness(0.92);
+  }
+}
+
+.btn-reset {
+  background: $bg-body;
+  color: $text-muted;
+  border: 1px solid $border-color;
+  padding: 0.45rem 0.7rem;
+
+  &:hover {
+    background: $border-color;
+  }
+}
+
+.table-card {
+  overflow: hidden;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid $border-color;
+    white-space: nowrap;
+    font-size: 0.8125rem;
+  }
+
+  th {
+    background: $bg-body;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: $text-muted;
+    text-transform: uppercase;
+
+    &.sortable {
+      cursor: pointer;
+      user-select: none;
+
+      &:hover {
+        color: $text-dark;
+        background: #e5e7eb;
+      }
+
+      .sort-icon {
+        font-size: 0.7rem;
+        margin-left: 0.25rem;
+        opacity: 0.4;
+      }
+
+      &:hover .sort-icon {
+        opacity: 0.7;
+      }
+    }
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tbody tr:hover {
+    background: rgba($bg-body, 0.5);
+  }
+}
+
+.clickable-cell {
+  cursor: pointer;
+
+  .link-text {
+    color: $primary;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.text-right{text-align:right!important}.text-center{text-align:center!important}.fw-medium{font-weight:500}.fw-semibold{font-weight:600}.text-muted{color:$text-muted}.text-small{font-size:.875rem}.text-success{color:$income-color}.text-danger{color:$expense-color}.text-primary{color:$primary}
+
+.date-cell {
+  display: flex;
+  flex-direction: column;
+
+  .day {
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+
+  .month-year {
+    font-size: 0.75rem;
+    color: $text-muted;
+    text-transform: uppercase;
+  }
+}
+
+.badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  &-primary { background: rgba($primary, 0.1); color: $primary; }
+  &-success { background: rgba($income-color, 0.1); color: $income-color; }
+  &-warning { background: rgba(#ed8936, 0.1); color: #c05621; }
+}
+
+.status-select {
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  appearance: none;
+
+  &:hover {
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba($primary, 0.2);
+  }
+}
+
+.bg-en-cours { background-color: rgba(#ed8936, 0.1); color: #c05621; text-transform: uppercase; }
+.bg-livre { background-color: rgba(#276749, 0.15); color: #276749; text-transform: uppercase; }
+.bg-monte { background-color: rgba(#48bb78, 0.15); color: #2f855a; text-transform: uppercase; }
+
+.spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid $border-color;
+  border-top-color: $primary;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.inline-spinner {
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 2px solid rgba($expense-color, 0.2);
+  border-top-color: $expense-color;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.btn-icon[disabled] {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.pagination-wrapper {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid $border-color;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .pagination-info {
+    color: $text-muted;
+    font-size: 0.875rem;
+  }
+
+  .pagination { display: flex; gap: 0.25rem; }
+}
+
+.btn-page {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid $border-color;
+  background: white;
+  color: $text-dark;
+  border-radius: $radius-sm;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: $bg-body;
+  }
+
+  &.active {
+    background: $primary;
+    color: white;
+    border-color: $primary;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1.5rem;
+}
+
+.modal-container {
+  background: white;
+  border-radius: $radius;
+  width: 95vw;
+  max-width: 1400px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: $shadow-md;
+}
+
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid $border-color;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: $text-dark;
+  }
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    margin: 1rem auto;
+    padding: 0 0.5rem;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+
+    .title-section h1 {
+      font-size: 1.4rem;
+    }
+
+    .actions {
+      width: 100%;
+      flex-wrap: wrap;
+
+      .btn {
+        flex: 1;
+        text-align: center;
+        font-size: 0.8rem;
+        padding: 0.5rem 0.5rem;
+      }
+    }
+  }
+
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .summary-card {
+    padding: 0.75rem;
+    gap: 0.75rem;
+
+    .card-icon {
+      width: 36px;
+      height: 36px;
+      font-size: 1.1rem;
+    }
+
+    .card-label {
+      font-size: 0.7rem;
+    }
+
+    .card-value {
+      font-size: 1rem;
+    }
+  }
+
+  .filters-section {
+    margin-bottom: 1.25rem;
+
+    .card-body {
+      padding: 0.75rem;
+    }
+
+    .filters-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+  }
+
+  .filter-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+
+  .table {
+    th,
+    td {
+      padding: 0.4rem 0.5rem;
+      font-size: 0.75rem;
+    }
+
+    th {
+      font-size: 0.7rem;
+    }
+  }
+
+  .pagination-wrapper {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    align-items: center;
+
+    .pagination-info {
+      font-size: 0.75rem;
+    }
+  }
+
+  .btn-page {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+
+  .modal-container {
+    max-height: 95vh;
+  }
+
+  .modal-header {
+    padding: 1rem;
+
+    h2 {
+      font-size: 1.1rem;
+    }
+  }
+
+  .modal-body {
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .filters-section .filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .header .actions {
+    .btn {
+      font-size: 0.75rem;
+    }
+  }
+}

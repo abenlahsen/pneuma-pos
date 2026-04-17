@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Accounts\AccountService;
-use App\Http\Requests\StoreAccountRequest;
-use App\Http\Requests\UpdateAccountRequest;
+use App\Http\Requests\Accounts\StoreAccountRequest;
+use App\Http\Requests\Accounts\TransferAccountRequest;
+use App\Http\Requests\Accounts\UpdateAccountRequest;
+use App\Http\Resources\Accounts\AccountResource;
 use App\Models\Account;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,15 +22,33 @@ class AccountController extends Controller
     {
         $this->accountService = $accountService;
     }
-    
+
     /**
      * List all accounts with their computed current_balance.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $accounts = Account::orderBy('name')->get();
+        $paginated = $this->accountService->list($request->all());
 
-        return response()->json($accounts);
+        if ($request->boolean('all')) {
+            return response()->json(AccountResource::collection($paginated)->resolve($request));
+        }
+
+        return response()->json([
+            'current_page' => $paginated->currentPage(),
+            'data' => AccountResource::collection($paginated->items())->resolve($request),
+            'first_page_url' => $paginated->url(1),
+            'from' => $paginated->firstItem(),
+            'last_page' => $paginated->lastPage(),
+            'last_page_url' => $paginated->url($paginated->lastPage()),
+            'links' => $paginated->linkCollection()->toArray(),
+            'next_page_url' => $paginated->nextPageUrl(),
+            'path' => $paginated->path(),
+            'per_page' => $paginated->perPage(),
+            'prev_page_url' => $paginated->previousPageUrl(),
+            'to' => $paginated->lastItem(),
+            'total' => $paginated->total(),
+        ]);
     }
 
     /**
@@ -36,7 +56,7 @@ class AccountController extends Controller
      */
     public function show(Account $account): JsonResponse
     {
-        return response()->json($account);
+        return response()->json((new AccountResource($account))->resolve(request()));
     }
 
     /**
@@ -46,7 +66,7 @@ class AccountController extends Controller
     {
         $account = $this->accountService->create($request->validated());
 
-        return response()->json($account, 201);
+        return response()->json((new AccountResource($account))->resolve($request), 201);
     }
 
     /**
@@ -56,7 +76,7 @@ class AccountController extends Controller
     {
         $account = $this->accountService->update($account, $request->validated());
 
-        return response()->json($account);
+        return response()->json((new AccountResource($account))->resolve($request));
     }
 
     /**
@@ -77,8 +97,8 @@ class AccountController extends Controller
      * Transfer money between two accounts.
      * Creates two linked transactions with the same transfer_id.
      */
-    public function transfer(Request $request): JsonResponse
+    public function transfer(TransferAccountRequest $request): JsonResponse
     {
-        return $this->accountService->transfer($request, $request->user());
+        return $this->accountService->transfer($request->validated(), $request->user());
     }
 }

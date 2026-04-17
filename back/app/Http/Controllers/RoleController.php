@@ -3,20 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Roles\RoleService;
+use App\Http\Resources\Users\RoleResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
-    /**
-     * @var RoleService
-     */
-    private $roleService;
+    private RoleService $roleService;
 
-    /**
-     * @param RoleService $roleService
-     */
     public function __construct(RoleService $roleService)
     {
         $this->roleService = $roleService;
@@ -27,10 +22,26 @@ class RoleController extends Controller
         $query = Role::with('permissions');
 
         if ($request->boolean('all')) {
-            return response()->json($query->get());
+            return response()->json(RoleResource::collection($query->get())->resolve($request));
         }
 
-        return response()->json($query->paginate($request->get('per_page', 20)));
+        $paginated = $query->paginate($request->get('per_page', 20));
+
+        return response()->json([
+            'current_page' => $paginated->currentPage(),
+            'data' => RoleResource::collection($paginated->items())->resolve($request),
+            'first_page_url' => $paginated->url(1),
+            'from' => $paginated->firstItem(),
+            'last_page' => $paginated->lastPage(),
+            'last_page_url' => $paginated->url($paginated->lastPage()),
+            'links' => $paginated->linkCollection()->toArray(),
+            'next_page_url' => $paginated->nextPageUrl(),
+            'path' => $paginated->path(),
+            'per_page' => $paginated->perPage(),
+            'prev_page_url' => $paginated->previousPageUrl(),
+            'to' => $paginated->lastItem(),
+            'total' => $paginated->total(),
+        ]);
     }
 
     public function store(Request $request): JsonResponse
@@ -43,12 +54,12 @@ class RoleController extends Controller
 
         $role = $this->roleService->create($request);
 
-        return response()->json($role, 201);
+        return response()->json((new RoleResource($role))->resolve($request), 201);
     }
 
     public function show(Role $role): JsonResponse
     {
-        return response()->json($role->load('permissions'));
+        return response()->json((new RoleResource($role->load('permissions')))->resolve(request()));
     }
 
     public function update(Request $request, Role $role): JsonResponse
@@ -65,7 +76,7 @@ class RoleController extends Controller
             return $updatedRole;
         }
 
-        return response()->json($updatedRole);
+        return response()->json((new RoleResource($updatedRole))->resolve($request));
     }
 
     public function destroy(Role $role): JsonResponse
@@ -88,6 +99,6 @@ class RoleController extends Controller
 
         $updatedRole = $this->roleService->assignPermissions($request, $role);
 
-        return response()->json($updatedRole);
+        return response()->json((new RoleResource($updatedRole))->resolve($request));
     }
 }

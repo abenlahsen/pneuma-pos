@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Users\UserService;
+use App\Http\Resources\Users\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,10 +36,26 @@ class UserController extends Controller
         }
 
         if ($request->boolean('all')) {
-            return response()->json($query->get());
+            return response()->json(UserResource::collection($query->get())->resolve($request));
         }
 
-        return response()->json($query->paginate($request->get('per_page', 20)));
+        $paginated = $query->paginate($request->get('per_page', 20));
+
+        return response()->json([
+            'current_page' => $paginated->currentPage(),
+            'data' => UserResource::collection($paginated->items())->resolve($request),
+            'first_page_url' => $paginated->url(1),
+            'from' => $paginated->firstItem(),
+            'last_page' => $paginated->lastPage(),
+            'last_page_url' => $paginated->url($paginated->lastPage()),
+            'links' => $paginated->linkCollection()->toArray(),
+            'next_page_url' => $paginated->nextPageUrl(),
+            'path' => $paginated->path(),
+            'per_page' => $paginated->perPage(),
+            'prev_page_url' => $paginated->previousPageUrl(),
+            'to' => $paginated->lastItem(),
+            'total' => $paginated->total(),
+        ]);
     }
 
     public function store(Request $request): JsonResponse
@@ -58,12 +75,12 @@ class UserController extends Controller
             return $user;
         }
 
-        return response()->json($user, 201);
+        return response()->json((new UserResource($user))->resolve($request), 201);
     }
 
     public function show(User $user): JsonResponse
     {
-        return response()->json($user->load('roles'));
+        return response()->json((new UserResource($user->load('roles')))->resolve(request()));
     }
 
     public function update(Request $request, User $user): JsonResponse
@@ -83,7 +100,7 @@ class UserController extends Controller
             return $updatedUser;
         }
 
-        return response()->json($updatedUser);
+        return response()->json((new UserResource($updatedUser))->resolve($request));
     }
 
     public function destroy(Request $request, User $user): JsonResponse

@@ -6,11 +6,40 @@ use App\Models\Account;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class AccountService
 {
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    public function list(array $filters = [])
+    {
+        $query = Account::query();
+
+        if (! empty($filters['search'])) {
+            $query->where('name', 'like', '%' . $filters['search'] . '%');
+        }
+
+        if (array_key_exists('is_active', $filters)) {
+            $query->where('is_active', filter_var($filters['is_active'], FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE) ?? $filters['is_active']);
+        }
+
+        $sortable = ['name', 'type', 'created_at'];
+        if (! empty($filters['sort_by']) && in_array($filters['sort_by'], $sortable, true)) {
+            $direction = ($filters['sort_direction'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
+            $query->orderBy($filters['sort_by'], $direction);
+        } else {
+            $query->orderBy('name');
+        }
+
+        if (! empty($filters['all'])) {
+            return $query->get();
+        }
+
+        return $query->paginate((int) ($filters['per_page'] ?? 20));
+    }
+
     /**
      * @param  array<string, mixed>  $validated
      * @return Account
@@ -52,20 +81,12 @@ class AccountService
     }
 
     /**
-     * @param  Request  $request
+     * @param  array<string, mixed>  $validated
      * @param  User  $user
      * @return JsonResponse
      */
-    public function transfer($request, $user)
+    public function transfer($validated, $user)
     {
-        $validated = $request->validate([
-            'source_account_id' => ['required', 'exists:accounts,id'],
-            'destination_account_id' => ['required', 'exists:accounts,id', 'different:source_account_id'],
-            'amount' => ['required', 'numeric', 'min:0.01'],
-            'date' => ['required', 'date'],
-            'description' => ['nullable', 'string', 'max:1000'],
-        ]);
-
         $transferId = Str::uuid()->toString();
         $sourceAccount = Account::findOrFail($validated['source_account_id']);
         $destAccount = Account::findOrFail($validated['destination_account_id']);

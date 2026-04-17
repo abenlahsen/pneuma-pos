@@ -27,44 +27,26 @@ class BrandController extends Controller
     
     public function index(Request $request): JsonResponse
     {
-        $query = Brand::query();
-
-        if ($request->filled('search')) {
-            $query->where('name', 'like', "%{$request->search}%");
-        }
-
-        if ($request->has('is_active')) {
-            $query->where('is_active', $request->boolean('is_active'));
-        }
-
-        $sortable = ['name', 'created_at'];
-        if ($request->filled('sort_by') && in_array($request->sort_by, $sortable)) {
-            $direction = $request->get('sort_direction', 'asc') === 'desc' ? 'desc' : 'asc';
-            $query->orderBy($request->sort_by, $direction);
-        } else {
-            $query->orderBy('name');
-        }
+        $brands = $this->brandService->list($request->all());
 
         if ($request->boolean('all')) {
-            return response()->json(BrandResource::collection($query->get())->resolve($request));
+            return response()->json(BrandResource::collection($brands)->resolve($request));
         }
 
-        $paginated = $query->paginate($request->get('per_page', 20));
-
         return response()->json([
-            'current_page' => $paginated->currentPage(),
-            'data' => BrandResource::collection($paginated->items())->resolve($request),
-            'first_page_url' => $paginated->url(1),
-            'from' => $paginated->firstItem(),
-            'last_page' => $paginated->lastPage(),
-            'last_page_url' => $paginated->url($paginated->lastPage()),
-            'links' => $paginated->linkCollection()->toArray(),
-            'next_page_url' => $paginated->nextPageUrl(),
-            'path' => $paginated->path(),
-            'per_page' => $paginated->perPage(),
-            'prev_page_url' => $paginated->previousPageUrl(),
-            'to' => $paginated->lastItem(),
-            'total' => $paginated->total(),
+            'current_page' => $brands->currentPage(),
+            'data' => BrandResource::collection($brands->items())->resolve($request),
+            'first_page_url' => $brands->url(1),
+            'from' => $brands->firstItem(),
+            'last_page' => $brands->lastPage(),
+            'last_page_url' => $brands->url($brands->lastPage()),
+            'links' => $brands->linkCollection()->toArray(),
+            'next_page_url' => $brands->nextPageUrl(),
+            'path' => $brands->path(),
+            'per_page' => $brands->perPage(),
+            'prev_page_url' => $brands->previousPageUrl(),
+            'to' => $brands->lastItem(),
+            'total' => $brands->total(),
         ]);
     }
 

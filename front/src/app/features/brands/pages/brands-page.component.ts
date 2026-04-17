@@ -26,6 +26,7 @@ export class BrandsPageComponent implements OnInit {
   sortDirection = signal<'asc' | 'desc'>('asc');
 
   loading = signal(false);
+  deletingBrandId = signal<number | null>(null);
   showForm = signal(false);
   editingBrand = signal<Brand | null>(null);
 
@@ -138,11 +139,21 @@ export class BrandsPageComponent implements OnInit {
   }
 
   deleteBrand(brand: Brand): void {
-    if (confirm(`Supprimer la marque "${brand.name}" ?`)) {
-      this.brandService.deleteBrand(brand.id).subscribe({
-        next: () => this.loadData(),
-      });
+    if (!confirm(`Supprimer la marque "${brand.name}" ?`)) {
+      return;
     }
+
+    this.deletingBrandId.set(brand.id);
+
+    this.brandService.deleteBrand(brand.id).subscribe({
+      next: () => {
+        this.deletingBrandId.set(null);
+        this.loadData();
+      },
+      error: () => {
+        this.deletingBrandId.set(null);
+      },
+    });
   }
 
   get pages(): number[] {

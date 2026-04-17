@@ -85,6 +85,7 @@
                 (click)="toggleActive(brand)"
                 [title]="brand.is_active ? 'Désactiver' : 'Activer'"
                 *ngIf="authService.hasPermission('edit brands')"
+                [disabled]="deletingBrandId() === brand.id"
               >
                 {{ brand.is_active ? '&#10003;' : '&#9675;' }}
               </button>
@@ -93,6 +94,7 @@
                 (click)="openEditForm(brand)"
                 title="Modifier"
                 *ngIf="authService.hasPermission('edit brands')"
+                [disabled]="deletingBrandId() === brand.id"
               >
                 &#9998;&#65039;
               </button>
@@ -101,8 +103,10 @@
                 (click)="deleteBrand(brand)"
                 title="Supprimer"
                 *ngIf="authService.hasPermission('delete brands')"
+                [disabled]="deletingBrandId() === brand.id"
               >
-                &#128465;&#65039;
+                <span *ngIf="deletingBrandId() !== brand.id">&#128465;&#65039;</span>
+                <span *ngIf="deletingBrandId() === brand.id" class="inline-spinner"></span>
               </button>
             </td>
           </tr>

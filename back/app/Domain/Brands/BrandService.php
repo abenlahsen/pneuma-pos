@@ -3,12 +3,45 @@
 namespace App\Domain\Brands;
 
 use App\Models\Brand;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class BrandService
 {
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return LengthAwarePaginator|Collection<int, Brand>
+     */
+    public function list(array $filters = [])
+    {
+        $query = Brand::query();
+
+        if (!empty($filters['search'])) {
+            $query->where('name', 'like', '%' . $filters['search'] . '%');
+        }
+
+        if (array_key_exists('is_active', $filters)) {
+            $query->where('is_active', filter_var($filters['is_active'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false);
+        }
+
+        $sortable = ['name', 'created_at'];
+        if (!empty($filters['sort_by']) && in_array($filters['sort_by'], $sortable, true)) {
+            $direction = ($filters['sort_direction'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
+            $query->orderBy($filters['sort_by'], $direction);
+        } else {
+            $query->orderBy('name');
+        }
+
+        if (filter_var($filters['all'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+            return $query->get();
+        }
+
+        return $query->paginate($filters['per_page'] ?? 20);
+    }
+
     /**
      * @param  array<string, mixed>  $validated
      * @param  UploadedFile|null  $logo

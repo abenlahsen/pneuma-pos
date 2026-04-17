@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Product, ProductPayload } from '../../../core/models/product.model';
+import { Product, ProductPayload } from '../models/product.model';
 import { Stock, StockPayload } from '../../../core/models/stock.model';
 import { StockService } from '../../../core/services/stock.service';
 import { StockMovementService } from '../../../core/services/stock-movement.service';

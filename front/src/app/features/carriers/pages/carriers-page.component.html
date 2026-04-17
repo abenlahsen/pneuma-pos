@@ -75,6 +75,7 @@
                 (click)="openEditForm(c)"
                 title="Modifier"
                 *ngIf="authService.hasPermission('edit carriers')"
+                [disabled]="deletingCarrierId() === c.id"
               >
                 ✏️
               </button>
@@ -83,8 +84,10 @@
                 (click)="deleteCarrier(c)"
                 title="Supprimer"
                 *ngIf="authService.hasPermission('delete carriers')"
+                [disabled]="deletingCarrierId() === c.id"
               >
-                🗑️
+                <span *ngIf="deletingCarrierId() !== c.id">🗑️</span>
+                <span *ngIf="deletingCarrierId() === c.id" class="inline-spinner"></span>
               </button>
             </td>
           </tr>
