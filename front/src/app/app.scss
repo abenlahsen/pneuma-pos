@@ -1,0 +1,84 @@
+:root {
+  --app-primary: #ff2d37;
+  --app-accent: #1e293b;
+  --app-surface: #ffffff;
+  --app-background: #f8fafc;
+  --app-text: #0f172a;
+  --app-text-muted: #475569;
+  --app-border: #e2e8f0;
+  --app-navbar-text: #ffffff;
+  --app-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+  color-scheme: light;
+}
+
+:root[data-theme-resolved='dark'] {
+  --app-background: #0f172a;
+  --app-text: #f8fafc;
+  --app-text-muted: #cbd5e1;
+  --app-border: rgba(148, 163, 184, 0.24);
+  --app-navbar-text: #f8fafc;
+  --app-shadow: 0 16px 40px rgba(2, 6, 23, 0.45);
+  color-scheme: dark;
+}
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background: var(--app-background);
+  color: var(--app-text);
+}
+
+.app-shell {
+  min-height: 100vh;
+  background: var(--app-background);
+  color: var(--app-text);
+}
+
+.app-shell--vertical {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  align-items: start;
+}
+
+.main-content {
+  min-height: calc(100vh - 72px);
+  background: var(--app-background);
+  color: var(--app-text);
+}
+
+.main-content__inner {
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+:root[data-content-width='full'] .main-content__inner {
+  max-width: 100%;
+}
+
+:root[data-content-width='boxed'] .main-content__inner {
+  max-width: 1440px;
+}
+
+:root[data-content-width='compact'] .main-content__inner {
+  max-width: 1120px;
+}
+
+:root[data-menu-layout='vertical'] .main-content {
+  min-height: 100vh;
+}
+
+@media (max-width: 1024px) {
+  .app-shell--vertical {
+    display: block;
+  }
+
+  .main-content,
+  :root[data-menu-layout='vertical'] .main-content {
+    min-height: calc(100vh - 72px);
+  }
+
+  .main-content__inner {
+    padding: 1rem;
+  }
+}

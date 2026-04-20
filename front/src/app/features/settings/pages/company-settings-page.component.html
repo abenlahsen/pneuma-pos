@@ -1,0 +1,479 @@
+<div class="page-container">
+  <div class="header">
+    <div class="title-section">
+      <h1>Paramètres</h1>
+      <p class="subtitle">Configurez les informations de votre entreprise pour les futurs documents et paramètres applicatifs.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="section-header">
+        <div>
+          <h2>Informations société</h2>
+          <p class="section-subtitle">Renseignez les informations légales, de contact et l'identité visuelle de votre entreprise.</p>
+        </div>
+      </div>
+
+      <div *ngIf="loading()" class="text-center py-4">
+        <div class="spinner"></div>
+        Chargement...
+      </div>
+
+      <div *ngIf="!loading()">
+        <div class="alert alert-danger" *ngIf="errorMessage()">{{ errorMessage() }}</div>
+        <div class="alert alert-success" *ngIf="successMessage()">{{ successMessage() }}</div>
+
+        <form class="settings-form" (ngSubmit)="save()">
+          <div class="media-grid">
+            <div class="media-card">
+              <div class="media-card__header">
+                <h3>Logo de l'entreprise</h3>
+                <p>Importez le logo principal affiché dans vos supports.</p>
+              </div>
+
+              <div class="media-preview" [class.media-preview--empty]="!logoUrl()">
+                <ng-container *ngIf="logoUrl(); else emptyLogo">
+                  <img [src]="logoUrl()!" alt="Logo de l'entreprise" class="media-preview__image media-preview__image--logo" />
+                </ng-container>
+                <ng-template #emptyLogo>
+                  <span class="media-preview__placeholder">Aucun logo</span>
+                </ng-template>
+              </div>
+
+              <div class="media-actions">
+                <label class="btn btn-secondary media-upload">
+                  <input type="file" accept="image/*" (change)="onLogoSelected($event)" hidden />
+                  Choisir un logo
+                </label>
+                <button type="button" class="btn btn-danger" *ngIf="logoUrl()" (click)="removeLogo()">
+                  Supprimer
+                </button>
+              </div>
+            </div>
+
+            <div class="media-card">
+              <div class="media-card__header">
+                <h3>Favicon</h3>
+                <p>Importez l'icône affichée dans l'onglet du navigateur.</p>
+              </div>
+
+              <div class="media-preview media-preview--favicon" [class.media-preview--empty]="!faviconUrl()">
+                <ng-container *ngIf="faviconUrl(); else emptyFavicon">
+                  <img [src]="faviconUrl()!" alt="Favicon de l'entreprise" class="media-preview__image media-preview__image--favicon" />
+                </ng-container>
+                <ng-template #emptyFavicon>
+                  <span class="media-preview__placeholder">Aucun favicon</span>
+                </ng-template>
+              </div>
+
+              <div class="media-actions">
+                <label class="btn btn-secondary media-upload">
+                  <input type="file" accept="image/*,.ico" (change)="onFaviconSelected($event)" hidden />
+                  Choisir un favicon
+                </label>
+                <button type="button" class="btn btn-danger" *ngIf="faviconUrl()" (click)="removeFavicon()">
+                  Supprimer
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group form-group-wide">
+              <label for="company_name">Nom de l'entreprise</label>
+              <input
+                id="company_name"
+                type="text"
+                class="form-control"
+                [ngModel]="form().company_name"
+                (ngModelChange)="updateField('company_name', $event)"
+                name="company_name"
+                required
+              />
+            </div>
+
+            <div class="form-group form-group-wide">
+              <label for="legal_name">Raison sociale</label>
+              <input
+                id="legal_name"
+                type="text"
+                class="form-control"
+                [ngModel]="form().legal_name"
+                (ngModelChange)="updateField('legal_name', $event || null)"
+                name="legal_name"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input
+                id="email"
+                type="email"
+                class="form-control"
+                [ngModel]="form().email"
+                (ngModelChange)="updateField('email', $event || null)"
+                name="email"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="phone">Téléphone</label>
+              <input
+                id="phone"
+                type="text"
+                class="form-control"
+                [ngModel]="form().phone"
+                (ngModelChange)="updateField('phone', $event || null)"
+                name="phone"
+              />
+            </div>
+
+            <div class="form-group form-group-wide">
+              <label for="address">Adresse</label>
+              <input
+                id="address"
+                type="text"
+                class="form-control"
+                [ngModel]="form().address"
+                (ngModelChange)="updateField('address', $event || null)"
+                name="address"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="city">Ville</label>
+              <input
+                id="city"
+                type="text"
+                class="form-control"
+                [ngModel]="form().city"
+                (ngModelChange)="updateField('city', $event || null)"
+                name="city"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="state">Région</label>
+              <input
+                id="state"
+                type="text"
+                class="form-control"
+                [ngModel]="form().state"
+                (ngModelChange)="updateField('state', $event || null)"
+                name="state"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="postal_code">Code postal</label>
+              <input
+                id="postal_code"
+                type="text"
+                class="form-control"
+                [ngModel]="form().postal_code"
+                (ngModelChange)="updateField('postal_code', $event || null)"
+                name="postal_code"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="country">Pays</label>
+              <input
+                id="country"
+                type="text"
+                class="form-control"
+                [ngModel]="form().country"
+                (ngModelChange)="updateField('country', $event || null)"
+                name="country"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="tax_id">Identifiant fiscal</label>
+              <input
+                id="tax_id"
+                type="text"
+                class="form-control"
+                [ngModel]="form().tax_id"
+                (ngModelChange)="updateField('tax_id', $event || null)"
+                name="tax_id"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="rc">RC</label>
+              <input
+                id="rc"
+                type="text"
+                class="form-control"
+                [ngModel]="form().rc"
+                (ngModelChange)="updateField('rc', $event || null)"
+                name="rc"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="ice">ICE</label>
+              <input
+                id="ice"
+                type="text"
+                class="form-control"
+                [ngModel]="form().ice"
+                (ngModelChange)="updateField('ice', $event || null)"
+                name="ice"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="cnss">CNSS</label>
+              <input
+                id="cnss"
+                type="text"
+                class="form-control"
+                [ngModel]="form().cnss"
+                (ngModelChange)="updateField('cnss', $event || null)"
+                name="cnss"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="patente">Patente</label>
+              <input
+                id="patente"
+                type="text"
+                class="form-control"
+                [ngModel]="form().patente"
+                (ngModelChange)="updateField('patente', $event || null)"
+                name="patente"
+              />
+            </div>
+          </div>
+
+          <div class="theme-section">
+            <div class="section-header section-header--split">
+              <div>
+                <h2>Thème de l'application</h2>
+                <p class="section-subtitle">Personnalisez le mode d'affichage, les couleurs et la structure générale. L'aperçu ci-dessous illustre le style appliqué, sans reproduire exactement l'interface réelle.</p>
+              </div>
+
+              <button type="button" class="btn btn-secondary" (click)="resetThemeDefaults()">
+                Réinitialiser le thème
+              </button>
+            </div>
+
+            <div class="theme-grid">
+              <div class="theme-controls">
+                <div class="form-group">
+                  <label for="theme_mode">Mode</label>
+                  <select
+                    id="theme_mode"
+                    class="form-control"
+                    [ngModel]="form().theme_mode"
+                    (ngModelChange)="updateField('theme_mode', $event)"
+                    name="theme_mode"
+                  >
+                    <option *ngFor="let option of themeModeOptions" [ngValue]="option.value">
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="layout-grid">
+                  <div class="form-group">
+                    <label for="menu_layout">Disposition du menu</label>
+                    <select
+                      id="menu_layout"
+                      class="form-control"
+                      [ngModel]="form().menu_layout"
+                      (ngModelChange)="updateField('menu_layout', $event)"
+                      name="menu_layout"
+                    >
+                      <option *ngFor="let option of menuLayoutOptions" [ngValue]="option.value">
+                        {{ option.label }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="navbar_variant">Style de la barre supérieure</label>
+                    <select
+                      id="navbar_variant"
+                      class="form-control"
+                      [ngModel]="form().navbar_variant"
+                      (ngModelChange)="updateField('navbar_variant', $event)"
+                      name="navbar_variant"
+                    >
+                      <option *ngFor="let option of navbarVariantOptions" [ngValue]="option.value">
+                        {{ option.label }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <div class="form-group form-group-wide">
+                    <label for="content_width">Largeur du contenu</label>
+                    <select
+                      id="content_width"
+                      class="form-control"
+                      [ngModel]="form().content_width"
+                      (ngModelChange)="updateField('content_width', $event)"
+                      name="content_width"
+                    >
+                      <option *ngFor="let option of contentWidthOptions" [ngValue]="option.value">
+                        {{ option.label }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="color-grid">
+                  <div class="color-field">
+                    <label for="primary_color">Couleur principale</label>
+                    <div class="color-input">
+                      <input
+                        id="primary_color"
+                        type="color"
+                        class="color-input__picker"
+                        [ngModel]="form().primary_color"
+                        (ngModelChange)="updateField('primary_color', $event)"
+                        name="primary_color"
+                      />
+                      <input
+                        type="text"
+                        class="form-control"
+                        [ngModel]="form().primary_color"
+                        (ngModelChange)="updateField('primary_color', $event)"
+                        name="primary_color_text"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="color-field">
+                    <label for="accent_color">Couleur d'accent</label>
+                    <div class="color-input">
+                      <input
+                        id="accent_color"
+                        type="color"
+                        class="color-input__picker"
+                        [ngModel]="form().accent_color"
+                        (ngModelChange)="updateField('accent_color', $event)"
+                        name="accent_color"
+                      />
+                      <input
+                        type="text"
+                        class="form-control"
+                        [ngModel]="form().accent_color"
+                        (ngModelChange)="updateField('accent_color', $event)"
+                        name="accent_color_text"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="color-field">
+                    <label for="surface_color">Couleur de surface</label>
+                    <div class="color-input">
+                      <input
+                        id="surface_color"
+                        type="color"
+                        class="color-input__picker"
+                        [ngModel]="form().surface_color"
+                        (ngModelChange)="updateField('surface_color', $event)"
+                        name="surface_color"
+                      />
+                      <input
+                        type="text"
+                        class="form-control"
+                        [ngModel]="form().surface_color"
+                        (ngModelChange)="updateField('surface_color', $event)"
+                        name="surface_color_text"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="theme-preview"
+                [class.theme-preview--dark]="previewThemeMode() === 'dark'"
+                [class.theme-preview--horizontal]="previewMenuLayout() === 'horizontal'"
+                [class.theme-preview--navbar-compact]="previewNavbarVariant() === 'compact'"
+                [class.theme-preview--navbar-flat]="previewNavbarVariant() === 'flat'"
+                [class.theme-preview--width-boxed]="previewContentWidth() === 'boxed'"
+                [class.theme-preview--width-compact]="previewContentWidth() === 'compact'"
+                [ngStyle]="previewStyles()"
+              >
+                <div class="theme-preview__window">
+                  <div class="theme-preview__topbar">
+                    <div class="theme-preview__brand">
+                      <div class="theme-preview__logo">P</div>
+                      <div>
+                        <strong>{{ form().company_name || 'Votre entreprise' }}</strong>
+                        <span>Point de vente</span>
+                      </div>
+                    </div>
+                    <div class="theme-preview__badge">{{ previewThemeMode() === 'system' ? 'Auto' : (previewThemeMode() === 'dark' ? 'Sombre' : 'Clair') }}</div>
+                  </div>
+
+                  <div class="theme-preview__menu-top" *ngIf="previewMenuLayout() === 'horizontal'">
+                    <span class="theme-preview__nav-item theme-preview__nav-item--active">Tableau de bord</span>
+                    <span class="theme-preview__nav-item">Produits</span>
+                    <span class="theme-preview__nav-item">Ventes</span>
+                    <span class="theme-preview__nav-item">Paramètres</span>
+                  </div>
+
+                  <div class="theme-preview__content">
+                    <aside class="theme-preview__sidebar" *ngIf="previewMenuLayout() === 'vertical'">
+                      <span class="theme-preview__nav-item theme-preview__nav-item--active">Tableau de bord</span>
+                      <span class="theme-preview__nav-item">Produits</span>
+                      <span class="theme-preview__nav-item">Ventes</span>
+                      <span class="theme-preview__nav-item">Paramètres</span>
+                    </aside>
+
+                    <div class="theme-preview__panel">
+                      <div class="theme-preview__content-shell">
+                        <div class="theme-preview__hero">
+                          <div>
+                            <h3>Résumé du jour</h3>
+                            <p>Un aperçu simplifié des couleurs et de la structure sélectionnées.</p>
+                          </div>
+                          <button type="button" class="theme-preview__cta">Nouvelle vente</button>
+                        </div>
+
+                        <div class="theme-preview__stats">
+                          <div class="theme-preview__stat">
+                            <span>Commandes</span>
+                            <strong>128</strong>
+                          </div>
+                          <div class="theme-preview__stat">
+                            <span>Revenus</span>
+                            <strong>24 560 DH</strong>
+                          </div>
+                          <div class="theme-preview__stat">
+                            <span>Clients</span>
+                            <strong>42</strong>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="theme-preview__legend">
+                  <span><strong>Menu :</strong> {{ previewMenuLayout() === 'horizontal' ? 'Horizontal' : 'Vertical' }}</span>
+                  <span><strong>Barre supérieure :</strong> {{ previewNavbarVariant() === 'compact' ? 'Compacte' : (previewNavbarVariant() === 'flat' ? 'Plate' : 'Standard') }}</span>
+                  <span><strong>Contenu :</strong> {{ previewContentWidth() === 'boxed' ? 'Encadré' : (previewContentWidth() === 'compact' ? 'Compact' : 'Pleine largeur') }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-primary" type="submit" [disabled]="saving() || loading()">
+              {{ saving() ? 'Enregistrement...' : 'Enregistrer' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
