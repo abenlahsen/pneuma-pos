@@ -1,7 +1,9 @@
-import { Component, computed } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { SettingsService } from '../../features/settings/data-access/settings.service';
+import { CompanySettings, MenuLayout } from '../../features/settings/models/company-settings.model';
 
 interface NavItem {
   label: string;
@@ -20,6 +22,9 @@ interface NavItem {
 })
 export class NavbarComponent {
   userName = computed(() => this.authService.user()?.name || '');
+  companySettings = signal<CompanySettings | null>(null);
+  brandLogoUrl = signal('logo.png');
+  readonly menuLayout = computed<MenuLayout>(() => this.companySettings()?.menu_layout ?? 'vertical');
   userRole = computed(() => {
     const roles = this.authService.user()?.roles;
     return roles && roles.length > 0 ? roles[0].name : '';
@@ -50,6 +55,7 @@ export class NavbarComponent {
     },
     { label: '👥 Utilisateurs', route: '/users', permission: 'view users' },
     { label: '🔐 Rôles', route: '/roles', permission: 'view roles' },
+    { label: '⚙️ Paramètres', route: '/settings', permission: 'view settings' },
   ];
 
   visibleNavItems = computed(() => {
@@ -70,7 +76,17 @@ export class NavbarComponent {
       .filter((item): item is NavItem => item !== null);
   });
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private settingsService: SettingsService,
+  ) {
+    this.settingsService.getCompanySettings().subscribe({
+      next: (settings) => {
+        this.companySettings.set(settings);
+        this.brandLogoUrl.set(settings.logo_url || 'logo.png');
+      },
+    });
+  }
 
   toggleMenu() { this.menuOpen = !this.menuOpen; }
   closeMenu() { this.menuOpen = false; }

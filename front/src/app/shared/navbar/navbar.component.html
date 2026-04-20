@@ -1,12 +1,19 @@
-<nav class="navbar">
+<nav class="navbar" [class.navbar--vertical]="menuLayout() === 'vertical'">
   <div class="navbar-brand">
-    <a routerLink="/dashboard" class="brand-link" (click)="closeMenu()"><img src="logo.png" alt="PNEU.MA" class="brand-logo"></a>
-    <button class="menu-toggle" (click)="toggleMenu()" [class.active]="menuOpen">
+    <a routerLink="/dashboard" class="brand-link" (click)="closeMenu()">
+      <img [src]="brandLogoUrl()" [alt]="companySettings()?.company_name || 'PNEU.MA'" class="brand-logo">
+    </a>
+    <button
+      *ngIf="menuLayout() !== 'vertical'"
+      class="menu-toggle"
+      (click)="toggleMenu()"
+      [class.active]="menuOpen"
+    >
       <span></span><span></span><span></span>
     </button>
   </div>
 
-  <div class="navbar-links" [class.open]="menuOpen">
+  <div class="navbar-links" [class.open]="menuOpen || menuLayout() === 'vertical'">
     <ng-container *ngFor="let item of visibleNavItems()">
       
       <a *ngIf="!item.children"
@@ -28,7 +35,7 @@
     </ng-container>
   </div>
 
-  <div class="navbar-user">
+  <div class="navbar-user" [class.navbar-user--vertical]="menuLayout() === 'vertical'">
     <span class="user-info" *ngIf="userName()">
       <span class="user-name">{{ userName() }}</span>
       <span class="user-role" *ngIf="userRole()">{{ userRole() }}</span>

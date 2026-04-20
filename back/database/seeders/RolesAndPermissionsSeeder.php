@@ -29,6 +29,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'stock-movements' => ['view'],
             'brands' => ['view', 'create', 'edit', 'delete'],
             'products' => ['view', 'create', 'edit', 'delete'],
+            'settings' => ['view', 'edit'],
         ];
 
         // Create permissions
@@ -57,11 +58,13 @@ class RolesAndPermissionsSeeder extends Seeder
                 'view partners',
                 'view products',
                 'view brands',
+                'view settings',
             ]);
         } else {
             $commercial->givePermissionTo([
                 'view products',
                 'view brands',
+                'view settings',
             ]);
         }
 
@@ -82,6 +85,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'view stock-movements',
                 'view products', 'create products', 'edit products', 'delete products',
                 'view brands', 'create brands', 'edit brands', 'delete brands',
+                'view settings', 'edit settings',
             ]);
         } else {
             // Ensure Manager gets new permissions added after initial creation
@@ -90,6 +94,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'view brands', 'create brands', 'edit brands', 'delete brands',
                 'view stock-movements',
                 'view accounts', 'create accounts', 'edit accounts', 'delete accounts', 'transfer accounts',
+                'view settings', 'edit settings',
             ]);
         }
 
