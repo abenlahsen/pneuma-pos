@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CarrierController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SupplierController;
@@ -48,3 +49,11 @@ Route::get('partners/{partner}', [PartnerController::class, 'show'])->middleware
 Route::post('partners', [PartnerController::class, 'store'])->middleware('permission:create partners');
 Route::put('partners/{partner}', [PartnerController::class, 'update'])->middleware('permission:edit partners');
 Route::delete('partners/{partner}', [PartnerController::class, 'destroy'])->middleware('permission:delete partners');
+
+// Clients
+Route::get('clients', [ClientController::class, 'index'])->middleware('permission:view clients');
+Route::get('clients/{client}', [ClientController::class, 'show'])->middleware('permission:view clients');
+Route::post('clients', [ClientController::class, 'store'])->middleware('permission:create clients');
+Route::put('clients/{client}', [ClientController::class, 'update'])->middleware('permission:edit clients');
+Route::patch('clients/{client}', [ClientController::class, 'update'])->middleware('permission:edit clients');
+Route::delete('clients/{client}', [ClientController::class, 'destroy'])->middleware('permission:delete clients');

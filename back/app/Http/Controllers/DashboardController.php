@@ -6,8 +6,9 @@ use App\Models\Account;
 use App\Models\Purchase;
 use App\Models\Sale;
 use App\Models\Stock;
-use App\Models\Transaction;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -15,13 +16,21 @@ class DashboardController extends Controller
     /**
      * Aggregated KPI snapshot for the admin dashboard.
      */
-    public function kpi()
+    public function kpi(Request $request): JsonResponse
     {
-        $today = now()->toDateString();
-        $monthStart = now()->startOfMonth()->toDateString();
-        $monthEnd = now()->endOfMonth()->toDateString();
-        $yearStart = now()->startOfYear()->toDateString();
-        $yearEnd = now()->endOfYear()->toDateString();
+        $selectedDay = $request->query('day');
+        $selectedMonth = $request->query('month');
+        $selectedYear = $request->query('year');
+
+        $dayDate = $selectedDay ? Carbon::createFromFormat('Y-m-d', $selectedDay) : now();
+        $monthDate = $selectedMonth ? Carbon::createFromFormat('Y-m', $selectedMonth) : now();
+        $yearDate = $selectedYear ? Carbon::createFromFormat('Y', $selectedYear) : now();
+
+        $today = $dayDate->toDateString();
+        $monthStart = $monthDate->copy()->startOfMonth()->toDateString();
+        $monthEnd = $monthDate->copy()->endOfMonth()->toDateString();
+        $yearStart = $yearDate->copy()->startOfYear()->toDateString();
+        $yearEnd = $yearDate->copy()->endOfYear()->toDateString();
 
         $salesToday = Sale::whereDate('date', $today);
         $salesMonth = Sale::whereBetween('date', [$monthStart, $monthEnd]);

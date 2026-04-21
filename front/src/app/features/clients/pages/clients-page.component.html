@@ -1,0 +1,152 @@
+<div class="page-container">
+  <div class="header">
+    <div class="title-section">
+      <h1>Clients</h1>
+      <p class="subtitle">Gérez vos clients, leurs coordonnées et leur solde d'ouverture.</p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" type="button" (click)="openCreateModal()">Nouveau Client</button>
+    </div>
+  </div>
+
+  <div class="card filters-section">
+    <div class="card-body" style="padding: 1rem 1.5rem">
+      <div class="filters-row">
+        <div class="form-group search-group">
+          <label>Rechercher</label>
+          <input
+            type="text"
+            class="form-control"
+            name="search"
+            [(ngModel)]="filters.search"
+            placeholder="Nom, téléphone, ville ou email..."
+            (keyup.enter)="applyFilters()"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Ville</label>
+          <input
+            type="text"
+            class="form-control"
+            name="city"
+            [(ngModel)]="filters.city"
+            placeholder="Filtrer par ville"
+            (keyup.enter)="applyFilters()"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Statut</label>
+          <select class="form-control" name="status" [(ngModel)]="filters.status">
+            <option value="all">Tous les clients</option>
+            <option value="active">Actifs uniquement</option>
+            <option value="inactive">Inactifs uniquement</option>
+          </select>
+        </div>
+
+        <div class="filter-actions">
+          <button class="btn btn-filter" type="button" (click)="applyFilters()" title="Rechercher">🔍</button>
+          <button class="btn btn-reset" type="button" (click)="clearFilters()" title="Réinitialiser">✕</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="feedback error" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+
+  <div class="card table-card">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Client</th>
+            <th>Type</th>
+            <th>Téléphone</th>
+            <th>Ville</th>
+            <th>Statut</th>
+            <th class="text-right">Limite de crédit (DH)</th>
+            <th class="text-right">Solde d'ouverture (DH)</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngIf="loading()">
+            <td colspan="8" class="text-center">
+              <div class="spinner"></div>
+              Chargement...
+            </td>
+          </tr>
+
+          <tr *ngIf="!loading() && clients().length === 0">
+            <td colspan="8" class="text-center text-muted">Aucun client trouvé.</td>
+          </tr>
+
+          <tr *ngFor="let client of clients(); trackBy: trackByClientId">
+            <td class="fw-semibold">
+              <button type="button" class="btn-link client-link" (click)="viewClient(client)">
+                {{ client.name }}
+              </button>
+              <small *ngIf="client.email">{{ client.email }}</small>
+            </td>
+            <td>{{ client.category || '-' }}</td>
+            <td>{{ client.phone || '-' }}</td>
+            <td>{{ client.city || '-' }}</td>
+            <td>
+              <span class="status-badge" [class.inactive]="client.is_active === false">
+                {{ client.is_active === false ? 'Inactive' : 'Active' }}
+              </span>
+            </td>
+            <td class="text-right">{{ client.credit_limit != null ? (client.credit_limit | number:'1.2-2') : '0.00' }}</td>
+            <td class="text-right">{{ client.opening_balance != null ? (client.opening_balance | number:'1.2-2') : '0.00' }}</td>
+            <td class="text-center">
+              <button class="btn-icon btn-sm text-primary" type="button" (click)="viewClient(client)" title="Voir">
+                👁️
+              </button>
+              <button class="btn-icon btn-sm text-primary" type="button" (click)="openEditModal(client)" title="Modifier">
+                ✏️
+              </button>
+              <button
+                class="btn-icon btn-sm text-danger"
+                type="button"
+                (click)="deleteClient(client)"
+                title="Supprimer"
+                [disabled]="deletingClientId() === client.id"
+              >
+                <span *ngIf="deletingClientId() !== client.id">🗑️</span>
+                <span *ngIf="deletingClientId() === client.id" class="inline-spinner"></span>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination-wrapper" *ngIf="total() > 0">
+      <div class="pagination-info">
+        {{ (currentPage() - 1) * perPage() + 1 }} à {{ currentPage() * perPage() > total() ? total() : currentPage() * perPage() }}
+        sur {{ total() }}
+      </div>
+      <div class="pagination">
+        <button class="btn-page" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">&laquo;</button>
+        <button class="btn-page" *ngFor="let pg of pages" [class.active]="pg === currentPage()" (click)="goToPage(pg)">
+          {{ pg }}
+        </button>
+        <button class="btn-page" [disabled]="currentPage() === lastPage()" (click)="goToPage(currentPage() + 1)">&raquo;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="isModalOpen()" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ selectedClient() ? 'Modifier Client' : 'Nouveau Client' }}</h2>
+      <button class="btn-icon" type="button" (click)="closeModal()" [disabled]="saving()">X</button>
+    </div>
+    <div class="modal-body">
+      <app-client-form [client]="selectedClient()" (save)="saveClient($event)" (cancel)="closeModal()"></app-client-form>
+    </div>
+  </div>
+</div>

@@ -316,6 +316,29 @@
   vertical-align: middle;
 }
 
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  background: #f8fafc;
+  color: #475569;
+}
+
+.tag-season {
+  background: #ebf4ff;
+  color: #2b6cb0;
+}
+
+.tag-rft,
+.tag-xl {
+  background: #fff5f5;
+  color: #ff2d37;
+}
+
 .pagination-wrapper {
   padding: 1rem 1.5rem;
   border-top: 1px solid #e2e8f0;

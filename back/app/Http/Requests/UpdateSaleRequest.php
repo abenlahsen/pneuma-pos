@@ -21,7 +21,10 @@ class UpdateSaleRequest extends FormRequest
     {
         return [
             'date' => ['sometimes', 'required', 'date'],
+            'with_invoice' => ['sometimes', 'nullable', 'boolean'],
             'client' => ['sometimes', 'nullable', 'string'],
+            'client_phone' => ['sometimes', 'nullable', 'string'],
+            'client_id' => ['sometimes', 'nullable', 'exists:clients,id'],
             'commercial_id' => ['sometimes', 'nullable', 'exists:users,id'],
             'carrier_id' => ['sometimes', 'nullable', 'exists:carriers,id'],
             'partner_id' => ['sometimes', 'nullable', 'exists:partners,id'],
@@ -29,6 +32,7 @@ class UpdateSaleRequest extends FormRequest
             'payment_status' => ['sometimes', 'nullable', 'string'],
             'city' => ['sometimes', 'nullable', 'string'],
             'payment_method' => ['sometimes', 'nullable', 'string'],
+            'delivery_date' => ['sometimes', 'nullable', 'date'],
             'comments' => ['sometimes', 'nullable', 'string'],
             'items' => ['sometimes', 'required', 'array', 'min:1'],
             'items.*.product_id' => ['required_with:items', 'exists:products,id'],

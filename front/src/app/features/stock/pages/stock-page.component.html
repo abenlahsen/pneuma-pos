@@ -116,7 +116,11 @@
             <th>Référence</th>
             <th>Marque</th>
             <th>Profil</th>
-            <th>Dimensions</th>
+            <th>Dimension</th>
+            <th>IC</th>
+            <th>IV</th>
+            <th>RunFlat</th>
+            <th>Saison</th>
             <th>Marquage</th>
             <th class="sortable" (click)="toggleSort('depot')">
               Dépôt
@@ -138,14 +142,14 @@
         </thead>
         <tbody>
           <tr *ngIf="loading()">
-            <td colspan="12" class="text-center py-4">
+            <td colspan="16" class="text-center py-4">
               <div class="spinner"></div>
               Chargement...
             </td>
           </tr>
 
           <tr *ngIf="!loading() && stocks().length === 0">
-            <td colspan="12" class="text-center py-4 text-muted">
+            <td colspan="16" class="text-center py-4 text-muted">
               Aucun article en stock trouvé.
             </td>
           </tr>
@@ -159,7 +163,32 @@
             <td>{{ stock.product?.brand?.name || '-' }}</td>
             <td>{{ stock.product?.profile || '-' }}</td>
             <td>{{ dimensionsLabel(stock) }}</td>
-            <td>{{ markingLabel(stock) }}</td>
+            <td>{{ stock.product?.tyre?.tire_load_index || '-' }}</td>
+            <td>{{ stock.product?.tyre?.tire_speed_index || '-' }}</td>
+            <td>
+              <span *ngIf="stock.product?.tyre?.tire_runflat" class="tag tag-rft" title="Run Flat">RFT</span>
+              <span *ngIf="!stock.product?.tyre?.tire_runflat">-</span>
+            </td>
+            <td>
+              <span *ngIf="stock.product?.tyre?.tire_season" class="tag tag-season">
+                {{
+                  stock.product?.tyre?.tire_season === 'summer'
+                    ? 'Été'
+                    : stock.product?.tyre?.tire_season === 'winter'
+                      ? 'Hiver'
+                      : stock.product?.tyre?.tire_season === 'all_season'
+                        ? '4 saisons'
+                        : stock.product?.tyre?.tire_season
+                }}
+              </span>
+              <span *ngIf="!stock.product?.tyre?.tire_season">-</span>
+            </td>
+            <td>
+              {{ stock.product?.tyre?.tire_marking || '' }}
+              <span *ngIf="stock.product?.tyre?.tire_runflat" class="tag tag-rft" title="Run Flat">RFT</span>
+              <span *ngIf="stock.product?.tyre?.tire_reinforced" class="tag tag-xl" title="Renforcé">XL</span>
+              <span *ngIf="!stock.product?.tyre?.tire_marking && !stock.product?.tyre?.tire_runflat && !stock.product?.tyre?.tire_reinforced">-</span>
+            </td>
             <td>{{ stock.depot || '-' }}</td>
             <td>{{ stock.zone || '-' }}</td>
             <td>{{ stock.made_in || '-' }}</td>

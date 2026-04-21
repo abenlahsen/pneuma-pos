@@ -7,11 +7,19 @@ return new class extends Migration
 {
     public function up()
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::statement("ALTER TABLE products MODIFY COLUMN type ENUM('tyre','part','service') NOT NULL");
     }
 
     public function down()
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         // Safety: do not allow rollback if any service products exist
         $count = (int) DB::table('products')->where('type', 'service')->count();
         if ($count > 0) {

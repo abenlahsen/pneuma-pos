@@ -18,20 +18,46 @@
           </div>
           <div class="detail-item">
             <span class="label">Client</span>
-            <span class="value">{{ sale.client || '-' }}</span>
+            <span class="value">{{ clientName }}</span>
           </div>
           <div class="detail-item">
             <span class="label">Téléphone</span>
-            <span class="value">{{ sale.client_phone || '-' }}</span>
+            <span class="value">{{ clientPhone }}</span>
           </div>
           <div class="detail-item">
             <span class="label">Ville</span>
-            <span class="value">{{ sale.city || '-' }}</span>
+            <span class="value">{{ clientCity }}</span>
           </div>
           <div class="detail-item">
             <span class="label">Facture</span>
             <span class="value">{{ sale.with_invoice ? 'Oui' : 'Non' }}</span>
           </div>
+        </div>
+      </div>
+
+      <div class="detail-section" *ngIf="showAccountWarning">
+        <h3 class="section-title">Contexte client</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="label">Solde impayé</span>
+            <span class="value">{{ outstandingBalance | number:'1.2-2' }} DH</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Limite de crédit</span>
+            <span class="value">{{ creditLimit | number:'1.2-2' }} DH</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Nombre de ventes</span>
+            <span class="value">{{ sale.client_summary?.sales_count || 0 }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Dernière vente</span>
+            <span class="value">{{ sale.client_summary?.last_sale_date || '-' }}</span>
+          </div>
+        </div>
+
+        <div class="account-warning" *ngIf="overCreditLimit">
+          Le client lié dépasse actuellement sa limite de crédit configurée.
         </div>
       </div>
 
@@ -42,28 +68,28 @@
             <thead>
               <tr>
                 <th class="col-produit">Produit</th>
-                <th>Qté</th>
-                <th class="no-print">Achat</th>
-                <th>Prix</th>
-                <th>Remise</th>
-                <th>Total</th>
-                <th class="no-print">Marge</th>
+                <th class="text-center">Qté</th>
+                <th class="no-print text-center">Achat</th>
+                <th class="text-center">Prix</th>
+                <th class="text-center">Remise</th>
+                <th class="text-center">Total</th>
+                <th class="no-print text-center">Marge</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let item of sale.items">
                 <td class="col-produit">
                   <span class="badge badge-primary mr-1" *ngIf="getProduct(item)?.brand">{{ getProduct(item)!.brand!.name }}</span>
-                  <span class="fw-medium">{{ getProduct(item)?.reference || 'Produit #' + item.product_id }}</span>
+                  <span class="fw-medium">{{ getProduct(item)?.reference || item.product_name || ('Produit #' + item.product_id) }}</span>
                   <span class="text-muted ml-1" *ngIf="getProduct(item)?.tyre?.tire_width">{{ getProduct(item)!.tyre!.tire_width }}/{{ getProduct(item)!.tyre!.tire_height }}R{{ getProduct(item)!.tyre!.tire_diameter }}</span>
                   <span class="text-muted ml-1" *ngIf="getProduct(item)?.profile">— {{ getProduct(item)!.profile }}</span>
                 </td>
-                <td>{{ item.quantity }}</td>
-                <td class="no-print">{{ item.purchase_price | number:'1.2-2' }}</td>
-                <td>{{ item.selling_price | number:'1.2-2' }}</td>
-                <td>{{ (item.discount || 0) | number:'1.0-2' }}%</td>
-                <td>{{ lineTotal(item) | number:'1.2-2' }}</td>
-                <td class="no-print" [class.text-success]="(lineTotal(item) - item.purchase_price * item.quantity) > 0" [class.text-danger]="(lineTotal(item) - item.purchase_price * item.quantity) < 0">{{ (lineTotal(item) - item.purchase_price * item.quantity) | number:'1.2-2' }}</td>
+                <td class="text-center">{{ item.quantity }}</td>
+                <td class="no-print text-center">{{ item.purchase_price | number:'1.2-2' }}</td>
+                <td class="text-center">{{ (item.selling_price ?? item.unit_price) | number:'1.2-2' }}</td>
+                <td class="text-center">{{ (item.discount || 0) | number:'1.0-2' }}%</td>
+                <td class="text-center">{{ lineTotal(item) | number:'1.2-2' }}</td>
+                <td class="no-print text-center" [class.text-success]="(lineTotal(item) - (item.purchase_price || 0) * item.quantity) > 0" [class.text-danger]="(lineTotal(item) - (item.purchase_price || 0) * item.quantity) < 0">{{ (lineTotal(item) - (item.purchase_price || 0) * item.quantity) | number:'1.2-2' }}</td>
               </tr>
               <tr *ngIf="!sale.items || sale.items.length === 0">
                 <td colspan="7" class="text-center text-muted">Aucun article.</td>
@@ -84,10 +110,9 @@
             <span class="label">Total Achat</span>
             <span class="value">{{ sale.total_purchase | number:'1.2-2' }} DH</span>
           </div>
-
           <div class="detail-item">
             <span class="label">Total Vente</span>
-            <span class="value fw-semibold">{{ sale.total_sale | number:'1.2-2' }} DH</span>
+            <span class="value fw-semibold">{{ (sale.total_sale ?? sale.total) | number:'1.2-2' }} DH</span>
           </div>
           <div class="detail-item no-print">
             <span class="label">Marge</span>

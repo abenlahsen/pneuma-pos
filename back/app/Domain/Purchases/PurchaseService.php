@@ -14,9 +14,9 @@ use Illuminate\Support\Facades\DB;
 
 class PurchaseService
 {
-    protected $movements;
+    protected StockMovementService $movements;
 
-    public function __construct($movements)
+    public function __construct(StockMovementService $movements)
     {
         $this->movements = $movements;
     }

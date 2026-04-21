@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Brand;
+use App\Models\Client;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Stock;
@@ -62,6 +63,7 @@ class SaleControllerTest extends TestCase
         $this->ensureProductSubtypeTablesExist();
         $this->ensureCarriersTableExists();
         $this->ensurePartnersTableExists();
+        $this->ensureClientsTableExists();
         $this->ensureSalesTableExists();
         $this->ensureStocksTableExists();
         $this->ensureSaleItemsTableExists();
@@ -257,6 +259,25 @@ class SaleControllerTest extends TestCase
         }
     }
 
+    protected function ensureClientsTableExists()
+    {
+        if (! Schema::hasTable('clients')) {
+            Schema::create('clients', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('phone')->nullable();
+                $table->string('email')->nullable();
+                $table->string('city')->nullable();
+                $table->text('address')->nullable();
+                $table->text('notes')->nullable();
+                $table->boolean('is_active')->default(true);
+                $table->unsignedBigInteger('created_by')->nullable();
+                $table->unsignedBigInteger('updated_by')->nullable();
+                $table->timestamps();
+            });
+        }
+    }
+
     protected function ensureSalesTableExists()
     {
         if (! Schema::hasTable('sales')) {
@@ -274,8 +295,7 @@ class SaleControllerTest extends TestCase
                 $table->unsignedBigInteger('partner_id')->nullable();
                 $table->string('service')->nullable();
                 $table->decimal('service_fee', 12, 2)->default(0);
-                $table->string('client')->nullable();
-                $table->string('client_phone')->nullable();
+                $table->unsignedBigInteger('client_id')->nullable();
                 $table->string('payment_method')->nullable();
                 $table->unsignedBigInteger('commercial_id')->nullable();
                 $table->string('status')->nullable();
@@ -397,9 +417,33 @@ class SaleControllerTest extends TestCase
 
     private function createSale($attributes = [])
     {
+        $clientName = $attributes['client'] ?? 'Client Test';
+        $clientPhone = $attributes['client_phone'] ?? null;
+        $city = $attributes['city'] ?? 'Casablanca';
+
+        if (! array_key_exists('client_id', $attributes)) {
+            $clientData = [
+                'name' => $clientName,
+                'phone' => $clientPhone,
+                'city' => $city,
+                'created_by' => $this->user->id,
+                'updated_by' => $this->user->id,
+                'is_active' => true,
+            ];
+
+            if (Schema::hasColumn('clients', 'category')) {
+                $clientData['category'] = 'Paticulier';
+            }
+
+            $client = Client::query()->create($clientData);
+
+            $attributes['client_id'] = $client->id;
+        }
+
+        unset($attributes['client'], $attributes['client_phone']);
+
         return Sale::query()->create(array_merge([
             'date' => '2026-03-01',
-            'client' => 'Client Test',
             'total_quantity' => 4,
             'total_purchase' => 400,
             'total_sale' => 600,
@@ -573,6 +617,42 @@ class SaleControllerTest extends TestCase
             ]);
     }
 
+    public function test_summary_returns_sales_page_kpis()
+    {
+        $this->createSale([
+            'date' => now()->toDateString(),
+            'total_quantity' => 4,
+            'total_sale' => 600,
+            'status' => 'EN COURS',
+            'payment_status' => 'NON PAYE',
+        ]);
+
+        $this->createSale([
+            'date' => now()->startOfMonth()->addDay()->toDateString(),
+            'total_quantity' => 6,
+            'total_sale' => 900,
+            'status' => 'LIVRE',
+            'payment_status' => 'PAYE',
+        ]);
+
+        $this->createSale([
+            'date' => now()->subMonth()->startOfMonth()->addDay()->toDateString(),
+            'total_quantity' => 5,
+            'total_sale' => 700,
+            'status' => 'EN COURS',
+            'payment_status' => 'NON PAYE',
+        ]);
+
+        $response = $this->getJson('/api/sales-summary', $this->authHeaders());
+
+        $response->assertOk()
+            ->assertJsonPath('tyres_today', 4)
+            ->assertJsonPath('tyres_this_month', 10)
+            ->assertJsonPath('tyres_en_cours', 9)
+            ->assertJsonPath('sales_en_cours', 2)
+            ->assertJsonPath('total_unpaid', 1300);
+    }
+
     public function test_store_creates_sale()
     {
         $brand = Brand::query()->create(['name' => 'TestBrand', 'is_active' => true]);
@@ -616,10 +696,18 @@ class SaleControllerTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonPath('client', 'New Client')
+            ->assertJsonPath('linked_client.name', 'New Client')
             ->assertJsonPath('total_quantity', 2)
             ->assertJsonPath('total_sale', '400.00');
 
-        $this->assertDatabaseHas('sales', ['client' => 'New Client']);
+        $saleId = $response->json('id');
+        $this->assertNotNull($saleId);
+
+        $sale = Sale::query()->find($saleId);
+        $this->assertNotNull($sale);
+        $this->assertNotNull($sale->client_id);
+
+        $this->assertDatabaseHas('clients', ['id' => $sale->client_id, 'name' => 'New Client']);
         $this->assertDatabaseHas('sale_items', ['product_id' => $product->id, 'quantity' => 2]);
     }
 

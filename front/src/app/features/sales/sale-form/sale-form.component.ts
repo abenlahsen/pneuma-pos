@@ -1,9 +1,10 @@
-import { Component, EventEmitter, Input, OnInit, Output, inject, signal, computed } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs/operators';
+
 import { Sale, SalePayload } from '../../../core/models/sale.model';
 import { Product } from '../../../core/models/product.model';
-
 import { ProductService } from '../../../core/services/product.service';
 import { UserService } from '../../../core/services/user.service';
 import { ManagedUser } from '../../../core/models/user-manage.model';
@@ -13,6 +14,8 @@ import { Partner } from '../../partners/models/partner.model';
 import { PartnerService } from '../../partners/data-access/partner.service';
 import { Stock } from '../../../core/models/stock.model';
 import { StockService } from '../../../core/services/stock.service';
+import { ClientService } from '../../clients/data-access/client.service';
+import { Client, ClientPayload, ClientProfileResponse } from '../../clients/models/client.model';
 
 @Component({
   selector: 'app-sale-form',
@@ -23,23 +26,63 @@ import { StockService } from '../../../core/services/stock.service';
 })
 export class SaleFormComponent implements OnInit {
   @Input() sale: Sale | null = null;
+
   @Output() save = new EventEmitter<SalePayload>();
   @Output() cancel = new EventEmitter<void>();
+  @Output() saved = new EventEmitter<SalePayload>();
+  @Output() cancelled = new EventEmitter<void>();
 
-  private productService = inject(ProductService);
-  private stockService = inject(StockService);
+  private readonly productService = inject(ProductService);
+  private readonly stockService = inject(StockService);
+  private readonly userService = inject(UserService);
+  private readonly carrierService = inject(CarrierService);
+  private readonly partnerService = inject(PartnerService);
+  private readonly clientService = inject(ClientService);
+
   products = signal<Product[]>([]);
   productSearch = signal('');
   loadingProducts = signal(false);
   stocks = signal<Stock[]>([]);
   loadingStocks = signal(false);
   noStockAvailable = signal(false);
+
+  commercials = signal<ManagedUser[]>([]);
+  carriers = signal<Carrier[]>([]);
+  partners = signal<Partner[]>([]);
+  clients = signal<Client[]>([]);
+  filteredClients = signal<Client[]>([]);
+  duplicateMatches = signal<Client[]>([]);
+  loadingClients = signal(false);
+  loadingClientProfile = signal(false);
+  selectedClient = signal<Client | null>(null);
+  clientProfile = signal<ClientProfileResponse | null>(null);
+
+  clientSearch = signal('');
+  showClientSuggestions = signal(false);
+  showQuickCreate = signal(false);
+  creatingClient = signal(false);
+
+  quickClient: ClientPayload = {
+    name: '',
+    phone: '',
+    email: '',
+    city: '',
+    address: '',
+    notes: '',
+    is_active: true,
+  };
+
   formData: Partial<SalePayload> = {
     date: new Date().toISOString().split('T')[0],
     with_invoice: false,
     items: [],
+    total_quantity: 0,
     total_purchase: 0,
     total_sale: 0,
+    subtotal: 0,
+    discount: 0,
+    tax: 0,
+    total: 0,
     margin: 0,
 
     city: '',
@@ -49,12 +92,13 @@ export class SaleFormComponent implements OnInit {
     service: '',
     client: '',
     client_phone: '',
+    client_id: null,
     payment_method: 'ESPECE',
     commercial_id: null,
     status: 'EN COURS',
     payment_status: 'NON PAYE',
     delivery_date: '',
-    comments: ''
+    comments: '',
   };
 
   currentItem: any = {
@@ -69,31 +113,56 @@ export class SaleFormComponent implements OnInit {
   };
 
   editingItemIndex: number | null = null;
-  /** Quantity of the item when we started editing it — added back to stock.quantity for the insufficient check */
   editingOriginalQuantity = 0;
   logisticsCollapsed = signal(true);
 
+  readonly selectedClientName = computed(() =>
+    this.selectedClient()?.name?.trim() || this.formData.client?.trim() || ''
+  );
 
-  commercials = signal<ManagedUser[]>([]);
-  carriers = signal<Carrier[]>([]);
-  partners = signal<Partner[]>([]);
+  readonly selectedClientPhone = computed(() =>
+    this.selectedClient()?.phone?.trim() || this.formData.client_phone?.trim() || ''
+  );
 
+  readonly clientOutstandingBalance = computed(() =>
+    Number(this.clientProfile()?.outstanding_balance ?? this.clientProfile()?.summary?.outstanding_balance ?? 0)
+  );
 
-  private userService = inject(UserService);
-  private carrierService = inject(CarrierService);
-  private partnerService = inject(PartnerService);
+  readonly clientCreditLimit = computed(() =>
+    Number(
+      this.clientProfile()?.client?.credit_limit
+      ?? this.clientProfile()?.summary?.credit_limit
+      ?? this.selectedClient()?.credit_limit
+      ?? 0
+    )
+  );
 
-  ngOnInit() {
+  readonly projectedBalance = computed(() =>
+    this.clientOutstandingBalance() + Number(this.formData.total_sale ?? this.formData.total ?? 0)
+  );
 
+  readonly nearCreditLimit = computed(() =>
+    this.clientCreditLimit() > 0 && this.projectedBalance() >= this.clientCreditLimit() * 0.9 && this.projectedBalance() <= this.clientCreditLimit()
+  );
+
+  readonly overCreditLimit = computed(() =>
+    this.clientCreditLimit() > 0 && this.projectedBalance() > this.clientCreditLimit()
+  );
+
+  ngOnInit(): void {
     this.userService.getUsers({ all: true }).subscribe({
       next: (res: any) => { this.commercials.set(Array.isArray(res) ? res : res.data); }
     });
+
     this.carrierService.getCarriers({ all: true }).subscribe({
       next: (res: any) => { this.carriers.set(Array.isArray(res) ? res : res.data); }
     });
+
     this.partnerService.getPartners({ all: true }).subscribe({
       next: (res: any) => { this.partners.set(Array.isArray(res) ? res : res.data); }
     });
+
+    this.loadClients();
     this.searchProducts();
 
     if (this.sale) {
@@ -101,21 +170,36 @@ export class SaleFormComponent implements OnInit {
       this.formData.date = this.sale.date?.substring(0, 10) || '';
       this.formData.delivery_date = this.sale.delivery_date?.substring(0, 10) || '';
       this.formData.items = this.sale.items ? JSON.parse(JSON.stringify(this.sale.items)) : [];
-      
-      // Load products for all items so they display correctly if we wanted to edit, but for now we just show them in the table.
+      this.formData.client_id = this.sale.client_id ?? this.sale.linked_client?.id ?? null;
+      this.formData.client = this.resolveClientName(this.sale);
+      this.formData.client_phone = this.resolveClientPhone(this.sale);
+      this.formData.city = this.sale.linked_client?.city || this.sale.city || '';
+      this.clientSearch.set(this.resolveClientName(this.sale));
+
+      if (this.sale.linked_client) {
+        this.selectedClient.set(this.sale.linked_client);
+      }
+
+      if (this.formData.client_id) {
+        this.loadClientProfile(this.formData.client_id);
+      }
     }
+
+    this.syncClientSearchResults();
+    this.updateDuplicateWarnings();
   }
 
   searchProducts(): void {
     this.loadingProducts.set(true);
     const filters: Record<string, string> = { per_page: '50', is_active: '1' };
+
     if (this.productSearch()) {
       filters['search'] = this.productSearch();
     }
+
     this.productService.getProducts(filters).subscribe({
       next: (res) => {
-        let list = res.data;
-        this.products.set(list);
+        this.products.set(res.data);
         this.loadingProducts.set(false);
       },
       error: () => this.loadingProducts.set(false),
@@ -127,17 +211,18 @@ export class SaleFormComponent implements OnInit {
     this.currentItem.product_id = id;
     this.currentItem.stock_id = null;
     this.currentItem.stock = null;
-    const product = this.products().find(p => p.id === id);
+
+    const product = this.products().find((p) => p.id === id);
+
     if (product) {
       this.currentItem.linkedProduct = product;
+
       if (product.type === 'service') {
-        // Services have no stock — pre-fill price from service default, purchase = 0
         this.stocks.set([]);
         this.noStockAvailable.set(false);
         this.currentItem.purchase_price = 0;
         this.currentItem.selling_price = Number(product.service?.selling_price ?? 0);
       } else {
-        // Tyres and parts: load stocks. Parts can still be sold without a stock row.
         this.loadStocksForProduct(id);
       }
     } else {
@@ -150,7 +235,6 @@ export class SaleFormComponent implements OnInit {
     return this.currentItem.linkedProduct?.type === 'service';
   }
 
-  /** True when the current product line doesn't require a stock row (service or part). */
   get isStockOptional(): boolean {
     const type = this.currentItem.linkedProduct?.type;
     return type === 'service' || type === 'part';
@@ -160,19 +244,21 @@ export class SaleFormComponent implements OnInit {
     this.loadingStocks.set(true);
     this.noStockAvailable.set(false);
     const filters: Record<string, string> = { product_id: String(productId), per_page: '100' };
+
     if (!includeEmpty) {
       filters['in_stock'] = '1';
     }
+
     this.stockService.getStocks(filters).subscribe({
       next: (res) => {
         let list = res.data;
-        // If we're editing an existing item, make sure its stock row is in the list
-        // even if the API filtered it out.
         const currentStock = this.currentItem.stock;
         const currentStockId = this.currentItem.stock_id;
-        if (currentStockId && !list.find(s => s.id === currentStockId) && currentStock) {
+
+        if (currentStockId && !list.find((s) => s.id === currentStockId) && currentStock) {
           list = [currentStock, ...list];
         }
+
         this.stocks.set(list);
         this.noStockAvailable.set(list.length === 0);
         this.loadingStocks.set(false);
@@ -183,6 +269,7 @@ export class SaleFormComponent implements OnInit {
 
   onStockSelected(): void {
     const stock = this.selectedStock;
+
     if (stock) {
       this.currentItem.stock = stock;
       if (stock.purchase_price != null) {
@@ -193,16 +280,13 @@ export class SaleFormComponent implements OnInit {
 
   get selectedStock(): Stock | null {
     if (!this.currentItem.stock_id) return null;
-    return this.stocks().find(s => s.id === this.currentItem.stock_id) || null;
+    return this.stocks().find((s) => s.id === this.currentItem.stock_id) || null;
   }
 
   get stockInsufficient(): boolean {
     const stock = this.selectedStock;
     if (!stock) return false;
-    // When editing an existing line, the backend will revert that line's
-    // previous quantity back into stock before re-applying the new quantity,
-    // so the true available amount is stock.quantity + original quantity
-    // (only if we're still editing the same stock row).
+
     let available = stock.quantity;
     if (this.editingItemIndex !== null) {
       const original: any = this.sale?.items?.[this.editingItemIndex];
@@ -210,14 +294,16 @@ export class SaleFormComponent implements OnInit {
         available += Number(this.editingOriginalQuantity) || 0;
       }
     }
+
     return (this.currentItem.quantity || 0) > available;
   }
 
-  addItem() {
+  addItem(): void {
     if (!this.currentItem.product_id) return;
+
     const stockOptional = this.isStockOptional;
     if (!stockOptional && !this.currentItem.stock_id) return;
-    // Only check sufficiency when a stock row is actually selected
+
     if (this.currentItem.stock_id && this.stockInsufficient) {
       alert('Quantité insuffisante en stock.');
       return;
@@ -228,67 +314,51 @@ export class SaleFormComponent implements OnInit {
     } else {
       this.formData.items!.push({ ...this.currentItem });
     }
+
     this.calculateTotals();
     this.resetCurrentItem();
   }
 
-  editItem(index: number) {
+  editItem(index: number): void {
     const item: any = this.formData.items![index];
     const product = item.linkedProduct || item.linked_product || item.product || null;
     this.editingOriginalQuantity = Number(item.quantity) || 0;
+
     this.currentItem = {
       product_id: item.product_id || product?.id || 0,
       stock_id: item.stock_id ?? null,
       quantity: item.quantity || 1,
       purchase_price: item.purchase_price ?? 0,
-      selling_price: item.selling_price ?? 0,
+      selling_price: item.selling_price ?? item.unit_price ?? 0,
       discount: Number(item.discount ?? 0),
       linkedProduct: product,
       stock: item.stock || null
     };
-    // Ensure the product appears in the dropdown
-    if (product && !this.products().find(p => p.id === product.id)) {
+
+    if (product && !this.products().find((p) => p.id === product.id)) {
       this.products.set([product, ...this.products()]);
     }
-    // Load stocks for non-service products so the stock dropdown is populated.
-    // Include empty stocks so the row being edited (whose stock may now be 0
-    // because it was already consumed by this sale) still appears.
+
     if (product && product.type !== 'service' && this.currentItem.product_id) {
       this.loadStocksForProduct(this.currentItem.product_id, true);
     } else {
       this.stocks.set([]);
     }
+
     this.editingItemIndex = index;
   }
 
-  cancelItemEdit() {
+  cancelItemEdit(): void {
     this.resetCurrentItem();
   }
 
-  private resetCurrentItem() {
-    this.currentItem = {
-      product_id: 0,
-      stock_id: null,
-      quantity: 1,
-      purchase_price: 0,
-      selling_price: 0,
-      discount: 0,
-      linkedProduct: null,
-      stock: null
-    };
-    this.editingItemIndex = null;
-    this.editingOriginalQuantity = 0;
-    this.productSearch.set('');
-    this.products.set([]);
-    this.stocks.set([]);
-  }
-
-  removeItem(index: number) {
+  removeItem(index: number): void {
     if (this.editingItemIndex === index) {
       this.resetCurrentItem();
     } else if (this.editingItemIndex !== null && this.editingItemIndex > index) {
       this.editingItemIndex--;
     }
+
     this.formData.items!.splice(index, 1);
     this.calculateTotals();
   }
@@ -308,6 +378,7 @@ export class SaleFormComponent implements OnInit {
     const ref = p.reference || '';
     const profile = p.profile || '';
     let detail = '';
+
     if (p.type === 'tyre' && p.tyre?.tire_width) {
       detail = `${p.tyre.tire_width}/${p.tyre.tire_height}R${p.tyre.tire_diameter}`;
     } else if (p.type === 'part' && p.part?.category) {
@@ -315,39 +386,287 @@ export class SaleFormComponent implements OnInit {
     } else if (p.type === 'service' && p.service?.category) {
       detail = p.service.category;
     }
+
     return [typeTag, ref, brand, detail, profile].filter(Boolean).join(' — ');
   }
 
   getProduct(item: any): any {
-    return item.linkedProduct || item.linked_product;
+    return item.linkedProduct || item.linked_product || item.product;
   }
 
   lineTotal(item: any): number {
-    const qte = item.quantity || 1;
-    const sell = item.selling_price || 0;
+    const qte = Number(item.quantity || 1);
+    const sell = Number(item.selling_price ?? item.unit_price ?? 0);
     const discount = Math.max(0, Math.min(100, Number(item.discount) || 0));
     return sell * qte * (1 - discount / 100);
   }
 
-  calculateTotals() {
-    let tp = 0;
-    let ts = 0;
-    for (const item of this.formData.items!) {
-      tp += (item.purchase_price || 0) * (item.quantity || 1);
-      ts += this.lineTotal(item);
+  calculateTotals(): void {
+    let totalPurchase = 0;
+    let totalSale = 0;
+    let totalQuantity = 0;
+
+    for (const item of this.formData.items || []) {
+      totalPurchase += Number(item.purchase_price || 0) * Number(item.quantity || 1);
+      totalSale += this.lineTotal(item);
+      totalQuantity += Number(item.quantity || 0);
+      item.total = this.lineTotal(item);
+      item.total_sale = this.lineTotal(item);
+      item.unit_price = Number(item.selling_price ?? item.unit_price ?? 0);
     }
-    this.formData.total_purchase = tp;
-    this.formData.total_sale = ts;
-    this.formData.margin = ts - tp;
+
+    this.formData.total_quantity = totalQuantity;
+    this.formData.total_purchase = totalPurchase;
+    this.formData.total_sale = totalSale;
+    this.formData.subtotal = totalSale;
+    this.formData.total = totalSale - Number(this.formData.discount || 0) + Number(this.formData.tax || 0);
+    this.formData.margin = totalSale - totalPurchase;
   }
 
-  onSubmit() {
+  onClientSearchInput(value: string): void {
+    this.clientSearch.set(value);
+    this.showClientSuggestions.set(true);
+    this.syncClientSearchResults();
+    this.prefillQuickClient();
+    this.updateDuplicateWarnings();
+  }
+
+  selectClient(client: Client): void {
+    this.selectedClient.set(client);
+    this.formData.client_id = client.id;
+    this.formData.client = client.name || '';
+    this.formData.client_phone = client.phone || '';
+    this.formData.city = client.city || this.formData.city || '';
+    this.clientSearch.set(client.name || '');
+    this.showClientSuggestions.set(false);
+    this.showQuickCreate.set(false);
+    this.quickClient = {
+      name: '',
+      phone: '',
+      email: '',
+      city: '',
+      address: '',
+      notes: '',
+      is_active: true,
+    };
+    this.updateDuplicateWarnings();
+
+    if (client.id) {
+      this.loadClientProfile(client.id);
+    } else {
+      this.clientProfile.set(null);
+    }
+  }
+
+  clearSelectedClient(): void {
+    this.selectedClient.set(null);
+    this.clientProfile.set(null);
+    this.formData.client_id = null;
+    this.clientSearch.set(this.formData.client || '');
+    this.showClientSuggestions.set(false);
+    this.updateDuplicateWarnings();
+  }
+
+  onManualClientChange(): void {
+    const selected = this.selectedClient();
+    if (selected && this.hasManualClientChanged(selected)) {
+      this.selectedClient.set(null);
+      this.clientProfile.set(null);
+      this.formData.client_id = null;
+    }
+
+    this.clientSearch.set(this.formData.client || '');
+    this.prefillQuickClient();
+    this.syncClientSearchResults();
+    this.updateDuplicateWarnings();
+  }
+
+  openQuickCreate(): void {
+    this.prefillQuickClient();
+    this.showQuickCreate.set(true);
+    this.showClientSuggestions.set(false);
+  }
+
+  cancelQuickCreate(): void {
+    this.showQuickCreate.set(false);
+  }
+
+  saveQuickClient(): void {
+    if (!this.quickClient.name?.trim()) {
+      return;
+    }
+
+    this.creatingClient.set(true);
+
+    this.clientService.createClient({
+      ...this.quickClient,
+      is_active: true,
+    }).pipe(
+      finalize(() => this.creatingClient.set(false))
+    ).subscribe({
+      next: (client) => {
+        this.clients.set([client, ...this.clients().filter((existing) => existing.id !== client.id)]);
+        this.syncClientSearchResults();
+        this.selectClient(client);
+        this.showQuickCreate.set(false);
+      },
+      error: () => {
+        alert('Erreur lors de la création rapide du client.');
+      }
+    });
+  }
+
+  onSubmit(): void {
     if (!this.formData.items || this.formData.items.length === 0) {
       alert('Veuillez ajouter au moins un produit.');
       return;
     }
-    
+
     this.calculateTotals();
-    this.save.emit(this.formData as SalePayload);
+
+    const payload = this.buildPayload();
+    this.save.emit(payload);
+    this.saved.emit(payload);
+  }
+
+  private buildPayload(): SalePayload {
+    return {
+      ...(this.formData as SalePayload),
+      client: (this.formData.client || '').trim(),
+      client_phone: (this.formData.client_phone || '').trim(),
+      city: (this.formData.city || '').trim(),
+      client_id: this.formData.client_id ?? null,
+      items: (this.formData.items || []).map((item: any) => ({
+        ...item,
+        unit_price: Number(item.selling_price ?? item.unit_price ?? 0),
+        total: this.lineTotal(item),
+        total_sale: this.lineTotal(item),
+      })),
+    };
+  }
+
+  private loadClients(): void {
+    this.loadingClients.set(true);
+
+    this.clientService.getClients({ per_page: 500, status: 'active' }).pipe(
+      finalize(() => this.loadingClients.set(false))
+    ).subscribe({
+      next: (clients) => {
+        this.clients.set(clients);
+        this.syncClientSearchResults();
+
+        if (this.formData.client_id) {
+          const selected = clients.find((client) => client.id === this.formData.client_id);
+          if (selected) {
+            this.selectedClient.set(selected);
+          }
+        }
+
+        this.updateDuplicateWarnings();
+      },
+      error: () => {
+        this.clients.set([]);
+        this.filteredClients.set([]);
+      }
+    });
+  }
+
+  private loadClientProfile(clientId: number): void {
+    this.loadingClientProfile.set(true);
+
+    this.clientService.getClientProfile(clientId).pipe(
+      finalize(() => this.loadingClientProfile.set(false))
+    ).subscribe({
+      next: (profile) => this.clientProfile.set(profile),
+      error: () => this.clientProfile.set(null),
+    });
+  }
+
+  private syncClientSearchResults(): void {
+    const search = this.clientSearch().trim().toLowerCase();
+
+    if (!search) {
+      this.filteredClients.set(this.clients().slice(0, 8));
+      return;
+    }
+
+    this.filteredClients.set(
+      this.clients()
+        .filter((client) => {
+          const haystack = [
+            client.name,
+            client.phone,
+            client.email,
+            client.city,
+          ]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase();
+
+          return haystack.includes(search);
+        })
+        .slice(0, 8)
+    );
+  }
+
+  updateDuplicateWarnings(): void {
+    const selectedId = this.selectedClient()?.id;
+    const name = (this.quickClient.name || this.formData.client || this.clientSearch()).trim().toLowerCase();
+    const phone = (this.quickClient.phone || this.formData.client_phone || '').trim().toLowerCase();
+
+    this.duplicateMatches.set(
+      this.clients().filter((client) => {
+        if (selectedId && client.id === selectedId) {
+          return false;
+        }
+
+        const sameName = !!name && client.name?.trim().toLowerCase() === name;
+        const samePhone = !!phone && client.phone?.trim().toLowerCase() === phone;
+
+        return sameName || samePhone;
+      })
+    );
+  }
+
+  private prefillQuickClient(): void {
+    this.quickClient = {
+      ...this.quickClient,
+      name: this.quickClient.name || this.formData.client || this.clientSearch(),
+      phone: this.quickClient.phone || this.formData.client_phone || '',
+      city: this.quickClient.city || this.formData.city || '',
+    };
+  }
+
+  private hasManualClientChanged(selected: Client): boolean {
+    return (this.formData.client || '').trim() !== (selected.name || '').trim()
+      || (this.formData.client_phone || '').trim() !== (selected.phone || '').trim()
+      || (this.formData.city || '').trim() !== (selected.city || '').trim();
+  }
+
+  private resolveClientName(sale: Sale): string {
+    return sale.linked_client?.name || sale.client || '';
+  }
+
+  private resolveClientPhone(sale: Sale): string {
+    return sale.linked_client?.phone || sale.client_phone || '';
+  }
+
+  private resetCurrentItem(): void {
+    this.currentItem = {
+      product_id: 0,
+      stock_id: null,
+      quantity: 1,
+      purchase_price: 0,
+      selling_price: 0,
+      discount: 0,
+      linkedProduct: null,
+      stock: null
+    };
+    this.editingItemIndex = null;
+    this.editingOriginalQuantity = 0;
+    this.productSearch.set('');
+    this.products.set([]);
+    this.stocks.set([]);
+    this.searchProducts();
   }
 }

@@ -15,8 +15,8 @@ body {
   height: 100%;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 16px;
-  color: #1a202c;
-  background: #f7fafc;
+  color: var(--app-text, #1a202c);
+  background: var(--app-background, #f7fafc);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;

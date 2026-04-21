@@ -55,12 +55,13 @@ export class AccountsPageComponent implements OnInit {
 
   loadAccounts() {
     this.loading.set(true);
-    this.accountService.getAccounts().subscribe({
-      next: (data) => {
-        this.accounts.set(data);
+    this.accountService.getAccounts({ all: '1' }).subscribe({
+      next: (response) => {
+        const accounts = Array.isArray(response) ? response : (response.data ?? []);
+        this.accounts.set(accounts);
         this.loading.set(false);
         if (this.selectedAccount()) {
-          const updated = data.find(a => a.id === this.selectedAccount()?.id);
+          const updated = accounts.find((a: Account) => a.id === this.selectedAccount()?.id);
           if (updated) {
             this.selectedAccount.set(updated);
           }

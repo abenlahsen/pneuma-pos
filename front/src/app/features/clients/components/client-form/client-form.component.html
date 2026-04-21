@@ -1,0 +1,47 @@
+<form (ngSubmit)="onSubmit()" #form="ngForm" class="form-container">
+  <div class="form-section">
+    <h3 class="section-title">Informations Client</h3>
+    <div class="form-grid">
+      <div class="form-control">
+        <label>Nom du Client *</label>
+        <input type="text" name="name" [(ngModel)]="formData.name" required placeholder="Ex: Ahmed Benali">
+      </div>
+      <div class="form-control">
+        <label>Type *</label>
+        <select name="category" [(ngModel)]="formData.category" required>
+          <option value="Paticulier">Paticulier</option>
+          <option value="Entreprise">Entreprise</option>
+        </select>
+      </div>
+      <div class="form-control">
+        <label>Téléphone</label>
+        <input type="text" name="phone" [(ngModel)]="formData.phone" placeholder="Ex: 0612345678">
+      </div>
+      <div class="form-control">
+        <label>Email</label>
+        <input type="email" name="email" [(ngModel)]="formData.email" placeholder="Ex: client@example.com">
+      </div>
+      <div class="form-control">
+        <label>Ville</label>
+        <input type="text" name="city" [(ngModel)]="formData.city" placeholder="Ex: Casablanca">
+      </div>
+      <div class="form-control full-width">
+        <label>Adresse</label>
+        <input type="text" name="address" [(ngModel)]="formData.address" placeholder="Adresse complète">
+      </div>
+      <div class="form-control full-width">
+        <label>Notes</label>
+        <textarea name="notes" [(ngModel)]="formData.notes" rows="3" placeholder="Informations complémentaires..."></textarea>
+      </div>
+      <div class="form-control checkbox-control">
+        <label>Client actif</label>
+        <input type="checkbox" name="is_active" [(ngModel)]="formData.is_active">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="button" class="btn btn-secondary" (click)="cancel.emit()">Annuler</button>
+    <button type="submit" class="btn btn-primary" [disabled]="!form.valid">Enregistrer</button>
+  </div>
+</form>

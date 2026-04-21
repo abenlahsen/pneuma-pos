@@ -106,9 +106,25 @@
 .badge-warning { background: rgba(237, 137, 54, 0.12); color: #ed8936; }
 .badge-danger { background: rgba(245, 101, 101, 0.12); color: #f56565; }
 
+.account-warning {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(245, 101, 101, 0.3);
+  background: rgba(245, 101, 101, 0.08);
+  color: #b83280;
+  font-weight: 600;
+}
+
 .col-produit {
   width: 45%;
   white-space: normal;
+}
+
+:host ::ng-deep .table .text-center,
+:host ::ng-deep .table th.text-center,
+:host ::ng-deep .table td.text-center {
+  text-align: center !important;
 }
 
 .modal-footer {

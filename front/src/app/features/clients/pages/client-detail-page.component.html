@@ -1,0 +1,298 @@
+<section class="client-detail-page">
+  <div class="page-header">
+    <a class="back-link" [routerLink]="['/clients']">← Back to clients</a>
+
+    @if (profile?.client) {
+      <div>
+        <p class="eyebrow">Client profile</p>
+        <h1>{{ profile?.client?.name }}</h1>
+        <p class="subtitle">
+          {{ profile?.client?.phone || 'No phone provided' }}
+          @if (profile?.client?.city) {
+            <span>• {{ profile?.client?.city }}</span>
+          }
+        </p>
+      </div>
+    }
+  </div>
+
+  @if (loading) {
+    <section class="panel centered">
+      <p>Loading client profile...</p>
+    </section>
+  } @else if (errorMessage) {
+    <section class="panel centered error-panel">
+      <p>{{ errorMessage }}</p>
+    </section>
+  } @else if (profile?.client) {
+    <section class="summary-grid">
+      <article class="summary-card">
+        <span class="summary-label">Sales count</span>
+        <strong>{{ profile?.sales_count ?? 0 }}</strong>
+      </article>
+
+      <article class="summary-card">
+        <span class="summary-label">Total purchased</span>
+        <strong>{{ (profile?.total_purchased ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</strong>
+      </article>
+
+      <article class="summary-card">
+        <span class="summary-label">Outstanding balance</span>
+        <strong>{{ (profile?.outstanding_balance ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</strong>
+      </article>
+
+      <article class="summary-card">
+        <span class="summary-label">Last sale date</span>
+        <strong class="summary-text">{{ profile?.last_sale_date ? (profile?.last_sale_date | date:'mediumDate') : 'No sales yet' }}</strong>
+      </article>
+    </section>
+
+    <section class="details-grid">
+      <article class="panel">
+        <div class="panel-header">
+          <h2>Client information</h2>
+          <span class="status-badge" [class.inactive]="profile?.client?.is_active === false">
+            {{ profile?.client?.is_active === false ? 'Inactive' : 'Active' }}
+          </span>
+        </div>
+
+        <dl class="info-grid">
+          <div>
+            <dt>Phone</dt>
+            <dd>{{ profile?.client?.phone || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Email</dt>
+            <dd>{{ profile?.client?.email || '—' }}</dd>
+          </div>
+          <div>
+            <dt>City</dt>
+            <dd>{{ profile?.client?.city || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Address</dt>
+            <dd>{{ profile?.client?.address || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Notes</dt>
+            <dd>{{ profile?.client?.notes || '—' }}</dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="panel">
+        <div class="panel-header">
+          <h2>Financial settings</h2>
+        </div>
+
+        <dl class="info-grid">
+          <div>
+            <dt>Credit limit</dt>
+            <dd>{{ (profile?.client?.credit_limit ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</dd>
+          </div>
+          <div>
+            <dt>Opening balance</dt>
+            <dd>{{ (profile?.client?.opening_balance ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</dd>
+          </div>
+          <div>
+            <dt>Payment terms</dt>
+            <dd>
+              {{ profile?.client?.payment_terms_days != null ? profile?.client?.payment_terms_days + ' days' : '—' }}
+            </dd>
+          </div>
+          <div>
+            <dt>Default payment method</dt>
+            <dd>{{ profile?.client?.default_payment_method || '—' }}</dd>
+          </div>
+        </dl>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="tab-actions">
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="activeTab === 'overview'"
+          (click)="setTab('overview')"
+        >
+          Sales history
+        </button>
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="activeTab === 'statement'"
+          (click)="setTab('statement')"
+        >
+          Account statement
+        </button>
+      </div>
+
+      @if (activeTab === 'overview') {
+        @if (!salesHistory.length) {
+          <div class="empty-state">
+            <p>No sales history available for this client.</p>
+          </div>
+        } @else {
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Reference</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Total</th>
+                  <th>Paid</th>
+                  <th>Balance</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                @for (sale of salesHistory; track trackByRowId($index, sale)) {
+                  <tr>
+                    <td>{{ sale.reference || sale.invoice_number || ('Sale #' + sale.id) }}</td>
+                    <td>{{ (sale.sale_date || sale.created_at) ? ((sale.sale_date || sale.created_at) | date:'mediumDate') : '—' }}</td>
+                    <td>{{ sale.payment_status || sale.status || '—' }}</td>
+                    <td>{{ (sale.total_amount ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
+                    <td>{{ (sale.amount_paid ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
+                    <td>{{ (sale.balance_due ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      } @else {
+        <div class="statement-grid">
+          <article class="statement-card">
+            <span class="summary-label">Outstanding balance</span>
+            <strong>{{ (statement?.summary?.outstanding_balance ?? profile?.outstanding_balance ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</strong>
+          </article>
+
+          <article class="statement-card">
+            <span class="summary-label">Total purchased</span>
+            <strong>{{ (statement?.summary?.total_purchased ?? profile?.total_purchased ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</strong>
+          </article>
+
+          <article class="statement-card">
+            <span class="summary-label">Total paid</span>
+            <strong>{{ (statement?.summary?.total_paid ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</strong>
+          </article>
+
+          <article class="statement-card">
+            <span class="summary-label">Opening balance</span>
+            <strong>{{ (statement?.summary?.opening_balance ?? profile?.client?.opening_balance ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</strong>
+          </article>
+        </div>
+
+        @if (openInvoices.length) {
+          <div class="subsection">
+            <div class="subsection-header">
+              <h3>Open invoices</h3>
+            </div>
+
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Reference</th>
+                    <th>Date</th>
+                    <th>Total</th>
+                    <th>Balance due</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  @for (sale of openInvoices; track trackByRowId($index, sale)) {
+                    <tr>
+                      <td>{{ sale.reference || sale.invoice_number || ('Sale #' + sale.id) }}</td>
+                      <td>{{ (sale.sale_date || sale.created_at) ? ((sale.sale_date || sale.created_at) | date:'mediumDate') : '—' }}</td>
+                      <td>{{ (sale.total_amount ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
+                      <td>{{ (sale.balance_due ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+
+        <div class="subsection">
+          <div class="subsection-header">
+            <h3>Ledger entries</h3>
+          </div>
+
+          @if (!statementEntries.length) {
+            <div class="empty-state">
+              <p>No statement entries available.</p>
+            </div>
+          } @else {
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Debit</th>
+                    <th>Credit</th>
+                    <th>Balance</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  @for (entry of statementEntries; track trackByRowId($index, entry)) {
+                    <tr>
+                      <td>{{ entry.date ? (entry.date | date:'mediumDate') : '—' }}</td>
+                      <td>{{ entry.type || '—' }}</td>
+                      <td>{{ entry.description || entry.reference || '—' }}</td>
+                      <td>{{ (entry.debit ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
+                      <td>{{ (entry.credit ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
+                      <td>{{ (entry.balance ?? entry.amount ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+
+        <div class="subsection">
+          <div class="subsection-header">
+            <h3>Payments</h3>
+          </div>
+
+          @if (!(statement?.payments?.length ?? 0)) {
+            <div class="empty-state">
+              <p>No payments recorded.</p>
+            </div>
+          } @else {
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Reference</th>
+                    <th>Date</th>
+                    <th>Method</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  @for (payment of statement?.payments ?? []; track trackByRowId($index, payment)) {
+                    <tr>
+                      <td>{{ payment.reference || ('Payment #' + payment.id) }}</td>
+                      <td>{{ (payment.payment_date || payment.created_at) ? ((payment.payment_date || payment.created_at) | date:'mediumDate') : '—' }}</td>
+                      <td>{{ payment.method || '—' }}</td>
+                      <td>{{ (payment.amount ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
+</section>
