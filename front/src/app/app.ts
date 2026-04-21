@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, signal } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './shared/navbar/navbar.component';
@@ -17,20 +17,31 @@ import { MenuLayout } from './features/settings/models/company-settings.model';
 export class App implements OnInit {
   private companySettings = signal<{ menu_layout?: MenuLayout } | null>(null);
   readonly menuLayout = computed<MenuLayout>(() => this.companySettings()?.menu_layout ?? 'vertical');
+
   constructor(
     public authService: AuthService,
     private titleService: Title,
     private settingsService: SettingsService,
     private themeService: ThemeService,
-  ) {}
+  ) {
+    effect(() => {
+      const user = this.authService.user();
+
+      if (!user) {
+        this.companySettings.set(null);
+        this.themeService.applyCompanyTheme(null);
+        return;
+      }
+
+      this.loadCompanySettings();
+    });
+  }
 
   ngOnInit(): void {
     this.titleService.setTitle(environment.appTitle);
+  }
 
-    if (!this.authService.getToken()) {
-      return;
-    }
-
+  private loadCompanySettings(): void {
     this.settingsService.getCompanySettings().subscribe({
       next: (settings) => {
         this.companySettings.set(settings);

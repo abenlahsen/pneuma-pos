@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="CLI Arguments" tests="17" assertions="68" errors="0" failures="0" skipped="0" time="28.093038">
+    <testsuite name="Tests\Feature\ClientManagementTest" file="/var/www/tests/Feature/ClientManagementTest.php" tests="3" assertions="18" errors="0" failures="0" skipped="0" time="21.722571">
+      <testcase name="test_client_profile_endpoint_returns_summary_metrics_and_sales_history" file="/var/www/tests/Feature/ClientManagementTest.php" line="21" class="Tests\Feature\ClientManagementTest" classname="Tests.Feature.ClientManagementTest" assertions="6" time="20.135577"/>
+      <testcase name="test_client_statement_endpoint_returns_summary_sales_payments_and_entries" file="/var/www/tests/Feature/ClientManagementTest.php" line="81" class="Tests\Feature\ClientManagementTest" classname="Tests.Feature.ClientManagementTest" assertions="11" time="0.979595"/>
+      <testcase name="test_store_sale_request_accepts_existing_client_id" file="/var/www/tests/Feature/ClientManagementTest.php" line="127" class="Tests\Feature\ClientManagementTest" classname="Tests.Feature.ClientManagementTest" assertions="1" time="0.607398"/>
+    </testsuite>
+    <testsuite name="Tests\Feature\SaleControllerTest" file="/var/www/tests/Feature/SaleControllerTest.php" tests="14" assertions="50" errors="0" failures="0" skipped="0" time="6.370468">
+      <testcase name="test_index_requires_authentication" file="/var/www/tests/Feature/SaleControllerTest.php" line="464" class="Tests\Feature\SaleControllerTest" classname="Tests.Feature.SaleControllerTest" assertions="1" time="0.470870"/>
+      <testcase name="test_index_returns_paginated_sales" file="/var/www/tests/Feature/SaleControllerTest.php" line="471" class="Tests\Feature\SaleControllerTest" classname="Tests.Feature.SaleControllerTest" assertions="3" time="0.506085"/>
+      <testcase name="test_index_eager_loads_commercial_relationship" file="/var/www/tests/Feature/SaleControllerTest.php" line="483" class="Tests\Feature\SaleControllerTest" classname="Tests.Feature.SaleControllerTest" assertions="3" time="0.560661"/>
+      <testcase name="test_index_returns_null_commercial_when_not_set" file="/var/www/tests/Feature/SaleControllerTest.php" line="495" class="Tests\Feature\SaleControllerTest" classname="Tests.Feature.SaleControllerTest" assertions="2" time="0.371990"/>
+      <testcase name="test_index_orders_by_id_descending" file="/var/www/tests/Feature/SaleControllerTest.php" line="505" class="Tests\Feature\SaleControllerTest" classname="Tests.Feature.SaleControllerTest" assertions="3" time="0.333060"/>
+      <testcase name="test_index_filters_by_commercial_id" file="/var/www/tests/Feature/SaleControllerTest.php" line="518" class="Tests\Feature\SaleControllerTest" classname="Tests.Feature.SaleControllerTest" assertions="3" time="0.307205"/>
+      <testcase name="test_index_filters_by_search" file="/var/www/tests/Feature/SaleControllerTest.php" line="531" class="Tests\Feature\SaleControllerTest" classname="Tests.Feature.SaleControllerTest" assertions="3" time="0.243410"/>
+      <testcase name="test_index_filters_by_date_range" file="/var/www/tests/Feature/SaleControllerTest.php" line="543" class="Tests\Feature\SaleControllerTest" classname="Tests.Feature.SaleControllerTest" assertions="2" time="0.233175"/>
+      <testcase name="test_show_returns_sale_with_commercial" file="/var/www/tests/Feature/SaleControllerTest.php" line="554" class="Tests\Feature\SaleControllerTest" classname="Tests.Feature.SaleControllerTest" assertions="4" time="0.235552"/>
+      <testcase name="test_show_returns_null_commercial_when_not_set" file="/var/www/tests/Feature/SaleControllerTest.php" line="567" class="Tests\Feature\SaleControllerTest" classname="Tests.Feature.SaleControllerTest" assertions="2" time="0.323160"/>
+      <testcase name="test_filters_returns_commercials_list" file="/var/www/tests/Feature/SaleControllerTest.php" line="577" class="Tests\Feature\SaleControllerTest" classname="Tests.Feature.SaleControllerTest" assertions="4" time="0.245087"/>
+      <testcase name="test_filters_returns_all_expected_keys" file="/var/www/tests/Feature/SaleControllerTest.php" line="598" class="Tests\Feature\SaleControllerTest" classname="Tests.Feature.SaleControllerTest" assertions="8" time="0.393199"/>
+      <testcase name="test_store_creates_sale" file="/var/www/tests/Feature/SaleControllerTest.php" line="614" class="Tests\Feature\SaleControllerTest" classname="Tests.Feature.SaleControllerTest" assertions="10" time="1.302958"/>
+      <testcase name="test_destroy_deletes_sale" file="/var/www/tests/Feature/SaleControllerTest.php" line="672" class="Tests\Feature\SaleControllerTest" classname="Tests.Feature.SaleControllerTest" assertions="2" time="0.844057"/>
+    </testsuite>
+  </testsuite>
+</testsuites>

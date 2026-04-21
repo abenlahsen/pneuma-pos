@@ -21,7 +21,10 @@ class StoreSaleRequest extends FormRequest
     {
         return [
             'date' => ['required', 'date'],
+            'with_invoice' => ['nullable', 'boolean'],
             'client' => ['nullable', 'string'],
+            'client_phone' => ['nullable', 'string'],
+            'client_id' => ['nullable', 'exists:clients,id'],
             'commercial_id' => ['nullable', 'exists:users,id'],
             'carrier_id' => ['nullable', 'exists:carriers,id'],
             'partner_id' => ['nullable', 'exists:partners,id'],
@@ -29,6 +32,7 @@ class StoreSaleRequest extends FormRequest
             'payment_status' => ['nullable', 'string'],
             'city' => ['nullable', 'string'],
             'payment_method' => ['nullable', 'string'],
+            'delivery_date' => ['nullable', 'date'],
             'comments' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'exists:products,id'],

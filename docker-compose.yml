@@ -2,7 +2,7 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "${NGINX_PORT:-8080}:80"
+      - "${NGINX_PORT:-8888}:80"
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
       - ./back:/var/www
@@ -62,4 +62,3 @@ volumes:
 networks:
   pneuma-net:
     driver: bridge
-

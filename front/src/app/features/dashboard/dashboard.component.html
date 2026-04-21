@@ -9,10 +9,28 @@
     </div>
 
     <div class="kpi-dashboard" *ngIf="authService.hasRole('Administrator') && kpi() as k">
-      <h3 class="section-title">Tableau de bord KPI</h3>
+      <div class="section-title-row">
+        <h3 class="section-title">Tableau de bord KPI</h3>
+        <div class="kpi-loading-indicator" *ngIf="loadingKpi()">
+          <span class="kpi-loading-spinner" aria-hidden="true"></span>
+          <span>Chargement...</span>
+        </div>
+      </div>
 
       <!-- Aujourd'hui -->
-      <h4 class="kpi-group-title">📅 Aujourd'hui</h4>
+      <div class="kpi-group-header">
+        <h4 class="kpi-group-title">📅 Aujourd'hui</h4>
+        <label class="kpi-filter" for="dashboard-day-filter">
+          <span class="kpi-filter-label">Date</span>
+          <input
+            id="dashboard-day-filter"
+            class="kpi-filter-control"
+            type="date"
+            [value]="selectedDay()"
+            (change)="onDayChange($any($event.target).value)"
+          />
+        </label>
+      </div>
       <div class="kpi-grid">
         <div class="kpi-card highlight-red">
           <div class="kpi-icon">💰</div>
@@ -32,7 +50,19 @@
       </div>
 
       <!-- Ce mois -->
-      <h4 class="kpi-group-title">📊 Ce mois</h4>
+      <div class="kpi-group-header">
+        <h4 class="kpi-group-title">📊 Ce mois</h4>
+        <label class="kpi-filter" for="dashboard-month-filter">
+          <span class="kpi-filter-label">Mois</span>
+          <input
+            id="dashboard-month-filter"
+            class="kpi-filter-control"
+            type="month"
+            [value]="selectedMonth()"
+            (change)="onMonthChange($any($event.target).value)"
+          />
+        </label>
+      </div>
       <div class="kpi-grid">
         <div class="kpi-card highlight-blue">
           <div class="kpi-icon">💰</div>
@@ -63,7 +93,20 @@
       </div>
 
       <!-- Cette année -->
-      <h4 class="kpi-group-title">📈 Cette année</h4>
+      <div class="kpi-group-header">
+        <h4 class="kpi-group-title">📈 Cette année</h4>
+        <label class="kpi-filter" for="dashboard-year-filter">
+          <span class="kpi-filter-label">Année</span>
+          <select
+            id="dashboard-year-filter"
+            class="kpi-filter-control"
+            [value]="selectedYear()"
+            (change)="onYearChange($any($event.target).value)"
+          >
+            <option *ngFor="let year of yearOptions()" [value]="year">{{ year }}</option>
+          </select>
+        </label>
+      </div>
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-icon">💰</div>
@@ -127,8 +170,8 @@
       </div>
 
       <div class="commercials-section" *ngIf="k.sales_by_commercial && k.sales_by_commercial.length > 0">
-        <h3 class="section-title">Performances Commerciaux (Ce mois)</h3>
-        
+        <h3 class="section-title">Performances Commerciaux ({{ selectedMonth() }})</h3>
+
         <div class="modern-table-container">
           <table class="modern-table">
             <thead>
@@ -243,4 +286,3 @@
     </div>
   </main>
 </div>
-

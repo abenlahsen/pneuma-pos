@@ -1,7 +1,151 @@
 <form (ngSubmit)="onSubmit()" #form="ngForm" class="form-container">
-  
   <div class="form-section">
     <h3 class="section-title">Informations Générales</h3>
+
+    <div class="client-panel">
+      <div class="client-panel-header">
+        <div>
+          <h4>Client enregistré</h4>
+          <p>Liez un client existant ou gardez les champs manuels pour l’historique.</p>
+        </div>
+
+        <div class="client-panel-actions">
+          <button type="button" class="btn btn-secondary" (click)="openQuickCreate()">Créer rapidement</button>
+          <button type="button" class="btn btn-secondary" *ngIf="selectedClient()" (click)="clearSelectedClient()">Dissocier</button>
+        </div>
+      </div>
+
+      <div class="client-search-box">
+        <label>Recherche client</label>
+        <input
+          type="text"
+          name="clientSearch"
+          [ngModel]="clientSearch()"
+          (ngModelChange)="onClientSearchInput($event)"
+          (focus)="showClientSuggestions.set(true)"
+          placeholder="Nom, téléphone, email ou ville"
+          autocomplete="off"
+        />
+
+        <div class="client-results" *ngIf="showClientSuggestions()">
+          <button
+            type="button"
+            class="client-result"
+            *ngFor="let client of filteredClients()"
+            (click)="selectClient(client)"
+          >
+            <span class="result-name">{{ client.name }}</span>
+            <span class="result-meta">
+              {{ client.phone || 'Sans téléphone' }}<ng-container *ngIf="client.city"> — {{ client.city }}</ng-container>
+            </span>
+          </button>
+
+          <div class="empty-state small" *ngIf="!filteredClients().length && !loadingClients()">Aucun client correspondant.</div>
+          <div class="helper-text" *ngIf="loadingClients()">Chargement des clients...</div>
+        </div>
+      </div>
+
+      <div class="selected-client" *ngIf="selectedClient()">
+        <div>
+          <strong>{{ selectedClientName() }}</strong>
+          <p>{{ selectedClientPhone() || 'Sans téléphone' }}</p>
+        </div>
+        <span class="badge-link">Lié</span>
+      </div>
+
+      <div class="warning-banner soft-warning" *ngIf="duplicateMatches().length">
+        <strong>Doublons possibles détectés</strong>
+        <p>Vérifiez les clients existants avant de créer un nouveau profil.</p>
+        <ul>
+          <li *ngFor="let duplicate of duplicateMatches()">
+            {{ duplicate.name }} — {{ duplicate.phone || 'Sans téléphone' }}<ng-container *ngIf="duplicate.city"> ({{ duplicate.city }})</ng-container>
+          </li>
+        </ul>
+      </div>
+
+      <div class="quick-create-card" *ngIf="showQuickCreate()">
+        <div class="client-panel-header compact">
+          <div>
+            <h4>Création rapide du client</h4>
+            <p>Créez et liez le client sans quitter la vente.</p>
+          </div>
+          <button type="button" class="btn btn-secondary" (click)="cancelQuickCreate()">Fermer</button>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-control">
+            <label>Nom *</label>
+            <input type="text" name="quickClientName" [(ngModel)]="quickClient.name" (ngModelChange)="updateDuplicateWarnings()">
+          </div>
+          <div class="form-control">
+            <label>Téléphone</label>
+            <input type="text" name="quickClientPhone" [(ngModel)]="quickClient.phone" (ngModelChange)="updateDuplicateWarnings()">
+          </div>
+          <div class="form-control">
+            <label>Email</label>
+            <input type="email" name="quickClientEmail" [(ngModel)]="quickClient.email">
+          </div>
+          <div class="form-control">
+            <label>Ville</label>
+            <input type="text" name="quickClientCity" [(ngModel)]="quickClient.city">
+          </div>
+          <div class="form-control full-width">
+            <label>Adresse</label>
+            <input type="text" name="quickClientAddress" [(ngModel)]="quickClient.address">
+          </div>
+          <div class="form-control full-width">
+            <label>Notes</label>
+            <textarea name="quickClientNotes" rows="3" [(ngModel)]="quickClient.notes"></textarea>
+          </div>
+        </div>
+
+        <div class="inline-actions">
+          <button type="button" class="btn btn-primary" [disabled]="creatingClient() || !quickClient.name.trim()" (click)="saveQuickClient()">
+            {{ creatingClient() ? 'Création...' : 'Créer et lier' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="account-banner" *ngIf="selectedClient() && (clientProfile() || loadingClientProfile())">
+        <div class="account-banner-header">
+          <div>
+            <h4>Contexte du compte client</h4>
+            <p>Informations utiles avant validation de la vente.</p>
+          </div>
+          <span class="helper-text" *ngIf="loadingClientProfile()">Chargement...</span>
+        </div>
+
+        <div class="account-metrics">
+          <div class="metric-card">
+            <span class="metric-label">Solde impayé</span>
+            <strong>{{ clientOutstandingBalance() | number:'1.2-2' }} DH</strong>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Solde projeté</span>
+            <strong>{{ projectedBalance() | number:'1.2-2' }} DH</strong>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Limite de crédit</span>
+            <strong>{{ clientCreditLimit() | number:'1.2-2' }} DH</strong>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Dernière vente</span>
+            <strong>{{ clientProfile()?.last_sale_date || 'N/A' }}</strong>
+          </div>
+        </div>
+
+        <div class="warning-banner danger-warning" *ngIf="overCreditLimit()">
+          <strong>Limite de crédit dépassée</strong>
+          <p>Cette vente ferait dépasser la limite configurée pour ce client.</p>
+        </div>
+
+        <div class="warning-banner soft-warning" *ngIf="!overCreditLimit() && nearCreditLimit()">
+          <strong>Client proche de la limite</strong>
+          <p>Cette vente rapprocherait fortement le client de sa limite de crédit.</p>
+        </div>
+      </div>
+    </div>
+
     <div class="form-grid">
       <div class="form-control">
         <label>Date *</label>
@@ -13,22 +157,22 @@
       </div>
       <div class="form-control">
         <label>Client</label>
-        <input type="text" name="client" [(ngModel)]="formData.client" placeholder="Nom du client">
+        <input type="text" name="client" [(ngModel)]="formData.client" placeholder="Nom du client" (ngModelChange)="onManualClientChange()">
       </div>
       <div class="form-control">
         <label>Téléphone Client</label>
-        <input type="tel" name="client_phone" [(ngModel)]="formData.client_phone" placeholder="Ex: 0612345678">
+        <input type="tel" name="client_phone" [(ngModel)]="formData.client_phone" placeholder="Ex: 0612345678" (ngModelChange)="onManualClientChange()">
       </div>
       <div class="form-control">
         <label>Ville</label>
-        <input type="text" name="city" [(ngModel)]="formData.city" placeholder="Ville">
+        <input type="text" name="city" [(ngModel)]="formData.city" placeholder="Ville" (ngModelChange)="onManualClientChange()">
       </div>
     </div>
   </div>
 
   <div class="form-section">
     <h3 class="section-title">Produits</h3>
-    
+
     <div class="items-table mb-3" *ngIf="formData.items && formData.items.length > 0">
       <table class="table table-sm">
         <thead>
@@ -52,7 +196,7 @@
             </td>
             <td>{{ item.quantity }}</td>
             <td>{{ item.purchase_price | number:'1.2-2' }}</td>
-            <td>{{ item.selling_price | number:'1.2-2' }}</td>
+            <td>{{ (item.selling_price ?? item.unit_price) | number:'1.2-2' }}</td>
             <td>{{ (item.discount || 0) | number:'1.0-2' }}%</td>
             <td>{{ lineTotal(item) | number:'1.2-2' }}</td>
             <td>
@@ -102,18 +246,22 @@
           <input type="number" name="cur_discount" [(ngModel)]="currentItem.discount" min="0" max="100" step="0.01">
         </div>
         <div class="form-control">
-          <button type="button" class="btn btn-primary" style="height: 42px;" [disabled]="!currentItem.product_id || (!isStockOptional && !currentItem.stock_id) || (currentItem.stock_id && stockInsufficient)" (click)="addItem()">{{ editingItemIndex !== null ? 'Mettre à jour' : 'Ajouter' }}</button>
+          <button type="button" class="btn btn-primary add-item-btn" [disabled]="!currentItem.product_id || (!isStockOptional && !currentItem.stock_id) || (currentItem.stock_id && stockInsufficient)" (click)="addItem()">{{ editingItemIndex !== null ? 'Mettre à jour' : 'Ajouter' }}</button>
         </div>
         <div class="form-control" *ngIf="editingItemIndex !== null">
-          <button type="button" class="btn btn-secondary" style="height: 42px;" (click)="cancelItemEdit()">Annuler</button>
+          <button type="button" class="btn btn-secondary add-item-btn" (click)="cancelItemEdit()">Annuler</button>
         </div>
       </div>
     </div>
   </div>
-    
+
   <div class="form-section">
     <h3 class="section-title">Totaux</h3>
     <div class="totals-preview">
+      <div class="total-item">
+        <span class="label">Total Articles:</span>
+        <span class="value">{{ formData.total_quantity }}</span>
+      </div>
       <div class="total-item">
         <span class="label">Total Achat:</span>
         <span class="value">{{ formData.total_purchase | number:'1.2-2' }} DH</span>
@@ -122,10 +270,10 @@
         <span class="label">Total Vente:</span>
         <span class="value">{{ formData.total_sale | number:'1.2-2' }} DH</span>
       </div>
-        <div class="summary-item total-margin">
-          <span class="label">Marge Nette:</span>
-          <span class="value" [class.negative]="(formData.margin || 0) < 0">{{ formData.margin | number:'1.2-2' }} DH</span>
-        </div>
+      <div class="summary-item total-margin">
+        <span class="label">Marge Nette:</span>
+        <span class="value" [class.negative]="(formData.margin || 0) < 0">{{ formData.margin | number:'1.2-2' }} DH</span>
+      </div>
     </div>
   </div>
 
@@ -134,79 +282,80 @@
       <span>Logistique & Suivi</span>
       <span class="collapse-indicator" style="float: right;">{{ logisticsCollapsed() ? '▸' : '▾' }}</span>
     </h3>
+
     <div *ngIf="!logisticsCollapsed()">
-    <div class="form-grid">
-      <div class="form-control">
-        <label>Transport</label>
-        <select name="carrier_id" [(ngModel)]="formData.carrier_id">
-          <option [ngValue]="null">-- Sélectionner --</option>
-          <option *ngFor="let c of carriers()" [ngValue]="c.id">{{ c.name }}</option>
-        </select>
+      <div class="form-grid">
+        <div class="form-control">
+          <label>Transport</label>
+          <select name="carrier_id" [(ngModel)]="formData.carrier_id">
+            <option [ngValue]="null">-- Sélectionner --</option>
+            <option *ngFor="let c of carriers()" [ngValue]="c.id">{{ c.name }}</option>
+          </select>
+        </div>
+        <div class="form-control">
+          <label>N° Suivi</label>
+          <input type="text" name="tracking_number" [(ngModel)]="formData.tracking_number" placeholder="Ex: TR-20260321-001">
+        </div>
+        <div class="form-control">
+          <label>Partenaire</label>
+          <select name="partner_id" [(ngModel)]="formData.partner_id">
+            <option [ngValue]="null">-- Sélectionner --</option>
+            <option *ngFor="let p of partners()" [ngValue]="p.id">{{ p.name }} {{ p.city ? '(' + p.city + ')' : '' }}</option>
+          </select>
+        </div>
+        <div class="form-control">
+          <label>Service</label>
+          <input type="text" name="service" [(ngModel)]="formData.service">
+        </div>
+        <div class="form-control">
+          <label>Commercial *</label>
+          <select name="commercial_id" [(ngModel)]="formData.commercial_id" class="form-control" required>
+            <option [ngValue]="null">-- Sélectionner un commercial --</option>
+            <option *ngFor="let rep of commercials()" [ngValue]="rep.id">{{ rep.name }}</option>
+          </select>
+        </div>
+        <div class="form-control">
+          <label>Status Global</label>
+          <select name="status" [(ngModel)]="formData.status">
+            <option value="EN COURS">En cours</option>
+            <option value="LIVRE">Livré</option>
+            <option value="MONTE">Monté</option>
+            <option value="ANNULE">Annulé</option>
+          </select>
+        </div>
+        <div class="form-control">
+          <label>Status Paiement</label>
+          <select name="payment_status" [(ngModel)]="formData.payment_status">
+            <option value="NON PAYE">Non Payé</option>
+            <option value="PARTIEL">Partiel</option>
+            <option value="PAYE">Payé</option>
+          </select>
+        </div>
+        <div class="form-control">
+          <label>Mode de Paiement</label>
+          <select name="payment_method" [(ngModel)]="formData.payment_method">
+            <option value="ESPECE">Espèce</option>
+            <option value="VIREMENT">Virement</option>
+            <option value="CHEQUE">Chèque</option>
+            <option value="TPE">TPE</option>
+            <option value="TRAITE">Traite</option>
+          </select>
+        </div>
+        <div class="form-control">
+          <label>Date de Livraison</label>
+          <input type="date" name="delivery_date" [(ngModel)]="formData.delivery_date">
+        </div>
       </div>
-      <div class="form-control">
-        <label>N° Suivi</label>
-        <input type="text" name="tracking_number" [(ngModel)]="formData.tracking_number" placeholder="Ex: TR-20260321-001">
+
+      <div class="form-control full-width" style="margin-top: 1rem;">
+        <label>Commentaires</label>
+        <textarea name="comments" [(ngModel)]="formData.comments" rows="3" placeholder="Notes additionnelles..."></textarea>
       </div>
-      <div class="form-control">
-        <label>Partenaire</label>
-        <select name="partner_id" [(ngModel)]="formData.partner_id">
-          <option [ngValue]="null">-- Sélectionner --</option>
-          <option *ngFor="let p of partners()" [ngValue]="p.id">{{ p.name }} {{ p.city ? '(' + p.city + ')' : '' }}</option>
-        </select>
-      </div>
-      <div class="form-control">
-        <label>Service</label>
-        <input type="text" name="service" [(ngModel)]="formData.service">
-      </div>
-      <div class="form-control">
-        <label>Commercial *</label>
-        <select name="commercial_id" [(ngModel)]="formData.commercial_id" class="form-control" required>
-          <option [ngValue]="null">-- Sélectionner un commercial --</option>
-          <option *ngFor="let rep of commercials()" [ngValue]="rep.id">{{ rep.name }}</option>
-        </select>
-      </div>
-      <div class="form-control">
-        <label>Status Global</label>
-        <select name="status" [(ngModel)]="formData.status">
-          <option value="EN COURS">En cours</option>
-          <option value="LIVRE">Livré</option>
-          <option value="MONTE">Monté</option>
-          <option value="ANNULE">Annulé</option>
-        </select>
-      </div>
-      <div class="form-control">
-        <label>Status Paiement</label>
-        <select name="payment_status" [(ngModel)]="formData.payment_status">
-          <option value="NON PAYE">Non Payé</option>
-          <option value="PARTIEL">Partiel</option>
-          <option value="PAYE">Payé</option>
-        </select>
-      </div>
-      <div class="form-control">
-        <label>Mode de Paiement</label>
-        <select name="payment_method" [(ngModel)]="formData.payment_method">
-          <option value="ESPECE">Espèce</option>
-          <option value="VIREMENT">Virement</option>
-          <option value="CHEQUE">Chèque</option>
-          <option value="TPE">TPE</option>
-          <option value="TRAITE">Traite</option>
-        </select>
-      </div>
-      <div class="form-control">
-        <label>Date de Livraison</label>
-        <input type="date" name="delivery_date" [(ngModel)]="formData.delivery_date">
-      </div>
-    </div>
-    
-    <div class="form-control full-width" style="margin-top: 1rem;">
-      <label>Commentaires</label>
-      <textarea name="comments" [(ngModel)]="formData.comments" rows="3" placeholder="Notes additionnelles..."></textarea>
-    </div>
     </div>
   </div>
 
   <div class="form-actions mt-4 text-right">
-    <button type="button" class="btn btn-secondary mr-2" (click)="cancel.emit()">Annuler</button>
+    <button type="button" class="btn btn-secondary mr-2" (click)="cancel.emit(); cancelled.emit()">Annuler</button>
     <button type="submit" class="btn btn-primary" [disabled]="!form.valid || !formData.items || formData.items.length === 0">Enregistrer</button>
   </div>
 </form>

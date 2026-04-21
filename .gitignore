@@ -3,7 +3,9 @@
 .idea/
 .vscode/
 .claude/
+*.tmp*
 dist/
+tmp/
 deploy/deploy.env
 deploy/deploy2.env
 env.production

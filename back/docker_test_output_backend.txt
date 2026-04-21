@@ -1,0 +1,31 @@
+
+   PASS  Tests\Feature\CompanySettingsApiTest
+  ✓ show requires authentication                                         8.58s  
+  ✓ show forbids user without view permission                            3.02s  
+  ✓ show returns default company settings shape                          0.52s  
+  ✓ show returns persisted settings                                      0.58s  
+  ✓ update requires authentication                                       0.35s  
+  ✓ update forbids user without edit permission                          0.35s  
+  ✓ update persists company settings                                     0.63s  
+  ✓ update modifies existing settings record                             0.74s  
+  ✓ update validates payload                                             0.63s  
+
+   PASS  Tests\Feature\SaleControllerTest
+  ✓ index requires authentication                                        0.94s  
+  ✓ index returns paginated sales                                        0.70s  
+  ✓ index eager loads commercial relationship                            0.28s  
+  ✓ index returns null commercial when not set                           0.80s  
+  ✓ index orders by id descending                                        1.46s  
+  ✓ index filters by commercial id                                       0.46s  
+  ✓ index filters by search                                              0.36s  
+  ✓ index filters by date range                                          0.36s  
+  ✓ show returns sale with commercial                                    0.34s  
+  ✓ show returns null commercial when not set                            0.43s  
+  ✓ filters returns commercials list                                     0.48s  
+  ✓ filters returns all expected keys                                    0.50s  
+  ✓ store creates sale                                                   0.46s  
+  ✓ destroy deletes sale                                                 0.38s  
+
+  Tests:    23 passed (104 assertions)
+  Duration: 39.65s
+

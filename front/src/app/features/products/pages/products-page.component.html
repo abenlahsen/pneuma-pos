@@ -71,6 +71,7 @@
             <th>Dimension</th>
             <th>IC</th>
             <th>IV</th>
+            <th>RunFlat</th>
             <th>Saison</th>
             <th>Marquage</th>
             <th class="text-center">Statut</th>
@@ -78,14 +79,14 @@
         </thead>
         <tbody>
           <tr *ngIf="loading()">
-            <td colspan="11" class="text-center py-4">
+            <td colspan="12" class="text-center py-4">
               <div class="spinner"></div>
               Chargement...
             </td>
           </tr>
 
           <tr *ngIf="!loading() && products().length === 0">
-            <td colspan="11" class="text-center py-4 text-muted">
+            <td colspan="12" class="text-center py-4 text-muted">
               Aucun produit trouvé.
             </td>
           </tr>
@@ -143,6 +144,7 @@
             </td>
             <td>{{ product.tyre?.tire_load_index || '-' }}</td>
             <td>{{ product.tyre?.tire_speed_index || '-' }}</td>
+            <td>{{ product.type === 'tyre' ? (product.tyre?.tire_runflat ? 'Oui' : 'Non') : '-' }}</td>
             <td>
               <span *ngIf="product.type === 'tyre' && product.tyre?.tire_season" class="tag tag-season">{{ seasonLabel(product.tyre?.tire_season) }}</span>
               <span *ngIf="product.type === 'service' && product.service?.duration_minutes">{{ product.service?.duration_minutes }} min</span>

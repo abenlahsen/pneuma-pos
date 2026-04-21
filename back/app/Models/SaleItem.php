@@ -12,38 +12,30 @@ class SaleItem extends Model
 
     protected $fillable = [
         'sale_id',
-        'product_id',
         'stock_id',
+        'product_id',
         'quantity',
-        'purchase_price',
-        'selling_price',
-        'discount',
-        'total_purchase',
-        'total_sale',
-        'margin',
+        'unit_price',
+        'total_price',
+        'subtotal',
     ];
 
     protected $casts = [
+        'sale_id' => 'integer',
+        'stock_id' => 'integer',
+        'product_id' => 'integer',
         'quantity' => 'integer',
-        'purchase_price' => 'decimal:2',
-        'selling_price' => 'decimal:2',
-        'discount' => 'decimal:2',
-        'total_purchase' => 'decimal:2',
-        'total_sale' => 'decimal:2',
-        'margin' => 'decimal:2',
+        'unit_price' => 'decimal:2',
+        'total_price' => 'decimal:2',
+        'subtotal' => 'decimal:2',
     ];
 
-    public function sale()
+    public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class);
     }
 
-    public function linkedProduct()
-    {
-        return $this->belongsTo(Product::class, 'product_id');
-    }
-
-    public function stock()
+    public function stock(): BelongsTo
     {
         return $this->belongsTo(Stock::class);
     }

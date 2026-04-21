@@ -165,8 +165,8 @@
             </td>
             <td>{{ sale.date | date:'dd/MM/yyyy' }}</td>
             <td class="clickable-cell" (click)="openDetail(sale)">
-              <div class="fw-medium link-text">{{ sale.client || '-' }}</div>
-              <div class="text-small text-muted">{{ sale.client_phone || '' }}{{ sale.client_phone && sale.city ? ' — ' : '' }}{{ sale.city || '' }}</div>
+              <div class="fw-medium link-text">{{ getClientName(sale) }}</div>
+              <div class="text-small text-muted">{{ getClientPhone(sale) }}{{ getClientPhone(sale) && getClientCity(sale) ? ' — ' : '' }}{{ getClientCity(sale) }}</div>
             </td>
             <td>{{ sale.commercial?.name || '-' }}</td>
             <td>{{ sale.total_quantity }}</td>

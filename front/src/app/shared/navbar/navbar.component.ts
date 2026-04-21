@@ -51,6 +51,7 @@ export class NavbarComponent {
         { label: '🏢 Fournisseurs', route: '/suppliers', permission: 'view suppliers' },
         { label: '🚚 Transporteurs', route: '/carriers', permission: 'view carriers' },
         { label: '🤝 Partenaires', route: '/partners', permission: 'view partners' },
+        { label: '🧑‍💼 Clients', route: '/clients', permission: 'view clients' },
       ]
     },
     { label: '👥 Utilisateurs', route: '/users', permission: 'view users' },

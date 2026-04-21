@@ -28,3 +28,5 @@ Route::get('users/{user}', [UserController::class, 'show'])->middleware('permiss
 Route::post('users', [UserController::class, 'store'])->middleware('permission:create users');
 Route::put('users/{user}', [UserController::class, 'update'])->middleware('permission:edit users');
 Route::delete('users/{user}', [UserController::class, 'destroy'])->middleware('permission:delete users');
+
+require __DIR__ . '/settings.php';

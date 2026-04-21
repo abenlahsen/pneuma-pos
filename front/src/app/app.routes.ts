@@ -69,6 +69,20 @@ export const routes: Routes = [
       import('./features/partners/pages/partners-page.component').then((m) => m.PartnersPageComponent),
   },
   {
+    path: 'clients',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'view clients' },
+    loadComponent: () =>
+      import('./features/clients/pages/clients-page.component').then((m) => m.ClientsPageComponent),
+  },
+  {
+    path: 'clients/:id',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'view clients' },
+    loadComponent: () =>
+      import('./features/clients/pages/client-detail-page.component').then((m) => m.ClientDetailPageComponent),
+  },
+  {
     path: 'achats',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view purchases' },
@@ -109,6 +123,13 @@ export const routes: Routes = [
     data: { permission: 'view users' },
     loadComponent: () =>
       import('./features/users/pages/users-page.component').then((m) => m.UsersPageComponent),
+  },
+  {
+    path: 'settings',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'view settings' },
+    loadComponent: () =>
+      import('./features/settings/pages/company-settings-page.component').then((m) => m.CompanySettingsPageComponent),
   },
   {
     path: '**',

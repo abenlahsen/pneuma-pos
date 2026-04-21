@@ -26,15 +26,19 @@ class SalePaymentService
 
     public function createPayment(Sale $sale, array $validated, User $user): Payment
     {
+        $sale->loadMissing('linkedClient');
+
+        $clientName = $sale->linkedClient?->name ?? $sale->client ?? '';
+
         $transaction = Transaction::create([
             'date' => $validated['date'],
             'amount' => $validated['amount'],
             'type' => 'income',
             'category' => 'Produit',
             'method' => $validated['method'] ?? null,
-            'description' => "Paiement vente #{$sale->id} - {$sale->total_quantity} X " . $this->describeSaleProduct($sale) . " POUR {$sale->client}",
+            'description' => "Paiement vente #{$sale->id} - {$sale->total_quantity} X " . $this->describeSaleProduct($sale) . " POUR {$clientName}",
             'person' => '',
-            'partner' => $sale->client ?? '',
+            'partner' => $clientName,
             'user_id' => $user->id,
             'account_id' => $validated['account_id'],
         ]);

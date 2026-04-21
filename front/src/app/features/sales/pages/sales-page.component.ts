@@ -144,6 +144,18 @@ export class SalesPageComponent implements OnInit {
     this.detailSale.set(sale);
   }
 
+  getClientName(sale: Sale): string {
+    return sale.linked_client?.name?.trim() || sale.client || '-';
+  }
+
+  getClientPhone(sale: Sale): string {
+    return sale.linked_client?.phone?.trim() || sale.client_phone || '';
+  }
+
+  getClientCity(sale: Sale): string {
+    return sale.linked_client?.city?.trim() || sale.city || '';
+  }
+
   closeDetail(): void {
     this.detailSale.set(null);
   }
@@ -187,7 +199,7 @@ export class SalesPageComponent implements OnInit {
 
   deleteSale(sale: Sale): void {
     const productLabel = `${sale.total_quantity} article(s)`;
-    if (confirm(`Voulez-vous vraiment supprimer cette vente ?\nClient: ${sale.client} - Produit: ${productLabel}`)) {
+    if (confirm(`Voulez-vous vraiment supprimer cette vente ?\nClient: ${this.getClientName(sale)} - Produit: ${productLabel}`)) {
       this.deletingSaleId.set(sale.id);
       this.saleService.deleteSale(sale.id).subscribe({
         next: () => {

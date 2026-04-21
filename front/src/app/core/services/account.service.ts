@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Account, AccountPayload, TransferPayload } from '../models/account.model';
 
@@ -13,7 +13,11 @@ export class AccountService {
   constructor(private http: HttpClient) {}
 
   getAccounts(): Observable<Account[]> {
-    return this.http.get<Account[]>(`${this.apiUrl}/accounts`);
+    return this.http
+      .get<Account[] | { data?: Account[] }>(`${this.apiUrl}/accounts`, {
+        params: { all: 'true' },
+      })
+      .pipe(map((response) => Array.isArray(response) ? response : (response.data ?? [])));
   }
 
   getAccount(id: number): Observable<Account> {
