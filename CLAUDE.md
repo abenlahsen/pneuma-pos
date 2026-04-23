@@ -63,35 +63,52 @@ npm test         # Run Karma tests
 
 ### Backend Structure
 
-**API Routes** (`back/routes/api.php`):
-- Public: `POST /api/login`
-- Protected (Sanctum): all other routes require `Authorization: Bearer {token}`
-- Resources: `sales`, `purchases`, `suppliers`, `users`, `carriers`, `partners`, `transactions`, `stocks`
-- Summary/filter endpoints: `GET /api/sales-summary`, `GET /api/sales-filters`, `GET /api/purchases-summary`, `GET /api/transactions-summary`, `GET /api/transactions-filters`, `GET /api/stocks-summary`, `GET /api/stocks-filters`
-- Nested payment routes: `GET|POST|DELETE /api/sales/{sale}/payments`, same pattern for `purchases/{purchase}/payments`
-- Stock import: `POST /api/stocks/import` (Excel .xlsx/.xls upload)
+**API Routes** (`back/routes/api.php` → split into `back/routes/api/`):
+- `auth.php` — Public: `POST /api/login`
+- `sales.php` — CRUD + payments (`/api/sales/{sale}/payments`)
+- `purchases.php` — CRUD + payments (`/api/purchases/{purchase}/payments`)
+- `clients.php` — CRUD + `/api/clients/{client}/profile`, `/api/clients/{client}/statement`, `/api/clients/duplicates/check`
+- `catalog.php` — CRUD for `suppliers`, `carriers`, `partners`, `brands`, `products`
+- `stock.php` — CRUD + import (Excel) + stock-movements
+- `accounts.php` — CRUD for accounts + cash-flow (transactions) + transfers
+- `admin.php` — CRUD for `users` and `roles`/`permissions`
+- `settings.php` — Company settings (view/update)
+- All protected routes require `Authorization: Bearer {token}` and `permission:` middleware
 
-**Controllers** (`back/app/Http/Controllers/`): Each resource has standard CRUD (index/store/show/update/destroy). `SaleController`, `PurchaseController`, `TransactionController`, and `StockController` also have `summary` methods for dashboard aggregations. `StockController` additionally has `filters` and `import` (Excel) endpoints.
+**Domain Services** (`back/app/Domain/`): Business logic is extracted from controllers into domain service classes. Each module has its own service (e.g., `Domain/Sales/SaleService.php`, `Domain/Clients/ClientService.php`, `Domain/Stock/StockService.php`). Controllers are thin — they delegate to domain services and return API Resources.
 
-**Models** (`back/app/Models/`): Key models are `Sale` (44+ fillable fields for tire product details), `Purchase`, `Transaction` (cash flow), `Payment`/`PurchasePayment` (linked to transactions), `Stock` (tire inventory with dimension parsing). Each payment creation auto-creates a corresponding `Transaction` record.
+**API Resources** (`back/app/Http/Resources/`): Laravel JSON Resources handle response serialization. Grouped by module (e.g., `Resources/Clients/ClientResource.php`, `Resources/Clients/ClientProfileResource.php`). All responses are wrapped in a `{ "data": ... }` envelope by default.
+
+**Controllers** (`back/app/Http/Controllers/`): Thin controllers that inject domain services, validate requests, and return API Resources. Each resource has standard CRUD (index/store/show/update/destroy). Some controllers have additional methods (e.g., `SaleController::summary`, `ClientController::profile`, `StockController::import`).
+
+**Models** (`back/app/Models/`): Key models are `Sale` (tire product details, linked to `Client` via `client_id`), `Purchase`, `Transaction` (cash flow), `Payment`/`PurchasePayment` (linked to transactions), `Stock` (tire inventory with dimension parsing), `Client` (with credit limit, opening balance, payment terms), `Brand`, `Product`. Each payment creation auto-creates a corresponding `Transaction` record.
 
 **Authentication**: Sanctum stateless tokens stored client-side. All previous tokens are revoked on new login (single active session).
 
-**ACL**: Spatie Laravel Permission with roles (Administrator, Commercial, Manager, Driver) and granular permissions per resource (view, create, edit, delete). The `RolesAndPermissionsSeeder` manages all permissions and role assignments. All API routes are protected with `permission:` middleware. Frontend uses `authService.hasPermission()` to conditionally show UI elements and `permissionGuard` on routes.
+**ACL**: Spatie Laravel Permission with roles (Administrator, Commercial, Manager, Driver) and granular permissions per resource (view, create, edit, delete + special ones like `import stock`, `manage sale-payments`, `transfer accounts`). The `RolesAndPermissionsSeeder` manages all 59 permissions and role assignments across all modules. All API routes are protected with `permission:` middleware. Frontend uses `authService.hasPermission()` to conditionally show UI elements and `permissionGuard` on routes.
 
 ### Frontend Structure
 
-**Feature modules** (`front/src/app/features/`): Each business domain (sales, purchases, cash-flow, suppliers, users, carriers, partners, stock, roles) has a lazy-loaded standalone component plus a `-form/` subcomponent and optional payment panel.
+**Feature modules** (`front/src/app/features/`): Each business domain has its own feature folder with a co-located structure:
+- `pages/` — Page components (lazy-loaded standalone)
+- `components/` — Reusable sub-components (e.g., forms)
+- `data-access/` — HTTP service for the feature (e.g., `client.service.ts`)
+- `models/` — TypeScript interfaces for the feature (e.g., `client.model.ts`)
+- Modules: `sales`, `purchases`, `cash-flow`, `clients`, `suppliers`, `users`, `carriers`, `partners`, `stock`, `roles`, `brands`, `products`, `accounts`, `company-settings`
 
 **Core** (`front/src/app/core/`):
-- `services/` — HTTP services, one per backend resource
-- `models/` — TypeScript interfaces matching backend data shapes
+- `services/` — Shared services (e.g., `auth.service.ts`). Feature-specific services live in each feature's `data-access/` folder.
+- `models/` — Shared interfaces (e.g., `sale.model.ts`, `user.model.ts`). Feature-specific models live in each feature's `models/` folder.
 - `guards/` — `authGuard` (redirect to /login), `guestGuard` (redirect to /dashboard), and `permissionGuard` (ACL-based route protection)
 - `interceptors/auth.interceptor.ts` — Adds `Bearer` token + `Accept: application/json` to all requests
 
 **State management**: Angular signals only (no NgRx). Components use `signal<T>` for local state and `computed()` for derived values. Auth state lives in `AuthService` with token in `localStorage` under key `auth_token`.
 
+**Zoneless Angular**: The app runs **without zone.js**. All mutable component state must use `signal()` and derived state must use `computed()` — plain class properties will not trigger change detection. Never use plain boolean/object properties for state that affects the template.
+
 **Routing** (`front/src/app/app.routes.ts`): All feature routes are lazy-loaded via `loadComponent()`. Root (`/`) redirects to `/dashboard`. Purchases route is `/achats` (French). Wildcard redirects to `/dashboard`.
+
+**Shared SCSS** (`front/src/app/features/_variables.scss`): Theme tokens (`$primary`, `$border-color`, `$radius`, etc.) imported via `@use '../../_variables' as *` in each page SCSS. Each page component has its own complete SCSS (no global stylesheet) — styles for layout, table, buttons, modal, pagination, and responsive breakpoints are repeated per module to maintain component encapsulation.
 
 **Environments** (`front/src/environments/`): `environment.ts` (dev), `environment.prod.ts` (default production — "PNEU.MA POS"), `environment.eas.ts` (secondary deployment — "EAS POS"). Each exports `{ production, apiUrl, appTitle }`. The document title is set from `environment.appTitle` in `App.ngOnInit()` via `Title` service. `angular.json` has two production configurations: `production` (default) and `production-eas` (uses `fileReplacements` to swap in `environment.eas.ts`).
 
@@ -105,7 +122,7 @@ The Angular dev proxy (`front/proxy.conf.json`) sends `/api` to `http://nginx:80
 
 ## Key Business Domain
 
-This is a **tire shop POS** (French: pneus). A `Sale` record captures: tire brand/reference/dimensions, quantity, unit price, supplier, commercial, carrier, partner (mounting/alignment shop), payment status, and many computed pricing fields. `User` records can have roles (commercials earn commissions). `Partners` have `montage_price` and `alignment_price` fields. `Stock` tracks tire inventory with smart dimension search (e.g., "2055516" or "205/55R16") and Excel import capability. French terminology is used throughout the UI (e.g., "achats" = purchases, "fournisseurs" = suppliers, "transporteurs" = carriers).
+This is a **tire shop POS** (French: pneus). A `Sale` record captures: tire brand/reference/dimensions, quantity, unit price, supplier, commercial, carrier, partner (mounting/alignment shop), payment status, and many computed pricing fields. Sales can be linked to a `Client` via `client_id` — the client profile page shows sales history, outstanding balance, and account statement. `Client` records have credit limit, opening balance, payment terms, and default payment method. `User` records can have roles (commercials earn commissions). `Partners` have `montage_price` and `alignment_price` fields. `Stock` tracks tire inventory with smart dimension search (e.g., "2055516" or "205/55R16") and Excel import capability. `Brand` and `Product` are catalog entities for organizing inventory. French terminology is used throughout the UI (e.g., "achats" = purchases, "fournisseurs" = suppliers, "transporteurs" = carriers, "clients" = clients).
 
 ## Deployment
 
