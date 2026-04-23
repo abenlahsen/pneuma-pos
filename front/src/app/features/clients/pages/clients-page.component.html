@@ -37,6 +37,15 @@
         </div>
 
         <div class="form-group">
+          <label>Type</label>
+          <select class="form-control" name="category" [(ngModel)]="filters.category">
+            <option value="">Tous les types</option>
+            <option value="Paticulier">Paticulier</option>
+            <option value="Entreprise">Entreprise</option>
+          </select>
+        </div>
+
+        <div class="form-group">
           <label>Statut</label>
           <select class="form-control" name="status" [(ngModel)]="filters.status">
             <option value="all">Tous les clients</option>
@@ -60,6 +69,7 @@
       <table class="table">
         <thead>
           <tr>
+            <th class="text-center">Actions</th>
             <th>Client</th>
             <th>Type</th>
             <th>Téléphone</th>
@@ -67,7 +77,6 @@
             <th>Statut</th>
             <th class="text-right">Limite de crédit (DH)</th>
             <th class="text-right">Solde d'ouverture (DH)</th>
-            <th class="text-center">Actions</th>
           </tr>
         </thead>
 
@@ -84,26 +93,7 @@
           </tr>
 
           <tr *ngFor="let client of clients(); trackBy: trackByClientId">
-            <td class="fw-semibold">
-              <button type="button" class="btn-link client-link" (click)="viewClient(client)">
-                {{ client.name }}
-              </button>
-              <small *ngIf="client.email">{{ client.email }}</small>
-            </td>
-            <td>{{ client.category || '-' }}</td>
-            <td>{{ client.phone || '-' }}</td>
-            <td>{{ client.city || '-' }}</td>
-            <td>
-              <span class="status-badge" [class.inactive]="client.is_active === false">
-                {{ client.is_active === false ? 'Inactive' : 'Active' }}
-              </span>
-            </td>
-            <td class="text-right">{{ client.credit_limit != null ? (client.credit_limit | number:'1.2-2') : '0.00' }}</td>
-            <td class="text-right">{{ client.opening_balance != null ? (client.opening_balance | number:'1.2-2') : '0.00' }}</td>
             <td class="text-center">
-              <button class="btn-icon btn-sm text-primary" type="button" (click)="viewClient(client)" title="Voir">
-                👁️
-              </button>
               <button class="btn-icon btn-sm text-primary" type="button" (click)="openEditModal(client)" title="Modifier">
                 ✏️
               </button>
@@ -118,6 +108,22 @@
                 <span *ngIf="deletingClientId() === client.id" class="inline-spinner"></span>
               </button>
             </td>
+            <td class="fw-semibold">
+              <button type="button" class="btn-link client-link" (click)="viewClient(client)">
+                {{ client.name }}
+              </button>
+              <small *ngIf="client.email">{{ client.email }}</small>
+            </td>
+            <td>{{ client.category || '-' }}</td>
+            <td>{{ client.phone || '-' }}</td>
+            <td>{{ client.city || '-' }}</td>
+            <td>
+              <span class="status-badge" [class.inactive]="client.is_active === false">
+                {{ client.is_active === false ? 'Inactif' : 'Actif' }}
+              </span>
+            </td>
+            <td class="text-right">{{ client.credit_limit != null ? (client.credit_limit | number:'1.2-2') : '0.00' }}</td>
+            <td class="text-right">{{ client.opening_balance != null ? (client.opening_balance | number:'1.2-2') : '0.00' }}</td>
           </tr>
         </tbody>
       </table>

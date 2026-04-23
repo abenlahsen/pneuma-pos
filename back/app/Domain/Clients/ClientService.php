@@ -67,18 +67,18 @@ class ClientService
     public function getProfile(Client $client): array
     {
         $client->loadMissing([
-            'sales' => fn ($query) => $query->with('linkedClient')->latest('date')->latest('id'),
+            'sales' => fn ($query) => $query->with(['linkedClient', 'payments'])->latest('date')->latest('id'),
         ]);
 
         $sales = $client->sales->values();
+        $latestSale = $sales->sortByDesc(fn (Sale $sale) => $this->sortableDate($sale))->first();
         $salesHistory = $sales->map(fn (Sale $sale) => $this->mapSale($sale))->values();
 
         return [
             'client' => $client,
             'sales_count' => $sales->count(),
             'total_purchased' => round((float) $sales->sum('total'), 2),
-            'last_sale_date' => optional($sales->sortByDesc(fn (Sale $sale) => $this->sortableDate($sale))->first())->sale_date
-                ?? optional($sales->sortByDesc(fn (Sale $sale) => $this->sortableDate($sale))->first())->created_at,
+            'last_sale_date' => optional($latestSale)->sale_date ?? optional($latestSale)->created_at,
             'outstanding_balance' => $this->calculateOutstandingBalance($client, $sales),
             'sales' => $salesHistory,
             'sales_history' => $salesHistory,
@@ -92,6 +92,7 @@ class ClientService
         ]);
 
         $sales = $client->sales->values();
+        $latestSale = $sales->sortByDesc(fn (Sale $sale) => $this->sortableDate($sale))->first();
         $salesRows = $sales->map(fn (Sale $sale) => $this->mapSale($sale))->values();
 
         $payments = $sales
@@ -119,8 +120,7 @@ class ClientService
             'total_sales' => round((float) $sales->sum('total'), 2),
             'total_paid' => round((float) $sales->sum('paid_amount'), 2),
             'outstanding_balance' => $this->calculateOutstandingBalance($client, $sales),
-            'last_sale_date' => $this->formatDate(optional($sales->sortByDesc(fn (Sale $sale) => $this->sortableDate($sale))->first())->sale_date
-                ?? optional($sales->sortByDesc(fn (Sale $sale) => $this->sortableDate($sale))->first())->created_at),
+            'last_sale_date' => $this->formatDate(optional($latestSale)->sale_date ?? optional($latestSale)->created_at),
         ];
 
         return [
@@ -140,6 +140,7 @@ class ClientService
         $name = $this->cleanString($filters['name'] ?? null);
         $phone = $this->cleanString($filters['phone'] ?? null);
         $city = $this->cleanString($filters['city'] ?? null);
+        $category = $this->cleanString($filters['category'] ?? $filters['type'] ?? null);
 
         if ($search !== null) {
             $query->where(function (Builder $builder) use ($search) {
@@ -161,6 +162,10 @@ class ClientService
 
         if ($city !== null) {
             $query->where('city', 'like', '%' . $city . '%');
+        }
+
+        if ($category !== null) {
+            $query->where('category', $category);
         }
 
         $activeFilter = $this->normalizeActiveFilter($filters);

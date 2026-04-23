@@ -36,6 +36,7 @@ export interface ClientFilters {
   name?: string;
   phone?: string;
   city?: string;
+  category?: string;
   is_active?: boolean | null;
   status?: 'all' | 'active' | 'inactive';
   page?: number;

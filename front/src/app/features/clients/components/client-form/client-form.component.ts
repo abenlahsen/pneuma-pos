@@ -24,6 +24,10 @@ export class ClientFormComponent implements OnInit {
     address: '',
     notes: '',
     is_active: true,
+    credit_limit: null,
+    opening_balance: null,
+    payment_terms_days: null,
+    default_payment_method: null,
   };
 
   ngOnInit(): void {
@@ -37,6 +41,10 @@ export class ClientFormComponent implements OnInit {
         address: this.client.address ?? '',
         notes: this.client.notes ?? '',
         is_active: this.client.is_active,
+        credit_limit: this.client.credit_limit ?? null,
+        opening_balance: this.client.opening_balance ?? null,
+        payment_terms_days: this.client.payment_terms_days ?? null,
+        default_payment_method: this.client.default_payment_method ?? null,
       };
     }
   }

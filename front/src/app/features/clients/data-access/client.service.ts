@@ -9,6 +9,7 @@ import {
   ClientListResponse,
   ClientPayload,
   ClientProfileResponse,
+  ClientSalesHistoryRow,
   ClientStatementResponse,
 } from '../models/client.model';
 
@@ -189,6 +190,10 @@ export class ClientService {
       params = params.set('city', filters.city.trim());
     }
 
+    if (filters.category?.trim()) {
+      params = params.set('category', filters.category.trim());
+    }
+
     if (normalizedStatus === 'active') {
       params = params.set('is_active', '1');
     }
@@ -230,7 +235,8 @@ export class ClientService {
 
   private normalizeProfileResponse(response: Partial<ClientProfileResponse>, id: number): ClientProfileResponse {
     const client = response.client ?? ({ id, name: 'Client' } as Client);
-    const sales = response.sales ?? response.sales_history ?? [];
+    const rawSales = response.sales ?? response.sales_history ?? [];
+    const sales = rawSales.map((s) => this.normalizeSaleRow(s as unknown as Record<string, unknown>));
 
     return {
       client,
@@ -239,7 +245,7 @@ export class ClientService {
       last_sale_date: response.last_sale_date ?? response.summary?.last_sale_date ?? null,
       outstanding_balance: response.outstanding_balance ?? response.summary?.outstanding_balance ?? 0,
       sales,
-      sales_history: response.sales_history ?? sales,
+      sales_history: sales,
       summary: response.summary ?? {
         total_purchased: response.total_purchased ?? 0,
         outstanding_balance: response.outstanding_balance ?? 0,
@@ -251,6 +257,8 @@ export class ClientService {
   }
 
   private normalizeStatementResponse(response: Partial<ClientStatementResponse>): ClientStatementResponse {
+    const rawSales = response.sales ?? [];
+
     return {
       client: response.client ?? ({ id: 0, name: 'Client' } as Client),
       summary: response.summary ?? {
@@ -261,9 +269,26 @@ export class ClientService {
         credit_limit: 0,
         last_sale_date: null,
       },
-      sales: response.sales ?? [],
+      sales: rawSales.map((s) => this.normalizeSaleRow(s as unknown as Record<string, unknown>)),
       payments: response.payments ?? [],
       entries: response.entries ?? [],
+    };
+  }
+
+  private normalizeSaleRow(s: Record<string, unknown>): ClientSalesHistoryRow {
+    return {
+      id: s['id'] as number,
+      sale_date: (s['sale_date'] ?? s['date'] ?? null) as string | null,
+      created_at: (s['created_at'] ?? null) as string | null,
+      reference: (s['reference'] ?? null) as string | null,
+      invoice_number: (s['invoice_number'] ?? null) as string | null,
+      total_amount: (s['total_amount'] ?? s['total'] ?? null) as number | null,
+      amount_paid: (s['amount_paid'] ?? s['paid_amount'] ?? null) as number | null,
+      balance_due: (s['balance_due'] ?? s['outstanding_amount'] ?? null) as number | null,
+      status: (s['status'] ?? null) as string | null,
+      payment_status: (s['payment_status'] ?? s['status'] ?? null) as string | null,
+      client: (s['client'] ?? null) as string | null,
+      client_phone: (s['client_phone'] ?? null) as string | null,
     };
   }
 }
