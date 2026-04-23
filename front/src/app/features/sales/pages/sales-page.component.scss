@@ -310,6 +310,16 @@
   }
 }
 
+.client-link {
+  color: $primary;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 .text-right{text-align:right!important}.text-center{text-align:center!important}.fw-medium{font-weight:500}.fw-semibold{font-weight:600}.text-muted{color:$text-muted}.text-small{font-size:.875rem}.text-success{color:$income-color}.text-danger{color:$expense-color}.text-primary{color:$primary}
 
 .date-cell {
@@ -384,9 +394,30 @@
   vertical-align: middle;
 }
 
-.btn-icon[disabled] {
-  opacity: 0.7;
-  cursor: not-allowed;
+.actions-cell {
+  white-space: nowrap;
+}
+
+.btn-icon {
+  border: 1px solid $border-color;
+  background: #fff;
+  border-radius: $radius-sm;
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: $bg-body;
+  }
+
+  &[disabled] {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
 }
 
 @keyframes spin {

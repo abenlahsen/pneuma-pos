@@ -33,6 +33,7 @@ export class ClientsPageComponent implements OnInit {
   filters: ClientFilters = {
     search: '',
     city: '',
+    category: '',
     status: 'all',
     page: 1,
     per_page: 100,
@@ -73,7 +74,7 @@ export class ClientsPageComponent implements OnInit {
           this.loading.set(false);
         },
         error: () => {
-          this.errorMessage.set('Unable to load clients right now.');
+          this.errorMessage.set('Impossible de charger les clients pour le moment.');
           this.loading.set(false);
         },
       });
@@ -90,6 +91,7 @@ export class ClientsPageComponent implements OnInit {
     this.filters = {
       search: '',
       city: '',
+      category: '',
       status: 'all',
       page: 1,
       per_page: 100,
@@ -132,15 +134,15 @@ export class ClientsPageComponent implements OnInit {
         this.saving.set(false);
         this.errorMessage.set(
           selectedClient
-            ? 'Unable to update the client right now.'
-            : 'Unable to create the client right now.',
+            ? 'Impossible de modifier le client pour le moment.'
+            : 'Impossible de créer le client pour le moment.',
         );
       },
     });
   }
 
   deleteClient(client: Client): void {
-    const confirmed = window.confirm(`Delete client "${client.name}"?`);
+    const confirmed = window.confirm(`Supprimer le client "${client.name}" ?`);
 
     if (!confirmed) {
       return;
@@ -156,7 +158,7 @@ export class ClientsPageComponent implements OnInit {
       },
       error: () => {
         this.deletingClientId.set(null);
-        this.errorMessage.set('Unable to delete the client right now.');
+        this.errorMessage.set('Impossible de supprimer le client pour le moment.');
       },
     });
   }

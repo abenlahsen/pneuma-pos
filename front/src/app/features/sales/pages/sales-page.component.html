@@ -156,6 +156,7 @@
 
           <tr *ngFor="let sale of sales()">
             <td class="text-center actions-cell">
+              <button class="btn-icon btn-sm" (click)="openDetail(sale)" title="Voir" [disabled]="deletingSaleId() === sale.id">👁️</button>
               <button class="btn-icon btn-sm" (click)="openPayments(sale)" title="Paiements" [disabled]="deletingSaleId() === sale.id">💳</button>
               <button class="btn-icon btn-sm text-primary" (click)="openEditForm(sale)" title="Modifier" *ngIf="authService.hasPermission('edit sales')" [disabled]="deletingSaleId() === sale.id">✏️</button>
               <button class="btn-icon btn-sm text-danger" (click)="deleteSale(sale)" title="Supprimer" *ngIf="authService.hasPermission('delete sales')" [disabled]="deletingSaleId() === sale.id">
@@ -164,8 +165,9 @@
               </button>
             </td>
             <td>{{ sale.date | date:'dd/MM/yyyy' }}</td>
-            <td class="clickable-cell" (click)="openDetail(sale)">
-              <div class="fw-medium link-text">{{ getClientName(sale) }}</div>
+            <td>
+              <a *ngIf="sale.client_id" class="fw-medium link-text client-link" [routerLink]="['/clients', sale.client_id]">{{ getClientName(sale) }}</a>
+              <div *ngIf="!sale.client_id" class="fw-medium">{{ getClientName(sale) }}</div>
               <div class="text-small text-muted">{{ getClientPhone(sale) }}{{ getClientPhone(sale) && getClientCity(sale) ? ' — ' : '' }}{{ getClientCity(sale) }}</div>
             </td>
             <td>{{ sale.commercial?.name || '-' }}</td>

@@ -1,108 +1,111 @@
 <section class="client-detail-page">
   <div class="page-header">
-    <a class="back-link" [routerLink]="['/clients']">← Back to clients</a>
+    <a class="back-link" [routerLink]="['/clients']">← Retour aux clients</a>
 
-    @if (profile?.client) {
-      <div>
-        <p class="eyebrow">Client profile</p>
-        <h1>{{ profile?.client?.name }}</h1>
-        <p class="subtitle">
-          {{ profile?.client?.phone || 'No phone provided' }}
-          @if (profile?.client?.city) {
-            <span>• {{ profile?.client?.city }}</span>
-          }
-        </p>
+    @if (profile()?.client) {
+      <div class="header-row">
+        <div>
+          <p class="eyebrow">Profil client</p>
+          <h1>{{ profile()?.client?.name }}</h1>
+          <p class="subtitle">
+            {{ profile()?.client?.phone || 'Aucun téléphone' }}
+            @if (profile()?.client?.city) {
+              <span>• {{ profile()?.client?.city }}</span>
+            }
+          </p>
+        </div>
+        <button type="button" class="btn btn-edit" (click)="openEditModal()">Modifier</button>
       </div>
     }
   </div>
 
-  @if (loading) {
+  @if (loading()) {
     <section class="panel centered">
-      <p>Loading client profile...</p>
+      <p>Chargement du profil client...</p>
     </section>
-  } @else if (errorMessage) {
+  } @else if (errorMessage()) {
     <section class="panel centered error-panel">
-      <p>{{ errorMessage }}</p>
+      <p>{{ errorMessage() }}</p>
     </section>
-  } @else if (profile?.client) {
+  } @else if (profile()?.client) {
     <section class="summary-grid">
       <article class="summary-card">
-        <span class="summary-label">Sales count</span>
-        <strong>{{ profile?.sales_count ?? 0 }}</strong>
+        <span class="summary-label">Nombre de ventes</span>
+        <strong>{{ profile()?.sales_count ?? 0 }}</strong>
       </article>
 
       <article class="summary-card">
-        <span class="summary-label">Total purchased</span>
-        <strong>{{ (profile?.total_purchased ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</strong>
+        <span class="summary-label">Total acheté</span>
+        <strong>{{ (profile()?.total_purchased ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</strong>
       </article>
 
       <article class="summary-card">
-        <span class="summary-label">Outstanding balance</span>
-        <strong>{{ (profile?.outstanding_balance ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</strong>
+        <span class="summary-label">Solde impayé</span>
+        <strong>{{ (profile()?.outstanding_balance ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</strong>
       </article>
 
       <article class="summary-card">
-        <span class="summary-label">Last sale date</span>
-        <strong class="summary-text">{{ profile?.last_sale_date ? (profile?.last_sale_date | date:'mediumDate') : 'No sales yet' }}</strong>
+        <span class="summary-label">Dernière vente</span>
+        <strong class="summary-text">{{ profile()?.last_sale_date ? (profile()?.last_sale_date | date:'mediumDate') : 'Aucune vente' }}</strong>
       </article>
     </section>
 
     <section class="details-grid">
       <article class="panel">
         <div class="panel-header">
-          <h2>Client information</h2>
-          <span class="status-badge" [class.inactive]="profile?.client?.is_active === false">
-            {{ profile?.client?.is_active === false ? 'Inactive' : 'Active' }}
+          <h2>Informations client</h2>
+          <span class="status-badge" [class.inactive]="profile()?.client?.is_active === false">
+            {{ profile()?.client?.is_active === false ? 'Inactif' : 'Actif' }}
           </span>
         </div>
 
         <dl class="info-grid">
           <div>
-            <dt>Phone</dt>
-            <dd>{{ profile?.client?.phone || '—' }}</dd>
+            <dt>Téléphone</dt>
+            <dd>{{ profile()?.client?.phone || '—' }}</dd>
           </div>
           <div>
             <dt>Email</dt>
-            <dd>{{ profile?.client?.email || '—' }}</dd>
+            <dd>{{ profile()?.client?.email || '—' }}</dd>
           </div>
           <div>
-            <dt>City</dt>
-            <dd>{{ profile?.client?.city || '—' }}</dd>
+            <dt>Ville</dt>
+            <dd>{{ profile()?.client?.city || '—' }}</dd>
           </div>
           <div>
-            <dt>Address</dt>
-            <dd>{{ profile?.client?.address || '—' }}</dd>
+            <dt>Adresse</dt>
+            <dd>{{ profile()?.client?.address || '—' }}</dd>
           </div>
           <div>
             <dt>Notes</dt>
-            <dd>{{ profile?.client?.notes || '—' }}</dd>
+            <dd>{{ profile()?.client?.notes || '—' }}</dd>
           </div>
         </dl>
       </article>
 
       <article class="panel">
         <div class="panel-header">
-          <h2>Financial settings</h2>
+          <h2>Paramètres financiers</h2>
         </div>
 
         <dl class="info-grid">
           <div>
-            <dt>Credit limit</dt>
-            <dd>{{ (profile?.client?.credit_limit ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</dd>
+            <dt>Limite de crédit</dt>
+            <dd>{{ (profile()?.client?.credit_limit ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</dd>
           </div>
           <div>
-            <dt>Opening balance</dt>
-            <dd>{{ (profile?.client?.opening_balance ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</dd>
+            <dt>Solde d'ouverture</dt>
+            <dd>{{ (profile()?.client?.opening_balance ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</dd>
           </div>
           <div>
-            <dt>Payment terms</dt>
+            <dt>Délai de paiement</dt>
             <dd>
-              {{ profile?.client?.payment_terms_days != null ? profile?.client?.payment_terms_days + ' days' : '—' }}
+              {{ profile()?.client?.payment_terms_days != null ? profile()?.client?.payment_terms_days + ' jours' : '—' }}
             </dd>
           </div>
           <div>
-            <dt>Default payment method</dt>
-            <dd>{{ profile?.client?.default_payment_method || '—' }}</dd>
+            <dt>Mode de paiement par défaut</dt>
+            <dd>{{ profile()?.client?.default_payment_method || '—' }}</dd>
           </div>
         </dl>
       </article>
@@ -113,44 +116,48 @@
         <button
           type="button"
           class="tab-btn"
-          [class.active]="activeTab === 'overview'"
+          [class.active]="activeTab() === 'overview'"
           (click)="setTab('overview')"
         >
-          Sales history
+          Historique des ventes
         </button>
         <button
           type="button"
           class="tab-btn"
-          [class.active]="activeTab === 'statement'"
+          [class.active]="activeTab() === 'statement'"
           (click)="setTab('statement')"
         >
-          Account statement
+          Relevé de compte
         </button>
       </div>
 
-      @if (activeTab === 'overview') {
-        @if (!salesHistory.length) {
+      @if (activeTab() === 'overview') {
+        @if (profileLoading()) {
           <div class="empty-state">
-            <p>No sales history available for this client.</p>
+            <p>Chargement de l'historique des ventes...</p>
+          </div>
+        } @else if (!salesHistory().length) {
+          <div class="empty-state">
+            <p>Aucun historique de ventes pour ce client.</p>
           </div>
         } @else {
           <div class="table-wrapper">
             <table>
               <thead>
                 <tr>
-                  <th>Reference</th>
+                  <th>Référence</th>
                   <th>Date</th>
-                  <th>Status</th>
+                  <th>Statut</th>
                   <th>Total</th>
-                  <th>Paid</th>
-                  <th>Balance</th>
+                  <th>Payé</th>
+                  <th>Solde</th>
                 </tr>
               </thead>
 
               <tbody>
-                @for (sale of salesHistory; track trackByRowId($index, sale)) {
+                @for (sale of salesHistory(); track trackByRowId($index, sale)) {
                   <tr>
-                    <td>{{ sale.reference || sale.invoice_number || ('Sale #' + sale.id) }}</td>
+                    <td>{{ sale.reference || sale.invoice_number || ('Vente #' + sale.id) }}</td>
                     <td>{{ (sale.sale_date || sale.created_at) ? ((sale.sale_date || sale.created_at) | date:'mediumDate') : '—' }}</td>
                     <td>{{ sale.payment_status || sale.status || '—' }}</td>
                     <td>{{ (sale.total_amount ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
@@ -165,134 +172,158 @@
       } @else {
         <div class="statement-grid">
           <article class="statement-card">
-            <span class="summary-label">Outstanding balance</span>
-            <strong>{{ (statement?.summary?.outstanding_balance ?? profile?.outstanding_balance ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</strong>
+            <span class="summary-label">Solde impayé</span>
+            <strong>{{ (statement()?.summary?.outstanding_balance ?? profile()?.outstanding_balance ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</strong>
           </article>
 
           <article class="statement-card">
-            <span class="summary-label">Total purchased</span>
-            <strong>{{ (statement?.summary?.total_purchased ?? profile?.total_purchased ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</strong>
+            <span class="summary-label">Total acheté</span>
+            <strong>{{ (statement()?.summary?.total_purchased ?? profile()?.total_purchased ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</strong>
           </article>
 
           <article class="statement-card">
-            <span class="summary-label">Total paid</span>
-            <strong>{{ (statement?.summary?.total_paid ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</strong>
+            <span class="summary-label">Total payé</span>
+            <strong>{{ (statement()?.summary?.total_paid ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</strong>
           </article>
 
           <article class="statement-card">
-            <span class="summary-label">Opening balance</span>
-            <strong>{{ (statement?.summary?.opening_balance ?? profile?.client?.opening_balance ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</strong>
+            <span class="summary-label">Solde d'ouverture</span>
+            <strong>{{ (statement()?.summary?.opening_balance ?? profile()?.client?.opening_balance ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</strong>
           </article>
         </div>
 
-        @if (openInvoices.length) {
+        @if (statementLoading()) {
+          <div class="empty-state">
+            <p>Chargement du relevé de compte...</p>
+          </div>
+        } @else if (statementErrorMessage()) {
+          <div class="empty-state">
+            <p>{{ statementErrorMessage() }}</p>
+          </div>
+        } @else {
+          @if (openInvoices().length) {
+            <div class="subsection">
+              <div class="subsection-header">
+                <h3>Factures en cours</h3>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Référence</th>
+                      <th>Date</th>
+                      <th>Total</th>
+                      <th>Solde dû</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    @for (sale of openInvoices(); track trackByRowId($index, sale)) {
+                      <tr>
+                        <td>{{ sale.reference || sale.invoice_number || ('Vente #' + sale.id) }}</td>
+                        <td>{{ (sale.sale_date || sale.created_at) ? ((sale.sale_date || sale.created_at) | date:'mediumDate') : '—' }}</td>
+                        <td>{{ (sale.total_amount ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
+                        <td>{{ (sale.balance_due ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
           <div class="subsection">
             <div class="subsection-header">
-              <h3>Open invoices</h3>
+              <h3>Écritures comptables</h3>
             </div>
 
-            <div class="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Reference</th>
-                    <th>Date</th>
-                    <th>Total</th>
-                    <th>Balance due</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  @for (sale of openInvoices; track trackByRowId($index, sale)) {
+            @if (!statementEntries().length) {
+              <div class="empty-state">
+                <p>Aucune écriture disponible.</p>
+              </div>
+            } @else {
+              <div class="table-wrapper">
+                <table>
+                  <thead>
                     <tr>
-                      <td>{{ sale.reference || sale.invoice_number || ('Sale #' + sale.id) }}</td>
-                      <td>{{ (sale.sale_date || sale.created_at) ? ((sale.sale_date || sale.created_at) | date:'mediumDate') : '—' }}</td>
-                      <td>{{ (sale.total_amount ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
-                      <td>{{ (sale.balance_due ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
+                      <th>Date</th>
+                      <th>Type</th>
+                      <th>Description</th>
+                      <th>Débit</th>
+                      <th>Crédit</th>
+                      <th>Solde</th>
                     </tr>
-                  }
-                </tbody>
-              </table>
+                  </thead>
+
+                  <tbody>
+                    @for (entry of statementEntries(); track trackByRowId($index, entry)) {
+                      <tr>
+                        <td>{{ entry.date ? (entry.date | date:'mediumDate') : '—' }}</td>
+                        <td>{{ entry.type || '—' }}</td>
+                        <td>{{ entry.description || entry.reference || '—' }}</td>
+                        <td>{{ (entry.debit ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
+                        <td>{{ (entry.credit ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
+                        <td>{{ (entry.balance ?? entry.amount ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+
+          <div class="subsection">
+            <div class="subsection-header">
+              <h3>Paiements</h3>
             </div>
+
+            @if (!(statement()?.payments?.length ?? 0)) {
+              <div class="empty-state">
+                <p>Aucun paiement enregistré.</p>
+              </div>
+            } @else {
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Référence</th>
+                      <th>Date</th>
+                      <th>Méthode</th>
+                      <th>Montant</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    @for (payment of statement()?.payments ?? []; track trackByRowId($index, payment)) {
+                      <tr>
+                        <td>{{ payment.reference || ('Paiement #' + payment.id) }}</td>
+                        <td>{{ (payment.payment_date || payment.created_at) ? ((payment.payment_date || payment.created_at) | date:'mediumDate') : '—' }}</td>
+                        <td>{{ payment.method || '—' }}</td>
+                        <td>{{ (payment.amount ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
           </div>
         }
-
-        <div class="subsection">
-          <div class="subsection-header">
-            <h3>Ledger entries</h3>
-          </div>
-
-          @if (!statementEntries.length) {
-            <div class="empty-state">
-              <p>No statement entries available.</p>
-            </div>
-          } @else {
-            <div class="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Type</th>
-                    <th>Description</th>
-                    <th>Debit</th>
-                    <th>Credit</th>
-                    <th>Balance</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  @for (entry of statementEntries; track trackByRowId($index, entry)) {
-                    <tr>
-                      <td>{{ entry.date ? (entry.date | date:'mediumDate') : '—' }}</td>
-                      <td>{{ entry.type || '—' }}</td>
-                      <td>{{ entry.description || entry.reference || '—' }}</td>
-                      <td>{{ (entry.debit ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
-                      <td>{{ (entry.credit ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
-                      <td>{{ (entry.balance ?? entry.amount ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
-        </div>
-
-        <div class="subsection">
-          <div class="subsection-header">
-            <h3>Payments</h3>
-          </div>
-
-          @if (!(statement?.payments?.length ?? 0)) {
-            <div class="empty-state">
-              <p>No payments recorded.</p>
-            </div>
-          } @else {
-            <div class="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Reference</th>
-                    <th>Date</th>
-                    <th>Method</th>
-                    <th>Amount</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  @for (payment of statement?.payments ?? []; track trackByRowId($index, payment)) {
-                    <tr>
-                      <td>{{ payment.reference || ('Payment #' + payment.id) }}</td>
-                      <td>{{ (payment.payment_date || payment.created_at) ? ((payment.payment_date || payment.created_at) | date:'mediumDate') : '—' }}</td>
-                      <td>{{ payment.method || '—' }}</td>
-                      <td>{{ (payment.amount ?? 0) | currency:'MAD':'symbol':'1.2-2' }}</td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
-        </div>
       }
     </section>
   }
 </section>
+
+@if (isEditModalOpen()) {
+  <div class="modal-overlay" (click)="closeEditModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Modifier Client</h2>
+        <button class="btn-icon" type="button" (click)="closeEditModal()" [disabled]="saving()">X</button>
+      </div>
+      <div class="modal-body">
+        <app-client-form [client]="profile()?.client ?? null" (save)="saveClient($event)" (cancel)="closeEditModal()"></app-client-form>
+      </div>
+    </div>
+  </div>
+}

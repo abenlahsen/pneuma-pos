@@ -40,6 +40,34 @@
     </div>
   </div>
 
+  <div class="form-section">
+    <h3 class="section-title">Paramètres Financiers</h3>
+    <div class="form-grid">
+      <div class="form-control">
+        <label>Limite de crédit (DH)</label>
+        <input type="number" name="credit_limit" [(ngModel)]="formData.credit_limit" placeholder="0.00" min="0" step="0.01">
+      </div>
+      <div class="form-control">
+        <label>Solde d'ouverture (DH)</label>
+        <input type="number" name="opening_balance" [(ngModel)]="formData.opening_balance" placeholder="0.00" step="0.01">
+      </div>
+      <div class="form-control">
+        <label>Délai de paiement (jours)</label>
+        <input type="number" name="payment_terms_days" [(ngModel)]="formData.payment_terms_days" placeholder="Ex: 30" min="0" step="1">
+      </div>
+      <div class="form-control">
+        <label>Mode de paiement par défaut</label>
+        <select name="default_payment_method" [(ngModel)]="formData.default_payment_method">
+          <option [ngValue]="null">— Aucun —</option>
+          <option value="ESPECE">Espèce</option>
+          <option value="CHEQUE">Chèque</option>
+          <option value="VIREMENT">Virement</option>
+          <option value="EFFET">Effet</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
   <div class="form-actions">
     <button type="button" class="btn btn-secondary" (click)="cancel.emit()">Annuler</button>
     <button type="submit" class="btn btn-primary" [disabled]="!form.valid">Enregistrer</button>
