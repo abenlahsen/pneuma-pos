@@ -8,6 +8,7 @@
       <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create brands')">
         Nouvelle Marque
       </button>
+      <app-auto-refresh-control pageKey="brands" (refresh)="loadData()" />
     </div>
   </div>
 

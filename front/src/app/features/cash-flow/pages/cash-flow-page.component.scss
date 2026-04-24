@@ -211,6 +211,7 @@
 
 .table-card {
   overflow: hidden;
+  border: 1px solid $border-color;
 }
 
 .table-responsive {
@@ -233,10 +234,12 @@
 
   th {
     background: $bg-body;
-    font-weight: 600;
-    font-size: 0.875rem;
+    font-weight: 700;
+    font-size: 0.7rem;
     color: $text-muted;
     text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid $border-color;
 
     &.sortable {
       cursor: pointer;

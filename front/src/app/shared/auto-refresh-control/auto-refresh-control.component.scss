@@ -1,0 +1,67 @@
+@use '../../features/variables' as *;
+
+.auto-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ar-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid $border-color;
+  background: white;
+  color: $text-muted;
+  border-radius: $radius-sm;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    background: $bg-body;
+    color: $text-dark;
+  }
+
+  &.on {
+    background: rgba($primary, 0.08);
+    border-color: rgba($primary, 0.4);
+    color: $primary;
+  }
+}
+
+.ar-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: $text-light;
+  display: inline-block;
+
+  .ar-toggle.on & {
+    background: $primary;
+    animation: ar-pulse 1.5s ease-in-out infinite;
+  }
+}
+
+.ar-interval {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid $border-color;
+  background: white;
+  color: $text-dark;
+  border-radius: $radius-sm;
+  font-size: 0.8rem;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: $primary;
+    box-shadow: 0 0 0 3px rgba($primary, 0.1);
+  }
+}
+
+@keyframes ar-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}

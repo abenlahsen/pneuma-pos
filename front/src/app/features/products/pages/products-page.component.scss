@@ -134,6 +134,7 @@
 
 .table-card {
   overflow: hidden;
+  border: 1px solid #edf2f7;
 }
 
 .table-responsive {
@@ -155,10 +156,12 @@
 
   th {
     background: #f8fafc;
-    font-size: 0.8rem;
+    font-size: 0.7rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.02em;
-    color: #64748b;
+    letter-spacing: 0.05em;
+    color: #718096;
+    border-bottom: 2px solid #edf2f7;
   }
 
   tbody tr:hover {
@@ -377,6 +380,14 @@
 .modal-body {
   padding: 1.25rem;
   overflow-y: auto;
+}
+
+.modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
 }
 
 @keyframes spin {

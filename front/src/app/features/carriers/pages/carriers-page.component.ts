@@ -5,11 +5,12 @@ import { CarrierService } from '../data-access/carrier.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Carrier, CarrierPayload, PaginatedResponse } from '../models/carrier.model';
 import { CarrierFormComponent } from '../components/carrier-form/carrier-form.component';
+import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 
 @Component({
   selector: 'app-carriers-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, CarrierFormComponent],
+  imports: [CommonModule, FormsModule, CarrierFormComponent, AutoRefreshControlComponent],
   templateUrl: './carriers-page.component.html',
   styleUrls: ['./carriers-page.component.scss'],
 })

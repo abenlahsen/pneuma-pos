@@ -15,6 +15,7 @@
           <span class="kpi-loading-spinner" aria-hidden="true"></span>
           <span>Chargement...</span>
         </div>
+        <app-auto-refresh-control pageKey="dashboard" [defaultIntervalMs]="60000" (refresh)="refreshKpi()" />
       </div>
 
       <!-- Aujourd'hui -->

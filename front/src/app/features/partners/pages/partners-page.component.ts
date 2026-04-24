@@ -5,11 +5,12 @@ import { PartnerService } from '../data-access/partner.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Partner, PartnerPayload, PaginatedResponse } from '../models/partner.model';
 import { PartnerFormComponent } from '../components/partner-form/partner-form.component';
+import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 
 @Component({
   selector: 'app-partners-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, PartnerFormComponent],
+  imports: [CommonModule, FormsModule, PartnerFormComponent, AutoRefreshControlComponent],
   templateUrl: './partners-page.component.html',
   styleUrls: ['./partners-page.component.scss'],
 })

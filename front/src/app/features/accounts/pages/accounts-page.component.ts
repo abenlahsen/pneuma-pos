@@ -8,11 +8,12 @@ import { AccountFormComponent } from '../account-form/account-form.component';
 import { TransferFormComponent } from '../transfer-form/transfer-form.component';
 import { CashFlowService } from '../../../core/services/cash-flow.service';
 import { Transaction, TransactionSummary } from '../../../core/models/transaction.model';
+import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 
 @Component({
   selector: 'app-accounts-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AccountFormComponent, TransferFormComponent],
+  imports: [CommonModule, FormsModule, AccountFormComponent, TransferFormComponent, AutoRefreshControlComponent],
   templateUrl: './accounts-page.component.html',
   styleUrls: ['./accounts-page.component.scss']
 })

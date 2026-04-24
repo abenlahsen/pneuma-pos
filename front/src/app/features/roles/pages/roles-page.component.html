@@ -11,6 +11,7 @@
       <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create roles')">
         Nouveau Rôle
       </button>
+      <app-auto-refresh-control pageKey="roles" (refresh)="loadData()" />
     </div>
   </div>
 

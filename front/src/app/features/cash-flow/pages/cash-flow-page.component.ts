@@ -11,11 +11,12 @@ import {
   TransactionPayload,
   TransactionSummary,
 } from '../models/transaction.model';
+import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 
 @Component({
   selector: 'app-cash-flow-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TransactionFormComponent],
+  imports: [CommonModule, FormsModule, TransactionFormComponent, AutoRefreshControlComponent],
   templateUrl: './cash-flow-page.component.html',
   styleUrls: ['./cash-flow-page.component.scss'],
 })

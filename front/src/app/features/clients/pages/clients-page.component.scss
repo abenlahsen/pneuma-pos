@@ -190,6 +190,7 @@
 
 .table-card {
   overflow: hidden;
+  border: 1px solid $border-color;
 }
 
 .table-responsive {
@@ -212,10 +213,12 @@
 
   th {
     background: $bg-body;
-    font-weight: 600;
-    font-size: 0.875rem;
+    font-weight: 700;
+    font-size: 0.7rem;
     color: $text-muted;
     text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid $border-color;
   }
 
   tr:last-child td {
@@ -403,6 +406,14 @@
 .modal-body {
   padding: 1.5rem;
   overflow-y: auto;
+}
+
+.modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid $border-color;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
 }
 
 @media (max-width: 768px) {

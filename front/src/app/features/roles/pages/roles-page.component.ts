@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { RoleService } from '../data-access/role.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Permission, Role } from '../models/role.model';
+import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 
 @Component({
   selector: 'app-roles-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AutoRefreshControlComponent],
   templateUrl: './roles-page.component.html',
   styleUrls: ['./roles-page.component.scss'],
 })

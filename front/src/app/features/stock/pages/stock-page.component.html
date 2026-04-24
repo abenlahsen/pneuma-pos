@@ -9,6 +9,7 @@
       <button class="btn btn-primary" type="button" (click)="exportAvailableStock()" [disabled]="isExporting">
         {{ isExporting ? 'Export en cours...' : 'Exporter le stock disponible' }}
       </button>
+      <app-auto-refresh-control pageKey="stock" (refresh)="loadData()" />
     </div>
   </div>
 

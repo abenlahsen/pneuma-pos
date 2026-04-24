@@ -8,6 +8,7 @@
       <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create carriers')">
         Nouveau Transporteur
       </button>
+      <app-auto-refresh-control pageKey="carriers" (refresh)="loadData()" />
     </div>
   </div>
 
