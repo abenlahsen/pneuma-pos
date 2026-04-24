@@ -8,11 +8,12 @@ import { SaleFormComponent } from '../sale-form/sale-form.component';
 import { PaymentPanelComponent } from '../payment-panel/payment-panel.component';
 import { Sale, SaleFilters, SalePayload, SaleSummary } from '../models/sale.model';
 import { SaleService } from '../data-access/sale.service';
+import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 
 @Component({
   selector: 'app-sales-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, SaleFormComponent, SaleDetailComponent, PaymentPanelComponent],
+  imports: [CommonModule, FormsModule, RouterLink, SaleFormComponent, SaleDetailComponent, PaymentPanelComponent, AutoRefreshControlComponent],
   templateUrl: './sales-page.component.html',
   styleUrl: './sales-page.component.scss',
 })

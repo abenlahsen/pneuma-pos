@@ -6,11 +6,12 @@ import { UserService } from '../data-access/user.service';
 import { ManagedUser, PaginatedResponse, UserPayload } from '../models/user.model';
 import { Role } from '../../roles/models/role.model';
 import { RoleService } from '../../roles/data-access/role.service';
+import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 
 @Component({
   selector: 'app-users-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AutoRefreshControlComponent],
   templateUrl: './users-page.component.html',
   styleUrls: ['./users-page.component.scss'],
 })

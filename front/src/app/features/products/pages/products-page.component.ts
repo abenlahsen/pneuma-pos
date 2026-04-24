@@ -5,11 +5,12 @@ import { ProductService } from '../data-access/product.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Product, ProductFilters, ProductPayload } from '../models/product.model';
 import { ProductFormComponent } from '../product-form/product-form.component';
+import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 
 @Component({
   selector: 'app-products-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductFormComponent],
+  imports: [CommonModule, FormsModule, ProductFormComponent, AutoRefreshControlComponent],
   templateUrl: './products-page.component.html',
   styleUrls: ['./products-page.component.scss'],
 })

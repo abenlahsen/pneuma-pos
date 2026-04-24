@@ -5,11 +5,12 @@ import { Router } from '@angular/router';
 import { ClientFormComponent } from '../components/client-form/client-form.component';
 import { ClientService } from '../data-access/client.service';
 import { Client, ClientFilters, ClientPayload } from '../models/client.model';
+import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 
 @Component({
   selector: 'app-clients-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ClientFormComponent],
+  imports: [CommonModule, FormsModule, ClientFormComponent, AutoRefreshControlComponent],
   templateUrl: './clients-page.component.html',
   styleUrl: './clients-page.component.scss',
 })

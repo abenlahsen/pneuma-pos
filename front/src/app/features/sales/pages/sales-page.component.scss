@@ -92,9 +92,9 @@
 
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
 .card {
@@ -104,10 +104,10 @@
 }
 
 .summary-card {
-  padding: 1.5rem;
+  padding: 1rem 1.25rem;
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
 
   &.income .card-icon {
     color: $primary;
@@ -135,27 +135,30 @@
   }
 
   .card-icon {
-    width: 48px;
-    height: 48px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
+    flex-shrink: 0;
   }
 
   .card-label {
     margin: 0;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     color: $text-muted;
     text-transform: uppercase;
     font-weight: 600;
+    letter-spacing: 0.03em;
   }
 
   .card-value {
-    margin: 0.25rem 0 0;
-    font-size: 1.5rem;
+    margin: 0;
+    font-size: 1.3rem;
     color: $text-dark;
+    font-variant-numeric: tabular-nums;
   }
 }
 
@@ -242,6 +245,7 @@
 
 .table-card {
   overflow: hidden;
+  border: 1px solid $border-color;
 }
 
 .table-responsive {
@@ -263,10 +267,12 @@
 
   th {
     background: $bg-body;
-    font-weight: 600;
-    font-size: 0.875rem;
+    font-weight: 700;
+    font-size: 0.7rem;
     color: $text-muted;
     text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid $border-color;
 
     &.sortable {
       cursor: pointer;
@@ -320,7 +326,15 @@
   }
 }
 
-.text-right{text-align:right!important}.text-center{text-align:center!important}.fw-medium{font-weight:500}.fw-semibold{font-weight:600}.text-muted{color:$text-muted}.text-small{font-size:.875rem}.text-success{color:$income-color}.text-danger{color:$expense-color}.text-primary{color:$primary}
+.text-right { text-align: right !important; }
+.text-center { text-align: center !important; }
+.fw-medium { font-weight: 500; }
+.fw-semibold { font-weight: 600; font-variant-numeric: tabular-nums; }
+.text-muted { color: $text-muted; }
+.text-small { font-size: 0.875rem; }
+.text-success { color: $income-color; }
+.text-danger { color: $expense-color; }
+.text-primary { color: $primary; }
 
 .date-cell {
   display: flex;
@@ -345,8 +359,9 @@
   font-weight: 600;
 
   &-primary { background: rgba($primary, 0.1); color: $primary; }
-  &-success { background: rgba($income-color, 0.1); color: $income-color; }
-  &-warning { background: rgba(#ed8936, 0.1); color: #c05621; }
+  &-success { background: rgba($income-color, 0.12); color: #276749; }
+  &-danger { background: rgba($expense-color, 0.12); color: #e53e3e; }
+  &-warning { background: rgba(#ed8936, 0.12); color: #c05621; }
 }
 
 .status-select {
@@ -504,6 +519,25 @@
   overflow-y: auto;
 }
 
+.modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid $border-color;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.btn-cancel {
+  background: white;
+  border: 1px solid $border-color;
+  border-radius: $radius-sm;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #4a5568;
+}
+
 @media (max-width: 768px) {
   .page-container {
     margin: 1rem auto;
@@ -541,20 +575,20 @@
 
   .summary-card {
     padding: 0.75rem;
-    gap: 0.75rem;
+    gap: 0.5rem;
 
     .card-icon {
-      width: 36px;
-      height: 36px;
-      font-size: 1.1rem;
+      width: 32px;
+      height: 32px;
+      font-size: 1rem;
     }
 
     .card-label {
-      font-size: 0.7rem;
+      font-size: 0.65rem;
     }
 
     .card-value {
-      font-size: 1rem;
+      font-size: 0.95rem;
     }
   }
 

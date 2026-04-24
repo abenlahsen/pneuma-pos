@@ -8,6 +8,7 @@
       <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create users')">
         Nouvel Utilisateur
       </button>
+      <app-auto-refresh-control pageKey="users" (refresh)="loadData()" />
     </div>
   </div>
 

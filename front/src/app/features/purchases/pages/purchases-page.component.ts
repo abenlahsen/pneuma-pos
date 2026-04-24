@@ -7,11 +7,12 @@ import { Purchase, PurchaseSummary } from '../models/purchase.model';
 import { PurchaseFormComponent } from '../purchase-form/purchase-form.component';
 import { PurchaseDetailComponent } from '../purchase-detail/purchase-detail.component';
 import { PurchasePaymentsComponent } from '../purchase-payments/purchase-payments.component';
+import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 
 @Component({
   selector: 'app-purchases-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, PurchaseFormComponent, PurchaseDetailComponent, PurchasePaymentsComponent],
+  imports: [CommonModule, FormsModule, PurchaseFormComponent, PurchaseDetailComponent, PurchasePaymentsComponent, AutoRefreshControlComponent],
   templateUrl: './purchases-page.component.html',
   styleUrls: ['./purchases-page.component.scss']
 })

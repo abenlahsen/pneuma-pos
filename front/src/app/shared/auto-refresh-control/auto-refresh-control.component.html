@@ -1,0 +1,25 @@
+<div class="auto-refresh">
+  <button
+    type="button"
+    class="ar-toggle"
+    [class.on]="enabled()"
+    (click)="toggle()"
+    [title]="enabled() ? 'Désactiver l\'actualisation automatique' : 'Activer l\'actualisation automatique'"
+  >
+    <span class="ar-dot" aria-hidden="true"></span>
+    <span class="ar-label">Auto</span>
+  </button>
+
+  @if (enabled()) {
+    <select
+      class="ar-interval"
+      [value]="intervalMs()"
+      (change)="onIntervalChange($any($event.target).value)"
+      title="Intervalle d'actualisation"
+    >
+      @for (opt of options; track opt.value) {
+        <option [value]="opt.value">{{ opt.label }}</option>
+      }
+    </select>
+  }
+</div>

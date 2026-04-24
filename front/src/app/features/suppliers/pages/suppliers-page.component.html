@@ -8,6 +8,7 @@
       <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create suppliers')">
         Nouveau Fournisseur
       </button>
+      <app-auto-refresh-control pageKey="suppliers" (refresh)="loadData()" />
     </div>
   </div>
 

@@ -5,11 +5,12 @@ import { SupplierService } from '../data-access/supplier.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Supplier, SupplierPayload, PaginatedResponse } from '../models/supplier.model';
 import { SupplierFormComponent } from '../components/supplier-form/supplier-form.component';
+import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 
 @Component({
   selector: 'app-suppliers-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, SupplierFormComponent],
+  imports: [CommonModule, FormsModule, SupplierFormComponent, AutoRefreshControlComponent],
   templateUrl: './suppliers-page.component.html',
   styleUrls: ['./suppliers-page.component.scss'],
 })

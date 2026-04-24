@@ -16,6 +16,7 @@
         <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create accounts')">
           + Nouveau Compte
         </button>
+        <app-auto-refresh-control pageKey="accounts" (refresh)="loadAccounts()" />
       </ng-container>
     </div>
   </div>

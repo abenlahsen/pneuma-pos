@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { StockService } from '../data-access/stock.service';
 import { Stock, StockFilters, StockMovement, StockSummary } from '../models/stock.model';
+import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 
 @Component({
   selector: 'app-stock-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AutoRefreshControlComponent],
   templateUrl: './stock-page.component.html',
   styleUrl: './stock-page.component.scss',
 })

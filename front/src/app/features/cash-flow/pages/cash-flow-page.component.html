@@ -8,6 +8,7 @@
       <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create cash-flow')">
         + Nouvelle Transaction
       </button>
+      <app-auto-refresh-control pageKey="cash-flow" (refresh)="loadData()" />
     </div>
   </div>
 
