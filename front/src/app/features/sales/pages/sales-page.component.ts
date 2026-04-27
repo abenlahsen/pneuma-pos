@@ -20,7 +20,7 @@ import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-contro
 export class SalesPageComponent implements OnInit {
   sales = signal<Sale[]>([]);
   summary = signal<SaleSummary>({ tyres_this_month: 0, tyres_today: 0, tyres_en_cours: 0, sales_en_cours: 0, total_unpaid: 0 });
-  filterOptions = signal<SaleFilters>({ brands: [], clients: [], cities: [], statuses: [], partners: [], payment_statuses: [], commercials: [] });
+  filterOptions = signal<SaleFilters>({ brands: [], clients: [], cities: [], statuses: [], carriers: [], partners: [], payment_statuses: [], commercials: [] });
 
   currentPage = signal(1);
   lastPage = signal(1);
@@ -33,6 +33,7 @@ export class SalesPageComponent implements OnInit {
   filterCity = signal('');
   filterStatus = signal('');
   filterPaymentStatus = signal('');
+  filterCarrier = signal('');
   filterPartner = signal('');
   filterCommercial = signal<string>('');
   filterDateFrom = signal('');
@@ -93,7 +94,8 @@ export class SalesPageComponent implements OnInit {
       city: this.filterCity(),
       status: this.filterStatus(),
       payment_status: this.filterPaymentStatus(),
-      partner: this.filterPartner(),
+      carrier_id: this.filterCarrier(),
+      partner_id: this.filterPartner(),
       commercial_id: this.filterCommercial(),
       date_from: this.filterDateFrom(),
       date_to: this.filterDateTo(),
@@ -125,6 +127,7 @@ export class SalesPageComponent implements OnInit {
     this.filterCity.set('');
     this.filterStatus.set('');
     this.filterPaymentStatus.set('');
+    this.filterCarrier.set('');
     this.filterPartner.set('');
     this.filterCommercial.set('');
     this.filterDateFrom.set('');

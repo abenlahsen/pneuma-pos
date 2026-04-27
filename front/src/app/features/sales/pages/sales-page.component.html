@@ -92,10 +92,18 @@
         </div>
 
         <div class="form-group">
+          <label>Transporteur</label>
+          <select class="form-control" [ngModel]="filterCarrier()" (ngModelChange)="filterCarrier.set($event); applyFilters()">
+            <option value="">Tous</option>
+            <option *ngFor="let c of filterOptions().carriers" [value]="c.id">{{ c.name }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
           <label>Partenaire</label>
           <select class="form-control" [ngModel]="filterPartner()" (ngModelChange)="filterPartner.set($event); applyFilters()">
             <option value="">Tous</option>
-            <option *ngFor="let p of filterOptions().partners" [value]="p">{{ p }}</option>
+            <option *ngFor="let p of filterOptions().partners" [value]="p.id">{{ p.name }}</option>
           </select>
         </div>
 

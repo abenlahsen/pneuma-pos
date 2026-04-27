@@ -86,6 +86,16 @@ class Sale extends Model
         return $this->belongsTo(User::class, 'commercial_id');
     }
 
+    public function linkedCarrier(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Carrier::class, 'carrier_id');
+    }
+
+    public function linkedPartner(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Partner::class, 'partner_id');
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(SaleItem::class);
