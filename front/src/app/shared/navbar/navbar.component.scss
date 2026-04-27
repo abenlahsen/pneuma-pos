@@ -113,7 +113,7 @@
     font-size: 0.82rem;
     font-weight: 500;
     padding: 0.4rem 0.7rem;
-    border-radius: 6px;
+    border-radius: 8px;
     transition: all 0.2s;
     white-space: nowrap;
 
@@ -123,7 +123,7 @@
     }
 
     &.active {
-      color: var(--navbar-text);
+      color: #ffffff;
       background: var(--navbar-active);
       font-weight: 600;
     }
@@ -150,7 +150,7 @@
       font-size: 0.82rem;
       font-weight: 500;
       padding: 0.4rem 0.7rem;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
       transition: all 0.2s;
       white-space: nowrap;
@@ -173,7 +173,7 @@
       left: 0;
       margin-top: 0.4rem;
       background: var(--app-surface);
-      border-radius: 6px;
+      border-radius: 12px;
       box-shadow: var(--app-shadow);
       min-width: 180px;
       padding: 0.5rem;
@@ -266,12 +266,34 @@
   align-items: stretch;
 }
 
+.navbar-user--vertical .user-avatar {
+  align-self: center;
+  width: 40px;
+  height: 40px;
+  font-size: 1rem;
+}
+
 .navbar-user--vertical .user-info {
-  align-items: flex-start;
+  align-items: center;
 }
 
 .navbar-user--vertical .btn-logout {
   width: 100%;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--app-primary, #ff2d37);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  -webkit-font-smoothing: antialiased;
 }
 
 .user-info {
@@ -341,6 +363,10 @@
 
   .navbar-user {
     margin-left: auto;
+
+    .user-avatar {
+      display: none;
+    }
 
     .user-name {
       display: none;
