@@ -9,10 +9,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('company_settings', function (Blueprint $table) {
-            $table->string('theme_mode')->default('system')->after('favicon_path');
-            $table->string('primary_color', 7)->default('#ff2d37')->after('theme_mode');
-            $table->string('accent_color', 7)->default('#1e293b')->after('primary_color');
-            $table->string('surface_color', 7)->default('#ffffff')->after('accent_color');
+            if (! Schema::hasColumn('company_settings', 'theme_mode')) {
+                $table->string('theme_mode')->default('system')->after('favicon_path');
+            }
+            if (! Schema::hasColumn('company_settings', 'primary_color')) {
+                $table->string('primary_color', 7)->default('#ff2d37')->after('theme_mode');
+            }
+            if (! Schema::hasColumn('company_settings', 'accent_color')) {
+                $table->string('accent_color', 7)->default('#1e293b')->after('primary_color');
+            }
+            if (! Schema::hasColumn('company_settings', 'surface_color')) {
+                $table->string('surface_color', 7)->default('#ffffff')->after('accent_color');
+            }
         });
     }
 
