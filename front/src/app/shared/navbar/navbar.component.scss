@@ -40,6 +40,8 @@
   gap: 1rem;
   padding: 1rem;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .navbar-brand {
@@ -258,6 +260,7 @@
   align-items: center;
   gap: 0.75rem;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .navbar-user--vertical {
@@ -267,10 +270,7 @@
 }
 
 .navbar-user--vertical .user-avatar {
-  align-self: center;
-  width: 40px;
-  height: 40px;
-  font-size: 1rem;
+  display: none;
 }
 
 .navbar-user--vertical .user-info {
