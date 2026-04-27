@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasColumn('clients', 'category')) {
+            return;
+        }
+
         Schema::table('clients', function (Blueprint $table) {
             $table->string('category', 32)->default('Paticulier')->after('name');
         });
