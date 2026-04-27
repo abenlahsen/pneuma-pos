@@ -36,6 +36,7 @@
   </div>
 
   <div class="navbar-user" [class.navbar-user--vertical]="menuLayout() === 'vertical'">
+    <div class="user-avatar" *ngIf="userName()" [title]="userName()">{{ userName().charAt(0).toUpperCase() }}</div>
     <span class="user-info" *ngIf="userName()">
       <span class="user-name">{{ userName() }}</span>
       <span class="user-role" *ngIf="userRole()">{{ userRole() }}</span>
