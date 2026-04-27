@@ -8,3 +8,7 @@ Route::get('settings/company', [CompanySettingsController::class, 'show'])
 
 Route::put('settings/company', [CompanySettingsController::class, 'update'])
     ->middleware('permission:edit settings');
+
+// POST alias for multipart/form-data uploads (method spoofing via _method=PUT)
+Route::post('settings/company', [CompanySettingsController::class, 'update'])
+    ->middleware('permission:edit settings');

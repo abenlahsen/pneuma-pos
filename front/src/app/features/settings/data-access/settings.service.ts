@@ -40,6 +40,9 @@ export class SettingsService {
       formData.append('favicon', faviconFile);
     }
 
-    return this.http.put<CompanySettings>(this.apiUrl, formData);
+    // PHP only parses multipart/form-data for POST — use method spoofing
+    // so files are accessible via $request->file() in Laravel.
+    formData.append('_method', 'PUT');
+    return this.http.post<CompanySettings>(this.apiUrl, formData);
   }
 }
