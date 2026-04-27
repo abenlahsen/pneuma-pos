@@ -96,7 +96,8 @@ export interface SaleFilters {
   cities: string[];
   statuses: string[];
   payment_statuses: string[];
-  partners: string[];
+  carriers: { id: number; name: string }[];
+  partners: { id: number; name: string }[];
   commercials: { id: number; name: string }[];
 }
 

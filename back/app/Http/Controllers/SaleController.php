@@ -6,6 +6,8 @@ use App\Domain\Sales\SaleService;
 use App\Http\Requests\StoreSaleRequest;
 use App\Http\Requests\UpdateSaleRequest;
 use App\Http\Resources\SaleResource;
+use App\Models\Carrier;
+use App\Models\Partner;
 use App\Models\Sale;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -23,10 +25,18 @@ class SaleController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Sale::query()
-            ->with(['linkedClient', 'commercial']);
+            ->with(['linkedClient', 'commercial', 'linkedCarrier', 'linkedPartner']);
 
         if ($request->filled('commercial_id') && Schema::hasColumn('sales', 'commercial_id')) {
             $query->where('commercial_id', $request->integer('commercial_id'));
+        }
+
+        if ($request->filled('carrier_id')) {
+            $query->where('carrier_id', $request->integer('carrier_id'));
+        }
+
+        if ($request->filled('partner_id')) {
+            $query->where('partner_id', $request->integer('partner_id'));
         }
 
         if ($request->filled('search')) {
@@ -146,13 +156,28 @@ class SaleController extends Controller
                 ->values()
             : collect();
 
+        $usedCarrierIds = Sale::query()->whereNotNull('carrier_id')->distinct()->pluck('carrier_id');
+        $carriers = Carrier::query()
+            ->whereIn('id', $usedCarrierIds)
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->values();
+
+        $usedPartnerIds = Sale::query()->whereNotNull('partner_id')->distinct()->pluck('partner_id');
+        $partners = Partner::query()
+            ->whereIn('id', $usedPartnerIds)
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->values();
+
         return response()->json([
             'brands' => $this->distinctValues('brand'),
             'clients' => $this->distinctClientValues(),
             'cities' => $this->distinctValues('city'),
             'statuses' => $this->distinctValues('status'),
             'payment_statuses' => $this->distinctValues('payment_status'),
-            'partners' => $this->distinctValues('partner'),
+            'carriers' => $carriers,
+            'partners' => $partners,
             'commercials' => $commercials,
         ]);
     }
@@ -214,8 +239,12 @@ class SaleController extends Controller
             $query->where('payment_status', (string) $request->string('payment_status'));
         }
 
-        if ($request->filled('partner') && Schema::hasColumn('sales', 'partner')) {
-            $query->where('partner', (string) $request->string('partner'));
+        if ($request->filled('carrier_id')) {
+            $query->where('carrier_id', $request->integer('carrier_id'));
+        }
+
+        if ($request->filled('partner_id')) {
+            $query->where('partner_id', $request->integer('partner_id'));
         }
 
         $dateColumn = $this->resolveDateColumn();

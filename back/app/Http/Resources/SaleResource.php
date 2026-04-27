@@ -28,7 +28,23 @@ class SaleResource extends JsonResource
             'city' => $this->relationLoaded('linkedClient') && $this->linkedClient?->city
                 ? $this->linkedClient->city
                 : $this->city,
-            'partner' => $this->partner,
+            'carrier_id' => $this->carrier_id,
+            'carrier' => $this->when(
+                $this->relationLoaded('linkedCarrier'),
+                fn () => $this->linkedCarrier ? [
+                    'id' => $this->linkedCarrier->id,
+                    'name' => $this->linkedCarrier->name,
+                ] : null
+            ),
+            'partner_id' => $this->partner_id,
+            'partner' => $this->when(
+                $this->relationLoaded('linkedPartner'),
+                fn () => $this->linkedPartner ? [
+                    'id' => $this->linkedPartner->id,
+                    'name' => $this->linkedPartner->name,
+                ] : null,
+                $this->partner
+            ),
             'status' => $this->status,
             'payment_status' => $this->payment_status,
             'notes' => $this->notes,
