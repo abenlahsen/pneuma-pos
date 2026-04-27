@@ -54,7 +54,9 @@ class CompanySetting extends Model
             return null;
         }
 
-        $url = Storage::disk('public')->url($path);
+        // Return a root-relative URL so it works regardless of APP_URL
+        // (avoids internal Docker hostnames reaching the browser).
+        $url = '/storage/' . ltrim($path, '/');
         $updatedAt = $this->updated_at?->timestamp;
 
         return $updatedAt ? "{$url}?v={$updatedAt}" : $url;
