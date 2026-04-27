@@ -41,7 +41,8 @@ source "$ENV_FILE"
 # deploy.env was saved with Windows (CRLF) line endings. A trailing \r in
 # DB_PASSWORD silently breaks mysqldump auth ("Access denied").
 for var in VPS_HOST VPS_USER VPS_PORT DB_HOST DB_DATABASE DB_USERNAME DB_PASSWORD \
-           APP_DIR DOMAIN DOMAIN_WWW VPS_SUDO SSH_STRICT_HOST_KEY_CHECKING; do
+           APP_DIR DOMAIN DOMAIN_WWW VPS_SUDO SSH_STRICT_HOST_KEY_CHECKING \
+           ADMIN_EMAIL ADMIN_INITIAL_PASSWORD; do
   if [ -n "${!var:-}" ]; then
     printf -v "$var" '%s' "${!var%$'\r'}"
   fi
@@ -260,6 +261,9 @@ SESSION_LIFETIME=120
 FILESYSTEM_DISK=local
 QUEUE_CONNECTION=sync
 CACHE_STORE=file
+
+ADMIN_EMAIL=${ADMIN_EMAIL:-admin@pneuma.pos}
+ADMIN_INITIAL_PASSWORD=${ADMIN_INITIAL_PASSWORD:-}
 ENVEOF
 
 # ── Composer ─────────────────────────────────────────────────
