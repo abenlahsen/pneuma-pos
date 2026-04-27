@@ -12,19 +12,25 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('company_settings', function (Blueprint $table) {
-            $table->string('logo_path')->nullable()->after('patente');
-            $table->string('favicon_path')->nullable()->after('logo_path');
+            if (! Schema::hasColumn('company_settings', 'logo_path')) {
+                $table->string('logo_path')->nullable()->after('patente');
+            }
+            if (! Schema::hasColumn('company_settings', 'favicon_path')) {
+                $table->string('favicon_path')->nullable()->after('logo_path');
+            }
         });
 
-        DB::table('company_settings')
-            ->whereNotNull('logo_url')
-            ->update([
-                'logo_path' => DB::raw('logo_url'),
-            ]);
+        if (Schema::hasColumn('company_settings', 'logo_url')) {
+            DB::table('company_settings')
+                ->whereNotNull('logo_url')
+                ->update([
+                    'logo_path' => DB::raw('logo_url'),
+                ]);
 
-        Schema::table('company_settings', function (Blueprint $table) {
-            $table->dropColumn('logo_url');
-        });
+            Schema::table('company_settings', function (Blueprint $table) {
+                $table->dropColumn('logo_url');
+            });
+        }
     }
 
     /**
