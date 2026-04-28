@@ -14,7 +14,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Schema;
-use Spatie\Permission\Models\Role;
 
 class SaleController extends Controller
 {
@@ -25,7 +24,7 @@ class SaleController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Sale::query()
-            ->with(['linkedClient', 'commercial', 'linkedCarrier', 'linkedPartner']);
+            ->with(['linkedClient', 'commercial', 'linkedCarrier', 'linkedPartner', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
 
         if ($request->filled('commercial_id') && Schema::hasColumn('sales', 'commercial_id')) {
             $query->where('commercial_id', $request->integer('commercial_id'));
@@ -41,31 +40,52 @@ class SaleController extends Controller
 
         if ($request->filled('search')) {
             $search = trim((string) $request->string('search'));
-            $searchableColumns = array_values(array_filter([
-                Schema::hasColumn('sales', 'reference') ? 'reference' : null,
-                Schema::hasColumn('sales', 'brand') ? 'brand' : null,
-                Schema::hasColumn('sales', 'city') ? 'city' : null,
-                Schema::hasColumn('sales', 'partner') ? 'partner' : null,
-                Schema::hasColumn('sales', 'status') ? 'status' : null,
-                Schema::hasColumn('sales', 'payment_status') ? 'payment_status' : null,
-            ]));
+            $query->where(function ($builder) use ($search) {
+                $builder->orWhereHas('linkedClient', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%")
+                        ->orWhere('city', 'like', "%{$search}%");
+                })
+                ->orWhereHas('commercial', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                })
+                ->orWhereHas('items.linkedProduct', function ($q) use ($search) {
+                    $q->where('profile', 'like', "%{$search}%")
+                        ->orWhere('reference', 'like', "%{$search}%")
+                        ->orWhereHas('brand', function ($q2) use ($search) {
+                            $q2->where('name', 'like', "%{$search}%");
+                        });
+                });
 
-            $query->where(function ($builder) use ($search, $searchableColumns) {
-                foreach ($searchableColumns as $index => $column) {
-                    if ($index === 0) {
-                        $builder->where($column, 'like', "%{$search}%");
-                    } else {
+                foreach (['reference', 'brand', 'city', 'status', 'payment_status'] as $column) {
+                    if (Schema::hasColumn('sales', $column)) {
                         $builder->orWhere($column, 'like', "%{$search}%");
                     }
                 }
-
-                $builder->orWhereHas('linkedClient', function ($clientQuery) use ($search) {
-                    $clientQuery
-                        ->where('name', 'like', "%{$search}%")
-                        ->orWhere('phone', 'like', "%{$search}%")
-                        ->orWhere('city', 'like', "%{$search}%");
-                });
             });
+        }
+
+        if ($request->filled('client')) {
+            $client = trim((string) $request->string('client'));
+            $query->whereHas('linkedClient', function ($q) use ($client) {
+                $q->where('name', 'like', "%{$client}%");
+            });
+        }
+
+        if ($request->filled('city') && Schema::hasColumn('sales', 'city')) {
+            $query->where('city', (string) $request->string('city'));
+        }
+
+        if ($request->filled('status') && Schema::hasColumn('sales', 'status')) {
+            $query->where('status', (string) $request->string('status'));
+        }
+
+        if ($request->filled('payment_status') && Schema::hasColumn('sales', 'payment_status')) {
+            $query->where('payment_status', (string) $request->string('payment_status'));
+        }
+
+        if ($request->filled('brand') && Schema::hasColumn('sales', 'brand')) {
+            $query->where('brand', (string) $request->string('brand'));
         }
 
         $dateColumn = $this->resolveDateColumn();
@@ -78,10 +98,15 @@ class SaleController extends Controller
             $query->whereDate($dateColumn, '<=', (string) $request->string('date_to'));
         }
 
-        $paginator = $query
-            ->orderByDesc($dateColumn)
-            ->orderByDesc('id')
-            ->paginate((int) $request->integer('per_page', 15));
+        $sortable = ['date', 'total_quantity', 'total_sale', 'margin', 'payment_status', 'status', 'client', 'created_at', 'updated_at'];
+        if ($request->filled('sort_by') && in_array($request->string('sort_by')->toString(), $sortable, true)) {
+            $direction = $request->string('sort_direction')->toString() === 'desc' ? 'desc' : 'asc';
+            $query->orderBy((string) $request->string('sort_by'), $direction)->orderByDesc('id');
+        } else {
+            $query->orderByDesc($dateColumn)->orderByDesc('id');
+        }
+
+        $paginator = $query->paginate((int) $request->integer('per_page', 15));
 
         return response()->json([
             'data' => SaleResource::collection($paginator->getCollection())->resolve(),
@@ -98,7 +123,7 @@ class SaleController extends Controller
 
         return response()->json(
             (new SaleResource(
-                $sale->loadMissing(['linkedClient', 'commercial', 'items', 'payments'])
+                $sale->loadMissing(['linkedClient', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments'])
             ))->resolve(),
             201
         );
@@ -108,7 +133,7 @@ class SaleController extends Controller
     {
         return response()->json(
             (new SaleResource(
-                $sale->loadMissing(['linkedClient', 'commercial', 'items', 'payments'])
+                $sale->loadMissing(['linkedClient', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments'])
             ))->resolve()
         );
     }
@@ -119,7 +144,7 @@ class SaleController extends Controller
 
         return response()->json(
             (new SaleResource(
-                $sale->loadMissing(['linkedClient', 'commercial', 'items', 'payments'])
+                $sale->loadMissing(['linkedClient', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments'])
             ))->resolve()
         );
     }
@@ -133,28 +158,10 @@ class SaleController extends Controller
 
     public function filters(): JsonResponse
     {
-        $commercialRole = Role::query()
-            ->where('name', 'Commercial')
-            ->where('guard_name', 'web')
-            ->first();
-
-        $commercials = $commercialRole
-            ? User::query()
-                ->select(['users.id', 'users.name'])
-                ->join('model_has_roles', function ($join) use ($commercialRole) {
-                    $join->on('model_has_roles.model_id', '=', 'users.id')
-                        ->where('model_has_roles.model_type', User::class)
-                        ->where('model_has_roles.role_id', $commercialRole->id);
-                })
-                ->orderBy('users.name')
-                ->distinct()
-                ->get()
-                ->map(fn (User $user) => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                ])
-                ->values()
-            : collect();
+        $commercials = User::role(['Commercial', 'Manager', 'Administrator'])
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->values();
 
         $usedCarrierIds = Sale::query()->whereNotNull('carrier_id')->distinct()->pluck('carrier_id');
         $carriers = Carrier::query()
@@ -192,30 +199,28 @@ class SaleController extends Controller
 
         if ($request->filled('search')) {
             $search = trim((string) $request->string('search'));
-            $searchableColumns = array_values(array_filter([
-                Schema::hasColumn('sales', 'reference') ? 'reference' : null,
-                Schema::hasColumn('sales', 'brand') ? 'brand' : null,
-                Schema::hasColumn('sales', 'city') ? 'city' : null,
-                Schema::hasColumn('sales', 'partner') ? 'partner' : null,
-                Schema::hasColumn('sales', 'status') ? 'status' : null,
-                Schema::hasColumn('sales', 'payment_status') ? 'payment_status' : null,
-            ]));
+            $query->where(function ($builder) use ($search) {
+                $builder->orWhereHas('linkedClient', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%")
+                        ->orWhere('city', 'like', "%{$search}%");
+                })
+                ->orWhereHas('commercial', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                })
+                ->orWhereHas('items.linkedProduct', function ($q) use ($search) {
+                    $q->where('profile', 'like', "%{$search}%")
+                        ->orWhere('reference', 'like', "%{$search}%")
+                        ->orWhereHas('brand', function ($q2) use ($search) {
+                            $q2->where('name', 'like', "%{$search}%");
+                        });
+                });
 
-            $query->where(function ($builder) use ($search, $searchableColumns) {
-                foreach ($searchableColumns as $index => $column) {
-                    if ($index === 0) {
-                        $builder->where($column, 'like', "%{$search}%");
-                    } else {
+                foreach (['reference', 'brand', 'city', 'status', 'payment_status'] as $column) {
+                    if (Schema::hasColumn('sales', $column)) {
                         $builder->orWhere($column, 'like', "%{$search}%");
                     }
                 }
-
-                $builder->orWhereHas('linkedClient', function ($clientQuery) use ($search) {
-                    $clientQuery
-                        ->where('name', 'like', "%{$search}%")
-                        ->orWhere('phone', 'like', "%{$search}%")
-                        ->orWhere('city', 'like', "%{$search}%");
-                });
             });
         }
 

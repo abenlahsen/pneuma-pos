@@ -59,7 +59,7 @@
       <div class="filters-grid">
         <div class="form-group">
           <label>Recherche globale</label>
-          <input type="text" class="form-control" [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event)" placeholder="Rechercher..." (keyup.enter)="applyFilters()">
+          <input type="text" class="form-control" [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event)" placeholder="Client, produit, marque..." (keyup.enter)="applyFilters()">
         </div>
 
         <div class="form-group">
