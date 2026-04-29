@@ -119,7 +119,7 @@ class SaleController extends Controller
 
     public function store(StoreSaleRequest $request): JsonResponse
     {
-        $sale = $this->saleService->create($request->validated());
+        $sale = $this->saleService->create($request->validated(), $request->user()?->id);
 
         return response()->json(
             (new SaleResource(
@@ -140,7 +140,7 @@ class SaleController extends Controller
 
     public function update(UpdateSaleRequest $request, Sale $sale): JsonResponse
     {
-        $sale = $this->saleService->update($sale, $request->validated());
+        $sale = $this->saleService->update($sale, $request->validated(), $request->user()?->id);
 
         return response()->json(
             (new SaleResource(
@@ -149,9 +149,9 @@ class SaleController extends Controller
         );
     }
 
-    public function destroy(Sale $sale): Response
+    public function destroy(Sale $sale, Request $request): Response
     {
-        $sale->delete();
+        $this->saleService->delete($sale, $request->user()?->id);
 
         return response()->noContent();
     }

@@ -43,7 +43,8 @@
               <tr *ngFor="let item of purchase.items">
                 <td class="col-produit">
                   <span class="badge badge-primary mr-1" *ngIf="getProduct(item)?.brand">{{ getProduct(item)!.brand!.name }}</span>
-                  <span class="fw-medium">{{ getProduct(item)?.reference || 'Produit #' + item.product_id }}</span>
+                  <button class="product-link fw-medium" type="button" (click)="openProductView(item)" *ngIf="getProduct(item); else plainRef" title="Voir le produit">{{ getProduct(item)?.reference || 'Produit #' + item.product_id }}</button>
+                  <ng-template #plainRef><span class="fw-medium">{{ 'Produit #' + item.product_id }}</span></ng-template>
                   <span class="text-muted ml-1" *ngIf="getProduct(item)?.tyre?.tire_width">{{ getProduct(item)!.tyre!.tire_width }}/{{ getProduct(item)!.tyre!.tire_height }}R{{ getProduct(item)!.tyre!.tire_diameter }}</span>
                   <span class="text-muted ml-1" *ngIf="getProduct(item)?.profile">— {{ getProduct(item)!.profile }}</span>
                 </td>
@@ -118,3 +119,10 @@
     </div>
   </div>
 </div>
+
+<app-product-detail
+  *ngIf="viewingProduct()"
+  [product]="viewingProduct()!"
+  (close)="viewingProduct.set(null)"
+  (edit)="editProductInNewTab($event)"
+/>

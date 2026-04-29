@@ -21,9 +21,12 @@ class UpdateTransactionRequest extends FormRequest
     {
         return [
             'account_id' => ['sometimes', 'required', 'exists:accounts,id'],
-            'type' => ['sometimes', 'required', 'in:credit,debit'],
+            'type' => ['sometimes', 'required', 'in:income,expense'],
             'amount' => ['sometimes', 'required', 'numeric', 'min:0'],
             'date' => ['sometimes', 'required', 'date'],
+            'category' => ['sometimes', 'required', 'string'],
+            'method' => ['sometimes', 'required', 'string'],
+            'person' => ['sometimes', 'required', 'string'],
             'description' => ['nullable', 'string'],
             'reference' => ['nullable', 'string', 'max:255'],
         ];

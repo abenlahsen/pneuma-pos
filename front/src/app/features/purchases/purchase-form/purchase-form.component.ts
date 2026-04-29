@@ -3,19 +3,18 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Purchase, PurchasePayload } from '../../../core/models/purchase.model';
 import { Product } from '../../../core/models/product.model';
+import { ProductDetailComponent } from '../../products/product-detail/product-detail.component';
 import { PurchaseService } from '../../../core/services/purchase.service';
 import { ProductService } from '../../../core/services/product.service';
 import { SupplierService } from '../../suppliers/data-access/supplier.service';
-import { UserService } from '../../../core/services/user.service';
 import { Supplier } from '../../suppliers/models/supplier.model';
-import { ManagedUser } from '../../../core/models/user-manage.model';
 import { Stock } from '../../../core/models/stock.model';
 import { StockService } from '../../../core/services/stock.service';
 
 @Component({
   selector: 'app-purchase-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ProductDetailComponent],
   templateUrl: './purchase-form.component.html',
   styleUrls: ['./purchase-form.component.scss']
 })
@@ -27,12 +26,11 @@ export class PurchaseFormComponent implements OnInit {
   private purchaseService = inject(PurchaseService);
   private productService = inject(ProductService);
   private supplierService = inject(SupplierService);
-  private userService = inject(UserService);
   private stockService = inject(StockService);
 
   loading = signal<boolean>(false);
   suppliers = signal<Supplier[]>([]);
-  commercials = signal<ManagedUser[]>([]);
+  commercials = signal<{ id: number; name: string }[]>([]);
   products = signal<Product[]>([]);
   productSearch = signal('');
   loadingProducts = signal(false);
@@ -109,8 +107,22 @@ export class PurchaseFormComponent implements OnInit {
     }
   }
 
+  viewingProduct = signal<Product | null>(null);
+
   getProduct(item: any): any {
     return item.linkedProduct || item.linked_product;
+  }
+
+  openProductView(item: any): void {
+    const product = this.getProduct(item);
+    if (product) {
+      this.viewingProduct.set(product);
+    }
+  }
+
+  editProductInNewTab(product: Product): void {
+    this.viewingProduct.set(null);
+    window.open(`/products?id=${product.id}&edit=1`, '_blank', 'noopener');
   }
 
   onStockSelected(): void {
@@ -231,11 +243,8 @@ export class PurchaseFormComponent implements OnInit {
   }
 
   loadCommercials(): void {
-    this.userService.getUsers({ all: true }).subscribe({
-      next: (res: any) => {
-        const data = Array.isArray(res) ? res : res.data;
-        this.commercials.set(data);
-      }
+    this.purchaseService.getFilters().subscribe({
+      next: (res) => this.commercials.set(res.commercials),
     });
   }
 

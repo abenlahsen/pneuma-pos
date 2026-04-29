@@ -720,4 +720,206 @@ class SaleControllerTest extends TestCase
         $response->assertStatus(204);
         $this->assertDatabaseMissing('sales', ['id' => $sale->id]);
     }
+
+    // ── Stock movement tests ─────────────────────────────────────────────────
+
+    private function createProductWithStock(int $quantity = 10): array
+    {
+        $brand = Brand::query()->create(['name' => 'BrandStock-' . fake()->unique()->word(), 'is_active' => true]);
+        $product = Product::query()->create([
+            'reference' => 'REF-STK-' . fake()->unique()->numerify('####'),
+            'type' => 'tyre',
+            'brand_id' => $brand->id,
+            'is_active' => true,
+        ]);
+        DB::table('product_tyres')->insert([
+            'product_id' => $product->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $stock = Stock::query()->create([
+            'product_id' => $product->id,
+            'quantity' => $quantity,
+            'purchase_price' => 100,
+            'user_id' => $this->user->id,
+        ]);
+
+        return [$product, $stock];
+    }
+
+    public function test_store_decrements_stock_and_records_sale_out_movement()
+    {
+        [$product, $stock] = $this->createProductWithStock(10);
+
+        $payload = [
+            'date' => '2026-03-15',
+            'client' => 'Client Stock Test',
+            'items' => [[
+                'product_id' => $product->id,
+                'stock_id' => $stock->id,
+                'quantity' => 3,
+                'purchase_price' => 100,
+                'selling_price' => 150,
+            ]],
+        ];
+
+        $response = $this->postJson('/api/sales', $payload, $this->authHeaders());
+        $response->assertStatus(201);
+
+        $saleId = $response->json('id');
+
+        $stock->refresh();
+        $this->assertEquals(7, $stock->quantity);
+
+        $this->assertDatabaseHas('stock_movements', [
+            'stock_id' => $stock->id,
+            'product_id' => $product->id,
+            'type' => 'SALE_OUT',
+            'quantity_before' => 10,
+            'quantity_after' => 7,
+            'delta' => -3,
+            'reference_id' => $saleId,
+        ]);
+    }
+
+    public function test_store_with_multiple_items_decrements_each_stock()
+    {
+        [$product1, $stock1] = $this->createProductWithStock(10);
+        [$product2, $stock2] = $this->createProductWithStock(20);
+
+        $payload = [
+            'date' => '2026-03-15',
+            'client' => 'Multi Item Client',
+            'items' => [
+                [
+                    'product_id' => $product1->id,
+                    'stock_id' => $stock1->id,
+                    'quantity' => 2,
+                    'purchase_price' => 100,
+                    'selling_price' => 150,
+                ],
+                [
+                    'product_id' => $product2->id,
+                    'stock_id' => $stock2->id,
+                    'quantity' => 5,
+                    'purchase_price' => 80,
+                    'selling_price' => 120,
+                ],
+            ],
+        ];
+
+        $response = $this->postJson('/api/sales', $payload, $this->authHeaders());
+        $response->assertStatus(201);
+
+        $stock1->refresh();
+        $stock2->refresh();
+        $this->assertEquals(8, $stock1->quantity);
+        $this->assertEquals(15, $stock2->quantity);
+    }
+
+    public function test_store_item_without_stock_id_skips_stock_movement()
+    {
+        [$product] = $this->createProductWithStock(10);
+
+        $payload = [
+            'date' => '2026-03-15',
+            'client' => 'No Stock Client',
+            'items' => [[
+                'product_id' => $product->id,
+                'stock_id' => null,
+                'quantity' => 2,
+                'purchase_price' => 100,
+                'selling_price' => 150,
+            ]],
+        ];
+
+        $response = $this->postJson('/api/sales', $payload, $this->authHeaders());
+        $response->assertStatus(201);
+
+        $this->assertDatabaseMissing('stock_movements', ['type' => 'SALE_OUT']);
+    }
+
+    public function test_update_restores_old_stock_and_applies_new_stock()
+    {
+        [$product, $stock] = $this->createProductWithStock(10);
+
+        $sale = $this->createSale();
+        $sale->items()->create([
+            'product_id' => $product->id,
+            'stock_id' => $stock->id,
+            'quantity' => 3,
+            'purchase_price' => 100,
+            'selling_price' => 150,
+            'total_purchase' => 300,
+            'total_sale' => 450,
+            'margin' => 150,
+        ]);
+        $stock->update(['quantity' => 7]); // simulate stock already decremented
+
+        $payload = [
+            'date' => '2026-03-15',
+            'items' => [[
+                'product_id' => $product->id,
+                'stock_id' => $stock->id,
+                'quantity' => 1,
+                'purchase_price' => 100,
+                'selling_price' => 150,
+            ]],
+        ];
+
+        $response = $this->putJson("/api/sales/{$sale->id}", $payload, $this->authHeaders());
+        $response->assertOk();
+
+        // Old qty (3) restored → 7 + 3 = 10, then new qty (1) deducted → 9
+        $stock->refresh();
+        $this->assertEquals(9, $stock->quantity);
+
+        $this->assertDatabaseHas('stock_movements', [
+            'stock_id' => $stock->id,
+            'type' => 'SALE_IN',
+            'delta' => 3,
+            'reference_id' => $sale->id,
+        ]);
+        $this->assertDatabaseHas('stock_movements', [
+            'stock_id' => $stock->id,
+            'type' => 'SALE_OUT',
+            'delta' => -1,
+            'reference_id' => $sale->id,
+        ]);
+    }
+
+    public function test_destroy_restores_stock_and_records_sale_in_movement()
+    {
+        [$product, $stock] = $this->createProductWithStock(7);
+
+        $sale = $this->createSale();
+        $sale->items()->create([
+            'product_id' => $product->id,
+            'stock_id' => $stock->id,
+            'quantity' => 3,
+            'purchase_price' => 100,
+            'selling_price' => 150,
+            'total_purchase' => 300,
+            'total_sale' => 450,
+            'margin' => 150,
+        ]);
+
+        $response = $this->deleteJson("/api/sales/{$sale->id}", [], $this->authHeaders());
+        $response->assertStatus(204);
+
+        $stock->refresh();
+        $this->assertEquals(10, $stock->quantity);
+
+        $this->assertDatabaseHas('stock_movements', [
+            'stock_id' => $stock->id,
+            'product_id' => $product->id,
+            'type' => 'SALE_IN',
+            'quantity_before' => 7,
+            'quantity_after' => 10,
+            'delta' => 3,
+            'reference_id' => $sale->id,
+        ]);
+
+        $this->assertDatabaseMissing('sales', ['id' => $sale->id]);
+    }
 }

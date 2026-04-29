@@ -26,6 +26,10 @@ export class SaleService {
     return this.http.get<SaleFilters>(`${environment.apiUrl}/sales-filters`);
   }
 
+  getSale(id: number): Observable<Sale> {
+    return this.http.get<Sale>(`${this.apiUrl}/${id}`);
+  }
+
   createSale(payload: SalePayload): Observable<Sale> {
     return this.http.post<Sale>(this.apiUrl, payload);
   }

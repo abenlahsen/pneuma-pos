@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ProductDetailComponent } from '../../products/product-detail/product-detail.component';
 import { finalize } from 'rxjs/operators';
 
 import { Sale, SalePayload } from '../../../core/models/sale.model';
@@ -20,7 +21,7 @@ import { Client, ClientPayload, ClientProfileResponse } from '../../clients/mode
 @Component({
   selector: 'app-sale-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ProductDetailComponent],
   templateUrl: './sale-form.component.html',
   styleUrl: './sale-form.component.scss'
 })
@@ -390,8 +391,22 @@ export class SaleFormComponent implements OnInit {
     return [typeTag, ref, brand, detail, profile].filter(Boolean).join(' — ');
   }
 
+  viewingProduct = signal<any>(null);
+
   getProduct(item: any): any {
     return item.linkedProduct || item.linked_product || item.product;
+  }
+
+  openProductView(item: any): void {
+    const product = this.getProduct(item);
+    if (product) {
+      this.viewingProduct.set(product);
+    }
+  }
+
+  editProductInNewTab(product: any): void {
+    this.viewingProduct.set(null);
+    window.open(`/products?id=${product.id}&edit=1`, '_blank', 'noopener');
   }
 
   lineTotal(item: any): number {

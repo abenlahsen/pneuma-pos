@@ -104,6 +104,7 @@ export interface ProductFilters {
   part_categories: string[];
   service_categories: string[];
   units: string[];
+  profiles: string[];
 }
 
 export interface PaginatedResponse<T> {

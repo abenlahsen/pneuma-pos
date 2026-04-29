@@ -1,16 +1,18 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { ProductService } from '../data-access/product.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Product, ProductFilters, ProductPayload } from '../models/product.model';
 import { ProductFormComponent } from '../product-form/product-form.component';
+import { ProductDetailComponent } from '../product-detail/product-detail.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 
 @Component({
   selector: 'app-products-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductFormComponent, AutoRefreshControlComponent],
+  imports: [CommonModule, FormsModule, ProductFormComponent, ProductDetailComponent, AutoRefreshControlComponent],
   templateUrl: './products-page.component.html',
   styleUrls: ['./products-page.component.scss'],
 })
@@ -23,6 +25,7 @@ export class ProductsPageComponent implements OnInit {
     units: [],
     part_categories: [],
     service_categories: [],
+    profiles: [],
   });
 
   currentPage = signal(1);
@@ -33,23 +36,38 @@ export class ProductsPageComponent implements OnInit {
   searchQuery = signal('');
   filterType = signal('');
   filterBrand = signal('');
+  filterProfile = signal('');
   sortBy = signal('');
   sortDirection = signal<'asc' | 'desc'>('asc');
 
   loading = signal(false);
   showForm = signal(false);
   editingProduct = signal<Product | null>(null);
+  viewingProduct = signal<Product | null>(null);
 
   private resetting = false;
 
   constructor(
     private productService: ProductService,
     public authService: AuthService,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
     this.loadFilters();
+    const search = this.route.snapshot.queryParamMap.get('search');
+    if (search) {
+      this.searchQuery.set(search);
+    }
     this.loadData();
+
+    const productId = Number(this.route.snapshot.queryParamMap.get('id'));
+    if (productId) {
+      const editMode = this.route.snapshot.queryParamMap.get('edit') === '1';
+      this.productService.getProduct(productId).subscribe({
+        next: (product) => editMode ? this.openEditForm(product) : this.openViewModal(product),
+      });
+    }
   }
 
   loadData(): void {
@@ -94,6 +112,10 @@ export class ProductsPageComponent implements OnInit {
       filters['brand_id'] = this.filterBrand();
     }
 
+    if (this.filterProfile()) {
+      filters['profile'] = this.filterProfile();
+    }
+
     return filters;
   }
 
@@ -130,6 +152,7 @@ export class ProductsPageComponent implements OnInit {
     this.searchQuery.set('');
     this.filterType.set('');
     this.filterBrand.set('');
+    this.filterProfile.set('');
     this.sortBy.set('');
     this.sortDirection.set('asc');
     this.currentPage.set(1);
@@ -142,6 +165,14 @@ export class ProductsPageComponent implements OnInit {
       this.currentPage.set(page);
       this.loadData();
     }
+  }
+
+  openViewModal(product: Product): void {
+    this.viewingProduct.set(product);
+  }
+
+  closeViewModal(): void {
+    this.viewingProduct.set(null);
   }
 
   openAddForm(): void {

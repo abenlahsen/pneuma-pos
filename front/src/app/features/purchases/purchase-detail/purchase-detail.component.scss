@@ -4,3 +4,15 @@
   width: 60%;
   white-space: normal;
 }
+
+.product-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #ff2d37;
+  font-size: inherit;
+  cursor: pointer;
+  text-align: left;
+
+  &:hover { text-decoration: underline; }
+}

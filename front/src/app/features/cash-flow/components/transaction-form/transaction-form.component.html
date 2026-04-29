@@ -29,10 +29,16 @@
         <div class="form-group">
           <label for="txn-date">Date *</label>
           <input type="date" id="txn-date" formControlName="date" />
+          @if (form.get('date')?.invalid && form.get('date')?.touched) {
+            <span class="field-error">Date requise</span>
+          }
         </div>
         <div class="form-group">
           <label for="txn-amount">Montant (DH) *</label>
           <input type="number" id="txn-amount" formControlName="amount" step="0.01" min="0" placeholder="0.00" />
+          @if (form.get('amount')?.invalid && form.get('amount')?.touched) {
+            <span class="field-error">Montant requis (> 0)</span>
+          }
         </div>
       </div>
 
@@ -41,13 +47,16 @@
           <label for="txn-account">Compte *</label>
           <select id="txn-account" formControlName="account_id">
             <option value="">-- Sélectionner --</option>
-            @for (acc of filterOptions.accounts; track acc.id) {
+            @for (acc of accounts; track acc.id) {
               <option [value]="acc.id">{{ acc.name }}</option>
             }
           </select>
+          @if (form.get('account_id')?.invalid && form.get('account_id')?.touched) {
+            <span class="field-error">Compte requis</span>
+          }
         </div>
         <div class="form-group">
-          <label for="txn-category">Catégorie</label>
+          <label for="txn-category">Catégorie *</label>
           <select id="txn-category" formControlName="category">
             <option value="">-- Sélectionner --</option>
             <option value="Charge">Charge</option>
@@ -56,9 +65,12 @@
             <option value="Service">Service</option>
             <option value="Ahmed">Ahmed</option>
           </select>
+          @if (form.get('category')?.invalid && form.get('category')?.touched) {
+            <span class="field-error">Catégorie requise</span>
+          }
         </div>
         <div class="form-group">
-          <label for="txn-method">Méthode</label>
+          <label for="txn-method">Méthode *</label>
           <select id="txn-method" formControlName="method">
             <option value="">-- Sélectionner --</option>
             <option value="Espèces">Espèces</option>
@@ -66,9 +78,12 @@
             <option value="Effet">Effet</option>
             <option value="Virement">Virement</option>
           </select>
+          @if (form.get('method')?.invalid && form.get('method')?.touched) {
+            <span class="field-error">Méthode requise</span>
+          }
         </div>
         <div class="form-group">
-          <label for="txn-person">Personne</label>
+          <label for="txn-person">Personne *</label>
           <select id="txn-person" formControlName="person">
             <option value="">-- Sélectionner --</option>
             <option value="Ahmed">Ahmed</option>
@@ -77,6 +92,9 @@
             <option value="Mohammed">Mohammed</option>
             <option value="Saad">Saad</option>
           </select>
+          @if (form.get('person')?.invalid && form.get('person')?.touched) {
+            <span class="field-error">Personne requise</span>
+          }
         </div>
       </div>
 
@@ -93,6 +111,9 @@
       <div class="form-group">
         <label for="txn-description">Description *</label>
         <textarea id="txn-description" formControlName="description" rows="3" placeholder="Détail de la transaction..."></textarea>
+        @if (form.get('description')?.invalid && form.get('description')?.touched) {
+          <span class="field-error">Description requise</span>
+        }
       </div>
 
       <div class="modal-footer">

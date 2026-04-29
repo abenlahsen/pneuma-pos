@@ -1,0 +1,269 @@
+<div class="modal-overlay" (click)="close.emit()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <div class="header-title">
+        <span class="badge" [class.badge-tyre]="isTyre" [class.badge-part]="isPart" [class.badge-service]="isService">{{ typeLabel() }}</span>
+        <h2>{{ product.profile || product.reference || ('Produit #' + product.id) }}</h2>
+      </div>
+      <button class="btn-icon" (click)="close.emit()" title="Fermer">✕</button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- General info -->
+      <div class="detail-section">
+        <h3 class="section-title">Informations générales</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="label">Référence / SKU</span>
+            <span class="value">{{ product.reference || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Marque</span>
+            <span class="value">{{ product.brand?.name || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Unité</span>
+            <span class="value">{{ unitLabel() }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Statut</span>
+            <span class="badge" [class.badge-active]="product.is_active" [class.badge-inactive]="!product.is_active">
+              {{ product.is_active ? 'Actif' : 'Inactif' }}
+            </span>
+          </div>
+          <div class="detail-item full" *ngIf="product.description">
+            <span class="label">Description</span>
+            <span class="value">{{ product.description }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tyre characteristics -->
+      <div class="detail-section" *ngIf="isTyre">
+        <h3 class="section-title">Caractéristiques pneu</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="label">Profil</span>
+            <span class="value">{{ product.profile || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Dimension</span>
+            <span class="value fw-semibold" *ngIf="product.tyre?.tire_width; else noDim">
+              {{ product.tyre!.tire_width }}/{{ product.tyre!.tire_height }}R{{ product.tyre!.tire_diameter }}
+            </span>
+            <ng-template #noDim><span class="value">-</span></ng-template>
+          </div>
+          <div class="detail-item">
+            <span class="label">Indice de charge</span>
+            <span class="value">{{ product.tyre?.tire_load_index || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Indice de vitesse</span>
+            <span class="value">{{ product.tyre?.tire_speed_index || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Saison</span>
+            <span class="tag tag-season" *ngIf="product.tyre?.tire_season; else noSeason">{{ seasonLabel() }}</span>
+            <ng-template #noSeason><span class="value">-</span></ng-template>
+          </div>
+          <div class="detail-item">
+            <span class="label">Run Flat / XL</span>
+            <span class="value">
+              <span class="tag tag-rft" *ngIf="product.tyre?.tire_runflat">RFT</span>
+              <span class="tag tag-xl" *ngIf="product.tyre?.tire_reinforced">XL</span>
+              <span *ngIf="!product.tyre?.tire_runflat && !product.tyre?.tire_reinforced">-</span>
+            </span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Marquage</span>
+            <span class="value">{{ product.tyre?.tire_marking || '-' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- EU label -->
+      <div class="detail-section eu-section" *ngIf="isTyre && (product.tyre?.eu_fuel || product.tyre?.eu_wet_grip || product.tyre?.eu_noise_db)">
+        <h3 class="section-title">Étiquetage européen</h3>
+        <div class="detail-grid eu-grid">
+          <div class="detail-item">
+            <span class="label">Efficacité énergétique</span>
+            <span class="eu-grade" *ngIf="product.tyre?.eu_fuel; else dash">{{ product.tyre!.eu_fuel }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Adhérence sol mouillé</span>
+            <span class="eu-grade" *ngIf="product.tyre?.eu_wet_grip; else dash">{{ product.tyre!.eu_wet_grip }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Bruit extérieur</span>
+            <span class="value">{{ product.tyre?.eu_noise_db ? (product.tyre!.eu_noise_db + ' dB') : '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Classe bruit</span>
+            <span class="value">{{ product.tyre?.eu_noise_class || '-' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Part characteristics -->
+      <div class="detail-section" *ngIf="isPart">
+        <h3 class="section-title">Caractéristiques pièce</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="label">Nom / Libellé</span>
+            <span class="value">{{ product.profile || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Catégorie</span>
+            <span class="value">{{ partCategoryLabel() }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Référence OEM</span>
+            <span class="value">{{ product.part?.oem_reference || '-' }}</span>
+          </div>
+          <div class="detail-item full" *ngIf="product.part?.compatibility">
+            <span class="label">Compatibilité véhicules</span>
+            <span class="value">{{ product.part!.compatibility }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Service characteristics -->
+      <div class="detail-section" *ngIf="isService">
+        <h3 class="section-title">Caractéristiques service</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="label">Nom du service</span>
+            <span class="value">{{ product.profile || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Catégorie</span>
+            <span class="value">{{ serviceCategoryLabel() }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Durée estimée</span>
+            <span class="value">{{ product.service?.duration_minutes ? (product.service!.duration_minutes + ' min') : '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Prix de vente</span>
+            <span class="value fw-semibold">{{ product.service?.selling_price ? (product.service!.selling_price | number:'1.2-2') + ' DH' : '-' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stock inventory -->
+      <div class="detail-section" *ngIf="!isService">
+        <h3 class="section-title">
+          📦 Inventaire
+          <span class="stock-total-badge" *ngIf="!stockLoading()">{{ totalStock }} en stock</span>
+        </h3>
+
+        <div class="table-loading" *ngIf="stockLoading()">Chargement...</div>
+
+        <ng-container *ngIf="!stockLoading()">
+          <table class="inv-table" *ngIf="stockItems().length > 0; else noStock">
+            <thead>
+              <tr>
+                <th>Dépôt</th>
+                <th>Zone</th>
+                <th>Origine</th>
+                <th>DOT</th>
+                <th class="text-center">Qté</th>
+                <th class="text-right">P. Achat</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of stockItems()">
+                <td>{{ item.depot || '-' }}</td>
+                <td>{{ item.zone || '-' }}</td>
+                <td>{{ item.made_in || '-' }}</td>
+                <td>{{ item.dot || '-' }}</td>
+                <td class="text-center">
+                  <span class="qty-badge" [class.qty-zero]="item.quantity === 0">{{ item.quantity }}</span>
+                </td>
+                <td class="text-right">{{ item.purchase_price ? (item.purchase_price | number:'1.2-2') + ' DH' : '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <ng-template #noStock>
+            <p class="empty-msg">Aucune entrée stock.</p>
+          </ng-template>
+        </ng-container>
+      </div>
+
+      <!-- Stock movements history -->
+      <div class="detail-section" *ngIf="!isService && authService.hasPermission('view stock-movements')">
+        <h3 class="section-title collapsible" (click)="toggleMovements()">
+          📜 Historique des mouvements
+          <span class="mv-count" *ngIf="movements().length > 0">({{ movements().length }})</span>
+          <span class="collapse-icon">{{ showMovements() ? '▾' : '▸' }}</span>
+        </h3>
+
+        <div *ngIf="showMovements()">
+          <div class="table-loading" *ngIf="movementsLoading()">Chargement...</div>
+
+          <ng-container *ngIf="!movementsLoading()">
+            <table class="mv-table" *ngIf="movements().length > 0; else noMovements">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Dépôt</th>
+                  <th class="text-center">Avant</th>
+                  <th class="text-center">Après</th>
+                  <th class="text-center">Δ</th>
+                  <th>Utilisateur</th>
+                  <th>Motif / Référence</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let m of movements()">
+                  <td class="mv-date">{{ m.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
+                  <td><span class="mv-chip" [ngClass]="movementTypeClass(m.type)">{{ movementTypeLabel(m.type) }}</span></td>
+                  <td>{{ m.stock?.depot || '-' }}</td>
+                  <td class="text-center">{{ m.quantity_before }}</td>
+                  <td class="text-center">{{ m.quantity_after }}</td>
+                  <td class="text-center mv-delta" [class.mv-pos]="m.delta > 0" [class.mv-neg]="m.delta < 0">
+                    {{ m.delta > 0 ? '+' : '' }}{{ m.delta }}
+                  </td>
+                  <td>{{ m.user?.name || '-' }}</td>
+                  <td>
+                    <span *ngIf="m.reason" class="mv-reason">{{ m.reason }}</span>
+                    <span *ngIf="!m.reason">{{ movementReferenceLabel(m) }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <ng-template #noMovements>
+              <p class="empty-msg">Aucun mouvement enregistré.</p>
+            </ng-template>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- Metadata -->
+      <div class="detail-section meta-section">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="label">Créé le</span>
+            <span class="value text-muted">{{ product.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Modifié le</span>
+            <span class="value text-muted">{{ product.updated_at | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="close.emit()">Fermer</button>
+      <button class="btn btn-primary" (click)="edit.emit(product)" *ngIf="authService.hasPermission('edit products')">✏️ Modifier</button>
+    </div>
+
+  </div>
+</div>
+
+<ng-template #dash><span class="value">-</span></ng-template>

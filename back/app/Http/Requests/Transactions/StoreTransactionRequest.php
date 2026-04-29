@@ -21,9 +21,12 @@ class StoreTransactionRequest extends FormRequest
     {
         return [
             'account_id' => ['required', 'exists:accounts,id'],
-            'type' => ['required', 'in:credit,debit'],
+            'type' => ['required', 'in:income,expense'],
             'amount' => ['required', 'numeric', 'min:0'],
             'date' => ['required', 'date'],
+            'category' => ['required', 'string'],
+            'method' => ['required', 'string'],
+            'person' => ['required', 'string'],
             'description' => ['nullable', 'string'],
             'reference' => ['nullable', 'string', 'max:255'],
         ];

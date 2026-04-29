@@ -6,30 +6,35 @@ use App\Models\Client;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Stock;
+use App\Services\StockMovementService;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class SaleService
 {
-    public function create(array $validated): Sale
+    public function __construct(private StockMovementService $movements)
     {
-        return DB::transaction(function () use ($validated) {
+    }
+
+    public function create(array $validated, ?int $userId = null): Sale
+    {
+        return DB::transaction(function () use ($validated, $userId) {
             $items = $validated['items'] ?? [];
 
             $saleData = $this->prepareSalePayload($validated, $items);
 
             $sale = Sale::create($this->filterColumns('sales', $saleData));
 
-            $this->persistItems($sale, $items);
+            $this->persistItems($sale, $items, $userId);
 
-            return $sale->fresh(['linkedClient', 'commercial', 'items', 'payments']);
+            return $sale->fresh(['linkedClient', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
         });
     }
 
-    public function update(Sale $sale, array $validated): Sale
+    public function update(Sale $sale, array $validated, ?int $userId = null): Sale
     {
-        return DB::transaction(function () use ($sale, $validated) {
+        return DB::transaction(function () use ($sale, $validated, $userId) {
             $items = $validated['items'] ?? null;
 
             $saleData = $items !== null
@@ -39,11 +44,20 @@ class SaleService
             $sale->update($this->filterColumns('sales', $saleData));
 
             if ($items !== null) {
+                $this->restoreStockForItems($sale, $userId);
                 $sale->items()->delete();
-                $this->persistItems($sale, $items);
+                $this->persistItems($sale, $items, $userId);
             }
 
-            return $sale->fresh(['linkedClient', 'commercial', 'items', 'payments']);
+            return $sale->fresh(['linkedClient', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
+        });
+    }
+
+    public function delete(Sale $sale, ?int $userId = null): void
+    {
+        DB::transaction(function () use ($sale, $userId) {
+            $this->restoreStockForItems($sale, $userId);
+            $sale->delete();
         });
     }
 
@@ -57,6 +71,8 @@ class SaleService
 
         $payload['total_quantity'] = $totals['total_quantity'];
         $payload['total_sale'] = $totals['total_sale'];
+        $payload['total_purchase'] = $totals['total_purchase'];
+        $payload['margin'] = $totals['margin'];
 
         if (Schema::hasColumn('sales', 'subtotal') && ! array_key_exists('subtotal', $payload)) {
             $payload['subtotal'] = $totals['total_sale'];
@@ -94,40 +110,95 @@ class SaleService
     {
         $totalQuantity = 0;
         $totalSale = 0.0;
+        $totalPurchase = 0.0;
 
         foreach ($items as $item) {
             $quantity = (int) ($item['quantity'] ?? 0);
             $unitPrice = $this->resolveUnitPrice($item);
             $lineTotal = $this->resolveLineTotal($item, $quantity, $unitPrice);
+            $purchasePrice = round((float) ($item['purchase_price'] ?? 0), 2);
 
             $totalQuantity += $quantity;
             $totalSale += $lineTotal;
+            $totalPurchase += $purchasePrice * $quantity;
         }
 
         return [
             'total_quantity' => $totalQuantity,
             'total_sale' => round($totalSale, 2),
+            'total_purchase' => round($totalPurchase, 2),
+            'margin' => round($totalSale - $totalPurchase, 2),
         ];
     }
 
-    protected function persistItems(Sale $sale, array $items): void
+    protected function persistItems(Sale $sale, array $items, ?int $userId = null): void
     {
         foreach ($items as $item) {
             $quantity = (int) ($item['quantity'] ?? 0);
             $unitPrice = $this->resolveUnitPrice($item);
             $lineTotal = $this->resolveLineTotal($item, $quantity, $unitPrice);
 
+            $purchasePrice = round((float) ($item['purchase_price'] ?? 0), 2);
+            $discount = round((float) ($item['discount'] ?? 0), 2);
+
             $payload = [
                 'sale_id' => $sale->id,
                 'stock_id' => $item['stock_id'] ?? null,
                 'product_id' => $item['product_id'] ?? null,
                 'quantity' => $quantity,
-                'unit_price' => $unitPrice,
-                'total_price' => $lineTotal,
-                'subtotal' => $lineTotal,
+                'purchase_price' => $purchasePrice,
+                'selling_price' => $unitPrice,
+                'discount' => $discount,
+                'total_purchase' => round($purchasePrice * $quantity, 2),
+                'total_sale' => $lineTotal,
+                'margin' => round($lineTotal - $purchasePrice * $quantity, 2),
             ];
 
             SaleItem::create($this->filterColumns('sale_items', $payload));
+
+            if (! empty($item['stock_id'])) {
+                $stock = Stock::lockForUpdate()->find($item['stock_id']);
+                if ($stock) {
+                    $before = (int) $stock->quantity;
+                    $stock->quantity = $before - $quantity;
+                    $stock->save();
+                    $this->movements->recordSaleOut(
+                        $stock->id,
+                        $stock->product_id,
+                        $before,
+                        (int) $stock->quantity,
+                        $sale->id,
+                        $userId
+                    );
+                }
+            }
+        }
+    }
+
+    private function restoreStockForItems(Sale $sale, ?int $userId): void
+    {
+        foreach ($sale->items as $item) {
+            if (! $item->stock_id) {
+                continue;
+            }
+
+            $stock = Stock::lockForUpdate()->find($item->stock_id);
+            if (! $stock) {
+                continue;
+            }
+
+            $before = (int) $stock->quantity;
+            $stock->quantity = $before + (int) $item->quantity;
+            $stock->save();
+
+            $this->movements->recordSaleIn(
+                $stock->id,
+                $stock->product_id,
+                $before,
+                (int) $stock->quantity,
+                $sale->id,
+                $userId
+            );
         }
     }
 

@@ -197,6 +197,7 @@
     <app-transaction-form
       [transaction]="editingTransaction()"
       [filterOptions]="filterOptions()"
+      [accounts]="accounts()"
       (submitted)="onFormSubmit($event)"
       (cancelled)="closeForm()"
     />

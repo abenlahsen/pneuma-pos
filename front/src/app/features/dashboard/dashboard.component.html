@@ -181,6 +181,7 @@
                 <th>Pneus Vendus</th>
                 <th>Chiffre d'Affaires</th>
                 <th>Marge Nette</th>
+                <th>Impayés</th>
               </tr>
             </thead>
             <tbody>
@@ -195,6 +196,9 @@
                 <td class="font-numeric">{{ com.total_sales | number:'1.2-2' }} <small>DH</small></td>
                 <td class="font-numeric" [class.negative]="com.total_margin < 0">
                   {{ com.total_margin | number:'1.2-2' }} <small>DH</small>
+                </td>
+                <td class="font-numeric" [class.negative]="com.total_unpaid > 0">
+                  {{ com.total_unpaid | number:'1.2-2' }} <small>DH</small>
                 </td>
               </tr>
             </tbody>

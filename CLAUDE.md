@@ -146,3 +146,6 @@ Two deploy scripts, both run from WSL Ubuntu-24.04:
 **DB backup**: Both scripts use `mariadb-dump` (falls back to `mysqldump`) with credentials passed via `--user`/`--password`/`--host` flags. The `--defaults-extra-file` approach was removed because it fails on MariaDB 11.4 with passwords containing `@` or similar characters.
 
 **Dashboard KPIs** (`DashboardController::kpi`): returns today/month/year sales amounts, tyres sold counts, margins, stock value, unpaid sales/purchases, cash balance, and `sales_by_commercial` (grouped by commercial with `total_sales`, `total_tyres`, `total_margin`). Only visible to Administrator role.
+
+## Design System
+Read `front/DESIGN_SYSTEM.md` before making any frontend UI changes.

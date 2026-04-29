@@ -15,9 +15,12 @@ class SaleItem extends Model
         'stock_id',
         'product_id',
         'quantity',
-        'unit_price',
-        'total_price',
-        'subtotal',
+        'purchase_price',
+        'selling_price',
+        'discount',
+        'total_purchase',
+        'total_sale',
+        'margin',
     ];
 
     protected $casts = [
@@ -25,9 +28,12 @@ class SaleItem extends Model
         'stock_id' => 'integer',
         'product_id' => 'integer',
         'quantity' => 'integer',
-        'unit_price' => 'decimal:2',
-        'total_price' => 'decimal:2',
-        'subtotal' => 'decimal:2',
+        'purchase_price' => 'decimal:2',
+        'selling_price' => 'decimal:2',
+        'discount' => 'decimal:2',
+        'total_purchase' => 'decimal:2',
+        'total_sale' => 'decimal:2',
+        'margin' => 'decimal:2',
     ];
 
     public function sale(): BelongsTo
@@ -38,5 +44,10 @@ class SaleItem extends Model
     public function stock(): BelongsTo
     {
         return $this->belongsTo(Stock::class);
+    }
+
+    public function linkedProduct(): BelongsTo
+    {
+        return $this->belongsTo(Product::class, 'product_id');
     }
 }

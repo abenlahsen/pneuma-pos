@@ -44,7 +44,7 @@ class DashboardController extends Controller
         $salesByCommercial = DB::table('sales')
             ->leftJoin('users', 'sales.commercial_id', '=', 'users.id')
             ->whereBetween('sales.date', [$monthStart, $monthEnd])
-            ->selectRaw('users.name as commercial_name, SUM(sales.total_sale) as total_sales, SUM(sales.total_quantity) as total_tyres, SUM(sales.margin) as total_margin')
+            ->selectRaw("users.name as commercial_name, SUM(sales.total_sale) as total_sales, SUM(sales.total_quantity) as total_tyres, SUM(sales.margin) as total_margin, SUM(CASE WHEN sales.payment_status IN ('NON PAYE', 'NON PAYÉ', 'PARTIEL') THEN sales.total_sale - COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.sale_id = sales.id), 0) ELSE 0 END) as total_unpaid")
             ->groupBy('sales.commercial_id', 'users.name')
             ->orderByDesc('total_sales')
             ->get()
@@ -54,6 +54,7 @@ class DashboardController extends Controller
                     'total_sales' => round((float) $item->total_sales, 2),
                     'total_tyres' => (int) $item->total_tyres,
                     'total_margin' => round((float) $item->total_margin, 2),
+                    'total_unpaid' => round((float) $item->total_unpaid, 2),
                 ];
             })
             ->toArray();

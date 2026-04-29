@@ -108,6 +108,12 @@
   gap: 1rem;
 }
 
+.field-error {
+  font-size: 0.75rem;
+  color: #e53e3e;
+  margin-top: 0.15rem;
+}
+
 .form-group {
   display: flex;
   flex-direction: column;

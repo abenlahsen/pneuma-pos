@@ -111,6 +111,7 @@ class ProductService
             'part_categories' => ['brakes', 'lubricants', 'engine', 'suspension', 'filters', 'electrical', 'body', 'other'],
             'service_categories' => ['mechanical', 'oil', 'tires', 'bodywork', 'diagnostic', 'other'],
             'units' => Product::distinct()->whereNotNull('unit')->where('unit', '!=', '')->pluck('unit')->sort()->values(),
+            'profiles' => Product::distinct()->whereNotNull('profile')->where('profile', '!=', '')->orderBy('profile')->pluck('profile')->values(),
         ];
     }
 
@@ -149,6 +150,10 @@ class ProductService
 
         if (! empty($filters['brand_id'])) {
             $query->where('brand_id', $filters['brand_id']);
+        }
+
+        if (! empty($filters['profile'])) {
+            $query->where('profile', $filters['profile']);
         }
 
         if (array_key_exists('is_active', $filters)) {
