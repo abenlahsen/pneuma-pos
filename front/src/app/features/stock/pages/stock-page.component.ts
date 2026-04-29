@@ -55,6 +55,23 @@ export class StockPageComponent implements OnInit {
   movementsError = signal('');
   selectedStock = signal<Stock | null>(null);
 
+  readonly searchHint = computed(() => {
+    const q = this.searchQuery().trim();
+    if (!q) return '';
+    const m = q.match(/^(\d{2,3})\/?(\d{2,3})?[A-Z]*R(\d{2,3})/i)
+      ?? q.match(/^[A-Za-z]*(\d{3})(\d{2})(\d{2,3})$/);
+    if (!m) {
+      const pure = q.match(/^(\d{3})(\d{2})(\d{2,3})$/);
+      if (pure) return `${pure[1]} / ${pure[2]} R${pure[3]}`;
+      return '';
+    }
+    const [, w, h, d] = m;
+    let hint = w;
+    if (h) hint += ` / ${h}`;
+    if (d) hint += ` R${d}`;
+    return hint;
+  });
+
   readonly totalPurchaseValueFormatted = computed(() =>
     new Intl.NumberFormat('fr-MA', {
       minimumFractionDigits: 2,

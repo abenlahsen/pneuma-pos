@@ -189,7 +189,10 @@
         </thead>
         <tbody>
           <tr *ngFor="let item of formData.items; let i = index" [class.table-active]="editingItemIndex === i">
-            <td>{{ getProduct(item) ? formatProductLabel(getProduct(item)) : 'Produit #' + item.product_id }}</td>
+            <td>
+              {{ getProduct(item) ? formatProductLabel(getProduct(item)) : 'Produit #' + item.product_id }}
+              <button class="product-link" type="button" (click)="openProductView(item)" *ngIf="getProduct(item)" title="Voir le produit">↗</button>
+            </td>
             <td>
               <ng-container *ngIf="item.stock_id; else serviceLine">{{ item.stock ? formatStockLabel(item.stock) : 'Stock #' + item.stock_id }}</ng-container>
               <ng-template #serviceLine><span class="text-muted">—</span></ng-template>
@@ -359,3 +362,10 @@
     <button type="submit" class="btn btn-primary" [disabled]="!form.valid || !formData.items || formData.items.length === 0">Enregistrer</button>
   </div>
 </form>
+
+<app-product-detail
+  *ngIf="viewingProduct()"
+  [product]="viewingProduct()"
+  (close)="viewingProduct.set(null)"
+  (edit)="editProductInNewTab($event)"
+/>

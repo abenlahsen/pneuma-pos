@@ -149,10 +149,7 @@ if [ -d "$APP_DIR/front-dist" ]; then
   echo "  ✓ Frontend backup: \$BACKUP_DIR/front_dist.tar.gz"
 fi
 
-# ── Cleanup old backups (keep last 5) ───────────────────────
-echo "  → Cleaning up old backups (keeping last 5)..."
-cd "$BACKUP_DIR"
-ls -1dt */ 2>/dev/null | tail -n +6 | xargs rm -rf 2>/dev/null || true
+# ── All backups are kept ─────────────────────────────────────
 
 echo "  ✓ Backup complete → $BACKUP_DIR/$TIMESTAMP"
 BACKUP_EOF
@@ -167,13 +164,15 @@ echo "[4/7] Transferring files to VPS..."
 ssh $SSH_OPTS "$VPS_USER@$VPS_HOST" "mkdir -p $APP_DIR/back $APP_DIR/front-dist $APP_DIR/deploy/nginx"
 
 # Backend source (no vendor/, no .env — both handled remotely)
+# --delete removes stale files (renamed/deleted locally); excludes are immune to deletion.
 echo "  → backend source..."
-rsync -az \
+rsync -az --delete \
   -e "ssh -p $VPS_PORT" \
   --exclude=vendor/ \
   --exclude=.env \
   --exclude=.git/ \
-  --exclude='storage/logs/*.log' \
+  --exclude='storage/app/' \
+  --exclude='storage/logs/' \
   --exclude='bootstrap/cache/' \
   "$PROJECT_ROOT/back/" \
   "$VPS_USER@$VPS_HOST:$APP_DIR/back/"

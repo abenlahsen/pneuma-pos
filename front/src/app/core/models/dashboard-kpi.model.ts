@@ -21,5 +21,6 @@ export interface DashboardKpi {
     total_sales: number;
     total_tyres: number;
     total_margin: number;
+    total_unpaid: number;
   }[];
 }

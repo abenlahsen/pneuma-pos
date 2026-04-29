@@ -69,10 +69,12 @@ class SaleResource extends JsonResource
                 null
             ),
             'total_quantity' => (int) ($this->total_quantity ?? 0),
+            'total_purchase' => $this->formatMoneyValue($this->total_purchase),
             'total_sale' => $this->formatMoneyValue($this->total_sale),
             'subtotal' => $this->formatMoneyValue($this->subtotal),
             'discount' => $this->formatMoneyValue($this->discount),
             'tax' => $this->formatMoneyValue($this->tax),
+            'margin' => $this->formatMoneyValue($this->margin),
             'items' => $this->whenLoaded('items'),
             'payments' => $this->whenLoaded('payments'),
             'created_at' => $this->created_at?->toISOString(),

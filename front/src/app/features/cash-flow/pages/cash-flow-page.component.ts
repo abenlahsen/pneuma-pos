@@ -12,6 +12,8 @@ import {
   TransactionSummary,
 } from '../models/transaction.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
+import { AccountService } from '../../accounts/data-access/account.service';
+import { Account } from '../../accounts/models/account.model';
 
 @Component({
   selector: 'app-cash-flow-page',
@@ -44,13 +46,16 @@ export class CashFlowPageComponent implements OnInit {
   deletingTransactionId = signal<number | null>(null);
   showForm = signal(false);
   editingTransaction = signal<Transaction | null>(null);
+  accounts = signal<Account[]>([]);
 
   constructor(
     private cashFlowService: CashFlowService,
+    private accountService: AccountService,
     public authService: AuthService,
   ) {}
 
   ngOnInit(): void {
+    this.loadAccounts();
     this.loadFilters();
     this.loadData();
   }
@@ -72,6 +77,12 @@ export class CashFlowPageComponent implements OnInit {
 
     this.cashFlowService.getSummary(filters).subscribe({
       next: (summary) => this.summary.set(summary),
+    });
+  }
+
+  loadAccounts(): void {
+    this.accountService.getAccounts({ all: '1', is_active: '1' }).subscribe({
+      next: (res: any) => this.accounts.set(Array.isArray(res) ? res : res.data),
     });
   }
 

@@ -39,4 +39,9 @@ class Payment extends Model
     {
         return $this->belongsTo(Sale::class);
     }
+
+    public function transaction(): BelongsTo
+    {
+        return $this->belongsTo(Transaction::class);
+    }
 }

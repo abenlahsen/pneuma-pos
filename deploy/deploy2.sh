@@ -186,10 +186,7 @@ if [ -d "$APP_DIR/front-dist" ]; then
   echo "  ✓ Frontend backup: \$BACKUP_DIR/front_dist.tar.gz"
 fi
 
-# ── Cleanup old backups (keep last 5) ───────────────────────
-echo "  → Cleaning up old backups (keeping last 5)..."
-cd "$BACKUP_DIR"
-ls -1dt */ 2>/dev/null | tail -n +6 | xargs rm -rf 2>/dev/null || true
+# ── All backups are kept ─────────────────────────────────────
 
 echo "  ✓ Backup complete → $BACKUP_DIR/$TIMESTAMP"
 BACKUP_EOF
