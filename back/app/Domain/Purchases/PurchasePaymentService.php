@@ -4,6 +4,8 @@ namespace App\Domain\Purchases;
 
 use App\Models\Purchase;
 use App\Models\PurchasePayment;
+use App\Models\Transaction;
+use App\Models\User;
 
 class PurchasePaymentService
 {
@@ -27,11 +29,34 @@ class PurchasePaymentService
     /**
      * @param  array<string, mixed>  $validated
      */
-    public function createPayment(Purchase $purchase, array $validated): PurchasePayment
+    public function createPayment(Purchase $purchase, array $validated, User $user): PurchasePayment
     {
-        $payment = PurchasePayment::create(array_merge($validated, [
+        $purchase->loadMissing('supplier');
+        $supplierName = $purchase->supplier?->name ?? '';
+
+        $transaction = Transaction::create([
+            'date' => $validated['date'],
+            'amount' => $validated['amount'],
+            'type' => 'expense',
+            'category' => 'Achat',
+            'method' => $validated['method'],
+            'description' => "Paiement achat #{$purchase->id} - {$purchase->total_quantity} pneus - {$supplierName}",
+            'person' => $supplierName,
+            'partner' => $supplierName,
+            'user_id' => $user->id,
+            'account_id' => $validated['account_id'],
+        ]);
+
+        $payment = PurchasePayment::create([
             'purchase_id' => $purchase->id,
-        ]));
+            'transaction_id' => $transaction->id,
+            'user_id' => $user->id,
+            'amount' => $validated['amount'],
+            'date' => $validated['date'],
+            'method' => $validated['method'],
+            'reference' => $validated['reference'] ?? null,
+            'notes' => $validated['notes'] ?? null,
+        ]);
 
         $this->refreshPaymentStatus($purchase);
 
@@ -44,8 +69,8 @@ class PurchasePaymentService
             abort(404);
         }
 
-        if ($payment->transaction) {
-            $payment->transaction->delete();
+        if ($payment->transaction_id) {
+            Transaction::where('id', $payment->transaction_id)->delete();
         }
 
         $payment->delete();
