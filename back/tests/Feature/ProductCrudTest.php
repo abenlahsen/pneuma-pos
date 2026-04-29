@@ -589,4 +589,80 @@ class ProductCrudTest extends TestCase
 
         $this->deleteJson('/api/products/99999')->assertNotFound();
     }
+
+    // -------------------------------------------------------------------------
+    // Profile filter & is_active filter
+    // -------------------------------------------------------------------------
+
+    public function test_index_filters_by_profile(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $suffix = fake()->unique()->numerify('###');
+
+        $withProfile = Product::query()->create([
+            'reference' => 'REF-PROF-' . $suffix,
+            'type' => 'tyre',
+            'profile' => 'Sport',
+            'is_active' => true,
+        ]);
+
+        Product::query()->create([
+            'reference' => 'REF-NO-PROF-' . $suffix,
+            'type' => 'tyre',
+            'profile' => null,
+            'is_active' => true,
+        ]);
+
+        $response = $this->getJson('/api/products?profile=Sport&per_page=100');
+        $response->assertOk();
+
+        $ids = collect($response->json('data'))->pluck('id');
+        $this->assertContains($withProfile->id, $ids->all());
+        foreach ($response->json('data') as $item) {
+            $this->assertEquals('Sport', $item['profile']);
+        }
+    }
+
+    public function test_index_filters_by_is_active(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $suffix = fake()->unique()->numerify('###');
+
+        $inactive = Product::query()->create([
+            'reference' => 'REF-INACTIVE-' . $suffix,
+            'type' => 'tyre',
+            'is_active' => false,
+        ]);
+
+        $responseActive = $this->getJson('/api/products?is_active=1&per_page=100');
+        $responseActive->assertOk();
+        $activeIds = collect($responseActive->json('data'))->pluck('id');
+        $this->assertNotContains($inactive->id, $activeIds->all());
+
+        $responseInactive = $this->getJson('/api/products?is_active=0&per_page=100');
+        $responseInactive->assertOk();
+        $inactiveIds = collect($responseInactive->json('data'))->pluck('id');
+        $this->assertContains($inactive->id, $inactiveIds->all());
+    }
+
+    public function test_filters_returns_profiles_list(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $suffix = fake()->unique()->numerify('###');
+
+        Product::query()->create([
+            'reference' => 'REF-SPORT-' . $suffix,
+            'type' => 'tyre',
+            'profile' => 'Profil-' . $suffix,
+            'is_active' => true,
+        ]);
+
+        $response = $this->getJson('/api/products-filters');
+        $response->assertOk()->assertJsonStructure(['brands', 'types', 'seasons', 'profiles']);
+
+        $this->assertContains('Profil-' . $suffix, $response->json('profiles'));
+    }
 }
