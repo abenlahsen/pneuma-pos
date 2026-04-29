@@ -21,8 +21,8 @@ class UpdateAccountRequest extends FormRequest
     {
         return [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'type' => ['sometimes', 'required', 'in:asset,liability,equity,revenue,expense'],
-            'balance' => ['nullable', 'numeric'],
+            'type' => ['sometimes', 'required', 'in:cash,bank,person'],
+            'initial_balance' => ['nullable', 'numeric'],
             'description' => ['nullable', 'string'],
         ];
     }

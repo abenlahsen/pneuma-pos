@@ -21,8 +21,8 @@ class StoreAccountRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'in:asset,liability,equity,revenue,expense'],
-            'balance' => ['nullable', 'numeric'],
+            'type' => ['required', 'in:cash,bank,person'],
+            'initial_balance' => ['nullable', 'numeric'],
             'description' => ['nullable', 'string'],
         ];
     }
