@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
+import { AuthService } from '../../../core/services/auth.service';
 import { StockService } from '../data-access/stock.service';
 import { Stock, StockFilters, StockMovement, StockSummary } from '../models/stock.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
@@ -15,6 +16,7 @@ import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-contro
 })
 export class StockPageComponent implements OnInit {
   private readonly stockService = inject(StockService);
+  readonly authService = inject(AuthService);
 
   stocks = signal<Stock[]>([]);
   movements = signal<StockMovement[]>([]);
@@ -54,6 +56,18 @@ export class StockPageComponent implements OnInit {
   movementsLoading = signal(false);
   movementsError = signal('');
   selectedStock = signal<Stock | null>(null);
+
+  showEditModal = signal(false);
+  editingStock = signal<Stock | null>(null);
+  editQuantity = signal<number | null>(null);
+  editPurchasePrice = signal<number | null>(null);
+  editDepot = signal('');
+  editZone = signal('');
+  editMadeIn = signal('');
+  editDot = signal('');
+  editReason = signal('');
+  editLoading = signal(false);
+  editError = signal('');
 
   readonly searchHint = computed(() => {
     const q = this.searchQuery().trim();
@@ -228,6 +242,72 @@ export class StockPageComponent implements OnInit {
           this.exportError = "L'export du stock a échoué. Veuillez réessayer.";
         },
       });
+  }
+
+  openEditModal(stock: Stock): void {
+    this.editingStock.set(stock);
+    this.editQuantity.set(stock.quantity);
+    this.editPurchasePrice.set(stock.purchase_price);
+    this.editDepot.set(stock.depot ?? '');
+    this.editZone.set(stock.zone ?? '');
+    this.editMadeIn.set(stock.made_in ?? '');
+    this.editDot.set(stock.dot ?? '');
+    this.editReason.set('');
+    this.editError.set('');
+    this.showEditModal.set(true);
+  }
+
+  closeEditModal(): void {
+    this.showEditModal.set(false);
+    this.editingStock.set(null);
+    this.editError.set('');
+    this.editLoading.set(false);
+  }
+
+  submitEdit(): void {
+    const stock = this.editingStock();
+    if (!stock) return;
+
+    const newQuantity = this.editQuantity() ?? stock.quantity;
+    const quantityChanged = newQuantity !== stock.quantity;
+    const reason = this.editReason().trim();
+
+    if (quantityChanged && reason.length < 3) {
+      this.editError.set('Le motif est obligatoire lorsque la quantité change (3 caractères minimum).');
+      return;
+    }
+
+    const payload: Record<string, unknown> = {
+      quantity: newQuantity,
+      purchase_price: this.editPurchasePrice(),
+      depot: this.editDepot() || null,
+      zone: this.editZone() || null,
+      made_in: this.editMadeIn() || null,
+      dot: this.editDot() || null,
+      reason: reason || null,
+    };
+
+    this.editLoading.set(true);
+    this.editError.set('');
+
+    this.stockService.updateStock(stock.id, payload).subscribe({
+      next: (updated) => {
+        this.stocks.update((list) => list.map((s) => (s.id === updated.id ? updated : s)));
+        this.editLoading.set(false);
+        this.closeEditModal();
+        this.loadData();
+      },
+      error: (err) => {
+        const errors = err?.error?.errors;
+        const first = errors ? Object.values(errors)[0] : null;
+        const msg =
+          (Array.isArray(first) ? first[0] : null) ||
+          err?.error?.message ||
+          'Une erreur est survenue.';
+        this.editError.set(msg as string);
+        this.editLoading.set(false);
+      },
+    });
   }
 
   openMovementsModal(stock: Stock): void {

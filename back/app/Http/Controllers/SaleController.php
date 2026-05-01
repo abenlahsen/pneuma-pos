@@ -272,7 +272,7 @@ class SaleController extends Controller
                 : (int) (clone $query)->whereDate($dateColumn, $today)->sum('total_quantity'),
             'tyres_this_month' => $dateColumn === 'id'
                 ? 0
-                : (int) (clone $query)->whereBetween($dateColumn, [$monthStart, $monthEnd])->sum('total_quantity'),
+                : (int) (clone $query)->whereDate($dateColumn, '>=', $monthStart)->whereDate($dateColumn, '<=', $monthEnd)->sum('total_quantity'),
             'tyres_en_cours' => (int) (clone $query)->where('status', 'EN COURS')->sum('total_quantity'),
             'sales_en_cours' => (int) (clone $query)->where('status', 'EN COURS')->count(),
             'total_unpaid' => round((float) (clone $query)->whereIn('payment_status', ['NON PAYE', 'NON PAYÉ'])->sum('total_sale'), 2),

@@ -1,0 +1,214 @@
+<div class="page-container">
+
+  <!-- En-tête -->
+  <div class="header">
+    <div class="title-section">
+      <h1>🔧 Service Auto</h1>
+      <p class="subtitle">{{ total() }} intervention(s) trouvée(s)</p>
+    </div>
+    <div class="actions">
+      <button
+        *ngIf="authService.hasPermission('create service-orders')"
+        class="btn btn-primary"
+        (click)="openAddForm()"
+      >+ Nouvelle intervention</button>
+    </div>
+  </div>
+
+  <!-- Résumé financier -->
+  <div class="summary-cards">
+    <div class="summary-card">
+      <div class="card-label">CA TOTAL</div>
+      <div class="card-value">{{ summary().total_revenue | number:'1.2-2' }} DH</div>
+    </div>
+    <div class="summary-card summary-card--success">
+      <div class="card-label">PAYÉ</div>
+      <div class="card-value">{{ summary().total_paid | number:'1.2-2' }} DH</div>
+    </div>
+    <div class="summary-card summary-card--danger">
+      <div class="card-label">RESTE À PAYER</div>
+      <div class="card-value">{{ summary().remaining | number:'1.2-2' }} DH</div>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filters-section card">
+    <div class="filters-grid">
+      <div class="filter-group">
+        <label>Client</label>
+        <input type="text" class="form-control"
+          [ngModel]="filterClient()" (ngModelChange)="filterClient.set($event)"
+          placeholder="Rechercher un client…" (keyup.enter)="applyFilters()" />
+      </div>
+      <div class="filter-group">
+        <label>Type de service</label>
+        <select class="form-control"
+          [ngModel]="filterServiceType()" (ngModelChange)="filterServiceType.set($event); applyFilters()">
+          <option value="">Tous les types</option>
+          <option *ngFor="let t of filterOptions().service_types" [value]="t">{{ t }}</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Statut</label>
+        <select class="form-control"
+          [ngModel]="filterStatus()" (ngModelChange)="filterStatus.set($event); applyFilters()">
+          <option value="">Tous les statuts</option>
+          <option value="EN COURS">En cours</option>
+          <option value="TERMINE">Terminé</option>
+          <option value="ANNULE">Annulé</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Paiement</label>
+        <select class="form-control"
+          [ngModel]="filterPaymentStatus()" (ngModelChange)="filterPaymentStatus.set($event); applyFilters()">
+          <option value="">Tous</option>
+          <option value="NON PAYE">Non payé</option>
+          <option value="PARTIEL">Partiel</option>
+          <option value="PAYE">Payé</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Commercial</label>
+        <select class="form-control"
+          [ngModel]="filterCommercial()" (ngModelChange)="filterCommercial.set($event); applyFilters()">
+          <option value="">Tous</option>
+          <option *ngFor="let c of filterOptions().commercials" [value]="c.id">{{ c.name }}</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Date du</label>
+        <input type="date" class="form-control"
+          [ngModel]="filterDateFrom()" (ngModelChange)="filterDateFrom.set($event)" />
+      </div>
+      <div class="filter-group">
+        <label>Date au</label>
+        <input type="date" class="form-control"
+          [ngModel]="filterDateTo()" (ngModelChange)="filterDateTo.set($event)" />
+      </div>
+    </div>
+    <div class="filter-actions">
+      <button class="btn btn-primary" (click)="applyFilters()">🔍 Rechercher</button>
+      <button class="btn btn-secondary" (click)="resetFilters()">✕ Réinitialiser</button>
+    </div>
+  </div>
+
+  <!-- Tableau -->
+  <div class="table-card card">
+    <div *ngIf="loading()" class="loading-state">Chargement…</div>
+
+    <div *ngIf="!loading() && serviceOrders().length === 0" class="empty-state">
+      Aucune intervention trouvée.
+    </div>
+
+    <table *ngIf="!loading() && serviceOrders().length > 0" class="data-table">
+      <thead>
+        <tr>
+          <th>DATE</th>
+          <th>CLIENT</th>
+          <th>VÉHICULE</th>
+          <th>TYPE DE SERVICE</th>
+          <th class="text-right">NET (DH)</th>
+          <th>STATUT</th>
+          <th>PAIEMENT</th>
+          <th>ACTIONS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let order of serviceOrders()">
+          <td class="date-cell">{{ order.date }}</td>
+          <td>
+            <div class="client-name">{{ order.client }}</div>
+            <div *ngIf="order.phone" class="client-phone">{{ order.phone }}</div>
+          </td>
+          <td>
+            <div class="vehicle-name">{{ order.vehicle }}</div>
+            <div *ngIf="order.mileage" class="mileage">{{ order.mileage | number }} km</div>
+          </td>
+          <td>
+            <div class="service-types">
+              <span
+                *ngFor="let t of orderServiceTypes(order).slice(0, 2)"
+                class="badge badge-type"
+              >{{ t }}</span>
+              <span
+                *ngIf="orderServiceTypes(order).length > 2"
+                class="badge badge-more"
+              >+{{ orderServiceTypes(order).length - 2 }}</span>
+            </div>
+          </td>
+          <td class="amount-cell">{{ order.net_amount | number:'1.2-2' }}</td>
+          <td>
+            <span class="badge" [class]="statusClass(order.status)">
+              {{ order.status }}
+            </span>
+          </td>
+          <td>
+            <span class="badge" [class]="paymentClass(order.payment_status)">
+              {{ order.payment_status }}
+            </span>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button
+                class="btn-icon"
+                title="Paiements"
+                (click)="openPayments(order)"
+              >💳</button>
+              <button
+                *ngIf="authService.hasPermission('edit service-orders')"
+                class="btn-icon"
+                title="Modifier"
+                (click)="openEditForm(order)"
+              >✏️</button>
+              <button
+                *ngIf="authService.hasPermission('delete service-orders')"
+                class="btn-icon btn-icon--danger"
+                title="Supprimer"
+                [disabled]="deletingId() === order.id"
+                (click)="deleteOrder(order)"
+              >🗑️</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div *ngIf="lastPage() > 1" class="pagination-wrapper">
+      <span class="pagination-info">
+        Page {{ currentPage() }} / {{ lastPage() }} — {{ total() }} résultats
+      </span>
+      <div class="pagination-controls">
+        <button class="btn-page" (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1">‹</button>
+        <button
+          *ngFor="let p of pages"
+          class="btn-page"
+          [class.active]="p === currentPage()"
+          (click)="goToPage(p)"
+        >{{ p }}</button>
+        <button class="btn-page" (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === lastPage()">›</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal Formulaire -->
+<div *ngIf="showForm()" class="modal-overlay" (click)="closeForm()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <app-service-order-form
+      [serviceOrder]="editingOrder()"
+      [initialCommercials]="filterOptions().commercials"
+      (save)="onFormSubmit($event)"
+      (cancel)="closeForm()"
+    ></app-service-order-form>
+  </div>
+</div>
+
+<!-- Panel paiements -->
+<app-service-payment-panel
+  *ngIf="paymentOrder()"
+  [serviceOrder]="paymentOrder()!"
+  (closed)="closePayments()"
+></app-service-payment-panel>

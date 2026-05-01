@@ -1,0 +1,377 @@
+@use '../../_variables' as *;
+
+.page-container {
+  max-width: 100%;
+  margin: 1.5rem auto;
+  padding: 0 1rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+
+  .title-section {
+    h1 {
+      margin: 0;
+      color: $text-dark;
+      font-size: 1.8rem;
+    }
+
+    .subtitle {
+      margin: 0.2rem 0 0;
+      color: $text-muted;
+      font-size: 0.9rem;
+    }
+  }
+
+  .actions {
+    display: flex;
+    gap: 1rem;
+  }
+}
+
+// Buttons
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: $radius-sm;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+
+  &-primary {
+    background: $primary;
+    color: white;
+    &:hover { filter: brightness(0.95); }
+  }
+
+  &-secondary {
+    background: white;
+    color: $text-dark;
+    border: 1px solid $border-color;
+    &:hover { background: $bg-body; }
+  }
+}
+
+.btn-icon {
+  background: white;
+  border: 1px solid $border-color;
+  border-radius: $radius-sm;
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  transition: background 0.15s;
+
+  &:hover:not(:disabled) { background: $bg-body; }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+  &--danger:hover:not(:disabled) { background: rgba($expense-color, 0.08); }
+}
+
+// Summary cards
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-card {
+  background: $bg-card;
+  border-radius: $radius;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid $border-color;
+
+  .card-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $text-muted;
+    margin-bottom: 0.5rem;
+  }
+
+  .card-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: $text-dark;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &--success .card-value { color: $income-color; }
+  &--danger .card-value { color: $expense-color; }
+}
+
+// Card base
+.card {
+  background: $bg-card;
+  border-radius: $radius;
+  border: 1px solid $border-color;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+// Filters
+.filters-section {
+  padding: 1.25rem;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+
+  label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+}
+
+.form-control {
+  border: 1px solid $border-color;
+  border-radius: $radius-sm;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.875rem;
+  color: $text-dark;
+  background: white;
+  width: 100%;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: $primary;
+  }
+}
+
+.filter-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+// Table
+.table-card {
+  padding: 0;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    padding: 0.75rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $text-muted;
+    background: $bg-body;
+    border-bottom: 1px solid $border-color;
+    text-align: left;
+
+    &.text-right { text-align: right; }
+  }
+
+  td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid $border-color;
+    color: $text-dark;
+    font-size: 0.875rem;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tr:hover td {
+    background: rgba($bg-body, 0.5);
+  }
+}
+
+.date-cell {
+  white-space: nowrap;
+  color: $text-muted;
+}
+
+.client-name {
+  font-weight: 500;
+}
+
+.client-phone,
+.mileage {
+  font-size: 0.8rem;
+  color: $text-muted;
+}
+
+.vehicle-name {
+  font-weight: 500;
+}
+
+.amount-cell {
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+// Badges
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+
+  &-success {
+    background: rgba(72, 187, 120, 0.12);
+    color: #276749;
+  }
+
+  &-warning {
+    background: rgba(237, 137, 54, 0.12);
+    color: #c05621;
+  }
+
+  &-danger {
+    background: rgba(245, 101, 101, 0.12);
+    color: #e53e3e;
+  }
+}
+
+.service-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.badge-type {
+  background: rgba($primary, 0.1);
+  color: $primary;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: $radius-sm;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.badge-more {
+  background: $bg-body;
+  color: $text-muted;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: $radius-sm;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.35rem;
+}
+
+// States
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: $text-muted;
+  font-size: 0.9rem;
+}
+
+// Pagination
+.pagination-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid $border-color;
+  font-size: 0.85rem;
+  color: $text-muted;
+}
+
+.pagination-controls {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.btn-page {
+  min-width: 2rem;
+  height: 2rem;
+  border: 1px solid $border-color;
+  background: white;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: $text-dark;
+  transition: all 0.15s;
+
+  &:hover:not(:disabled) { background: $bg-body; }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  &.active {
+    background: $primary;
+    color: white;
+    border-color: $primary;
+  }
+}
+
+// Modal
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-container {
+  width: 100%;
+  max-width: 680px;
+  max-height: 90vh;
+  overflow: hidden;
+  border-radius: $radius;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .data-table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .modal-container {
+    max-width: 100%;
+    max-height: 95vh;
+  }
+}

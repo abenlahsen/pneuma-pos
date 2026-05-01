@@ -267,12 +267,12 @@
             </tr>
             <!-- Inline edit row -->
             <tr class="edit-row" *ngIf="editingStockId() === item.id">
-              <td><input type="text" [(ngModel)]="stockForm.depot" name="edit_depot" placeholder="Dépôt" class="inv-input"></td>
-              <td><input type="text" [(ngModel)]="stockForm.zone" name="edit_zone" placeholder="Zone" class="inv-input"></td>
-              <td><input type="text" [(ngModel)]="stockForm.made_in" name="edit_made_in" placeholder="Origine" class="inv-input"></td>
-              <td><input type="text" [(ngModel)]="stockForm.dot" name="edit_dot" placeholder="DOT" class="inv-input"></td>
-              <td><input type="number" [(ngModel)]="stockForm.quantity" name="edit_qty" min="0" class="inv-input text-center" style="width:60px"></td>
-              <td><input type="number" [(ngModel)]="stockForm.purchase_price" name="edit_price" min="0" step="0.01" class="inv-input text-right" style="width:80px"></td>
+              <td><input type="text" [(ngModel)]="stockForm.depot" name="edit_depot" placeholder="Dépôt" class="inv-input" (keydown.enter)="$event.preventDefault()"></td>
+              <td><input type="text" [(ngModel)]="stockForm.zone" name="edit_zone" placeholder="Zone" class="inv-input" (keydown.enter)="$event.preventDefault()"></td>
+              <td><input type="text" [(ngModel)]="stockForm.made_in" name="edit_made_in" placeholder="Origine" class="inv-input" (keydown.enter)="$event.preventDefault()"></td>
+              <td><input type="text" [(ngModel)]="stockForm.dot" name="edit_dot" placeholder="DOT" class="inv-input" (keydown.enter)="$event.preventDefault()"></td>
+              <td><input type="number" [ngModel]="editingStockQuantity()" (ngModelChange)="editingStockQuantity.set(+$event); stockForm.quantity = +$event" name="edit_qty" min="0" class="inv-input text-center" style="width:60px" (keydown.enter)="$event.preventDefault()"></td>
+              <td><input type="number" [(ngModel)]="stockForm.purchase_price" name="edit_price" min="0" step="0.01" class="inv-input text-right" style="width:80px" (keydown.enter)="$event.preventDefault()"></td>
               <td class="text-center actions-cell">
                 <button type="button" class="btn-icon-sm text-success" (click)="saveStock()" title="Enregistrer">✅</button>
                 <button type="button" class="btn-icon-sm" (click)="cancelStockEdit()" title="Annuler">❌</button>
@@ -294,6 +294,7 @@
                   minlength="3"
                   maxlength="1000"
                   required
+                  (keydown.enter)="$event.preventDefault()"
                 >
               </td>
             </tr>

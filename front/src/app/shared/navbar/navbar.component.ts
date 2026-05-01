@@ -34,6 +34,7 @@ export class NavbarComponent {
   allNavItems: NavItem[] = [
     { label: '🏠 Accueil', route: '/dashboard', exact: true },
     { label: '🏷️ Ventes', route: '/sales', permission: 'view sales' },
+    { label: '🔧 Service Auto', route: '/service-orders', permission: 'view service-orders' },
     { label: '📦 Achats', route: '/achats', permission: 'view purchases' },
     { label: '💰 Cash Flow', route: '/cash-flow', permission: 'view cash-flow' },
     { label: '🏦 Comptes', route: '/accounts', permission: 'view accounts' },

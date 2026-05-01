@@ -28,7 +28,9 @@ class SaleResource extends JsonResource
             'city' => $this->relationLoaded('linkedClient') && $this->linkedClient?->city
                 ? $this->linkedClient->city
                 : $this->city,
+            'with_invoice' => (bool) $this->with_invoice,
             'carrier_id' => $this->carrier_id,
+            'tracking_number' => $this->tracking_number,
             'carrier' => $this->when(
                 $this->relationLoaded('linkedCarrier'),
                 fn () => $this->linkedCarrier ? [
@@ -37,6 +39,7 @@ class SaleResource extends JsonResource
                 ] : null
             ),
             'partner_id' => $this->partner_id,
+            'service' => $this->service,
             'partner' => $this->when(
                 $this->relationLoaded('linkedPartner'),
                 fn () => $this->linkedPartner ? [
@@ -45,6 +48,9 @@ class SaleResource extends JsonResource
                 ] : null,
                 $this->partner
             ),
+            'payment_method' => $this->payment_method,
+            'delivery_date' => $this->formatDateValue($this->delivery_date),
+            'comments' => $this->comments,
             'status' => $this->status,
             'payment_status' => $this->payment_status,
             'notes' => $this->notes,

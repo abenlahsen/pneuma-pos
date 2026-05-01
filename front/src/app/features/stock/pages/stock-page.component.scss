@@ -528,6 +528,58 @@
   gap: 0.75rem;
 }
 
+.correction-modal {
+  width: min(600px, 100%);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.reason-group {
+  margin-bottom: 0.75rem;
+}
+
+.required-hint {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #718096;
+}
+
+.form-error {
+  color: #e53e3e;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0.5rem 0 0;
+}
+
+.btn-cancel {
+  background: #f7fafc;
+  color: #2d3748;
+  border: 1px solid #e2e8f0;
+
+  &:hover:not(:disabled) {
+    background: #e2e8f0;
+  }
+}
+
+.actions-cell {
+  white-space: nowrap;
+}
+
+.btn-sm {
+  width: 1.75rem;
+  height: 1.75rem;
+  font-size: 0.85rem;
+}
+
 .movements-table {
   th,
   td {

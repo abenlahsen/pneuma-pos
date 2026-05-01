@@ -250,6 +250,9 @@
     <div class="modal-body">
       <app-sale-form
         [sale]="editingSale()!"
+        [initialCarriers]="allCarriers()"
+        [initialPartners]="allPartners()"
+        [initialCommercials]="allCommercials()"
         (save)="onFormSubmit($event)"
         (cancel)="closeForm()">
       </app-sale-form>

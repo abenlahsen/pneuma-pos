@@ -56,7 +56,7 @@ cd front
 npm install
 npm start        # Dev server on :4200 (proxies /api to nginx:80 — only works inside Docker)
 npm run build    # Production build → dist/pneuma-pos/browser/
-npm test         # Run Karma tests
+npm test         # Run Vitest tests
 ```
 
 ## Architecture
@@ -69,7 +69,7 @@ npm test         # Run Karma tests
 - `purchases.php` — CRUD + payments (`/api/purchases/{purchase}/payments`)
 - `clients.php` — Full client CRUD + `/api/clients/{client}/profile`, `/api/clients/{client}/statement`, `/api/clients/duplicates/check`
 - `catalog.php` — CRUD for `suppliers`, `carriers`, `partners`, `brands`, `products`; also registers duplicate client CRUD (registered before `clients.php`, so these routes take precedence for basic CRUD — the extended endpoints come from `clients.php`)
-- `stock.php` — CRUD (`/api/stocks`) + `POST /api/stocks/import` (Excel) + `GET /api/stock-movements` (audit trail)
+- `stock.php` — CRUD (`/api/stocks`) + `POST /api/stocks/import` (Excel import) + `GET /api/stocks/export` (Excel export of available stock) + `GET /api/stock-movements` (audit trail)
 - `accounts.php` — CRUD for accounts + cash-flow transactions + `POST /api/accounts/transfer`
 - `admin.php` — CRUD for `users` and `roles`/`permissions` + `GET /api/dashboard-kpi` (Administrator only); `require`s `settings.php`
 - `settings.php` — `GET/PUT /api/settings/company` (company profile, logo, theme)
@@ -97,7 +97,7 @@ Each payment creation auto-creates a corresponding `Transaction` record.
 
 **Authentication**: Sanctum stateless tokens stored client-side. All previous tokens are revoked on new login (single active session).
 
-**ACL**: Spatie Laravel Permission with roles (Administrator, Commercial, Manager, Driver) and granular permissions per resource (view, create, edit, delete + special ones like `import stock`, `manage sale-payments`, `transfer accounts`). The `RolesAndPermissionsSeeder` manages all 59 permissions and role assignments across all modules. All API routes are protected with `permission:` middleware. Frontend uses `authService.hasPermission()` to conditionally show UI elements and `permissionGuard` on routes.
+**ACL**: Spatie Laravel Permission with roles (Administrator, Commercial, Manager, Driver) and granular permissions per resource (view, create, edit, delete + special ones like `import stock`, `manage sale-payments`, `transfer accounts`). The `RolesAndPermissionsSeeder` manages all 63 permissions and role assignments across all modules. All API routes are protected with `permission:` middleware. Frontend uses `authService.hasPermission()` to conditionally show UI elements and `permissionGuard` on routes.
 
 ### Frontend Structure
 
@@ -106,7 +106,9 @@ Each payment creation auto-creates a corresponding `Transaction` record.
 - `components/` — Reusable sub-components (e.g., forms)
 - `data-access/` — HTTP service for the feature (e.g., `client.service.ts`)
 - `models/` — TypeScript interfaces for the feature (e.g., `client.model.ts`)
-- Modules: `sales`, `purchases`, `cash-flow`, `clients`, `suppliers`, `users`, `carriers`, `partners`, `stock`, `roles`, `brands`, `products`, `accounts`, `company-settings`
+- Modules: `sales`, `purchases`, `cash-flow`, `clients`, `suppliers`, `users`, `carriers`, `partners`, `stock`, `roles`, `brands`, `products`, `accounts`, `settings`
+
+**Shared** (`front/src/app/shared/`): Cross-feature reusable components — `auto-refresh-control` (per-page configurable auto-refresh toggle), `navbar` (top navigation bar).
 
 **Core** (`front/src/app/core/`):
 - `services/` — Shared services (e.g., `auth.service.ts`). Feature-specific services live in each feature's `data-access/` folder.
