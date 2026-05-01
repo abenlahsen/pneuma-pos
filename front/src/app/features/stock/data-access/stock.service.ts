@@ -31,7 +31,7 @@ export class StockService {
     return this.http.post<Stock>(this.apiUrl, payload);
   }
 
-  updateStock(id: number, payload: StockPayload): Observable<Stock> {
+  updateStock(id: number, payload: Partial<StockPayload>): Observable<Stock> {
     return this.http.put<Stock>(`${this.apiUrl}/${id}`, payload);
   }
 

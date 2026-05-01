@@ -96,6 +96,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit roles',
             'delete roles',
 
+            // Service Orders
+            'view service-orders',
+            'create service-orders',
+            'edit service-orders',
+            'delete service-orders',
+            'manage service-payments',
+
             // Settings
             'view settings',
             'edit settings',
@@ -124,6 +131,12 @@ class RolesAndPermissionsSeeder extends Seeder
 
         $commercial = Role::findOrCreate('Commercial');
         $commercial->syncPermissions([
+            // Service Orders
+            'view service-orders',
+            'create service-orders',
+            'edit service-orders',
+            'manage service-payments',
+
             // Sales
             'view sales',
             'create sales',

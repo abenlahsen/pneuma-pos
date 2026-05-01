@@ -7,12 +7,9 @@ import { finalize } from 'rxjs/operators';
 import { Sale, SalePayload } from '../../../core/models/sale.model';
 import { Product } from '../../../core/models/product.model';
 import { ProductService } from '../../../core/services/product.service';
-import { UserService } from '../../../core/services/user.service';
 import { ManagedUser } from '../../../core/models/user-manage.model';
 import { Carrier } from '../../carriers/models/carrier.model';
-import { CarrierService } from '../../carriers/data-access/carrier.service';
 import { Partner } from '../../partners/models/partner.model';
-import { PartnerService } from '../../partners/data-access/partner.service';
 import { Stock } from '../../../core/models/stock.model';
 import { StockService } from '../../../core/services/stock.service';
 import { ClientService } from '../../clients/data-access/client.service';
@@ -27,6 +24,9 @@ import { Client, ClientPayload, ClientProfileResponse } from '../../clients/mode
 })
 export class SaleFormComponent implements OnInit {
   @Input() sale: Sale | null = null;
+  @Input() initialCarriers: Carrier[] = [];
+  @Input() initialPartners: Partner[] = [];
+  @Input() initialCommercials: ManagedUser[] = [];
 
   @Output() save = new EventEmitter<SalePayload>();
   @Output() cancel = new EventEmitter<void>();
@@ -35,9 +35,6 @@ export class SaleFormComponent implements OnInit {
 
   private readonly productService = inject(ProductService);
   private readonly stockService = inject(StockService);
-  private readonly userService = inject(UserService);
-  private readonly carrierService = inject(CarrierService);
-  private readonly partnerService = inject(PartnerService);
   private readonly clientService = inject(ClientService);
 
   products = signal<Product[]>([]);
@@ -151,17 +148,9 @@ export class SaleFormComponent implements OnInit {
   );
 
   ngOnInit(): void {
-    this.userService.getUsers({ all: true }).subscribe({
-      next: (res: any) => { this.commercials.set(Array.isArray(res) ? res : res.data); }
-    });
-
-    this.carrierService.getCarriers({ all: true }).subscribe({
-      next: (res: any) => { this.carriers.set(Array.isArray(res) ? res : res.data); }
-    });
-
-    this.partnerService.getPartners({ all: true }).subscribe({
-      next: (res: any) => { this.partners.set(Array.isArray(res) ? res : res.data); }
-    });
+    this.carriers.set(this.initialCarriers);
+    this.partners.set(this.initialPartners);
+    this.commercials.set(this.initialCommercials);
 
     this.loadClients();
     this.searchProducts();

@@ -26,7 +26,8 @@ class UpdateProductRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:255',
-                Rule::unique('products', 'reference', optional($this->route('product'))->id ?? $this->route('product'))
+                Rule::unique('products', 'reference')
+                    ->ignore(optional($this->route('product'))->id)
                     ->where(function ($query) {
                         return $query->whereNotNull('reference');
                     }),

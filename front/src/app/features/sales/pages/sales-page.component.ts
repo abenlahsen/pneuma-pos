@@ -9,6 +9,12 @@ import { PaymentPanelComponent } from '../payment-panel/payment-panel.component'
 import { Sale, SaleFilters, SalePayload, SaleSummary } from '../models/sale.model';
 import { SaleService } from '../data-access/sale.service';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
+import { Carrier } from '../../carriers/models/carrier.model';
+import { CarrierService } from '../../carriers/data-access/carrier.service';
+import { Partner } from '../../partners/models/partner.model';
+import { PartnerService } from '../../partners/data-access/partner.service';
+import { ManagedUser } from '../../../core/models/user-manage.model';
+import { UserService } from '../../../core/services/user.service';
 
 @Component({
   selector: 'app-sales-page',
@@ -48,14 +54,34 @@ export class SalesPageComponent implements OnInit {
   detailSale = signal<Sale | null>(null);
   paymentSale = signal<Sale | null>(null);
 
+  allCarriers = signal<Carrier[]>([]);
+  allPartners = signal<Partner[]>([]);
+  allCommercials = signal<ManagedUser[]>([]);
+
   constructor(
     private saleService: SaleService,
     public authService: AuthService,
+    private carrierService: CarrierService,
+    private partnerService: PartnerService,
+    private userService: UserService,
   ) {}
 
   ngOnInit(): void {
     this.loadFilters();
     this.loadData();
+    this.loadFormLookups();
+  }
+
+  private loadFormLookups(): void {
+    this.carrierService.getCarriers({ all: true }).subscribe({
+      next: (res: any) => this.allCarriers.set(Array.isArray(res) ? res : res.data),
+    });
+    this.partnerService.getPartners({ all: true }).subscribe({
+      next: (res: any) => this.allPartners.set(Array.isArray(res) ? res : res.data),
+    });
+    this.userService.getUsers({ all: true }).subscribe({
+      next: (res: any) => this.allCommercials.set(Array.isArray(res) ? res : res.data),
+    });
   }
 
   loadData(): void {

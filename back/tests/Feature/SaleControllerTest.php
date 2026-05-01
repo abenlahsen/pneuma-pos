@@ -721,6 +721,100 @@ class SaleControllerTest extends TestCase
         $this->assertDatabaseMissing('sales', ['id' => $sale->id]);
     }
 
+    // ── Logistics field tests ────────────────────────────────────────────────
+
+    public function test_store_persists_logistics_fields(): void
+    {
+        [$product, $stock] = $this->createProductWithStock(10);
+
+        $carrier = \App\Models\Carrier::query()->create(['name' => 'Transporteur Test']);
+        $partner = \App\Models\Partner::query()->create(['name' => 'Partenaire Test']);
+
+        $payload = [
+            'date' => '2026-03-15',
+            'carrier_id' => $carrier->id,
+            'tracking_number' => 'TR-20260315-001',
+            'partner_id' => $partner->id,
+            'service' => 'Montage inclus',
+            'items' => [[
+                'product_id' => $product->id,
+                'stock_id' => $stock->id,
+                'quantity' => 1,
+                'purchase_price' => 100,
+                'selling_price' => 150,
+            ]],
+        ];
+
+        $payload = array_merge($payload, [
+            'payment_method' => 'VIREMENT',
+            'delivery_date' => '2026-04-01',
+            'comments' => 'Livraison express',
+        ]);
+
+        $response = $this->postJson('/api/sales', $payload, $this->authHeaders());
+
+        $response->assertStatus(201);
+
+        $saleId = $response->json('id');
+
+        $this->assertDatabaseHas('sales', [
+            'id' => $saleId,
+            'carrier_id' => $carrier->id,
+            'tracking_number' => 'TR-20260315-001',
+            'partner_id' => $partner->id,
+            'service' => 'Montage inclus',
+            'payment_method' => 'VIREMENT',
+            'comments' => 'Livraison express',
+        ]);
+
+        $response->assertJsonPath('carrier_id', $carrier->id)
+            ->assertJsonPath('tracking_number', 'TR-20260315-001')
+            ->assertJsonPath('partner_id', $partner->id)
+            ->assertJsonPath('service', 'Montage inclus')
+            ->assertJsonPath('payment_method', 'VIREMENT')
+            ->assertJsonPath('delivery_date', '2026-04-01')
+            ->assertJsonPath('comments', 'Livraison express');
+    }
+
+    public function test_update_persists_logistics_fields(): void
+    {
+        $sale = $this->createSale();
+        $carrier = \App\Models\Carrier::query()->create(['name' => 'Transporteur MAJ']);
+        $partner = \App\Models\Partner::query()->create(['name' => 'Partenaire MAJ']);
+
+        $payload = [
+            'carrier_id' => $carrier->id,
+            'tracking_number' => 'TR-UPDATE-001',
+            'partner_id' => $partner->id,
+            'service' => 'Alignement',
+            'payment_method' => 'CHEQUE',
+            'delivery_date' => '2026-05-15',
+            'comments' => 'Commentaire MAJ',
+        ];
+
+        $response = $this->putJson("/api/sales/{$sale->id}", $payload, $this->authHeaders());
+
+        $response->assertOk();
+
+        $this->assertDatabaseHas('sales', [
+            'id' => $sale->id,
+            'carrier_id' => $carrier->id,
+            'tracking_number' => 'TR-UPDATE-001',
+            'partner_id' => $partner->id,
+            'service' => 'Alignement',
+            'payment_method' => 'CHEQUE',
+            'comments' => 'Commentaire MAJ',
+        ]);
+
+        $response->assertJsonPath('carrier_id', $carrier->id)
+            ->assertJsonPath('tracking_number', 'TR-UPDATE-001')
+            ->assertJsonPath('partner_id', $partner->id)
+            ->assertJsonPath('service', 'Alignement')
+            ->assertJsonPath('payment_method', 'CHEQUE')
+            ->assertJsonPath('delivery_date', '2026-05-15')
+            ->assertJsonPath('comments', 'Commentaire MAJ');
+    }
+
     // ── Stock movement tests ─────────────────────────────────────────────────
 
     private function createProductWithStock(int $quantity = 10): array

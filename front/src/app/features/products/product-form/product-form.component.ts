@@ -59,13 +59,14 @@ export class ProductFormComponent implements OnInit {
   showStockRow = signal(false);
   editingStockId = signal<number | null>(null);
   editingStockOriginalQty = signal<number | null>(null);
+  editingStockQuantity = signal<number>(0);
   stockForm: Partial<StockPayload> = {};
   stockReason = signal<string>('');
 
   stockQuantityChanged = computed(() => {
     const orig = this.editingStockOriginalQty();
     if (orig === null) return false;
-    return Number(this.stockForm.quantity ?? 0) !== orig;
+    return this.editingStockQuantity() !== orig;
   });
 
   // ── Stock Movements History ──
@@ -181,6 +182,7 @@ export class ProductFormComponent implements OnInit {
   editStock(stock: Stock): void {
     this.editingStockId.set(stock.id);
     this.editingStockOriginalQty.set(stock.quantity);
+    this.editingStockQuantity.set(stock.quantity);
     this.stockReason.set('');
     this.stockForm = {
       product_id: this.product!.id,
@@ -198,6 +200,7 @@ export class ProductFormComponent implements OnInit {
     this.showStockRow.set(false);
     this.editingStockId.set(null);
     this.editingStockOriginalQty.set(null);
+    this.editingStockQuantity.set(0);
     this.stockReason.set('');
     this.stockForm = {};
   }
@@ -215,7 +218,7 @@ export class ProductFormComponent implements OnInit {
       zone: (this.stockForm.zone as string) || null,
       made_in: (this.stockForm.made_in as string) || null,
       dot: (this.stockForm.dot as string) || null,
-      quantity: this.stockForm.quantity || 0,
+      quantity: this.editingStockId() !== null ? this.editingStockQuantity() : (this.stockForm.quantity || 0),
       purchase_price: this.stockForm.purchase_price ?? null,
     };
 

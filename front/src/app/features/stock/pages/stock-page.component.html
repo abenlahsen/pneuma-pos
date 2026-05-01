@@ -122,6 +122,7 @@
       <table class="table">
         <thead>
           <tr>
+            <th *ngIf="authService.hasPermission('edit stock')" class="text-center">Actions</th>
             <th>Référence</th>
             <th>Marque</th>
             <th>Profil</th>
@@ -151,19 +152,22 @@
         </thead>
         <tbody>
           <tr *ngIf="loading()">
-            <td colspan="16" class="text-center py-4">
+            <td [attr.colspan]="authService.hasPermission('edit stock') ? 17 : 16" class="text-center py-4">
               <div class="spinner"></div>
               Chargement...
             </td>
           </tr>
 
           <tr *ngIf="!loading() && stocks().length === 0">
-            <td colspan="16" class="text-center py-4 text-muted">
+            <td [attr.colspan]="authService.hasPermission('edit stock') ? 17 : 16" class="text-center py-4 text-muted">
               Aucun article en stock trouvé.
             </td>
           </tr>
 
           <tr *ngFor="let stock of stocks()">
+            <td *ngIf="authService.hasPermission('edit stock')" class="text-center actions-cell">
+              <button class="btn-icon btn-sm" type="button" (click)="openEditModal(stock)" title="Corriger le stock">✏️</button>
+            </td>
             <td>
               <button class="reference-link" type="button" (click)="openMovementsModal(stock)" [disabled]="!stock.product_id">
                 {{ stock.product?.reference || '-' }}
@@ -226,6 +230,103 @@
         </button>
         <button class="btn-page" [disabled]="currentPage() === lastPage()" (click)="goToPage(currentPage() + 1)">&raquo;</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showEditModal()" (click)="closeEditModal()">
+  <div class="modal-container correction-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h2>Correction de stock</h2>
+        <p class="modal-subtitle">
+          {{ editingStock()?.product?.reference || '-' }}
+          <span *ngIf="editingStock()?.product?.brand?.name">— {{ editingStock()?.product?.brand?.name }}</span>
+        </p>
+      </div>
+      <button class="btn-icon" type="button" (click)="closeEditModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Quantité</label>
+          <input
+            type="number"
+            class="form-control"
+            min="0"
+            [ngModel]="editQuantity()"
+            (ngModelChange)="editQuantity.set($event)"
+          />
+        </div>
+        <div class="form-group">
+          <label>Prix d'achat (DH)</label>
+          <input
+            type="number"
+            class="form-control"
+            min="0"
+            step="0.01"
+            [ngModel]="editPurchasePrice()"
+            (ngModelChange)="editPurchasePrice.set($event)"
+          />
+        </div>
+        <div class="form-group">
+          <label>Dépôt</label>
+          <input
+            type="text"
+            class="form-control"
+            [ngModel]="editDepot()"
+            (ngModelChange)="editDepot.set($event)"
+          />
+        </div>
+        <div class="form-group">
+          <label>Zone</label>
+          <input
+            type="text"
+            class="form-control"
+            [ngModel]="editZone()"
+            (ngModelChange)="editZone.set($event)"
+          />
+        </div>
+        <div class="form-group">
+          <label>Pays d'origine</label>
+          <input
+            type="text"
+            class="form-control"
+            [ngModel]="editMadeIn()"
+            (ngModelChange)="editMadeIn.set($event)"
+          />
+        </div>
+        <div class="form-group">
+          <label>DOT</label>
+          <input
+            type="text"
+            class="form-control"
+            [ngModel]="editDot()"
+            (ngModelChange)="editDot.set($event)"
+          />
+        </div>
+      </div>
+
+      <div class="form-group reason-group">
+        <label>Motif <span class="required-hint">(obligatoire si la quantité change)</span></label>
+        <textarea
+          class="form-control"
+          rows="3"
+          placeholder="Ex: Inventaire physique du 30/04/2026, erreur de saisie..."
+          [ngModel]="editReason()"
+          (ngModelChange)="editReason.set($event)"
+        ></textarea>
+      </div>
+
+      <p class="form-error" *ngIf="editError()">{{ editError() }}</p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-cancel" type="button" (click)="closeEditModal()" [disabled]="editLoading()">Annuler</button>
+      <button class="btn btn-primary" type="button" (click)="submitEdit()" [disabled]="editLoading()">
+        {{ editLoading() ? 'Enregistrement...' : 'Enregistrer' }}
+      </button>
     </div>
   </div>
 </div>
