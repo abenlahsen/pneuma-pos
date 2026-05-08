@@ -289,7 +289,6 @@ class SaleControllerTest extends TestCase
                 $table->decimal('total_purchase', 12, 2)->default(0);
                 $table->decimal('total_sale', 12, 2)->default(0);
                 $table->decimal('margin', 12, 2)->default(0);
-                $table->string('city')->nullable();
                 $table->unsignedBigInteger('carrier_id')->nullable();
                 $table->string('tracking_number')->nullable();
                 $table->unsignedBigInteger('partner_id')->nullable();
@@ -419,13 +418,11 @@ class SaleControllerTest extends TestCase
     {
         $clientName = $attributes['client'] ?? 'Client Test';
         $clientPhone = $attributes['client_phone'] ?? null;
-        $city = $attributes['city'] ?? 'Casablanca';
 
         if (! array_key_exists('client_id', $attributes)) {
             $clientData = [
                 'name' => $clientName,
                 'phone' => $clientPhone,
-                'city' => $city,
                 'created_by' => $this->user->id,
                 'updated_by' => $this->user->id,
                 'is_active' => true,
@@ -448,7 +445,6 @@ class SaleControllerTest extends TestCase
             'total_purchase' => 400,
             'total_sale' => 600,
             'margin' => 200,
-            'city' => 'Casablanca',
             'status' => 'EN COURS',
             'payment_status' => 'NON PAYÉ',
             'created_by' => $this->user->id,
@@ -732,6 +728,7 @@ class SaleControllerTest extends TestCase
 
         $payload = [
             'date' => '2026-03-15',
+            'commercial_id' => $this->user->id,
             'carrier_id' => $carrier->id,
             'tracking_number' => 'TR-20260315-001',
             'partner_id' => $partner->id,
@@ -847,6 +844,7 @@ class SaleControllerTest extends TestCase
 
         $payload = [
             'date' => '2026-03-15',
+            'commercial_id' => $this->user->id,
             'client' => 'Client Stock Test',
             'items' => [[
                 'product_id' => $product->id,
@@ -883,6 +881,7 @@ class SaleControllerTest extends TestCase
 
         $payload = [
             'date' => '2026-03-15',
+            'commercial_id' => $this->user->id,
             'client' => 'Multi Item Client',
             'items' => [
                 [
@@ -917,6 +916,7 @@ class SaleControllerTest extends TestCase
 
         $payload = [
             'date' => '2026-03-15',
+            'commercial_id' => $this->user->id,
             'client' => 'No Stock Client',
             'items' => [[
                 'product_id' => $product->id,
@@ -1015,5 +1015,142 @@ class SaleControllerTest extends TestCase
         ]);
 
         $this->assertDatabaseMissing('sales', ['id' => $sale->id]);
+    }
+
+    // ── Accès par rôle : Manager & Commercial ────────────────────────────────
+
+    private function makeManager(): User
+    {
+        Permission::findOrCreate('view users', 'web');
+
+        $managerRole = Role::findOrCreate('Manager', 'web');
+        $managerRole->syncPermissions(['view sales', 'create sales', 'edit sales']); // pas view users
+
+        $user = User::query()->create([
+            'name'                 => 'Test Manager',
+            'email'                => fake()->unique()->safeEmail(),
+            'password'             => 'password',
+            'phone'                => '0600000010',
+            'commission_rate'      => 0,
+            'must_change_password' => false,
+        ]);
+        $user->assignRole($managerRole);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        return $user;
+    }
+
+    private function makeCommercial(): User
+    {
+        Permission::findOrCreate('view users', 'web');
+
+        $commercialRole = Role::findOrCreate('Commercial', 'web');
+        $commercialRole->syncPermissions(['view sales', 'create sales', 'edit sales', 'view users']);
+
+        $user = User::query()->create([
+            'name'                 => 'Test Commercial',
+            'email'                => fake()->unique()->safeEmail(),
+            'password'             => 'password',
+            'phone'                => '0600000011',
+            'commission_rate'      => 5,
+            'must_change_password' => false,
+        ]);
+        $user->assignRole($commercialRole);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        return $user;
+    }
+
+    private function tokenFor(User $user): array
+    {
+        $token = $user->createToken('test-role')->plainTextToken;
+
+        return ['Authorization' => "Bearer {$token}"];
+    }
+
+    public function test_manager_is_forbidden_from_users_list(): void
+    {
+        $manager = $this->makeManager();
+
+        $this->getJson('/api/users', $this->tokenFor($manager))
+            ->assertForbidden();
+    }
+
+    public function test_manager_can_access_sales_filters_with_commercials(): void
+    {
+        $commercialRole = Role::findOrCreate('Commercial', 'web');
+        $youssef = $this->createCommercial('Youssef Filtre');
+        $youssef->assignRole($commercialRole);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $manager = $this->makeManager();
+
+        $response = $this->getJson('/api/sales-filters', $this->tokenFor($manager));
+
+        $response->assertOk();
+        $names = collect($response->json('commercials'))->pluck('name')->toArray();
+        $this->assertContains('Youssef Filtre', $names);
+    }
+
+    public function test_commercial_can_access_sales_filters_with_commercials(): void
+    {
+        $commercialRole = Role::findOrCreate('Commercial', 'web');
+        $ali = $this->createCommercial('Ali Filtre');
+        $ali->assignRole($commercialRole);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $commercial = $this->makeCommercial();
+
+        $response = $this->getJson('/api/sales-filters', $this->tokenFor($commercial));
+
+        $response->assertOk();
+        $names = collect($response->json('commercials'))->pluck('name')->toArray();
+        $this->assertContains('Ali Filtre', $names);
+    }
+
+    public function test_manager_can_create_a_sale(): void
+    {
+        [$product, $stock] = $this->createProductWithStock(10);
+        $manager = $this->makeManager();
+
+        $payload = [
+            'date'           => '2026-03-15',
+            'commercial_id'  => $manager->id,
+            'client'         => 'Client Manager Test',
+            'items'          => [[
+                'product_id'     => $product->id,
+                'stock_id'       => $stock->id,
+                'quantity'       => 1,
+                'purchase_price' => 100,
+                'selling_price'  => 150,
+            ]],
+        ];
+
+        $this->postJson('/api/sales', $payload, $this->tokenFor($manager))
+            ->assertStatus(201)
+            ->assertJsonPath('client', 'Client Manager Test');
+    }
+
+    public function test_commercial_can_create_a_sale(): void
+    {
+        [$product, $stock] = $this->createProductWithStock(10);
+        $commercial = $this->makeCommercial();
+
+        $payload = [
+            'date'           => '2026-03-15',
+            'commercial_id'  => $commercial->id,
+            'client'         => 'Client Commercial Test',
+            'items'          => [[
+                'product_id'     => $product->id,
+                'stock_id'       => $stock->id,
+                'quantity'       => 1,
+                'purchase_price' => 80,
+                'selling_price'  => 120,
+            ]],
+        ];
+
+        $this->postJson('/api/sales', $payload, $this->tokenFor($commercial))
+            ->assertStatus(201)
+            ->assertJsonPath('client', 'Client Commercial Test');
     }
 }

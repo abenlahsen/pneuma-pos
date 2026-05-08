@@ -14,7 +14,6 @@ import { CarrierService } from '../../carriers/data-access/carrier.service';
 import { Partner } from '../../partners/models/partner.model';
 import { PartnerService } from '../../partners/data-access/partner.service';
 import { ManagedUser } from '../../../core/models/user-manage.model';
-import { UserService } from '../../../core/services/user.service';
 
 @Component({
   selector: 'app-sales-page',
@@ -36,7 +35,6 @@ export class SalesPageComponent implements OnInit {
   filterSearch = signal('');
   filterBrand = signal('');
   filterClient = signal('');
-  filterCity = signal('');
   filterStatus = signal('');
   filterPaymentStatus = signal('');
   filterCarrier = signal('');
@@ -63,7 +61,6 @@ export class SalesPageComponent implements OnInit {
     public authService: AuthService,
     private carrierService: CarrierService,
     private partnerService: PartnerService,
-    private userService: UserService,
   ) {}
 
   ngOnInit(): void {
@@ -78,9 +75,6 @@ export class SalesPageComponent implements OnInit {
     });
     this.partnerService.getPartners({ all: true }).subscribe({
       next: (res: any) => this.allPartners.set(Array.isArray(res) ? res : res.data),
-    });
-    this.userService.getUsers({ all: true }).subscribe({
-      next: (res: any) => this.allCommercials.set(Array.isArray(res) ? res : res.data),
     });
   }
 
@@ -106,7 +100,10 @@ export class SalesPageComponent implements OnInit {
 
   loadFilters(): void {
     this.saleService.getFilters().subscribe({
-      next: (filters) => this.filterOptions.set(filters),
+      next: (filters) => {
+        this.filterOptions.set(filters);
+        this.allCommercials.set(filters.commercials as unknown as ManagedUser[]);
+      },
     });
   }
 
@@ -117,7 +114,6 @@ export class SalesPageComponent implements OnInit {
       search: this.filterSearch(),
       brand: this.filterBrand(),
       client: this.filterClient(),
-      city: this.filterCity(),
       status: this.filterStatus(),
       payment_status: this.filterPaymentStatus(),
       carrier_id: this.filterCarrier(),
@@ -150,7 +146,6 @@ export class SalesPageComponent implements OnInit {
     this.filterSearch.set('');
     this.filterBrand.set('');
     this.filterClient.set('');
-    this.filterCity.set('');
     this.filterStatus.set('');
     this.filterPaymentStatus.set('');
     this.filterCarrier.set('');
@@ -184,7 +179,7 @@ export class SalesPageComponent implements OnInit {
   }
 
   getClientCity(sale: Sale): string {
-    return sale.linked_client?.city?.trim() || sale.city || '';
+    return sale.linked_client?.city?.trim() || '';
   }
 
   closeDetail(): void {
