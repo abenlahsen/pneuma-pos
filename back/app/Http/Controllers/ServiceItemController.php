@@ -7,6 +7,7 @@ use App\Models\ServiceItem;
 use App\Models\ServiceOrder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ServiceItemController extends Controller
 {
@@ -18,7 +19,7 @@ class ServiceItemController extends Controller
     public function store(Request $request, ServiceOrder $serviceOrder): JsonResponse
     {
         $validated = $request->validate([
-            'service_type' => ['required', 'string', 'max:255'],
+            'product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('type', 'service')],
             'description' => ['nullable', 'string', 'max:2000'],
             'parts_cost' => ['required', 'numeric', 'min:0'],
             'labor_cost' => ['required', 'numeric', 'min:0'],
@@ -35,7 +36,7 @@ class ServiceItemController extends Controller
         abort_unless($serviceItem->service_order_id === $serviceOrder->id, 404);
 
         $validated = $request->validate([
-            'service_type' => ['sometimes', 'required', 'string', 'max:255'],
+            'product_id' => ['sometimes', 'required', 'integer', Rule::exists('products', 'id')->where('type', 'service')],
             'description' => ['nullable', 'string', 'max:2000'],
             'parts_cost' => ['sometimes', 'required', 'numeric', 'min:0'],
             'labor_cost' => ['sometimes', 'required', 'numeric', 'min:0'],
@@ -61,7 +62,7 @@ class ServiceItemController extends Controller
     {
         $validated = $request->validate([
             'items' => ['required', 'array', 'min:1'],
-            'items.*.service_type' => ['required', 'string', 'max:255'],
+            'items.*.product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('type', 'service')],
             'items.*.description' => ['nullable', 'string', 'max:2000'],
             'items.*.parts_cost' => ['required', 'numeric', 'min:0'],
             'items.*.labor_cost' => ['required', 'numeric', 'min:0'],
@@ -74,7 +75,7 @@ class ServiceItemController extends Controller
                 $parts = (float) $itemData['parts_cost'];
                 $labor = (float) $itemData['labor_cost'];
                 $serviceOrder->items()->create([
-                    'service_type' => $itemData['service_type'],
+                    'product_id' => $itemData['product_id'],
                     'description' => $itemData['description'] ?? null,
                     'parts_cost' => $parts,
                     'labor_cost' => $labor,

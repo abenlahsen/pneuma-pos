@@ -7,6 +7,12 @@ import { AuthService } from '../../../core/services/auth.service';
 
 const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Carte'];
 
+interface AccountOption {
+  id: number;
+  name: string;
+  type: string;
+}
+
 @Component({
   selector: 'app-service-payment-panel',
   standalone: true,
@@ -25,6 +31,7 @@ export class ServicePaymentPanelComponent implements OnInit {
   paymentStatus = signal('');
   loading = signal(true);
   submitting = signal(false);
+  accounts = signal<AccountOption[]>([]);
 
   readonly paymentMethods = PAYMENT_METHODS;
   showAddForm = false;
@@ -45,6 +52,9 @@ export class ServicePaymentPanelComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadPayments();
+    this.serviceOrderService.getFilters().subscribe(f => {
+      this.accounts.set(f.accounts ?? []);
+    });
   }
 
   loadPayments(): void {

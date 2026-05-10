@@ -9,30 +9,59 @@
     <!-- Section 1 : Client & Véhicule -->
     <div class="form-section">
       <h3 class="section-title">Client & Véhicule</h3>
+
+      <div class="client-panel">
+        <div class="client-panel-header">
+          <div>
+            <h4>Client enregistré</h4>
+            <p>Liez un client existant ou saisissez le nom manuellement ci-dessous.</p>
+          </div>
+          <div class="client-panel-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              *ngIf="selectedClient()"
+              (click)="clearSelectedClient()"
+            >Dissocier</button>
+          </div>
+        </div>
+
+        <div class="client-search-box">
+          <label>Recherche client</label>
+          <input
+            type="text"
+            name="clientSearch"
+            [ngModel]="clientSearch()"
+            (ngModelChange)="onClientSearchInput($event)"
+            (focus)="showClientSuggestions.set(true)"
+            placeholder="Nom, téléphone ou ville"
+            autocomplete="off"
+          />
+
+          <div class="client-results" *ngIf="showClientSuggestions() && filteredClients().length > 0">
+            <button
+              type="button"
+              class="client-result"
+              *ngFor="let c of filteredClients()"
+              (click)="selectClient(c)"
+            >
+              <span class="result-name">{{ c.name }}</span>
+              <span class="result-meta">{{ c.phone || 'Sans téléphone' }}<ng-container *ngIf="c.city"> — {{ c.city }}</ng-container></span>
+            </button>
+            <div class="helper-text" *ngIf="loadingClients()">Chargement des clients…</div>
+          </div>
+        </div>
+
+        <div class="selected-client" *ngIf="selectedClient()">
+          <div>
+            <strong>{{ selectedClient()!.name }}</strong>
+            <p>{{ selectedClient()!.phone || 'Sans téléphone' }}</p>
+          </div>
+          <span class="badge-link">Lié</span>
+        </div>
+      </div>
+
       <div class="form-grid">
-        <div class="form-group">
-          <label>Client <span class="required">*</span></label>
-          <input
-            type="text"
-            [ngModel]="client()"
-            (ngModelChange)="client.set($event)"
-            name="client"
-            placeholder="Nom du client"
-            required
-            class="form-control"
-          />
-        </div>
-        <div class="form-group">
-          <label>Téléphone</label>
-          <input
-            type="text"
-            [ngModel]="phone()"
-            (ngModelChange)="phone.set($event)"
-            name="phone"
-            placeholder="06 00 00 00 00"
-            class="form-control"
-          />
-        </div>
         <div class="form-group">
           <label>Véhicule <span class="required">*</span></label>
           <input
@@ -60,86 +89,72 @@
       </div>
     </div>
 
-    <!-- Section 2 : Prestations -->
+    <!-- Section 2 : Prestations (sélection par cases à cocher) -->
     <div class="form-section">
-      <div class="section-header">
-        <h3 class="section-title">Prestations</h3>
-        <button type="button" class="btn-add-item" (click)="addItem()">+ Ajouter une prestation</button>
-      </div>
+      <h3 class="section-title">
+        Prestations
+        <span *ngIf="checkedCount() > 0" class="badge-count">{{ checkedCount() }}</span>
+      </h3>
 
-      <div class="items-list">
-        <div
-          class="item-row"
-          *ngFor="let item of items(); let i = index; trackBy: trackByIndex"
-        >
-          <div class="item-row-header">
-            <span class="item-number">Prestation {{ i + 1 }}</span>
-            <button
-              type="button"
-              class="btn-remove-item"
-              (click)="removeItem(i)"
-              [disabled]="items().length === 1"
-              title="Supprimer cette prestation"
-            >✕</button>
-          </div>
-
-          <div class="item-fields">
-            <div class="form-group">
-              <label>Type <span class="required">*</span></label>
-              <select
-                [ngModel]="item.service_type"
-                (ngModelChange)="updateItem(i, 'service_type', $event)"
-                [name]="'service_type_' + i"
-                required
-                class="form-control"
-              >
-                <option value="">-- Sélectionner --</option>
-                <option *ngFor="let type of serviceTypes" [value]="type">{{ type }}</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Coût pièces (DH)</label>
+      <ng-container *ngIf="serviceProducts().length > 0; else noServices">
+        <div class="services-grid">
+          <div
+            *ngFor="let product of serviceProducts()"
+            class="service-card"
+            [class.is-checked]="isChecked(product.id)"
+          >
+            <label class="service-card-label">
               <input
-                type="number"
-                [ngModel]="item.parts_cost"
-                (ngModelChange)="updateItem(i, 'parts_cost', +$event || 0)"
-                [name]="'parts_cost_' + i"
-                min="0"
-                step="0.01"
-                class="form-control"
+                type="checkbox"
+                [checked]="isChecked(product.id)"
+                (change)="toggleProduct(product.id)"
+                class="service-checkbox"
               />
-            </div>
-            <div class="form-group">
-              <label>Main d'œuvre (DH)</label>
-              <input
-                type="number"
-                [ngModel]="item.labor_cost"
-                (ngModelChange)="updateItem(i, 'labor_cost', +$event || 0)"
-                [name]="'labor_cost_' + i"
-                min="0"
-                step="0.01"
-                class="form-control"
-              />
-            </div>
-            <div class="form-group item-total">
-              <label>Total ligne</label>
-              <div class="item-total-value">{{ itemLineTotal(item) | number:'1.2-2' }} DH</div>
-            </div>
-          </div>
+              <span class="service-name">{{ product.profile || '—' }}</span>
+              <span *ngIf="product.reference" class="service-ref">{{ product.reference }}</span>
+              <span *ngIf="product.selling_price" class="service-catalog-price">
+                {{ product.selling_price | number:'1.2-2' }} DH
+              </span>
+            </label>
 
-          <div class="form-group" style="margin-top: 0.5rem;">
-            <label>Description</label>
-            <textarea
-              [ngModel]="item.description"
-              (ngModelChange)="updateItem(i, 'description', $event)"
-              [name]="'description_' + i"
-              placeholder="Détails de la prestation effectuée..."
-              rows="2"
-              class="form-control"
-            ></textarea>
+            <div *ngIf="isChecked(product.id)" class="service-card-details">
+              <div class="service-detail-row">
+                <div class="form-group form-group--price">
+                  <label>Prix (DH)</label>
+                  <input
+                    type="number"
+                    [ngModel]="getCheckedEntry(product.id).price"
+                    (ngModelChange)="setPrice(product.id, +$event || 0)"
+                    [name]="'price_' + product.id"
+                    min="0"
+                    step="0.01"
+                    class="form-control"
+                  />
+                </div>
+                <div class="form-group form-group--grow">
+                  <label>Description</label>
+                  <input
+                    type="text"
+                    [ngModel]="getCheckedEntry(product.id).description"
+                    (ngModelChange)="setDescription(product.id, $event)"
+                    [name]="'desc_' + product.id"
+                    placeholder="Détails de l'intervention..."
+                    class="form-control"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </ng-container>
+
+      <ng-template #noServices>
+        <p class="empty-msg">Aucun service trouvé dans le catalogue. Ajoutez des produits de type « service ».</p>
+      </ng-template>
+
+      <p *ngIf="serviceProducts().length > 0 && checkedCount() === 0" class="empty-services-warning">
+        Cochez au moins une prestation.
+      </p>
     </div>
 
     <!-- Section 3 : Tarification -->
@@ -147,13 +162,14 @@
       <h3 class="section-title">Tarification</h3>
       <div class="form-grid form-grid--narrow">
         <div class="form-group">
-          <label>Remise globale (DH)</label>
+          <label>Remise (%)</label>
           <input
             type="number"
             [ngModel]="discount()"
             (ngModelChange)="discount.set(+$event || 0)"
             name="discount"
             min="0"
+            max="100"
             step="0.01"
             class="form-control"
           />
@@ -167,7 +183,7 @@
         </div>
         <div class="total-row" *ngIf="discount() > 0">
           <span>Remise</span>
-          <span class="total-value discount">- {{ discount() | number:'1.2-2' }} DH</span>
+          <span class="total-value discount">{{ discount() | number:'1.0-2' }} %</span>
         </div>
         <div class="total-row total-net">
           <span>Net à payer</span>
@@ -232,7 +248,7 @@
 
     <div class="form-actions">
       <button type="button" class="btn btn-secondary" (click)="onCancel()">Annuler</button>
-      <button type="submit" class="btn btn-primary" [disabled]="orderForm.invalid">
+      <button type="submit" class="btn btn-primary" [disabled]="orderForm.invalid || checkedCount() === 0">
         {{ isEditing ? 'Enregistrer les modifications' : 'Créer l\'intervention' }}
       </button>
     </div>

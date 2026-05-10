@@ -57,7 +57,7 @@ class SaleController extends Controller
                         });
                 });
 
-                foreach (['reference', 'brand', 'city', 'status', 'payment_status'] as $column) {
+                foreach (['reference', 'brand', 'status', 'payment_status'] as $column) {
                     if (Schema::hasColumn('sales', $column)) {
                         $builder->orWhere($column, 'like', "%{$search}%");
                     }
@@ -72,8 +72,11 @@ class SaleController extends Controller
             });
         }
 
-        if ($request->filled('city') && Schema::hasColumn('sales', 'city')) {
-            $query->where('city', (string) $request->string('city'));
+        if ($request->filled('city')) {
+            $city = (string) $request->string('city');
+            $query->whereHas('linkedClient', function ($q) use ($city) {
+                $q->where('city', $city);
+            });
         }
 
         if ($request->filled('status') && Schema::hasColumn('sales', 'status')) {
@@ -180,7 +183,7 @@ class SaleController extends Controller
         return response()->json([
             'brands' => $this->distinctValues('brand'),
             'clients' => $this->distinctClientValues(),
-            'cities' => $this->distinctValues('city'),
+            'cities' => $this->distinctClientCities(),
             'statuses' => $this->distinctValues('status'),
             'payment_statuses' => $this->distinctValues('payment_status'),
             'carriers' => $carriers,
@@ -216,7 +219,7 @@ class SaleController extends Controller
                         });
                 });
 
-                foreach (['reference', 'brand', 'city', 'status', 'payment_status'] as $column) {
+                foreach (['reference', 'brand', 'status', 'payment_status'] as $column) {
                     if (Schema::hasColumn('sales', $column)) {
                         $builder->orWhere($column, 'like', "%{$search}%");
                     }
@@ -232,8 +235,11 @@ class SaleController extends Controller
             });
         }
 
-        if ($request->filled('city') && Schema::hasColumn('sales', 'city')) {
-            $query->where('city', (string) $request->string('city'));
+        if ($request->filled('city')) {
+            $city = (string) $request->string('city');
+            $query->whereHas('linkedClient', function ($q) use ($city) {
+                $q->where('city', $city);
+            });
         }
 
         if ($request->filled('status') && Schema::hasColumn('sales', 'status')) {
@@ -291,6 +297,22 @@ class SaleController extends Controller
             ->distinct()
             ->orderBy($column)
             ->pluck($column)
+            ->values()
+            ->all();
+    }
+
+    protected function distinctClientCities(): array
+    {
+        return Sale::query()
+            ->whereNotNull('client_id')
+            ->whereHas('linkedClient', fn ($q) => $q->whereNotNull('city')->where('city', '!=', ''))
+            ->with('linkedClient:id,city')
+            ->get()
+            ->pluck('linkedClient.city')
+            ->filter(fn (?string $c) => $c !== null && trim($c) !== '')
+            ->map(fn (string $c) => trim($c))
+            ->unique()
+            ->sort()
             ->values()
             ->all();
     }

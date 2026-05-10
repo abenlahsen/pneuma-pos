@@ -83,7 +83,6 @@ export class SaleFormComponent implements OnInit {
     total: 0,
     margin: 0,
 
-    city: '',
     carrier_id: null,
     tracking_number: '',
     partner_id: null,
@@ -163,7 +162,6 @@ export class SaleFormComponent implements OnInit {
       this.formData.client_id = this.sale.client_id ?? this.sale.linked_client?.id ?? null;
       this.formData.client = this.resolveClientName(this.sale);
       this.formData.client_phone = this.resolveClientPhone(this.sale);
-      this.formData.city = this.sale.linked_client?.city || this.sale.city || '';
       this.clientSearch.set(this.resolveClientName(this.sale));
 
       if (this.sale.linked_client) {
@@ -440,7 +438,6 @@ export class SaleFormComponent implements OnInit {
     this.formData.client_id = client.id;
     this.formData.client = client.name || '';
     this.formData.client_phone = client.phone || '';
-    this.formData.city = client.city || this.formData.city || '';
     this.clientSearch.set(client.name || '');
     this.showClientSuggestions.set(false);
     this.showQuickCreate.set(false);
@@ -521,6 +518,10 @@ export class SaleFormComponent implements OnInit {
   }
 
   onSubmit(): void {
+    if (!this.formData.commercial_id) {
+      alert('Veuillez sélectionner un commercial.');
+      return;
+    }
     if (!this.formData.items || this.formData.items.length === 0) {
       alert('Veuillez ajouter au moins un produit.');
       return;
@@ -538,7 +539,6 @@ export class SaleFormComponent implements OnInit {
       ...(this.formData as SalePayload),
       client: (this.formData.client || '').trim(),
       client_phone: (this.formData.client_phone || '').trim(),
-      city: (this.formData.city || '').trim(),
       client_id: this.formData.client_id ?? null,
       items: (this.formData.items || []).map((item: any) => ({
         ...item,
@@ -637,14 +637,14 @@ export class SaleFormComponent implements OnInit {
       ...this.quickClient,
       name: this.quickClient.name || this.formData.client || this.clientSearch(),
       phone: this.quickClient.phone || this.formData.client_phone || '',
-      city: this.quickClient.city || this.formData.city || '',
+      city: this.quickClient.city || '',
     };
   }
 
   private hasManualClientChanged(selected: Client): boolean {
     return (this.formData.client || '').trim() !== (selected.name || '').trim()
       || (this.formData.client_phone || '').trim() !== (selected.phone || '').trim()
-      || (this.formData.city || '').trim() !== (selected.city || '').trim();
+      ;
   }
 
   private resolveClientName(sale: Sale): string {

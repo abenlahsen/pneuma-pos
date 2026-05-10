@@ -6,7 +6,7 @@
       <span class="panel-icon">💳</span>
       <div>
         <h3>Paiements</h3>
-        <p class="panel-subtitle">{{ serviceOrder.client }} — {{ serviceOrder.vehicle }}</p>
+        <p class="panel-subtitle">{{ serviceOrder.client_record?.name || serviceOrder.vehicle }} — {{ serviceOrder.vehicle }}</p>
       </div>
     </div>
     <button class="btn-close" (click)="close()">✕</button>
@@ -69,6 +69,7 @@
             <th>DATE</th>
             <th>MONTANT</th>
             <th>MÉTHODE</th>
+            <th>COMPTE</th>
             <th>RÉFÉRENCE</th>
             <th></th>
           </tr>
@@ -78,6 +79,7 @@
             <td>{{ p.date }}</td>
             <td class="amount-cell">{{ p.amount | number:'1.2-2' }} DH</td>
             <td>{{ p.method || '—' }}</td>
+            <td>{{ p.account?.name || p.transaction?.account?.name || '—' }}</td>
             <td>{{ p.reference || '—' }}</td>
             <td>
               <button
@@ -111,6 +113,13 @@
           </select>
         </div>
         <div class="form-group">
+          <label>Compte de paiement <span class="required">*</span></label>
+          <select [(ngModel)]="formData.account_id" name="account_id" class="form-control" required>
+            <option [ngValue]="null" disabled>-- Sélectionner un compte --</option>
+            <option *ngFor="let acc of accounts()" [ngValue]="acc.id">{{ acc.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label>Référence</label>
           <input type="text" [(ngModel)]="formData.reference" placeholder="N° chèque, virement…" class="form-control" />
         </div>
@@ -121,7 +130,7 @@
       </div>
       <div class="form-actions">
         <button class="btn btn-secondary" (click)="showAddForm = false">Annuler</button>
-        <button class="btn btn-primary" (click)="submitPayment()" [disabled]="submitting() || !formData.amount || !formData.date">
+        <button class="btn btn-primary" (click)="submitPayment()" [disabled]="submitting() || !formData.amount || !formData.date || !formData.account_id">
           {{ submitting() ? 'Enregistrement…' : 'Enregistrer' }}
         </button>
       </div>

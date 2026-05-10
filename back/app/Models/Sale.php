@@ -32,7 +32,6 @@ class Sale extends Model
         'discount',
         'tax',
         'margin',
-        'city',
         'carrier_id',
         'tracking_number',
         'partner_id',

@@ -11,14 +11,34 @@ class ServiceOrderResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'client_id' => $this->client_id,
+            'client_record' => $this->whenLoaded('clientRecord', fn () => $this->clientRecord ? [
+                'id' => $this->clientRecord->id,
+                'name' => $this->clientRecord->name,
+                'phone' => $this->clientRecord->phone,
+            ] : null),
             'date' => $this->date instanceof \DateTimeInterface
                 ? $this->date->format('Y-m-d')
                 : $this->date,
-            'client' => $this->client,
-            'phone' => $this->phone,
             'vehicle' => $this->vehicle,
             'mileage' => $this->mileage,
-            'items' => $this->whenLoaded('items'),
+            'items' => $this->whenLoaded('items', fn () =>
+                $this->items->map(fn ($item) => [
+                    'id' => $item->id,
+                    'product_id' => $item->product_id,
+                    'product' => $item->product ? [
+                        'id' => $item->product->id,
+                        'profile' => $item->product->profile,
+                        'reference' => $item->product->reference,
+                        'selling_price' => $item->product->service?->selling_price,
+                    ] : null,
+                    'description' => $item->description,
+                    'parts_cost' => number_format((float) $item->parts_cost, 2, '.', ''),
+                    'labor_cost' => number_format((float) $item->labor_cost, 2, '.', ''),
+                    'line_total' => number_format((float) $item->line_total, 2, '.', ''),
+                    'sort_order' => $item->sort_order,
+                ])
+            ),
             'total_amount' => number_format((float) $this->total_amount, 2, '.', ''),
             'discount' => number_format((float) $this->discount, 2, '.', ''),
             'net_amount' => number_format((float) $this->net_amount, 2, '.', ''),

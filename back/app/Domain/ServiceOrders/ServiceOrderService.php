@@ -16,9 +16,8 @@ class ServiceOrderService
             $discount = (float) ($validated['discount'] ?? 0);
 
             $order = ServiceOrder::create([
+                'client_id' => $validated['client_id'] ?? null,
                 'date' => $validated['date'],
-                'client' => $validated['client'],
-                'phone' => $validated['phone'] ?? null,
                 'vehicle' => $validated['vehicle'],
                 'mileage' => $validated['mileage'] ?? null,
                 'discount' => $discount,
@@ -36,7 +35,7 @@ class ServiceOrderService
                     $parts = (float) ($itemData['parts_cost'] ?? 0);
                     $labor = (float) ($itemData['labor_cost'] ?? 0);
                     $order->items()->create([
-                        'service_type' => $itemData['service_type'],
+                        'product_id' => $itemData['product_id'],
                         'description' => $itemData['description'] ?? null,
                         'parts_cost' => $parts,
                         'labor_cost' => $labor,
@@ -48,7 +47,7 @@ class ServiceOrderService
 
             $order->recalculateTotals();
 
-            return $order->fresh()->load(['commercial', 'items']);
+            return $order->fresh()->load(['commercial', 'items.product.service', 'clientRecord']);
         });
     }
 
@@ -72,7 +71,7 @@ class ServiceOrderService
                         $parts = (float) ($itemData['parts_cost'] ?? 0);
                         $labor = (float) ($itemData['labor_cost'] ?? 0);
                         $order->items()->create([
-                            'service_type' => $itemData['service_type'],
+                            'product_id' => $itemData['product_id'],
                             'description' => $itemData['description'] ?? null,
                             'parts_cost' => $parts,
                             'labor_cost' => $labor,
@@ -85,7 +84,7 @@ class ServiceOrderService
 
             $order->recalculateTotals();
 
-            return $order->fresh()->load(['commercial', 'items']);
+            return $order->fresh()->load(['commercial', 'items.product.service', 'clientRecord']);
         });
     }
 

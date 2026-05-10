@@ -6,7 +6,9 @@ use App\Domain\ServiceOrders\ServiceOrderService;
 use App\Http\Requests\ServiceOrders\StoreServiceOrderRequest;
 use App\Http\Requests\ServiceOrders\UpdateServiceOrderRequest;
 use App\Http\Resources\ServiceOrders\ServiceOrderResource;
-use App\Models\ServiceItem;
+use App\Models\Account;
+use App\Models\Client;
+use App\Models\Product;
 use App\Models\ServiceOrder;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -19,7 +21,7 @@ class ServiceOrderController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = ServiceOrder::query()->with(['commercial', 'items']);
+        $query = ServiceOrder::query()->with(['commercial', 'items.product', 'clientRecord']);
 
         if ($request->filled('status')) {
             $query->where('status', (string) $request->string('status'));
@@ -29,18 +31,16 @@ class ServiceOrderController extends Controller
             $query->where('payment_status', (string) $request->string('payment_status'));
         }
 
-        if ($request->filled('service_type')) {
-            $type = (string) $request->string('service_type');
-            $query->whereHas('items', fn ($q) => $q->where('service_type', $type));
+        if ($request->filled('product_id')) {
+            $query->whereHas('items', fn ($q) => $q->where('product_id', $request->integer('product_id')));
         }
 
         if ($request->filled('commercial_id')) {
             $query->where('commercial_id', $request->integer('commercial_id'));
         }
 
-        if ($request->filled('client')) {
-            $client = trim((string) $request->string('client'));
-            $query->where('client', 'like', "%{$client}%");
+        if ($request->filled('client_id')) {
+            $query->where('client_id', $request->integer('client_id'));
         }
 
         if ($request->filled('date_from')) {
@@ -77,7 +77,7 @@ class ServiceOrderController extends Controller
     public function show(ServiceOrder $serviceOrder): JsonResponse
     {
         return response()->json(
-            (new ServiceOrderResource($serviceOrder->loadMissing(['commercial', 'items', 'payments'])))->resolve()
+            (new ServiceOrderResource($serviceOrder->loadMissing(['commercial', 'items.product.service', 'payments', 'clientRecord'])))->resolve()
         );
     }
 
@@ -109,18 +109,16 @@ class ServiceOrderController extends Controller
             $query->where('payment_status', (string) $request->string('payment_status'));
         }
 
-        if ($request->filled('service_type')) {
-            $type = (string) $request->string('service_type');
-            $query->whereHas('items', fn ($q) => $q->where('service_type', $type));
+        if ($request->filled('product_id')) {
+            $query->whereHas('items', fn ($q) => $q->where('product_id', $request->integer('product_id')));
         }
 
         if ($request->filled('commercial_id')) {
             $query->where('commercial_id', $request->integer('commercial_id'));
         }
 
-        if ($request->filled('client')) {
-            $client = trim((string) $request->string('client'));
-            $query->where('client', 'like', "%{$client}%");
+        if ($request->filled('client_id')) {
+            $query->where('client_id', $request->integer('client_id'));
         }
 
         if ($request->filled('date_from')) {
@@ -146,23 +144,32 @@ class ServiceOrderController extends Controller
 
     public function filters(): JsonResponse
     {
-        $serviceTypes = ServiceItem::query()
-            ->whereNotNull('service_type')
-            ->where('service_type', '!=', '')
-            ->distinct()
-            ->orderBy('service_type')
-            ->pluck('service_type')
-            ->values()
-            ->all();
+        $serviceProducts = Product::where('type', 'service')
+            ->where('is_active', true)
+            ->orderBy('profile')
+            ->get(['id', 'profile', 'reference'])
+            ->values();
 
         $commercials = User::role(['Commercial', 'Manager', 'Administrator'])
             ->orderBy('name')
             ->get(['id', 'name'])
             ->values();
 
+        $clients = Client::active()
+            ->orderBy('name')
+            ->get(['id', 'name', 'phone'])
+            ->values();
+
+        $accounts = Account::active()
+            ->orderBy('name')
+            ->get(['id', 'name', 'type'])
+            ->values();
+
         return response()->json([
-            'service_types' => $serviceTypes,
+            'service_products' => $serviceProducts,
             'commercials' => $commercials,
+            'clients' => $clients,
+            'accounts' => $accounts,
         ]);
     }
 }

@@ -1,7 +1,13 @@
 export interface ServiceItem {
   id?: number;
   service_order_id?: number;
-  service_type: string;
+  product_id: number;
+  product?: {
+    id: number;
+    profile: string | null;
+    reference: string | null;
+    selling_price?: number | null;
+  } | null;
   description?: string | null;
   parts_cost: number;
   labor_cost: number;
@@ -11,9 +17,9 @@ export interface ServiceItem {
 
 export interface ServiceOrder {
   id: number;
+  client_id?: number | null;
+  client_record?: { id: number; name: string; phone?: string | null } | null;
   date: string;
-  client: string;
-  phone?: string | null;
   vehicle: string;
   mileage?: number | null;
   items?: ServiceItem[];
@@ -30,7 +36,7 @@ export interface ServiceOrder {
 }
 
 export interface ServiceItemPayload {
-  service_type: string;
+  product_id: number;
   description?: string | null;
   parts_cost: number;
   labor_cost: number;
@@ -38,9 +44,8 @@ export interface ServiceItemPayload {
 }
 
 export interface ServiceOrderPayload {
+  client_id?: number | null;
   date: string;
-  client: string;
-  phone?: string | null;
   vehicle: string;
   mileage?: number | null;
   items: ServiceItemPayload[];
@@ -57,8 +62,11 @@ export interface ServicePayment {
   amount: number;
   date: string;
   method?: string | null;
+  account_id?: number | null;
+  account?: { id: number; name: string; type: string } | null;
   reference?: string | null;
   notes?: string | null;
+  transaction?: { account?: { id: number; name: string } | null } | null;
   transaction_id?: number | null;
   user_id?: number | null;
   created_at?: string | null;
@@ -80,6 +88,8 @@ export interface ServiceOrderSummary {
 }
 
 export interface ServiceOrderFilters {
-  service_types: string[];
+  service_products: { id: number; profile: string | null; reference: string | null }[];
   commercials: { id: number; name: string }[];
+  clients: { id: number; name: string; phone?: string | null }[];
+  accounts: { id: number; name: string; type: string }[];
 }

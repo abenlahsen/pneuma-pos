@@ -71,11 +71,12 @@ npm test         # Run Vitest tests
 - `catalog.php` — CRUD for `suppliers`, `carriers`, `partners`, `brands`, `products`; also registers duplicate client CRUD (registered before `clients.php`, so these routes take precedence for basic CRUD — the extended endpoints come from `clients.php`)
 - `stock.php` — CRUD (`/api/stocks`) + `POST /api/stocks/import` (Excel import) + `GET /api/stocks/export` (Excel export of available stock) + `GET /api/stock-movements` (audit trail)
 - `accounts.php` — CRUD for accounts + cash-flow transactions + `POST /api/accounts/transfer`
+- `service_orders.php` — CRUD (`/api/service-orders`) + payments (`/api/service-orders/{id}/payments`) + item sync (`/api/service-orders/{id}/items/sync`) + `GET /api/service-orders-summary` + `GET /api/service-orders-filters`
 - `admin.php` — CRUD for `users` and `roles`/`permissions` + `GET /api/dashboard-kpi` (Administrator only); `require`s `settings.php`
 - `settings.php` — `GET/PUT /api/settings/company` (company profile, logo, theme)
 - All protected routes require `Authorization: Bearer {token}` and `permission:` middleware
 
-**Domain Services** (`back/app/Domain/`): Business logic is extracted from controllers into domain service classes. Each module has its own service (e.g., `Domain/Sales/SaleService.php`, `Domain/Clients/ClientService.php`, `Domain/Stock/StockService.php`). Controllers are thin — they delegate to domain services and return API Resources.
+**Domain Services** (`back/app/Domain/`): Business logic is extracted from controllers into domain service classes. Each module has its own service (e.g., `Domain/Sales/SaleService.php`, `Domain/Clients/ClientService.php`, `Domain/Stock/StockService.php`, `Domain/ServiceOrders/ServiceOrderService.php`, `Domain/ServiceOrders/ServicePaymentService.php`). Controllers are thin — they delegate to domain services and return API Resources.
 
 **API Resources** (`back/app/Http/Resources/`): Laravel JSON Resources handle response serialization. Grouped by module (e.g., `Resources/Clients/ClientResource.php`, `Resources/Clients/ClientProfileResource.php`). All responses are wrapped in a `{ "data": ... }` envelope by default.
 
@@ -87,17 +88,21 @@ npm test         # Run Vitest tests
 - `Product` — catalog entry with a `type` field (`tyre` | `part` | `service`). Each type has a dedicated sub-table joined 1:1 by `product_id` as PK: `ProductTyre` (dimensions, EU label), `ProductPart`, `ProductService`. Use `$product->details()` to get the type-specific sub-model.
 - `Stock` — inventory lots linked to `Product` via `product_id`. Tire dimensions are on the related `ProductTyre`, not on `Stock` itself. `Stock::parseSearchQuery()` parses shorthand queries like "2055516" or "205/55R16" into width/height/diameter components.
 - `StockMovement` — append-only audit trail written whenever stock quantity changes.
-- `Transaction` — cash-flow entry linked to an `Account`. Auto-created when a `Payment` or `PurchasePayment` is saved.
+- `Transaction` — cash-flow entry linked to an `Account`. Auto-created when a `Payment`, `PurchasePayment`, or `ServicePayment` is saved.
 - `Payment` / `PurchasePayment` — payment records linked to their parent sale/purchase and to a `Transaction`.
+- `ServiceOrder` — header record (date, vehicle, mileage, totals, discount, status, payment_status, client_id, commercial_id). Line items live in `ServiceItem` (HasMany). Payments via `ServicePayment` (HasMany).
+- `ServiceItem` — line item for a service order (service_type, description, parts_cost, labor_cost, line_total, sort_order). Auto-calculates line_total on save and triggers parent recalculateTotals().
+- `ServicePayment` — payment linked to a `ServiceOrder` and optionally to a `Transaction` for cash-flow integration.
+- `ProductService` — service catalog sub-table (joined 1:1 with `Product` where type='service'); fields: category, duration_minutes, selling_price.
 - `Client` — with credit limit, opening balance, payment terms, default payment method, category.
 - `CompanySetting` — singleton row; stores company name, address, logo path, favicon, and theme/layout fields.
 - `Brand`, `Supplier`, `Carrier`, `Partner`, `User`, `Account` — standard catalog/reference entities.
 
-Each payment creation auto-creates a corresponding `Transaction` record.
+Each payment creation (Payment, PurchasePayment, ServicePayment) auto-creates a corresponding `Transaction` record.
 
 **Authentication**: Sanctum stateless tokens stored client-side. All previous tokens are revoked on new login (single active session).
 
-**ACL**: Spatie Laravel Permission with roles (Administrator, Commercial, Manager, Driver) and granular permissions per resource (view, create, edit, delete + special ones like `import stock`, `manage sale-payments`, `transfer accounts`). The `RolesAndPermissionsSeeder` manages all 63 permissions and role assignments across all modules. All API routes are protected with `permission:` middleware. Frontend uses `authService.hasPermission()` to conditionally show UI elements and `permissionGuard` on routes.
+**ACL**: Spatie Laravel Permission with roles (Administrator, Commercial, Manager, Driver) and granular permissions per resource (view, create, edit, delete + special ones like `import stock`, `manage sale-payments`, `transfer accounts`, `manage service-payments`). The `RolesAndPermissionsSeeder` manages all permissions and role assignments across all modules. All API routes are protected with `permission:` middleware. Frontend uses `authService.hasPermission()` to conditionally show UI elements and `permissionGuard` on routes.
 
 ### Frontend Structure
 
@@ -106,7 +111,7 @@ Each payment creation auto-creates a corresponding `Transaction` record.
 - `components/` — Reusable sub-components (e.g., forms)
 - `data-access/` — HTTP service for the feature (e.g., `client.service.ts`)
 - `models/` — TypeScript interfaces for the feature (e.g., `client.model.ts`)
-- Modules: `sales`, `purchases`, `cash-flow`, `clients`, `suppliers`, `users`, `carriers`, `partners`, `stock`, `roles`, `brands`, `products`, `accounts`, `settings`
+- Modules: `sales`, `purchases`, `cash-flow`, `clients`, `suppliers`, `users`, `carriers`, `partners`, `stock`, `roles`, `brands`, `products`, `accounts`, `settings`, `service-orders`
 
 **Shared** (`front/src/app/shared/`): Cross-feature reusable components — `auto-refresh-control` (per-page configurable auto-refresh toggle), `navbar` (top navigation bar).
 
@@ -137,6 +142,8 @@ The Angular dev proxy (`front/proxy.conf.json`) sends `/api` to `http://nginx:80
 ## Key Business Domain
 
 This is a **tire shop POS** (French: pneus). A `Sale` has header-level fields (commercial, carrier, partner, payment status, pricing totals) and child `SaleItem` rows (each with tire brand/reference/dimensions, quantity, unit price). Sales are optionally linked to a `Client` — the client profile page shows sales history, outstanding balance, and account statement. `Client` records have credit limit, opening balance, payment terms, default payment method, and category. `User` records can have roles (commercials earn commissions). `Partners` have `montage_price` and `alignment_price` fields. `Stock` tracks tire inventory by `Product` lot with smart dimension search (e.g., "2055516" or "205/55R16") and Excel import; dimensions are stored on the `ProductTyre` sub-table. `Brand` and `Product` are catalog entities — products have a `type` (`tyre`, `part`, `service`) with type-specific attributes in sub-tables. `CompanySetting` stores the shop's identity, logo, and UI theme. French terminology is used throughout the UI (e.g., "achats" = purchases, "fournisseurs" = suppliers, "transporteurs" = carriers, "clients" = clients).
+
+The **Service Auto** module manages automotive service orders (repairs, oil changes, etc.). A `ServiceOrder` links to a `Client` (optional), has a vehicle + mileage, and contains multiple `ServiceItem` rows (each with a service_type, parts_cost, and labor_cost that sum to a line_total). Order-level discount and net_amount are auto-calculated. Status values: `EN COURS` | `TERMINÉ` | `ANNULÉ`. Payment status: `NON PAYE` | `PARTIEL` | `PAYE`. Payments are tracked via `ServicePayment` which optionally creates a `Transaction` for cash-flow integration. The frontend feature is at `/service-orders` (French UI uses "Service Auto", "Prestations", "Ordre de service").
 
 ## Deployment
 

@@ -12,6 +12,7 @@ class ServicePayment extends Model
         'amount',
         'date',
         'method',
+        'account_id',
         'reference',
         'notes',
         'transaction_id',
@@ -26,6 +27,11 @@ class ServicePayment extends Model
     public function serviceOrder(): BelongsTo
     {
         return $this->belongsTo(ServiceOrder::class);
+    }
+
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(Account::class);
     }
 
     public function transaction(): BelongsTo

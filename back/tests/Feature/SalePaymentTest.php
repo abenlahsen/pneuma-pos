@@ -610,7 +610,6 @@ class SalePaymentTest extends TestCase
             $table->decimal('total_purchase', 12, 2)->default(0);
             $table->decimal('total_sale', 12, 2)->default(0);
             $table->decimal('margin', 12, 2)->default(0);
-            $table->string('city')->nullable();
             $table->unsignedBigInteger('carrier_id')->nullable();
             $table->string('tracking_number')->nullable();
             $table->unsignedBigInteger('partner_id')->nullable();

@@ -55,9 +55,28 @@ services:
     networks:
       - pneuma-net
 
+  playwright:
+    build:
+      context: ./e2e
+      dockerfile: Dockerfile
+    volumes:
+      - ./e2e:/e2e
+      - e2e-node-modules:/e2e/node_modules
+    environment:
+      - E2E_BASE_URL=http://nginx:80
+      - E2E_ADMIN_EMAIL=${E2E_ADMIN_EMAIL:-admin@pneuma.pos}
+      - E2E_ADMIN_PASSWORD=${E2E_ADMIN_PASSWORD:-}
+    depends_on:
+      - nginx
+    networks:
+      - pneuma-net
+    profiles:
+      - e2e
+
 volumes:
   mysql-data:
   front-node-modules:
+  e2e-node-modules:
 
 networks:
   pneuma-net:
