@@ -108,14 +108,6 @@
         </div>
 
         <div class="form-group">
-          <label>Ville</label>
-          <select class="form-control" [ngModel]="filterCity()" (ngModelChange)="filterCity.set($event); applyFilters()">
-            <option value="">Toutes</option>
-            <option *ngFor="let v of filterOptions().cities" [value]="v">{{ v }}</option>
-          </select>
-        </div>
-
-        <div class="form-group">
           <label>Du</label>
           <input type="date" class="form-control" [ngModel]="filterDateFrom()" (ngModelChange)="filterDateFrom.set($event)" (change)="applyFilters()">
         </div>

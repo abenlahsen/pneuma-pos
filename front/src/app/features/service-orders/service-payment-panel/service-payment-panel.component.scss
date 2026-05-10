@@ -273,6 +273,10 @@
     font-weight: 500;
     color: $text-dark;
   }
+
+  .required {
+    color: $expense-color;
+  }
 }
 
 .form-control {

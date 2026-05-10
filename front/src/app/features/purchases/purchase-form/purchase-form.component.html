@@ -1,4 +1,8 @@
-<form (ngSubmit)="onSubmit()" #form="ngForm" class="p-6">
+<div *ngIf="loadingForm()" class="loading-overlay">
+  <span>Chargement…</span>
+</div>
+
+<form *ngIf="!loadingForm()" (ngSubmit)="onSubmit()" #form="ngForm" class="p-6">
 
   <div class="form-section">
     <h3 class="section-title">Informations Générales</h3>
@@ -136,7 +140,8 @@
 
   <div class="form-actions mt-4 text-right">
     <button type="button" class="btn btn-secondary mr-2" (click)="cancel.emit()" [disabled]="loading()">Annuler</button>
-    <button type="submit" class="btn btn-primary" [disabled]="loading() || !formData.items || formData.items.length === 0">
+    <button type="submit" class="btn btn-primary"
+      [disabled]="loading() || !formData.date || !formData.supplier_id || !formData.commercial_id || !formData.items || formData.items.length === 0">
       {{ loading() ? 'Enregistrement...' : 'Enregistrer' }}
     </button>
   </div>

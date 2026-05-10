@@ -9,9 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ServiceOrder extends Model
 {
     protected $fillable = [
+        'client_id',
         'date',
-        'client',
-        'phone',
         'vehicle',
         'mileage',
         'total_amount',
@@ -36,15 +35,21 @@ class ServiceOrder extends Model
     public function recalculateTotals(): void
     {
         $total = $this->items()->sum('line_total');
+        $discountAmount = $total * ((float) ($this->discount ?? 0) / 100);
         $this->updateQuietly([
-            'total_amount' => $total,
-            'net_amount' => max(0, $total - (float) ($this->discount ?? 0)),
+            'total_amount' => round($total, 2),
+            'net_amount' => max(0, round($total - $discountAmount, 2)),
         ]);
     }
 
     public function items(): HasMany
     {
         return $this->hasMany(ServiceItem::class)->orderBy('sort_order');
+    }
+
+    public function clientRecord(): BelongsTo
+    {
+        return $this->belongsTo(Client::class, 'client_id');
     }
 
     public function commercial(): BelongsTo

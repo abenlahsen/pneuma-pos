@@ -155,18 +155,6 @@
         <label>Avec Facture</label>
         <input type="checkbox" name="with_invoice" [(ngModel)]="formData.with_invoice">
       </div>
-      <div class="form-control">
-        <label>Client</label>
-        <input type="text" name="client" [(ngModel)]="formData.client" placeholder="Nom du client" (ngModelChange)="onManualClientChange()">
-      </div>
-      <div class="form-control">
-        <label>Téléphone Client</label>
-        <input type="tel" name="client_phone" [(ngModel)]="formData.client_phone" placeholder="Ex: 0612345678" (ngModelChange)="onManualClientChange()">
-      </div>
-      <div class="form-control">
-        <label>Ville</label>
-        <input type="text" name="city" [(ngModel)]="formData.city" placeholder="Ville" (ngModelChange)="onManualClientChange()">
-      </div>
     </div>
   </div>
 
@@ -324,14 +312,6 @@
             <option value="LIVRE">Livré</option>
             <option value="MONTE">Monté</option>
             <option value="ANNULE">Annulé</option>
-          </select>
-        </div>
-        <div class="form-control">
-          <label>Status Paiement</label>
-          <select name="payment_status" [(ngModel)]="formData.payment_status">
-            <option value="NON PAYE">Non Payé</option>
-            <option value="PARTIEL">Partiel</option>
-            <option value="PAYE">Payé</option>
           </select>
         </div>
         <div class="form-control">

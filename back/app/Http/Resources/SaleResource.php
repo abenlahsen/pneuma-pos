@@ -25,9 +25,10 @@ class SaleResource extends JsonResource
             'client' => $clientName,
             'client_phone' => $clientPhone,
             'brand' => $this->brand,
-            'city' => $this->relationLoaded('linkedClient') && $this->linkedClient?->city
-                ? $this->linkedClient->city
-                : $this->city,
+            'city' => $this->when(
+                $this->relationLoaded('linkedClient'),
+                fn () => $this->linkedClient?->city
+            ),
             'with_invoice' => (bool) $this->with_invoice,
             'carrier_id' => $this->carrier_id,
             'tracking_number' => $this->tracking_number,

@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { Purchase, PurchasePayload } from '../../../core/models/purchase.model';
 import { Product } from '../../../core/models/product.model';
 import { ProductDetailComponent } from '../../products/product-detail/product-detail.component';
@@ -58,22 +59,39 @@ export class PurchaseFormComponent implements OnInit {
     payment_status: 'NON PAYE',
   };
 
+  loadingForm = signal(false);
+
   ngOnInit(): void {
-    this.loadSuppliers();
-    this.loadCommercials();
     this.searchProducts();
 
-    if (this.purchase) {
-      this.formData = {
-        date: this.purchase.date?.substring(0, 10) || '',
-        with_invoice: !!this.purchase.with_invoice,
-        supplier_id: this.purchase.supplier?.id || 0,
-        commercial_id: this.purchase.commercial?.id || null,
-        items: this.purchase.items ? JSON.parse(JSON.stringify(this.purchase.items)) : [],
-        status: this.purchase.status,
-        payment_status: this.purchase.payment_status,
-      };
+    if (!this.purchase) {
+      this.loadSuppliers();
+      this.loadCommercials();
+      return;
     }
+
+    this.loadingForm.set(true);
+    forkJoin({
+      suppliers: this.supplierService.getSuppliers({ all: true }),
+      filters: this.purchaseService.getFilters(),
+    }).subscribe({
+      next: ({ suppliers, filters }) => {
+        const data = Array.isArray(suppliers) ? suppliers : (suppliers as any).data;
+        this.suppliers.set(data);
+        this.commercials.set(filters.commercials);
+        this.formData = {
+          date: this.purchase!.date?.substring(0, 10) || '',
+          with_invoice: !!this.purchase!.with_invoice,
+          supplier_id: this.purchase!.supplier?.id || 0,
+          commercial_id: this.purchase!.commercial?.id || null,
+          items: this.purchase!.items ? JSON.parse(JSON.stringify(this.purchase!.items)) : [],
+          status: this.purchase!.status,
+          payment_status: this.purchase!.payment_status,
+        };
+        this.loadingForm.set(false);
+      },
+      error: () => this.loadingForm.set(false),
+    });
   }
 
   searchProducts(): void {
@@ -249,14 +267,6 @@ export class PurchaseFormComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (!this.formData.date || !this.formData.supplier_id) {
-      alert('Veuillez remplir les champs obligatoires');
-      return;
-    }
-    if (!this.formData.items || this.formData.items.length === 0) {
-      alert('Veuillez ajouter au moins un produit.');
-      return;
-    }
 
     this.loading.set(true);
 

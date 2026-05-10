@@ -55,7 +55,7 @@ export interface Sale {
   invoice_number?: string | null;
   items?: SaleItem[];
 
-  city: string;
+  city?: string | null;
   carrier_id: number | null;
   carrier?: { id: number; name: string } | null;
   tracking_number: string;

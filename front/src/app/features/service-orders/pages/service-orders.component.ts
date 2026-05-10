@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ServiceOrder, ServiceOrderFilters, ServiceOrderPayload, ServiceOrderSummary } from '../../../core/models/service-order.model';
 import { ServiceOrderService } from '../data-access/service-order.service';
 import { ServiceOrderFormComponent } from '../service-order-form/service-order-form.component';
+import { ServiceOrderDetailComponent } from '../service-order-detail/service-order-detail.component';
 import { ServicePaymentPanelComponent } from '../service-payment-panel/service-payment-panel.component';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -14,6 +15,7 @@ import { AuthService } from '../../../core/services/auth.service';
     CommonModule,
     FormsModule,
     ServiceOrderFormComponent,
+    ServiceOrderDetailComponent,
     ServicePaymentPanelComponent,
   ],
   templateUrl: './service-orders.component.html',
@@ -22,7 +24,7 @@ import { AuthService } from '../../../core/services/auth.service';
 export class ServiceOrdersComponent implements OnInit {
   serviceOrders = signal<ServiceOrder[]>([]);
   summary = signal<ServiceOrderSummary>({ total_revenue: 0, total_paid: 0, remaining: 0 });
-  filterOptions = signal<ServiceOrderFilters>({ service_types: [], commercials: [] });
+  filterOptions = signal<ServiceOrderFilters>({ service_products: [], commercials: [], clients: [], accounts: [] });
 
   currentPage = signal(1);
   lastPage = signal(1);
@@ -30,7 +32,8 @@ export class ServiceOrdersComponent implements OnInit {
   perPage = signal(20);
 
   filterClient = signal('');
-  filterServiceType = signal('');
+  filterClientId = signal<number | null>(null);
+  filterProductId = signal<number | null>(null);
   filterStatus = signal('');
   filterPaymentStatus = signal('');
   filterCommercial = signal('');
@@ -40,6 +43,7 @@ export class ServiceOrdersComponent implements OnInit {
   loading = signal(false);
   showForm = signal(false);
   editingOrder = signal<ServiceOrder | null>(null);
+  detailOrder = signal<ServiceOrder | null>(null);
   paymentOrder = signal<ServiceOrder | null>(null);
   deletingId = signal<number | null>(null);
 
@@ -89,7 +93,8 @@ export class ServiceOrdersComponent implements OnInit {
 
   resetFilters(): void {
     this.filterClient.set('');
-    this.filterServiceType.set('');
+    this.filterClientId.set(null);
+    this.filterProductId.set(null);
     this.filterStatus.set('');
     this.filterPaymentStatus.set('');
     this.filterCommercial.set('');
@@ -109,6 +114,16 @@ export class ServiceOrdersComponent implements OnInit {
     this.showForm.set(true);
   }
 
+  openDetail(order: ServiceOrder): void {
+    this.serviceOrderService.getServiceOrder(order.id).subscribe({
+      next: (full) => this.detailOrder.set(full),
+    });
+  }
+
+  closeDetail(): void {
+    this.detailOrder.set(null);
+  }
+
   openEditForm(order: ServiceOrder): void {
     this.serviceOrderService.getServiceOrder(order.id).subscribe({
       next: (full) => {
@@ -118,8 +133,10 @@ export class ServiceOrdersComponent implements OnInit {
     });
   }
 
-  orderServiceTypes(order: ServiceOrder): string[] {
-    return (order.items ?? []).map(it => it.service_type).filter(Boolean);
+  orderProductLabels(order: ServiceOrder): string[] {
+    return (order.items ?? [])
+      .map(it => it.product?.profile ?? null)
+      .filter((v): v is string => v !== null);
   }
 
   closeForm(): void {
@@ -149,7 +166,7 @@ export class ServiceOrdersComponent implements OnInit {
   }
 
   deleteOrder(order: ServiceOrder): void {
-    if (!confirm(`Supprimer l'intervention de ${order.client} ?`)) return;
+    if (!confirm(`Supprimer l'intervention de ${order.client_record?.name || order.vehicle} ?`)) return;
     this.deletingId.set(order.id);
     this.serviceOrderService.deleteServiceOrder(order.id).subscribe({
       next: () => {
@@ -176,8 +193,8 @@ export class ServiceOrdersComponent implements OnInit {
       page: String(this.currentPage()),
       per_page: String(this.perPage()),
     };
-    if (this.filterClient()) f['client'] = this.filterClient();
-    if (this.filterServiceType()) f['service_type'] = this.filterServiceType();
+    if (this.filterClientId()) f['client_id'] = String(this.filterClientId());
+    if (this.filterProductId()) f['product_id'] = String(this.filterProductId());
     if (this.filterStatus()) f['status'] = this.filterStatus();
     if (this.filterPaymentStatus()) f['payment_status'] = this.filterPaymentStatus();
     if (this.filterCommercial()) f['commercial_id'] = this.filterCommercial();
@@ -194,6 +211,22 @@ export class ServiceOrdersComponent implements OnInit {
       range.push(i);
     }
     return range;
+  }
+
+  updateOrderStatus(order: ServiceOrder, target: any): void {
+    const newStatus = target.value;
+    if (order.status === newStatus) return;
+
+    const oldStatus = order.status;
+    order.status = newStatus as ServiceOrder['status'];
+
+    this.serviceOrderService.updateServiceOrder(order.id, { status: newStatus } as any).subscribe({
+      next: () => this.loadData(),
+      error: () => {
+        order.status = oldStatus;
+        alert('Erreur lors de la mise à jour du statut');
+      },
+    });
   }
 
   statusClass(status: string): string {

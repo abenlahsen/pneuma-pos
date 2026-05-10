@@ -11,7 +11,7 @@ class ServicePaymentService
 {
     public function listForOrder(ServiceOrder $order): array
     {
-        $payments = $order->payments()->with('transaction.account')->latest('date')->get();
+        $payments = $order->payments()->with('transaction.account', 'account')->latest('date')->get();
         $totalPaid = (float) $order->payments()->sum('amount');
         $netAmount = (float) $order->net_amount;
 
@@ -27,19 +27,21 @@ class ServicePaymentService
     public function createPayment(ServiceOrder $order, array $validated, User $user): ServicePayment
     {
         $transactionId = null;
+        $accountId = $validated['account_id'] ?? null;
+        $method = $validated['method'] ?? null;
 
-        if (($validated['method'] ?? '') === 'Espèces') {
+        if ($accountId || $method === 'Espèces') {
             $transaction = Transaction::create([
                 'date' => $validated['date'],
                 'amount' => $validated['amount'],
                 'type' => 'income',
                 'category' => 'Produit',
-                'method' => 'Espèces',
+                'method' => $method ?? 'Espèces',
                 'description' => "Paiement service #{$order->id} - " . $this->describeOrderItems($order) . " POUR {$order->client}",
                 'person' => '',
                 'partner' => $order->client,
                 'user_id' => $user->id,
-                'account_id' => $validated['account_id'] ?? null,
+                'account_id' => $accountId,
             ]);
 
             $transactionId = $transaction->id;
@@ -49,7 +51,8 @@ class ServicePaymentService
             'service_order_id' => $order->id,
             'amount' => $validated['amount'],
             'date' => $validated['date'],
-            'method' => $validated['method'] ?? null,
+            'method' => $method,
+            'account_id' => $accountId,
             'reference' => $validated['reference'] ?? null,
             'notes' => $validated['notes'] ?? null,
             'transaction_id' => $transactionId,
@@ -58,7 +61,7 @@ class ServicePaymentService
 
         $this->refreshPaymentStatus($order);
 
-        return $payment->load('transaction.account');
+        return $payment->load('transaction.account', 'account');
     }
 
     public function deletePayment(ServiceOrder $order, ServicePayment $payment): void
@@ -76,8 +79,8 @@ class ServicePaymentService
 
     private function describeOrderItems(ServiceOrder $order): string
     {
-        $order->loadMissing('items');
-        $types = $order->items->pluck('service_type')->filter()->unique()->implode(', ');
+        $order->loadMissing('items.product');
+        $types = $order->items->pluck('product.profile')->filter()->unique()->implode(', ');
 
         return $types ?: 'Service';
     }

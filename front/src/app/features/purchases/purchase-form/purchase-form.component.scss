@@ -1,5 +1,14 @@
 @use '../../variables' as *;
 
+.loading-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: $primary;
+  font-size: 1rem;
+}
+
 .p-6 { padding: 1.5rem; }
 .mb-4 { margin-bottom: 1rem; }
 .mb-2 { margin-bottom: 0.5rem; }

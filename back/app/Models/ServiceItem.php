@@ -9,7 +9,7 @@ class ServiceItem extends Model
 {
     protected $fillable = [
         'service_order_id',
-        'service_type',
+        'product_id',
         'description',
         'parts_cost',
         'labor_cost',
@@ -37,5 +37,10 @@ class ServiceItem extends Model
     public function serviceOrder(): BelongsTo
     {
         return $this->belongsTo(ServiceOrder::class);
+    }
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class)->with('service');
     }
 }
