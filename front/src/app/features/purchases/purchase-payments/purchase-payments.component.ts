@@ -7,6 +7,8 @@ import { Purchase, PurchasePayment, PurchasePaymentSummary } from '../../../core
 import { Account } from '../../../core/models/account.model';
 import { AccountService } from '../../../core/services/account.service';
 
+const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Effet'];
+
 @Component({
   selector: 'app-purchase-payments',
   standalone: true,
@@ -25,10 +27,19 @@ export class PurchasePaymentsComponent implements OnInit {
   remaining = signal(0);
   paymentStatus = signal('');
   loading = signal(true);
+  submitting = signal(false);
   accounts = signal<Account[]>([]);
 
+  readonly paymentMethods = PAYMENT_METHODS;
   showAddForm = false;
-  formData: any = {
+  formData: {
+    amount: number;
+    date: string;
+    method: string;
+    reference: string;
+    notes: string;
+    account_id: number;
+  } = {
     amount: 0,
     date: new Date().toISOString().slice(0, 10),
     method: 'Espèces',
@@ -40,27 +51,17 @@ export class PurchasePaymentsComponent implements OnInit {
   constructor(
     private purchaseService: PurchaseService,
     private accountService: AccountService,
-    public authService: AuthService
+    public authService: AuthService,
   ) {}
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.loadPayments();
-    this.loadAccounts();
-  }
-
-  loadAccounts() {
     this.accountService.getAccounts().subscribe({
-      next: (data) => {
-        const activeAccounts = data.filter(a => a.is_active);
-        this.accounts.set(activeAccounts);
-        if (activeAccounts.length > 0) {
-          this.formData.account_id = activeAccounts[0].id;
-        }
-      }
+      next: (data) => this.accounts.set(data.filter((a: Account) => a.is_active)),
     });
   }
 
-  loadPayments() {
+  loadPayments(onComplete?: () => void): void {
     this.loading.set(true);
     this.purchaseService.getPurchasePayments(this.purchase.id).subscribe({
       next: (data: PurchasePaymentSummary) => {
@@ -70,18 +71,21 @@ export class PurchasePaymentsComponent implements OnInit {
         this.remaining.set(data.remaining);
         this.paymentStatus.set(data.payment_status);
         this.loading.set(false);
+        onComplete?.();
       },
       error: () => this.loading.set(false),
     });
   }
 
   get progressPercent(): number {
-    return this.totalPurchase() > 0 ? Math.min(100, (this.totalPaid() / this.totalPurchase()) * 100) : 0;
+    const total = this.totalPurchase();
+    if (!total) return 0;
+    return Math.min(100, Math.round((this.totalPaid() / total) * 100));
   }
 
-  openAddForm() {
+  openAddForm(): void {
     this.formData = {
-      amount: this.remaining() > 0 ? this.remaining() : 0,
+      amount: Math.max(0, this.remaining()),
       date: new Date().toISOString().slice(0, 10),
       method: 'Espèces',
       reference: '',
@@ -91,18 +95,21 @@ export class PurchasePaymentsComponent implements OnInit {
     this.showAddForm = true;
   }
 
-  submitPayment() {
-    if (this.formData.amount <= 0) return;
+  submitPayment(): void {
+    if (this.submitting()) return;
+    this.submitting.set(true);
     this.purchaseService.addPurchasePayment(this.purchase.id, this.formData).subscribe({
       next: () => {
         this.showAddForm = false;
-        this.loadPayments();
+        this.submitting.set(false);
         this.statusChanged.emit();
+        this.loadPayments(() => { if (this.remaining() <= 0) this.close(); });
       },
+      error: () => this.submitting.set(false),
     });
   }
 
-  deletePayment(payment: PurchasePayment) {
+  deletePayment(payment: PurchasePayment): void {
     if (!confirm('Supprimer ce paiement ?')) return;
     this.purchaseService.deletePurchasePayment(this.purchase.id, payment.id).subscribe({
       next: () => {
@@ -112,7 +119,7 @@ export class PurchasePaymentsComponent implements OnInit {
     });
   }
 
-  close() {
+  close(): void {
     this.closed.emit();
   }
 }

@@ -16,6 +16,8 @@ class StockMovement extends Model
     public const TYPE_SALE_IN = 'SALE_IN';
     public const TYPE_PURCHASE_IN = 'PURCHASE_IN';
     public const TYPE_PURCHASE_OUT = 'PURCHASE_OUT';
+    public const TYPE_SERVICE_OUT = 'SERVICE_OUT';
+    public const TYPE_SERVICE_IN = 'SERVICE_IN';
 
     protected $fillable = [
         'stock_id',

@@ -325,13 +325,16 @@ class PurchaseService
             $stock->quantity = $before + $quantity;
             $stock->save();
 
+            $supplierName = $purchase->supplier?->name ?? null;
+            $reason = "Achat #{$purchase->id}" . ($supplierName ? " — {$supplierName}" : '');
             $this->movements->recordPurchaseIn(
                 $stock->id,
                 $stock->product_id,
                 $before,
                 (int) $stock->quantity,
                 $purchase->id,
-                $userId
+                $userId,
+                $reason
             );
         }
     }
@@ -352,13 +355,16 @@ class PurchaseService
             $stock->quantity = $before - (int) $item->quantity;
             $stock->save();
 
+            $supplierName = $purchase->supplier?->name ?? null;
+            $reason = "Achat #{$purchase->id}" . ($supplierName ? " — {$supplierName}" : '');
             $this->movements->recordPurchaseOut(
                 $stock->id,
                 $stock->product_id,
                 $before,
                 (int) $stock->quantity,
                 $purchase->id,
-                $userId
+                $userId,
+                $reason
             );
         }
     }

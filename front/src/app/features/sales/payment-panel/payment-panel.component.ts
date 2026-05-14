@@ -8,6 +8,8 @@ import { Sale } from '../../../core/models/sale.model';
 import { Account } from '../../../core/models/account.model';
 import { AccountService } from '../../../core/services/account.service';
 
+const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Effet'];
+
 @Component({
   selector: 'app-payment-panel',
   standalone: true,
@@ -26,8 +28,10 @@ export class PaymentPanelComponent implements OnInit {
   remaining = signal(0);
   paymentStatus = signal('');
   loading = signal(true);
+  submitting = signal(false);
   accounts = signal<Account[]>([]);
 
+  readonly paymentMethods = PAYMENT_METHODS;
   showAddForm = false;
   formData: PaymentPayload = {
     amount: 0,
@@ -41,27 +45,17 @@ export class PaymentPanelComponent implements OnInit {
   constructor(
     private paymentService: PaymentService,
     private accountService: AccountService,
-    public authService: AuthService
+    public authService: AuthService,
   ) {}
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.loadPayments();
-    this.loadAccounts();
-  }
-
-  loadAccounts() {
     this.accountService.getAccounts().subscribe({
-      next: (data) => {
-        const activeAccounts = data.filter(a => a.is_active);
-        this.accounts.set(activeAccounts);
-        if (activeAccounts.length > 0) {
-          this.formData.account_id = activeAccounts[0].id;
-        }
-      }
+      next: (data) => this.accounts.set(data.filter((a: Account) => a.is_active)),
     });
   }
 
-  loadPayments() {
+  loadPayments(onComplete?: () => void): void {
     this.loading.set(true);
     this.paymentService.getPayments(this.sale.id).subscribe({
       next: (data: PaymentSummary) => {
@@ -71,18 +65,21 @@ export class PaymentPanelComponent implements OnInit {
         this.remaining.set(data.remaining);
         this.paymentStatus.set(data.payment_status);
         this.loading.set(false);
+        onComplete?.();
       },
       error: () => this.loading.set(false),
     });
   }
 
   get progressPercent(): number {
-    return this.totalSale() > 0 ? Math.min(100, (this.totalPaid() / this.totalSale()) * 100) : 0;
+    const total = this.totalSale();
+    if (!total) return 0;
+    return Math.min(100, Math.round((this.totalPaid() / total) * 100));
   }
 
-  openAddForm() {
+  openAddForm(): void {
     this.formData = {
-      amount: this.remaining() > 0 ? this.remaining() : 0,
+      amount: Math.max(0, this.remaining()),
       date: new Date().toISOString().slice(0, 10),
       method: 'Espèces',
       reference: '',
@@ -92,18 +89,21 @@ export class PaymentPanelComponent implements OnInit {
     this.showAddForm = true;
   }
 
-  submitPayment() {
-    if (this.formData.amount <= 0) return;
+  submitPayment(): void {
+    if (this.submitting()) return;
+    this.submitting.set(true);
     this.paymentService.addPayment(this.sale.id, this.formData).subscribe({
       next: () => {
         this.showAddForm = false;
-        this.loadPayments();
+        this.submitting.set(false);
         this.statusChanged.emit();
+        this.loadPayments(() => { if (this.remaining() <= 0) this.close(); });
       },
+      error: () => this.submitting.set(false),
     });
   }
 
-  deletePayment(payment: Payment) {
+  deletePayment(payment: Payment): void {
     if (!confirm('Supprimer ce paiement ?')) return;
     this.paymentService.deletePayment(this.sale.id, payment.id).subscribe({
       next: () => {
@@ -113,7 +113,7 @@ export class PaymentPanelComponent implements OnInit {
     });
   }
 
-  close() {
+  close(): void {
     this.closed.emit();
   }
 }

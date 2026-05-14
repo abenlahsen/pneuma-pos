@@ -89,72 +89,206 @@
       </div>
     </div>
 
-    <!-- Section 2 : Prestations (sélection par cases à cocher) -->
+    <!-- Section 2 : Prestations & Pièces -->
     <div class="form-section">
-      <h3 class="section-title">
-        Prestations
-        <span *ngIf="checkedCount() > 0" class="badge-count">{{ checkedCount() }}</span>
-      </h3>
+      <div class="section-header">
+        <h3 class="section-title">
+          Prestations & Pièces
+          <span class="badge-count">{{ lines().length }}</span>
+        </h3>
+        <div class="add-buttons">
+          <button type="button" class="btn-add btn-add-service" (click)="addServiceLine()">
+            🔧 Prestation
+          </button>
+          <button type="button" class="btn-add btn-add-part" (click)="addPartLine()">
+            🔩 Pièce
+          </button>
+        </div>
+      </div>
 
-      <ng-container *ngIf="serviceProducts().length > 0; else noServices">
-        <div class="services-grid">
-          <div
-            *ngFor="let product of serviceProducts()"
-            class="service-card"
-            [class.is-checked]="isChecked(product.id)"
-          >
-            <label class="service-card-label">
-              <input
-                type="checkbox"
-                [checked]="isChecked(product.id)"
-                (change)="toggleProduct(product.id)"
-                class="service-checkbox"
-              />
-              <span class="service-name">{{ product.profile || '—' }}</span>
-              <span *ngIf="product.reference" class="service-ref">{{ product.reference }}</span>
-              <span *ngIf="product.selling_price" class="service-catalog-price">
-                {{ product.selling_price | number:'1.2-2' }} DH
-              </span>
-            </label>
+      <div class="lines-list">
+        <div
+          class="line-row"
+          *ngFor="let line of lines(); let i = index; trackBy: trackByIndex"
+          [class.line-row--service]="line.item_type === 'service'"
+          [class.line-row--part]="line.item_type === 'part'"
+        >
+          <div class="line-row-header">
+            <span class="line-badge" [class.badge-service]="line.item_type === 'service'" [class.badge-part]="line.item_type === 'part'">
+              {{ line.item_type === 'service' ? '🔧 Prestation' : '🔩 Pièce' }}
+            </span>
+            <span class="line-number">#{{ i + 1 }}</span>
+            <button
+              type="button"
+              class="btn-remove-line"
+              (click)="removeLine(i)"
+              [disabled]="lines().length === 1"
+              title="Supprimer cette ligne"
+            >✕</button>
+          </div>
 
-            <div *ngIf="isChecked(product.id)" class="service-card-details">
-              <div class="service-detail-row">
-                <div class="form-group form-group--price">
-                  <label>Prix (DH)</label>
-                  <input
-                    type="number"
-                    [ngModel]="getCheckedEntry(product.id).price"
-                    (ngModelChange)="setPrice(product.id, +$event || 0)"
-                    [name]="'price_' + product.id"
-                    min="0"
-                    step="0.01"
-                    class="form-control"
-                  />
-                </div>
-                <div class="form-group form-group--grow">
-                  <label>Description</label>
-                  <input
-                    type="text"
-                    [ngModel]="getCheckedEntry(product.id).description"
-                    (ngModelChange)="setDescription(product.id, $event)"
-                    [name]="'desc_' + product.id"
-                    placeholder="Détails de l'intervention..."
-                    class="form-control"
-                  />
+          <!-- Ligne PRESTATION -->
+          <ng-container *ngIf="line.item_type === 'service'">
+            <div class="form-group">
+              <label>Type de prestation <span class="required">*</span></label>
+              <div class="service-type-row">
+                <select
+                  class="form-control"
+                  [name]="'svc_catalog_' + i"
+                  (change)="onServiceTypeChange(i, $any($event.target).value)"
+                >
+                  <option value="">— Sélectionner depuis le catalogue —</option>
+                  <option *ngFor="let p of serviceProducts()" [value]="p.id">
+                    {{ p.profile }}{{ p.reference ? ' (' + p.reference + ')' : '' }}
+                    {{ p.selling_price ? ' — ' + p.selling_price + ' DH' : '' }}
+                  </option>
+                </select>
+                <span class="or-separator">ou</span>
+                <input
+                  type="text"
+                  class="form-control"
+                  [name]="'svc_type_' + i"
+                  [ngModel]="asService(line).service_type"
+                  (ngModelChange)="updateLine(i, { service_type: $event })"
+                  placeholder="Saisir librement…"
+                />
+              </div>
+            </div>
+            <div class="service-costs-row">
+              <div class="form-group">
+                <label>Quantité</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  [name]="'svc_qty_' + i"
+                  [ngModel]="asService(line).quantity"
+                  (ngModelChange)="updateLine(i, { quantity: +$event || 1 })"
+                  min="1" step="1"
+                />
+              </div>
+              <div class="form-group">
+                <label>M.O. (DH)</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  [name]="'labor_' + i"
+                  [ngModel]="asService(line).labor_cost"
+                  (ngModelChange)="updateLine(i, { labor_cost: +$event || 0 })"
+                  min="0" step="0.01"
+                />
+              </div>
+              <div class="form-group">
+                <label>Total</label>
+                <div class="line-total-value">
+                  {{ serviceLineTotal(asService(line)) | number:'1.2-2' }} DH
                 </div>
               </div>
             </div>
-          </div>
+            <div class="form-group">
+              <label>Description</label>
+              <input
+                type="text"
+                class="form-control"
+                [name]="'svc_desc_' + i"
+                [ngModel]="asService(line).description"
+                (ngModelChange)="updateLine(i, { description: $event })"
+                placeholder="Détails de l'intervention…"
+              />
+            </div>
+          </ng-container>
+
+          <!-- Ligne PIÈCE -->
+          <ng-container *ngIf="line.item_type === 'part'">
+            <div class="form-group part-search-wrapper">
+              <label>Pièce <span class="required">*</span></label>
+              <div class="search-input-row">
+                <input
+                  type="text"
+                  class="form-control"
+                  [name]="'part_search_' + i"
+                  [ngModel]="asPart(line).searchQuery"
+                  (ngModelChange)="searchPartsFor(i, $event)"
+                  placeholder="Rechercher par nom, référence, OEM…"
+                  autocomplete="off"
+                />
+                <span class="search-spinner" *ngIf="asPart(line).searching">⏳</span>
+              </div>
+
+              <div class="parts-dropdown" *ngIf="asPart(line).searchResults.length > 0">
+                <div
+                  class="part-result-item"
+                  *ngFor="let part of asPart(line).searchResults"
+                  (mousedown)="selectPart(i, part)"
+                >
+                  <div class="part-result-main">
+                    <span class="part-name">{{ part.name }}</span>
+                    <span class="part-ref" *ngIf="part.reference">Réf: {{ part.reference }}</span>
+                    <span class="part-oem" *ngIf="part.oem_reference">OEM: {{ part.oem_reference }}</span>
+                  </div>
+                  <div class="part-result-stock" [class.stock-ok]="part.total_quantity > 0" [class.stock-empty]="part.total_quantity === 0">
+                    Stock: {{ part.total_quantity }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="selected-part-tag" *ngIf="asPart(line).product_id">
+                ✓ {{ asPart(line).product_name }}
+                <span class="part-tag-ref" *ngIf="asPart(line).product_reference">
+                  ({{ asPart(line).product_reference }})
+                </span>
+                <button type="button" class="btn-clear-part" (click)="clearPartSelection(i)">✕</button>
+              </div>
+            </div>
+
+            <div class="stock-info" *ngIf="asPart(line).product_id">
+              <span
+                [class.text-danger]="asPart(line).total_quantity === 0"
+                [class.text-warning]="asPart(line).total_quantity > 0 && asPart(line).quantity > asPart(line).total_quantity"
+              >
+                Stock disponible : {{ asPart(line).total_quantity }} {{ asPart(line).unit }}
+              </span>
+              <span class="text-danger" *ngIf="asPart(line).quantity > asPart(line).total_quantity && asPart(line).total_quantity > 0">
+                &nbsp;⚠ Qté demandée supérieure au stock
+              </span>
+              <span class="text-danger" *ngIf="asPart(line).total_quantity === 0">
+                &nbsp;⚠ Rupture de stock
+              </span>
+            </div>
+
+            <div class="part-fields">
+              <div class="form-group">
+                <label>Quantité</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  [name]="'part_qty_' + i"
+                  [ngModel]="asPart(line).quantity"
+                  (ngModelChange)="updateLine(i, { quantity: +$event || 1 })"
+                  min="1" step="1"
+                />
+              </div>
+              <div class="form-group">
+                <label>Prix unitaire (DH)</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  [name]="'part_price_' + i"
+                  [ngModel]="asPart(line).unit_price"
+                  (ngModelChange)="updateLine(i, { unit_price: +$event || 0 })"
+                  min="0" step="0.01"
+                />
+              </div>
+              <div class="form-group">
+                <label>Total</label>
+                <div class="line-total-value">
+                  {{ partLineTotal(asPart(line)) | number:'1.2-2' }} DH
+                </div>
+              </div>
+            </div>
+          </ng-container>
+
         </div>
-      </ng-container>
-
-      <ng-template #noServices>
-        <p class="empty-msg">Aucun service trouvé dans le catalogue. Ajoutez des produits de type « service ».</p>
-      </ng-template>
-
-      <p *ngIf="serviceProducts().length > 0 && checkedCount() === 0" class="empty-services-warning">
-        Cochez au moins une prestation.
-      </p>
+      </div>
     </div>
 
     <!-- Section 3 : Tarification -->
@@ -216,8 +350,8 @@
             class="form-control"
           >
             <option value="EN COURS">En cours</option>
-            <option value="TERMINE">Terminé</option>
-            <option value="ANNULE">Annulé</option>
+            <option value="TERMINE">Terminée</option>
+            <option value="ANNULE">Annulée</option>
           </select>
         </div>
         <div class="form-group">
@@ -247,8 +381,11 @@
     </div>
 
     <div class="form-actions">
+      <div class="stock-block-msg" *ngIf="hasStockError()">
+        ⛔ {{ stockErrorMessage() }}
+      </div>
       <button type="button" class="btn btn-secondary" (click)="onCancel()">Annuler</button>
-      <button type="submit" class="btn btn-primary" [disabled]="orderForm.invalid || checkedCount() === 0">
+      <button type="submit" class="btn btn-primary" [disabled]="orderForm.invalid || !hasValidLines() || hasStockError()">
         {{ isEditing ? 'Enregistrer les modifications' : 'Créer l\'intervention' }}
       </button>
     </div>

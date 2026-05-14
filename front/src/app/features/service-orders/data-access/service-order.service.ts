@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
+  PartSearchResult,
   ServiceItem,
   ServiceItemPayload,
   ServiceOrder,
@@ -75,6 +76,12 @@ export class ServiceOrderService {
 
   deletePayment(orderId: number, paymentId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${orderId}/payments/${paymentId}`);
+  }
+
+  searchParts(query: string): Observable<PartSearchResult[]> {
+    return this.http.get<PartSearchResult[]>(`${environment.apiUrl}/service-orders-parts-search`, {
+      params: { q: query },
+    });
   }
 
   syncItems(orderId: number, items: ServiceItemPayload[]): Observable<ServiceOrder> {

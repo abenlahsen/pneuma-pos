@@ -46,4 +46,27 @@ test.describe('Ventes', () => {
     await page.getByRole('button', { name: /Annuler|Fermer|✕|X/ }).first().click();
     await expect(page.locator('.modal-overlay')).not.toBeVisible();
   });
+
+  test('le bouton Visualiser ouvre la modale de détail', async ({ page }) => {
+    const firstBtn = page.locator('button[title="Voir"]').first();
+    test.skip(await firstBtn.count() === 0, 'Aucune ligne dans le tableau');
+
+    await firstBtn.click();
+    await expect(page.locator('.modal-overlay')).toBeVisible();
+    await expect(page.locator('h2', { hasText: 'Détail de la vente' })).toBeVisible();
+  });
+
+  test('le bouton Modifier dans le détail ouvre le formulaire de modification', async ({ page }) => {
+    const firstBtn = page.locator('button[title="Voir"]').first();
+    test.skip(await firstBtn.count() === 0, 'Aucune ligne dans le tableau');
+
+    await firstBtn.click();
+    await expect(page.locator('.modal-overlay')).toBeVisible();
+
+    const modifierBtn = page.locator('.modal-footer button', { hasText: 'Modifier' });
+    await expect(modifierBtn).toBeVisible();
+    await modifierBtn.click();
+
+    await expect(page.locator('h2', { hasText: 'Modifier la vente' })).toBeVisible();
+  });
 });

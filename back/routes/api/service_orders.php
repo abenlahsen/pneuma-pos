@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('permission:view service-orders')->group(function () {
     Route::get('/service-orders-summary', [ServiceOrderController::class, 'summary']);
     Route::get('/service-orders-filters', [ServiceOrderController::class, 'filters']);
+    Route::get('/service-orders-parts-search', [ServiceOrderController::class, 'searchParts']);
     Route::get('service-orders', [ServiceOrderController::class, 'index']);
     Route::get('service-orders/{serviceOrder}', [ServiceOrderController::class, 'show']);
     Route::get('service-orders/{serviceOrder}/payments', [ServicePaymentController::class, 'index']);
@@ -31,7 +32,5 @@ Route::delete('service-orders/{serviceOrder}/payments/{servicePayment}', [Servic
 
 Route::middleware('permission:edit service-orders')->group(function () {
     Route::post('service-orders/{serviceOrder}/items/sync', [ServiceItemController::class, 'sync']);
-    Route::post('service-orders/{serviceOrder}/items', [ServiceItemController::class, 'store']);
-    Route::put('service-orders/{serviceOrder}/items/{serviceItem}', [ServiceItemController::class, 'update']);
     Route::delete('service-orders/{serviceOrder}/items/{serviceItem}', [ServiceItemController::class, 'destroy']);
 });

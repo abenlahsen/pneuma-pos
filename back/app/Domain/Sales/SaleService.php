@@ -162,13 +162,16 @@ class SaleService
                     $before = (int) $stock->quantity;
                     $stock->quantity = $before - $quantity;
                     $stock->save();
+                    $clientName = $sale->client_id ? ($sale->linkedClient?->name ?? null) : null;
+                    $reason = "Vente #{$sale->id}" . ($clientName ? " — {$clientName}" : '');
                     $this->movements->recordSaleOut(
                         $stock->id,
                         $stock->product_id,
                         $before,
                         (int) $stock->quantity,
                         $sale->id,
-                        $userId
+                        $userId,
+                        $reason
                     );
                 }
             }
@@ -191,13 +194,16 @@ class SaleService
             $stock->quantity = $before + (int) $item->quantity;
             $stock->save();
 
+            $clientName = $sale->client_id ? ($sale->linkedClient?->name ?? null) : null;
+            $reason = "Vente #{$sale->id}" . ($clientName ? " — {$clientName}" : '');
             $this->movements->recordSaleIn(
                 $stock->id,
                 $stock->product_id,
                 $before,
                 (int) $stock->quantity,
                 $sale->id,
-                $userId
+                $userId,
+                $reason
             );
         }
     }

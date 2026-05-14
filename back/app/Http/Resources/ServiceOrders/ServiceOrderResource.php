@@ -25,13 +25,15 @@ class ServiceOrderResource extends JsonResource
             'items' => $this->whenLoaded('items', fn () =>
                 $this->items->map(fn ($item) => [
                     'id' => $item->id,
+                    'item_type' => $item->item_type ?? 'service',
+                    'service_type' => $item->service_type,
                     'product_id' => $item->product_id,
-                    'product' => $item->product ? [
-                        'id' => $item->product->id,
-                        'profile' => $item->product->profile,
-                        'reference' => $item->product->reference,
-                        'selling_price' => $item->product->service?->selling_price,
-                    ] : null,
+                    'product_name' => $item->product?->profile,
+                    'product_reference' => $item->product?->reference,
+                    'quantity' => (int) ($item->quantity ?? 1),
+                    'unit_price' => number_format((float) ($item->unit_price ?? 0), 2, '.', ''),
+                    'total_quantity' => $item->item_type === 'part' ? (int) ($item->product?->stocks_sum_quantity ?? 0) : null,
+                    'stock_id' => $item->stock_id,
                     'description' => $item->description,
                     'parts_cost' => number_format((float) $item->parts_cost, 2, '.', ''),
                     'labor_cost' => number_format((float) $item->labor_cost, 2, '.', ''),

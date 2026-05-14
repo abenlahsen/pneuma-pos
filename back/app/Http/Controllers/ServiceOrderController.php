@@ -76,8 +76,15 @@ class ServiceOrderController extends Controller
 
     public function show(ServiceOrder $serviceOrder): JsonResponse
     {
+        $serviceOrder->load([
+            'commercial',
+            'items.product' => fn ($q) => $q->with('service')->withSum('stocks', 'quantity'),
+            'payments',
+            'clientRecord',
+        ]);
+
         return response()->json(
-            (new ServiceOrderResource($serviceOrder->loadMissing(['commercial', 'items.product.service', 'payments', 'clientRecord'])))->resolve()
+            (new ServiceOrderResource($serviceOrder))->resolve()
         );
     }
 
@@ -90,9 +97,9 @@ class ServiceOrderController extends Controller
         );
     }
 
-    public function destroy(ServiceOrder $serviceOrder): Response
+    public function destroy(Request $request, ServiceOrder $serviceOrder): Response
     {
-        $this->serviceOrderService->delete($serviceOrder);
+        $this->serviceOrderService->delete($serviceOrder, $request->user()?->id);
 
         return response()->noContent();
     }
@@ -140,6 +147,39 @@ class ServiceOrderController extends Controller
             'total_paid' => $totalPaid,
             'remaining' => round($totalRevenue - $totalPaid, 2),
         ]);
+    }
+
+    public function searchParts(Request $request): JsonResponse
+    {
+        $search = (string) ($request->string('q') ?? '');
+
+        $query = Product::query()
+            ->where('type', 'part')
+            ->where('is_active', true)
+            ->with(['part', 'stocks' => fn ($q) => $q->select('id', 'product_id', 'quantity', 'purchase_price')])
+            ->withSum('stocks', 'quantity');
+
+        if (strlen($search) >= 2) {
+            $query->where(function ($q) use ($search) {
+                $q->where('profile', 'like', "%{$search}%")
+                  ->orWhere('reference', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('part', fn ($p) => $p->where('oem_reference', 'like', "%{$search}%"));
+            });
+        }
+
+        $products = $query->orderBy('profile')->limit(20)->get();
+
+        return response()->json($products->map(fn ($p) => [
+            'id' => $p->id,
+            'name' => $p->profile,
+            'reference' => $p->reference,
+            'oem_reference' => $p->part?->oem_reference,
+            'description' => $p->description,
+            'unit' => $p->unit ?? 'pièce',
+            'total_quantity' => (int) $p->stocks_sum_quantity,
+            'purchase_price' => (float) ($p->stocks->first()?->purchase_price ?? 0),
+        ]));
     }
 
     public function filters(): JsonResponse

@@ -1,121 +1,149 @@
-<div class="modal-overlay">
-  <div class="modal-container payment-modal" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>💳 Paiements — {{ purchase.supplier?.name || 'Achat' }} #{{ purchase.id }}</h2>
-      <button class="btn-close" (click)="close()">✕</button>
+<div class="panel-overlay" (click)="close()"></div>
+<div class="payment-panel">
+
+  <div class="panel-header">
+    <div class="panel-title">
+      <span class="panel-icon">💳</span>
+      <div>
+        <h3>Paiements</h3>
+        <p class="panel-subtitle">{{ purchase.supplier?.name || 'Fournisseur' }} — Achat #{{ purchase.id }}</p>
+      </div>
+    </div>
+    <button class="btn-close" (click)="close()">✕</button>
+  </div>
+
+  <div class="panel-body" *ngIf="!loading(); else loadingTpl">
+
+    <!-- Récapitulatif -->
+    <div class="summary-section">
+      <div class="summary-row">
+        <span>Total achat</span>
+        <strong>{{ totalPurchase() | number:'1.2-2' }} DH</strong>
+      </div>
+      <div class="summary-row">
+        <span>Total payé</span>
+        <strong class="text-success">{{ totalPaid() | number:'1.2-2' }} DH</strong>
+      </div>
+      <div class="summary-row">
+        <span>Reste à payer</span>
+        <strong class="text-danger">{{ remaining() | number:'1.2-2' }} DH</strong>
+      </div>
+
+      <div class="progress-bar-wrapper">
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="progressPercent"></div>
+        </div>
+        <span class="progress-label">{{ progressPercent }}%</span>
+      </div>
+
+      <div class="status-row">
+        <span
+          class="badge"
+          [class.badge-danger]="paymentStatus() === 'NON PAYE'"
+          [class.badge-warning]="paymentStatus() === 'PARTIEL'"
+          [class.badge-success]="paymentStatus() === 'PAYE'"
+        >
+          {{ paymentStatus() }}
+        </span>
+      </div>
     </div>
 
-    <div class="modal-body">
-      <!-- Summary -->
-      <div class="payment-summary">
-        <div class="summary-row">
-          <span class="label">Total achat :</span>
-          <span class="value">{{ totalPurchase() | number:'1.2-2' }} DH</span>
-        </div>
-        <div class="summary-row">
-          <span class="label">Total payé :</span>
-          <span class="value paid">{{ totalPaid() | number:'1.2-2' }} DH</span>
-        </div>
-        <div class="summary-row">
-          <span class="label">Reste :</span>
-          <span class="value remaining" [class.zero]="remaining() <= 0">{{ remaining() | number:'1.2-2' }} DH</span>
-        </div>
-        <div class="progress-bar-container">
-          <div class="progress-bar" [style.width.%]="progressPercent">
-            {{ progressPercent | number:'1.0-0' }}%
-          </div>
-        </div>
-        <div class="status-badge" [class]="'status-' + paymentStatus().toLowerCase().replace(' ', '-')">
-          {{ paymentStatus() }}
-        </div>
+    <!-- Liste des paiements -->
+    <div class="payments-list">
+      <div class="list-header">
+        <span class="list-title">Historique des paiements</span>
+        <button
+          *ngIf="authService.hasPermission('manage purchase-payments')"
+          class="btn btn-primary btn-sm"
+          (click)="openAddForm()"
+          [disabled]="remaining() <= 0"
+        >+ Ajouter</button>
       </div>
 
-      <!-- Payments list -->
-      <div class="payments-list">
-        <h3>Historique des paiements</h3>
-
-        <div class="empty-state" *ngIf="!loading() && payments().length === 0">
-          Aucun paiement enregistré.
-        </div>
-
-        <table class="table" *ngIf="payments().length > 0">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Montant</th>
-              <th>Compte</th>
-              <th>Méthode</th>
-              <th>Référence</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let p of payments()">
-              <td>{{ p.date | date:'dd/MM/yyyy' }}</td>
-              <td class="fw-semibold">{{ p.amount | number:'1.2-2' }} DH</td>
-              <td>{{ $any(p).transaction_id ? $any(p).transaction?.account?.name : '-' }}</td>
-              <td>{{ p.method || '-' }}</td>
-              <td>{{ $any(p).reference || '-' }}</td>
-              <td>
-                <button class="btn-icon btn-sm text-danger" (click)="deletePayment(p)" title="Supprimer" *ngIf="authService.hasPermission('manage purchase-payments')">🗑️</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div *ngIf="payments().length === 0" class="empty-state">
+        Aucun paiement enregistré.
       </div>
 
-      <!-- Add form -->
-      <div class="add-payment-section" *ngIf="!showAddForm && authService.hasPermission('manage purchase-payments')">
-        <button class="btn btn-primary" (click)="openAddForm()" [disabled]="remaining() <= 0">
-          + Ajouter un paiement
-        </button>
-      </div>
+      <table *ngIf="payments().length > 0" class="payments-table">
+        <thead>
+          <tr>
+            <th>DATE</th>
+            <th>MONTANT</th>
+            <th>MÉTHODE</th>
+            <th>COMPTE</th>
+            <th>RÉFÉRENCE</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of payments()">
+            <td>{{ p.date | date:'dd/MM/yyyy' }}</td>
+            <td class="amount-cell">{{ p.amount | number:'1.2-2' }} DH</td>
+            <td>{{ p.method || '—' }}</td>
+            <td>{{ $any(p).transaction_id ? $any(p).transaction?.account?.name : '—' }}</td>
+            <td>{{ $any(p).reference || '—' }}</td>
+            <td>
+              <button
+                *ngIf="authService.hasPermission('manage purchase-payments')"
+                class="btn-delete"
+                (click)="deletePayment(p)"
+                title="Supprimer"
+              >🗑️</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-      <div class="add-payment-form" *ngIf="showAddForm && authService.hasPermission('manage purchase-payments')">
-        <h3>Nouveau paiement</h3>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Montant (DH) *</label>
-            <input type="number" class="form-control" [(ngModel)]="formData.amount" step="0.01" min="0.01">
-          </div>
-          <div class="form-group">
-            <label>Date *</label>
-            <input type="date" class="form-control" [(ngModel)]="formData.date">
-            <small class="form-hint" *ngIf="(formData.method === 'Chèque' || formData.method === 'Effet')">
-              Date d'échéance — ce paiement sera intégré au solde à cette date.
-            </small>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Compte *</label>
-            <select class="form-control" [(ngModel)]="formData.account_id">
-              <option *ngFor="let acc of accounts()" [value]="acc.id">{{ acc.name }}</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Méthode</label>
-            <select class="form-control" [(ngModel)]="formData.method">
-              <option value="Espèces">Espèces</option>
-              <option value="Chèque">Chèque</option>
-              <option value="Virement">Virement</option>
-              <option value="Effet">Effet</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Référence</label>
-            <input type="text" class="form-control" [(ngModel)]="formData.reference" placeholder="N° chèque, virement...">
-          </div>
+    <!-- Formulaire d'ajout -->
+    <div *ngIf="showAddForm" class="add-payment-form">
+      <h4>Nouveau paiement</h4>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Montant (DH) *</label>
+          <input type="number" [(ngModel)]="formData.amount" min="0.01" step="0.01" class="form-control" />
         </div>
         <div class="form-group">
-          <label>Notes</label>
-          <input type="text" class="form-control" [(ngModel)]="formData.notes" placeholder="Notes...">
+          <label>Date *</label>
+          <input type="date" [(ngModel)]="formData.date" class="form-control" />
+          <small class="form-hint" *ngIf="formData.method === 'Chèque' || formData.method === 'Effet'">
+            Date d'échéance — intégrée au solde à cette date.
+          </small>
         </div>
-        <div class="form-actions">
-          <button class="btn btn-secondary" (click)="showAddForm = false">Annuler</button>
-          <button class="btn btn-primary" (click)="submitPayment()" [disabled]="formData.amount <= 0">Enregistrer</button>
+        <div class="form-group">
+          <label>Méthode</label>
+          <select [(ngModel)]="formData.method" class="form-control">
+            <option *ngFor="let m of paymentMethods" [value]="m">{{ m }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Compte de paiement <span class="required">*</span></label>
+          <select [(ngModel)]="formData.account_id" class="form-control" required>
+            <option [ngValue]="0" disabled>-- Sélectionner un compte --</option>
+            <option *ngFor="let acc of accounts()" [ngValue]="acc.id">{{ acc.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Référence</label>
+          <input type="text" [(ngModel)]="formData.reference" placeholder="N° chèque, virement…" class="form-control" />
+        </div>
+        <div class="form-group form-group--full">
+          <label>Notes</label>
+          <input type="text" [(ngModel)]="formData.notes" placeholder="Notes optionnelles" class="form-control" />
         </div>
       </div>
+      <div class="form-actions">
+        <button class="btn btn-secondary" (click)="showAddForm = false">Annuler</button>
+        <button class="btn btn-primary" (click)="submitPayment()" [disabled]="submitting() || !formData.amount || !formData.date || !formData.account_id">
+          {{ submitting() ? 'Enregistrement…' : 'Enregistrer' }}
+        </button>
+      </div>
     </div>
+
   </div>
+
+  <ng-template #loadingTpl>
+    <div class="loading-state">Chargement…</div>
+  </ng-template>
+
 </div>

@@ -148,6 +148,13 @@ export class PurchasesPageComponent implements OnInit {
     this.detailPurchase.set(null);
   }
 
+  editFromDetail(): void {
+    const purchase = this.detailPurchase();
+    if (!purchase) return;
+    this.closeDetail();
+    this.openForm(purchase);
+  }
+
   openForm(purchase: Purchase | null = null): void {
     this.selectedPurchase.set(purchase);
     this.isFormOpen.set(true);

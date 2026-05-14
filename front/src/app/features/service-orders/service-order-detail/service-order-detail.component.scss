@@ -106,13 +106,63 @@
 .badge-success { background: rgba(72, 187, 120, 0.12); color: #48bb78; }
 .badge-warning { background: rgba(237, 137, 54, 0.12); color: #ed8936; }
 .badge-danger  { background: rgba(245, 101, 101, 0.12); color: #f56565; }
-.badge-type    { background: rgba(102, 126, 234, 0.12); color: $primary; }
+.badge-type      { background: rgba(102, 126, 234, 0.12); color: $primary; }
+.badge-part-inline { background: rgba(72, 187, 120, 0.12); color: #2f855a; }
+
+.item-desc {
+  font-size: 0.8rem;
+  color: $text-muted;
+  margin-top: 0.2rem;
+}
+
+.item-costs {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  color: $text-muted;
+  margin-top: 0.2rem;
+}
+
+.item-ref {
+  font-size: 0.8rem;
+  color: $text-muted;
+  margin-top: 0.2rem;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 2px solid $border-color;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 0.85rem 0.75rem;
+    border-bottom: 1px solid $border-color;
+    vertical-align: top;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+}
 
 .description-cell {
-  color: $text-muted;
+  color: $text-dark;
   font-size: 0.9rem;
-  max-width: 300px;
-  white-space: pre-wrap;
+  max-width: 320px;
 }
 
 .modal-footer {

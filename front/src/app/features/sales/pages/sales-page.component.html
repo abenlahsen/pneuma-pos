@@ -192,12 +192,15 @@
                       [class.bg-en-cours]="sale.status === 'EN COURS'"
                       [class.bg-livre]="sale.status === 'LIVRE'"
                       [class.bg-monte]="sale.status === 'MONTE'"
+                      [class.bg-terminee]="sale.status === 'TERMINEE'"
+                      [class.bg-annule]="sale.status === 'ANNULE'"
                       [ngModel]="sale.status"
                       (change)="updateSaleStatus(sale, $event.target)">
                 <option value="EN COURS">En cours</option>
-                <option value="LIVRE">Livré</option>
+                <option value="LIVRE">Livrée</option>
                 <option value="MONTE">Monté</option>
-                <option value="ANNULE">Annulé</option>
+                <option value="TERMINEE">Terminée</option>
+                <option value="ANNULE">Annulée</option>
               </select>
             </td>
             <td>{{ sale.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
@@ -252,6 +255,6 @@
   </div>
 </div>
 
-<app-sale-detail *ngIf="detailSale()" [sale]="detailSale()!" (close)="closeDetail()"></app-sale-detail>
+<app-sale-detail *ngIf="detailSale()" [sale]="detailSale()!" [canEdit]="authService.hasPermission('edit sales')" (close)="closeDetail()" (edit)="editFromDetail()"></app-sale-detail>
 
 <app-payment-panel *ngIf="paymentSale()" [sale]="paymentSale()!" (closed)="closePayments()" (statusChanged)="loadData()"></app-payment-panel>

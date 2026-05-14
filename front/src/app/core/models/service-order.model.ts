@@ -1,16 +1,21 @@
 export interface ServiceItem {
   id?: number;
   service_order_id?: number;
-  product_id: number;
-  product?: {
-    id: number;
-    profile: string | null;
-    reference: string | null;
-    selling_price?: number | null;
-  } | null;
+  item_type: 'service' | 'part';
+  // Champs service
+  service_type?: string | null;
   description?: string | null;
-  parts_cost: number;
-  labor_cost: number;
+  parts_cost?: number;
+  labor_cost?: number;
+  // Champs part
+  product_id?: number | null;
+  product_name?: string | null;
+  product_reference?: string | null;
+  quantity?: number;
+  unit_price?: number;
+  total_quantity?: number | null;
+  stock_id?: number | null;
+  // Commun
   line_total?: number;
   sort_order?: number;
 }
@@ -36,10 +41,14 @@ export interface ServiceOrder {
 }
 
 export interface ServiceItemPayload {
-  product_id: number;
+  item_type: 'service' | 'part';
+  service_type?: string | null;
   description?: string | null;
-  parts_cost: number;
-  labor_cost: number;
+  parts_cost?: number;
+  labor_cost?: number;
+  product_id?: number | null;
+  quantity?: number;
+  unit_price?: number;
   sort_order?: number;
 }
 
@@ -54,6 +63,17 @@ export interface ServiceOrderPayload {
   payment_status?: string;
   notes?: string | null;
   commercial_id?: number | null;
+}
+
+export interface PartSearchResult {
+  id: number;
+  name: string;
+  reference?: string | null;
+  oem_reference?: string | null;
+  description?: string | null;
+  unit: string;
+  total_quantity: number;
+  purchase_price: number;
 }
 
 export interface ServicePayment {

@@ -57,7 +57,7 @@ export class ServicePaymentPanelComponent implements OnInit {
     });
   }
 
-  loadPayments(): void {
+  loadPayments(onComplete?: () => void): void {
     this.loading.set(true);
     this.serviceOrderService.getPayments(this.serviceOrder.id).subscribe({
       next: (data) => {
@@ -67,6 +67,7 @@ export class ServicePaymentPanelComponent implements OnInit {
         this.remaining.set(data.remaining);
         this.paymentStatus.set(data.payment_status);
         this.loading.set(false);
+        onComplete?.();
       },
       error: () => this.loading.set(false),
     });
@@ -91,7 +92,7 @@ export class ServicePaymentPanelComponent implements OnInit {
       next: () => {
         this.showAddForm = false;
         this.submitting.set(false);
-        this.loadPayments();
+        this.loadPayments(() => { if (this.remaining() <= 0) this.close(); });
       },
       error: () => this.submitting.set(false),
     });

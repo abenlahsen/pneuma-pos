@@ -13,7 +13,9 @@ import { ProductDetailComponent } from '../../products/product-detail/product-de
 })
 export class PurchaseDetailComponent {
   @Input({ required: true }) purchase!: Purchase;
+  @Input() canEdit = false;
   @Output() close = new EventEmitter<void>();
+  @Output() edit = new EventEmitter<void>();
 
   viewingProduct = signal<Product | null>(null);
 
