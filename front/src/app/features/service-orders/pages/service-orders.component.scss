@@ -281,6 +281,17 @@
   letter-spacing: 0;
 }
 
+.badge-part-type {
+  background: rgba(#d97706, 0.1);
+  color: #d97706;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: $radius-sm;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 .badge-more {
   background: $bg-body;
   color: $text-muted;
@@ -383,7 +394,7 @@
 
 .modal-container {
   width: 100%;
-  max-width: 680px;
+  max-width: 960px;
   max-height: 90vh;
   overflow: hidden;
   border-radius: $radius;

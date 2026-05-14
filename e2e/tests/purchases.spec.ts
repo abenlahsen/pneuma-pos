@@ -37,6 +37,30 @@ test.describe('Achats', () => {
     await expect(page.locator('label:has-text("Fournisseur"), label:has-text("Date")').first()).toBeVisible();
   });
 
+  test('le bouton Visualiser ouvre la modale de détail', async ({ page }) => {
+    const firstBtn = page.locator('button[title="Visualiser"]').first();
+    const count = await firstBtn.count();
+    test.skip(count === 0, 'Aucune ligne dans le tableau');
+
+    await firstBtn.click();
+    await expect(page.locator('.modal-overlay')).toBeVisible();
+    await expect(page.locator('h2', { hasText: 'Détail de l\'achat' })).toBeVisible();
+  });
+
+  test('le bouton Modifier dans le détail ouvre le formulaire de modification', async ({ page }) => {
+    const firstBtn = page.locator('button[title="Visualiser"]').first();
+    test.skip(await firstBtn.count() === 0, 'Aucune ligne dans le tableau');
+
+    await firstBtn.click();
+    await expect(page.locator('.modal-overlay')).toBeVisible();
+
+    const modifierBtn = page.locator('.modal-footer button', { hasText: 'Modifier' });
+    await expect(modifierBtn).toBeVisible();
+    await modifierBtn.click();
+
+    await expect(page.locator('h2', { hasText: 'Modifier Achat' })).toBeVisible();
+  });
+
   test('filtrer par statut "En cours"', async ({ page }) => {
     const statusSelect = page.locator('label:has-text("Statut")').locator('..').locator('select');
     await statusSelect.selectOption({ label: 'En cours' });

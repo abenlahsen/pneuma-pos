@@ -1,290 +1,349 @@
-.modal-overlay {
+@use '../../_variables' as *;
+
+.panel-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 100;
 }
 
-.payment-modal {
-  background: #fff;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 650px;
-  max-height: 85vh;
-  overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+.payment-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 480px;
+  max-width: 100vw;
+  background: $bg-card;
+  z-index: 101;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
 }
 
-.modal-header {
+.panel-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #eee;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid $border-color;
+  flex-shrink: 0;
+}
 
-  h2 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #333;
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  .panel-icon {
+    font-size: 1.5rem;
+  }
+
+  h3 {
     margin: 0;
+    font-size: 1.1rem;
+    color: $text-dark;
+  }
+
+  .panel-subtitle {
+    margin: 0.1rem 0 0;
+    font-size: 0.8rem;
+    color: $text-muted;
   }
 }
 
 .btn-close {
   background: none;
-  border: none;
-  font-size: 1.2rem;
+  border: 1px solid $border-color;
+  border-radius: $radius-sm;
+  width: 2rem;
+  height: 2rem;
   cursor: pointer;
-  color: #666;
-  &:hover { color: #333; }
+  color: $text-muted;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: $bg-body;
+  }
 }
 
-.modal-body {
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
   padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-/* Summary */
-.payment-summary {
-  background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%);
-  padding: 1.25rem;
-  border-radius: 10px;
-  margin-bottom: 1.5rem;
+.summary-section {
+  background: $bg-body;
+  border-radius: $radius-sm;
+  padding: 1rem;
+  border: 1px solid $border-color;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .summary-row {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+  color: $text-muted;
 
-  .label {
-    color: #666;
-    font-size: 0.9rem;
+  strong {
+    color: $text-dark;
+    font-variant-numeric: tabular-nums;
   }
-  .value {
-    font-weight: 600;
-    color: #333;
-    &.paid { color: #2e7d32; }
-    &.remaining { color: #e65100; }
-    &.remaining.zero { color: #2e7d32; }
-  }
+
+  .text-success { color: $income-color; }
+  .text-danger  { color: $expense-color; }
 }
 
-.progress-bar-container {
-  background: #ddd;
-  border-radius: 8px;
-  height: 24px;
-  margin: 0.75rem 0 0.5rem;
-  overflow: hidden;
+.progress-bar-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 .progress-bar {
-  background: linear-gradient(90deg, #4caf50 0%, #66bb6a 100%);
+  flex: 1;
+  height: 8px;
+  background: $border-color;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
   height: 100%;
-  border-radius: 8px;
-  color: #fff;
+  background: $income-color;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.progress-label {
+  font-size: 0.75rem;
+  color: $text-muted;
+  min-width: 2.5rem;
+  text-align: right;
+}
+
+.status-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 30px;
-  transition: width 0.4s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+
+  &-success {
+    background: rgba(72, 187, 120, 0.12);
+    color: #276749;
+  }
+
+  &-warning {
+    background: rgba(237, 137, 54, 0.12);
+    color: #c05621;
+  }
+
+  &-danger {
+    background: rgba(245, 101, 101, 0.12);
+    color: #e53e3e;
+  }
 }
 
-.status-badge {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
+.payments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.list-title {
   font-size: 0.8rem;
   font-weight: 600;
-  margin-top: 0.5rem;
-
-  &.status-non-payé,
-  &.status-non\ payé {
-    background: #ffebee;
-    color: #c62828;
-  }
-  &.status-partiel {
-    background: #fff3e0;
-    color: #e65100;
-  }
-  &.status-payé {
-    background: #e8f5e9;
-    color: #2e7d32;
-  }
-}
-
-/* Payments list */
-.payments-list {
-  margin-bottom: 1.5rem;
-
-  h3 {
-    font-size: 0.95rem;
-    font-weight: 600;
-    margin-bottom: 0.75rem;
-    color: #444;
-  }
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: $text-muted;
 }
 
 .empty-state {
   text-align: center;
+  color: $text-muted;
+  font-size: 0.9rem;
   padding: 1.5rem;
-  color: #999;
-  font-style: italic;
+  background: $bg-body;
+  border-radius: $radius-sm;
+  border: 1px dashed $border-color;
 }
 
-.table {
+.payments-table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 0.85rem;
 
-  th, td {
-    padding: 0.6rem 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-    font-size: 0.85rem;
-  }
   th {
-    color: #666;
-    font-weight: 600;
-    text-transform: uppercase;
+    text-align: left;
+    color: $text-muted;
     font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.5rem;
+    border-bottom: 1px solid $border-color;
+  }
+
+  td {
+    padding: 0.6rem 0.5rem;
+    color: $text-dark;
+    border-bottom: 1px solid $border-color;
+
+    &:last-child {
+      width: 2rem;
+      text-align: center;
+    }
+  }
+
+  .amount-cell {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
   }
 }
 
-.btn-icon {
+.btn-delete {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1rem;
-  padding: 0.2rem 0.4rem;
-  border-radius: 4px;
-  &:hover { background: #fee; }
-}
+  padding: 0.25rem;
+  font-size: 0.9rem;
+  opacity: 0.6;
+  transition: opacity 0.2s;
 
-/* Add form */
-.add-payment-section {
-  text-align: center;
-  padding: 0.5rem 0;
-}
-
-.add-payment-form {
-  background: #fafafa;
-  padding: 1.25rem;
-  border-radius: 10px;
-  border: 1px solid #eee;
-
-  h3 {
-    font-size: 0.95rem;
-    font-weight: 600;
-    margin-bottom: 0.75rem;
-    color: #444;
+  &:hover {
+    opacity: 1;
   }
 }
 
-.form-row {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
+.add-payment-form {
+  background: $bg-body;
+  border-radius: $radius-sm;
+  padding: 1rem;
+  border: 1px solid $border-color;
+
+  h4 {
+    margin: 0 0 1rem;
+    font-size: 0.95rem;
+    color: $text-dark;
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
 }
 
 .form-group {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: 0.5rem;
+  gap: 0.3rem;
+
+  &--full {
+    grid-column: 1 / -1;
+  }
 
   label {
     font-size: 0.8rem;
-    font-weight: 600;
-    color: #555;
+    font-weight: 500;
+    color: $text-dark;
+  }
+
+  .required {
+    color: $expense-color;
   }
 }
 
 .form-control {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.9rem;
+  border: 1px solid $border-color;
+  border-radius: $radius-sm;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.875rem;
+  color: $text-dark;
+  background: white;
+  width: 100%;
+  box-sizing: border-box;
+
   &:focus {
     outline: none;
-    border-color: #ff2d37;
-    box-shadow: 0 0 0 2px rgba(255, 45, 55, 0.15);
+    border-color: $primary;
   }
+}
+
+.form-hint {
+  font-size: 0.75rem;
+  color: $text-muted;
+  font-style: italic;
 }
 
 .form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.75rem;
+  gap: 0.5rem;
   margin-top: 0.75rem;
 }
 
 .btn {
-  padding: 0.5rem 1rem;
+  padding: 0.45rem 1rem;
+  border-radius: $radius-sm;
   border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: opacity 0.2s;
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  font-size: 0.875rem;
+  transition: all 0.15s;
+
+  &-sm {
+    padding: 0.3rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  &-primary {
+    background: $primary;
+    color: white;
+
+    &:hover:not(:disabled) { filter: brightness(0.95); }
+    &:disabled { opacity: 0.6; cursor: not-allowed; }
+  }
+
+  &-secondary {
+    background: white;
+    color: $text-dark;
+    border: 1px solid $border-color;
+
+    &:hover { background: $bg-body; }
+  }
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, #cc0a13, #ff2d37);
-  color: #fff;
-  &:hover:not(:disabled) { opacity: 0.9; }
-}
-
-.btn-secondary {
-  background: #eee;
-  color: #555;
-  &:hover { background: #ddd; }
-}
-
-.fw-semibold { font-weight: 600; }
-
-/* ---- Responsive ---- */
-@media (max-width: 768px) {
-  .payment-modal {
-    width: 95%;
-    max-height: 95vh;
-  }
-
-  .modal-header {
-    padding: 0.75rem 1rem;
-    h2 { font-size: 1rem; }
-  }
-
-  .modal-body {
-    padding: 0.75rem;
-  }
-
-  .payment-summary {
-    padding: 0.75rem;
-  }
-
-  .summary-row {
-    .label { font-size: 0.8rem; }
-    .value { font-size: 0.85rem; }
-  }
-
-  .form-row {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .form-actions {
-    flex-direction: column-reverse;
-    .btn { width: 100%; text-align: center; }
-  }
-
-  .table {
-    th, td { padding: 0.4rem 0.5rem; font-size: 0.75rem; }
-    th { font-size: 0.7rem; }
-  }
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: $text-muted;
+  font-size: 0.9rem;
 }

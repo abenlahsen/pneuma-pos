@@ -127,6 +127,7 @@
 
           <tr *ngFor="let purchase of purchases()">
             <td class="text-center actions-cell">
+              <button class="btn-icon btn-sm" (click)="openDetail(purchase)" title="Visualiser">👁️</button>
               <button class="btn-icon btn-sm" (click)="openPayments(purchase)" title="Paiements">💳</button>
               <button class="btn-icon btn-sm text-primary" (click)="openForm(purchase)" title="Modifier" *ngIf="authService.hasPermission('edit purchases')">✏️</button>
               <button class="btn-icon btn-sm text-danger" (click)="deletePurchase(purchase)" title="Supprimer" *ngIf="authService.hasPermission('delete purchases')">🗑️</button>
@@ -207,7 +208,7 @@
   </div>
 </div>
 
-<app-purchase-detail *ngIf="detailPurchase()" [purchase]="detailPurchase()!" (close)="closeDetail()"></app-purchase-detail>
+<app-purchase-detail *ngIf="detailPurchase()" [purchase]="detailPurchase()!" [canEdit]="authService.hasPermission('edit purchases')" (close)="closeDetail()" (edit)="editFromDetail()"></app-purchase-detail>
 
 <app-purchase-payments
   *ngIf="paymentPurchase()"

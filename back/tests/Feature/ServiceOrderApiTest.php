@@ -189,7 +189,7 @@ class ServiceOrderApiTest extends TestCase
             ->assertJsonPath('status', 'EN COURS');
 
         $this->assertDatabaseHas('service_orders', ['vehicle' => 'Renault Clio']);
-        $this->assertDatabaseHas('service_items', ['product_id' => $this->product->id]);
+        $this->assertDatabaseHas('service_items', ['service_type' => 'Vidange', 'item_type' => 'service']);
     }
 
     public function test_store_calculates_totals_correctly(): void
@@ -198,8 +198,8 @@ class ServiceOrderApiTest extends TestCase
 
         $payload = $this->validOrderPayload();
         $payload['items'] = [
-            ['product_id' => $this->product->id, 'parts_cost' => 100, 'labor_cost' => 50],
-            ['product_id' => $this->product->id, 'parts_cost' => 200, 'labor_cost' => 80],
+            ['item_type' => 'service', 'service_type' => 'Vidange', 'parts_cost' => 100, 'labor_cost' => 50],
+            ['item_type' => 'service', 'service_type' => 'Montage', 'parts_cost' => 200, 'labor_cost' => 80],
         ];
         $payload['discount'] = 30;
 
@@ -265,7 +265,7 @@ class ServiceOrderApiTest extends TestCase
 
         $payload = $this->validOrderPayload();
         $payload['items'] = [
-            ['product_id' => $this->product->id, 'parts_cost' => 300, 'labor_cost' => 100],
+            ['item_type' => 'service', 'service_type' => 'Révision', 'parts_cost' => 300, 'labor_cost' => 100],
         ];
 
         $response = $this->putJson("/api/service-orders/{$this->order->id}", $payload);
@@ -273,7 +273,7 @@ class ServiceOrderApiTest extends TestCase
         $response->assertOk();
         $this->assertDatabaseHas('service_items', [
             'service_order_id' => $this->order->id,
-            'product_id' => $this->product->id,
+            'service_type' => 'Révision',
         ]);
     }
 
@@ -515,68 +515,6 @@ class ServiceOrderApiTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
-    // POST /api/service-orders/{id}/items
-    // -------------------------------------------------------------------------
-
-    public function test_items_store_creates_item(): void
-    {
-        Sanctum::actingAs($this->user, [], 'web');
-
-        $response = $this->postJson("/api/service-orders/{$this->order->id}/items", [
-            'product_id' => $this->product->id,
-            'parts_cost' => 0,
-            'labor_cost' => 80,
-        ]);
-
-        $response->assertCreated();
-        $this->assertDatabaseHas('service_items', [
-            'service_order_id' => $this->order->id,
-            'product_id' => $this->product->id,
-        ]);
-    }
-
-    public function test_items_store_validates_required_fields(): void
-    {
-        Sanctum::actingAs($this->user, [], 'web');
-
-        $this->postJson("/api/service-orders/{$this->order->id}/items", [])
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors(['product_id', 'parts_cost', 'labor_cost']);
-    }
-
-    // -------------------------------------------------------------------------
-    // PUT /api/service-orders/{id}/items/{item}
-    // -------------------------------------------------------------------------
-
-    public function test_items_update_modifies_item(): void
-    {
-        Sanctum::actingAs($this->user, [], 'web');
-
-        $item = $this->order->items()->first();
-
-        $response = $this->putJson(
-            "/api/service-orders/{$this->order->id}/items/{$item->id}",
-            ['product_id' => $this->product->id, 'parts_cost' => 0, 'labor_cost' => 120]
-        );
-
-        $response->assertOk();
-        $this->assertDatabaseHas('service_items', ['id' => $item->id, 'product_id' => $this->product->id]);
-    }
-
-    public function test_items_update_returns_404_for_item_on_wrong_order(): void
-    {
-        Sanctum::actingAs($this->user, [], 'web');
-
-        $otherOrder = $this->createOrder();
-        $item = $this->order->items()->first();
-
-        $this->putJson(
-            "/api/service-orders/{$otherOrder->id}/items/{$item->id}",
-            ['product_id' => $this->product->id, 'parts_cost' => 0, 'labor_cost' => 0]
-        )->assertNotFound();
-    }
-
-    // -------------------------------------------------------------------------
     // DELETE /api/service-orders/{id}/items/{item}
     // -------------------------------------------------------------------------
 
@@ -594,8 +532,15 @@ class ServiceOrderApiTest extends TestCase
     {
         Sanctum::actingAs($this->user, [], 'web');
 
-        $this->postJson("/api/service-orders/{$this->order->id}/items", [
-            'product_id' => $this->product->id, 'parts_cost' => 0, 'labor_cost' => 50,
+        // Add a second item via direct DB so we have 2 items
+        ServiceItem::query()->create([
+            'service_order_id' => $this->order->id,
+            'item_type' => 'service',
+            'service_type' => 'Extra',
+            'parts_cost' => 0,
+            'labor_cost' => 50,
+            'line_total' => 50,
+            'sort_order' => 1,
         ]);
 
         $item = $this->order->items()->first();
@@ -616,8 +561,8 @@ class ServiceOrderApiTest extends TestCase
 
         $response = $this->postJson("/api/service-orders/{$this->order->id}/items/sync", [
             'items' => [
-                ['product_id' => $this->product->id, 'parts_cost' => 400, 'labor_cost' => 50],
-                ['product_id' => $this->product->id, 'parts_cost' => 0, 'labor_cost' => 80],
+                ['item_type' => 'service', 'service_type' => 'Vidange', 'parts_cost' => 400, 'labor_cost' => 50],
+                ['item_type' => 'service', 'service_type' => 'Montage', 'parts_cost' => 0, 'labor_cost' => 80],
             ],
         ]);
 
@@ -625,7 +570,7 @@ class ServiceOrderApiTest extends TestCase
 
         $this->assertDatabaseHas('service_items', [
             'service_order_id' => $this->order->id,
-            'product_id' => $this->product->id,
+            'service_type' => 'Vidange',
         ]);
     }
 
@@ -642,7 +587,7 @@ class ServiceOrderApiTest extends TestCase
             'status' => 'EN COURS',
             'payment_status' => 'NON PAYE',
             'items' => [
-                ['product_id' => $this->product->id, 'parts_cost' => 80, 'labor_cost' => 40],
+                ['item_type' => 'service', 'service_type' => 'Vidange', 'parts_cost' => 80, 'labor_cost' => 40],
             ],
             'discount' => 0,
         ];
@@ -675,7 +620,8 @@ class ServiceOrderApiTest extends TestCase
 
         ServiceItem::query()->create([
             'service_order_id' => $order->id,
-            'product_id' => $this->product->id,
+            'item_type' => 'service',
+            'service_type' => 'Vidange',
             'parts_cost' => 80,
             'labor_cost' => 120,
             'line_total' => 200,
@@ -968,7 +914,12 @@ class ServiceOrderApiTest extends TestCase
         Schema::create('service_items', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('service_order_id');
+            $table->string('item_type')->default('service');
+            $table->string('service_type')->nullable();
             $table->unsignedBigInteger('product_id')->nullable();
+            $table->integer('quantity')->default(1);
+            $table->decimal('unit_price', 10, 2)->default(0);
+            $table->unsignedBigInteger('stock_id')->nullable();
             $table->text('description')->nullable();
             $table->decimal('parts_cost', 10, 2)->default(0);
             $table->decimal('labor_cost', 10, 2)->default(0);

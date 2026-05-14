@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Purchase;
-use App\Models\Sale;
 use App\Models\Stock;
 use App\Models\StockMovement;
 
@@ -118,7 +116,7 @@ class StockMovementService
      * @param  int|null  $userId
      * @return void
      */
-    public function recordSaleOut($stockId, $productId, $before, $after, $saleId, $userId)
+    public function recordSaleOut($stockId, $productId, $before, $after, $saleId, $userId, ?string $reason = null)
     {
         $this->insert([
             'stock_id' => $stockId,
@@ -127,8 +125,9 @@ class StockMovementService
             'quantity_before' => $before,
             'quantity_after' => $after,
             'delta' => $after - $before,
-            'reference_type' => Sale::class,
+            'reference_type' => 'Vente',
             'reference_id' => $saleId,
+            'reason' => $reason,
             'user_id' => $userId,
         ]);
     }
@@ -142,7 +141,7 @@ class StockMovementService
      * @param  int|null  $userId
      * @return void
      */
-    public function recordSaleIn($stockId, $productId, $before, $after, $saleId, $userId)
+    public function recordSaleIn($stockId, $productId, $before, $after, $saleId, $userId, ?string $reason = null)
     {
         $this->insert([
             'stock_id' => $stockId,
@@ -151,8 +150,9 @@ class StockMovementService
             'quantity_before' => $before,
             'quantity_after' => $after,
             'delta' => $after - $before,
-            'reference_type' => Sale::class,
+            'reference_type' => 'Vente',
             'reference_id' => $saleId,
+            'reason' => $reason,
             'user_id' => $userId,
         ]);
     }
@@ -166,7 +166,7 @@ class StockMovementService
      * @param  int|null  $userId
      * @return void
      */
-    public function recordPurchaseIn($stockId, $productId, $before, $after, $purchaseId, $userId)
+    public function recordPurchaseIn($stockId, $productId, $before, $after, $purchaseId, $userId, ?string $reason = null)
     {
         $this->insert([
             'stock_id' => $stockId,
@@ -175,8 +175,9 @@ class StockMovementService
             'quantity_before' => $before,
             'quantity_after' => $after,
             'delta' => $after - $before,
-            'reference_type' => Purchase::class,
+            'reference_type' => 'Achat',
             'reference_id' => $purchaseId,
+            'reason' => $reason,
             'user_id' => $userId,
         ]);
     }
@@ -190,7 +191,7 @@ class StockMovementService
      * @param  int|null  $userId
      * @return void
      */
-    public function recordPurchaseOut($stockId, $productId, $before, $after, $purchaseId, $userId)
+    public function recordPurchaseOut($stockId, $productId, $before, $after, $purchaseId, $userId, ?string $reason = null)
     {
         $this->insert([
             'stock_id' => $stockId,
@@ -199,8 +200,41 @@ class StockMovementService
             'quantity_before' => $before,
             'quantity_after' => $after,
             'delta' => $after - $before,
-            'reference_type' => Purchase::class,
+            'reference_type' => 'Achat',
             'reference_id' => $purchaseId,
+            'reason' => $reason,
+            'user_id' => $userId,
+        ]);
+    }
+
+    public function recordServiceOut($stockId, $productId, $before, $after, $serviceOrderId, $userId, ?string $reason = null)
+    {
+        $this->insert([
+            'stock_id' => $stockId,
+            'product_id' => $productId,
+            'type' => StockMovement::TYPE_SERVICE_OUT,
+            'quantity_before' => $before,
+            'quantity_after' => $after,
+            'delta' => $after - $before,
+            'reference_type' => 'Service Auto',
+            'reference_id' => $serviceOrderId,
+            'reason' => $reason,
+            'user_id' => $userId,
+        ]);
+    }
+
+    public function recordServiceIn($stockId, $productId, $before, $after, $serviceOrderId, $userId, ?string $reason = null)
+    {
+        $this->insert([
+            'stock_id' => $stockId,
+            'product_id' => $productId,
+            'type' => StockMovement::TYPE_SERVICE_IN,
+            'quantity_before' => $before,
+            'quantity_after' => $after,
+            'delta' => $after - $before,
+            'reference_type' => 'Service Auto',
+            'reference_id' => $serviceOrderId,
+            'reason' => $reason,
             'user_id' => $userId,
         ]);
     }

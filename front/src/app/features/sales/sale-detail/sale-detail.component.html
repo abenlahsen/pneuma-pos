@@ -151,7 +151,7 @@
           </div>
           <div class="detail-item">
             <span class="label">Statut</span>
-            <span class="value badge" [class.badge-success]="sale.status === 'LIVRE' || sale.status === 'MONTE'" [class.badge-warning]="sale.status === 'EN COURS'" [class.badge-danger]="sale.status === 'ANNULE'">{{ sale.status }}</span>
+            <span class="value badge" [class.badge-success]="sale.status === 'LIVRE' || sale.status === 'MONTE' || sale.status === 'TERMINEE'" [class.badge-warning]="sale.status === 'EN COURS'" [class.badge-danger]="sale.status === 'ANNULE'">{{ sale.status }}</span>
           </div>
           <div class="detail-item">
             <span class="label">Paiement</span>
@@ -184,6 +184,7 @@
 
     <div class="modal-footer">
       <button class="btn btn-primary mr-2" (click)="printDocument()">Imprimer</button>
+      <button *ngIf="canEdit" class="btn btn-secondary mr-2" (click)="edit.emit()">✏️ Modifier</button>
       <button class="btn btn-secondary" (click)="close.emit()">Fermer</button>
     </div>
   </div>

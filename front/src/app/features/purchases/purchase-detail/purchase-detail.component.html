@@ -115,6 +115,7 @@
 
     <div class="modal-footer">
       <button class="btn btn-primary mr-2" (click)="printDocument()">Imprimer</button>
+      <button *ngIf="canEdit" class="btn btn-secondary mr-2" (click)="edit.emit()">✏️ Modifier</button>
       <button class="btn btn-secondary" (click)="close.emit()">Fermer</button>
     </div>
   </div>

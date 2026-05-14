@@ -50,8 +50,8 @@
           [ngModel]="filterStatus()" (ngModelChange)="filterStatus.set($event); applyFilters()">
           <option value="">Tous les statuts</option>
           <option value="EN COURS">En cours</option>
-          <option value="TERMINE">Terminé</option>
-          <option value="ANNULE">Annulé</option>
+          <option value="TERMINE">Terminée</option>
+          <option value="ANNULE">Annulée</option>
         </select>
       </div>
       <div class="filter-group">
@@ -163,13 +163,17 @@
           <td>
             <div class="service-types">
               <span
-                *ngFor="let t of orderProductLabels(order).slice(0, 2)"
+                *ngFor="let item of getServiceItems(order).slice(0, 2)"
                 class="badge badge-type"
-              >{{ t }}</span>
+              >{{ item.service_type || '—' }}</span>
               <span
-                *ngIf="orderProductLabels(order).length > 2"
+                *ngFor="let item of getPartItems(order).slice(0, 2)"
+                class="badge badge-part-type"
+              >🔩 {{ item.product_name || 'Pièce' }}</span>
+              <span
+                *ngIf="orderProductLabels(order).length > 4"
                 class="badge badge-more"
-              >+{{ orderProductLabels(order).length - 2 }}</span>
+              >+{{ orderProductLabels(order).length - 4 }}</span>
             </div>
           </td>
           <td class="amount-cell">{{ order.net_amount | number:'1.2-2' }}</td>
@@ -181,8 +185,8 @@
                     [ngModel]="order.status"
                     (change)="updateOrderStatus(order, $event.target)">
               <option value="EN COURS">En cours</option>
-              <option value="TERMINE">Terminé</option>
-              <option value="ANNULE">Annulé</option>
+              <option value="TERMINE">Terminée</option>
+              <option value="ANNULE">Annulée</option>
             </select>
           </td>
           <td>
@@ -217,7 +221,9 @@
 <!-- Modal Formulaire -->
 <div *ngIf="showForm()" class="modal-overlay" (click)="closeForm()">
   <div class="modal-container" (click)="$event.stopPropagation()">
+    <div *ngIf="loadingEdit()" class="loading-state">Chargement…</div>
     <app-service-order-form
+      *ngIf="!loadingEdit()"
       [serviceOrder]="editingOrder()"
       [initialCommercials]="filterOptions().commercials"
       (save)="onFormSubmit($event)"
@@ -230,7 +236,9 @@
 <app-service-order-detail
   *ngIf="detailOrder()"
   [serviceOrder]="detailOrder()!"
+  [canEdit]="authService.hasPermission('edit service-orders')"
   (close)="closeDetail()"
+  (edit)="editFromDetail()"
 ></app-service-order-detail>
 
 <!-- Panel paiements -->

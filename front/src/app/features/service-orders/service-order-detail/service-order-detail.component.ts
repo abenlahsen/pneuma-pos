@@ -11,7 +11,9 @@ import { ServiceOrder } from '../../../core/models/service-order.model';
 })
 export class ServiceOrderDetailComponent {
   @Input({ required: true }) serviceOrder!: ServiceOrder;
+  @Input() canEdit = false;
   @Output() close = new EventEmitter<void>();
+  @Output() edit = new EventEmitter<void>();
 
   printDocument(): void {
     window.print();

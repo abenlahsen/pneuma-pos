@@ -42,4 +42,41 @@ test.describe('Service Auto', () => {
     await page.getByRole('button', { name: /Annuler|Fermer|✕|X/ }).first().click();
     await expect(page.locator('.modal-overlay')).not.toBeVisible();
   });
+
+  test('le bouton Visualiser ouvre la modale de détail', async ({ page }) => {
+    const firstBtn = page.locator('button[title="Voir"]').first();
+    test.skip(await firstBtn.count() === 0, 'Aucune ligne dans le tableau');
+
+    await firstBtn.click();
+    await expect(page.locator('.modal-overlay')).toBeVisible();
+    await expect(page.locator('h2', { hasText: 'Détail de l\'intervention' })).toBeVisible();
+  });
+
+  test('le bouton Modifier dans le détail ouvre le formulaire de modification', async ({ page }) => {
+    const firstBtn = page.locator('button[title="Voir"]').first();
+    test.skip(await firstBtn.count() === 0, 'Aucune ligne dans le tableau');
+
+    await firstBtn.click();
+    await expect(page.locator('.modal-overlay')).toBeVisible();
+
+    const modifierBtn = page.locator('.modal-footer button', { hasText: 'Modifier' });
+    await expect(modifierBtn).toBeVisible();
+    await modifierBtn.click();
+
+    await expect(page.locator('h2', { hasText: 'Modifier l\'intervention' })).toBeVisible();
+  });
+
+  test('le formulaire de prestation contient le champ Quantité', async ({ page }) => {
+    await page.getByRole('button', { name: /Nouvelle intervention/ }).click();
+    await expect(page.locator('.modal-overlay, .form-overlay').first()).toBeVisible();
+
+    await expect(page.locator('.service-costs-row label', { hasText: 'Quantité' }).first()).toBeVisible();
+  });
+
+  test('le formulaire de prestation ne contient pas le champ Pièces (DH)', async ({ page }) => {
+    await page.getByRole('button', { name: /Nouvelle intervention/ }).click();
+    await expect(page.locator('.modal-overlay, .form-overlay').first()).toBeVisible();
+
+    await expect(page.locator('label', { hasText: 'Pièces (DH)' })).not.toBeVisible();
+  });
 });

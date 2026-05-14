@@ -42,6 +42,8 @@ export class ServiceOrdersComponent implements OnInit {
 
   loading = signal(false);
   showForm = signal(false);
+  loadingEdit = signal(false);
+  loadingDetail = signal(false);
   editingOrder = signal<ServiceOrder | null>(null);
   detailOrder = signal<ServiceOrder | null>(null);
   paymentOrder = signal<ServiceOrder | null>(null);
@@ -115,28 +117,63 @@ export class ServiceOrdersComponent implements OnInit {
   }
 
   openDetail(order: ServiceOrder): void {
+    this.detailOrder.set(order);
+    this.loadingDetail.set(true);
     this.serviceOrderService.getServiceOrder(order.id).subscribe({
-      next: (full) => this.detailOrder.set(full),
+      next: (full) => {
+        this.detailOrder.set(full);
+        this.loadingDetail.set(false);
+      },
+      error: () => {
+        this.loadingDetail.set(false);
+        this.detailOrder.set(null);
+      },
     });
   }
 
   closeDetail(): void {
     this.detailOrder.set(null);
+    this.loadingDetail.set(false);
+  }
+
+  editFromDetail(): void {
+    const order = this.detailOrder();
+    if (!order) return;
+    this.closeDetail();
+    this.openEditForm(order);
   }
 
   openEditForm(order: ServiceOrder): void {
+    this.editingOrder.set(null);
+    this.loadingEdit.set(true);
+    this.showForm.set(true);
     this.serviceOrderService.getServiceOrder(order.id).subscribe({
       next: (full) => {
         this.editingOrder.set(full);
-        this.showForm.set(true);
+        this.loadingEdit.set(false);
+      },
+      error: () => {
+        this.loadingEdit.set(false);
+        this.showForm.set(false);
       },
     });
   }
 
   orderProductLabels(order: ServiceOrder): string[] {
     return (order.items ?? [])
-      .map(it => it.product?.profile ?? null)
-      .filter((v): v is string => v !== null);
+      .map(it => {
+        if (it.item_type === 'part') return it.product_name ?? null;
+        return it.service_type ?? null;
+      })
+      .filter((v): v is string => v !== null && v.trim().length > 0);
+  }
+
+  getServiceItems(order: ServiceOrder) {
+    return (order.items ?? []).filter(i => i.item_type !== 'part');
+  }
+
+  getPartItems(order: ServiceOrder) {
+    return (order.items ?? []).filter(i => i.item_type === 'part');
   }
 
   closeForm(): void {

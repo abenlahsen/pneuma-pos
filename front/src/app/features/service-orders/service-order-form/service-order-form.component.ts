@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import {
-  ServiceItem,
+  PartSearchResult,
   ServiceOrder,
   ServiceOrderPayload,
 } from '../../../core/models/service-order.model';
+import { ServiceOrderService } from '../data-access/service-order.service';
 import { ClientService } from '../../clients/data-access/client.service';
 import { Client } from '../../clients/models/client.model';
 import { ProductService } from '../../products/data-access/product.service';
@@ -18,10 +19,30 @@ interface ServiceProductOption {
   selling_price: number | null;
 }
 
-interface CheckedService {
-  price: number;
+interface ServiceLineForm {
+  item_type: 'service';
+  service_type: string;
   description: string;
+  quantity: number;
+  parts_cost: number;
+  labor_cost: number;
 }
+
+interface PartLineForm {
+  item_type: 'part';
+  product_id: number | null;
+  product_name: string;
+  product_reference: string;
+  unit: string;
+  quantity: number;
+  unit_price: number;
+  total_quantity: number;
+  searchQuery: string;
+  searchResults: PartSearchResult[];
+  searching: boolean;
+}
+
+type AnyLineForm = ServiceLineForm | PartLineForm;
 
 @Component({
   selector: 'app-service-order-form',
@@ -39,10 +60,11 @@ export class ServiceOrderFormComponent implements OnInit {
 
   private clientService = inject(ClientService);
   private productService = inject(ProductService);
+  private serviceOrderService = inject(ServiceOrderService);
 
   serviceProducts = signal<ServiceProductOption[]>([]);
 
-  // Form fields
+  // Form header fields
   date = signal(new Date().toISOString().split('T')[0]);
   vehicle = signal('');
   mileage = signal<number | null>(null);
@@ -60,18 +82,50 @@ export class ServiceOrderFormComponent implements OnInit {
   showClientSuggestions = signal(false);
   loadingClients = signal(false);
 
-  // Checked services: productId → { price, description }
-  checkedServices = signal<Record<number, CheckedService>>({});
-
-  checkedCount = computed(() => Object.keys(this.checkedServices()).length);
+  // Lines
+  lines = signal<AnyLineForm[]>([
+    { item_type: 'service', service_type: '', description: '', quantity: 1, parts_cost: 0, labor_cost: 0 },
+  ]);
 
   totalAmount = computed(() =>
-    Object.values(this.checkedServices()).reduce((sum, s) => sum + (Number(s.price) || 0), 0)
+    this.lines().reduce((sum, line) => {
+      if (line.item_type === 'part') {
+        return sum + (Number(line.quantity) || 1) * (Number(line.unit_price) || 0);
+      }
+      return sum + (Number(line.quantity) || 1) * (Number(line.labor_cost) || 0);
+    }, 0)
   );
 
   netAmount = computed(() =>
     Math.max(0, this.totalAmount() * (1 - (Number(this.discount()) || 0) / 100))
   );
+
+  hasValidLines = computed(() =>
+    this.lines().some(line => {
+      if (line.item_type === 'service') return line.service_type.trim().length > 0;
+      return line.product_id !== null;
+    })
+  );
+
+  hasStockError = computed(() =>
+    this.lines().some(line => {
+      if (line.item_type !== 'part') return false;
+      if (!line.product_id) return false;
+      return line.total_quantity < (Number(line.quantity) || 1);
+    })
+  );
+
+  stockErrorMessage = computed(() => {
+    const bad = this.lines().filter(line =>
+      line.item_type === 'part' && line.product_id && line.total_quantity < (Number(line.quantity) || 1)
+    ) as PartLineForm[];
+    if (!bad.length) return '';
+    return bad.map(l =>
+      l.total_quantity === 0
+        ? `${l.product_name || 'Pièce'} : rupture de stock`
+        : `${l.product_name || 'Pièce'} : stock insuffisant (dispo ${l.total_quantity}, demandé ${l.quantity})`
+    ).join(' • ');
+  });
 
   ngOnInit(): void {
     this.loadServiceProducts();
@@ -88,16 +142,32 @@ export class ServiceOrderFormComponent implements OnInit {
       this.clientSearch.set(this.serviceOrder.client_record?.name ?? '');
 
       if (this.serviceOrder.items?.length) {
-        const map: Record<number, CheckedService> = {};
-        for (const it of this.serviceOrder.items as ServiceItem[]) {
-          if (it.product_id) {
-            map[it.product_id] = {
-              price: (Number(it.parts_cost) || 0) + (Number(it.labor_cost) || 0),
-              description: it.description ?? '',
-            };
+        const mapped: AnyLineForm[] = this.serviceOrder.items.map(it => {
+          if (it.item_type === 'part') {
+            return {
+              item_type: 'part',
+              product_id: it.product_id ?? null,
+              product_name: it.product_name ?? '',
+              product_reference: it.product_reference ?? '',
+              unit: 'pièce',
+              quantity: it.quantity ?? 1,
+              unit_price: Number(it.unit_price) || 0,
+              total_quantity: it.total_quantity ?? 0,
+              searchQuery: it.product_name ?? '',
+              searchResults: [],
+              searching: false,
+            } as PartLineForm;
           }
-        }
-        this.checkedServices.set(map);
+          return {
+            item_type: 'service',
+            service_type: it.service_type ?? '',
+            description: it.description ?? '',
+            quantity: Number(it.quantity) || 1,
+            parts_cost: Number(it.parts_cost) || 0,
+            labor_cost: Number(it.labor_cost) || 0,
+          } as ServiceLineForm;
+        });
+        this.lines.set(mapped);
       }
     }
 
@@ -147,43 +217,93 @@ export class ServiceOrderFormComponent implements OnInit {
     });
   }
 
-  isChecked(productId: number): boolean {
-    return productId in this.checkedServices();
+  // --- Lines management ---
+
+  addServiceLine(): void {
+    this.lines.update(l => [...l, {
+      item_type: 'service', service_type: '', description: '', quantity: 1, parts_cost: 0, labor_cost: 0,
+    }]);
   }
 
-  toggleProduct(productId: number): void {
-    this.checkedServices.update(map => {
-      const copy = { ...map };
-      if (productId in copy) {
-        delete copy[productId];
-      } else {
-        const product = this.serviceProducts().find(p => p.id === productId);
-        copy[productId] = {
-          price: product?.selling_price ?? 0,
-          description: '',
-        };
-      }
+  addPartLine(): void {
+    this.lines.update(l => [...l, {
+      item_type: 'part',
+      product_id: null, product_name: '', product_reference: '',
+      unit: 'pièce', quantity: 1, unit_price: 0, total_quantity: 0,
+      searchQuery: '', searchResults: [], searching: false,
+    }]);
+  }
+
+  removeLine(index: number): void {
+    if (this.lines().length === 1) return;
+    this.lines.update(l => l.filter((_, i) => i !== index));
+  }
+
+  updateLine(index: number, patch: Partial<AnyLineForm>): void {
+    this.lines.update(list => {
+      const copy = [...list];
+      copy[index] = { ...copy[index], ...patch } as AnyLineForm;
       return copy;
     });
   }
 
-  setPrice(productId: number, price: number): void {
-    this.checkedServices.update(map => ({
-      ...map,
-      [productId]: { ...map[productId], price: Number(price) || 0 },
-    }));
+  asService(line: AnyLineForm): ServiceLineForm {
+    return line as ServiceLineForm;
   }
 
-  setDescription(productId: number, desc: string): void {
-    this.checkedServices.update(map => ({
-      ...map,
-      [productId]: { ...map[productId], description: desc },
-    }));
+  asPart(line: AnyLineForm): PartLineForm {
+    return line as PartLineForm;
   }
 
-  getCheckedEntry(productId: number): CheckedService {
-    return this.checkedServices()[productId] ?? { price: 0, description: '' };
+  // --- Part search ---
+
+  searchPartsFor(index: number, query: string): void {
+    this.updateLine(index, { searchQuery: query } as Partial<PartLineForm>);
+    if (query.length < 2) {
+      this.updateLine(index, { searchResults: [] } as Partial<PartLineForm>);
+      return;
+    }
+    this.updateLine(index, { searching: true } as Partial<PartLineForm>);
+    this.serviceOrderService.searchParts(query).subscribe({
+      next: (results) => this.updateLine(index, { searchResults: results, searching: false } as Partial<PartLineForm>),
+      error: () => this.updateLine(index, { searching: false } as Partial<PartLineForm>),
+    });
   }
+
+  selectPart(index: number, part: PartSearchResult): void {
+    this.updateLine(index, {
+      product_id: part.id,
+      product_name: part.name,
+      product_reference: part.reference ?? '',
+      unit: part.unit,
+      unit_price: part.purchase_price,
+      total_quantity: part.total_quantity,
+      searchQuery: part.name,
+      searchResults: [],
+    } as Partial<PartLineForm>);
+  }
+
+  clearPartSelection(index: number): void {
+    this.updateLine(index, {
+      product_id: null, product_name: '', product_reference: '',
+      searchQuery: '', searchResults: [],
+    } as Partial<PartLineForm>);
+  }
+
+  // --- Service type selection from catalog ---
+
+  onServiceTypeChange(index: number, productId: string): void {
+    const id = Number(productId);
+    const product = this.serviceProducts().find(p => p.id === id);
+    if (product) {
+      this.updateLine(index, {
+        service_type: product.profile ?? '',
+        labor_cost: Number(product.selling_price) || 0,
+      } as Partial<ServiceLineForm>);
+    }
+  }
+
+  // --- Client ---
 
   onClientSearchInput(value: string): void {
     this.clientSearch.set(value);
@@ -193,19 +313,14 @@ export class ServiceOrderFormComponent implements OnInit {
 
   private syncClientSearchResults(): void {
     const search = this.clientSearch().trim().toLowerCase();
-
     if (!search) {
       this.filteredClients.set(this.clients().slice(0, 8));
       return;
     }
-
     this.filteredClients.set(
       this.clients()
         .filter(c => {
-          const haystack = [c.name, c.phone, c.city]
-            .filter(Boolean)
-            .join(' ')
-            .toLowerCase();
+          const haystack = [c.name, c.phone, c.city].filter(Boolean).join(' ').toLowerCase();
           return haystack.includes(search);
         })
         .slice(0, 8)
@@ -226,14 +341,29 @@ export class ServiceOrderFormComponent implements OnInit {
     this.showClientSuggestions.set(false);
   }
 
+  // --- Submit ---
+
   onSubmit(): void {
-    const items = Object.entries(this.checkedServices()).map(([productIdStr, entry], i) => ({
-      product_id: Number(productIdStr),
-      description: entry.description || null,
-      parts_cost: 0,
-      labor_cost: Number(entry.price) || 0,
-      sort_order: i,
-    }));
+    const items = this.lines().map((line, i) => {
+      if (line.item_type === 'part') {
+        return {
+          item_type: 'part' as const,
+          product_id: line.product_id,
+          quantity: line.quantity,
+          unit_price: line.unit_price,
+          sort_order: i,
+        };
+      }
+      return {
+        item_type: 'service' as const,
+        service_type: line.service_type || null,
+        description: line.description || null,
+        quantity: line.quantity,
+        parts_cost: 0,
+        labor_cost: line.labor_cost,
+        sort_order: i,
+      };
+    });
 
     const payload: ServiceOrderPayload = {
       client_id: this.client_id(),
@@ -251,6 +381,18 @@ export class ServiceOrderFormComponent implements OnInit {
 
   onCancel(): void {
     this.cancel.emit();
+  }
+
+  trackByIndex(_: number, __: unknown): number {
+    return _;
+  }
+
+  serviceLineTotal(line: ServiceLineForm): number {
+    return (Number(line.quantity) || 1) * (Number(line.labor_cost) || 0);
+  }
+
+  partLineTotal(line: PartLineForm): number {
+    return (Number(line.quantity) || 1) * (Number(line.unit_price) || 0);
   }
 
   get isEditing(): boolean {

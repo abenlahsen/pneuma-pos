@@ -40,28 +40,50 @@
       </div>
 
       <div class="detail-section">
-        <h3 class="section-title">Prestations ({{ (serviceOrder.items || []).length }})</h3>
+        <h3 class="section-title">Prestations & Pièces ({{ (serviceOrder.items || []).length }})</h3>
         <div class="table-responsive mt-3">
           <table class="table table-sm text-left">
             <thead>
               <tr>
-                <th>Prestation</th>
-                <th>Description</th>
-                <th class="text-right">Pièces (DH)</th>
-                <th class="text-right">Main d'œuvre (DH)</th>
+                <th>Type</th>
+                <th>Désignation</th>
+                <th class="text-right">Qté</th>
+                <th class="text-right">Prix unit.</th>
                 <th class="text-right">Total (DH)</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let item of serviceOrder.items">
-                <td><span class="badge badge-type">{{ item.product?.profile || '—' }}</span></td>
-                <td class="description-cell">{{ item.description || '—' }}</td>
-                <td class="text-right">{{ item.parts_cost | number:'1.2-2' }}</td>
-                <td class="text-right">{{ item.labor_cost | number:'1.2-2' }}</td>
+                <td>
+                  <span *ngIf="item.item_type !== 'part'" class="badge badge-type">🔧 Prestation</span>
+                  <span *ngIf="item.item_type === 'part'" class="badge badge-part-inline">🔩 Pièce</span>
+                </td>
+                <td class="description-cell">
+                  <ng-container *ngIf="item.item_type !== 'part'">
+                    <strong>{{ item.service_type || '—' }}</strong>
+                    <div *ngIf="item.description" class="item-desc">{{ item.description }}</div>
+                    <div *ngIf="(item.parts_cost ?? 0) > 0 || (item.labor_cost ?? 0) > 0" class="item-costs">
+                      <span *ngIf="(item.parts_cost ?? 0) > 0">Pièces : {{ item.parts_cost | number:'1.2-2' }} DH</span>
+                      <span *ngIf="(item.labor_cost ?? 0) > 0">M.O. : {{ item.labor_cost | number:'1.2-2' }} DH</span>
+                    </div>
+                  </ng-container>
+                  <ng-container *ngIf="item.item_type === 'part'">
+                    <strong>{{ item.product_name || '—' }}</strong>
+                    <div *ngIf="item.product_reference" class="item-ref">Réf: {{ item.product_reference }}</div>
+                  </ng-container>
+                </td>
+                <td class="text-right">
+                  <ng-container *ngIf="item.item_type === 'part'">{{ item.quantity ?? 1 }}</ng-container>
+                  <ng-container *ngIf="item.item_type !== 'part'">—</ng-container>
+                </td>
+                <td class="text-right">
+                  <ng-container *ngIf="item.item_type === 'part'">{{ item.unit_price | number:'1.2-2' }} DH</ng-container>
+                  <ng-container *ngIf="item.item_type !== 'part'">—</ng-container>
+                </td>
                 <td class="text-right fw-semibold">{{ itemTotal(item) | number:'1.2-2' }}</td>
               </tr>
               <tr *ngIf="!serviceOrder.items || serviceOrder.items.length === 0">
-                <td colspan="5" class="text-center text-muted">Aucune prestation.</td>
+                <td colspan="5" class="text-center text-muted">Aucune ligne.</td>
               </tr>
             </tbody>
           </table>
@@ -120,6 +142,7 @@
 
     <div class="modal-footer">
       <button class="btn btn-primary mr-2" (click)="printDocument()">Imprimer</button>
+      <button *ngIf="canEdit" class="btn btn-secondary mr-2" (click)="edit.emit()">✏️ Modifier</button>
       <button class="btn btn-secondary" (click)="close.emit()">Fermer</button>
     </div>
   </div>

@@ -135,10 +135,40 @@
   }
 }
 
-:host ::ng-deep .table .text-center,
-:host ::ng-deep .table th.text-center,
-:host ::ng-deep .table td.text-center {
-  text-align: center !important;
+.table-responsive {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 2px solid $border-color;
+    white-space: nowrap;
+
+    &.text-center { text-align: center; }
+    &.text-right  { text-align: right; }
+  }
+
+  td {
+    padding: 0.85rem 0.75rem;
+    border-bottom: 1px solid $border-color;
+    vertical-align: top;
+
+    &.text-center { text-align: center; }
+    &.text-right  { text-align: right; }
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
 }
 
 .modal-footer {

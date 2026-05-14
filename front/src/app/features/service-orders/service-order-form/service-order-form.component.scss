@@ -300,91 +300,289 @@ textarea.form-control {
   min-height: 70px;
 }
 
-// Services checkbox grid
-.services-grid {
+// Section header with add buttons
+.section-header {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  gap: 0.75rem;
+
+  .section-title {
+    margin: 0;
+  }
 }
 
-.service-card {
+.add-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.btn-add {
+  padding: 0.4rem 0.85rem;
+  border-radius: $radius-sm;
+  border: none;
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: filter 0.15s;
+
+  &:hover { filter: brightness(0.93); }
+
+  &-service {
+    background: rgba($primary, 0.12);
+    color: $primary;
+  }
+
+  &-part {
+    background: rgba(#d97706, 0.12);
+    color: #d97706;
+  }
+}
+
+// Lines list
+.lines-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.line-row {
   border: 1px solid $border-color;
   border-radius: $radius-sm;
   background: $bg-body;
   overflow: hidden;
-  transition: border-color 0.15s, background 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 
-  &.is-checked {
-    border-color: $primary;
-    background: rgba($primary, 0.03);
+  &--service { border-left: 3px solid $primary; }
+  &--part    { border-left: 3px solid #d97706; }
+}
+
+.line-row-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.85rem;
+  background: rgba(0, 0, 0, 0.02);
+  border-bottom: 1px solid $border-color;
+}
+
+.line-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+
+  &.badge-service {
+    background: rgba($primary, 0.1);
+    color: $primary;
+  }
+
+  &.badge-part {
+    background: rgba(#d97706, 0.12);
+    color: #d97706;
   }
 }
 
-.service-card-label {
+.line-number {
+  font-size: 0.78rem;
+  color: $text-muted;
+  margin-left: 0.1rem;
+}
+
+.btn-remove-line {
+  margin-left: auto;
+  background: none;
+  border: 1px solid $border-color;
+  border-radius: $radius-sm;
+  width: 1.75rem;
+  height: 1.75rem;
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.65rem 0.85rem;
+  justify-content: center;
   cursor: pointer;
-  user-select: none;
+  font-size: 0.8rem;
+  color: $text-muted;
+  transition: all 0.15s;
+
+  &:hover:not(:disabled) {
+    border-color: #ef4444;
+    color: #ef4444;
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+// Service line inner layout
+.service-type-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.or-separator {
+  font-size: 0.8rem;
+  color: $text-muted;
+  white-space: nowrap;
+}
+
+.service-costs-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  padding: 0 0.85rem 0.75rem;
+}
+
+// Part line inner layout
+.part-search-wrapper {
+  padding: 0.75rem 0.85rem 0;
+  position: relative;
+}
+
+.search-input-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-spinner {
+  position: absolute;
+  right: 0.6rem;
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
+.parts-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: white;
+  border: 1px solid $border-color;
+  border-radius: $radius-sm;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.part-result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.55rem 0.75rem;
+  cursor: pointer;
+  border-bottom: 1px solid $border-color;
+
+  &:last-child { border-bottom: none; }
 
   &:hover {
     background: rgba($primary, 0.04);
   }
 }
 
-.service-checkbox {
-  flex-shrink: 0;
-  width: 1rem;
-  height: 1rem;
-  accent-color: $primary;
-  cursor: pointer;
+.part-result-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+
+  .part-name {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: $text-dark;
+  }
+
+  .part-ref, .part-oem {
+    font-size: 0.78rem;
+    color: $text-muted;
+    font-family: monospace;
+  }
 }
 
-.service-name {
-  font-size: 0.9rem;
-  font-weight: 500;
+.part-result-stock {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  white-space: nowrap;
+
+  &.stock-ok    { background: #dcfce7; color: #15803d; }
+  &.stock-empty { background: #fee2e2; color: #dc2626; }
+}
+
+.selected-part-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.5rem;
+  padding: 0.3rem 0.65rem;
+  background: rgba($primary, 0.08);
+  border-radius: 999px;
+  font-size: 0.84rem;
   color: $text-dark;
-  flex: 1;
+  font-weight: 500;
+
+  .part-tag-ref {
+    color: $text-muted;
+    font-size: 0.78rem;
+  }
 }
 
-.service-ref {
+.btn-clear-part {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: $text-muted;
+  padding: 0;
+  line-height: 1;
+
+  &:hover { color: #ef4444; }
+}
+
+.stock-info {
+  padding: 0.35rem 0.85rem;
   font-size: 0.8rem;
   color: $text-muted;
-  font-family: monospace;
 }
 
-.service-catalog-price {
-  font-size: 0.82rem;
-  color: $text-muted;
-  font-variant-numeric: tabular-nums;
-  margin-left: auto;
-  padding-left: 0.5rem;
-  white-space: nowrap;
-}
+.text-danger  { color: #dc2626; }
+.text-warning { color: #d97706; }
 
-.service-card-details {
-  border-top: 1px solid rgba($primary, 0.14);
-  padding: 0.65rem 0.85rem;
-}
-
-.service-detail-row {
+.part-fields {
   display: flex;
   gap: 0.75rem;
   align-items: flex-end;
+  padding: 0.5rem 0.85rem 0.75rem;
 }
 
-.empty-msg {
-  font-size: 0.875rem;
-  color: $text-muted;
-  font-style: italic;
-  margin: 0;
+.line-total-value {
+  padding: 0.5rem 0.75rem;
+  background: $bg-body;
+  border: 1px solid $border-color;
+  border-radius: $radius-sm;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: $text-dark;
+  white-space: nowrap;
 }
 
-.empty-services-warning {
-  margin-top: 0.75rem;
-  font-size: 0.82rem;
-  color: $warning-color;
+// Form groups that are direct children of a line-row need horizontal padding
+.line-row > .form-group {
+  padding: 0.75rem 0.85rem 0;
+
+  &:last-child {
+    padding-bottom: 0.75rem;
+  }
 }
 
 // Totals
@@ -469,11 +667,22 @@ textarea.form-control {
 
 .form-actions {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
   gap: 0.75rem;
   padding: 1.25rem 1.5rem;
   border-top: 1px solid $border-color;
   background: $bg-body;
+}
+
+.stock-block-msg {
+  flex: 1;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #dc2626;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: $radius-sm;
+  padding: 0.4rem 0.75rem;
 }
 
 @media (max-width: 600px) {

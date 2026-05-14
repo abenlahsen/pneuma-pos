@@ -186,6 +186,13 @@ export class SalesPageComponent implements OnInit {
     this.detailSale.set(null);
   }
 
+  editFromDetail(): void {
+    const sale = this.detailSale();
+    if (!sale) return;
+    this.closeDetail();
+    this.openEditForm(sale);
+  }
+
   openAddForm(): void {
     this.editingSale.set(null);
     this.showForm.set(true);

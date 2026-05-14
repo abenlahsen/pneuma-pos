@@ -9,7 +9,12 @@ class ServiceItem extends Model
 {
     protected $fillable = [
         'service_order_id',
+        'item_type',
+        'service_type',
         'product_id',
+        'quantity',
+        'unit_price',
+        'stock_id',
         'description',
         'parts_cost',
         'labor_cost',
@@ -20,14 +25,23 @@ class ServiceItem extends Model
     protected $casts = [
         'parts_cost' => 'decimal:2',
         'labor_cost' => 'decimal:2',
+        'unit_price' => 'decimal:2',
         'line_total' => 'decimal:2',
+        'quantity' => 'integer',
         'sort_order' => 'integer',
     ];
 
     protected static function booted(): void
     {
         static::saving(function (ServiceItem $item) {
-            $item->line_total = (float) ($item->parts_cost ?? 0) + (float) ($item->labor_cost ?? 0);
+            if ($item->item_type === 'part') {
+                $item->line_total = (float) ($item->quantity ?? 1) * (float) ($item->unit_price ?? 0);
+                $item->parts_cost = 0;
+                $item->labor_cost = 0;
+            } else {
+                $qty = (int) ($item->quantity ?? 1);
+                $item->line_total = $qty * ((float) ($item->parts_cost ?? 0) + (float) ($item->labor_cost ?? 0));
+            }
         });
 
         static::saved(fn (ServiceItem $item) => $item->serviceOrder->recalculateTotals());
@@ -41,6 +55,11 @@ class ServiceItem extends Model
 
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class)->with('service');
+        return $this->belongsTo(Product::class);
+    }
+
+    public function stock(): BelongsTo
+    {
+        return $this->belongsTo(Stock::class);
     }
 }
