@@ -1,0 +1,176 @@
+<div class="print-modal-overlay" (click)="closed.emit()">
+  <div class="print-modal" (click)="$event.stopPropagation()">
+
+    <!-- Barre d'actions (masquée à l'impression) -->
+    <div class="print-actions no-print">
+      <h3>Aperçu du document</h3>
+      <div class="print-actions-right">
+        <button class="btn btn-primary"
+                (click)="downloadPdf()"
+                [disabled]="generatingPdf() || loadingSettings()">
+          {{ generatingPdf() ? 'Génération...' : '⬇ Télécharger PDF' }}
+        </button>
+        <button class="btn btn-ghost" (click)="closed.emit()">✕ Fermer</button>
+      </div>
+    </div>
+
+    <!-- ZONE D'IMPRESSION -->
+    <div class="print-paper" #printZone>
+
+      <!-- EN-TÊTE -->
+      <header class="doc-header">
+        <div class="doc-header-logo">
+          <img *ngIf="settings()?.logo_url"
+               [src]="settings()!.logo_url!"
+               [alt]="settings()?.company_name"
+               class="company-logo">
+          <div class="company-name-fallback" *ngIf="!settings()?.logo_url">
+            {{ settings()?.company_name }}
+          </div>
+        </div>
+        <div class="doc-header-title">
+          <h1 class="doc-type-title">{{ getDocumentTitle() }}</h1>
+          <div class="doc-meta">
+            <span class="doc-number">N° {{ document.doc_number }}</span>
+            <span class="doc-date">{{ document.date | date:'dd/MM/yyyy' }}</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="doc-divider"></div>
+
+      <!-- ÉMETTEUR / DESTINATAIRE -->
+      <section class="doc-parties">
+        <div class="doc-emitter">
+          <h4>Émetteur</h4>
+          <p class="company-name">{{ settings()?.company_name }}</p>
+          <p *ngIf="settings()?.legal_name">{{ settings()?.legal_name }}</p>
+          <p *ngIf="settings()?.address">{{ settings()?.address }}</p>
+          <p *ngIf="settings()?.city">{{ settings()?.city }}</p>
+          <p *ngIf="settings()?.phone">Tél : {{ settings()?.phone }}</p>
+          <p *ngIf="settings()?.email">{{ settings()?.email }}</p>
+        </div>
+        <div class="doc-recipient">
+          <h4>{{ document.party_label }}</h4>
+          <p class="party-name">{{ document.party_name }}</p>
+          <p *ngIf="document.party_phone">Tél : {{ document.party_phone }}</p>
+          <p *ngIf="document.party_city">{{ document.party_city }}</p>
+          <p *ngIf="document.vehicle">Véhicule : {{ document.vehicle }}</p>
+          <p *ngIf="document.mileage">Kilométrage : {{ document.mileage | number }} km</p>
+        </div>
+      </section>
+
+      <!-- LIGNES -->
+      <section class="doc-lines">
+        <table class="lines-table">
+          <thead>
+            <tr>
+              <th class="col-label">Désignation</th>
+              <th class="col-qty text-center">Qté</th>
+              <th class="col-price text-right">Prix unit.</th>
+              <th class="col-discount text-center" *ngIf="hasDiscounts()">Rem.</th>
+              <th class="col-total text-right">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let line of document.lines">
+              <td class="col-label">
+                <span class="line-label">{{ line.label }}</span>
+                <span class="line-ref text-muted" *ngIf="line.reference"> — {{ line.reference }}</span>
+              </td>
+              <td class="col-qty text-center">{{ line.qty }} {{ line.unit || '' }}</td>
+              <td class="col-price text-right">{{ line.unit_price | number:'1.2-2' }} DH</td>
+              <td class="col-discount text-center" *ngIf="hasDiscounts()">
+                {{ (line.discount || 0) | number:'1.0-0' }}%
+              </td>
+              <td class="col-total text-right">{{ line.total | number:'1.2-2' }} DH</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- TOTAUX -->
+      <section class="doc-totals">
+        <div class="totals-spacer"></div>
+        <div class="totals-block">
+          <div class="total-row" *ngIf="document.discount_global && document.discount_global > 0">
+            <span>Sous-total</span>
+            <span>{{ document.total_ht | number:'1.2-2' }} DH</span>
+          </div>
+          <div class="total-row discount-row" *ngIf="document.discount_global && document.discount_global > 0">
+            <span>Remise globale</span>
+            <span>- {{ document.discount_global | number:'1.2-2' }} DH</span>
+          </div>
+          <div class="total-row total-net">
+            <span>NET À PAYER</span>
+            <span>{{ document.net_amount | number:'1.2-2' }} DH</span>
+          </div>
+          <div class="payment-status-row" *ngIf="document.payment_status">
+            <span class="status-badge"
+                  [class.paid]="document.payment_status === 'PAYE'"
+                  [class.partial]="document.payment_status === 'PARTIEL'"
+                  [class.unpaid]="document.payment_status === 'NON PAYE'">
+              {{ document.payment_status }}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- TRANSPORT & SUIVI -->
+      <section class="doc-transport" *ngIf="hasTransport()">
+        <h4 class="section-label">Transport & Suivi</h4>
+        <div class="transport-grid">
+          <div class="transport-item" *ngIf="document.carrier">
+            <span class="transport-label">Transporteur</span>
+            <span class="transport-value">{{ document.carrier }}</span>
+          </div>
+          <div class="transport-item" *ngIf="document.tracking_number">
+            <span class="transport-label">N° Suivi</span>
+            <span class="transport-value">{{ document.tracking_number }}</span>
+          </div>
+          <div class="transport-item" *ngIf="document.partner">
+            <span class="transport-label">Partenaire</span>
+            <span class="transport-value">{{ document.partner }}</span>
+          </div>
+          <div class="transport-item" *ngIf="document.service">
+            <span class="transport-label">Service</span>
+            <span class="transport-value">{{ document.service }}</span>
+          </div>
+          <div class="transport-item" *ngIf="document.delivery_date">
+            <span class="transport-label">Date livraison</span>
+            <span class="transport-value">{{ document.delivery_date | date:'dd/MM/yyyy' }}</span>
+          </div>
+          <div class="transport-item" *ngIf="document.payment_method">
+            <span class="transport-label">Mode de paiement</span>
+            <span class="transport-value">{{ document.payment_method }}</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- NOTES -->
+      <section class="doc-notes" *ngIf="document.notes">
+        <h4>Notes</h4>
+        <p>{{ document.notes }}</p>
+      </section>
+
+      <!-- PIED DE PAGE LÉGAL -->
+      <footer class="doc-footer">
+        <div class="doc-divider"></div>
+        <div class="footer-legal">
+          <span *ngIf="settings()?.rc">RC : {{ settings()?.rc }}</span>
+          <span *ngIf="settings()?.ice">ICE : {{ settings()?.ice }}</span>
+          <span *ngIf="settings()?.tax_id">IF : {{ settings()?.tax_id }}</span>
+          <span *ngIf="settings()?.cnss">CNSS : {{ settings()?.cnss }}</span>
+          <span *ngIf="settings()?.patente">Patente : {{ settings()?.patente }}</span>
+        </div>
+        <div class="footer-contact">
+          <span *ngIf="settings()?.address">{{ settings()?.address }}</span>
+          <span *ngIf="settings()?.city">{{ settings()?.city }}</span>
+          <span *ngIf="settings()?.phone">Tél : {{ settings()?.phone }}</span>
+          <span *ngIf="settings()?.email">{{ settings()?.email }}</span>
+        </div>
+      </footer>
+
+    </div><!-- /print-paper -->
+  </div><!-- /print-modal -->
+</div><!-- /overlay -->
