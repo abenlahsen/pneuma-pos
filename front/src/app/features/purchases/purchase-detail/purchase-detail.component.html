@@ -3,7 +3,7 @@
     <div class="modal-header">
       <h2>Détail de l'achat</h2>
       <div>
-        <button class="btn btn-primary btn-sm mr-2" (click)="printDocument()">🖨️ Imprimer</button>
+        <button class="btn btn-primary btn-sm mr-2" (click)="openPrint()">🖨️ Imprimer</button>
         <button class="btn-close" (click)="close.emit()">✕</button>
       </div>
     </div>
@@ -114,7 +114,7 @@
     </div>
 
     <div class="modal-footer">
-      <button class="btn btn-primary mr-2" (click)="printDocument()">Imprimer</button>
+      <button class="btn btn-primary mr-2" (click)="openPrint()">Imprimer</button>
       <button *ngIf="canEdit" class="btn btn-secondary mr-2" (click)="edit.emit()">✏️ Modifier</button>
       <button class="btn btn-secondary" (click)="close.emit()">Fermer</button>
     </div>
@@ -126,4 +126,10 @@
   [product]="viewingProduct()!"
   (close)="viewingProduct.set(null)"
   (edit)="editProductInNewTab($event)"
+/>
+
+<app-document-print
+  *ngIf="printDoc()"
+  [document]="printDoc()!"
+  (closed)="printDoc.set(null)"
 />

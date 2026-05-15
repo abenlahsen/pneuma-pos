@@ -155,15 +155,40 @@ describe('ServiceOrderDetailComponent', () => {
   });
 
   // -------------------------------------------------------------------------
-  // printDocument
+  // openPrint
   // -------------------------------------------------------------------------
 
-  describe('printDocument', () => {
-    it('calls window.print()', () => {
-      const spy = vi.spyOn(window, 'print').mockReturnValue(undefined);
-      comp.printDocument();
-      expect(spy).toHaveBeenCalledOnce();
-      vi.restoreAllMocks();
+  describe('openPrint', () => {
+    it('sets printDoc signal with correct type and doc_number', () => {
+      comp.serviceOrder = { ...baseOrder(), id: 42 };
+      comp.openPrint();
+      const doc = comp.printDoc();
+      expect(doc).not.toBeNull();
+      expect(doc!.type).toBe('service_order');
+      expect(doc!.doc_number).toBe('42');
+    });
+
+    it('maps part items correctly', () => {
+      comp.serviceOrder = {
+        ...baseOrder(),
+        items: [{ item_type: 'part', product_name: 'Filtre à huile', product_reference: 'REF-001', quantity: 2, unit_price: 50, line_total: 100 }],
+      };
+      comp.openPrint();
+      const line = comp.printDoc()!.lines[0];
+      expect(line.label).toBe('Filtre à huile');
+      expect(line.qty).toBe(2);
+      expect(line.total).toBe(100);
+    });
+
+    it('maps service items correctly', () => {
+      comp.serviceOrder = {
+        ...baseOrder(),
+        items: [{ item_type: 'service', service_type: 'Vidange', labor_cost: 150, quantity: 1, line_total: 150 }],
+      };
+      comp.openPrint();
+      const line = comp.printDoc()!.lines[0];
+      expect(line.label).toBe('Vidange');
+      expect(line.total).toBe(150);
     });
   });
 });

@@ -95,7 +95,7 @@ npm test         # Run Vitest tests
 - `ServicePayment` — payment linked to a `ServiceOrder` and optionally to a `Transaction` for cash-flow integration.
 - `ProductService` — service catalog sub-table (joined 1:1 with `Product` where type='service'); fields: category, duration_minutes, selling_price.
 - `Client` — with credit limit, opening balance, payment terms, default payment method, category.
-- `CompanySetting` — singleton row; stores company name, address, logo path, favicon, and theme/layout fields.
+- `CompanySetting` — singleton row; stores company name, legal name, full address (address, city, state, postal_code, country), contact (phone, email), legal identifiers (rc, ice, tax_id/IF, cnss, patente), logo path, favicon, and theme/layout fields.
 - `Brand`, `Supplier`, `Carrier`, `Partner`, `User`, `Account` — standard catalog/reference entities.
 
 Each payment creation (Payment, PurchasePayment, ServicePayment) auto-creates a corresponding `Transaction` record.
@@ -113,10 +113,10 @@ Each payment creation (Payment, PurchasePayment, ServicePayment) auto-creates a 
 - `models/` — TypeScript interfaces for the feature (e.g., `client.model.ts`)
 - Modules: `sales`, `purchases`, `cash-flow`, `clients`, `suppliers`, `users`, `carriers`, `partners`, `stock`, `roles`, `brands`, `products`, `accounts`, `settings`, `service-orders`
 
-**Shared** (`front/src/app/shared/`): Cross-feature reusable components — `auto-refresh-control` (per-page configurable auto-refresh toggle), `navbar` (top navigation bar).
+**Shared** (`front/src/app/shared/`): Cross-feature reusable components — `auto-refresh-control` (per-page configurable auto-refresh toggle), `navbar` (top navigation bar), `document-print` (A4 PDF preview modal for sales, purchases, and service orders).
 
 **Core** (`front/src/app/core/`):
-- `services/` — Shared services (e.g., `auth.service.ts`). Feature-specific services live in each feature's `data-access/` folder.
+- `services/` — Shared services (e.g., `auth.service.ts`, `print.service.ts`). Feature-specific services live in each feature's `data-access/` folder.
 - `models/` — Shared interfaces (e.g., `sale.model.ts`, `user.model.ts`). Feature-specific models live in each feature's `models/` folder.
 - `guards/` — `authGuard` (redirect to /login), `guestGuard` (redirect to /dashboard), and `permissionGuard` (ACL-based route protection)
 - `interceptors/auth.interceptor.ts` — Adds `Bearer` token + `Accept: application/json` to all requests
@@ -132,6 +132,8 @@ Each payment creation (Payment, PurchasePayment, ServicePayment) auto-creates a 
 **Payment panels**: All three modules (Sales, Purchases, Service Auto) use a unified **side-panel** layout (`panel-overlay` + `payment-panel` classes, design tokens from `_variables.scss`). Panels auto-close when the remaining balance reaches 0 — implemented via an `onComplete` callback passed to `loadPayments()`.
 
 **Detail/consultation modals**: All three modules' detail components (`sale-detail`, `purchase-detail`, `service-order-detail`) expose `@Input() canEdit = false` and `@Output() edit`. The parent page passes `[canEdit]="authService.hasPermission('edit X')"` and `(edit)="editFromDetail()"`. The `editFromDetail()` method closes the detail modal then immediately opens the edit form.
+
+**Print / PDF generation**: The `document-print` shared component renders an A4 document preview in a modal overlay. It accepts a `PrintDocument` input (type-safe interface defined in `document-print.component.ts`) and emits a `closed` event. Clicking "Télécharger PDF" calls `PrintService.downloadPdf()`, which lazy-imports `html2canvas` + `jsPDF` to capture the `#printZone` DOM element and produce a multi-page A4 PDF. `PrintService` caches the company settings observable via `shareReplay(1)` so settings are fetched only once per session. The `DocumentType` union (`'sale' | 'purchase' | 'service_order'`) controls the document title: "BON DE VENTE", "BON D'ACHAT", "FICHE D'INTERVENTION". Each detail component has an `openPrint()` method that maps its domain object to `PrintDocument` and sets a `printDoc` signal — the template renders `<app-document-print>` only when `printDoc()` is non-null.
 
 **Shared SCSS** (`front/src/app/features/_variables.scss`): Theme tokens (`$primary`, `$border-color`, `$radius`, etc.) imported via `@use '../../_variables' as *` in each page SCSS. Each page component has its own complete SCSS (no global stylesheet) — styles for layout, table, buttons, modal, pagination, and responsive breakpoints are repeated per module to maintain component encapsulation.
 
