@@ -81,6 +81,7 @@ class ServiceOrderController extends Controller
             'items.product' => fn ($q) => $q->with('service')->withSum('stocks', 'quantity'),
             'payments',
             'clientRecord',
+            'vehicle',
         ]);
 
         return response()->json(

@@ -11,6 +11,8 @@ import { ServiceOrderService } from '../data-access/service-order.service';
 import { ClientService } from '../../clients/data-access/client.service';
 import { Client } from '../../clients/models/client.model';
 import { ProductService } from '../../products/data-access/product.service';
+import { Vehicle } from '../../../features/vehicles/models/vehicle.model';
+import { VehicleSelectorComponent } from '../../../shared/vehicle-selector/vehicle-selector.component';
 
 interface ServiceProductOption {
   id: number;
@@ -47,7 +49,7 @@ type AnyLineForm = ServiceLineForm | PartLineForm;
 @Component({
   selector: 'app-service-order-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, VehicleSelectorComponent],
   templateUrl: './service-order-form.component.html',
   styleUrls: ['./service-order-form.component.scss'],
 })
@@ -67,6 +69,8 @@ export class ServiceOrderFormComponent implements OnInit {
   // Form header fields
   date = signal(new Date().toISOString().split('T')[0]);
   vehicle = signal('');
+  vehicle_id = signal<number | null>(null);
+  selectedVehicleObj = signal<Vehicle | null>(null);
   mileage = signal<number | null>(null);
   discount = signal(0);
   status = signal<string>('EN COURS');
@@ -99,6 +103,13 @@ export class ServiceOrderFormComponent implements OnInit {
   netAmount = computed(() =>
     Math.max(0, this.totalAmount() * (1 - (Number(this.discount()) || 0) / 100))
   );
+
+  readonly vehicleValid = computed(() => {
+    if (this.client_id()) {
+      return this.vehicle_id() !== null;
+    }
+    return this.vehicle().trim().length > 0;
+  });
 
   hasValidLines = computed(() =>
     this.lines().some(line => {
@@ -133,6 +144,7 @@ export class ServiceOrderFormComponent implements OnInit {
     if (this.serviceOrder) {
       this.date.set(this.serviceOrder.date);
       this.vehicle.set(this.serviceOrder.vehicle);
+      this.vehicle_id.set(this.serviceOrder.vehicle_id ?? null);
       this.mileage.set(this.serviceOrder.mileage ?? null);
       this.discount.set(Number(this.serviceOrder.discount) || 0);
       this.status.set(this.serviceOrder.status);
@@ -332,6 +344,8 @@ export class ServiceOrderFormComponent implements OnInit {
     this.client_id.set(c.id);
     this.clientSearch.set(c.name);
     this.showClientSuggestions.set(false);
+    this.vehicle_id.set(null);
+    this.selectedVehicleObj.set(null);
   }
 
   clearSelectedClient(): void {
@@ -339,6 +353,13 @@ export class ServiceOrderFormComponent implements OnInit {
     this.client_id.set(null);
     this.clientSearch.set('');
     this.showClientSuggestions.set(false);
+    this.vehicle_id.set(null);
+    this.selectedVehicleObj.set(null);
+  }
+
+  onVehicleSelected(vehicle: Vehicle | null): void {
+    this.selectedVehicleObj.set(vehicle);
+    this.vehicle_id.set(vehicle?.id ?? null);
   }
 
   // --- Submit ---
@@ -365,10 +386,15 @@ export class ServiceOrderFormComponent implements OnInit {
       };
     });
 
+    const resolvedVehicle = this.selectedVehicleObj()
+      ? `${this.selectedVehicleObj()!.brand} ${this.selectedVehicleObj()!.model_name}`
+      : this.vehicle();
+
     const payload: ServiceOrderPayload = {
       client_id: this.client_id(),
+      vehicle_id: this.vehicle_id(),
       date: this.date(),
-      vehicle: this.vehicle(),
+      vehicle: resolvedVehicle,
       mileage: this.mileage(),
       items,
       discount: Number(this.discount()) || 0,

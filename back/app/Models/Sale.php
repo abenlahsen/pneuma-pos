@@ -38,6 +38,8 @@ class Sale extends Model
         'service',
         'service_fee',
         'client_id',
+        'vehicle_id',
+        'mileage',
         'payment_method',
         'sales_rep',
         'commercial_id',
@@ -66,10 +68,17 @@ class Sale extends Model
         'service_fee' => 'float',
         'delivery_date' => 'date',
         'client_id' => 'integer',
+        'vehicle_id' => 'integer',
+        'mileage' => 'integer',
         'commercial_id' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    public function linkedVehicle(): BelongsTo
+    {
+        return $this->belongsTo(Vehicle::class, 'vehicle_id');
+    }
 
     public function linkedClient(): BelongsTo
     {

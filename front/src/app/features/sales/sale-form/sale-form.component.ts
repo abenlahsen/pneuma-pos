@@ -14,11 +14,13 @@ import { Stock } from '../../../core/models/stock.model';
 import { StockService } from '../../../core/services/stock.service';
 import { ClientService } from '../../clients/data-access/client.service';
 import { Client, ClientPayload, ClientProfileResponse } from '../../clients/models/client.model';
+import { Vehicle } from '../../vehicles/models/vehicle.model';
+import { VehicleSelectorComponent } from '../../../shared/vehicle-selector/vehicle-selector.component';
 
 @Component({
   selector: 'app-sale-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductDetailComponent],
+  imports: [CommonModule, FormsModule, ProductDetailComponent, VehicleSelectorComponent],
   templateUrl: './sale-form.component.html',
   styleUrl: './sale-form.component.scss'
 })
@@ -112,6 +114,8 @@ export class SaleFormComponent implements OnInit {
   editingItemIndex: number | null = null;
   editingOriginalQuantity = 0;
   logisticsCollapsed = signal(true);
+  vehicle_id = signal<number | null>(null);
+  saleVehicleMileage = signal<number | null>(null);
 
   readonly selectedClientName = computed(() =>
     this.selectedClient()?.name?.trim() || this.formData.client?.trim() || ''
@@ -163,6 +167,8 @@ export class SaleFormComponent implements OnInit {
       this.formData.client = this.resolveClientName(this.sale);
       this.formData.client_phone = this.resolveClientPhone(this.sale);
       this.clientSearch.set(this.resolveClientName(this.sale));
+      this.vehicle_id.set(this.sale.vehicle_id ?? null);
+      this.saleVehicleMileage.set(this.sale.mileage ?? null);
 
       if (this.sale.linked_client) {
         this.selectedClient.set(this.sale.linked_client);
@@ -433,6 +439,10 @@ export class SaleFormComponent implements OnInit {
     this.updateDuplicateWarnings();
   }
 
+  onVehicleSelected(vehicle: Vehicle | null): void {
+    this.vehicle_id.set(vehicle?.id ?? null);
+  }
+
   selectClient(client: Client): void {
     this.selectedClient.set(client);
     this.formData.client_id = client.id;
@@ -441,6 +451,8 @@ export class SaleFormComponent implements OnInit {
     this.clientSearch.set(client.name || '');
     this.showClientSuggestions.set(false);
     this.showQuickCreate.set(false);
+    this.vehicle_id.set(null);
+    this.saleVehicleMileage.set(null);
     this.quickClient = {
       name: '',
       phone: '',
@@ -465,6 +477,8 @@ export class SaleFormComponent implements OnInit {
     this.formData.client_id = null;
     this.clientSearch.set(this.formData.client || '');
     this.showClientSuggestions.set(false);
+    this.vehicle_id.set(null);
+    this.saleVehicleMileage.set(null);
     this.updateDuplicateWarnings();
   }
 
@@ -540,6 +554,8 @@ export class SaleFormComponent implements OnInit {
       client: (this.formData.client || '').trim(),
       client_phone: (this.formData.client_phone || '').trim(),
       client_id: this.formData.client_id ?? null,
+      vehicle_id: this.vehicle_id(),
+      mileage: this.saleVehicleMileage(),
       items: (this.formData.items || []).map((item: any) => ({
         ...item,
         unit_price: Number(item.selling_price ?? item.unit_price ?? 0),

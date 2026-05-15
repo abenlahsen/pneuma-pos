@@ -25,6 +25,8 @@ class StoreSaleRequest extends FormRequest
             'client' => ['nullable', 'string'],
             'client_phone' => ['nullable', 'string'],
             'client_id' => ['nullable', 'exists:clients,id'],
+            'vehicle_id' => ['nullable', 'exists:vehicles,id'],
+            'mileage' => ['nullable', 'integer', 'min:0'],
             'commercial_id' => ['required', 'exists:users,id'],
             'carrier_id' => ['nullable', 'exists:carriers,id'],
             'tracking_number' => ['nullable', 'string', 'max:255'],

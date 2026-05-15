@@ -111,6 +111,58 @@
       </article>
     </section>
 
+    <section class="panel vehicles-panel">
+      <div class="panel-header">
+        <h2>Véhicules ({{ vehicles().length }})</h2>
+        <button type="button" class="btn btn-sm btn-primary"
+                (click)="openAddVehicle()"
+                *ngIf="!showVehicleForm()">
+          + Ajouter un véhicule
+        </button>
+      </div>
+
+      @if (showVehicleForm()) {
+        <app-vehicle-form
+          [clientId]="profile()!.client!.id"
+          [vehicle]="editingVehicle()"
+          (saved)="onVehicleSaved($event)"
+          (cancelled)="showVehicleForm.set(false); editingVehicle.set(null)"
+        />
+      }
+
+      @if (vehicles().length > 0) {
+        <div class="vehicles-list">
+          @for (v of vehicles(); track v.id) {
+            <div class="vehicle-card" [class.vehicle-inactive]="!v.is_active">
+              <div class="vehicle-card-header">
+                <span class="vehicle-plate">{{ v.plate }}</span>
+                <span class="vehicle-brand">{{ v.brand }} {{ v.model_name }}</span>
+                <span class="badge" [class.badge-success]="v.is_active" [class.badge-secondary]="!v.is_active">
+                  {{ v.is_active ? 'Actif' : 'Inactif' }}
+                </span>
+                <div class="vehicle-card-actions">
+                  <button type="button" class="btn-icon" (click)="editVehicle(v)" title="Modifier">✏️</button>
+                  <button type="button" class="btn-icon btn-icon-danger" (click)="deleteVehicle(v)" title="Supprimer">🗑</button>
+                </div>
+              </div>
+              <div class="vehicle-card-body">
+                <span class="text-muted">
+                  Mise en circulation :
+                  {{ v.circulation_month < 10 ? '0' : '' }}{{ v.circulation_month }}/{{ v.circulation_year }}
+                </span>
+                @if (v.vin) { <span class="text-muted">VIN : {{ v.vin }}</span> }
+                @if (v.notes) { <span class="text-muted">{{ v.notes }}</span> }
+              </div>
+            </div>
+          }
+        </div>
+      } @else if (!showVehicleForm()) {
+        <div class="empty-state">
+          <p>Aucun véhicule enregistré pour ce client.</p>
+        </div>
+      }
+    </section>
+
     <section class="panel">
       <div class="tab-actions">
         <button

@@ -61,7 +61,30 @@
         </div>
       </div>
 
-      <div class="form-grid">
+      <!-- Véhicule via sélecteur (client lié) -->
+      <ng-container *ngIf="client_id()">
+        <app-vehicle-selector
+          [clientId]="client_id()"
+          [required]="true"
+          [selectedVehicleId]="vehicle_id()"
+          (vehicleSelected)="onVehicleSelected($event)"
+        />
+        <div class="form-group" style="margin-top: 0.5rem;">
+          <label>Kilométrage (km)</label>
+          <input
+            type="number"
+            [ngModel]="mileage()"
+            (ngModelChange)="mileage.set($event ? +$event : null)"
+            name="mileage"
+            placeholder="Ex: 85000"
+            min="0"
+            class="form-control"
+          />
+        </div>
+      </ng-container>
+
+      <!-- Véhicule texte libre (pas de client lié) -->
+      <div class="form-grid" *ngIf="!client_id()">
         <div class="form-group">
           <label>Véhicule <span class="required">*</span></label>
           <input
@@ -80,7 +103,7 @@
             type="number"
             [ngModel]="mileage()"
             (ngModelChange)="mileage.set($event ? +$event : null)"
-            name="mileage"
+            name="mileage_no_client"
             placeholder="Ex: 85000"
             min="0"
             class="form-control"
@@ -385,7 +408,7 @@
         ⛔ {{ stockErrorMessage() }}
       </div>
       <button type="button" class="btn btn-secondary" (click)="onCancel()">Annuler</button>
-      <button type="submit" class="btn btn-primary" [disabled]="orderForm.invalid || !hasValidLines() || hasStockError()">
+      <button type="submit" class="btn btn-primary" [disabled]="orderForm.invalid || !hasValidLines() || hasStockError() || !vehicleValid()">
         {{ isEditing ? 'Enregistrer les modifications' : 'Créer l\'intervention' }}
       </button>
     </div>

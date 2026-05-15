@@ -1,0 +1,82 @@
+<div class="vehicle-form">
+  <div class="vf-row">
+    <div class="form-group">
+      <label>Immatriculation <span class="required">*</span></label>
+      <input type="text" class="form-control"
+             [ngModel]="plate()"
+             (ngModelChange)="plate.set($event.toUpperCase())"
+             name="vf_plate"
+             placeholder="Ex: 12345-A-78"
+             autocomplete="off">
+      <small class="form-hint">Format : chiffres-lettre(s)-année</small>
+      <small class="text-danger" *ngIf="plateInvalid()">Format invalide (ex: 12345-A-78)</small>
+    </div>
+    <div class="form-group">
+      <label>Marque <span class="required">*</span></label>
+      <input type="text" class="form-control"
+             [ngModel]="brand()"
+             (ngModelChange)="brand.set($event)"
+             name="vf_brand"
+             placeholder="Ex: Dacia">
+    </div>
+    <div class="form-group">
+      <label>Modèle <span class="required">*</span></label>
+      <input type="text" class="form-control"
+             [ngModel]="modelName()"
+             (ngModelChange)="modelName.set($event)"
+             name="vf_model_name"
+             placeholder="Ex: Logan">
+    </div>
+  </div>
+
+  <div class="vf-row">
+    <div class="form-group">
+      <label>Mois de mise en circulation <span class="required">*</span></label>
+      <select class="form-control"
+              [ngModel]="circulationMonth()"
+              (ngModelChange)="circulationMonth.set(+$event)"
+              name="vf_circulation_month">
+        <option [ngValue]="null">-- Mois --</option>
+        <option *ngFor="let m of months" [ngValue]="m.value">{{ m.label }}</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Année <span class="required">*</span></label>
+      <select class="form-control"
+              [ngModel]="circulationYear()"
+              (ngModelChange)="circulationYear.set(+$event)"
+              name="vf_circulation_year">
+        <option [ngValue]="null">-- Année --</option>
+        <option *ngFor="let y of years" [ngValue]="y">{{ y }}</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>VIN <span class="form-hint-inline">(17 car., optionnel)</span></label>
+      <input type="text" class="form-control"
+             [ngModel]="vin()"
+             (ngModelChange)="vin.set($event.toUpperCase())"
+             name="vf_vin"
+             placeholder="17 caractères"
+             maxlength="17">
+      <small class="form-hint" *ngIf="vin()">{{ vin().length }}/17</small>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Notes</label>
+    <textarea class="form-control" rows="2"
+              [ngModel]="notes()"
+              (ngModelChange)="notes.set($event)"
+              name="vf_notes"
+              placeholder="Informations complémentaires..."></textarea>
+  </div>
+
+  <div class="vf-actions">
+    <button type="button" class="btn btn-secondary" (click)="cancelled.emit()">Annuler</button>
+    <button type="button" class="btn btn-primary"
+            [disabled]="!isValid() || saving()"
+            (click)="onSubmit()">
+      {{ saving() ? 'Enregistrement...' : (vehicle ? 'Modifier le véhicule' : 'Ajouter le véhicule') }}
+    </button>
+  </div>
+</div>

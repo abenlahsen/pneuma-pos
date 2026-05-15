@@ -16,7 +16,8 @@ class UpdateServiceOrderRequest extends FormRequest
     {
         return [
             'date' => ['sometimes', 'required', 'date'],
-            'vehicle' => ['sometimes', 'required', 'string', 'max:255'],
+            'vehicle_id' => ['nullable', 'exists:vehicles,id'],
+            'vehicle' => ['sometimes', 'nullable', 'string', 'max:255'],
             'mileage' => ['nullable', 'integer', 'min:0'],
             'items' => ['sometimes', 'array', 'min:1'],
             'items.*.item_type' => ['required_with:items', 'in:service,part'],
