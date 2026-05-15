@@ -36,6 +36,11 @@ class Client extends Model
         'updated_at' => 'datetime',
     ];
 
+    public function vehicles(): HasMany
+    {
+        return $this->hasMany(Vehicle::class)->orderBy('brand');
+    }
+
     public function sales(): HasMany
     {
         return $this->hasMany(Sale::class);

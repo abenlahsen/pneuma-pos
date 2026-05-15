@@ -1,0 +1,51 @@
+<div class="vehicle-selector" *ngIf="clientId">
+  <label class="vs-label">
+    Véhicule
+    <span class="required" *ngIf="required">*</span>
+    <span class="optional" *ngIf="!required">(optionnel)</span>
+  </label>
+
+  <div class="vs-loading" *ngIf="loading()">Chargement des véhicules…</div>
+
+  <ng-container *ngIf="!loading()">
+    <ng-container *ngIf="!showCreateForm()">
+      <div class="vs-select-row">
+        <select class="form-control"
+                [ngModel]="selectedVehicle()?.id ?? null"
+                (ngModelChange)="onVehicleChange($event)"
+                name="vehicle_id">
+          <option [ngValue]="null">
+            {{ vehicles().length === 0 ? '— Aucun véhicule enregistré —' : '— Sélectionner —' }}
+          </option>
+          <option *ngFor="let v of vehicles()" [ngValue]="v.id">
+            {{ formatVehicle(v) }}
+          </option>
+        </select>
+        <button type="button" class="btn-add-vehicle"
+                (click)="showCreateForm.set(true)"
+                title="Ajouter un nouveau véhicule">＋</button>
+        <button type="button" class="btn-clear-vehicle"
+                *ngIf="selectedVehicle() && !required"
+                (click)="clearVehicle()"
+                title="Retirer">✕</button>
+      </div>
+    </ng-container>
+
+    <div class="vs-inline-form" *ngIf="showCreateForm()">
+      <app-vehicle-form
+        [clientId]="clientId!"
+        (saved)="onVehicleCreated($event)"
+        (cancelled)="showCreateForm.set(false)"
+      />
+    </div>
+
+    <div class="vs-selected-info" *ngIf="selectedVehicle() && !showCreateForm()">
+      <span class="vs-tag">
+        🚗 <strong>{{ selectedVehicle()!.plate }}</strong>
+        — {{ selectedVehicle()!.brand }} {{ selectedVehicle()!.model_name }}
+        ({{ selectedVehicle()!.circulation_month < 10 ? '0' : '' }}{{ selectedVehicle()!.circulation_month }}/{{ selectedVehicle()!.circulation_year }})
+      </span>
+      <span class="vs-vin" *ngIf="selectedVehicle()!.vin">VIN : {{ selectedVehicle()!.vin }}</span>
+    </div>
+  </ng-container>
+</div>

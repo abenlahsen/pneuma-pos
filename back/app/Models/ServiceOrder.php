@@ -10,6 +10,7 @@ class ServiceOrder extends Model
 {
     protected $fillable = [
         'client_id',
+        'vehicle_id',
         'date',
         'vehicle',
         'mileage',
@@ -45,6 +46,11 @@ class ServiceOrder extends Model
     public function items(): HasMany
     {
         return $this->hasMany(ServiceItem::class)->orderBy('sort_order');
+    }
+
+    public function vehicle(): BelongsTo
+    {
+        return $this->belongsTo(Vehicle::class);
     }
 
     public function clientRecord(): BelongsTo

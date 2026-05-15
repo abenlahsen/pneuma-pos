@@ -25,6 +25,8 @@ class UpdateSaleRequest extends FormRequest
             'client' => ['sometimes', 'nullable', 'string'],
             'client_phone' => ['sometimes', 'nullable', 'string'],
             'client_id' => ['sometimes', 'nullable', 'exists:clients,id'],
+            'vehicle_id' => ['sometimes', 'nullable', 'exists:vehicles,id'],
+            'mileage' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'commercial_id' => ['sometimes', 'required', 'exists:users,id'],
             'carrier_id' => ['sometimes', 'nullable', 'exists:carriers,id'],
             'tracking_number' => ['sometimes', 'nullable', 'string', 'max:255'],

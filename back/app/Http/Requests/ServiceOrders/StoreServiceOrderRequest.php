@@ -16,7 +16,8 @@ class StoreServiceOrderRequest extends FormRequest
     {
         return [
             'date' => ['required', 'date'],
-            'vehicle' => ['required', 'string', 'max:255'],
+            'vehicle_id' => ['nullable', 'exists:vehicles,id'],
+            'vehicle' => ['nullable', 'string', 'max:255', 'required_without:vehicle_id'],
             'mileage' => ['nullable', 'integer', 'min:0'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.item_type' => ['required', 'in:service,part'],

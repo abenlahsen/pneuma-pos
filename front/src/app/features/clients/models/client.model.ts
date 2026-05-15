@@ -1,3 +1,5 @@
+import { Vehicle } from '../../vehicles/models/vehicle.model';
+
 export interface Client {
   id: number;
   name: string;
@@ -14,6 +16,8 @@ export interface Client {
   opening_balance?: number | null;
   payment_terms_days?: number | null;
   default_payment_method?: string | null;
+  vehicles?: Vehicle[];
+  vehicles_count?: number;
 }
 
 export interface ClientPayload {

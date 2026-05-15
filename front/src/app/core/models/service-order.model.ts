@@ -23,6 +23,8 @@ export interface ServiceItem {
 export interface ServiceOrder {
   id: number;
   client_id?: number | null;
+  vehicle_id?: number | null;
+  vehicle_data?: { id: number; plate: string; brand: string; model_name: string; circulation_month: number; circulation_year: number; display_name?: string } | null;
   client_record?: { id: number; name: string; phone?: string | null } | null;
   date: string;
   vehicle: string;
@@ -54,6 +56,7 @@ export interface ServiceItemPayload {
 
 export interface ServiceOrderPayload {
   client_id?: number | null;
+  vehicle_id?: number | null;
   date: string;
   vehicle: string;
   mileage?: number | null;

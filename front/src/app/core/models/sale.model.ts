@@ -63,6 +63,8 @@ export interface Sale {
   partner?: { id: number; name: string; city?: string; montage_price?: number; alignment_price?: number } | null;
   service: string;
   client_id?: number | null;
+  vehicle_id?: number | null;
+  mileage?: number | null;
   linked_client?: Client | null;
   client_summary?: SaleClientAccountSummary | null;
   client: string;

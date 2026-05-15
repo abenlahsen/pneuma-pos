@@ -12,17 +12,21 @@ import {
   ClientStatementEntry,
   ClientStatementResponse,
 } from '../models/client.model';
+import { VehicleService } from '../../vehicles/data-access/vehicle.service';
+import { Vehicle } from '../../vehicles/models/vehicle.model';
+import { VehicleFormComponent } from '../../../shared/vehicle-form/vehicle-form.component';
 
 @Component({
   selector: 'app-client-detail-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, ClientFormComponent],
+  imports: [CommonModule, RouterLink, ClientFormComponent, VehicleFormComponent],
   templateUrl: './client-detail-page.component.html',
   styleUrl: './client-detail-page.component.scss',
 })
 export class ClientDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly clientService = inject(ClientService);
+  private readonly vehicleService = inject(VehicleService);
   private readonly destroyRef = inject(DestroyRef);
 
   private activeClientId: number | null = null;
@@ -39,6 +43,10 @@ export class ClientDetailPageComponent implements OnInit {
 
   readonly isEditModalOpen = signal(false);
   readonly saving = signal(false);
+
+  readonly vehicles = signal<Vehicle[]>([]);
+  readonly showVehicleForm = signal(false);
+  readonly editingVehicle = signal<Vehicle | null>(null);
 
   readonly salesHistory = computed<ClientSalesHistoryRow[]>(() => {
     const p = this.profile();
@@ -92,6 +100,41 @@ export class ClientDetailPageComponent implements OnInit {
     this.isEditModalOpen.set(false);
   }
 
+  openAddVehicle(): void {
+    this.editingVehicle.set(null);
+    this.showVehicleForm.set(true);
+  }
+
+  editVehicle(v: Vehicle): void {
+    this.editingVehicle.set(v);
+    this.showVehicleForm.set(true);
+  }
+
+  onVehicleSaved(v: Vehicle): void {
+    if (this.editingVehicle()) {
+      this.vehicles.update(list => list.map(x => x.id === v.id ? v : x));
+    } else {
+      this.vehicles.update(list => [...list, v]);
+    }
+    this.showVehicleForm.set(false);
+    this.editingVehicle.set(null);
+  }
+
+  deleteVehicle(v: Vehicle): void {
+    if (!confirm(`Supprimer le véhicule ${v.plate} ?`)) return;
+    this.vehicleService.deleteVehicle(v.id).subscribe(result => {
+      if ((result as any)?.deactivated) {
+        this.vehicles.update(list => list.map(x => x.id === v.id ? { ...x, is_active: false } : x));
+      } else {
+        this.vehicles.update(list => list.filter(x => x.id !== v.id));
+      }
+    });
+  }
+
+  formatVehicle(v: Vehicle): string {
+    return this.vehicleService.formatDisplay(v);
+  }
+
   saveClient(payload: ClientPayload): void {
     const clientId = this.activeClientId;
     if (!clientId) return;
@@ -118,7 +161,14 @@ export class ClientDetailPageComponent implements OnInit {
     this.statementErrorMessage.set('');
     this.profile.set(null);
     this.statement.set(null);
+    this.vehicles.set([]);
+    this.showVehicleForm.set(false);
+    this.editingVehicle.set(null);
     this.activeTab.set('overview');
+
+    this.vehicleService.getVehiclesForClient(clientId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (list) => this.vehicles.set(list), error: () => {} });
 
     this.clientService
       .getClient(clientId)

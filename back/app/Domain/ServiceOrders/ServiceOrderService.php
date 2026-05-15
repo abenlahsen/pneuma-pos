@@ -19,8 +19,9 @@ class ServiceOrderService
 
             $order = ServiceOrder::create([
                 'client_id' => $validated['client_id'] ?? null,
+                'vehicle_id' => $validated['vehicle_id'] ?? null,
                 'date' => $validated['date'],
-                'vehicle' => $validated['vehicle'],
+                'vehicle' => $this->resolveVehicleSnapshot($validated),
                 'mileage' => $validated['mileage'] ?? null,
                 'discount' => $discount,
                 'total_amount' => 0,
@@ -117,6 +118,22 @@ class ServiceOrderService
         if ($order->status !== 'ANNULE') {
             $this->stockDeduction->deductForOrder($order, $userId);
         }
+    }
+
+    private function resolveVehicleSnapshot(array $validated): string
+    {
+        if (!empty($validated['vehicle'])) {
+            return $validated['vehicle'];
+        }
+
+        if (!empty($validated['vehicle_id'])) {
+            $v = \App\Models\Vehicle::find($validated['vehicle_id']);
+            if ($v) {
+                return "{$v->brand} {$v->model_name}";
+            }
+        }
+
+        return '';
     }
 
     private function buildItemAttributes(array $itemData, int $index): array

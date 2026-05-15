@@ -1,0 +1,85 @@
+@use '../../features/_variables' as *;
+
+.vehicle-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.vs-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: $text-dark;
+
+  .required { color: $primary; margin-left: 2px; }
+  .optional { font-size: 0.72rem; font-weight: 400; color: $text-muted; margin-left: 4px; }
+}
+
+.vs-loading {
+  font-size: 0.8rem;
+  color: $text-muted;
+  padding: 0.25rem 0;
+}
+
+.vs-select-row {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+
+  .form-control {
+    flex: 1;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid $border-color;
+    border-radius: $radius-sm;
+    font-size: 0.875rem;
+    color: $text-dark;
+    background: #fff;
+
+    &:focus { outline: none; border-color: $primary; }
+  }
+}
+
+.btn-add-vehicle {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid $primary;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $primary;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+  white-space: nowrap;
+
+  &:hover { background: lighten(#ff2d37, 42%); }
+}
+
+.btn-clear-vehicle {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid $border-color;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $text-muted;
+  cursor: pointer;
+  font-size: 0.8rem;
+
+  &:hover { color: $expense-color; border-color: $expense-color; }
+}
+
+.vs-inline-form {
+  margin-top: 0.25rem;
+}
+
+.vs-selected-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.4rem 0.6rem;
+  background: lighten(#ff2d37, 45%);
+  border-radius: $radius-sm;
+  font-size: 0.8rem;
+
+  .vs-tag { color: $text-dark; }
+  .vs-vin { color: $text-muted; font-size: 0.72rem; }
+}
