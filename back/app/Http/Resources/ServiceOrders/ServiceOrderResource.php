@@ -15,15 +15,18 @@ class ServiceOrderResource extends JsonResource
             'vehicle_id' => $this->vehicle_id,
             'vehicle_data' => $this->when(
                 $this->relationLoaded('vehicle'),
-                fn () => $this->vehicle ? [
-                    'id'                => $this->vehicle->id,
-                    'plate'             => $this->vehicle->plate,
-                    'brand'             => $this->vehicle->brand,
-                    'model_name'        => $this->vehicle->model_name,
-                    'circulation_month' => $this->vehicle->circulation_month,
-                    'circulation_year'  => $this->vehicle->circulation_year,
-                    'display_name'      => $this->vehicle->display_name,
-                ] : null
+                function () {
+                    $v = $this->getRelation('vehicle');
+                    return $v ? [
+                        'id'                => $v->id,
+                        'plate'             => $v->plate,
+                        'brand'             => $v->brand,
+                        'model_name'        => $v->model_name,
+                        'circulation_month' => $v->circulation_month,
+                        'circulation_year'  => $v->circulation_year,
+                        'display_name'      => $v->display_name,
+                    ] : null;
+                }
             ),
             'client_record' => $this->whenLoaded('clientRecord', fn () => $this->clientRecord ? [
                 'id' => $this->clientRecord->id,
