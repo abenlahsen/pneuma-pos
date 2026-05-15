@@ -313,6 +313,8 @@ class ServiceOrderApiTest extends TestCase
             'description' => 'Test',
             'person' => '',
             'partner' => '',
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
         ]);
 
         ServicePayment::query()->create([
@@ -642,6 +644,7 @@ class ServiceOrderApiTest extends TestCase
             'description' => 'Test',
             'person' => '',
             'partner' => '',
+            'user_id' => $this->user->id,
             'account_id' => $this->account->id,
         ]);
 
