@@ -1,8 +1,35 @@
 import { test, expect } from '@playwright/test';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const TEST_ACCOUNT = 'COMPTE_E2E_TEST';
+const AUTH_FILE = path.join(__dirname, '..', '.auth', 'state.json');
+const BASE_URL = process.env['E2E_BASE_URL'] ?? 'http://nginx:80';
+
+function getStoredToken(): string | null {
+  try {
+    const state = JSON.parse(fs.readFileSync(AUTH_FILE, 'utf-8'));
+    const origin = state.origins?.find((o: { origin: string }) => o.origin === BASE_URL);
+    const item = origin?.localStorage?.find((i: { name: string }) => i.name === 'auth_token');
+    return item?.value ?? null;
+  } catch { return null; }
+}
 
 test.describe.serial('Comptes & Trésorerie', () => {
+  test.beforeAll(async ({ request }) => {
+    const token = getStoredToken();
+    if (!token) return;
+    const headers = { Authorization: `Bearer ${token}` };
+    const res = await request.get(`/api/accounts?search=${encodeURIComponent(TEST_ACCOUNT)}&per_page=100`, { headers });
+    if (!res.ok()) return;
+    const data = await res.json() as { data: { id: number; name: string }[] };
+    for (const a of data.data) {
+      if (a.name === TEST_ACCOUNT) {
+        await request.delete(`/api/accounts/${a.id}`, { headers });
+      }
+    }
+  });
+
   test.beforeEach(async ({ page }) => {
     await page.goto('/accounts');
     await page.waitForLoadState('networkidle');
@@ -29,20 +56,27 @@ test.describe.serial('Comptes & Trésorerie', () => {
     await page.getByRole('button', { name: /Nouveau Compte/ }).click();
     await expect(page.locator('.modal-overlay, .modal-container').first()).toBeVisible();
     await expect(page.locator('label:has-text("Nom"), label:has-text("Type")').first()).toBeVisible();
+    // Fermer proprement la modale
+    await page.locator('.modal-overlay').locator('.btn-close, button:has-text("Annuler")').first().click();
   });
 
   test('créer un compte de trésorerie', async ({ page }) => {
+    test.setTimeout(60_000);
+
     await page.getByRole('button', { name: /Nouveau Compte/ }).click();
-    await expect(page.locator('.modal-container')).toBeVisible();
+    await expect(page.locator('.modal-content')).toBeVisible();
 
-    // Chercher le champ Nom du compte
-    await page.locator('.modal-container').locator('input[name="name"], input[placeholder*="nom" i], input[placeholder*="compte" i]').first().fill(TEST_ACCOUNT);
+    // Utiliser le placeholder pour trouver le champ Nom de manière fiable
+    await page.getByPlaceholder('ex: Caisse principale').fill(TEST_ACCOUNT);
 
-    await page.locator('.modal-container').locator('button[type="submit"]:has-text("Enregistrer"), button:has-text("Créer")').first().click();
-    await page.waitForLoadState('networkidle');
+    const [postResp] = await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/accounts') && r.request().method() === 'POST'),
+      page.locator('.modal-content').locator('button[type="submit"]').click(),
+    ]);
+    expect(postResp.status()).toBeLessThan(400);
 
-    await expect(page.locator('.modal-overlay')).not.toBeVisible();
-    await expect(page.locator(':has-text("' + TEST_ACCOUNT + '")').first()).toBeVisible();
+    await expect(page.locator('.modal-overlay')).not.toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('.account-card', { hasText: TEST_ACCOUNT }).first()).toBeVisible({ timeout: 10_000 });
   });
 
   // ── Détail du compte ──────────────────────────────────────────────────────

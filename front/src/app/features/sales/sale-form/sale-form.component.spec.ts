@@ -47,6 +47,7 @@ describe('SaleFormComponent', () => {
     it('includes carrier_id, tracking_number, partner_id and service in the emitted payload', () => {
       comp.formData = {
         ...comp.formData,
+        commercial_id: 1,
         carrier_id: 5,
         tracking_number: 'TR-20260315-001',
         partner_id: 3,
@@ -69,6 +70,7 @@ describe('SaleFormComponent', () => {
       comp.sale = {
         id: 42,
         date: '2026-03-15',
+        commercial_id: 1,
         carrier_id: 7,
         tracking_number: 'TR-EXISTING',
         partner_id: 2,
@@ -92,6 +94,7 @@ describe('SaleFormComponent', () => {
     it('sets null logistics fields when not provided', () => {
       comp.formData = {
         ...comp.formData,
+        commercial_id: 1,
         carrier_id: null,
         tracking_number: '',
         partner_id: null,

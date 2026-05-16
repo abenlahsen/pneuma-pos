@@ -11,12 +11,10 @@ return new class extends Migration
         Schema::table('sales', function (Blueprint $table) {
             $table->foreignId('vehicle_id')
                   ->nullable()
-                  ->after('client_id')
                   ->constrained('vehicles')
                   ->nullOnDelete();
             $table->unsignedInteger('mileage')
-                  ->nullable()
-                  ->after('vehicle_id');
+                  ->nullable();
         });
     }
 

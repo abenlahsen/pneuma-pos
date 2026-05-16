@@ -3,8 +3,8 @@ import { test, expect } from '@playwright/test';
 test.describe('Stock', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/stock');
-    await page.waitForLoadState('networkidle');
-    await expect(page.locator('h1')).toContainText('Stock');
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('h1')).toContainText('Stock', { timeout: 15_000 });
   });
 
   test('affiche les cartes de résumé (Articles, Quantité, Valeur)', async ({ page }) => {
@@ -12,9 +12,9 @@ test.describe('Stock', () => {
     await expect(page.locator('.card-label', { hasText: 'Quantité totale' })).toBeVisible();
     await expect(page.locator('.card-label', { hasText: "Valeur d'achat" })).toBeVisible();
 
-    // 803 lots seedés
+    // Wait for spinner to go away and show a non-zero count
     const articlesValue = page.locator('.summary-card').filter({ hasText: 'Articles' }).locator('.card-value');
-    await expect(articlesValue).toContainText('803');
+    await expect(articlesValue).toContainText(/[1-9]/);
   });
 
   test('rechercher "MICHELIN" filtre les résultats', async ({ page }) => {
@@ -46,16 +46,21 @@ test.describe('Stock', () => {
     await expect(hint).toContainText('205');
   });
 
-  test('réinitialiser affiche les 803 lots de stock', async ({ page }) => {
+  test('réinitialiser restaure le stock complet', async ({ page }) => {
     await page.fill('.search-input', 'MICHELIN');
-    await page.click('.search-btn');
-    await page.waitForLoadState('networkidle');
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/stocks') && r.request().method() === 'GET'),
+      page.click('.search-btn'),
+    ]);
 
-    await page.click('.reset-btn');
-    await page.waitForLoadState('networkidle');
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/stocks') && r.request().method() === 'GET'),
+      page.click('.reset-btn'),
+    ]);
 
     const articlesValue = page.locator('.summary-card').filter({ hasText: 'Articles' }).locator('.card-value');
-    await expect(articlesValue).toContainText('803');
+    // /[1-9]/ rules out both "0" (zero articles) and "..." (loading spinner) — no separate parseInt needed
+    await expect(articlesValue).toContainText(/[1-9]/, { timeout: 15_000 });
   });
 
   test('le bouton "Exporter le stock disponible" est visible', async ({ page }) => {

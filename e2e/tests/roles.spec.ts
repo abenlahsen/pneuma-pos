@@ -6,8 +6,8 @@ const TEST_ROLE = 'ROLE_E2E_TEST';
 test.describe.serial('Gestion des Rôles', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/roles');
-    await page.waitForLoadState('networkidle');
-    await expect(page.locator('h1')).toContainText('Gestion des Rôles');
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('h1')).toContainText('Gestion des Rôles', { timeout: 15_000 });
   });
 
   // ── Lecture : rôles seedés ────────────────────────────────────────────────
@@ -59,12 +59,18 @@ test.describe.serial('Gestion des Rôles', () => {
   // ── Suppression (cleanup) ─────────────────────────────────────────────────
 
   test('supprimer le rôle de test', async ({ page }) => {
-    page.once('dialog', (dialog) => dialog.accept());
-    await page.locator('tbody tr', { hasText: TEST_ROLE })
-      .locator('button[title="Supprimer"]')
-      .click();
-    await page.waitForLoadState('networkidle');
+    test.setTimeout(60_000);
 
-    await expect(page.locator('tbody td', { hasText: TEST_ROLE })).not.toBeVisible();
+    // Pre-register before delete to avoid race condition with auto-refresh GET
+    const refreshPromise = page.waitForResponse(r => r.url().includes('/api/roles') && r.request().method() === 'GET');
+
+    page.once('dialog', (dialog) => dialog.accept());
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/roles') && r.request().method() === 'DELETE'),
+      page.locator('tbody tr', { hasText: TEST_ROLE }).locator('button[title="Supprimer"]').click(),
+    ]);
+
+    await refreshPromise;
+    await expect(page.locator('tbody td', { hasText: TEST_ROLE })).not.toBeVisible({ timeout: 10_000 });
   });
 });

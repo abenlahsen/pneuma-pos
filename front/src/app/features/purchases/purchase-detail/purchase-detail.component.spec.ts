@@ -52,4 +52,59 @@ describe('PurchaseDetailComponent', () => {
       expect(openSpy).toHaveBeenCalledWith('/products?id=5&edit=1', '_blank', 'noopener');
     });
   });
+
+  describe('openPrint', () => {
+    it('sets printDoc signal (not null)', () => {
+      comp.purchase = { id: 10, date: '2026-05-01', items: [], total_price: 0 } as any;
+      comp.openPrint();
+      expect(comp.printDoc()).not.toBeNull();
+    });
+
+    it('sets type=purchase and party_label=Fournisseur', () => {
+      comp.purchase = { id: 10, date: '2026-05-01', items: [], total_price: 0 } as any;
+      comp.openPrint();
+      const doc = comp.printDoc()!;
+      expect(doc.type).toBe('purchase');
+      expect(doc.party_label).toBe('Fournisseur');
+    });
+
+    it('sets doc_number from purchase.id', () => {
+      comp.purchase = { id: 42, date: '2026-05-01', items: [], total_price: 0 } as any;
+      comp.openPrint();
+      expect(comp.printDoc()!.doc_number).toBe('42');
+    });
+
+    it('uses supplier.name as party_name', () => {
+      comp.purchase = { id: 1, date: '2026-05-01', items: [], total_price: 0, supplier: { name: 'Fournisseur SA' } } as any;
+      comp.openPrint();
+      expect(comp.printDoc()!.party_name).toBe('Fournisseur SA');
+    });
+
+    it('falls back to "-" when supplier is absent', () => {
+      comp.purchase = { id: 1, date: '2026-05-01', items: [], total_price: 0, supplier: null } as any;
+      comp.openPrint();
+      expect(comp.printDoc()!.party_name).toBe('-');
+    });
+
+    it('maps line label from linkedProduct.reference and sets discount=0, total=price×qty', () => {
+      comp.purchase = {
+        id: 1, date: '2026-05-01', total_price: 200,
+        items: [{ linkedProduct: { reference: 'REF-001' }, product_id: 5, quantity: 2, unit_price: 100 }],
+      } as any;
+      comp.openPrint();
+      const line = comp.printDoc()!.lines[0];
+      expect(line.label).toBe('REF-001');
+      expect(line.discount).toBe(0);
+      expect(line.total).toBe(200);
+    });
+
+    it('falls back to "Produit #id" when linkedProduct has no reference', () => {
+      comp.purchase = {
+        id: 1, date: '2026-05-01', total_price: 50,
+        items: [{ product_id: 7, quantity: 1, unit_price: 50 }],
+      } as any;
+      comp.openPrint();
+      expect(comp.printDoc()!.lines[0].label).toBe('Produit #7');
+    });
+  });
 });
