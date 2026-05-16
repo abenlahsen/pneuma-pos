@@ -59,6 +59,29 @@ npm run build    # Production build → dist/pneuma-pos/browser/
 npm test         # Run Vitest tests
 ```
 
+### E2E Tests (Playwright)
+```bash
+cd e2e
+npm install
+npm test                    # Run all tests (headless Chromium)
+npm run test:headed         # Run with visible browser
+npm run test:ui             # Playwright UI mode
+npm run report              # Open last HTML report
+npx playwright test --grep "Comptes"  # Run specific tests by name
+```
+
+Config (`e2e/playwright.config.ts`): `timeout: 30_000` per test, `expect: { timeout: 8_000 }` per assertion, `workers: 1` (sequential). Base URL defaults to `http://localhost:8888`; override with `E2E_BASE_URL` env var.
+
+**Auth flow**: `global-setup.ts` logs in as admin and saves the browser session (localStorage token) to `e2e/.auth/state.json`. All tests reuse this state via `storageState`. Sanctum uses single-session tokens — every new login revokes previous tokens. The `auth.spec.ts` login test revokes the global-setup token; its `afterAll` re-logs in and refreshes `.auth/state.json` so subsequent test files can make API calls.
+
+**Writing reliable tests**:
+- Use `test.describe.serial` for suites that create → modify → delete data.
+- Add `beforeAll` API cleanup to delete leftover test entities from previous runs: read the stored token from `.auth/state.json`, call `GET /api/entity?search=TEST_NAME&per_page=100`, then `DELETE /api/entity/{id}` for exact name matches.
+- Angular zoneless: summary cards render numbers inside `<span *ngIf="!loadingSummary()">`. Wait with `await expect(locator).toContainText(/\d+/)` before reading `textContent()` — never `parseInt()` raw textContent directly.
+- For reactive-form inputs (`formControlName`), prefer `page.getByPlaceholder(...)` over `page.locator('#id')` — reactive forms don't always emit a `name` attribute.
+- Scope `Annuler`/`Fermer` button clicks inside `.modal-overlay` to avoid matching filter-reset buttons with the same label.
+- Close modals explicitly at the end of serial tests that open but don't submit forms (otherwise the next `beforeEach` navigation may not reset SPA state cleanly).
+
 ## Architecture
 
 ### Backend Structure
@@ -78,7 +101,7 @@ npm test         # Run Vitest tests
 
 **Domain Services** (`back/app/Domain/`): Business logic is extracted from controllers into domain service classes. Each module has its own service (e.g., `Domain/Sales/SaleService.php`, `Domain/Clients/ClientService.php`, `Domain/Stock/StockService.php`, `Domain/ServiceOrders/ServiceOrderService.php`, `Domain/ServiceOrders/ServicePaymentService.php`). Controllers are thin — they delegate to domain services and return API Resources.
 
-**API Resources** (`back/app/Http/Resources/`): Laravel JSON Resources handle response serialization. Grouped by module (e.g., `Resources/Clients/ClientResource.php`, `Resources/Clients/ClientProfileResource.php`). All responses are wrapped in a `{ "data": ... }` envelope by default.
+**API Resources** (`back/app/Http/Resources/`): Laravel JSON Resources handle response serialization. Grouped by module (e.g., `Resources/Clients/ClientResource.php`, `Resources/Clients/ClientProfileResource.php`). Response envelope convention: **list endpoints** return `{ "data": [...], "meta": {...}, "total": N, ... }` (manual wrapping via `['data' => Resource::collection(...)->resolve()]`); **single-item endpoints** (show/store/update) return a **flat object** (no `data` wrapper) via `(new Resource($model))->resolve()`. Angular services type single-item responses as the model directly (e.g., `http.get<ServiceOrder>(url)`).
 
 **Controllers** (`back/app/Http/Controllers/`): Thin controllers that inject domain services, validate requests, and return API Resources. Each resource has standard CRUD (index/store/show/update/destroy). Some controllers have additional methods (e.g., `SaleController::summary`, `ClientController::profile`, `StockController::import`).
 

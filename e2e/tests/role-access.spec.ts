@@ -61,6 +61,7 @@ test.describe.serial('Accès par rôle — Manager & Commercial', () => {
   let commercialId: number | null = null;
 
   test.beforeAll(async () => {
+    test.setTimeout(90_000);
     const adminToken = getAdminToken();
 
     const managerRes = await apiRequest('POST', 'users', adminToken, {

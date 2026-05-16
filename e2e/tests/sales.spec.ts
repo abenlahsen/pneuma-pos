@@ -43,7 +43,7 @@ test.describe('Ventes', () => {
     await page.getByRole('button', { name: 'Nouvelle Vente' }).click();
     await expect(page.locator('.modal-overlay')).toBeVisible();
 
-    await page.getByRole('button', { name: /Annuler|Fermer|✕|X/ }).first().click();
+    await page.locator('.modal-overlay').getByRole('button', { name: /Annuler|Fermer|✕/ }).first().click();
     await expect(page.locator('.modal-overlay')).not.toBeVisible();
   });
 
@@ -68,5 +68,17 @@ test.describe('Ventes', () => {
     await modifierBtn.click();
 
     await expect(page.locator('h2', { hasText: 'Modifier la vente' })).toBeVisible();
+  });
+
+  test('le bouton Imprimer ouvre l\'aperçu PDF', async ({ page }) => {
+    const firstBtn = page.locator('button[title="Voir"]').first();
+    test.skip(await firstBtn.count() === 0, 'Aucune ligne dans le tableau');
+
+    await firstBtn.click();
+    await expect(page.locator('.modal-overlay')).toBeVisible();
+
+    await page.locator('.modal-overlay').getByRole('button', { name: /Imprimer/ }).first().click();
+    await expect(page.locator('.print-modal-overlay')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Télécharger PDF/ })).toBeVisible();
   });
 });

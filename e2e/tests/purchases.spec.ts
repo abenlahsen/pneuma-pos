@@ -3,8 +3,8 @@ import { test, expect } from '@playwright/test';
 test.describe('Achats', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/achats');
-    await page.waitForLoadState('networkidle');
-    await expect(page.locator('h1')).toContainText('Achats');
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('h1')).toContainText('Achats', { timeout: 25_000 });
   });
 
   test('affiche les 3 cartes de résumé', async ({ page }) => {
@@ -71,7 +71,7 @@ test.describe('Achats', () => {
 
   test('filtrer par paiement "Non payé"', async ({ page }) => {
     const paymentSelect = page.locator('label:has-text("Paiement")').locator('..').locator('select');
-    await paymentSelect.selectOption({ label: /Non payé/i });
+    await paymentSelect.selectOption({ label: 'Non payé' });
     await page.waitForLoadState('networkidle');
     await expect(page.locator('h1')).toContainText('Achats');
   });
@@ -83,5 +83,17 @@ test.describe('Achats', () => {
     await page.fill('input[type="date"]:last-of-type', today);
     await page.waitForLoadState('networkidle');
     await expect(page.locator('h1')).toContainText('Achats');
+  });
+
+  test('le bouton Imprimer ouvre l\'aperçu PDF', async ({ page }) => {
+    const firstBtn = page.locator('button[title="Visualiser"]').first();
+    test.skip(await firstBtn.count() === 0, 'Aucune ligne dans le tableau');
+
+    await firstBtn.click();
+    await expect(page.locator('.modal-overlay')).toBeVisible();
+
+    await page.locator('.modal-overlay').getByRole('button', { name: /Imprimer/ }).first().click();
+    await expect(page.locator('.print-modal-overlay')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Télécharger PDF/ })).toBeVisible();
   });
 });

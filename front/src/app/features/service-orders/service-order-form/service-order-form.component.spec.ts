@@ -5,6 +5,7 @@ import { of } from 'rxjs';
 import { ServiceOrderFormComponent } from './service-order-form.component';
 import { ClientService } from '../../clients/data-access/client.service';
 import { ProductService } from '../../products/data-access/product.service';
+import { ServiceOrderService } from '../data-access/service-order.service';
 
 const clientServiceStub = {
   getClients: () => of([]),
@@ -12,6 +13,10 @@ const clientServiceStub = {
 
 const productServiceStub = {
   getProducts: () => of({ data: [], total: 0, current_page: 1, last_page: 1, per_page: 500 }),
+};
+
+const serviceOrderServiceStub = {
+  searchParts: () => of([]),
 };
 
 describe('ServiceOrderFormComponent', () => {
@@ -24,6 +29,7 @@ describe('ServiceOrderFormComponent', () => {
         provideZonelessChangeDetection(),
         { provide: ClientService, useValue: clientServiceStub },
         { provide: ProductService, useValue: productServiceStub },
+        { provide: ServiceOrderService, useValue: serviceOrderServiceStub },
       ],
     }).compileComponents();
 
@@ -35,22 +41,38 @@ describe('ServiceOrderFormComponent', () => {
   // -------------------------------------------------------------------------
 
   describe('totalAmount', () => {
-    it('sums prices of all checked services', () => {
-      comp.checkedServices.set({
-        1: { price: 80, description: '' },
-        2: { price: 150, description: '' },
-      });
+    it('sums labor_cost × quantity for service lines', () => {
+      comp.lines.set([
+        { item_type: 'service', service_type: 'Vidange', description: '', quantity: 1, parts_cost: 0, labor_cost: 80 },
+        { item_type: 'service', service_type: 'Freins', description: '', quantity: 1, parts_cost: 0, labor_cost: 150 },
+      ]);
       expect(comp.totalAmount()).toBe(230);
     });
 
     it('handles string coercions from inputs', () => {
-      comp.checkedServices.set({ 1: { price: '100' as any, description: '' } });
+      comp.lines.set([
+        { item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: '100' as any },
+      ]);
       expect(comp.totalAmount()).toBe(100);
     });
 
-    it('returns 0 when no services checked', () => {
-      comp.checkedServices.set({});
+    it('returns 0 when lines array is empty', () => {
+      comp.lines.set([]);
       expect(comp.totalAmount()).toBe(0);
+    });
+
+    it('multiplies labor_cost by quantity', () => {
+      comp.lines.set([
+        { item_type: 'service', service_type: 'X', description: '', quantity: 3, parts_cost: 0, labor_cost: 50 },
+      ]);
+      expect(comp.totalAmount()).toBe(150);
+    });
+
+    it('sums unit_price × quantity for part lines', () => {
+      comp.lines.set([
+        { item_type: 'part', product_id: 1, product_name: 'Filtre', product_reference: '', unit: 'pièce', quantity: 2, unit_price: 75, total_quantity: 10, searchQuery: '', searchResults: [], searching: false },
+      ]);
+      expect(comp.totalAmount()).toBe(150);
     });
   });
 
@@ -60,135 +82,137 @@ describe('ServiceOrderFormComponent', () => {
 
   describe('netAmount', () => {
     it('applies percentage discount to totalAmount', () => {
-      comp.checkedServices.set({ 1: { price: 300, description: '' } });
-      comp.discount.set(10); // 10%
+      comp.lines.set([{ item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 300 }]);
+      comp.discount.set(10);
       expect(comp.netAmount()).toBe(270);
     });
 
     it('clamps to 0 when discount is 100%', () => {
-      comp.checkedServices.set({ 1: { price: 100, description: '' } });
+      comp.lines.set([{ item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 100 }]);
       comp.discount.set(100);
       expect(comp.netAmount()).toBe(0);
     });
 
     it('equals totalAmount when discount is 0', () => {
-      comp.checkedServices.set({ 1: { price: 200, description: '' } });
+      comp.lines.set([{ item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 200 }]);
       comp.discount.set(0);
       expect(comp.netAmount()).toBe(200);
     });
 
     it('handles 50% discount correctly', () => {
-      comp.checkedServices.set({ 1: { price: 200, description: '' } });
+      comp.lines.set([{ item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 200 }]);
       comp.discount.set(50);
       expect(comp.netAmount()).toBe(100);
     });
   });
 
   // -------------------------------------------------------------------------
-  // checkedCount computed signal
+  // Lines management
   // -------------------------------------------------------------------------
 
-  describe('checkedCount', () => {
-    it('returns the number of checked services', () => {
-      comp.checkedServices.set({
-        1: { price: 50, description: '' },
-        2: { price: 80, description: '' },
-      });
-      expect(comp.checkedCount()).toBe(2);
+  describe('addServiceLine', () => {
+    it('appends a service line with defaults', () => {
+      comp.lines.set([]);
+      comp.addServiceLine();
+      expect(comp.lines()).toHaveLength(1);
+      expect(comp.lines()[0].item_type).toBe('service');
     });
 
-    it('returns 0 when nothing is checked', () => {
-      comp.checkedServices.set({});
-      expect(comp.checkedCount()).toBe(0);
-    });
-  });
-
-  // -------------------------------------------------------------------------
-  // toggleProduct
-  // -------------------------------------------------------------------------
-
-  describe('toggleProduct', () => {
-    it('adds a service when unchecked, pre-filling selling_price', () => {
-      comp.serviceProducts.set([
-        { id: 5, profile: 'Vidange', reference: null, selling_price: 120 },
+    it('preserves existing lines when adding', () => {
+      comp.lines.set([
+        { item_type: 'service', service_type: 'A', description: '', quantity: 1, parts_cost: 0, labor_cost: 50 },
       ]);
-      comp.checkedServices.set({});
-      comp.toggleProduct(5);
-      expect(comp.isChecked(5)).toBe(true);
-      expect(comp.getCheckedEntry(5).price).toBe(120);
-      expect(comp.getCheckedEntry(5).description).toBe('');
+      comp.addServiceLine();
+      expect(comp.lines()).toHaveLength(2);
     });
+  });
 
-    it('removes a service when already checked', () => {
-      comp.checkedServices.set({ 5: { price: 100, description: '' } });
-      comp.toggleProduct(5);
-      expect(comp.isChecked(5)).toBe(false);
+  describe('addPartLine', () => {
+    it('appends a part line with defaults', () => {
+      comp.lines.set([]);
+      comp.addPartLine();
+      expect(comp.lines()).toHaveLength(1);
+      expect(comp.lines()[0].item_type).toBe('part');
     });
+  });
 
-    it('pre-fills price with 0 when product has no selling_price', () => {
-      comp.serviceProducts.set([
-        { id: 3, profile: 'Révision', reference: null, selling_price: null },
+  describe('removeLine', () => {
+    it('removes the line at the given index', () => {
+      comp.lines.set([
+        { item_type: 'service', service_type: 'A', description: '', quantity: 1, parts_cost: 0, labor_cost: 50 },
+        { item_type: 'service', service_type: 'B', description: '', quantity: 1, parts_cost: 0, labor_cost: 80 },
       ]);
-      comp.toggleProduct(3);
-      expect(comp.getCheckedEntry(3).price).toBe(0);
+      comp.removeLine(0);
+      expect(comp.lines()).toHaveLength(1);
+      expect((comp.lines()[0] as any).service_type).toBe('B');
     });
 
-    it('does not affect other checked services when removing one', () => {
-      comp.checkedServices.set({
-        1: { price: 50, description: '' },
-        2: { price: 80, description: '' },
-      });
-      comp.toggleProduct(1);
-      expect(comp.isChecked(1)).toBe(false);
-      expect(comp.isChecked(2)).toBe(true);
+    it('does NOT remove when only one line remains', () => {
+      comp.lines.set([
+        { item_type: 'service', service_type: 'A', description: '', quantity: 1, parts_cost: 0, labor_cost: 50 },
+      ]);
+      comp.removeLine(0);
+      expect(comp.lines()).toHaveLength(1);
+    });
+  });
+
+  describe('updateLine', () => {
+    it('patches the field at the given index without affecting other lines', () => {
+      comp.lines.set([
+        { item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 50 },
+        { item_type: 'service', service_type: 'Y', description: '', quantity: 1, parts_cost: 0, labor_cost: 80 },
+      ]);
+      comp.updateLine(0, { labor_cost: 200 } as any);
+      expect((comp.lines()[0] as any).labor_cost).toBe(200);
+      expect((comp.lines()[1] as any).labor_cost).toBe(80);
     });
   });
 
   // -------------------------------------------------------------------------
-  // isChecked
+  // serviceLineTotal / partLineTotal
   // -------------------------------------------------------------------------
 
-  describe('isChecked', () => {
-    it('returns true for a checked product', () => {
-      comp.checkedServices.set({ 7: { price: 100, description: '' } });
-      expect(comp.isChecked(7)).toBe(true);
+  describe('serviceLineTotal', () => {
+    it('returns quantity × labor_cost', () => {
+      const line: any = { item_type: 'service', service_type: 'X', description: '', quantity: 3, parts_cost: 0, labor_cost: 50 };
+      expect(comp.serviceLineTotal(line)).toBe(150);
     });
 
-    it('returns false for an unchecked product', () => {
-      comp.checkedServices.set({});
-      expect(comp.isChecked(7)).toBe(false);
+    it('defaults quantity to 1 when 0', () => {
+      const line: any = { item_type: 'service', service_type: 'X', description: '', quantity: 0, parts_cost: 0, labor_cost: 100 };
+      expect(comp.serviceLineTotal(line)).toBe(100);
+    });
+  });
+
+  describe('partLineTotal', () => {
+    it('returns quantity × unit_price', () => {
+      const line: any = { item_type: 'part', product_id: 1, product_name: 'Filtre', quantity: 2, unit_price: 75 };
+      expect(comp.partLineTotal(line)).toBe(150);
     });
   });
 
   // -------------------------------------------------------------------------
-  // setPrice / setDescription
+  // hasValidLines
   // -------------------------------------------------------------------------
 
-  describe('setPrice', () => {
-    it('updates the price of a checked service', () => {
-      comp.checkedServices.set({ 1: { price: 50, description: '' } });
-      comp.setPrice(1, 200);
-      expect(comp.getCheckedEntry(1).price).toBe(200);
+  describe('hasValidLines', () => {
+    it('returns true when a service line has a non-empty service_type', () => {
+      comp.lines.set([{ item_type: 'service', service_type: 'Vidange', description: '', quantity: 1, parts_cost: 0, labor_cost: 0 }]);
+      expect(comp.hasValidLines()).toBe(true);
     });
 
-    it('does not affect description', () => {
-      comp.checkedServices.set({ 1: { price: 50, description: 'test' } });
-      comp.setPrice(1, 75);
-      expect(comp.getCheckedEntry(1).description).toBe('test');
-    });
-  });
-
-  describe('setDescription', () => {
-    it('updates the description of a checked service', () => {
-      comp.checkedServices.set({ 1: { price: 50, description: '' } });
-      comp.setDescription(1, 'Huile 5W30');
-      expect(comp.getCheckedEntry(1).description).toBe('Huile 5W30');
+    it('returns false when service line has empty service_type', () => {
+      comp.lines.set([{ item_type: 'service', service_type: '', description: '', quantity: 1, parts_cost: 0, labor_cost: 0 }]);
+      expect(comp.hasValidLines()).toBe(false);
     });
 
-    it('does not affect price', () => {
-      comp.checkedServices.set({ 1: { price: 120, description: '' } });
-      comp.setDescription(1, 'Test');
-      expect(comp.getCheckedEntry(1).price).toBe(120);
+    it('returns true when a part line has a product_id', () => {
+      comp.lines.set([{
+        item_type: 'part', product_id: 5, product_name: 'Filtre', product_reference: '',
+        unit: 'pièce', quantity: 1, unit_price: 0, total_quantity: 10,
+        searchQuery: '', searchResults: [], searching: false,
+      }]);
+      expect(comp.hasValidLines()).toBe(true);
     });
   });
 
@@ -232,7 +256,7 @@ describe('ServiceOrderFormComponent', () => {
   // -------------------------------------------------------------------------
 
   describe('ngOnInit', () => {
-    it('pre-fills signals and checkedServices from an existing serviceOrder', () => {
+    it('pre-fills signals and lines from a serviceOrder with service items', () => {
       comp.serviceOrder = {
         id: 10,
         date: '2026-05-01',
@@ -244,9 +268,16 @@ describe('ServiceOrderFormComponent', () => {
         commercial_id: 2,
         client_id: 5,
         client_record: { name: 'Alpha Garage', phone: '0611111111' },
-        items: [
-          { product_id: 7, description: 'Huile synthétique', parts_cost: 50, labor_cost: 100, line_total: 150, sort_order: 0 },
-        ],
+        items: [{
+          item_type: 'service',
+          service_type: 'Vidange',
+          description: 'Huile synthétique',
+          quantity: 1,
+          parts_cost: 0,
+          labor_cost: 150,
+          line_total: 150,
+          sort_order: 0,
+        }],
       } as any;
 
       comp.ngOnInit();
@@ -259,35 +290,15 @@ describe('ServiceOrderFormComponent', () => {
       expect(comp.commercial_id()).toBe(2);
       expect(comp.client_id()).toBe(5);
       expect(comp.clientSearch()).toBe('Alpha Garage');
-      expect(comp.isChecked(7)).toBe(true);
-      expect(comp.getCheckedEntry(7).price).toBe(150);
-      expect(comp.getCheckedEntry(7).description).toBe('Huile synthétique');
+      expect(comp.lines()).toHaveLength(1);
+      expect((comp.lines()[0] as any).labor_cost).toBe(150);
+      expect((comp.lines()[0] as any).description).toBe('Huile synthétique');
     });
 
-    it('starts with empty checkedServices when no serviceOrder', () => {
+    it('starts with a single default service line when no serviceOrder', () => {
       comp.ngOnInit();
-      expect(comp.checkedCount()).toBe(0);
-    });
-
-    it('ignores items without a product_id', () => {
-      comp.serviceOrder = {
-        id: 11,
-        date: '2026-05-01',
-        vehicle: 'Ford',
-        mileage: null,
-        discount: 0,
-        status: 'EN COURS',
-        notes: null,
-        commercial_id: null,
-        client_id: null,
-        client_record: null,
-        items: [
-          { product_id: null, description: null, parts_cost: 50, labor_cost: 0, line_total: 50, sort_order: 0 },
-        ],
-      } as any;
-
-      comp.ngOnInit();
-      expect(comp.checkedCount()).toBe(0);
+      expect(comp.lines()).toHaveLength(1);
+      expect(comp.lines()[0].item_type).toBe('service');
     });
   });
 
@@ -296,7 +307,7 @@ describe('ServiceOrderFormComponent', () => {
   // -------------------------------------------------------------------------
 
   describe('onSubmit', () => {
-    it('emits the correct ServiceOrderPayload', () => {
+    it('emits the correct ServiceOrderPayload for a service line', () => {
       comp.date.set('2026-05-15');
       comp.vehicle.set('Renault Clio');
       comp.mileage.set(45000);
@@ -305,7 +316,9 @@ describe('ServiceOrderFormComponent', () => {
       comp.notes.set('RAS');
       comp.commercial_id.set(3);
       comp.client_id.set(null);
-      comp.checkedServices.set({ 5: { price: 120, description: 'Huile 5W30' } });
+      comp.lines.set([
+        { item_type: 'service', service_type: 'Vidange', description: 'Huile 5W30', quantity: 1, parts_cost: 0, labor_cost: 120 },
+      ]);
 
       const emitted: any[] = [];
       comp.save.subscribe((p) => emitted.push(p));
@@ -320,44 +333,37 @@ describe('ServiceOrderFormComponent', () => {
       expect(emitted[0].commercial_id).toBe(3);
       expect(emitted[0].client_id).toBeNull();
       expect(emitted[0].items).toHaveLength(1);
-      expect(emitted[0].items[0].product_id).toBe(5);
+      expect(emitted[0].items[0].item_type).toBe('service');
       expect(emitted[0].items[0].labor_cost).toBe(120);
-      expect(emitted[0].items[0].parts_cost).toBe(0);
       expect(emitted[0].items[0].description).toBe('Huile 5W30');
       expect(emitted[0].items[0].sort_order).toBe(0);
     });
 
     it('converts empty notes to null', () => {
       comp.notes.set('');
-      comp.checkedServices.set({ 1: { price: 50, description: '' } });
-
+      comp.lines.set([{ item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 50 }]);
       const emitted: any[] = [];
       comp.save.subscribe((p) => emitted.push(p));
       comp.onSubmit();
-
       expect(emitted[0].notes).toBeNull();
     });
 
-    it('converts empty item description to null', () => {
-      comp.checkedServices.set({ 5: { price: 50, description: '' } });
-
+    it('converts empty item description to null for service lines', () => {
+      comp.lines.set([{ item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 50 }]);
       const emitted: any[] = [];
       comp.save.subscribe((p) => emitted.push(p));
       comp.onSubmit();
-
       expect(emitted[0].items[0].description).toBeNull();
     });
 
-    it('emits multiple items when multiple services are checked', () => {
-      comp.checkedServices.set({
-        1: { price: 80, description: '' },
-        2: { price: 150, description: 'Details' },
-      });
-
+    it('emits multiple items when multiple lines are set', () => {
+      comp.lines.set([
+        { item_type: 'service', service_type: 'A', description: '', quantity: 1, parts_cost: 0, labor_cost: 80 },
+        { item_type: 'service', service_type: 'B', description: 'Details', quantity: 1, parts_cost: 0, labor_cost: 150 },
+      ]);
       const emitted: any[] = [];
       comp.save.subscribe((p) => emitted.push(p));
       comp.onSubmit();
-
       expect(emitted[0].items).toHaveLength(2);
     });
   });
@@ -392,7 +398,7 @@ describe('ServiceOrderFormComponent', () => {
   });
 
   // -------------------------------------------------------------------------
-  // Client filtering (syncClientSearchResults via onClientSearchInput)
+  // Client filtering
   // -------------------------------------------------------------------------
 
   describe('client filtering', () => {
@@ -421,7 +427,7 @@ describe('ServiceOrderFormComponent', () => {
     });
 
     it('returns empty array when no match', () => {
-      comp.onClientSearchInput('zzzznotsuchclient');
+      comp.onClientSearchInput('zzzznosuchclient');
       expect(comp.filteredClients()).toHaveLength(0);
     });
   });

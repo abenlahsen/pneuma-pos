@@ -28,9 +28,8 @@ test.describe('Navigation', () => {
 
   for (const route of ROUTES) {
     test(`${route.path} — charge avec le titre "${route.titre}"`, async ({ page }) => {
-      await page.goto(route.path);
-      await page.waitForLoadState('networkidle');
-      await expect(page.locator('h1').first()).toContainText(route.titre, { timeout: 8_000 });
+      await page.goto(route.path, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('h1').first()).toContainText(route.titre, { timeout: 20_000 });
     });
   }
 

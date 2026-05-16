@@ -11,7 +11,6 @@ return new class extends Migration
         Schema::table('service_orders', function (Blueprint $table) {
             $table->foreignId('vehicle_id')
                   ->nullable()
-                  ->after('client_id')
                   ->constrained('vehicles')
                   ->nullOnDelete();
         });

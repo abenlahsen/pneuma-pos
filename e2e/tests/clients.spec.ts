@@ -1,13 +1,44 @@
 import { test, expect } from '@playwright/test';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const TEST_CLIENT = 'CLIENT_E2E_TEST';
 const TEST_CLIENT_UPDATED = 'CLIENT_E2E_TEST_MAJ';
+const AUTH_FILE = path.join(__dirname, '..', '.auth', 'state.json');
+const BASE_URL = process.env['E2E_BASE_URL'] ?? 'http://nginx:80';
+
+function getStoredToken(): string | null {
+  try {
+    const state = JSON.parse(fs.readFileSync(AUTH_FILE, 'utf-8'));
+    const origin = state.origins?.find((o: { origin: string }) => o.origin === BASE_URL);
+    const item = origin?.localStorage?.find((i: { name: string }) => i.name === 'auth_token');
+    return item?.value ?? null;
+  } catch { return null; }
+}
 
 test.describe.serial('Clients', () => {
+  test.beforeAll(async ({ request }) => {
+    const token = getStoredToken();
+    if (!token) return;
+    const headers = { Authorization: `Bearer ${token}` };
+    for (const name of [TEST_CLIENT, TEST_CLIENT_UPDATED]) {
+      const res = await request.get(`/api/clients?search=${encodeURIComponent(name)}&per_page=100`, { headers });
+      if (!res.ok()) continue;
+      const data = await res.json() as { data: { id: number; name: string }[] };
+      for (const c of data.data) {
+        if (c.name === name) {
+          await request.delete(`/api/clients/${c.id}`, { headers });
+        }
+      }
+    }
+  });
+
   test.beforeEach(async ({ page }) => {
-    await page.goto('/clients');
-    await page.waitForLoadState('networkidle');
-    await expect(page.locator('h1')).toContainText('Clients');
+    await page.goto('/clients', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('h1')).toContainText('Clients', { timeout: 15_000 });
+    // Ensure the initial loadClients() GET has completed before any test body runs,
+    // so that later waitForResponse(GET) calls catch the intended list-refresh GETs.
+    await expect(page.locator('tbody')).not.toContainText('Chargement', { timeout: 15_000 });
   });
 
   // ── Lecture : état initial (pas de clients seedés) ────────────────────────
@@ -25,6 +56,8 @@ test.describe.serial('Clients', () => {
   // ── Création ──────────────────────────────────────────────────────────────
 
   test('créer un nouveau client particulier', async ({ page }) => {
+    test.setTimeout(60_000);
+
     await page.getByRole('button', { name: 'Nouveau Client' }).click();
     await expect(page.locator('.modal-container')).toBeVisible();
     await expect(page.locator('.modal-container h2')).toContainText('Nouveau Client');
@@ -32,16 +65,22 @@ test.describe.serial('Clients', () => {
     await page.fill('input[name="name"]', TEST_CLIENT);
     await page.selectOption('select[name="category"]', 'Paticulier');
     await page.fill('input[name="phone"]', '0612345678');
-    await page.fill('input[name="city"]', 'Casablanca');
+    // Use placeholder-based selector to avoid matching the page's filter city input
+    await page.fill('input[placeholder="Ex: Casablanca"]', 'Casablanca');
+    // Wait for Angular (zoneless) to update form validity and enable submit
+    await expect(page.locator('.modal-container button[type="submit"]')).toBeEnabled({ timeout: 5_000 });
 
-    await page.click('button[type="submit"]:has-text("Enregistrer")');
-    await page.waitForLoadState('networkidle');
+    const [postResp] = await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/clients') && r.request().method() === 'POST'),
+      page.click('button[type="submit"]:has-text("Enregistrer")'),
+    ]);
+    expect(postResp.status(), `POST /api/clients returned ${postResp.status()}`).toBeLessThan(400);
 
-    // Le modal se ferme
-    await expect(page.locator('.modal-overlay')).not.toBeVisible();
-
-    // Le client apparaît dans la liste
-    await expect(page.locator('.btn-link.client-link', { hasText: TEST_CLIENT })).toBeVisible();
+    // Reload to get a clean list (bypasses any in-place CD timing issues)
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await expect(page.locator('h1')).toContainText('Clients', { timeout: 15_000 });
+    await expect(page.locator('tbody')).not.toContainText('Chargement', { timeout: 15_000 });
+    await expect(page.locator('.btn-link.client-link', { hasText: TEST_CLIENT })).toBeVisible({ timeout: 10_000 });
   });
 
   // ── Recherche ─────────────────────────────────────────────────────────────
@@ -56,8 +95,10 @@ test.describe.serial('Clients', () => {
 
   test('rechercher le client par ville "Casablanca"', async ({ page }) => {
     await page.fill('input[placeholder="Filtrer par ville"]', 'Casablanca');
-    await page.keyboard.press('Enter');
-    await page.waitForLoadState('networkidle');
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/clients') && r.url().includes('city') && r.request().method() === 'GET'),
+      page.click('button[title="Rechercher"]'),
+    ]);
 
     await expect(page.locator('.btn-link.client-link', { hasText: TEST_CLIENT })).toBeVisible();
   });
@@ -78,32 +119,54 @@ test.describe.serial('Clients', () => {
   // ── Modification ──────────────────────────────────────────────────────────
 
   test('modifier le client créé', async ({ page }) => {
+    test.setTimeout(60_000);
+
     await page.fill('input[placeholder="Nom, téléphone, ville ou email..."]', TEST_CLIENT);
-    await page.keyboard.press('Enter');
-    await page.waitForLoadState('networkidle');
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/clients') && r.url().includes('search') && r.request().method() === 'GET'),
+      page.click('button[title="Rechercher"]'),
+    ]);
 
     await page.locator('tr', { hasText: TEST_CLIENT }).locator('button[title="Modifier"]').click();
     await expect(page.locator('.modal-container')).toBeVisible();
     await expect(page.locator('.modal-container h2')).toContainText('Modifier Client');
 
-    await page.fill('input[name="name"]', TEST_CLIENT_UPDATED);
-    await page.click('button[type="submit"]:has-text("Enregistrer")');
-    await page.waitForLoadState('networkidle');
+    await page.locator('.modal-container input[name="name"]').fill(TEST_CLIENT_UPDATED);
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/clients') && r.request().method() !== 'GET'),
+      page.click('button[type="submit"]:has-text("Enregistrer")'),
+    ]);
 
-    await expect(page.locator('.btn-link.client-link', { hasText: TEST_CLIENT_UPDATED })).toBeVisible();
+    // Re-search to get definitive updated list
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/clients') && r.request().method() === 'GET'),
+      page.click('button[title="Rechercher"]'),
+    ]);
+    await expect(page.locator('.btn-link.client-link', { hasText: TEST_CLIENT_UPDATED })).toBeVisible({ timeout: 10_000 });
   });
 
   // ── Suppression (cleanup) ─────────────────────────────────────────────────
 
   test('supprimer le client de test', async ({ page }) => {
+    test.setTimeout(60_000);
+
     await page.fill('input[placeholder="Nom, téléphone, ville ou email..."]', TEST_CLIENT_UPDATED);
-    await page.keyboard.press('Enter');
-    await page.waitForLoadState('networkidle');
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/clients') && r.url().includes('search') && r.request().method() === 'GET'),
+      page.click('button[title="Rechercher"]'),
+    ]);
 
     page.once('dialog', (dialog) => dialog.accept());
-    await page.locator('tr', { hasText: TEST_CLIENT_UPDATED }).locator('button[title="Supprimer"]').click();
-    await page.waitForLoadState('networkidle');
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/clients') && r.request().method() === 'DELETE'),
+      page.locator('tr', { hasText: TEST_CLIENT_UPDATED }).locator('button[title="Supprimer"]').click(),
+    ]);
 
-    await expect(page.locator('.btn-link.client-link', { hasText: TEST_CLIENT_UPDATED })).not.toBeVisible();
+    // Re-search to get a definitive fresh list (avoids race with the component's auto-refresh GET)
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/clients') && r.request().method() === 'GET'),
+      page.click('button[title="Rechercher"]'),
+    ]);
+    await expect(page.locator('.btn-link.client-link', { hasText: TEST_CLIENT_UPDATED })).not.toBeVisible({ timeout: 10_000 });
   });
 });

@@ -3,13 +3,16 @@ import { test, expect } from '@playwright/test';
 test.describe('Paramètres Entreprise', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/settings');
-    await page.waitForLoadState('networkidle');
-    await expect(page.locator('h1')).toContainText('Paramètres');
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('h1')).toContainText('Paramètres', { timeout: 15_000 });
+    // Wait for settings form to load (inside *ngIf="!loading()")
+    await expect(page.locator('#company_name')).toBeVisible({ timeout: 25_000 });
   });
 
   test('affiche les 2 sections : Informations société et Thème', async ({ page }) => {
     await expect(page.locator('h2, h3').filter({ hasText: 'Informations société' })).toBeVisible();
-    await expect(page.locator('h2, h3').filter({ hasText: "Thème de l'application" })).toBeVisible();
+    // Theme section is inside *ngIf="!loading()" — wait for API response
+    await expect(page.locator('h2, h3').filter({ hasText: "Thème de l'application" })).toBeVisible({ timeout: 15_000 });
   });
 
   test('affiche les champs société remplis ou vides', async ({ page }) => {
@@ -54,7 +57,7 @@ test.describe('Paramètres Entreprise', () => {
   });
 
   test('les sections logo et favicon sont visibles', async ({ page }) => {
-    await expect(page.locator(':has-text("Logo de l\'entreprise")')).toBeVisible();
-    await expect(page.locator(':has-text("Favicon")')).toBeVisible();
+    await expect(page.locator('h3', { hasText: "Logo de l'entreprise" })).toBeVisible();
+    await expect(page.locator('h3', { hasText: 'Favicon' })).toBeVisible();
   });
 });

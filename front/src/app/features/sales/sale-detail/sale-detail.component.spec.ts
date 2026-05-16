@@ -78,4 +78,75 @@ describe('SaleDetailComponent', () => {
       expect(openSpy).toHaveBeenCalledWith('/products?id=7&edit=1', '_blank', 'noopener');
     });
   });
+
+  describe('openPrint', () => {
+    it('sets printDoc signal (not null)', () => {
+      comp.sale = { id: 5, date: '2026-05-01', items: [], total_sale: 0 } as any;
+      comp.openPrint();
+      expect(comp.printDoc()).not.toBeNull();
+    });
+
+    it('sets type=sale and party_label=Client', () => {
+      comp.sale = { id: 5, date: '2026-05-01', items: [], total_sale: 0 } as any;
+      comp.openPrint();
+      const doc = comp.printDoc()!;
+      expect(doc.type).toBe('sale');
+      expect(doc.party_label).toBe('Client');
+    });
+
+    it('sets doc_number from sale.id', () => {
+      comp.sale = { id: 99, date: '2026-05-01', items: [], total_sale: 0 } as any;
+      comp.openPrint();
+      expect(comp.printDoc()!.doc_number).toBe('99');
+    });
+
+    it('uses linkedProduct.reference as line label (highest priority)', () => {
+      comp.sale = {
+        id: 1, date: '2026-05-01', total_sale: 300,
+        items: [{ linkedProduct: { reference: 'REF-100' }, product_name: 'Pneu', quantity: 3, selling_price: 100, discount: 0, total: 300 }],
+      } as any;
+      comp.openPrint();
+      expect(comp.printDoc()!.lines[0].label).toBe('REF-100');
+    });
+
+    it('falls back to product_name when linkedProduct has no reference', () => {
+      comp.sale = {
+        id: 1, date: '2026-05-01', total_sale: 100,
+        items: [{ product_name: 'Pneu 205/55R16', product_id: 3, quantity: 1, selling_price: 100, discount: 0, total: 100 }],
+      } as any;
+      comp.openPrint();
+      expect(comp.printDoc()!.lines[0].label).toBe('Pneu 205/55R16');
+    });
+
+    it('falls back to "Produit #id" when neither reference nor product_name', () => {
+      comp.sale = {
+        id: 1, date: '2026-05-01', total_sale: 50,
+        items: [{ product_id: 9, quantity: 1, selling_price: 50, discount: 0, total: 50 }],
+      } as any;
+      comp.openPrint();
+      expect(comp.printDoc()!.lines[0].label).toBe('Produit #9');
+    });
+
+    it('maps line discount from item.discount', () => {
+      comp.sale = {
+        id: 1, date: '2026-05-01', total_sale: 180,
+        items: [{ product_name: 'X', quantity: 2, selling_price: 100, discount: 10, total: 180 }],
+      } as any;
+      comp.openPrint();
+      expect(comp.printDoc()!.lines[0].discount).toBe(10);
+    });
+
+    it('includes carrier and payment_method transport fields', () => {
+      comp.sale = {
+        id: 1, date: '2026-05-01', items: [], total_sale: 0,
+        carrier: { name: 'Transit Express' }, tracking_number: 'TRK-999',
+        partner: null, service: null, delivery_date: null, payment_method: 'Chèque',
+      } as any;
+      comp.openPrint();
+      const doc = comp.printDoc()!;
+      expect(doc.carrier).toBe('Transit Express');
+      expect(doc.tracking_number).toBe('TRK-999');
+      expect(doc.payment_method).toBe('Chèque');
+    });
+  });
 });
