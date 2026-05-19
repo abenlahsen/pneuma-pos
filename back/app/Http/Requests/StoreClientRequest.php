@@ -16,7 +16,7 @@ class StoreClientRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'category' => ['required', 'string', Rule::in(['Paticulier', 'Entreprise'])],
+            'category' => ['nullable', 'string', Rule::in(['Paticulier', 'Entreprise'])],
             'phone' => ['nullable', 'string', 'max:50', Rule::unique('clients', 'phone')],
             'email' => ['nullable', 'email', 'max:255'],
             'city' => ['nullable', 'string', 'max:255'],

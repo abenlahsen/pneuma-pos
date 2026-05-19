@@ -1,6 +1,9 @@
 @use '../../variables' as *;
 
-.badge-purple { background: rgba(107, 70, 193, 0.12); color: #6b46c1; }
+.badge-purple    { background: rgba(107, 70, 193, 0.12); color: #6b46c1; }
+.badge-success   { background: rgba(#38a169, 0.1); color: #276749; }
+.badge-blue      { background: rgba(#3182ce, 0.1); color: #2b6cb0; }
+.badge-secondary { background: rgba(#718096, 0.1); color: #4a5568; }
 
 .table-responsive {
   overflow-x: auto;

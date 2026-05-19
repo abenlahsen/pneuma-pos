@@ -14,15 +14,17 @@ async function globalSetup(): Promise<void> {
     throw new Error('E2E_ADMIN_PASSWORD est requis dans e2e/.env');
   }
 
-  // Vérifier que l'application répond
-  try {
-    const probe = await fetch(`${BASE_URL}/api/login`, { method: 'HEAD' }).catch(() => null);
-    if (!probe) {
-      throw new Error(`L'application ne répond pas sur ${BASE_URL}. Lancez Docker avec "docker compose up".`);
-    }
-  } catch (err: unknown) {
-    if (err instanceof Error && err.message.includes('ne répond pas')) throw err;
-    // HEAD peut être refusé — on continue
+  // Attendre que l'application soit prête (retry sur 502/503 pendant 60s)
+  let ready = false;
+  for (let i = 0; i < 30; i++) {
+    try {
+      const probe = await fetch(`${BASE_URL}/api/login`, { method: 'HEAD' });
+      if (probe.status !== 502 && probe.status !== 503) { ready = true; break; }
+    } catch { /* pas encore démarré */ }
+    await new Promise(r => setTimeout(r, 2000));
+  }
+  if (!ready) {
+    throw new Error(`L'application ne répond pas sur ${BASE_URL}. Lancez Docker avec "docker compose up".`);
   }
 
   // Login via API

@@ -5,6 +5,8 @@ test.describe('Service Auto', () => {
     await page.goto('/service-orders');
     await page.waitForLoadState('domcontentloaded');
     await expect(page.locator('h1')).toContainText('Service Auto', { timeout: 15_000 });
+    // Attendre que le chargement des données soit terminé
+    await expect(page.locator('div.loading-state')).not.toBeVisible({ timeout: 20_000 });
   });
 
   test('affiche les 3 cartes de résumé financier', async ({ page }) => {
@@ -19,9 +21,9 @@ test.describe('Service Auto', () => {
   });
 
   test('affiche le tableau des interventions ou un état vide', async ({ page }) => {
-    const table = page.locator('table');
-    const emptyState = page.locator('td').filter({ hasText: /Aucune|intervention/ });
-    await expect(table.or(emptyState)).toBeVisible();
+    const table = page.locator('table.data-table');
+    const emptyState = page.locator('div.empty-state');
+    await expect(table.or(emptyState)).toBeVisible({ timeout: 20_000 });
   });
 
   test('le bouton "+ Nouvelle intervention" est visible pour admin', async ({ page }) => {

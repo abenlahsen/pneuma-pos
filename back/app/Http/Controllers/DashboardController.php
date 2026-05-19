@@ -38,13 +38,36 @@ class DashboardController extends Controller
         $purchasesMonth = Purchase::whereBetween('date', [$monthStart, $monthEnd]);
         $purchasesYear = Purchase::whereBetween('date', [$yearStart, $yearEnd]);
 
+        $tyreSalesQty = function (string $start, ?string $end = null): int {
+            $q = DB::table('sale_items')
+                ->join('products', 'sale_items.product_id', '=', 'products.id')
+                ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+                ->where('products.type', 'tyre');
+            $end ? $q->whereBetween('sales.date', [$start, $end]) : $q->whereDate('sales.date', $start);
+            return (int) $q->sum('sale_items.quantity');
+        };
+
+        $tyrePurchaseQty = fn (string $start, string $end): int => (int) DB::table('purchase_items')
+            ->join('products', 'purchase_items.product_id', '=', 'products.id')
+            ->join('purchases', 'purchase_items.purchase_id', '=', 'purchases.id')
+            ->where('products.type', 'tyre')
+            ->whereBetween('purchases.date', [$start, $end])
+            ->sum('purchase_items.quantity');
+
         $purchasesTotalLifetime = (float) Purchase::sum('total_price');
         $purchasesPaidLifetime = (float) Purchase::where('payment_status', 'PAYE')->sum('total_price');
 
+        $tyreItemsSub = DB::table('sale_items')
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->where('products.type', 'tyre')
+            ->selectRaw('sale_items.sale_id, SUM(sale_items.quantity) as tyre_qty')
+            ->groupBy('sale_items.sale_id');
+
         $salesByCommercial = DB::table('sales')
             ->leftJoin('users', 'sales.commercial_id', '=', 'users.id')
+            ->leftJoinSub($tyreItemsSub, 'tyre_items', 'tyre_items.sale_id', '=', 'sales.id')
             ->whereBetween('sales.date', [$monthStart, $monthEnd])
-            ->selectRaw("users.name as commercial_name, SUM(sales.total_sale) as total_sales, SUM(sales.total_quantity) as total_tyres, SUM(sales.margin) as total_margin, SUM(CASE WHEN sales.payment_status IN ('NON PAYE', 'NON PAYÉ', 'PARTIEL') THEN sales.total_sale - COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.sale_id = sales.id), 0) ELSE 0 END) as total_unpaid")
+            ->selectRaw("users.name as commercial_name, SUM(sales.total_sale) as total_sales, COALESCE(SUM(tyre_items.tyre_qty), 0) as total_tyres, SUM(sales.margin) as total_margin, SUM(CASE WHEN sales.payment_status IN ('NON PAYE', 'NON PAYÉ', 'PARTIEL') THEN sales.total_sale - COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.sale_id = sales.id), 0) ELSE 0 END) as total_unpaid")
             ->groupBy('sales.commercial_id', 'users.name')
             ->orderByDesc('total_sales')
             ->get()
@@ -62,7 +85,7 @@ class DashboardController extends Controller
         return response()->json([
             // Today
             'sales_today_amount' => round((clone $salesToday)->sum('total_sale'), 2),
-            'tyres_today' => (int) (clone $salesToday)->sum('total_quantity'),
+            'tyres_today' => $tyreSalesQty($today),
             'margin_today' => round((clone $salesToday)->sum('margin'), 2),
 
             // This month
@@ -72,9 +95,9 @@ class DashboardController extends Controller
             'margin_year' => round((clone $salesYear)->sum('margin'), 2),
             'total_sale_year' => round((clone $salesYear)->sum('total_sale'), 2),
             'total_purchase_year' => round((clone $purchasesYear)->sum('total_price'), 2),
-            'tyres_month' => (int) (clone $salesMonth)->sum('total_quantity'),
-            'tyres_year' => (int) (clone $salesYear)->sum('total_quantity'),
-            'tyres_purchased_month' => (int) (clone $purchasesMonth)->sum('total_quantity'),
+            'tyres_month' => $tyreSalesQty($monthStart, $monthEnd),
+            'tyres_year' => $tyreSalesQty($yearStart, $yearEnd),
+            'tyres_purchased_month' => $tyrePurchaseQty($monthStart, $monthEnd),
 
             // Sales by Commercial (This Month)
             'sales_by_commercial' => $salesByCommercial,

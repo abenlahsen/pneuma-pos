@@ -39,8 +39,15 @@ export class CashFlowPageComponent implements OnInit {
   filterDateFrom = signal('');
   filterDateTo = signal('');
   filterSearch = signal('');
+  filterPartner = signal('');
+  filterAmountMin = signal('');
+  filterAmountMax = signal('');
   sortBy = signal('');
   sortDirection = signal<'asc' | 'desc'>('asc');
+
+  pendingTransactions = signal<Transaction[]>([]);
+  loadingPending = signal(false);
+  pendingCollapsed = signal(false);
 
   loading = signal(false);
   deletingTransactionId = signal<number | null>(null);
@@ -62,9 +69,10 @@ export class CashFlowPageComponent implements OnInit {
 
   loadData(): void {
     this.loading.set(true);
+    this.loadingPending.set(true);
     const filters = this.buildFilters();
 
-    this.cashFlowService.getTransactions(filters).subscribe({
+    this.cashFlowService.getTransactions({ ...filters, status: 'settled' }).subscribe({
       next: (response) => {
         this.transactions.set((response as PaginatedResponse<Transaction>).data);
         this.currentPage.set(response.current_page);
@@ -73,6 +81,14 @@ export class CashFlowPageComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
+    });
+
+    this.cashFlowService.getTransactions({ ...filters, status: 'pending', page: '1', per_page: '500' }).subscribe({
+      next: (response) => {
+        this.pendingTransactions.set((response as PaginatedResponse<Transaction>).data);
+        this.loadingPending.set(false);
+      },
+      error: () => this.loadingPending.set(false),
     });
 
     this.cashFlowService.getSummary(filters).subscribe({
@@ -103,6 +119,9 @@ export class CashFlowPageComponent implements OnInit {
       date_from: this.filterDateFrom(),
       date_to: this.filterDateTo(),
       search: this.filterSearch(),
+      partner: this.filterPartner(),
+      amount_min: this.filterAmountMin(),
+      amount_max: this.filterAmountMax(),
       sort_by: this.sortBy(),
       sort_direction: this.sortDirection(),
     };
@@ -132,6 +151,9 @@ export class CashFlowPageComponent implements OnInit {
     this.filterDateFrom.set('');
     this.filterDateTo.set('');
     this.filterSearch.set('');
+    this.filterPartner.set('');
+    this.filterAmountMin.set('');
+    this.filterAmountMax.set('');
     this.sortBy.set('');
     this.sortDirection.set('asc');
     this.currentPage.set(1);
@@ -170,6 +192,10 @@ export class CashFlowPageComponent implements OnInit {
           this.loadData();
           this.loadFilters();
         },
+        error: (err) => {
+          const msg = err?.error?.message || 'Erreur lors de la modification.';
+          alert(msg);
+        },
       });
     } else {
       this.cashFlowService.createTransaction(payload).subscribe({
@@ -195,8 +221,10 @@ export class CashFlowPageComponent implements OnInit {
         this.loadData();
         this.loadFilters();
       },
-      error: () => {
+      error: (err) => {
         this.deletingTransactionId.set(null);
+        const msg = err?.error?.message || 'Erreur lors de la suppression.';
+        alert(msg);
       },
     });
   }
