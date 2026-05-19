@@ -3,6 +3,8 @@
 namespace App\Domain\Transactions;
 
 use App\Models\Account;
+use App\Models\Payment;
+use App\Models\PurchasePayment;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -43,6 +45,8 @@ class TransactionService
      */
     public function update(Transaction $transaction, array $validated): Transaction
     {
+        $this->guardLinkedToCompleted($transaction);
+
         $transaction->update($validated);
 
         return $transaction->fresh()->load('account');
@@ -50,7 +54,28 @@ class TransactionService
 
     public function delete(Transaction $transaction): void
     {
+        $this->guardLinkedToCompleted($transaction);
+
         $transaction->delete();
+    }
+
+    private function guardLinkedToCompleted(Transaction $transaction): void
+    {
+        $payment = Payment::where('transaction_id', $transaction->id)
+            ->with('sale:id,payment_status')
+            ->first();
+
+        if ($payment?->sale?->payment_status === 'PAYÉ') {
+            abort(422, "Cette transaction est liée à la vente #{$payment->sale_id} entièrement payée. Modifiez d'abord le statut de paiement de la vente.");
+        }
+
+        $purchasePayment = PurchasePayment::where('transaction_id', $transaction->id)
+            ->with('purchase:id,payment_status')
+            ->first();
+
+        if ($purchasePayment?->purchase?->payment_status === 'PAYE') {
+            abort(422, "Cette transaction est liée à l'achat #{$purchasePayment->purchase_id} entièrement payé. Modifiez d'abord le statut de paiement de l'achat.");
+        }
     }
 
     /**
@@ -132,12 +157,30 @@ class TransactionService
             $query->where('person', $filters['person']);
         }
 
+        if (! empty($filters['partner'])) {
+            $query->where('partner', $filters['partner']);
+        }
+
         if (! empty($filters['account_id'])) {
             $query->where('account_id', $filters['account_id']);
         }
 
         if (! empty($filters['search'])) {
             $query->where('description', 'like', '%' . $filters['search'] . '%');
+        }
+
+        if (isset($filters['amount_min']) && $filters['amount_min'] !== '') {
+            $query->where('amount', '>=', (float) $filters['amount_min']);
+        }
+
+        if (isset($filters['amount_max']) && $filters['amount_max'] !== '') {
+            $query->where('amount', '<=', (float) $filters['amount_max']);
+        }
+
+        if (($filters['status'] ?? '') === 'pending') {
+            $query->pending();
+        } elseif (($filters['status'] ?? '') === 'settled') {
+            $query->settled();
         }
 
         return $query;

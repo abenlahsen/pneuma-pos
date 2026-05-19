@@ -64,6 +64,7 @@
             <option value="">Tous</option>
             <option value="EN COURS">En cours</option>
             <option value="RECU">Reçu</option>
+            <option value="TERMINE">Terminé</option>
             <option value="ANNULE">Annulé</option>
             <option value="RETOUR">Retour</option>
           </select>
@@ -88,6 +89,25 @@
           <label>Au</label>
           <input type="date" class="form-control" [ngModel]="filterDateTo()" (ngModelChange)="filterDateTo.set($event); applyFilters()">
         </div>
+
+        <div class="form-group">
+          <label>Facture</label>
+          <div class="pill-group">
+            <button type="button" class="pill" [class.active]="filterWithInvoice() === ''" (click)="filterWithInvoice.set(''); applyFilters()">Toutes</button>
+            <button type="button" class="pill" [class.active]="filterWithInvoice() === '1'" (click)="filterWithInvoice.set('1'); applyFilters()">Avec</button>
+            <button type="button" class="pill" [class.active]="filterWithInvoice() === '0'" (click)="filterWithInvoice.set('0'); applyFilters()">Sans</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Montant min (DH)</label>
+          <input type="number" class="form-control" min="0" step="0.01" [ngModel]="filterAmountMin()" (ngModelChange)="filterAmountMin.set($event)" (change)="applyFilters()" placeholder="0.00">
+        </div>
+
+        <div class="form-group">
+          <label>Montant max (DH)</label>
+          <input type="number" class="form-control" min="0" step="0.01" [ngModel]="filterAmountMax()" (ngModelChange)="filterAmountMax.set($event)" (change)="applyFilters()" placeholder="∞">
+        </div>
         <div class="filter-actions">
           <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher">🔍</button>
           <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser">✕</button>
@@ -103,6 +123,7 @@
           <tr>
             <th class="text-center">Actions</th>
             <th class="sortable" (click)="toggleSort('date')">Date <span class="sort-icon">{{ sortBy() === 'date' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th class="text-center">Facture</th>
             <th>Fournisseur / Commercial</th>
             <th class="sortable" (click)="toggleSort('total_quantity')">Qté <span class="sort-icon">{{ sortBy() === 'total_quantity' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="text-right">Total Achat</th>
@@ -114,13 +135,13 @@
         </thead>
         <tbody>
           <tr *ngIf="loading()">
-            <td colspan="9" class="text-center py-4">
+            <td colspan="10" class="text-center py-4">
               <div class="spinner"></div> Chargement...
             </td>
           </tr>
 
           <tr *ngIf="!loading() && purchases().length === 0">
-            <td colspan="9" class="text-center py-4 text-muted">
+            <td colspan="10" class="text-center py-4 text-muted">
               Aucun achat trouvé.
             </td>
           </tr>
@@ -129,10 +150,15 @@
             <td class="text-center actions-cell">
               <button class="btn-icon btn-sm" (click)="openDetail(purchase)" title="Visualiser">👁️</button>
               <button class="btn-icon btn-sm" (click)="openPayments(purchase)" title="Paiements">💳</button>
-              <button class="btn-icon btn-sm text-primary" (click)="openForm(purchase)" title="Modifier" *ngIf="authService.hasPermission('edit purchases')">✏️</button>
-              <button class="btn-icon btn-sm text-danger" (click)="deletePurchase(purchase)" title="Supprimer" *ngIf="authService.hasPermission('delete purchases')">🗑️</button>
+              <button class="btn-icon btn-sm text-primary" (click)="openForm(purchase)" title="Modifier" *ngIf="authService.hasPermission('edit purchases') && !isPurchaseLocked(purchase)">✏️</button>
+              <button class="btn-icon btn-sm text-danger" (click)="deletePurchase(purchase)" title="Supprimer" *ngIf="authService.hasPermission('delete purchases') && !isPurchaseLocked(purchase)">🗑️</button>
             </td>
             <td>{{ purchase.date | date:'dd/MM/yyyy' }}</td>
+            <td class="text-center">
+              <span class="badge" [class.badge-success]="purchase.with_invoice" [class.badge-secondary]="!purchase.with_invoice">
+                {{ purchase.with_invoice ? 'Oui' : 'Non' }}
+              </span>
+            </td>
             <td class="clickable-cell" (click)="openDetail(purchase)">
               <div class="fw-medium">{{ purchase.supplier?.name || '-' }}</div>
               <div class="text-small text-muted">{{ purchase.commercial?.name || '-' }}</div>
@@ -153,12 +179,15 @@
               <select class="status-select"
                       [class.bg-en-cours]="purchase.status === 'EN COURS'"
                       [class.bg-recu]="purchase.status === 'RECU'"
+                      [class.bg-termine]="purchase.status === 'TERMINE'"
                       [class.bg-annule]="purchase.status === 'ANNULE'"
                       [class.bg-retour]="purchase.status === 'RETOUR'"
                       [ngModel]="purchase.status"
+                      [disabled]="isPurchaseLocked(purchase)"
                       (change)="updatePurchaseStatus(purchase, $event.target)">
                 <option value="EN COURS">En cours</option>
                 <option value="RECU">Reçu</option>
+                <option value="TERMINE">Terminé</option>
                 <option value="ANNULE">Annulé</option>
                 <option value="RETOUR">Retour</option>
               </select>
@@ -208,7 +237,7 @@
   </div>
 </div>
 
-<app-purchase-detail *ngIf="detailPurchase()" [purchase]="detailPurchase()!" [canEdit]="authService.hasPermission('edit purchases')" (close)="closeDetail()" (edit)="editFromDetail()"></app-purchase-detail>
+<app-purchase-detail *ngIf="detailPurchase()" [purchase]="detailPurchase()!" [canEdit]="authService.hasPermission('edit purchases') && !isPurchaseLocked(detailPurchase()!)" (close)="closeDetail()" (edit)="editFromDetail()"></app-purchase-detail>
 
 <app-purchase-payments
   *ngIf="paymentPurchase()"

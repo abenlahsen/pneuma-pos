@@ -112,6 +112,8 @@ class RolesAndPermissionsSeeder extends Seeder
             Permission::findOrCreate($permission);
         }
 
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
         // --- Roles ---
 
         $administrator = Role::findOrCreate('Administrator');

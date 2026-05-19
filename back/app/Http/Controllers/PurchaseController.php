@@ -45,7 +45,7 @@ class PurchaseController extends Controller
             'with_invoice' => 'boolean',
             'supplier_id' => 'required|exists:suppliers,id',
             'commercial_id' => 'required|exists:users,id',
-            'status' => 'required|string|in:EN COURS,RECU,ANNULE,RETOUR',
+            'status' => 'required|string|in:EN COURS,RECU,TERMINE,ANNULE,RETOUR',
             'payment_status' => 'required|string|in:PAYE,NON PAYE,PARTIEL',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
@@ -70,12 +70,16 @@ class PurchaseController extends Controller
 
     public function update(Request $request, Purchase $purchase): JsonResponse
     {
+        if ($purchase->status === 'TERMINE' && ! $request->user()->hasRole('Administrator')) {
+            return response()->json(['message' => 'Cet achat est terminé et ne peut plus être modifié.'], 403);
+        }
+
         $validated = $request->validate([
             'date' => 'required|date',
             'with_invoice' => 'boolean',
             'supplier_id' => 'required|exists:suppliers,id',
             'commercial_id' => 'required|exists:users,id',
-            'status' => 'required|string|in:EN COURS,RECU,ANNULE,RETOUR',
+            'status' => 'required|string|in:EN COURS,RECU,TERMINE,ANNULE,RETOUR',
             'payment_status' => 'required|string|in:PAYE,NON PAYE,PARTIEL',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
@@ -95,6 +99,10 @@ class PurchaseController extends Controller
 
     public function destroy(Request $request, Purchase $purchase): JsonResponse
     {
+        if ($purchase->status === 'TERMINE' && ! $request->user()->hasRole('Administrator')) {
+            return response()->json(['message' => 'Cet achat est terminé et ne peut plus être supprimé.'], 403);
+        }
+
         $this->purchaseService->delete($purchase, $request->user()?->id);
 
         return response()->json(null, 204);

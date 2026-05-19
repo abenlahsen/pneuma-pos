@@ -101,6 +101,18 @@ class SaleController extends Controller
             $query->whereDate($dateColumn, '<=', (string) $request->string('date_to'));
         }
 
+        if ($request->filled('with_invoice') && Schema::hasColumn('sales', 'with_invoice')) {
+            $query->where('with_invoice', filter_var($request->input('with_invoice'), FILTER_VALIDATE_BOOLEAN));
+        }
+
+        if ($request->filled('amount_min') && Schema::hasColumn('sales', 'total_sale')) {
+            $query->where('total_sale', '>=', (float) $request->input('amount_min'));
+        }
+
+        if ($request->filled('amount_max') && Schema::hasColumn('sales', 'total_sale')) {
+            $query->where('total_sale', '<=', (float) $request->input('amount_max'));
+        }
+
         $sortable = ['date', 'total_quantity', 'total_sale', 'margin', 'payment_status', 'status', 'client', 'created_at', 'updated_at'];
         if ($request->filled('sort_by') && in_array($request->string('sort_by')->toString(), $sortable, true)) {
             $direction = $request->string('sort_direction')->toString() === 'desc' ? 'desc' : 'asc';
@@ -143,6 +155,10 @@ class SaleController extends Controller
 
     public function update(UpdateSaleRequest $request, Sale $sale): JsonResponse
     {
+        if ($sale->status === 'TERMINEE' && ! $request->user()->hasRole('Administrator')) {
+            return response()->json(['message' => 'Cette vente est terminée et ne peut plus être modifiée.'], 403);
+        }
+
         $sale = $this->saleService->update($sale, $request->validated(), $request->user()?->id);
 
         return response()->json(
@@ -154,6 +170,10 @@ class SaleController extends Controller
 
     public function destroy(Sale $sale, Request $request): Response
     {
+        if ($sale->status === 'TERMINEE' && ! $request->user()->hasRole('Administrator')) {
+            return response()->json(['message' => 'Cette vente est terminée et ne peut plus être supprimée.'], 403);
+        }
+
         $this->saleService->delete($sale, $request->user()?->id);
 
         return response()->noContent();

@@ -111,8 +111,8 @@ Config (`e2e/playwright.config.ts`): `timeout: 30_000` per test, `expect: { time
 - `Product` — catalog entry with a `type` field (`tyre` | `part` | `service`). Each type has a dedicated sub-table joined 1:1 by `product_id` as PK: `ProductTyre` (dimensions, EU label), `ProductPart`, `ProductService`. Use `$product->details()` to get the type-specific sub-model.
 - `Stock` — inventory lots linked to `Product` via `product_id`. Tire dimensions are on the related `ProductTyre`, not on `Stock` itself. `Stock::parseSearchQuery()` parses shorthand queries like "2055516" or "205/55R16" into width/height/diameter components.
 - `StockMovement` — append-only audit trail written whenever stock quantity changes.
-- `Transaction` — cash-flow entry linked to an `Account`. Auto-created when a `Payment`, `PurchasePayment`, or `ServicePayment` is saved.
-- `Payment` / `PurchasePayment` — payment records linked to their parent sale/purchase and to a `Transaction`.
+- `Transaction` — cash-flow entry linked to an `Account`. Auto-created when a `Payment`, `PurchasePayment`, or `ServicePayment` is saved. Has two scopes: `pending()` (Chèque/Effet with `date > today`) and `settled()` (everything else). The `TransactionService` accepts a `status` filter param (`pending` | `settled`) to split the list. Editing or deleting a transaction that is linked to a fully-paid sale (`payment_status = 'PAYÉ'`) or purchase (`payment_status = 'PAYE'`) is blocked by `TransactionService::guardLinkedToCompleted()` — the user must modify the sale/purchase payment status first.
+- `Payment` / `PurchasePayment` — payment records linked to their parent sale/purchase and to a `Transaction`. Deleting a payment also deletes its linked `Transaction`.
 - `ServiceOrder` — header record (date, vehicle, mileage, totals, discount, status, payment_status, client_id, commercial_id). Line items live in `ServiceItem` (HasMany). Payments via `ServicePayment` (HasMany).
 - `ServiceItem` — line item for a service order. Two item types: `service` (service_type, description, labor_cost, quantity — `line_total = qty * labor_cost`; parts_cost is always 0) and `part` (product_id, product_name, product_reference, unit_price, quantity — `line_total = qty * unit_price`). Auto-calculates line_total on save via `booted()` hook and triggers parent `recalculateTotals()`.
 - `ServicePayment` — payment linked to a `ServiceOrder` and optionally to a `Transaction` for cash-flow integration.
@@ -177,6 +177,16 @@ This is a **tire shop POS** (French: pneus). A `Sale` has header-level fields (c
 The **Service Auto** module manages automotive service orders (repairs, oil changes, etc.). A `ServiceOrder` links to a `Client` (optional), has a vehicle + mileage, and contains multiple `ServiceItem` rows of two types: `service` lines (prestation: labor_cost × quantity) and `part` lines (pièce: unit_price × quantity, linked to a `Product`). Parts cost on service lines is always 0 — parts are tracked via dedicated part lines. Order-level discount and net_amount are auto-calculated. Status values: `EN COURS` | `TERMINÉE` | `ANNULÉE`. Payment status: `NON PAYE` | `PARTIEL` | `PAYE`. Payments are tracked via `ServicePayment` which optionally creates a `Transaction` for cash-flow integration. The frontend feature is at `/service-orders` (French UI uses "Service Auto", "Prestations", "Ordre de service").
 
 **Sales statuses** (DB values, don't change): `EN COURS` | `LIVRE` | `MONTE` | `TERMINEE` | `ANNULE`. Display labels use feminine French: "Livrée", "Annulée", "Terminée". `TERMINEE` is the "finished/collected" terminal state added alongside `LIVRE`.
+
+**Cash Flow module** (`/cash-flow`, `GET /api/transactions`): displays all transactions with two distinct sections:
+- **Transactions à venir** (collapsible card, amber/orange accent) — pending Chèque/Effet with a future date. Loaded separately via `status=pending&per_page=500`. Shows an "Échéance" date column and a "Méthode" badge. Count and total pending amounts (income/expense) shown in the section header.
+- **Transactions réalisées** (main paginated table) — all settled transactions, loaded via `status=settled`.
+
+Both sections are loaded in parallel on every `loadData()` call. The summary endpoint (no `status` param) returns `pending_income` and `pending_expense` totals across all filters.
+
+Filters available (order in UI): Rechercher (description LIKE), Type, Compte, Catégorie, Personne, Partenaire, Du, Au, Montant min, Montant max. All filters apply to both the settled and pending requests. The `TransactionService::buildFilteredQuery()` supports: `type`, `category`, `account_id`, `person`, `partner`, `date_from`, `date_to`, `search`, `amount_min`, `amount_max`, `status`.
+
+**Transaction auto-creation**: each payment recorded against a sale, purchase, or service order automatically creates a `Transaction`. Sale payments → type `income`, category `Produit`, partner = client name. Purchase payments → type `expense`, category `Achat`, person + partner = supplier name. Deleting a payment cascades to delete its linked transaction. Editing/deleting a transaction linked to a fully-paid sale or purchase is blocked by the backend guard (422 error).
 
 ## Deployment
 

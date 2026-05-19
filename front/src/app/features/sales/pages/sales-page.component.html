@@ -116,6 +116,25 @@
           <label>Au</label>
           <input type="date" class="form-control" [ngModel]="filterDateTo()" (ngModelChange)="filterDateTo.set($event)" (change)="applyFilters()">
         </div>
+
+        <div class="form-group">
+          <label>Facture</label>
+          <div class="pill-group">
+            <button type="button" class="pill" [class.active]="filterWithInvoice() === ''" (click)="filterWithInvoice.set(''); applyFilters()">Toutes</button>
+            <button type="button" class="pill" [class.active]="filterWithInvoice() === '1'" (click)="filterWithInvoice.set('1'); applyFilters()">Avec</button>
+            <button type="button" class="pill" [class.active]="filterWithInvoice() === '0'" (click)="filterWithInvoice.set('0'); applyFilters()">Sans</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Montant min (DH)</label>
+          <input type="number" class="form-control" min="0" step="0.01" [ngModel]="filterAmountMin()" (ngModelChange)="filterAmountMin.set($event)" (change)="applyFilters()" placeholder="0.00">
+        </div>
+
+        <div class="form-group">
+          <label>Montant max (DH)</label>
+          <input type="number" class="form-control" min="0" step="0.01" [ngModel]="filterAmountMax()" (ngModelChange)="filterAmountMax.set($event)" (change)="applyFilters()" placeholder="∞">
+        </div>
         <div class="filter-actions">
           <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher">🔍</button>
           <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser">✕</button>
@@ -131,6 +150,7 @@
           <tr>
             <th class="text-center">Actions</th>
             <th class="sortable" (click)="toggleSort('date')">Date <span class="sort-icon">{{ sortBy() === 'date' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th class="text-center">Facture</th>
             <th class="sortable" (click)="toggleSort('client')">Client <span class="sort-icon">{{ sortBy() === 'client' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th>Commercial</th>
             <th class="sortable" (click)="toggleSort('total_quantity')">Qte <span class="sort-icon">{{ sortBy() === 'total_quantity' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
@@ -144,13 +164,13 @@
         </thead>
         <tbody>
           <tr *ngIf="loading()">
-            <td colspan="11" class="text-center py-4">
+            <td colspan="12" class="text-center py-4">
               <div class="spinner"></div> Chargement...
             </td>
           </tr>
 
           <tr *ngIf="!loading() && sales().length === 0">
-            <td colspan="11" class="text-center py-4 text-muted">
+            <td colspan="12" class="text-center py-4 text-muted">
               Aucune vente trouvée.
             </td>
           </tr>
@@ -159,13 +179,18 @@
             <td class="text-center actions-cell">
               <button class="btn-icon btn-sm" (click)="openDetail(sale)" title="Voir" [disabled]="deletingSaleId() === sale.id">👁️</button>
               <button class="btn-icon btn-sm" (click)="openPayments(sale)" title="Paiements" [disabled]="deletingSaleId() === sale.id">💳</button>
-              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(sale)" title="Modifier" *ngIf="authService.hasPermission('edit sales')" [disabled]="deletingSaleId() === sale.id">✏️</button>
-              <button class="btn-icon btn-sm text-danger" (click)="deleteSale(sale)" title="Supprimer" *ngIf="authService.hasPermission('delete sales')" [disabled]="deletingSaleId() === sale.id">
+              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(sale)" title="Modifier" *ngIf="authService.hasPermission('edit sales') && !isSaleLocked(sale)" [disabled]="deletingSaleId() === sale.id">✏️</button>
+              <button class="btn-icon btn-sm text-danger" (click)="deleteSale(sale)" title="Supprimer" *ngIf="authService.hasPermission('delete sales') && !isSaleLocked(sale)" [disabled]="deletingSaleId() === sale.id">
                 <span *ngIf="deletingSaleId() !== sale.id">🗑️</span>
                 <span *ngIf="deletingSaleId() === sale.id" class="inline-spinner"></span>
               </button>
             </td>
             <td>{{ sale.date | date:'dd/MM/yyyy' }}</td>
+            <td class="text-center">
+              <span class="badge" [class.badge-success]="sale.with_invoice" [class.badge-secondary]="!sale.with_invoice">
+                {{ sale.with_invoice ? 'Oui' : 'Non' }}
+              </span>
+            </td>
             <td>
               <a *ngIf="sale.client_id" class="fw-medium link-text client-link" [routerLink]="['/clients', sale.client_id]">{{ getClientName(sale) }}</a>
               <div *ngIf="!sale.client_id" class="fw-medium">{{ getClientName(sale) }}</div>
@@ -195,6 +220,7 @@
                       [class.bg-terminee]="sale.status === 'TERMINEE'"
                       [class.bg-annule]="sale.status === 'ANNULE'"
                       [ngModel]="sale.status"
+                      [disabled]="isSaleLocked(sale)"
                       (change)="updateSaleStatus(sale, $event.target)">
                 <option value="EN COURS">En cours</option>
                 <option value="LIVRE">Livrée</option>
@@ -255,6 +281,6 @@
   </div>
 </div>
 
-<app-sale-detail *ngIf="detailSale()" [sale]="detailSale()!" [canEdit]="authService.hasPermission('edit sales')" (close)="closeDetail()" (edit)="editFromDetail()"></app-sale-detail>
+<app-sale-detail *ngIf="detailSale()" [sale]="detailSale()!" [canEdit]="authService.hasPermission('edit sales') && !isSaleLocked(detailSale()!)" (close)="closeDetail()" (edit)="editFromDetail()"></app-sale-detail>
 
 <app-payment-panel *ngIf="paymentSale()" [sale]="paymentSale()!" (closed)="closePayments()" (statusChanged)="loadData()"></app-payment-panel>

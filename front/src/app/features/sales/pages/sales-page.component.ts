@@ -42,6 +42,9 @@ export class SalesPageComponent implements OnInit {
   filterCommercial = signal<string>('');
   filterDateFrom = signal('');
   filterDateTo = signal('');
+  filterWithInvoice = signal('');
+  filterAmountMin = signal('');
+  filterAmountMax = signal('');
   sortBy = signal('');
   sortDirection = signal<'asc' | 'desc'>('asc');
 
@@ -121,6 +124,9 @@ export class SalesPageComponent implements OnInit {
       commercial_id: this.filterCommercial(),
       date_from: this.filterDateFrom(),
       date_to: this.filterDateTo(),
+      with_invoice: this.filterWithInvoice(),
+      amount_min: this.filterAmountMin(),
+      amount_max: this.filterAmountMax(),
       sort_by: this.sortBy(),
       sort_direction: this.sortDirection(),
     };
@@ -153,6 +159,9 @@ export class SalesPageComponent implements OnInit {
     this.filterCommercial.set('');
     this.filterDateFrom.set('');
     this.filterDateTo.set('');
+    this.filterWithInvoice.set('');
+    this.filterAmountMin.set('');
+    this.filterAmountMax.set('');
     this.sortBy.set('');
     this.sortDirection.set('asc');
     this.currentPage.set(1);
@@ -246,6 +255,10 @@ export class SalesPageComponent implements OnInit {
         },
       });
     }
+  }
+
+  isSaleLocked(sale: Sale): boolean {
+    return sale.status === 'TERMINEE' && !this.authService.hasRole('Administrator');
   }
 
   logout(): void {

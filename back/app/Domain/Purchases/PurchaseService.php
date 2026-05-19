@@ -160,6 +160,15 @@ class PurchaseService
         if (! empty($filters['date_to'])) {
             $query->where('date', '<=', $filters['date_to']);
         }
+        if (isset($filters['with_invoice']) && $filters['with_invoice'] !== '') {
+            $query->where('with_invoice', filter_var($filters['with_invoice'], FILTER_VALIDATE_BOOLEAN));
+        }
+        if (isset($filters['amount_min']) && $filters['amount_min'] !== '') {
+            $query->where('total_price', '>=', (float) $filters['amount_min']);
+        }
+        if (isset($filters['amount_max']) && $filters['amount_max'] !== '') {
+            $query->where('total_price', '<=', (float) $filters['amount_max']);
+        }
 
         $totalAchats = (clone $query)->sum('total_price') ?? 0;
         $totalPaye = (clone $query)->where('payment_status', 'PAYE')->sum('total_price') ?? 0;
@@ -257,6 +266,15 @@ class PurchaseService
         }
         if (! empty($filters['date_to'])) {
             $query->where('date', '<=', $filters['date_to']);
+        }
+        if (isset($filters['with_invoice']) && $filters['with_invoice'] !== '') {
+            $query->where('with_invoice', filter_var($filters['with_invoice'], FILTER_VALIDATE_BOOLEAN));
+        }
+        if (isset($filters['amount_min']) && $filters['amount_min'] !== '') {
+            $query->where('total_price', '>=', (float) $filters['amount_min']);
+        }
+        if (isset($filters['amount_max']) && $filters['amount_max'] !== '') {
+            $query->where('total_price', '<=', (float) $filters['amount_max']);
         }
 
         return $query;

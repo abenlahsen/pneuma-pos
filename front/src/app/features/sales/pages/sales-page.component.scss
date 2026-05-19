@@ -201,6 +201,31 @@
     color: $text-dark;
   }
 
+  .pill-group {
+    display: flex;
+    border: 1px solid $border-color;
+    border-radius: $radius-sm;
+    overflow: hidden;
+
+    .pill {
+      flex: 1;
+      padding: 0.5rem 0.25rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      background: transparent;
+      border: none;
+      border-right: 1px solid $border-color;
+      cursor: pointer;
+      color: $text-muted;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+
+      &:last-child { border-right: none; }
+      &:hover:not(.active) { background: rgba($primary, 0.06); }
+      &.active { background: $primary; color: #fff; }
+    }
+  }
+
   .form-control {
     padding: 0.5rem;
     border: 1px solid $border-color;
@@ -358,10 +383,11 @@
   font-size: 0.75rem;
   font-weight: 600;
 
-  &-primary { background: rgba($primary, 0.1); color: $primary; }
-  &-success { background: rgba($income-color, 0.12); color: #276749; }
-  &-danger { background: rgba($expense-color, 0.12); color: #e53e3e; }
-  &-warning { background: rgba(#ed8936, 0.12); color: #c05621; }
+  &-primary   { background: rgba($primary, 0.1); color: $primary; }
+  &-success   { background: rgba($income-color, 0.12); color: #276749; }
+  &-danger    { background: rgba($expense-color, 0.12); color: #e53e3e; }
+  &-warning   { background: rgba(#ed8936, 0.12); color: #c05621; }
+  &-secondary { background: rgba(#718096, 0.1); color: #4a5568; }
 }
 
 .status-select {

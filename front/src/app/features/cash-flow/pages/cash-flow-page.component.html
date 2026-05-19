@@ -40,6 +40,17 @@
     <div class="card-body">
       <div class="filters-grid">
         <div class="form-group">
+          <label>Rechercher</label>
+          <input
+            type="text"
+            class="form-control"
+            [ngModel]="filterSearch()"
+            (ngModelChange)="filterSearch.set($event)"
+            placeholder="Description..."
+            (keyup.enter)="applyFilters()"
+          />
+        </div>
+        <div class="form-group">
           <label>Type</label>
           <select class="form-control" [ngModel]="filterType()" (ngModelChange)="filterType.set($event); applyFilters()">
             <option value="">Tous</option>
@@ -75,6 +86,15 @@
           </select>
         </div>
         <div class="form-group">
+          <label>Partenaire</label>
+          <select class="form-control" [ngModel]="filterPartner()" (ngModelChange)="filterPartner.set($event); applyFilters()">
+            <option value="">Tous</option>
+            @for (p of filterOptions().partners; track p) {
+              <option [value]="p">{{ p }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
           <label>Du</label>
           <input type="date" class="form-control" [ngModel]="filterDateFrom()" (ngModelChange)="filterDateFrom.set($event); applyFilters()" />
         </div>
@@ -83,15 +103,16 @@
           <input type="date" class="form-control" [ngModel]="filterDateTo()" (ngModelChange)="filterDateTo.set($event); applyFilters()" />
         </div>
         <div class="form-group">
-          <label>Rechercher</label>
-          <input
-            type="text"
-            class="form-control"
-            [ngModel]="filterSearch()"
-            (ngModelChange)="filterSearch.set($event)"
-            placeholder="Description..."
-            (keyup.enter)="applyFilters()"
-          />
+          <label>Montant min (DH)</label>
+          <input type="number" class="form-control" min="0" step="0.01"
+            [ngModel]="filterAmountMin()" (ngModelChange)="filterAmountMin.set($event)"
+            (change)="applyFilters()" placeholder="0.00" />
+        </div>
+        <div class="form-group">
+          <label>Montant max (DH)</label>
+          <input type="number" class="form-control" min="0" step="0.01"
+            [ngModel]="filterAmountMax()" (ngModelChange)="filterAmountMax.set($event)"
+            (change)="applyFilters()" placeholder="∞" />
         </div>
         <div class="filter-actions">
           <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher">🔍</button>
@@ -101,7 +122,111 @@
     </div>
   </div>
 
+  @if (loadingPending() || pendingTransactions().length > 0) {
+    <div class="card pending-section">
+      <div class="pending-header" (click)="pendingCollapsed.set(!pendingCollapsed())">
+        <div class="pending-title">
+          <span class="pending-icon">⏳</span>
+          <span>Transactions à venir</span>
+          @if (loadingPending()) {
+            <span class="inline-spinner pending-spinner"></span>
+          } @else {
+            <span class="badge-count">{{ pendingTransactions().length }}</span>
+          }
+        </div>
+        <div class="pending-amounts">
+          @if (summary().pending_income > 0) {
+            <span class="amount-income">+{{ summary().pending_income | number:'1.2-2' }} DH</span>
+          }
+          @if (summary().pending_expense > 0) {
+            <span class="amount-expense">-{{ summary().pending_expense | number:'1.2-2' }} DH</span>
+          }
+          <span class="collapse-icon">{{ pendingCollapsed() ? '▶' : '▼' }}</span>
+        </div>
+      </div>
+      @if (!pendingCollapsed()) {
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Actions</th>
+                <th>Échéance</th>
+                <th>Montant</th>
+                <th>Type</th>
+                <th>Compte</th>
+                <th>Méthode</th>
+                <th>Catégorie</th>
+                <th class="desc-col">Description</th>
+                <th>Personne</th>
+                <th>Partenaire</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (loadingPending()) {
+                <tr>
+                  <td colspan="10" class="text-center py-4">
+                    <div class="spinner"></div>
+                    Chargement...
+                  </td>
+                </tr>
+              } @else {
+                @for (t of pendingTransactions(); track t.id) {
+                  <tr [class.income-row]="t.type === 'income'" [class.expense-row]="t.type === 'expense'" class="pending-row">
+                    <td class="actions-cell">
+                      <button
+                        (click)="openEditForm(t)"
+                        class="btn-icon btn-edit"
+                        title="Modifier"
+                        *ngIf="authService.hasPermission('edit cash-flow')"
+                        [disabled]="deletingTransactionId() === t.id"
+                      >✏️</button>
+                      <button
+                        (click)="deleteTransaction(t)"
+                        class="btn-icon btn-delete"
+                        title="Supprimer"
+                        *ngIf="authService.hasPermission('delete cash-flow')"
+                        [disabled]="deletingTransactionId() === t.id"
+                      >
+                        <span *ngIf="deletingTransactionId() !== t.id">🗑️</span>
+                        <span *ngIf="deletingTransactionId() === t.id" class="inline-spinner"></span>
+                      </button>
+                    </td>
+                    <td class="date-cell">{{ t.date | date:'dd/MM/yyyy' }}</td>
+                    <td class="amount-cell">
+                      <span [class.amount-income]="t.type === 'income'" [class.amount-expense]="t.type === 'expense'">
+                        {{ t.type === 'expense' ? '-' : '+' }}{{ t.amount | number:'1.2-2' }} DH
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge" [class.badge-income]="t.type === 'income'" [class.badge-expense]="t.type === 'expense'">
+                        {{ t.type === 'income' ? 'Revenu' : 'Dépense' }}
+                      </span>
+                    </td>
+                    <td>{{ t.account?.name || '—' }}</td>
+                    <td><span class="method-badge">{{ t.method }}</span></td>
+                    <td>{{ t.category || '—' }}</td>
+                    <td class="desc-col" [title]="t.description">{{ t.description }}</td>
+                    <td>{{ t.person || '—' }}</td>
+                    <td>{{ t.partner || '—' }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="10" class="empty-state">Aucune transaction à venir.</td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+
   <div class="card table-card">
+    <div class="section-header">
+      <span class="section-title">Transactions réalisées</span>
+      <span class="section-count">{{ total() }} résultat(s)</span>
+    </div>
     <div class="table-responsive">
       <table class="table">
         <thead>
