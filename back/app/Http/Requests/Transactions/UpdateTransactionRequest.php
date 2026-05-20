@@ -27,6 +27,7 @@ class UpdateTransactionRequest extends FormRequest
             'category' => ['sometimes', 'required', 'string'],
             'method' => ['sometimes', 'required', 'string'],
             'person' => ['sometimes', 'required', 'string'],
+            'partner_id' => ['nullable', 'exists:partners,id'],
             'description' => ['nullable', 'string'],
             'reference' => ['nullable', 'string', 'max:255'],
         ];

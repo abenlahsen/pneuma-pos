@@ -18,7 +18,7 @@ class Transaction extends Model
         'method',
         'description',
         'person',
-        'partner',
+        'partner_id',
         'user_id',
         'account_id',
         'transfer_id',
@@ -27,6 +27,7 @@ class Transaction extends Model
     protected $casts = [
         'date' => 'date:Y-m-d',
         'amount' => 'decimal:2',
+        'partner_id' => 'integer',
     ];
 
     /**
@@ -43,6 +44,11 @@ class Transaction extends Model
     public function account()
     {
         return $this->belongsTo(Account::class);
+    }
+
+    public function partner(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Partner::class);
     }
 
     /**

@@ -20,7 +20,11 @@ class TransactionResource extends JsonResource
             'type' => $this->type,
             'category' => $this->category,
             'method' => $this->method,
-            'partner' => $this->partner,
+            'partner_id' => $this->partner_id,
+            'partner' => $this->whenLoaded('partner', fn ($p) => $p ? [
+                'id' => $p->id,
+                'name' => $p->name,
+            ] : null),
             'person' => $this->person,
             'amount' => $this->amount,
             'date' => $this->date?->format('Y-m-d'),

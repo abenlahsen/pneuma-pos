@@ -7,7 +7,8 @@ export interface Transaction {
   method: string | null;
   description: string;
   person: string | null;
-  partner: string | null;
+  partner_id: number | null;
+  partner?: { id: number; name: string } | null;
   user_id: number;
   account_id: number;
   transfer_id: string | null;
@@ -24,7 +25,7 @@ export interface TransactionPayload {
   method?: string;
   description: string;
   person?: string;
-  partner?: string;
+  partner_id?: number | null;
   account_id: number;
 }
 
@@ -39,7 +40,7 @@ export interface TransactionSummary {
 export interface TransactionFilters {
   categories: string[];
   persons: string[];
-  partners: string[];
+  partners: { id: number; name: string }[];
   accounts: { id: number; name: string; type: string }[];
 }
 
