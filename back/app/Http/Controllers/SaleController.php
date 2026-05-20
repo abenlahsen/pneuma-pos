@@ -13,6 +13,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class SaleController extends Controller
@@ -292,14 +293,22 @@ class SaleController extends Controller
         $monthStart = now()->startOfMonth()->toDateString();
         $monthEnd = now()->endOfMonth()->toDateString();
 
+        $tyreSaleQty = function ($saleSubQuery): int {
+            return (int) DB::table('sale_items')
+                ->join('products', 'sale_items.product_id', '=', 'products.id')
+                ->where('products.type', 'tyre')
+                ->whereIn('sale_items.sale_id', $saleSubQuery->select('id'))
+                ->sum('sale_items.quantity');
+        };
+
         return response()->json([
             'tyres_today' => $dateColumn === 'id'
                 ? 0
-                : (int) (clone $query)->whereDate($dateColumn, $today)->sum('total_quantity'),
+                : $tyreSaleQty((clone $query)->whereDate($dateColumn, $today)),
             'tyres_this_month' => $dateColumn === 'id'
                 ? 0
-                : (int) (clone $query)->whereDate($dateColumn, '>=', $monthStart)->whereDate($dateColumn, '<=', $monthEnd)->sum('total_quantity'),
-            'tyres_en_cours' => (int) (clone $query)->where('status', 'EN COURS')->sum('total_quantity'),
+                : $tyreSaleQty((clone $query)->whereDate($dateColumn, '>=', $monthStart)->whereDate($dateColumn, '<=', $monthEnd)),
+            'tyres_en_cours' => $tyreSaleQty((clone $query)->where('status', 'EN COURS')),
             'sales_en_cours' => (int) (clone $query)->where('status', 'EN COURS')->count(),
             'total_unpaid' => round((float) (clone $query)->whereIn('payment_status', ['NON PAYE', 'NON PAYÉ'])->sum('total_sale'), 2),
         ]);
