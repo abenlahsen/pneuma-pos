@@ -42,7 +42,6 @@ class PurchasePaymentService
             'method' => $validated['method'],
             'description' => "Paiement achat #{$purchase->id} - {$purchase->total_quantity} pneus - {$supplierName}",
             'person' => $supplierName,
-            'partner' => $supplierName,
             'user_id' => $user->id,
             'account_id' => $validated['account_id'],
         ]);

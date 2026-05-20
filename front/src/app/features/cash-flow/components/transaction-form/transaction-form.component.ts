@@ -38,7 +38,7 @@ export class TransactionFormComponent implements OnInit, OnChanges {
       method: [this.transaction?.method || '', [Validators.required]],
       description: [this.transaction?.description || '', [Validators.required]],
       person: [this.transaction?.person || '', [Validators.required]],
-      partner: [this.transaction?.partner || ''],
+      partner_id: [this.transaction?.partner_id ?? null],
     });
   }
 

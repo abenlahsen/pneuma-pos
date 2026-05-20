@@ -3,6 +3,7 @@
 namespace App\Domain\Transactions;
 
 use App\Models\Account;
+use App\Models\Partner;
 use App\Models\Payment;
 use App\Models\PurchasePayment;
 use App\Models\Transaction;
@@ -123,7 +124,7 @@ class TransactionService
         return [
             'categories' => Transaction::distinct()->whereNotNull('category')->pluck('category')->sort()->values(),
             'persons' => Transaction::distinct()->whereNotNull('person')->pluck('person')->sort()->values(),
-            'partners' => Transaction::distinct()->whereNotNull('partner')->pluck('partner')->sort()->values(),
+            'partners' => Partner::orderBy('name')->get(['id', 'name']),
             'accounts' => Account::active()->orderBy('name')->get(['id', 'name', 'type']),
         ];
     }
@@ -133,7 +134,7 @@ class TransactionService
      */
     private function buildFilteredQuery(array $filters): Builder
     {
-        $query = Transaction::with('account');
+        $query = Transaction::with('account', 'partner');
 
         $sortable = ['date', 'amount', 'type', 'category', 'description', 'person', 'partner', 'created_at'];
         if (! empty($filters['sort_by']) && in_array($filters['sort_by'], $sortable, true)) {
@@ -157,8 +158,8 @@ class TransactionService
             $query->where('person', $filters['person']);
         }
 
-        if (! empty($filters['partner'])) {
-            $query->where('partner', $filters['partner']);
+        if (! empty($filters['partner_id'])) {
+            $query->where('partner_id', (int) $filters['partner_id']);
         }
 
         if (! empty($filters['account_id'])) {

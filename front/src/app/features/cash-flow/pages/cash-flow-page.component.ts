@@ -119,7 +119,7 @@ export class CashFlowPageComponent implements OnInit {
       date_from: this.filterDateFrom(),
       date_to: this.filterDateTo(),
       search: this.filterSearch(),
-      partner: this.filterPartner(),
+      partner_id: this.filterPartner(),
       amount_min: this.filterAmountMin(),
       amount_max: this.filterAmountMax(),
       sort_by: this.sortBy(),

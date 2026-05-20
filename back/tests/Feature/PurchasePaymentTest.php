@@ -111,7 +111,7 @@ class PurchasePaymentTest extends TestCase
             'method' => 'Espèces',
             'description' => 'Test',
             'person' => '',
-            'partner' => '',
+            'user_id' => $this->user->id,
             'account_id' => $this->account->id,
         ]);
 
@@ -377,7 +377,7 @@ class PurchasePaymentTest extends TestCase
             'method' => 'Espèces',
             'description' => "Paiement achat #{$this->purchase->id}",
             'person' => '',
-            'partner' => '',
+            'user_id' => $this->user->id,
             'account_id' => $this->account->id,
         ]);
 
@@ -565,7 +565,7 @@ class PurchasePaymentTest extends TestCase
             $table->string('method')->nullable();
             $table->string('description')->nullable();
             $table->string('person')->nullable();
-            $table->string('partner')->nullable();
+            $table->unsignedBigInteger('partner_id')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('account_id')->nullable();
             $table->unsignedBigInteger('transfer_id')->nullable();

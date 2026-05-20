@@ -38,7 +38,6 @@ class SalePaymentService
             'method' => $validated['method'] ?? null,
             'description' => "Paiement vente #{$sale->id} - {$sale->total_quantity} X " . $this->describeSaleProduct($sale) . " POUR {$clientName}",
             'person' => '',
-            'partner' => $clientName,
             'user_id' => $user->id,
             'account_id' => $validated['account_id'],
         ]);

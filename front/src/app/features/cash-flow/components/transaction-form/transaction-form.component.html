@@ -77,6 +77,7 @@
             <option value="Chèque">Chèque</option>
             <option value="Effet">Effet</option>
             <option value="Virement">Virement</option>
+            <option value="Carte bancaire">Carte bancaire</option>
           </select>
           @if (form.get('method')?.invalid && form.get('method')?.touched) {
             <span class="field-error">Méthode requise</span>
@@ -100,12 +101,12 @@
 
       <div class="form-group">
         <label for="txn-partner">Partenaire</label>
-        <input type="text" id="txn-partner" formControlName="partner" list="partner-list" placeholder="Ex: DAS TANGER, MARKET RABAT..." />
-        <datalist id="partner-list">
-          @for (p of filterOptions.partners; track p) {
-            <option [value]="p"></option>
+        <select id="txn-partner" formControlName="partner_id">
+          <option [value]="null">— Aucun —</option>
+          @for (p of filterOptions.partners; track p.id) {
+            <option [value]="p.id">{{ p.name }}</option>
           }
-        </datalist>
+        </select>
       </div>
 
       <div class="form-group">
