@@ -7,7 +7,7 @@ import { Purchase, PurchasePayment, PurchasePaymentSummary } from '../../../core
 import { Account } from '../../../core/models/account.model';
 import { AccountService } from '../../../core/services/account.service';
 
-const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Effet'];
+const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Effet', 'Carte bancaire'];
 
 @Component({
   selector: 'app-purchase-payments',

@@ -5,7 +5,7 @@ import { ServiceOrder, ServicePayment, ServicePaymentPayload } from '../../../co
 import { ServiceOrderService } from '../data-access/service-order.service';
 import { AuthService } from '../../../core/services/auth.service';
 
-const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Carte'];
+const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Carte bancaire'];
 
 interface AccountOption {
   id: number;
