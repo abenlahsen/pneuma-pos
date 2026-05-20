@@ -52,6 +52,7 @@ export class PurchaseFormComponent implements OnInit {
   formData: PurchasePayload = {
     date: new Date().toISOString().split('T')[0],
     with_invoice: false,
+    discount: 0,
     supplier_id: 0,
     commercial_id: null,
     items: [],
@@ -82,6 +83,7 @@ export class PurchaseFormComponent implements OnInit {
         this.formData = {
           date: this.purchase!.date?.substring(0, 10) || '',
           with_invoice: !!this.purchase!.with_invoice,
+          discount: this.purchase!.discount ?? 0,
           supplier_id: this.purchase!.supplier?.id || 0,
           commercial_id: this.purchase!.commercial?.id || null,
           items: this.purchase!.items ? JSON.parse(JSON.stringify(this.purchase!.items)) : [],
@@ -215,6 +217,14 @@ export class PurchaseFormComponent implements OnInit {
 
   get totalAmount(): number {
     return this.formData.items.reduce((acc: number, item: any) => acc + (item.quantity * item.unit_price), 0);
+  }
+
+  get discountAmount(): number {
+    return this.totalAmount * ((this.formData.discount ?? 0) / 100);
+  }
+
+  get netAmount(): number {
+    return Math.max(0, this.totalAmount - this.discountAmount);
   }
 
   loadStocksForProduct(productId: number): void {

@@ -69,7 +69,8 @@ class PurchaseService
     public function create(array $validated, $userId)
     {
         $itemsData = $validated['items'] ?? [];
-        $totals = $this->calculateTotals($itemsData);
+        $discount = (float) ($validated['discount'] ?? 0);
+        $totals = $this->calculateTotals($itemsData, $discount);
 
         $purchase = DB::transaction(function () use ($validated, $itemsData, $totals, $userId) {
             $purchase = Purchase::create(array_merge(
@@ -93,7 +94,8 @@ class PurchaseService
     {
         $oldStatus = $purchase->status;
         $itemsData = $validated['items'] ?? [];
-        $totals = $this->calculateTotals($itemsData);
+        $discount = (float) ($validated['discount'] ?? 0);
+        $totals = $this->calculateTotals($itemsData, $discount);
 
         DB::transaction(function () use ($purchase, $validated, $itemsData, $totals, $userId, $oldStatus) {
             if (! in_array($oldStatus, ['ANNULE', 'RETOUR'], true)) {
@@ -164,14 +166,14 @@ class PurchaseService
             $query->where('with_invoice', filter_var($filters['with_invoice'], FILTER_VALIDATE_BOOLEAN));
         }
         if (isset($filters['amount_min']) && $filters['amount_min'] !== '') {
-            $query->where('total_price', '>=', (float) $filters['amount_min']);
+            $query->where('net_amount', '>=', (float) $filters['amount_min']);
         }
         if (isset($filters['amount_max']) && $filters['amount_max'] !== '') {
-            $query->where('total_price', '<=', (float) $filters['amount_max']);
+            $query->where('net_amount', '<=', (float) $filters['amount_max']);
         }
 
-        $totalAchats = (clone $query)->sum('total_price') ?? 0;
-        $totalPaye = (clone $query)->where('payment_status', 'PAYE')->sum('total_price') ?? 0;
+        $totalAchats = (clone $query)->sum('net_amount') ?? 0;
+        $totalPaye = (clone $query)->where('payment_status', 'PAYE')->sum('net_amount') ?? 0;
         $resteAPayer = $totalAchats - $totalPaye;
 
         return [
@@ -271,10 +273,10 @@ class PurchaseService
             $query->where('with_invoice', filter_var($filters['with_invoice'], FILTER_VALIDATE_BOOLEAN));
         }
         if (isset($filters['amount_min']) && $filters['amount_min'] !== '') {
-            $query->where('total_price', '>=', (float) $filters['amount_min']);
+            $query->where('net_amount', '>=', (float) $filters['amount_min']);
         }
         if (isset($filters['amount_max']) && $filters['amount_max'] !== '') {
-            $query->where('total_price', '<=', (float) $filters['amount_max']);
+            $query->where('net_amount', '<=', (float) $filters['amount_max']);
         }
 
         return $query;
@@ -284,10 +286,10 @@ class PurchaseService
      * @param  array<int, array<string, mixed>>  $itemsData
      * @return array<string, int|float>
      */
-    protected function calculateTotals(array $itemsData)
+    protected function calculateTotals(array $itemsData, float $discount = 0.0): array
     {
         $totalQuantity = 0;
-        $totalPrice = 0;
+        $totalPrice = 0.0;
 
         foreach ($itemsData as $itemData) {
             $quantity = $itemData['quantity'] ?? 1;
@@ -297,9 +299,12 @@ class PurchaseService
             $totalPrice += $unitPrice * $quantity;
         }
 
+        $discountAmount = $totalPrice * ($discount / 100);
+
         return [
             'total_quantity' => $totalQuantity,
-            'total_price' => $totalPrice,
+            'total_price' => round($totalPrice, 2),
+            'net_amount' => max(0, round($totalPrice - $discountAmount, 2)),
         ];
     }
 

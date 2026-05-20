@@ -1,0 +1,10 @@
+# Normalise les fins de ligne en LF dans le dépôt
+* text=auto eol=lf
+
+# Forcer LF pour les scripts shell (exécutés sous Linux/WSL)
+*.sh text eol=lf
+
+# Forcer LF pour les fichiers de config Unix
+*.conf text eol=lf
+Dockerfile text eol=lf
+.env* text eol=lf

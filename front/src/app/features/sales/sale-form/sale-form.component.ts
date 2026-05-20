@@ -1,8 +1,9 @@
-import { Component, EventEmitter, Input, OnInit, Output, computed, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductDetailComponent } from '../../products/product-detail/product-detail.component';
-import { finalize } from 'rxjs/operators';
+import { Subject, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize, switchMap, takeUntil } from 'rxjs/operators';
 
 import { Sale, SalePayload } from '../../../core/models/sale.model';
 import { Product } from '../../../core/models/product.model';
@@ -24,7 +25,7 @@ import { VehicleSelectorComponent } from '../../../shared/vehicle-selector/vehic
   templateUrl: './sale-form.component.html',
   styleUrl: './sale-form.component.scss'
 })
-export class SaleFormComponent implements OnInit {
+export class SaleFormComponent implements OnInit, OnDestroy {
   @Input() sale: Sale | null = null;
   @Input() initialCarriers: Carrier[] = [];
   @Input() initialPartners: Partner[] = [];
@@ -61,6 +62,10 @@ export class SaleFormComponent implements OnInit {
   showClientSuggestions = signal(false);
   showQuickCreate = signal(false);
   creatingClient = signal(false);
+  loadingSearch = signal(false);
+
+  private readonly clientSearchSubject = new Subject<string>();
+  private readonly destroy$ = new Subject<void>();
 
   quickClient: ClientPayload = {
     name: '',
@@ -155,6 +160,7 @@ export class SaleFormComponent implements OnInit {
     this.partners.set(this.initialPartners);
     this.commercials.set(this.initialCommercials);
 
+    this.setupClientSearch();
     this.loadClients();
     this.searchProducts();
 
@@ -179,8 +185,12 @@ export class SaleFormComponent implements OnInit {
       }
     }
 
-    this.syncClientSearchResults();
     this.updateDuplicateWarnings();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   searchProducts(): void {
@@ -434,7 +444,7 @@ export class SaleFormComponent implements OnInit {
   onClientSearchInput(value: string): void {
     this.clientSearch.set(value);
     this.showClientSuggestions.set(true);
-    this.syncClientSearchResults();
+    this.clientSearchSubject.next(value);
     this.prefillQuickClient();
     this.updateDuplicateWarnings();
   }
@@ -492,7 +502,7 @@ export class SaleFormComponent implements OnInit {
 
     this.clientSearch.set(this.formData.client || '');
     this.prefillQuickClient();
-    this.syncClientSearchResults();
+    this.clientSearchSubject.next(this.clientSearch());
     this.updateDuplicateWarnings();
   }
 
@@ -504,6 +514,7 @@ export class SaleFormComponent implements OnInit {
 
   cancelQuickCreate(): void {
     this.showQuickCreate.set(false);
+    this.quickClient = { name: '', phone: '', email: '', city: '', address: '', notes: '', is_active: true };
   }
 
   saveQuickClient(): void {
@@ -521,12 +532,14 @@ export class SaleFormComponent implements OnInit {
     ).subscribe({
       next: (client) => {
         this.clients.set([client, ...this.clients().filter((existing) => existing.id !== client.id)]);
-        this.syncClientSearchResults();
         this.selectClient(client);
         this.showQuickCreate.set(false);
       },
-      error: () => {
-        alert('Erreur lors de la création rapide du client.');
+      error: (err) => {
+        const errors: Record<string, string[]> = err?.error?.errors ?? {};
+        const messages = Object.values(errors).flat();
+        const detail = messages.length ? '\n' + messages.join('\n') : '';
+        alert('Erreur lors de la création rapide du client.' + detail);
       }
     });
   }
@@ -565,20 +578,42 @@ export class SaleFormComponent implements OnInit {
     };
   }
 
+  private setupClientSearch(): void {
+    this.clientSearchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(term => {
+        const trimmed = term.trim();
+        if (!trimmed) {
+          return of(this.clients().slice(0, 8));
+        }
+        this.loadingSearch.set(true);
+        return this.clientService.getClients({ search: trimmed, per_page: 20, status: 'active' }).pipe(
+          finalize(() => this.loadingSearch.set(false)),
+        );
+      }),
+      takeUntil(this.destroy$),
+    ).subscribe(clients => {
+      this.filteredClients.set(clients.slice(0, 8));
+    });
+  }
+
   private loadClients(): void {
     this.loadingClients.set(true);
 
-    this.clientService.getClients({ per_page: 500, status: 'active' }).pipe(
+    this.clientService.getClients({ per_page: 20, status: 'active' }).pipe(
       finalize(() => this.loadingClients.set(false))
     ).subscribe({
       next: (clients) => {
         this.clients.set(clients);
-        this.syncClientSearchResults();
+        this.filteredClients.set(clients.slice(0, 8));
 
         if (this.formData.client_id) {
           const selected = clients.find((client) => client.id === this.formData.client_id);
           if (selected) {
             this.selectedClient.set(selected);
+          } else {
+            this.loadClientById(this.formData.client_id);
           }
         }
 
@@ -588,6 +623,12 @@ export class SaleFormComponent implements OnInit {
         this.clients.set([]);
         this.filteredClients.set([]);
       }
+    });
+  }
+
+  private loadClientById(clientId: number): void {
+    this.clientService.getClient(clientId).subscribe({
+      next: (client) => this.selectedClient.set(client),
     });
   }
 
@@ -602,32 +643,6 @@ export class SaleFormComponent implements OnInit {
     });
   }
 
-  private syncClientSearchResults(): void {
-    const search = this.clientSearch().trim().toLowerCase();
-
-    if (!search) {
-      this.filteredClients.set(this.clients().slice(0, 8));
-      return;
-    }
-
-    this.filteredClients.set(
-      this.clients()
-        .filter((client) => {
-          const haystack = [
-            client.name,
-            client.phone,
-            client.email,
-            client.city,
-          ]
-            .filter(Boolean)
-            .join(' ')
-            .toLowerCase();
-
-          return haystack.includes(search);
-        })
-        .slice(0, 8)
-    );
-  }
 
   updateDuplicateWarnings(): void {
     const selectedId = this.selectedClient()?.id;

@@ -17,6 +17,8 @@ class Purchase extends Model
         'with_invoice',
         'total_quantity',
         'total_price',
+        'discount',
+        'net_amount',
         'supplier_id',
         'commercial_id',
         'status',
@@ -33,6 +35,8 @@ class Purchase extends Model
         'with_invoice' => 'boolean',
         'total_quantity' => 'integer',
         'total_price' => 'decimal:2',
+        'discount' => 'decimal:2',
+        'net_amount' => 'decimal:2',
     ];
 
     // Removed appended total_price because it is now a real DB column.
