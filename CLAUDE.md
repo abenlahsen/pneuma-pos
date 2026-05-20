@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Pneuma POS is a Point of Sale system for a **tire shop** (pneus). The UI is in **French**. It uses:
 - **Backend**: Laravel 13 (PHP 8.4 FPM) REST API with Sanctum token auth
 - **Frontend**: Angular 21 SPA (standalone components, signals-based state)
-- **Database**: MySQL 8 (tests use in-memory SQLite)
+- **Database**: MySQL 8 (tests use a dedicated `pneuma_pos_test` MySQL database)
 - **Infrastructure**: Docker Compose with Nginx reverse proxy
 
 Initial admin account is seeded from `ADMIN_EMAIL` / `ADMIN_INITIAL_PASSWORD` env vars (see `back/.env.example`). If `ADMIN_INITIAL_PASSWORD` is empty, the seeder generates a random password and prints it once on stdout. The admin is always forced to change their password on first login (`must_change_password = true`).
@@ -30,6 +30,7 @@ docker compose up                # Start without rebuild
 docker compose down              # Stop services
 docker compose exec php php artisan migrate --seed   # Run migrations + seed
 docker compose exec php php artisan migrate:fresh --seed  # Reset DB completely
+docker compose exec -e DB_DATABASE=pneuma_pos_test php php artisan migrate  # Migrate test DB
 docker compose exec php php artisan tinker           # Laravel REPL
 docker compose logs -f           # Tail logs
 ```
@@ -45,7 +46,7 @@ cd back
 composer install
 php artisan migrate --seed       # Setup DB with default admin user
 php artisan serve                # Dev server on :8000
-php artisan test                 # Run PHPUnit tests (uses in-memory SQLite)
+php artisan test                 # Run PHPUnit tests (uses pneuma_pos_test MySQL DB)
 php artisan test --filter=TestName   # Run a single test
 ./vendor/bin/pint                # Code style fixer (Laravel Pint)
 ```
@@ -111,7 +112,7 @@ Config (`e2e/playwright.config.ts`): `timeout: 30_000` per test, `expect: { time
 - `Product` — catalog entry with a `type` field (`tyre` | `part` | `service`). Each type has a dedicated sub-table joined 1:1 by `product_id` as PK: `ProductTyre` (dimensions, EU label), `ProductPart`, `ProductService`. Use `$product->details()` to get the type-specific sub-model.
 - `Stock` — inventory lots linked to `Product` via `product_id`. Tire dimensions are on the related `ProductTyre`, not on `Stock` itself. `Stock::parseSearchQuery()` parses shorthand queries like "2055516" or "205/55R16" into width/height/diameter components.
 - `StockMovement` — append-only audit trail written whenever stock quantity changes.
-- `Transaction` — cash-flow entry linked to an `Account`. Auto-created when a `Payment`, `PurchasePayment`, or `ServicePayment` is saved. Has two scopes: `pending()` (Chèque/Effet with `date > today`) and `settled()` (everything else). The `TransactionService` accepts a `status` filter param (`pending` | `settled`) to split the list. Editing or deleting a transaction that is linked to a fully-paid sale (`payment_status = 'PAYÉ'`) or purchase (`payment_status = 'PAYE'`) is blocked by `TransactionService::guardLinkedToCompleted()` — the user must modify the sale/purchase payment status first.
+- `Transaction` — cash-flow entry linked to an `Account`. Auto-created when a `Payment`, `PurchasePayment`, or `ServicePayment` is saved. Has two scopes: `pending()` (Chèque/Effet with `date > today`) and `settled()` (everything else). The `TransactionService` accepts a `status` filter param (`pending` | `settled`) to split the list. Editing or deleting a transaction that is linked to a fully-paid sale (`payment_status = 'PAYÉ'`) or purchase (`payment_status = 'PAYE'`) is blocked by `TransactionService::guardLinkedToCompleted()` — the user must modify the sale/purchase payment status first. `partner_id` is a nullable FK to `partners` — set manually by the user on cash-flow transactions (not auto-populated from sale/purchase payments).
 - `Payment` / `PurchasePayment` — payment records linked to their parent sale/purchase and to a `Transaction`. Deleting a payment also deletes its linked `Transaction`.
 - `ServiceOrder` — header record (date, vehicle, mileage, totals, discount, status, payment_status, client_id, commercial_id). Line items live in `ServiceItem` (HasMany). Payments via `ServicePayment` (HasMany).
 - `ServiceItem` — line item for a service order. Two item types: `service` (service_type, description, labor_cost, quantity — `line_total = qty * labor_cost`; parts_cost is always 0) and `part` (product_id, product_name, product_reference, unit_price, quantity — `line_total = qty * unit_price`). Auto-calculates line_total on save via `booted()` hook and triggers parent `recalculateTotals()`.
@@ -152,7 +153,7 @@ Each payment creation (Payment, PurchasePayment, ServicePayment) auto-creates a 
 
 **Instant modal open pattern** (Service Auto): The page uses `loadingEdit = signal(false)` and `loadingDetail = signal(false)`. When opening edit or detail, the modal shell opens immediately while the API call runs in the background. The form component (`<app-service-order-form>`) is inside `*ngIf="!loadingEdit()"` so its `ngOnInit` only runs after data is available. Detail components have no `ngOnInit` and read `@Input()` via getters, so they can be shown immediately with partial data and re-rendered when full data arrives.
 
-**Payment panels**: All three modules (Sales, Purchases, Service Auto) use a unified **side-panel** layout (`panel-overlay` + `payment-panel` classes, design tokens from `_variables.scss`). Panels auto-close when the remaining balance reaches 0 — implemented via an `onComplete` callback passed to `loadPayments()`.
+**Payment panels**: All three modules (Sales, Purchases, Service Auto) use a unified **side-panel** layout (`panel-overlay` + `payment-panel` classes, design tokens from `_variables.scss`). Panels auto-close when the remaining balance reaches 0 — implemented via an `onComplete` callback passed to `loadPayments()`. Available payment methods across all modules: `Espèces`, `Chèque`, `Virement`, `Effet`, `Carte bancaire`.
 
 **Detail/consultation modals**: All three modules' detail components (`sale-detail`, `purchase-detail`, `service-order-detail`) expose `@Input() canEdit = false` and `@Output() edit`. The parent page passes `[canEdit]="authService.hasPermission('edit X')"` and `(edit)="editFromDetail()"`. The `editFromDetail()` method closes the detail modal then immediately opens the edit form.
 
@@ -184,9 +185,9 @@ The **Service Auto** module manages automotive service orders (repairs, oil chan
 
 Both sections are loaded in parallel on every `loadData()` call. The summary endpoint (no `status` param) returns `pending_income` and `pending_expense` totals across all filters.
 
-Filters available (order in UI): Rechercher (description LIKE), Type, Compte, Catégorie, Personne, Partenaire, Du, Au, Montant min, Montant max. All filters apply to both the settled and pending requests. The `TransactionService::buildFilteredQuery()` supports: `type`, `category`, `account_id`, `person`, `partner`, `date_from`, `date_to`, `search`, `amount_min`, `amount_max`, `status`.
+Filters available (order in UI): Rechercher (description LIKE), Type, Compte, Catégorie, Personne, Partenaire, Du, Au, Montant min, Montant max. All filters apply to both the settled and pending requests. The `TransactionService::buildFilteredQuery()` supports: `type`, `category`, `account_id`, `person`, `partner_id`, `date_from`, `date_to`, `search`, `amount_min`, `amount_max`, `status`. The Partenaire filter uses `partner_id` (FK) — the filter dropdown is fed by `GET /api/transactions-filters` which returns partners as `{id, name}` objects.
 
-**Transaction auto-creation**: each payment recorded against a sale, purchase, or service order automatically creates a `Transaction`. Sale payments → type `income`, category `Produit`, partner = client name. Purchase payments → type `expense`, category `Achat`, person + partner = supplier name. Deleting a payment cascades to delete its linked transaction. Editing/deleting a transaction linked to a fully-paid sale or purchase is blocked by the backend guard (422 error).
+**Transaction auto-creation**: each payment recorded against a sale, purchase, or service order automatically creates a `Transaction`. Sale payments → type `income`, category `Produit`. Purchase payments → type `expense`, category `Achat`, `person` = supplier name. The `partner_id` field is **not** auto-populated — it is set manually by the user on standalone cash-flow transactions. Deleting a payment cascades to delete its linked transaction. Editing/deleting a transaction linked to a fully-paid sale or purchase is blocked by the backend guard (422 error).
 
 ## Deployment
 
@@ -197,7 +198,7 @@ Two deploy scripts, both run from WSL Ubuntu-24.04:
 
 **DB backup**: Both scripts use `mariadb-dump` (falls back to `mysqldump`) with credentials passed via `--user`/`--password`/`--host` flags. The `--defaults-extra-file` approach was removed because it fails on MariaDB 11.4 with passwords containing `@` or similar characters.
 
-**Dashboard KPIs** (`DashboardController::kpi`): returns today/month/year sales amounts, tyres sold counts, margins, stock value, unpaid sales/purchases, cash balance, and `sales_by_commercial` (grouped by commercial with `total_sales`, `total_tyres`, `total_margin`). Only visible to Administrator role.
+**Dashboard KPIs** (`DashboardController::kpi`): returns today/month/year sales amounts, tyres sold counts, margins, stock value, unpaid sales/purchases, cash balance, and `sales_by_commercial` (grouped by commercial with `total_sales`, `total_tyres`, `total_margin`). Only visible to Administrator role. The "Pneus vendus" KPI (`tyres_today`, `tyres_this_month`, `tyres_en_cours`) counts only `sale_items` joined to `products` where `products.type = 'tyre'` — parts and services are excluded.
 
 ## Design System
 Read `front/DESIGN_SYSTEM.md` before making any frontend UI changes.
