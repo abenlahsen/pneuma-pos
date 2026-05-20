@@ -14,7 +14,7 @@ class PurchasePaymentService
         $purchase->load(['payments.transaction.account']);
 
         $totalPaid = (float) $purchase->payments->sum('amount');
-        $totalPurchase = (float) ($purchase->total_price ?? 0);
+        $totalPurchase = (float) ($purchase->net_amount ?? $purchase->total_price ?? 0);
         $remaining = max(0, $totalPurchase - $totalPaid);
 
         return [
@@ -82,7 +82,7 @@ class PurchasePaymentService
         $purchase->load('payments');
 
         $paid = (float) $purchase->payments->sum('amount');
-        $total = (float) ($purchase->total_price ?? 0);
+        $total = (float) ($purchase->net_amount ?? $purchase->total_price ?? 0);
 
         if ($paid <= 0) {
             $purchase->payment_status = 'NON PAYE';

@@ -72,6 +72,8 @@ class PurchasePaymentTest extends TestCase
             'supplier_id' => $supplier->id,
             'total_quantity' => 4,
             'total_price' => 1000.00,
+            'discount' => 0,
+            'net_amount' => 1000.00,
             'status' => 'EN COURS',
             'payment_status' => 'NON PAYE',
             'created_by' => $this->user->id,

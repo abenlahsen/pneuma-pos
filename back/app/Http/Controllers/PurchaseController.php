@@ -43,6 +43,7 @@ class PurchaseController extends Controller
         $validated = $request->validate([
             'date' => 'required|date',
             'with_invoice' => 'boolean',
+            'discount' => 'nullable|numeric|min:0|max:100',
             'supplier_id' => 'required|exists:suppliers,id',
             'commercial_id' => 'required|exists:users,id',
             'status' => 'required|string|in:EN COURS,RECU,TERMINE,ANNULE,RETOUR',
@@ -77,6 +78,7 @@ class PurchaseController extends Controller
         $validated = $request->validate([
             'date' => 'required|date',
             'with_invoice' => 'boolean',
+            'discount' => 'nullable|numeric|min:0|max:100',
             'supplier_id' => 'required|exists:suppliers,id',
             'commercial_id' => 'required|exists:users,id',
             'status' => 'required|string|in:EN COURS,RECU,TERMINE,ANNULE,RETOUR',

@@ -40,8 +40,8 @@
             </span>
           </button>
 
-          <div class="empty-state small" *ngIf="!filteredClients().length && !loadingClients()">Aucun client correspondant.</div>
-          <div class="helper-text" *ngIf="loadingClients()">Chargement des clients...</div>
+          <div class="empty-state small" *ngIf="!filteredClients().length && !loadingClients() && !loadingSearch()">Aucun client correspondant.</div>
+          <div class="helper-text" *ngIf="loadingClients() || loadingSearch()">Chargement...</div>
         </div>
       </div>
 
@@ -83,7 +83,7 @@
           </div>
           <div class="form-control">
             <label>Email</label>
-            <input type="email" name="quickClientEmail" [(ngModel)]="quickClient.email">
+            <input type="text" name="quickClientEmail" [(ngModel)]="quickClient.email" placeholder="exemple@domaine.com">
           </div>
           <div class="form-control">
             <label>Ville</label>

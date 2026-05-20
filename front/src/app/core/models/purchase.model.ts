@@ -20,6 +20,8 @@ export interface Purchase {
   with_invoice: boolean;
   total_quantity?: number;
   total_price?: number;
+  discount?: number;
+  net_amount?: number;
   items?: PurchaseItem[];
   status: 'EN COURS' | 'RECU' | 'TERMINE' | 'ANNULE' | 'RETOUR';
   payment_status: 'PAYE' | 'NON PAYE' | 'PARTIEL';
@@ -32,6 +34,7 @@ export interface Purchase {
 export interface PurchasePayload {
   date: string;
   with_invoice: boolean;
+  discount?: number;
   supplier_id: number;
   commercial_id?: number | null;
   status: 'EN COURS' | 'RECU' | 'TERMINE' | 'ANNULE' | 'RETOUR';

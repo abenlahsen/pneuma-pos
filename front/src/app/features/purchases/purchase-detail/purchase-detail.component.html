@@ -74,8 +74,16 @@
             <span class="value">{{ purchase.total_quantity }}</span>
           </div>
           <div class="detail-item">
-            <span class="label">Total Achat</span>
-            <span class="value fw-semibold">{{ purchase.total_price | number:'1.2-2' }} DH</span>
+            <span class="label">Sous-total</span>
+            <span class="value">{{ purchase.total_price | number:'1.2-2' }} DH</span>
+          </div>
+          <div class="detail-item" *ngIf="(purchase.discount ?? 0) > 0">
+            <span class="label">Remise</span>
+            <span class="value text-warning">{{ purchase.discount }}%</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Net à payer</span>
+            <span class="value fw-semibold">{{ (purchase.net_amount ?? purchase.total_price) | number:'1.2-2' }} DH</span>
           </div>
         </div>
       </div>
