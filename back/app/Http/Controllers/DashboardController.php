@@ -67,6 +67,11 @@ class DashboardController extends Controller
 
         $expenseCategories = ['Charge', 'Transport', 'Service'];
 
+        $expensesToday = round((float) Transaction::where('type', 'expense')
+            ->whereIn('category', $expenseCategories)
+            ->whereDate('date', $today)
+            ->sum('amount'), 2);
+
         $expensesMonth = round((float) Transaction::where('type', 'expense')
             ->whereIn('category', $expenseCategories)
             ->whereBetween('date', [$monthStart, $monthEnd])
@@ -101,6 +106,7 @@ class DashboardController extends Controller
             'sales_today_amount' => round((clone $salesToday)->sum('total_sale'), 2),
             'tyres_today' => $tyreSalesQty($today),
             'margin_today' => round((clone $salesToday)->sum('margin'), 2),
+            'net_margin_today' => round((clone $salesToday)->sum('margin'), 2) - $expensesToday,
 
             // This month
             'sales_month_amount' => round((clone $salesMonth)->sum('total_sale'), 2),
