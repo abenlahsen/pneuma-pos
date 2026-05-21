@@ -5,7 +5,9 @@ export interface DashboardKpi {
   sales_month_amount: number;
   purchases_month_amount: number;
   margin_month: number;
+  net_margin_month: number;
   margin_year: number;
+  net_margin_year: number;
   total_sale_year: number;
   total_purchase_year: number;
   tyres_month: number;
