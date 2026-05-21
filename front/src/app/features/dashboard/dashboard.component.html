@@ -55,6 +55,14 @@
             <span class="kpi-val">{{ k.net_margin_today | number:'1.2-2' }} <small>DH</small></span>
           </div>
         </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">🛒</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Achats</span>
+            <span class="kpi-val">{{ k.purchases_today_amount | number:'1.2-2' }} <small>DH</small></span>
+          </div>
+          <div class="kpi-badge">{{ k.tyres_purchased_today }} Pneus achetés</div>
+        </div>
       </div>
 
       <!-- Ce mois -->

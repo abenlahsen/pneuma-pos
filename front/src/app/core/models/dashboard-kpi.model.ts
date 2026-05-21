@@ -3,6 +3,8 @@ export interface DashboardKpi {
   tyres_today: number;
   margin_today: number;
   net_margin_today: number;
+  purchases_today_amount: number;
+  tyres_purchased_today: number;
   sales_month_amount: number;
   purchases_month_amount: number;
   margin_month: number;
