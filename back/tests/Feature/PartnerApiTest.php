@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\City;
 use App\Models\Partner;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
@@ -31,8 +32,24 @@ class PartnerApiTest extends TestCase
     protected function ensureTestTablesExist()
     {
         $this->ensureUsersTableExists();
+        $this->ensureCitiesTableExists();
         $this->ensurePartnersTableExists();
         $this->ensurePermissionTablesExist();
+    }
+
+    protected function ensureCitiesTableExists(): void
+    {
+        if (! Schema::hasTable('cities')) {
+            Schema::create('cities', function (Blueprint $table) {
+                $table->id();
+                $table->string('name')->unique();
+            });
+        }
+    }
+
+    protected function ensureCity(string $name): City
+    {
+        return City::firstOrCreate(['name' => $name]);
     }
 
     protected function ensureUsersTableExists()
@@ -59,7 +76,7 @@ class PartnerApiTest extends TestCase
             Schema::create('partners', function (Blueprint $table) {
                 $table->id();
                 $table->string('name');
-                $table->string('city')->nullable();
+                $table->unsignedBigInteger('city_id')->nullable();
                 $table->string('phone')->nullable();
                 $table->string('mobile')->nullable();
                 $table->string('address')->nullable();
@@ -169,6 +186,9 @@ class PartnerApiTest extends TestCase
             'must_change_password' => false,
         ]);
 
+        $cityName = $attributes['city'] ?? 'Casablanca';
+        $this->ensureCity($cityName);
+
         return Partner::query()->create(array_merge([
             'name' => 'Partner '.fake()->unique()->company(),
             'city' => 'Casablanca',
@@ -201,6 +221,9 @@ class PartnerApiTest extends TestCase
     {
         $this->authenticateWithPermissions(['view partners']);
 
+        $this->ensureCity('Rabat');
+        $this->ensureCity('Marrakech');
+
         $first = $this->createPartner([
             'name' => 'Alpha Partner',
             'city' => 'Rabat',
@@ -210,7 +233,7 @@ class PartnerApiTest extends TestCase
 
         $this->createPartner([
             'name' => 'Beta Partner',
-            'city' => 'Marrakesh',
+            'city' => 'Marrakech',
             'phone' => '0500000002',
             'mobile' => '0600000002',
         ]);
@@ -268,6 +291,7 @@ class PartnerApiTest extends TestCase
         $user = $this->authenticateWithPermissions(['create partners']);
 
         $payload = $this->partnerPayload();
+        $this->ensureCity($payload['city']);
 
         $response = $this->postJson($this->baseUrl, $payload);
 
@@ -284,7 +308,7 @@ class PartnerApiTest extends TestCase
 
         $this->assertDatabaseHas('partners', [
             'name' => $payload['name'],
-            'city' => $payload['city'],
+            'city_id' => City::where('name', $payload['city'])->value('id'),
             'phone' => $payload['phone'],
             'mobile' => $payload['mobile'],
             'address' => $payload['address'],
@@ -305,6 +329,7 @@ class PartnerApiTest extends TestCase
 
     public function test_show_returns_partner_resource()
     {
+        $this->ensureCity('Fes');
         $partner = $this->createPartner([
             'name' => 'Shown Partner',
             'city' => 'Fes',
@@ -369,6 +394,8 @@ class PartnerApiTest extends TestCase
             'alignment_price' => 100,
         ];
 
+        $this->ensureCity($payload['city']);
+
         $response = $this->putJson($this->baseUrl.'/'.$partner->id, $payload);
 
         $response
@@ -385,7 +412,7 @@ class PartnerApiTest extends TestCase
         $this->assertDatabaseHas('partners', [
             'id' => $partner->id,
             'name' => $payload['name'],
-            'city' => $payload['city'],
+            'city_id' => City::where('name', $payload['city'])->value('id'),
             'phone' => $payload['phone'],
             'mobile' => $payload['mobile'],
             'address' => $payload['address'],

@@ -5,10 +5,14 @@
       <p class="subtitle">Gérez vos achats de pneus et autres produits</p>
     </div>
     <div class="actions">
+      <button class="btn btn-secondary" (click)="exportPurchases()" [disabled]="isExporting()">
+        {{ isExporting() ? 'Export...' : 'Exporter Excel' }}
+      </button>
       <button class="btn btn-primary" (click)="openForm()" *ngIf="authService.hasPermission('create purchases')">+ Nouvel achat</button>
       <app-auto-refresh-control pageKey="purchases" (refresh)="loadData()" />
     </div>
   </div>
+  <p class="export-error" *ngIf="exportError()">{{ exportError() }}</p>
 
   <div class="summary-cards" *ngIf="summary()">
     <div class="card summary-card income">

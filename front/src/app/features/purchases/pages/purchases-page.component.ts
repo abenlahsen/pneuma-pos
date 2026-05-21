@@ -43,6 +43,9 @@ export class PurchasesPageComponent implements OnInit {
   sortBy = signal('');
   sortDirection = signal<'asc' | 'desc'>('asc');
 
+  isExporting = signal(false);
+  exportError = signal('');
+
   isFormOpen = signal<boolean>(false);
   selectedPurchase = signal<Purchase | null>(null);
   detailPurchase = signal<Purchase | null>(null);
@@ -218,6 +221,30 @@ export class PurchasesPageComponent implements OnInit {
 
   isPurchaseLocked(purchase: Purchase): boolean {
     return purchase.status === 'TERMINE' && !this.authService.hasRole('Administrator');
+  }
+
+  exportPurchases(): void {
+    this.isExporting.set(true);
+    this.exportError.set('');
+    const filters = { ...this.buildFilters() };
+    delete filters['page'];
+    delete filters['per_page'];
+
+    this.purchaseService.exportPurchases(filters).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `achats_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.isExporting.set(false);
+      },
+      error: () => {
+        this.exportError.set("Erreur lors de l'export.");
+        this.isExporting.set(false);
+      },
+    });
   }
 
   deletePurchase(purchase: Purchase): void {

@@ -6,12 +6,13 @@ use App\Domain\Purchases\PurchaseService;
 use App\Models\Purchase;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PurchaseController extends Controller
 {
-    public function __construct(private PurchaseService $purchaseService)
-    {
-    }
+    public function __construct(private PurchaseService $purchaseService) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -118,5 +119,43 @@ class PurchaseController extends Controller
     public function filters(): JsonResponse
     {
         return response()->json($this->purchaseService->filters());
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $filters = $request->except(['page', 'per_page']);
+        $purchases = $this->purchaseService->buildFilteredQuery($filters)->get();
+
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $rows = [['Date', 'Fournisseur', 'Commercial', 'Statut', 'Paiement', 'Facture', 'Remise (%)', 'Qté totale', 'Total HT', 'Net']];
+
+        foreach ($purchases as $purchase) {
+            $rows[] = [
+                $purchase->date?->toDateString() ?? '',
+                $purchase->supplier?->name ?? '',
+                $purchase->commercial?->name ?? '',
+                $purchase->status ?? '',
+                $purchase->payment_status ?? '',
+                $purchase->with_invoice ? 'Oui' : 'Non',
+                (float) ($purchase->discount ?? 0),
+                (int) ($purchase->total_quantity ?? 0),
+                (float) ($purchase->total_price ?? 0),
+                (float) ($purchase->net_amount ?? 0),
+            ];
+        }
+
+        $sheet->fromArray($rows, null, 'A1', true);
+
+        $filename = 'achats_'.now()->format('Ymd_His').'.xlsx';
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'max-age=0',
+        ]);
     }
 }

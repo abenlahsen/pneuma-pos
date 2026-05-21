@@ -5,11 +5,15 @@
       <p class="subtitle">Gérez vos ventes et marges</p>
     </div>
     <div class="actions">
+      <button class="btn btn-secondary" type="button" (click)="exportSales()" [disabled]="isExporting()">
+        {{ isExporting() ? 'Export en cours...' : 'Exporter Excel' }}
+      </button>
       <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create sales')">
         Nouvelle Vente
       </button>
       <app-auto-refresh-control pageKey="sales" (refresh)="loadData()" />
     </div>
+    <p class="export-error" *ngIf="exportError()">{{ exportError() }}</p>
   </div>
 
   <div class="summary-cards">
@@ -65,6 +69,14 @@
         <div class="form-group">
           <label>Client</label>
           <input type="text" class="form-control" [ngModel]="filterClient()" (ngModelChange)="filterClient.set($event)" placeholder="Nom du client..." (keyup.enter)="applyFilters()">
+        </div>
+
+        <div class="form-group">
+          <label>Ville</label>
+          <select class="form-control" [ngModel]="filterCity()" (ngModelChange)="filterCity.set($event); applyFilters()">
+            <option value="">Toutes les villes</option>
+            <option *ngFor="let c of cities()" [value]="c">{{ c }}</option>
+          </select>
         </div>
 
         <div class="form-group">

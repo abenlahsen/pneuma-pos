@@ -143,14 +143,16 @@
 
             <div class="form-group">
               <label for="city">Ville</label>
-              <input
+              <select
                 id="city"
-                type="text"
                 class="form-control"
                 [ngModel]="form().city"
                 (ngModelChange)="updateField('city', $event || null)"
                 name="city"
-              />
+              >
+                <option [ngValue]="null">— Sélectionner —</option>
+                <option *ngFor="let c of cities" [value]="c">{{ c }}</option>
+              </select>
             </div>
 
             <div class="form-group">

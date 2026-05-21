@@ -15,6 +15,7 @@ import { Stock } from '../../../core/models/stock.model';
 import { StockService } from '../../../core/services/stock.service';
 import { ClientService } from '../../clients/data-access/client.service';
 import { Client, ClientPayload, ClientProfileResponse } from '../../clients/models/client.model';
+import { CityService } from '../../../core/services/city.service';
 import { Vehicle } from '../../vehicles/models/vehicle.model';
 import { VehicleSelectorComponent } from '../../../shared/vehicle-selector/vehicle-selector.component';
 
@@ -40,6 +41,7 @@ export class SaleFormComponent implements OnInit, OnDestroy {
   private readonly productService = inject(ProductService);
   private readonly stockService = inject(StockService);
   private readonly clientService = inject(ClientService);
+  private readonly cityService = inject(CityService);
 
   products = signal<Product[]>([]);
   productSearch = signal('');
@@ -57,6 +59,7 @@ export class SaleFormComponent implements OnInit, OnDestroy {
   loadingClients = signal(false);
   loadingClientProfile = signal(false);
   selectedClient = signal<Client | null>(null);
+  cities = signal<string[]>([]);
   clientProfile = signal<ClientProfileResponse | null>(null);
 
   clientSearch = signal('');
@@ -157,6 +160,7 @@ export class SaleFormComponent implements OnInit, OnDestroy {
   );
 
   ngOnInit(): void {
+    this.cityService.getCities().subscribe(cities => this.cities.set(cities));
     this.carriers.set(this.initialCarriers);
     this.partners.set(this.initialPartners);
     this.commercials.set(this.initialCommercials);

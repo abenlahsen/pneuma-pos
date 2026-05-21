@@ -2,11 +2,15 @@
 
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CarrierController;
+use App\Http\Controllers\CityController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SupplierController;
 use Illuminate\Support\Facades\Route;
+
+// Cities (reference list — no specific permission required)
+Route::get('cities', [CityController::class, 'index']);
 
 // Brands
 Route::middleware('permission:view brands')->group(function () {

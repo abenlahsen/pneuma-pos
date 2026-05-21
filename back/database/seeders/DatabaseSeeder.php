@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         $this->call(RolesAndPermissionsSeeder::class);
+        $this->call(CitiesSeeder::class);
 
         $email = env('ADMIN_EMAIL', 'admin@pneuma.pos');
         $generated = null;

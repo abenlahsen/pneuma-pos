@@ -2,6 +2,7 @@ import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SettingsService } from '../data-access/settings.service';
+import { CityService } from '../../../core/services/city.service';
 import {
   CompanySettings,
   DEFAULT_COMPANY_THEME_SETTINGS,
@@ -93,9 +94,12 @@ export class CompanySettingsPageComponent implements OnInit {
     '--preview-shadow': this.getPreviewShadowColor(),
   }));
 
-  constructor(private settingsService: SettingsService) {}
+  cities: string[] = [];
+
+  constructor(private settingsService: SettingsService, private cityService: CityService) {}
 
   ngOnInit(): void {
+    this.cityService.getCities().subscribe(cities => this.cities = cities);
     this.loadSettings();
   }
 

@@ -2,11 +2,12 @@
 
 namespace App\Domain\Partners;
 
+use App\Models\City;
 use App\Models\Partner;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 class PartnerService
 {
@@ -18,18 +19,25 @@ class PartnerService
     {
         $query = Partner::query();
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function (Builder $q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('city', 'like', "%{$search}%")
+                    ->orWhereHas('cityRelation', fn (Builder $q2) => $q2->where('name', 'like', "%{$search}%"))
                     ->orWhere('phone', 'like', "%{$search}%")
                     ->orWhere('mobile', 'like', "%{$search}%");
             });
         }
 
+        if (! empty($filters['city'])) {
+            $cityId = City::where('name', $filters['city'])->value('id');
+            if ($cityId) {
+                $query->where('city_id', $cityId);
+            }
+        }
+
         $sortable = ['name', 'city', 'phone', 'mobile', 'created_at'];
-        if (!empty($filters['sort_by']) && in_array($filters['sort_by'], $sortable, true)) {
+        if (! empty($filters['sort_by']) && in_array($filters['sort_by'], $sortable, true)) {
             $direction = ($filters['sort_direction'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
             $query->orderBy($filters['sort_by'], $direction);
         } else {
@@ -37,10 +45,10 @@ class PartnerService
         }
 
         if (filter_var($filters['all'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
-            return $query->get();
+            return $query->with('cityRelation')->get();
         }
 
-        return $query->paginate((int) ($filters['per_page'] ?? 20));
+        return $query->with('cityRelation')->paginate((int) ($filters['per_page'] ?? 20));
     }
 
     /**

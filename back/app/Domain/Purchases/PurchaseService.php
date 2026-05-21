@@ -211,7 +211,7 @@ class PurchaseService
     /**
      * @param  array<string, mixed>  $filters
      */
-    protected function buildFilteredQuery(array $filters): Builder
+    public function buildFilteredQuery(array $filters): Builder
     {
         $query = Purchase::with([
             'supplier',
@@ -349,7 +349,7 @@ class PurchaseService
             $stock->save();
 
             $supplierName = $purchase->supplier?->name ?? null;
-            $reason = "Achat #{$purchase->id}" . ($supplierName ? " — {$supplierName}" : '');
+            $reason = "Achat #{$purchase->id}".($supplierName ? " — {$supplierName}" : '');
             $this->movements->recordPurchaseIn(
                 $stock->id,
                 $stock->product_id,
@@ -379,7 +379,7 @@ class PurchaseService
             $stock->save();
 
             $supplierName = $purchase->supplier?->name ?? null;
-            $reason = "Achat #{$purchase->id}" . ($supplierName ? " — {$supplierName}" : '');
+            $reason = "Achat #{$purchase->id}".($supplierName ? " — {$supplierName}" : '');
             $this->movements->recordPurchaseOut(
                 $stock->id,
                 $stock->product_id,

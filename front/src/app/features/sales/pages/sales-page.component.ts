@@ -14,6 +14,7 @@ import { CarrierService } from '../../carriers/data-access/carrier.service';
 import { Partner } from '../../partners/models/partner.model';
 import { PartnerService } from '../../partners/data-access/partner.service';
 import { ManagedUser } from '../../../core/models/user-manage.model';
+import { CityService } from '../../../core/services/city.service';
 
 @Component({
   selector: 'app-sales-page',
@@ -35,6 +36,8 @@ export class SalesPageComponent implements OnInit {
   filterSearch = signal('');
   filterBrand = signal('');
   filterClient = signal('');
+  filterCity = signal('');
+  cities = signal<string[]>([]);
   filterStatus = signal('');
   filterPaymentStatus = signal('');
   filterCarrier = signal('');
@@ -49,6 +52,8 @@ export class SalesPageComponent implements OnInit {
   sortDirection = signal<'asc' | 'desc'>('asc');
 
   loading = signal(false);
+  isExporting = signal(false);
+  exportError = signal('');
   deletingSaleId = signal<number | null>(null);
   showForm = signal(false);
   editingSale = signal<Sale | null>(null);
@@ -64,9 +69,11 @@ export class SalesPageComponent implements OnInit {
     public authService: AuthService,
     private carrierService: CarrierService,
     private partnerService: PartnerService,
+    private cityService: CityService,
   ) {}
 
   ngOnInit(): void {
+    this.cityService.getCities().subscribe(cities => this.cities.set(cities));
     this.loadFilters();
     this.loadData();
     this.loadFormLookups();
@@ -117,6 +124,7 @@ export class SalesPageComponent implements OnInit {
       search: this.filterSearch(),
       brand: this.filterBrand(),
       client: this.filterClient(),
+      city: this.filterCity(),
       status: this.filterStatus(),
       payment_status: this.filterPaymentStatus(),
       carrier_id: this.filterCarrier(),
@@ -152,6 +160,7 @@ export class SalesPageComponent implements OnInit {
     this.filterSearch.set('');
     this.filterBrand.set('');
     this.filterClient.set('');
+    this.filterCity.set('');
     this.filterStatus.set('');
     this.filterPaymentStatus.set('');
     this.filterCarrier.set('');
@@ -255,6 +264,29 @@ export class SalesPageComponent implements OnInit {
         },
       });
     }
+  }
+
+  exportSales(): void {
+    this.isExporting.set(true);
+    this.exportError.set('');
+    const filters = this.buildFilters();
+    delete filters['page'];
+    delete filters['per_page'];
+    this.saleService.exportSales(filters).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ventes-${new Date().toISOString().slice(0, 10)}.xlsx`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.isExporting.set(false);
+      },
+      error: () => {
+        this.exportError.set("L'export des ventes a échoué. Veuillez réessayer.");
+        this.isExporting.set(false);
+      },
+    });
   }
 
   isSaleLocked(sale: Sale): boolean {

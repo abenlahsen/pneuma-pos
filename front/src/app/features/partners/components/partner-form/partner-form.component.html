@@ -8,7 +8,10 @@
       </div>
       <div class="form-control">
         <label>Ville</label>
-        <input type="text" name="city" [(ngModel)]="formData.city" placeholder="Ex: Casablanca">
+        <select name="city" [(ngModel)]="formData.city">
+          <option value="">— Sélectionner —</option>
+          <option *ngFor="let c of cities" [value]="c">{{ c }}</option>
+        </select>
       </div>
       <div class="form-control">
         <label>Téléphone</label>
