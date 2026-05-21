@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Brand;
+use App\Models\Carrier;
 use App\Models\Client;
+use App\Models\Partner;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Stock;
@@ -11,6 +13,7 @@ use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\PersonalAccessToken;
 use Spatie\Permission\Models\Permission;
@@ -24,9 +27,17 @@ class SaleControllerTest extends TestCase
 
     private $user;
 
+    private ?Product $sharedProduct = null;
+
+    private ?Stock $sharedStock = null;
+
     protected function setUp(): void
     {
         parent::setUp();
+
+        if (! Route::has('login')) {
+            Route::get('/login', fn () => response()->json(['message' => 'Unauthenticated.'], 401))->name('login');
+        }
 
         $this->ensureTestTablesExist();
 
@@ -439,7 +450,7 @@ class SaleControllerTest extends TestCase
 
         unset($attributes['client'], $attributes['client_phone']);
 
-        return Sale::query()->create(array_merge([
+        $sale = Sale::query()->create(array_merge([
             'date' => '2026-03-01',
             'total_quantity' => 4,
             'total_purchase' => 400,
@@ -449,6 +460,20 @@ class SaleControllerTest extends TestCase
             'payment_status' => 'NON PAYÉ',
             'created_by' => $this->user->id,
         ], $attributes));
+
+        if ($this->sharedProduct === null) {
+            [$this->sharedProduct, $this->sharedStock] = $this->createProductWithStock(100);
+        }
+
+        $sale->items()->create([
+            'product_id' => $this->sharedProduct->id,
+            'stock_id' => $this->sharedStock->id,
+            'quantity' => $attributes['total_quantity'] ?? 4,
+            'purchase_price' => 100,
+            'selling_price' => 150,
+        ]);
+
+        return $sale;
     }
 
     private function createCommercial($name = 'Ali Commercial')
@@ -659,8 +684,7 @@ class SaleControllerTest extends TestCase
             'is_active' => true,
         ]);
 
-        Schema::table('product_tyres', function (Blueprint $table) {
-        });
+        Schema::table('product_tyres', function (Blueprint $table) {});
 
         DB::table('product_tyres')->insert([
             'product_id' => $product->id,
@@ -723,8 +747,8 @@ class SaleControllerTest extends TestCase
     {
         [$product, $stock] = $this->createProductWithStock(10);
 
-        $carrier = \App\Models\Carrier::query()->create(['name' => 'Transporteur Test']);
-        $partner = \App\Models\Partner::query()->create(['name' => 'Partenaire Test']);
+        $carrier = Carrier::query()->create(['name' => 'Transporteur Test', 'user_id' => $this->user->id]);
+        $partner = Partner::query()->create(['name' => 'Partenaire Test', 'user_id' => $this->user->id]);
 
         $payload = [
             'date' => '2026-03-15',
@@ -776,8 +800,8 @@ class SaleControllerTest extends TestCase
     public function test_update_persists_logistics_fields(): void
     {
         $sale = $this->createSale();
-        $carrier = \App\Models\Carrier::query()->create(['name' => 'Transporteur MAJ']);
-        $partner = \App\Models\Partner::query()->create(['name' => 'Partenaire MAJ']);
+        $carrier = Carrier::query()->create(['name' => 'Transporteur MAJ', 'user_id' => $this->user->id]);
+        $partner = Partner::query()->create(['name' => 'Partenaire MAJ', 'user_id' => $this->user->id]);
 
         $payload = [
             'carrier_id' => $carrier->id,
@@ -816,9 +840,9 @@ class SaleControllerTest extends TestCase
 
     private function createProductWithStock(int $quantity = 10): array
     {
-        $brand = Brand::query()->create(['name' => 'BrandStock-' . fake()->unique()->word(), 'is_active' => true]);
+        $brand = Brand::query()->create(['name' => 'BrandStock-'.fake()->unique()->word(), 'is_active' => true]);
         $product = Product::query()->create([
-            'reference' => 'REF-STK-' . fake()->unique()->numerify('####'),
+            'reference' => 'REF-STK-'.fake()->unique()->numerify('####'),
             'type' => 'tyre',
             'brand_id' => $brand->id,
             'is_active' => true,
@@ -1027,11 +1051,11 @@ class SaleControllerTest extends TestCase
         $managerRole->syncPermissions(['view sales', 'create sales', 'edit sales']); // pas view users
 
         $user = User::query()->create([
-            'name'                 => 'Test Manager',
-            'email'                => fake()->unique()->safeEmail(),
-            'password'             => 'password',
-            'phone'                => '0600000010',
-            'commission_rate'      => 0,
+            'name' => 'Test Manager',
+            'email' => fake()->unique()->safeEmail(),
+            'password' => 'password',
+            'phone' => '0600000010',
+            'commission_rate' => 0,
             'must_change_password' => false,
         ]);
         $user->assignRole($managerRole);
@@ -1048,11 +1072,11 @@ class SaleControllerTest extends TestCase
         $commercialRole->syncPermissions(['view sales', 'create sales', 'edit sales', 'view users']);
 
         $user = User::query()->create([
-            'name'                 => 'Test Commercial',
-            'email'                => fake()->unique()->safeEmail(),
-            'password'             => 'password',
-            'phone'                => '0600000011',
-            'commission_rate'      => 5,
+            'name' => 'Test Commercial',
+            'email' => fake()->unique()->safeEmail(),
+            'password' => 'password',
+            'phone' => '0600000011',
+            'commission_rate' => 5,
             'must_change_password' => false,
         ]);
         $user->assignRole($commercialRole);
@@ -1114,15 +1138,15 @@ class SaleControllerTest extends TestCase
         $manager = $this->makeManager();
 
         $payload = [
-            'date'           => '2026-03-15',
-            'commercial_id'  => $manager->id,
-            'client'         => 'Client Manager Test',
-            'items'          => [[
-                'product_id'     => $product->id,
-                'stock_id'       => $stock->id,
-                'quantity'       => 1,
+            'date' => '2026-03-15',
+            'commercial_id' => $manager->id,
+            'client' => 'Client Manager Test',
+            'items' => [[
+                'product_id' => $product->id,
+                'stock_id' => $stock->id,
+                'quantity' => 1,
                 'purchase_price' => 100,
-                'selling_price'  => 150,
+                'selling_price' => 150,
             ]],
         ];
 
@@ -1131,21 +1155,56 @@ class SaleControllerTest extends TestCase
             ->assertJsonPath('client', 'Client Manager Test');
     }
 
+    // ── Export Excel ─────────────────────────────────────────────────────────
+
+    public function test_export_streams_xlsx(): void
+    {
+        $this->createSale(['date' => '2026-04-10']);
+        $this->createSale(['date' => '2026-04-15']);
+
+        $response = $this->get('/api/sales/export', $this->authHeaders());
+
+        $response->assertOk();
+        $this->assertStringContainsString(
+            'spreadsheetml',
+            $response->headers->get('Content-Type')
+        );
+    }
+
+    public function test_export_requires_authentication(): void
+    {
+        $this->getJson('/api/sales/export')->assertUnauthorized();
+    }
+
+    public function test_export_applies_date_filter(): void
+    {
+        $this->createSale(['date' => '2026-01-15']);
+        $this->createSale(['date' => '2026-04-15']);
+
+        $response = $this->get('/api/sales/export?date_from=2026-04-01&date_to=2026-04-30', $this->authHeaders());
+
+        $response->assertOk();
+        $this->assertStringContainsString(
+            'spreadsheetml',
+            $response->headers->get('Content-Type')
+        );
+    }
+
     public function test_commercial_can_create_a_sale(): void
     {
         [$product, $stock] = $this->createProductWithStock(10);
         $commercial = $this->makeCommercial();
 
         $payload = [
-            'date'           => '2026-03-15',
-            'commercial_id'  => $commercial->id,
-            'client'         => 'Client Commercial Test',
-            'items'          => [[
-                'product_id'     => $product->id,
-                'stock_id'       => $stock->id,
-                'quantity'       => 1,
+            'date' => '2026-03-15',
+            'commercial_id' => $commercial->id,
+            'client' => 'Client Commercial Test',
+            'items' => [[
+                'product_id' => $product->id,
+                'stock_id' => $stock->id,
+                'quantity' => 1,
                 'purchase_price' => 80,
-                'selling_price'  => 120,
+                'selling_price' => 120,
             ]],
         ];
 

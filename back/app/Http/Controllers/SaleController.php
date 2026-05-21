@@ -7,6 +7,7 @@ use App\Http\Requests\StoreSaleRequest;
 use App\Http\Requests\UpdateSaleRequest;
 use App\Http\Resources\SaleResource;
 use App\Models\Carrier;
+use App\Models\City;
 use App\Models\Partner;
 use App\Models\Sale;
 use App\Models\User;
@@ -15,6 +16,9 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SaleController extends Controller
 {
@@ -25,7 +29,7 @@ class SaleController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Sale::query()
-            ->with(['linkedClient', 'commercial', 'linkedCarrier', 'linkedPartner', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
+            ->with(['linkedClient.cityRelation', 'commercial', 'linkedCarrier', 'linkedPartner', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
 
         if ($request->filled('commercial_id') && Schema::hasColumn('sales', 'commercial_id')) {
             $query->where('commercial_id', $request->integer('commercial_id'));
@@ -45,18 +49,18 @@ class SaleController extends Controller
                 $builder->orWhereHas('linkedClient', function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
                         ->orWhere('phone', 'like', "%{$search}%")
-                        ->orWhere('city', 'like', "%{$search}%");
+                        ->orWhereHas('cityRelation', fn ($q2) => $q2->where('name', 'like', "%{$search}%"));
                 })
-                ->orWhereHas('commercial', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%");
-                })
-                ->orWhereHas('items.linkedProduct', function ($q) use ($search) {
-                    $q->where('profile', 'like', "%{$search}%")
-                        ->orWhere('reference', 'like', "%{$search}%")
-                        ->orWhereHas('brand', function ($q2) use ($search) {
-                            $q2->where('name', 'like', "%{$search}%");
-                        });
-                });
+                    ->orWhereHas('commercial', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('items.linkedProduct', function ($q) use ($search) {
+                        $q->where('profile', 'like', "%{$search}%")
+                            ->orWhere('reference', 'like', "%{$search}%")
+                            ->orWhereHas('brand', function ($q2) use ($search) {
+                                $q2->where('name', 'like', "%{$search}%");
+                            });
+                    });
 
                 foreach (['reference', 'brand', 'status', 'payment_status'] as $column) {
                     if (Schema::hasColumn('sales', $column)) {
@@ -74,10 +78,10 @@ class SaleController extends Controller
         }
 
         if ($request->filled('city')) {
-            $city = (string) $request->string('city');
-            $query->whereHas('linkedClient', function ($q) use ($city) {
-                $q->where('city', $city);
-            });
+            $cityId = City::where('name', (string) $request->string('city'))->value('id');
+            if ($cityId) {
+                $query->whereHas('linkedClient', fn ($q) => $q->where('city_id', $cityId));
+            }
         }
 
         if ($request->filled('status') && Schema::hasColumn('sales', 'status')) {
@@ -139,7 +143,7 @@ class SaleController extends Controller
 
         return response()->json(
             (new SaleResource(
-                $sale->loadMissing(['linkedClient', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments'])
+                $sale->loadMissing(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments'])
             ))->resolve(),
             201
         );
@@ -149,7 +153,7 @@ class SaleController extends Controller
     {
         return response()->json(
             (new SaleResource(
-                $sale->loadMissing(['linkedClient', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments'])
+                $sale->loadMissing(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments'])
             ))->resolve()
         );
     }
@@ -164,7 +168,7 @@ class SaleController extends Controller
 
         return response()->json(
             (new SaleResource(
-                $sale->loadMissing(['linkedClient', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments'])
+                $sale->loadMissing(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments'])
             ))->resolve()
         );
     }
@@ -178,6 +182,167 @@ class SaleController extends Controller
         $this->saleService->delete($sale, $request->user()?->id);
 
         return response()->noContent();
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $query = Sale::query()
+            ->with(['linkedClient', 'commercial', 'linkedCarrier', 'linkedPartner', 'items.linkedProduct.brand', 'items.linkedProduct.tyre']);
+
+        if ($request->filled('commercial_id') && Schema::hasColumn('sales', 'commercial_id')) {
+            $query->where('commercial_id', $request->integer('commercial_id'));
+        }
+
+        if ($request->filled('carrier_id')) {
+            $query->where('carrier_id', $request->integer('carrier_id'));
+        }
+
+        if ($request->filled('partner_id')) {
+            $query->where('partner_id', $request->integer('partner_id'));
+        }
+
+        if ($request->filled('search')) {
+            $search = trim((string) $request->string('search'));
+            $query->where(function ($builder) use ($search) {
+                $builder->orWhereHas('linkedClient', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%")
+                        ->orWhereHas('cityRelation', fn ($q2) => $q2->where('name', 'like', "%{$search}%"));
+                })
+                    ->orWhereHas('commercial', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('items.linkedProduct', function ($q) use ($search) {
+                        $q->where('profile', 'like', "%{$search}%")
+                            ->orWhere('reference', 'like', "%{$search}%")
+                            ->orWhereHas('brand', function ($q2) use ($search) {
+                                $q2->where('name', 'like', "%{$search}%");
+                            });
+                    });
+
+                foreach (['reference', 'brand', 'status', 'payment_status'] as $column) {
+                    if (Schema::hasColumn('sales', $column)) {
+                        $builder->orWhere($column, 'like', "%{$search}%");
+                    }
+                }
+            });
+        }
+
+        if ($request->filled('client')) {
+            $client = trim((string) $request->string('client'));
+            $query->whereHas('linkedClient', function ($q) use ($client) {
+                $q->where('name', 'like', "%{$client}%");
+            });
+        }
+
+        if ($request->filled('city')) {
+            $cityId = City::where('name', (string) $request->string('city'))->value('id');
+            if ($cityId) {
+                $query->whereHas('linkedClient', fn ($q) => $q->where('city_id', $cityId));
+            }
+        }
+
+        if ($request->filled('status') && Schema::hasColumn('sales', 'status')) {
+            $query->where('status', (string) $request->string('status'));
+        }
+
+        if ($request->filled('payment_status') && Schema::hasColumn('sales', 'payment_status')) {
+            $query->where('payment_status', (string) $request->string('payment_status'));
+        }
+
+        if ($request->filled('brand') && Schema::hasColumn('sales', 'brand')) {
+            $query->where('brand', (string) $request->string('brand'));
+        }
+
+        $dateColumn = $this->resolveDateColumn();
+
+        if ($dateColumn !== 'id' && $request->filled('date_from')) {
+            $query->whereDate($dateColumn, '>=', (string) $request->string('date_from'));
+        }
+
+        if ($dateColumn !== 'id' && $request->filled('date_to')) {
+            $query->whereDate($dateColumn, '<=', (string) $request->string('date_to'));
+        }
+
+        if ($request->filled('with_invoice') && Schema::hasColumn('sales', 'with_invoice')) {
+            $query->where('with_invoice', filter_var($request->input('with_invoice'), FILTER_VALIDATE_BOOLEAN));
+        }
+
+        if ($request->filled('amount_min') && Schema::hasColumn('sales', 'total_sale')) {
+            $query->where('total_sale', '>=', (float) $request->input('amount_min'));
+        }
+
+        if ($request->filled('amount_max') && Schema::hasColumn('sales', 'total_sale')) {
+            $query->where('total_sale', '<=', (float) $request->input('amount_max'));
+        }
+
+        $query->orderByDesc($dateColumn)->orderByDesc('id');
+
+        $fileName = 'ventes-'.now()->format('Y-m-d-His').'.xlsx';
+        $headers = [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
+            'Cache-Control' => 'max-age=0, no-store, no-cache, must-revalidate',
+            'Pragma' => 'public',
+        ];
+
+        return response()->streamDownload(function () use ($query) {
+            $spreadsheet = new Spreadsheet;
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Ventes');
+
+            $rows = [[
+                'Date',
+                'Référence',
+                'Client',
+                'Téléphone',
+                'Ville',
+                'Commercial',
+                'Transporteur',
+                'Partenaire',
+                'Statut',
+                'Paiement',
+                'Facture',
+                'Méthode paiement',
+                'Qté totale',
+                'Total achat',
+                'Total vente',
+                'Marge',
+            ]];
+
+            $query->get()->each(function (Sale $sale) use (&$rows) {
+                $date = $sale->sale_date ?? $sale->date;
+                $rows[] = [
+                    $date ? (is_string($date) ? $date : $date->format('Y-m-d')) : '',
+                    $sale->reference ?? '',
+                    $sale->linkedClient?->name ?? $sale->client ?? '',
+                    $sale->linkedClient?->phone ?? $sale->client_phone ?? '',
+                    $sale->linkedClient?->city ?? '',
+                    $sale->commercial?->name ?? '',
+                    $sale->linkedCarrier?->name ?? '',
+                    $sale->linkedPartner?->name ?? $sale->partner ?? '',
+                    $sale->status ?? '',
+                    $sale->payment_status ?? '',
+                    $sale->with_invoice ? 'Oui' : 'Non',
+                    $sale->payment_method ?? '',
+                    (int) ($sale->total_quantity ?? 0),
+                    $sale->total_purchase !== null ? round((float) $sale->total_purchase, 2) : null,
+                    $sale->total_sale !== null ? round((float) $sale->total_sale, 2) : null,
+                    $sale->margin !== null ? round((float) $sale->margin, 2) : null,
+                ];
+            });
+
+            $sheet->fromArray($rows, null, 'A1', true);
+            $sheet->getStyle('A1:P1')->getFont()->setBold(true);
+            $sheet->freezePane('A2');
+
+            foreach (range('A', 'P') as $column) {
+                $sheet->getColumnDimension($column)->setAutoSize(true);
+            }
+
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        }, $fileName, $headers);
     }
 
     public function filters(): JsonResponse
@@ -227,18 +392,18 @@ class SaleController extends Controller
                 $builder->orWhereHas('linkedClient', function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
                         ->orWhere('phone', 'like', "%{$search}%")
-                        ->orWhere('city', 'like', "%{$search}%");
+                        ->orWhereHas('cityRelation', fn ($q2) => $q2->where('name', 'like', "%{$search}%"));
                 })
-                ->orWhereHas('commercial', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%");
-                })
-                ->orWhereHas('items.linkedProduct', function ($q) use ($search) {
-                    $q->where('profile', 'like', "%{$search}%")
-                        ->orWhere('reference', 'like', "%{$search}%")
-                        ->orWhereHas('brand', function ($q2) use ($search) {
-                            $q2->where('name', 'like', "%{$search}%");
-                        });
-                });
+                    ->orWhereHas('commercial', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('items.linkedProduct', function ($q) use ($search) {
+                        $q->where('profile', 'like', "%{$search}%")
+                            ->orWhere('reference', 'like', "%{$search}%")
+                            ->orWhereHas('brand', function ($q2) use ($search) {
+                                $q2->where('name', 'like', "%{$search}%");
+                            });
+                    });
 
                 foreach (['reference', 'brand', 'status', 'payment_status'] as $column) {
                     if (Schema::hasColumn('sales', $column)) {
@@ -257,10 +422,10 @@ class SaleController extends Controller
         }
 
         if ($request->filled('city')) {
-            $city = (string) $request->string('city');
-            $query->whereHas('linkedClient', function ($q) use ($city) {
-                $q->where('city', $city);
-            });
+            $cityId = City::where('name', (string) $request->string('city'))->value('id');
+            if ($cityId) {
+                $query->whereHas('linkedClient', fn ($q) => $q->where('city_id', $cityId));
+            }
         }
 
         if ($request->filled('status') && Schema::hasColumn('sales', 'status')) {
@@ -334,12 +499,12 @@ class SaleController extends Controller
     {
         return Sale::query()
             ->whereNotNull('client_id')
-            ->whereHas('linkedClient', fn ($q) => $q->whereNotNull('city')->where('city', '!=', ''))
-            ->with('linkedClient:id,city')
+            ->whereHas('linkedClient', fn ($q) => $q->whereNotNull('city_id'))
+            ->with('linkedClient:id,city_id', 'linkedClient.cityRelation:id,name')
             ->get()
             ->pluck('linkedClient.city')
-            ->filter(fn (?string $c) => $c !== null && trim($c) !== '')
-            ->map(fn (string $c) => trim($c))
+            ->filter(fn ($c) => $c !== null && trim((string) $c) !== '')
+            ->map(fn ($c) => trim((string) $c))
             ->unique()
             ->sort()
             ->values()
