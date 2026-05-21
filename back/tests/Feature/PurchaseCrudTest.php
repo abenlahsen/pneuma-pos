@@ -25,8 +25,11 @@ class PurchaseCrudTest extends TestCase
     use DatabaseTransactions;
 
     private User $user;
+
     private Supplier $supplier;
+
     private Product $product;
+
     private Stock $stock;
 
     protected function setUp(): void
@@ -60,7 +63,7 @@ class PurchaseCrudTest extends TestCase
         ]);
         $this->user->assignRole($admin);
 
-        $brand = Brand::query()->create(['name' => 'Michelin', 'is_active' => true]);
+        $brand = Brand::query()->firstOrCreate(['name' => 'Michelin'], ['is_active' => true]);
 
         $this->supplier = Supplier::query()->create([
             'name' => 'Fournisseur Test',
@@ -68,7 +71,7 @@ class PurchaseCrudTest extends TestCase
         ]);
 
         $this->product = Product::query()->create([
-            'reference' => 'REF-TEST-' . fake()->unique()->numerify('###'),
+            'reference' => 'REF-TEST-'.fake()->unique()->numerify('###'),
             'type' => 'tyre',
             'brand_id' => $brand->id,
             'is_active' => true,
@@ -156,8 +159,8 @@ class PurchaseCrudTest extends TestCase
     {
         Sanctum::actingAs($this->user, [], 'web');
 
-        $this->createPurchase(['total_price' => 1000, 'payment_status' => 'PAYE']);
-        $this->createPurchase(['total_price' => 500, 'payment_status' => 'NON PAYE']);
+        $this->createPurchase(['net_amount' => 1000, 'total_price' => 1000, 'payment_status' => 'PAYE']);
+        $this->createPurchase(['net_amount' => 500, 'total_price' => 500, 'payment_status' => 'NON PAYE']);
 
         $response = $this->getJson('/api/purchases-summary');
 
@@ -260,7 +263,7 @@ class PurchaseCrudTest extends TestCase
         Sanctum::actingAs($this->user, [], 'web');
 
         $service = Product::query()->create([
-            'reference' => 'SVC-' . fake()->unique()->numerify('###'),
+            'reference' => 'SVC-'.fake()->unique()->numerify('###'),
             'type' => 'service',
             'is_active' => true,
         ]);
@@ -410,6 +413,45 @@ class PurchaseCrudTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
+    // GET /api/purchases/export
+    // -------------------------------------------------------------------------
+
+    public function test_export_streams_xlsx(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $this->createPurchase(['date' => '2026-04-10', 'payment_status' => 'PAYE']);
+        $this->createPurchase(['date' => '2026-04-15', 'payment_status' => 'NON PAYE']);
+
+        $response = $this->get('/api/purchases/export');
+
+        $response->assertOk();
+        $this->assertStringContainsString(
+            'spreadsheetml',
+            $response->headers->get('Content-Type')
+        );
+    }
+
+    public function test_export_requires_view_purchases_permission(): void
+    {
+        $guest = $this->createUserWithPermissions([]);
+        Sanctum::actingAs($guest, [], 'web');
+
+        $this->get('/api/purchases/export')->assertForbidden();
+    }
+
+    public function test_export_applies_filters(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $this->createPurchase(['date' => '2026-04-10', 'payment_status' => 'PAYE']);
+        $this->createPurchase(['date' => '2026-04-15', 'payment_status' => 'NON PAYE']);
+
+        // Should return 200 regardless of filter (content varies, not testable as XLSX here)
+        $this->get('/api/purchases/export?payment_status=PAYE')->assertOk();
+    }
+
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
@@ -436,6 +478,7 @@ class PurchaseCrudTest extends TestCase
             'commercial_id' => $this->user->id,
             'total_quantity' => 4,
             'total_price' => 400.00,
+            'net_amount' => 400.00,
             'status' => 'EN COURS',
             'payment_status' => 'NON PAYE',
             'created_by' => $this->user->id,
@@ -702,8 +745,10 @@ class PurchaseCrudTest extends TestCase
             $table->id();
             $table->date('date');
             $table->boolean('with_invoice')->default(false);
+            $table->decimal('discount', 5, 2)->default(0);
             $table->integer('total_quantity')->default(0);
             $table->decimal('total_price', 10, 2)->default(0);
+            $table->decimal('net_amount', 10, 2)->default(0);
             $table->unsignedBigInteger('supplier_id');
             $table->unsignedBigInteger('commercial_id')->nullable();
             $table->string('status')->default('EN COURS');

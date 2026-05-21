@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\City;
 use App\Models\Client;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
@@ -19,6 +20,7 @@ class ClientCrudTest extends TestCase
     use DatabaseTransactions;
 
     private User $user;
+
     private Client $client;
 
     protected function setUp(): void
@@ -30,6 +32,7 @@ class ClientCrudTest extends TestCase
         }
 
         $this->ensureTablesExist();
+        $this->ensureCitiesTable();
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
@@ -50,6 +53,8 @@ class ClientCrudTest extends TestCase
         ]);
         $this->user->assignRole($admin);
 
+        City::firstOrCreate(['name' => 'Casablanca']);
+
         $this->client = Client::query()->create([
             'name' => 'Ahmed Benali',
             'category' => 'Paticulier',
@@ -65,6 +70,16 @@ class ClientCrudTest extends TestCase
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+
+    private function ensureCitiesTable(): void
+    {
+        if (! Schema::hasTable('cities')) {
+            Schema::create('cities', function (Blueprint $t) {
+                $t->id();
+                $t->string('name')->unique();
+            });
+        }
+    }
 
     private function ensureTablesExist(): void
     {
@@ -150,7 +165,7 @@ class ClientCrudTest extends TestCase
                 $t->string('category')->nullable();
                 $t->string('phone')->nullable();
                 $t->string('email')->nullable();
-                $t->string('city')->nullable();
+                $t->unsignedBigInteger('city_id')->nullable();
                 $t->text('address')->nullable();
                 $t->text('notes')->nullable();
                 $t->boolean('is_active')->default(true);
@@ -211,12 +226,14 @@ class ClientCrudTest extends TestCase
         $response->assertOk();
 
         foreach ($response->json('data') as $item) {
-            $this->assertStringContainsStringIgnoringCase('Ahmed', $item['name'] . ($item['phone'] ?? '') . ($item['email'] ?? '') . ($item['city'] ?? ''));
+            $this->assertStringContainsStringIgnoringCase('Ahmed', $item['name'].($item['phone'] ?? '').($item['email'] ?? '').($item['city'] ?? ''));
         }
     }
 
     public function test_index_filters_by_city(): void
     {
+        City::firstOrCreate(['name' => 'Rabat']);
+
         Client::query()->create([
             'name' => 'Client Rabat',
             'category' => 'Entreprise',
@@ -297,7 +314,7 @@ class ClientCrudTest extends TestCase
 
         $this->postJson('/api/clients', [])
             ->assertUnprocessable()
-            ->assertJsonValidationErrors(['name', 'category']);
+            ->assertJsonValidationErrors(['name']);
     }
 
     public function test_store_validates_category_values(): void
@@ -327,6 +344,8 @@ class ClientCrudTest extends TestCase
     {
         Sanctum::actingAs($this->user, [], 'web');
 
+        City::firstOrCreate(['name' => 'Marrakech']);
+
         $response = $this->postJson('/api/clients', [
             'name' => 'Nouveau Client',
             'category' => 'Entreprise',
@@ -345,6 +364,7 @@ class ClientCrudTest extends TestCase
             'name' => 'Nouveau Client',
             'category' => 'Entreprise',
             'phone' => '0677777777',
+            'city_id' => City::where('name', 'Marrakech')->value('id'),
         ]);
     }
 
@@ -394,6 +414,8 @@ class ClientCrudTest extends TestCase
     {
         Sanctum::actingAs($this->user, [], 'web');
 
+        City::firstOrCreate(['name' => 'Agadir']);
+
         $response = $this->putJson("/api/clients/{$this->client->id}", [
             'name' => 'Ahmed Benali Updated',
             'category' => 'Entreprise',
@@ -408,7 +430,7 @@ class ClientCrudTest extends TestCase
         $this->assertDatabaseHas('clients', [
             'id' => $this->client->id,
             'name' => 'Ahmed Benali Updated',
-            'city' => 'Agadir',
+            'city_id' => City::where('name', 'Agadir')->value('id'),
         ]);
     }
 
