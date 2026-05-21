@@ -6,6 +6,7 @@ use App\Models\Account;
 use App\Models\Purchase;
 use App\Models\Sale;
 use App\Models\Stock;
+use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -44,6 +45,7 @@ class DashboardController extends Controller
                 ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
                 ->where('products.type', 'tyre');
             $end ? $q->whereBetween('sales.date', [$start, $end]) : $q->whereDate('sales.date', $start);
+
             return (int) $q->sum('sale_items.quantity');
         };
 
@@ -62,6 +64,18 @@ class DashboardController extends Controller
             ->where('products.type', 'tyre')
             ->selectRaw('sale_items.sale_id, SUM(sale_items.quantity) as tyre_qty')
             ->groupBy('sale_items.sale_id');
+
+        $expenseCategories = ['Charge', 'Transport', 'Service'];
+
+        $expensesMonth = round((float) Transaction::where('type', 'expense')
+            ->whereIn('category', $expenseCategories)
+            ->whereBetween('date', [$monthStart, $monthEnd])
+            ->sum('amount'), 2);
+
+        $expensesYear = round((float) Transaction::where('type', 'expense')
+            ->whereIn('category', $expenseCategories)
+            ->whereBetween('date', [$yearStart, $yearEnd])
+            ->sum('amount'), 2);
 
         $salesByCommercial = DB::table('sales')
             ->leftJoin('users', 'sales.commercial_id', '=', 'users.id')
@@ -92,7 +106,9 @@ class DashboardController extends Controller
             'sales_month_amount' => round((clone $salesMonth)->sum('total_sale'), 2),
             'purchases_month_amount' => round((clone $purchasesMonth)->sum('total_price'), 2),
             'margin_month' => round((clone $salesMonth)->sum('margin'), 2),
+            'net_margin_month' => round((clone $salesMonth)->sum('margin'), 2) - $expensesMonth,
             'margin_year' => round((clone $salesYear)->sum('margin'), 2),
+            'net_margin_year' => round((clone $salesYear)->sum('margin'), 2) - $expensesYear,
             'total_sale_year' => round((clone $salesYear)->sum('total_sale'), 2),
             'total_purchase_year' => round((clone $purchasesYear)->sum('total_price'), 2),
             'tyres_month' => $tyreSalesQty($monthStart, $monthEnd),
