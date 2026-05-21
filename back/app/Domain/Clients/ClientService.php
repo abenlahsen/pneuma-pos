@@ -2,6 +2,7 @@
 
 namespace App\Domain\Clients;
 
+use App\Models\City;
 use App\Models\Client;
 use App\Models\Sale;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -17,6 +18,7 @@ class ClientService
         $perPage = $perPage > 0 ? min($perPage, 100) : 15;
 
         return $this->buildQuery($filters)
+            ->with('cityRelation')
             ->paginate($perPage)
             ->appends($filters);
     }
@@ -51,12 +53,12 @@ class ClientService
             ->when($exceptId, fn (Builder $query) => $query->whereKeyNot($exceptId))
             ->where(function (Builder $query) use ($name, $phone) {
                 if ($phone !== null) {
-                    $query->where('phone', 'like', '%' . $phone . '%');
+                    $query->where('phone', 'like', '%'.$phone.'%');
                 }
 
                 if ($name !== null) {
                     $method = $phone !== null ? 'orWhere' : 'where';
-                    $query->{$method}('name', 'like', '%' . $name . '%');
+                    $query->{$method}('name', 'like', '%'.$name.'%');
                 }
             })
             ->orderBy('name')
@@ -145,23 +147,26 @@ class ClientService
         if ($search !== null) {
             $query->where(function (Builder $builder) use ($search) {
                 $builder
-                    ->where('name', 'like', '%' . $search . '%')
-                    ->orWhere('phone', 'like', '%' . $search . '%')
-                    ->orWhere('email', 'like', '%' . $search . '%')
-                    ->orWhere('city', 'like', '%' . $search . '%');
+                    ->where('name', 'like', '%'.$search.'%')
+                    ->orWhere('phone', 'like', '%'.$search.'%')
+                    ->orWhere('email', 'like', '%'.$search.'%')
+                    ->orWhereHas('cityRelation', fn (Builder $q) => $q->where('name', 'like', '%'.$search.'%'));
             });
         }
 
         if ($name !== null) {
-            $query->where('name', 'like', '%' . $name . '%');
+            $query->where('name', 'like', '%'.$name.'%');
         }
 
         if ($phone !== null) {
-            $query->where('phone', 'like', '%' . $phone . '%');
+            $query->where('phone', 'like', '%'.$phone.'%');
         }
 
         if ($city !== null) {
-            $query->where('city', 'like', '%' . $city . '%');
+            $cityId = City::where('name', $city)->value('id');
+            if ($cityId) {
+                $query->where('city_id', $cityId);
+            }
         }
 
         if ($category !== null) {
@@ -180,7 +185,7 @@ class ClientService
     protected function normalizeActiveFilter(array $filters): ?bool
     {
         foreach (['is_active', 'active'] as $key) {
-            if (!array_key_exists($key, $filters) || $filters[$key] === '' || $filters[$key] === null) {
+            if (! array_key_exists($key, $filters) || $filters[$key] === '' || $filters[$key] === null) {
                 continue;
             }
 
@@ -267,7 +272,7 @@ class ClientService
             $entries->push([
                 'type' => 'sale',
                 'date' => $this->formatDate($sale->sale_date ?? $sale->created_at),
-                'description' => 'Sale #' . $sale->id,
+                'description' => 'Sale #'.$sale->id,
                 'sale_id' => $sale->id,
                 'payment_id' => null,
                 'debit' => round((float) ($sale->total ?? 0), 2),
@@ -280,7 +285,7 @@ class ClientService
             $entries->push([
                 'type' => 'payment',
                 'date' => $this->formatDate($payment->payment_date ?? $payment->paid_at ?? $payment->created_at),
-                'description' => 'Payment #' . $payment->id,
+                'description' => 'Payment #'.$payment->id,
                 'sale_id' => $payment->sale_id,
                 'payment_id' => $payment->id,
                 'debit' => 0.0,

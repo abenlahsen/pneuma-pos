@@ -13,9 +13,7 @@ use Illuminate\Support\Facades\Schema;
 
 class SaleService
 {
-    public function __construct(private StockMovementService $movements)
-    {
-    }
+    public function __construct(private StockMovementService $movements) {}
 
     public function create(array $validated, ?int $userId = null): Sale
     {
@@ -28,7 +26,7 @@ class SaleService
 
             $this->persistItems($sale, $items, $userId);
 
-            return $sale->fresh(['linkedClient', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
+            return $sale->fresh(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
         });
     }
 
@@ -49,7 +47,7 @@ class SaleService
                 $this->persistItems($sale, $items, $userId);
             }
 
-            return $sale->fresh(['linkedClient', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
+            return $sale->fresh(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
         });
     }
 
@@ -163,7 +161,7 @@ class SaleService
                     $stock->quantity = $before - $quantity;
                     $stock->save();
                     $clientName = $sale->client_id ? ($sale->linkedClient?->name ?? null) : null;
-                    $reason = "Vente #{$sale->id}" . ($clientName ? " — {$clientName}" : '');
+                    $reason = "Vente #{$sale->id}".($clientName ? " — {$clientName}" : '');
                     $this->movements->recordSaleOut(
                         $stock->id,
                         $stock->product_id,
@@ -195,7 +193,7 @@ class SaleService
             $stock->save();
 
             $clientName = $sale->client_id ? ($sale->linkedClient?->name ?? null) : null;
-            $reason = "Vente #{$sale->id}" . ($clientName ? " — {$clientName}" : '');
+            $reason = "Vente #{$sale->id}".($clientName ? " — {$clientName}" : '');
             $this->movements->recordSaleIn(
                 $stock->id,
                 $stock->product_id,

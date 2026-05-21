@@ -6,6 +6,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Partner, PartnerPayload, PaginatedResponse } from '../models/partner.model';
 import { PartnerFormComponent } from '../components/partner-form/partner-form.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
+import { CityService } from '../../../core/services/city.service';
 
 @Component({
   selector: 'app-partners-page',
@@ -21,6 +22,8 @@ export class PartnersPageComponent implements OnInit {
   total = signal(0);
   perPage = signal(100);
   filterSearch = signal('');
+  filterCity = signal('');
+  cities = signal<string[]>([]);
   sortBy = signal('');
   sortDirection = signal<'asc' | 'desc'>('asc');
   loading = signal(false);
@@ -28,9 +31,10 @@ export class PartnersPageComponent implements OnInit {
   showForm = signal(false);
   editingPartner = signal<Partner | null>(null);
 
-  constructor(private service: PartnerService, public authService: AuthService) {}
+  constructor(private service: PartnerService, public authService: AuthService, private cityService: CityService) {}
 
   ngOnInit(): void {
+    this.cityService.getCities().subscribe(cities => this.cities.set(cities));
     this.loadData();
   }
 
@@ -44,6 +48,7 @@ export class PartnersPageComponent implements OnInit {
         page: page.toString(),
         per_page: perPage.toString(),
         search: this.filterSearch(),
+        city: this.filterCity(),
         sort_by: this.sortBy(),
         sort_direction: this.sortDirection(),
       })
@@ -78,6 +83,7 @@ export class PartnersPageComponent implements OnInit {
 
   resetFilters(): void {
     this.filterSearch.set('');
+    this.filterCity.set('');
     this.sortBy.set('');
     this.sortDirection.set('asc');
     this.currentPage.set(1);

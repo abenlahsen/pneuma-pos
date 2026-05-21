@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Partner, PartnerPayload } from '../../models/partner.model';
+import { CityService } from '../../../../core/services/city.service';
 
 @Component({
   selector: 'app-partner-form',
@@ -15,6 +16,10 @@ export class PartnerFormComponent implements OnInit {
   @Output() save = new EventEmitter<PartnerPayload>();
   @Output() cancel = new EventEmitter<void>();
 
+  cities: string[] = [];
+
+  constructor(private cityService: CityService) {}
+
   formData: PartnerPayload = {
     name: '',
     city: '',
@@ -26,6 +31,7 @@ export class PartnerFormComponent implements OnInit {
   };
 
   ngOnInit() {
+    this.cityService.getCities().subscribe(cities => this.cities = cities);
     if (this.partner) {
       this.formData = { ...this.partner };
     }

@@ -41,4 +41,9 @@ export class SaleService {
   deleteSale(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  exportSales(filters: Record<string, string> = {}): Observable<Blob> {
+    const params = new HttpParams({ fromObject: filters });
+    return this.http.get(`${this.apiUrl}/export`, { params, responseType: 'blob' });
+  }
 }

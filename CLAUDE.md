@@ -89,10 +89,10 @@ Config (`e2e/playwright.config.ts`): `timeout: 30_000` per test, `expect: { time
 
 **API Routes** (`back/routes/api.php` → split into `back/routes/api/`):
 - `auth.php` — Public: `POST /api/login`
-- `sales.php` — CRUD + payments (`/api/sales/{sale}/payments`)
-- `purchases.php` — CRUD + payments (`/api/purchases/{purchase}/payments`)
+- `sales.php` — CRUD + payments (`/api/sales/{sale}/payments`) + `GET /api/sales/export` (Excel export with active filters, route declared before `sales/{sale}` to avoid conflict)
+- `purchases.php` — CRUD + payments (`/api/purchases/{purchase}/payments`) + `GET /api/purchases/export` (Excel export with active filters, route declared before `purchases/{purchase}`)
 - `clients.php` — Full client CRUD + `/api/clients/{client}/profile`, `/api/clients/{client}/statement`, `/api/clients/duplicates/check`
-- `catalog.php` — CRUD for `suppliers`, `carriers`, `partners`, `brands`, `products`; also registers duplicate client CRUD (registered before `clients.php`, so these routes take precedence for basic CRUD — the extended endpoints come from `clients.php`)
+- `catalog.php` — CRUD for `suppliers`, `carriers`, `partners`, `brands`, `products`; also registers duplicate client CRUD (registered before `clients.php`, so these routes take precedence for basic CRUD — the extended endpoints come from `clients.php`); `GET /api/cities` (returns ordered list of city names, no permission required)
 - `stock.php` — CRUD (`/api/stocks`) + `POST /api/stocks/import` (Excel import) + `GET /api/stocks/export` (Excel export of available stock) + `GET /api/stock-movements` (audit trail)
 - `accounts.php` — CRUD for accounts + cash-flow transactions + `POST /api/accounts/transfer`
 - `service_orders.php` — CRUD (`/api/service-orders`) + payments (`/api/service-orders/{id}/payments`) + item sync (`/api/service-orders/{id}/items/sync`) + `GET /api/service-orders-summary` + `GET /api/service-orders-filters`
@@ -118,9 +118,11 @@ Config (`e2e/playwright.config.ts`): `timeout: 30_000` per test, `expect: { time
 - `ServiceItem` — line item for a service order. Two item types: `service` (service_type, description, labor_cost, quantity — `line_total = qty * labor_cost`; parts_cost is always 0) and `part` (product_id, product_name, product_reference, unit_price, quantity — `line_total = qty * unit_price`). Auto-calculates line_total on save via `booted()` hook and triggers parent `recalculateTotals()`.
 - `ServicePayment` — payment linked to a `ServiceOrder` and optionally to a `Transaction` for cash-flow integration.
 - `ProductService` — service catalog sub-table (joined 1:1 with `Product` where type='service'); fields: category, duration_minutes, selling_price.
-- `Client` — with credit limit, opening balance, payment terms, default payment method, category.
-- `CompanySetting` — singleton row; stores company name, legal name, full address (address, city, state, postal_code, country), contact (phone, email), legal identifiers (rc, ice, tax_id/IF, cnss, patente), logo path, favicon, and theme/layout fields.
-- `Brand`, `Supplier`, `Carrier`, `Partner`, `User`, `Account` — standard catalog/reference entities.
+- `City` — reference table of Moroccan cities (`id`, `name`), no timestamps. Seeded with 64+ cities via `CitiesSeeder`. Used as FK target for `clients.city_id`, `partners.city_id`, `company_settings.city_id`.
+- `Client` — with credit limit, opening balance, payment terms, default payment method, category. The `city` field is a **virtual accessor/mutator** backed by `city_id` FK → `cities.id`: reads return the city name string, writes accept a city name string and resolve it to `city_id`. The API surface is unchanged (always a string), but the DB column is a FK. Eager-load `cityRelation` to avoid N+1. Filter by city uses `where('city_id', City::where('name', ...)->value('id'))`.
+- `CompanySetting` — singleton row; stores company name, legal name, full address (address, city, state, postal_code, country), contact (phone, email), legal identifiers (rc, ice, tax_id/IF, cnss, patente), logo path, favicon, and theme/layout fields. The `city` field uses the same FK accessor/mutator pattern as `Client`.
+- `Partner` — standard catalog entity. The `city` field uses the same FK accessor/mutator pattern as `Client`.
+- `Brand`, `Supplier`, `Carrier`, `User`, `Account` — standard catalog/reference entities.
 
 Each payment creation (Payment, PurchasePayment, ServicePayment) auto-creates a corresponding `Transaction` record.
 
@@ -140,7 +142,7 @@ Each payment creation (Payment, PurchasePayment, ServicePayment) auto-creates a 
 **Shared** (`front/src/app/shared/`): Cross-feature reusable components — `auto-refresh-control` (per-page configurable auto-refresh toggle), `navbar` (top navigation bar), `document-print` (A4 PDF preview modal for sales, purchases, and service orders).
 
 **Core** (`front/src/app/core/`):
-- `services/` — Shared services (e.g., `auth.service.ts`, `print.service.ts`). Feature-specific services live in each feature's `data-access/` folder.
+- `services/` — Shared services (e.g., `auth.service.ts`, `print.service.ts`, `city.service.ts`). `CityService` fetches `GET /api/cities` once per session via `shareReplay(1)` and returns an `Observable<string[]>`. Inject it wherever a city dropdown is needed. Feature-specific services live in each feature's `data-access/` folder.
 - `models/` — Shared interfaces (e.g., `sale.model.ts`, `user.model.ts`). Feature-specific models live in each feature's `models/` folder.
 - `guards/` — `authGuard` (redirect to /login), `guestGuard` (redirect to /dashboard), and `permissionGuard` (ACL-based route protection)
 - `interceptors/auth.interceptor.ts` — Adds `Bearer` token + `Accept: application/json` to all requests
@@ -174,6 +176,10 @@ The Angular dev proxy (`front/proxy.conf.json`) sends `/api` to `http://nginx:80
 ## Key Business Domain
 
 This is a **tire shop POS** (French: pneus). A `Sale` has header-level fields (commercial, carrier, partner, payment status, pricing totals) and child `SaleItem` rows (each with tire brand/reference/dimensions, quantity, unit price). Sales are optionally linked to a `Client` — the client profile page shows sales history, outstanding balance, and account statement. `Client` records have credit limit, opening balance, payment terms, default payment method, and category. `User` records can have roles (commercials earn commissions). `Partners` have `montage_price` and `alignment_price` fields. `Stock` tracks tire inventory by `Product` lot with smart dimension search (e.g., "2055516" or "205/55R16") and Excel import; dimensions are stored on the `ProductTyre` sub-table. `Brand` and `Product` are catalog entities — products have a `type` (`tyre`, `part`, `service`) with type-specific attributes in sub-tables. `CompanySetting` stores the shop's identity, logo, and UI theme. French terminology is used throughout the UI (e.g., "achats" = purchases, "fournisseurs" = suppliers, "transporteurs" = carriers, "clients" = clients).
+
+**City field pattern** (`clients`, `partners`, `company_settings`): The `city` varchar column has been replaced by a `city_id` FK → `cities.id` on all three tables. Each model uses an Eloquent `Attribute` accessor/mutator so the API continues to accept and return `city` as a plain string — the FK resolution is transparent. The relationship method is named `cityRelation()` (not `city()`, which is reserved for the accessor). Always eager-load `->with('cityRelation')` or `->with('linkedClient.cityRelation')` to avoid N+1. Filter by city with `City::where('name', $value)->value('id')` then `where('city_id', $cityId)`. Search by city with `whereHas('cityRelation', fn($q) => $q->where('name', 'like', "%{$search}%"))`. City dropdowns in all forms are populated from `CityService` (`GET /api/cities`).
+
+**Excel exports**: `GET /api/sales/export` and `GET /api/purchases/export` stream XLSX files using PhpSpreadsheet. Both accept the same filter params as the list endpoint (minus `page`/`per_page`). Use `$sheet->fromArray($rows, null, 'A1', true)` — `setCellValueByColumnAndRow()` was removed in PhpSpreadsheet 2.x. The Angular side uses `responseType: 'blob'` + `URL.createObjectURL` for the download.
 
 The **Service Auto** module manages automotive service orders (repairs, oil changes, etc.). A `ServiceOrder` links to a `Client` (optional), has a vehicle + mileage, and contains multiple `ServiceItem` rows of two types: `service` lines (prestation: labor_cost × quantity) and `part` lines (pièce: unit_price × quantity, linked to a `Product`). Parts cost on service lines is always 0 — parts are tracked via dedicated part lines. Order-level discount and net_amount are auto-calculated. Status values: `EN COURS` | `TERMINÉE` | `ANNULÉE`. Payment status: `NON PAYE` | `PARTIEL` | `PAYE`. Payments are tracked via `ServicePayment` which optionally creates a `Transaction` for cash-flow integration. The frontend feature is at `/service-orders` (French UI uses "Service Auto", "Prestations", "Ordre de service").
 

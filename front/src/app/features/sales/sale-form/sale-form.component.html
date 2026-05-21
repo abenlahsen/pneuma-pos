@@ -87,7 +87,10 @@
           </div>
           <div class="form-control">
             <label>Ville</label>
-            <input type="text" name="quickClientCity" [(ngModel)]="quickClient.city">
+            <select name="quickClientCity" [(ngModel)]="quickClient.city">
+              <option value="">— Sélectionner —</option>
+              <option *ngFor="let c of cities()" [value]="c">{{ c }}</option>
+            </select>
           </div>
           <div class="form-control full-width">
             <label>Adresse</label>

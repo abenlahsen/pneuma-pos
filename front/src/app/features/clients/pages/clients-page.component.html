@@ -27,14 +27,10 @@
 
         <div class="form-group">
           <label>Ville</label>
-          <input
-            type="text"
-            class="form-control"
-            name="city"
-            [(ngModel)]="filters.city"
-            placeholder="Filtrer par ville"
-            (keyup.enter)="applyFilters()"
-          />
+          <select class="form-control" name="city" [(ngModel)]="filters.city" (change)="applyFilters()">
+            <option value="">Toutes les villes</option>
+            <option *ngFor="let c of cities()" [value]="c">{{ c }}</option>
+          </select>
         </div>
 
         <div class="form-group">

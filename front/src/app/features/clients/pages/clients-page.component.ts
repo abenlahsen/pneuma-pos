@@ -6,6 +6,7 @@ import { ClientFormComponent } from '../components/client-form/client-form.compo
 import { ClientService } from '../data-access/client.service';
 import { Client, ClientFilters, ClientPayload } from '../models/client.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
+import { CityService } from '../../../core/services/city.service';
 
 @Component({
   selector: 'app-clients-page',
@@ -17,6 +18,7 @@ import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-contro
 export class ClientsPageComponent implements OnInit {
   private readonly clientService = inject(ClientService);
   private readonly router = inject(Router);
+  private readonly cityService = inject(CityService);
 
   readonly clients = signal<Client[]>([]);
   readonly currentPage = signal(1);
@@ -27,6 +29,7 @@ export class ClientsPageComponent implements OnInit {
   readonly saving = signal(false);
   readonly deletingClientId = signal<number | null>(null);
   readonly errorMessage = signal('');
+  readonly cities = signal<string[]>([]);
 
   readonly isModalOpen = signal(false);
   readonly selectedClient = signal<Client | null>(null);
@@ -49,6 +52,7 @@ export class ClientsPageComponent implements OnInit {
   );
 
   ngOnInit(): void {
+    this.cityService.getCities().subscribe(cities => this.cities.set(cities));
     this.loadClients();
   }
 

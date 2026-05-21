@@ -87,4 +87,12 @@ export class PurchaseService {
   deletePurchasePayment(purchaseId: number, paymentId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${purchaseId}/payments/${paymentId}`);
   }
+
+  exportPurchases(filters: Record<string, string> = {}): Observable<Blob> {
+    let params = new HttpParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) params = params.set(key, value);
+    });
+    return this.http.get(`${this.apiUrl}/export`, { params, responseType: 'blob' });
+  }
 }
