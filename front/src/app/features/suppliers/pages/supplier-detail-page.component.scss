@@ -1,4 +1,4 @@
-// ── Design tokens (alignés avec le design system) ──────────────────────────
+// ── Design tokens ────────────────────────────────────────────────────────────
 $primary:       #ff2d37;
 $primary-dark:  #cc0a13;
 $primary-light: rgba(255, 45, 55, 0.10);
@@ -19,19 +19,19 @@ $gray-700:  #4a5568;
 $gray-800:  #2d3748;
 $gray-950:  #0f172a;
 
-$radius-sm:  8px;
-$radius-md:  12px;
-$radius-lg:  16px;
+$radius-sm:   8px;
+$radius-md:   12px;
+$radius-lg:   16px;
 $radius-full: 999px;
 
 $shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.07);
 $shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
 
-// ── Host ────────────────────────────────────────────────────────────────────
+// ── Host ─────────────────────────────────────────────────────────────────────
 :host { display: block; }
 
-// ── Page layout ─────────────────────────────────────────────────────────────
-.client-detail-page {
+// ── Page layout ──────────────────────────────────────────────────────────────
+.supplier-detail-page {
   display: grid;
   gap: 1.25rem;
   padding: 1.5rem;
@@ -40,7 +40,7 @@ $shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
   -webkit-font-smoothing: antialiased;
 }
 
-// ── Page header ─────────────────────────────────────────────────────────────
+// ── Page header ──────────────────────────────────────────────────────────────
 .page-header {
   display: grid;
   gap: 0.75rem;
@@ -58,7 +58,7 @@ $shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
   &:hover { color: $gray-950; }
 }
 
-.client-hero {
+.supplier-hero {
   display: flex;
   align-items: center;
   gap: 1.25rem;
@@ -69,7 +69,7 @@ $shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
   padding: 1.5rem;
 }
 
-.client-avatar {
+.supplier-avatar {
   width: 64px;
   height: 64px;
   border-radius: 50%;
@@ -84,7 +84,7 @@ $shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
   box-shadow: 0 4px 12px rgba($primary, 0.3);
 }
 
-.client-identity {
+.supplier-identity {
   flex: 1;
   min-width: 0;
 }
@@ -106,7 +106,7 @@ h1 {
   line-height: 1.2;
 }
 
-.client-meta {
+.supplier-meta {
   display: flex;
   align-items: center;
   gap: 0.625rem;
@@ -118,19 +118,7 @@ h1 {
   color: $gray-500;
 }
 
-.tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.15rem 0.6rem;
-  border-radius: $radius-full;
-  font-size: 0.72rem;
-  font-weight: 600;
-  background: $gray-100;
-  color: $gray-700;
-  letter-spacing: 0.02em;
-}
-
-// ── Buttons ─────────────────────────────────────────────────────────────────
+// ── Buttons ──────────────────────────────────────────────────────────────────
 .header-actions {
   display: flex;
   gap: 0.5rem;
@@ -155,37 +143,12 @@ h1 {
   border: none;
 }
 
-.btn-primary {
-  background: $primary;
-  color: white;
-  box-shadow: 0 2px 6px rgba($primary, 0.35);
-
-  &:hover {
-    background: $primary-dark;
-    box-shadow: 0 4px 10px rgba($primary, 0.4);
-    transform: translateY(-1px);
-  }
-}
-
 .btn-secondary {
   background: white;
   color: $gray-800;
   border: 1px solid $gray-200;
 
   &:hover { background: $gray-50; }
-}
-
-.btn-sm {
-  padding: 0.35rem 0.85rem;
-  font-size: 0.8125rem;
-}
-
-.btn-outline {
-  background: white;
-  color: $primary;
-  border: 1px solid $primary;
-
-  &:hover { background: $primary-light; }
 }
 
 .btn-danger {
@@ -268,7 +231,7 @@ h1 {
   }
 }
 
-// ── Panels (cards blanches) ──────────────────────────────────────────────────
+// ── Panels ───────────────────────────────────────────────────────────────────
 .panel {
   background: white;
   border-radius: $radius-md;
@@ -286,24 +249,8 @@ h1 {
   border-left: 3px solid $primary;
 }
 
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.25rem;
-
-  .panel-title { margin-bottom: 0; }
-}
-
 .centered { display: flex; justify-content: center; padding: 2rem; }
 .error-panel { color: #b91c1c; }
-
-// ── Details grid ─────────────────────────────────────────────────────────────
-.details-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
-}
 
 // ── Info list (key-value rows) ────────────────────────────────────────────────
 .info-list {
@@ -354,111 +301,6 @@ h1 {
 .badge-warning { background: $warning-bg; color: $warning-text; }
 .badge-danger  { background: $danger-bg;  color: $danger-text; }
 .badge-neutral { background: $gray-100;   color: $gray-700; }
-
-.count-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.4rem;
-  height: 1.4rem;
-  padding: 0 0.35rem;
-  border-radius: $radius-full;
-  font-size: 0.72rem;
-  font-weight: 700;
-  background: $primary-light;
-  color: $primary;
-  margin-left: 0.5rem;
-  vertical-align: middle;
-}
-
-// ── Vehicles ─────────────────────────────────────────────────────────────────
-.vehicles-panel {}
-
-.vehicles-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-  margin-top: 0.25rem;
-}
-
-.vehicle-card {
-  border: 1px solid $gray-200;
-  border-radius: $radius-sm;
-  background: $gray-50;
-  overflow: hidden;
-  transition: border-color 0.15s;
-
-  &:hover { border-color: $gray-400; }
-
-  &.vehicle-inactive {
-    opacity: 0.6;
-    background: $gray-100;
-  }
-}
-
-.vehicle-card-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.625rem 1rem;
-  flex-wrap: wrap;
-}
-
-.vehicle-card-body {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.5rem;
-  padding: 0.4rem 1rem 0.625rem;
-  border-top: 1px solid $gray-200;
-  font-size: 0.8rem;
-  color: $gray-500;
-}
-
-.vehicle-plate {
-  font-weight: 700;
-  font-size: 0.875rem;
-  color: $gray-950;
-  font-family: monospace;
-  letter-spacing: 0.06em;
-  background: $gray-100;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-}
-
-.vehicle-brand {
-  color: $gray-700;
-  font-weight: 500;
-  flex: 1;
-  font-size: 0.875rem;
-}
-
-.vehicle-card-actions {
-  display: flex;
-  gap: 0.25rem;
-  margin-left: auto;
-}
-
-// ── Icon buttons ─────────────────────────────────────────────────────────────
-.btn-icon {
-  width: 2rem;
-  height: 2rem;
-  border: 1px solid $gray-200;
-  background: white;
-  border-radius: $radius-sm;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: background 0.15s;
-
-  &:hover { background: $gray-50; }
-
-  &.btn-icon-danger:hover {
-    background: #fee2e2;
-    border-color: #fca5a5;
-  }
-}
 
 // ── Empty state ───────────────────────────────────────────────────────────────
 .empty-state {
@@ -625,10 +467,6 @@ h1 {
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-
-  &.modal-container--wide {
-    max-width: 960px;
-  }
 }
 
 .modal-header {
@@ -653,6 +491,22 @@ h1 {
   flex: 1;
 }
 
+.btn-icon {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid $gray-200;
+  background: white;
+  border-radius: $radius-sm;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s;
+
+  &:hover { background: $gray-50; }
+}
+
 // ── Responsive ───────────────────────────────────────────────────────────────
 @media (max-width: 1024px) {
   .kpi-grid {
@@ -661,9 +515,9 @@ h1 {
 }
 
 @media (max-width: 768px) {
-  .client-detail-page { padding: 1rem; }
+  .supplier-detail-page { padding: 1rem; }
 
-  .client-hero {
+  .supplier-hero {
     flex-wrap: wrap;
     gap: 1rem;
     padding: 1.25rem;
@@ -677,7 +531,6 @@ h1 {
   }
 
   .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-  .details-grid { grid-template-columns: 1fr; }
   .statement-kpi-row { grid-template-columns: repeat(2, 1fr); }
 
   .stmt-kpi:nth-child(2n) { border-right: none; }
@@ -689,6 +542,6 @@ h1 {
 
 @media (max-width: 480px) {
   .kpi-grid { grid-template-columns: 1fr 1fr; }
-  .client-avatar { width: 48px; height: 48px; font-size: 1.25rem; }
+  .supplier-avatar { width: 48px; height: 48px; font-size: 1.25rem; }
   h1 { font-size: 1.25rem; }
 }

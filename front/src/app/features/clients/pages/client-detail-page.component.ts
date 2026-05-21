@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
-import { RouterLink, ActivatedRoute } from '@angular/router';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ClientService } from '../data-access/client.service';
@@ -15,19 +15,33 @@ import {
 import { VehicleService } from '../../vehicles/data-access/vehicle.service';
 import { Vehicle } from '../../vehicles/models/vehicle.model';
 import { VehicleFormComponent } from '../../../shared/vehicle-form/vehicle-form.component';
+import { AuthService } from '../../../core/services/auth.service';
+import { SaleService } from '../../sales/data-access/sale.service';
+import { SalePayload } from '../../../core/models/sale.model';
+import { CarrierService } from '../../carriers/data-access/carrier.service';
+import { PartnerService } from '../../partners/data-access/partner.service';
+import { Carrier } from '../../carriers/models/carrier.model';
+import { Partner } from '../../partners/models/partner.model';
+import { ManagedUser } from '../../../core/models/user-manage.model';
+import { SaleFormComponent } from '../../sales/sale-form/sale-form.component';
 
 @Component({
   selector: 'app-client-detail-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, ClientFormComponent, VehicleFormComponent],
+  imports: [CommonModule, RouterLink, ClientFormComponent, VehicleFormComponent, SaleFormComponent],
   templateUrl: './client-detail-page.component.html',
   styleUrl: './client-detail-page.component.scss',
 })
 export class ClientDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly clientService = inject(ClientService);
   private readonly vehicleService = inject(VehicleService);
   private readonly destroyRef = inject(DestroyRef);
+  readonly authService = inject(AuthService);
+  private readonly saleService = inject(SaleService);
+  private readonly carrierService = inject(CarrierService);
+  private readonly partnerService = inject(PartnerService);
 
   private activeClientId: number | null = null;
 
@@ -43,10 +57,18 @@ export class ClientDetailPageComponent implements OnInit {
 
   readonly isEditModalOpen = signal(false);
   readonly saving = signal(false);
+  readonly deleting = signal(false);
 
   readonly vehicles = signal<Vehicle[]>([]);
   readonly showVehicleForm = signal(false);
   readonly editingVehicle = signal<Vehicle | null>(null);
+
+  readonly showSaleForm = signal(false);
+  readonly allCarriers = signal<Carrier[]>([]);
+  readonly allPartners = signal<Partner[]>([]);
+  readonly allCommercials = signal<ManagedUser[]>([]);
+  readonly saleFormLookupLoaded = signal(false);
+  readonly savingSale = signal(false);
 
   readonly salesHistory = computed<ClientSalesHistoryRow[]>(() => {
     const p = this.profile();
@@ -90,6 +112,31 @@ export class ClientDetailPageComponent implements OnInit {
 
   trackByRowId(_: number, row: { id?: number | string | null }): number | string {
     return row.id ?? _;
+  }
+
+  paymentStatusClass(status: string | null | undefined): string {
+    const s = (status ?? '').toUpperCase();
+    if (s === 'PAYÉ' || s === 'PAYE') return 'badge-success';
+    if (s === 'PARTIEL') return 'badge-warning';
+    if (s === 'NON PAYÉ' || s === 'NON PAYE') return 'badge-danger';
+    return 'badge-neutral';
+  }
+
+  deleteClient(): void {
+    const name = this.profile()?.client?.name ?? 'ce client';
+    if (!confirm(`Supprimer définitivement "${name}" ? Cette action est irréversible.`)) return;
+
+    const id = this.activeClientId;
+    if (!id) return;
+
+    this.deleting.set(true);
+    this.clientService.deleteClient(id).subscribe({
+      next: () => this.router.navigate(['/clients']),
+      error: () => {
+        this.deleting.set(false);
+        alert('Impossible de supprimer ce client. Il est peut-être lié à des ventes ou des paiements.');
+      },
+    });
   }
 
   openEditModal(): void {
@@ -152,6 +199,42 @@ export class ClientDetailPageComponent implements OnInit {
     });
   }
 
+  openNewSaleForm(): void {
+    if (!this.saleFormLookupLoaded()) {
+      this.carrierService.getCarriers({ all: true }).subscribe({
+        next: (res: any) => this.allCarriers.set(Array.isArray(res) ? res : (res.data ?? [])),
+      });
+      this.partnerService.getPartners({ all: true }).subscribe({
+        next: (res: any) => this.allPartners.set(Array.isArray(res) ? res : (res.data ?? [])),
+      });
+      this.saleService.getFilters().subscribe({
+        next: (filters) => this.allCommercials.set(filters.commercials as unknown as ManagedUser[]),
+      });
+      this.saleFormLookupLoaded.set(true);
+    }
+    this.showSaleForm.set(true);
+  }
+
+  closeSaleForm(): void {
+    this.showSaleForm.set(false);
+  }
+
+  onSaleFormSave(payload: SalePayload): void {
+    this.savingSale.set(true);
+    this.saleService.createSale(payload).subscribe({
+      next: () => {
+        this.savingSale.set(false);
+        this.showSaleForm.set(false);
+        const id = this.activeClientId;
+        if (id) this.loadClient(id);
+      },
+      error: () => {
+        this.savingSale.set(false);
+        alert('Erreur lors de la création de la vente.');
+      },
+    });
+  }
+
   private loadClient(clientId: number): void {
     this.activeClientId = clientId;
     this.loading.set(true);
@@ -164,6 +247,7 @@ export class ClientDetailPageComponent implements OnInit {
     this.vehicles.set([]);
     this.showVehicleForm.set(false);
     this.editingVehicle.set(null);
+    this.showSaleForm.set(false);
     this.activeTab.set('overview');
 
     this.vehicleService.getVehiclesForClient(clientId)

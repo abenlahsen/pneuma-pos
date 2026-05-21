@@ -20,3 +20,67 @@ export interface PaginatedResponse<T> {
   per_page: number;
   total: number;
 }
+
+export interface PurchaseHistoryRow {
+  id: number;
+  supplier_id?: number;
+  date?: string;
+  total_price?: number;
+  discount?: number;
+  net_amount?: number;
+  total_quantity?: number;
+  status?: string;
+  payment_status?: string;
+  payment_method?: string;
+  paid_amount?: number;
+  outstanding_amount?: number;
+  created_at?: string;
+}
+
+export interface SupplierStatementEntry {
+  type: string;
+  date?: string;
+  description?: string;
+  purchase_id?: number;
+  payment_id?: number;
+  debit: number;
+  credit: number;
+  balance: number;
+}
+
+export interface SupplierStatementPayment {
+  id: number;
+  purchase_id?: number;
+  reference?: string;
+  date?: string;
+  amount?: number;
+  method?: string;
+  notes?: string;
+  created_at?: string;
+}
+
+export interface SupplierProfileResponse {
+  supplier: Supplier;
+  purchases_count: number;
+  total_purchased: number;
+  last_purchase_date?: string | null;
+  outstanding_balance: number;
+  purchases: PurchaseHistoryRow[];
+}
+
+export interface SupplierStatementSummary {
+  purchases_count: number;
+  payments_count: number;
+  total_purchased: number;
+  total_paid: number;
+  outstanding_balance: number;
+  last_purchase_date?: string | null;
+}
+
+export interface SupplierStatementResponse {
+  supplier: Supplier;
+  summary: SupplierStatementSummary;
+  purchases: PurchaseHistoryRow[];
+  payments: SupplierStatementPayment[];
+  entries: SupplierStatementEntry[];
+}

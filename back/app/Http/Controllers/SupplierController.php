@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Domain\Suppliers\SupplierService;
 use App\Http\Requests\Suppliers\StoreSupplierRequest;
 use App\Http\Requests\Suppliers\UpdateSupplierRequest;
+use App\Http\Resources\Suppliers\SupplierProfileResource;
 use App\Http\Resources\Suppliers\SupplierResource;
+use App\Http\Resources\Suppliers\SupplierStatementResource;
 use App\Models\Supplier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -97,5 +99,19 @@ class SupplierController extends Controller
         $this->supplierService->delete($supplier);
 
         return response()->json(null, 204);
+    }
+
+    public function profile(Supplier $supplier): JsonResponse
+    {
+        return response()->json(
+            (new SupplierProfileResource($this->supplierService->getProfile($supplier)))->resolve(request())
+        );
+    }
+
+    public function statement(Supplier $supplier): JsonResponse
+    {
+        return response()->json(
+            (new SupplierStatementResource($this->supplierService->getStatement($supplier)))->resolve(request())
+        );
     }
 }

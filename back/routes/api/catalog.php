@@ -32,6 +32,8 @@ Route::delete('products/{product}', [ProductController::class, 'destroy'])->midd
 // Suppliers
 Route::get('suppliers', [SupplierController::class, 'index'])->middleware('permission:view suppliers');
 Route::get('suppliers/{supplier}', [SupplierController::class, 'show'])->middleware('permission:view suppliers');
+Route::get('suppliers/{supplier}/profile', [SupplierController::class, 'profile'])->middleware('permission:view suppliers');
+Route::get('suppliers/{supplier}/statement', [SupplierController::class, 'statement'])->middleware('permission:view suppliers');
 Route::post('suppliers', [SupplierController::class, 'store'])->middleware('permission:create suppliers');
 Route::put('suppliers/{supplier}', [SupplierController::class, 'update'])->middleware('permission:edit suppliers');
 Route::delete('suppliers/{supplier}', [SupplierController::class, 'destroy'])->middleware('permission:delete suppliers');

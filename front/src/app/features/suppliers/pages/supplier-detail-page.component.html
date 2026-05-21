@@ -1,0 +1,308 @@
+<section class="supplier-detail-page">
+
+  <!-- ── En-tête ── -->
+  <div class="page-header">
+    <a class="back-link" [routerLink]="['/suppliers']">← Retour aux fournisseurs</a>
+
+    @if (profile()?.supplier) {
+      <div class="supplier-hero">
+        <div class="supplier-avatar">{{ profile()!.supplier!.name.charAt(0).toUpperCase() }}</div>
+
+        <div class="supplier-identity">
+          <p class="eyebrow">Fiche fournisseur</p>
+          <h1>{{ profile()!.supplier!.name }}</h1>
+          <div class="supplier-meta">
+            @if (profile()?.supplier?.contact_person) {
+              <span class="meta-item">👤 {{ profile()!.supplier!.contact_person }}</span>
+            }
+            @if (profile()?.supplier?.phone) {
+              <span class="meta-item">📞 {{ profile()!.supplier!.phone }}</span>
+            }
+            @if (profile()?.supplier?.email) {
+              <span class="meta-item">✉️ {{ profile()!.supplier!.email }}</span>
+            }
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button type="button" class="btn btn-secondary" (click)="openEditModal()">✏️ Modifier</button>
+          @if (authService.hasPermission('delete suppliers')) {
+            <button type="button" class="btn btn-danger" (click)="deleteSupplier()" [disabled]="deleting()">
+              🗑️ Supprimer
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- ── États ── -->
+  @if (loading()) {
+    <section class="panel centered"><p>Chargement du profil fournisseur...</p></section>
+  } @else if (errorMessage()) {
+    <section class="panel centered error-panel"><p>{{ errorMessage() }}</p></section>
+  } @else if (profile()?.supplier) {
+
+    <!-- ── KPIs ── -->
+    <section class="kpi-grid">
+      <article class="kpi-card">
+        <span class="kpi-icon">📦</span>
+        <div class="kpi-body">
+          <p class="kpi-label">ACHATS</p>
+          <p class="kpi-val">{{ profile()?.purchases_count ?? 0 }}</p>
+        </div>
+      </article>
+
+      <article class="kpi-card">
+        <span class="kpi-icon">💰</span>
+        <div class="kpi-body">
+          <p class="kpi-label">TOTAL ACHETÉ</p>
+          <p class="kpi-val">{{ (profile()?.total_purchased ?? 0) | number:'1.2-2' }} <small>DH</small></p>
+        </div>
+      </article>
+
+      <article class="kpi-card" [class.kpi-card--danger]="(profile()?.outstanding_balance ?? 0) > 0">
+        <span class="kpi-icon">⏳</span>
+        <div class="kpi-body">
+          <p class="kpi-label">SOLDE DÛ</p>
+          <p class="kpi-val">{{ (profile()?.outstanding_balance ?? 0) | number:'1.2-2' }} <small>DH</small></p>
+        </div>
+      </article>
+
+      <article class="kpi-card">
+        <span class="kpi-icon">📅</span>
+        <div class="kpi-body">
+          <p class="kpi-label">DERNIER ACHAT</p>
+          <p class="kpi-val kpi-val--date">
+            {{ profile()?.last_purchase_date ? (profile()!.last_purchase_date | date:'dd/MM/yyyy') : '—' }}
+          </p>
+        </div>
+      </article>
+    </section>
+
+    <!-- ── Informations fournisseur ── -->
+    <article class="panel">
+      <h2 class="panel-title">Informations fournisseur</h2>
+      <dl class="info-list">
+        <div class="info-row">
+          <dt>Personne de contact</dt>
+          <dd>{{ profile()?.supplier?.contact_person || '—' }}</dd>
+        </div>
+        <div class="info-row">
+          <dt>Téléphone</dt>
+          <dd>{{ profile()?.supplier?.phone || '—' }}</dd>
+        </div>
+        <div class="info-row">
+          <dt>Email</dt>
+          <dd>{{ profile()?.supplier?.email || '—' }}</dd>
+        </div>
+        <div class="info-row">
+          <dt>Adresse</dt>
+          <dd>{{ profile()?.supplier?.address || '—' }}</dd>
+        </div>
+      </dl>
+    </article>
+
+    <!-- ── Historique & Relevé ── -->
+    <section class="panel tab-panel">
+      <div class="tab-nav">
+        <button type="button" class="tab-btn"
+                [class.active]="activeTab() === 'overview'"
+                (click)="setTab('overview')">
+          📦 Historique des achats
+        </button>
+        <button type="button" class="tab-btn"
+                [class.active]="activeTab() === 'statement'"
+                (click)="setTab('statement')">
+          📋 Relevé de compte
+        </button>
+      </div>
+
+      <!-- Historique des achats -->
+      @if (activeTab() === 'overview') {
+        @if (profileLoading()) {
+          <div class="empty-state"><p>Chargement de l'historique...</p></div>
+        } @else if (!purchasesHistory().length) {
+          <div class="empty-state"><p>Aucun historique d'achats pour ce fournisseur.</p></div>
+        } @else {
+          <div class="table-wrapper">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>RÉFÉRENCE</th>
+                  <th>DATE</th>
+                  <th>STATUT</th>
+                  <th>PAIEMENT</th>
+                  <th class="col-right">MONTANT</th>
+                  <th class="col-right">PAYÉ</th>
+                  <th class="col-right">SOLDE</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (p of purchasesHistory(); track trackById($index, p)) {
+                  <tr>
+                    <td class="ref-cell">Achat #{{ p.id }}</td>
+                    <td>{{ p.date ? (p.date | date:'dd/MM/yyyy') : '—' }}</td>
+                    <td>
+                      <span class="badge" [ngClass]="purchaseStatusClass(p.status)">
+                        {{ p.status || '—' }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge" [ngClass]="paymentStatusClass(p.payment_status)">
+                        {{ p.payment_status || '—' }}
+                      </span>
+                    </td>
+                    <td class="col-right num">{{ (p.net_amount ?? 0) | number:'1.2-2' }} DH</td>
+                    <td class="col-right num">{{ (p.paid_amount ?? 0) | number:'1.2-2' }} DH</td>
+                    <td class="col-right num" [class.text-danger]="(p.outstanding_amount ?? 0) > 0">
+                      {{ (p.outstanding_amount ?? 0) | number:'1.2-2' }} DH
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+
+      <!-- Relevé de compte -->
+      @else {
+        <div class="statement-kpi-row">
+          <div class="stmt-kpi">
+            <p class="kpi-label">SOLDE DÛ</p>
+            <p class="stmt-val">{{ (statement()?.summary?.outstanding_balance ?? profile()?.outstanding_balance ?? 0) | number:'1.2-2' }} <small>DH</small></p>
+          </div>
+          <div class="stmt-kpi">
+            <p class="kpi-label">TOTAL ACHETÉ</p>
+            <p class="stmt-val">{{ (statement()?.summary?.total_purchased ?? profile()?.total_purchased ?? 0) | number:'1.2-2' }} <small>DH</small></p>
+          </div>
+          <div class="stmt-kpi">
+            <p class="kpi-label">TOTAL PAYÉ</p>
+            <p class="stmt-val">{{ (statement()?.summary?.total_paid ?? 0) | number:'1.2-2' }} <small>DH</small></p>
+          </div>
+          <div class="stmt-kpi">
+            <p class="kpi-label">NB ACHATS</p>
+            <p class="stmt-val">{{ statement()?.summary?.purchases_count ?? 0 }}</p>
+          </div>
+        </div>
+
+        @if (statementLoading()) {
+          <div class="empty-state"><p>Chargement du relevé...</p></div>
+        } @else if (statementErrorMessage()) {
+          <div class="empty-state"><p>{{ statementErrorMessage() }}</p></div>
+        } @else {
+          @if (openPurchases().length) {
+            <div class="subsection">
+              <h3 class="subsection-title">Achats en attente de paiement</h3>
+              <div class="table-wrapper">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>RÉFÉRENCE</th>
+                      <th>DATE</th>
+                      <th class="col-right">TOTAL</th>
+                      <th class="col-right">SOLDE DÛ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (p of openPurchases(); track trackById($index, p)) {
+                      <tr>
+                        <td class="ref-cell">Achat #{{ p.id }}</td>
+                        <td>{{ p.date ? (p.date | date:'dd/MM/yyyy') : '—' }}</td>
+                        <td class="col-right num">{{ (p.net_amount ?? 0) | number:'1.2-2' }} DH</td>
+                        <td class="col-right num text-danger">{{ (p.outstanding_amount ?? 0) | number:'1.2-2' }} DH</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
+          <div class="subsection">
+            <h3 class="subsection-title">Écritures comptables</h3>
+            @if (!statementEntries().length) {
+              <div class="empty-state"><p>Aucune écriture disponible.</p></div>
+            } @else {
+              <div class="table-wrapper">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>DATE</th>
+                      <th>TYPE</th>
+                      <th>DESCRIPTION</th>
+                      <th class="col-right">DÉBIT</th>
+                      <th class="col-right">CRÉDIT</th>
+                      <th class="col-right">SOLDE</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (entry of statementEntries(); track $index) {
+                      <tr>
+                        <td>{{ entry.date ? (entry.date | date:'dd/MM/yyyy') : '—' }}</td>
+                        <td>{{ entry.type || '—' }}</td>
+                        <td>{{ entry.description || '—' }}</td>
+                        <td class="col-right num">{{ (entry.debit ?? 0) | number:'1.2-2' }} DH</td>
+                        <td class="col-right num">{{ (entry.credit ?? 0) | number:'1.2-2' }} DH</td>
+                        <td class="col-right num">{{ (entry.balance ?? 0) | number:'1.2-2' }} DH</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+
+          <div class="subsection">
+            <h3 class="subsection-title">Paiements effectués</h3>
+            @if (!(statement()?.payments?.length ?? 0)) {
+              <div class="empty-state"><p>Aucun paiement enregistré.</p></div>
+            } @else {
+              <div class="table-wrapper">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>RÉFÉRENCE</th>
+                      <th>DATE</th>
+                      <th>MÉTHODE</th>
+                      <th class="col-right">MONTANT</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (payment of statement()?.payments ?? []; track trackById($index, payment)) {
+                      <tr>
+                        <td class="ref-cell">{{ payment.reference || ('Paiement #' + payment.id) }}</td>
+                        <td>{{ payment.date ? (payment.date | date:'dd/MM/yyyy') : '—' }}</td>
+                        <td>{{ payment.method || '—' }}</td>
+                        <td class="col-right num">{{ (payment.amount ?? 0) | number:'1.2-2' }} DH</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        }
+      }
+    </section>
+  }
+</section>
+
+@if (isEditModalOpen()) {
+  <div class="modal-overlay" (click)="closeEditModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Modifier fournisseur</h2>
+        <button class="btn-icon" type="button" (click)="closeEditModal()" [disabled]="saving()">✕</button>
+      </div>
+      <div class="modal-body">
+        <app-supplier-form
+          [supplier]="profile()?.supplier ?? null"
+          (save)="saveSupplier($event)"
+          (cancel)="closeEditModal()">
+        </app-supplier-form>
+      </div>
+    </div>
+  </div>
+}
