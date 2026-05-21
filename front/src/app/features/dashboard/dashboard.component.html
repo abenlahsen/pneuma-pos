@@ -63,6 +63,13 @@
           </div>
           <div class="kpi-badge">{{ k.tyres_purchased_today }} Pneus achetés</div>
         </div>
+        <div class="kpi-card warning-card">
+          <div class="kpi-icon">💸</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Dépenses</span>
+            <span class="kpi-val">{{ k.expenses_today | number:'1.2-2' }} <small>DH</small></span>
+          </div>
+        </div>
       </div>
 
       <!-- Ce mois -->
@@ -116,6 +123,13 @@
           </div>
           <div class="kpi-badge">{{ k.tyres_purchased_month }} Pneus achetés</div>
         </div>
+        <div class="kpi-card warning-card">
+          <div class="kpi-icon">💸</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Dépenses</span>
+            <span class="kpi-val">{{ k.expenses_month | number:'1.2-2' }} <small>DH</small></span>
+          </div>
+        </div>
       </div>
 
       <!-- Cette année -->
@@ -167,6 +181,13 @@
           <div class="kpi-info">
             <span class="kpi-label">Total Achats</span>
             <span class="kpi-val">{{ k.total_purchase_year | number:'1.2-2' }} <small>DH</small></span>
+          </div>
+        </div>
+        <div class="kpi-card warning-card">
+          <div class="kpi-icon">💸</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Dépenses</span>
+            <span class="kpi-val">{{ k.expenses_year | number:'1.2-2' }} <small>DH</small></span>
           </div>
         </div>
       </div>

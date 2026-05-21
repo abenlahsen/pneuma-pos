@@ -110,14 +110,17 @@ class DashboardController extends Controller
             'net_margin_today' => round((clone $salesToday)->sum('margin'), 2) - $expensesToday,
             'purchases_today_amount' => round((clone $purchasesToday)->sum('total_price'), 2),
             'tyres_purchased_today' => $tyrePurchaseQty($today, $today),
+            'expenses_today' => $expensesToday,
 
             // This month
             'sales_month_amount' => round((clone $salesMonth)->sum('total_sale'), 2),
             'purchases_month_amount' => round((clone $purchasesMonth)->sum('total_price'), 2),
             'margin_month' => round((clone $salesMonth)->sum('margin'), 2),
             'net_margin_month' => round((clone $salesMonth)->sum('margin'), 2) - $expensesMonth,
+            'expenses_month' => $expensesMonth,
             'margin_year' => round((clone $salesYear)->sum('margin'), 2),
             'net_margin_year' => round((clone $salesYear)->sum('margin'), 2) - $expensesYear,
+            'expenses_year' => $expensesYear,
             'total_sale_year' => round((clone $salesYear)->sum('total_sale'), 2),
             'total_purchase_year' => round((clone $purchasesYear)->sum('total_price'), 2),
             'tyres_month' => $tyreSalesQty($monthStart, $monthEnd),
