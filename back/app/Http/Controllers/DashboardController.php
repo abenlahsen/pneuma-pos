@@ -34,6 +34,7 @@ class DashboardController extends Controller
         $yearEnd = $yearDate->copy()->endOfYear()->toDateString();
 
         $salesToday = Sale::whereDate('date', $today);
+        $purchasesToday = Purchase::whereDate('date', $today);
         $salesMonth = Sale::whereBetween('date', [$monthStart, $monthEnd]);
         $salesYear = Sale::whereBetween('date', [$yearStart, $yearEnd]);
         $purchasesMonth = Purchase::whereBetween('date', [$monthStart, $monthEnd]);
@@ -107,6 +108,8 @@ class DashboardController extends Controller
             'tyres_today' => $tyreSalesQty($today),
             'margin_today' => round((clone $salesToday)->sum('margin'), 2),
             'net_margin_today' => round((clone $salesToday)->sum('margin'), 2) - $expensesToday,
+            'purchases_today_amount' => round((clone $purchasesToday)->sum('total_price'), 2),
+            'tyres_purchased_today' => $tyrePurchaseQty($today, $today),
 
             // This month
             'sales_month_amount' => round((clone $salesMonth)->sum('total_sale'), 2),
