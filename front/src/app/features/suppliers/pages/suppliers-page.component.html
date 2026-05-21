@@ -75,13 +75,22 @@
 
           <tr *ngFor="let supplier of suppliers()">
             <td>
-              <div class="fw-semibold">{{ supplier.name }}</div>
+              <button type="button" class="btn-link supplier-link" (click)="viewSupplier(supplier)">
+                {{ supplier.name }}
+              </button>
             </td>
             <td>{{ supplier.contact_person || '-' }}</td>
             <td>{{ supplier.phone || '-' }}</td>
             <td>{{ supplier.email || '-' }}</td>
             <td><div class="desc-col">{{ supplier.address || '-' }}</div></td>
             <td class="text-center actions-cell">
+              <button
+                class="btn-icon btn-sm"
+                (click)="viewSupplier(supplier)"
+                title="Voir la fiche"
+              >
+                👁️
+              </button>
               <button
                 class="btn-icon btn-sm text-primary"
                 (click)="openEditForm(supplier)"

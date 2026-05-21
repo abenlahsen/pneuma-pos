@@ -27,6 +27,7 @@ import { VehicleSelectorComponent } from '../../../shared/vehicle-selector/vehic
 })
 export class SaleFormComponent implements OnInit, OnDestroy {
   @Input() sale: Sale | null = null;
+  @Input() preselectedClient: Client | null = null;
   @Input() initialCarriers: Carrier[] = [];
   @Input() initialPartners: Partner[] = [];
   @Input() initialCommercials: ManagedUser[] = [];
@@ -183,6 +184,14 @@ export class SaleFormComponent implements OnInit, OnDestroy {
       if (this.formData.client_id) {
         this.loadClientProfile(this.formData.client_id);
       }
+    } else if (this.preselectedClient) {
+      const c = this.preselectedClient;
+      this.formData.client_id = c.id;
+      this.formData.client = c.name ?? '';
+      this.formData.client_phone = c.phone ?? '';
+      this.clientSearch.set(c.name ?? '');
+      this.selectedClient.set(c);
+      this.loadClientProfile(c.id);
     }
 
     this.updateDuplicateWarnings();

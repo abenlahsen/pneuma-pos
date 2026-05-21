@@ -1,6 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { SupplierService } from '../data-access/supplier.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Supplier, SupplierPayload, PaginatedResponse } from '../models/supplier.model';
@@ -33,7 +34,12 @@ export class SuppliersPageComponent implements OnInit {
   constructor(
     private supplierService: SupplierService,
     public authService: AuthService,
+    private router: Router,
   ) {}
+
+  viewSupplier(supplier: Supplier): void {
+    this.router.navigate(['/suppliers', supplier.id]);
+  }
 
   ngOnInit(): void {
     this.loadData();

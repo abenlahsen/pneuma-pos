@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Supplier extends Model
 {
@@ -19,11 +18,13 @@ class Supplier extends Model
         'user_id'
     ];
 
-    /**
-     * The user who created this supplier.
-     */
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function purchases()
+    {
+        return $this->hasMany(Purchase::class);
     }
 }

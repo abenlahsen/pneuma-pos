@@ -62,6 +62,13 @@ export const routes: Routes = [
       import('./features/suppliers/pages/suppliers-page.component').then((m) => m.SuppliersPageComponent),
   },
   {
+    path: 'suppliers/:id',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'view suppliers' },
+    loadComponent: () =>
+      import('./features/suppliers/pages/supplier-detail-page.component').then((m) => m.SupplierDetailPageComponent),
+  },
+  {
     path: 'carriers',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view carriers' },
