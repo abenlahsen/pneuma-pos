@@ -114,6 +114,30 @@
         </div>
       </div>
 
+      <div class="detail-section" *ngIf="purchase.payments && purchase.payments.length > 0">
+        <h3 class="section-title">Historique des paiements</h3>
+        <div class="table-responsive mt-3">
+          <table class="table table-sm text-left">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th class="text-right">Montant</th>
+                <th>Mode</th>
+                <th>Référence</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of purchase.payments">
+                <td>{{ p.date | date:'dd/MM/yyyy' }}</td>
+                <td class="text-right fw-semibold">{{ p.amount | number:'1.2-2' }} DH</td>
+                <td>{{ p.method || '-' }}</td>
+                <td class="text-muted">{{ p.reference || p.notes || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="detail-section meta">
         <div class="detail-grid">
           <div class="detail-item">

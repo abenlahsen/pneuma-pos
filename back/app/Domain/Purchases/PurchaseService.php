@@ -205,6 +205,7 @@ class PurchaseService
             'commercial',
             'creator',
             'updater',
+            'payments',
         ]);
     }
 
