@@ -85,6 +85,18 @@
         </div>
 
         <div class="form-group">
+          <label>Mode paiement</label>
+          <select class="form-control" [ngModel]="filterPaymentMethod()" (ngModelChange)="filterPaymentMethod.set($event); applyFilters()">
+            <option value="">Tous</option>
+            <option value="Espèces">Espèces</option>
+            <option value="Chèque">Chèque</option>
+            <option value="Virement">Virement</option>
+            <option value="Effet">Effet</option>
+            <option value="Carte bancaire">Carte bancaire</option>
+          </select>
+        </div>
+
+        <div class="form-group">
           <label>Du</label>
           <input type="date" class="form-control" [ngModel]="filterDateFrom()" (ngModelChange)="filterDateFrom.set($event); applyFilters()">
         </div>
@@ -132,6 +144,7 @@
             <th class="sortable" (click)="toggleSort('total_quantity')">Qté <span class="sort-icon">{{ sortBy() === 'total_quantity' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="text-right">Total Achat</th>
             <th class="sortable" (click)="toggleSort('payment_status')">Paiement <span class="sort-icon">{{ sortBy() === 'payment_status' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th>Mode paiement</th>
             <th class="sortable" (click)="toggleSort('status')">Statut <span class="sort-icon">{{ sortBy() === 'status' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('created_at')">Créé le <span class="sort-icon">{{ sortBy() === 'created_at' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('updated_at')">Modifié le <span class="sort-icon">{{ sortBy() === 'updated_at' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
@@ -139,13 +152,13 @@
         </thead>
         <tbody>
           <tr *ngIf="loading()">
-            <td colspan="10" class="text-center py-4">
+            <td colspan="11" class="text-center py-4">
               <div class="spinner"></div> Chargement...
             </td>
           </tr>
 
           <tr *ngIf="!loading() && purchases().length === 0">
-            <td colspan="10" class="text-center py-4 text-muted">
+            <td colspan="11" class="text-center py-4 text-muted">
               Aucun achat trouvé.
             </td>
           </tr>
@@ -179,6 +192,7 @@
                 {{ purchase.payment_status }}
               </span>
             </td>
+            <td>{{ purchase.payment_method || '-' }}</td>
             <td class="status-cell">
               <select class="status-select"
                       [class.bg-en-cours]="purchase.status === 'EN COURS'"

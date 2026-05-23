@@ -283,6 +283,9 @@ php artisan migrate --force
 echo "  → Seeding roles & permissions..."
 php artisan db:seed --class=RolesAndPermissionsSeeder --force
 
+echo "  → Seeding cities..."
+php artisan db:seed --class=CitiesSeeder --force
+
 # ── Laravel cache ─────────────────────────────────────────────
 echo "  → Caching config / routes / views..."
 php artisan config:cache
