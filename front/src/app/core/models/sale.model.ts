@@ -2,6 +2,16 @@ import { Product } from './product.model';
 import { Stock } from './stock.model';
 import { Client } from '../../features/clients/models/client.model';
 
+export interface SalePayment {
+  id: number;
+  sale_id: number;
+  amount: number;
+  date: string;
+  method?: string | null;
+  reference?: string | null;
+  notes?: string | null;
+}
+
 export interface SaleItem {
   id?: number;
   sale_id?: number;
@@ -51,6 +61,7 @@ export interface Sale {
   due_amount?: number;
   amount_paid?: number;
   remaining_amount?: number;
+  payments?: SalePayment[];
   sale_number?: string | null;
   invoice_number?: string | null;
   items?: SaleItem[];

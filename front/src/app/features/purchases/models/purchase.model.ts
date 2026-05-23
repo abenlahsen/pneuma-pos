@@ -27,6 +27,7 @@ export interface Purchase {
   status: 'EN COURS' | 'RECU' | 'TERMINE' | 'ANNULE' | 'RETOUR';
   payment_status: 'PAYE' | 'NON PAYE' | 'PARTIEL';
   payment_method?: string;
+  payments?: PurchasePayment[];
   supplier?: Supplier;
   commercial?: { id: number; name: string } | null;
   created_at?: string;
