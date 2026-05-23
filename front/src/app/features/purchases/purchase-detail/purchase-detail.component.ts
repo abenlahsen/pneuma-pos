@@ -22,14 +22,18 @@ export class PurchaseDetailComponent {
   printDoc = signal<PrintDocument | null>(null);
 
   openPrint(): void {
-    const lines: PrintLine[] = (this.purchase.items || []).map(item => ({
-      label: this.getProduct(item)?.reference || `Produit #${item.product_id}`,
-      reference: this.getProduct(item)?.profile || undefined,
-      qty: item.quantity,
-      unit_price: Number(item.unit_price ?? 0),
-      discount: 0,
-      total: Number(item.unit_price ?? 0) * Number(item.quantity),
-    }));
+    const lines: PrintLine[] = (this.purchase.items || []).map(item => {
+      const product = this.getProduct(item);
+      return {
+        label: this.printLabel(product, `Produit #${item.product_id}`),
+        reference: this.printReference(product),
+        details: this.printDetails(product),
+        qty: item.quantity,
+        unit_price: Number(item.unit_price ?? 0),
+        discount: 0,
+        total: Number(item.unit_price ?? 0) * Number(item.quantity),
+      };
+    });
 
     this.printDoc.set({
       type: 'purchase',
@@ -50,6 +54,34 @@ export class PurchaseDetailComponent {
 
   getProduct(item: any): any {
     return item.linkedProduct || item.linked_product;
+  }
+
+  private printLabel(product: any, fallback: string): string {
+    if (product?.type !== 'tyre') return product?.reference || fallback;
+    const parts: string[] = [];
+    if (product.brand?.name) parts.push(product.brand.name);
+    if (product.profile) parts.push(product.profile);
+    return parts.join(' ') || product?.reference || fallback;
+  }
+
+  private printReference(product: any): string | undefined {
+    if (product?.type !== 'tyre') return product?.profile || undefined;
+    const t = product?.tyre;
+    if (t?.tire_width && t?.tire_height && t?.tire_diameter) {
+      return `${t.tire_width}/${t.tire_height}R${t.tire_diameter}`;
+    }
+    return undefined;
+  }
+
+  private printDetails(product: any): string | undefined {
+    if (product?.type !== 'tyre') return undefined;
+    const t = product?.tyre;
+    if (!t) return undefined;
+    const parts: string[] = [];
+    if (t.tire_load_index) parts.push(t.tire_load_index);
+    if (t.tire_speed_index) parts.push(t.tire_speed_index);
+    if (t.tire_marking) parts.push(t.tire_marking);
+    return parts.length ? parts.join(' · ') : undefined;
   }
 
   openProductView(item: any): void {

@@ -254,6 +254,9 @@ class PurchaseService
         if (! empty($filters['payment_status'])) {
             $query->where('payment_status', $filters['payment_status']);
         }
+        if (! empty($filters['payment_method'])) {
+            $query->where('payment_method', $filters['payment_method']);
+        }
         if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
