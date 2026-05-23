@@ -126,6 +126,7 @@ class DashboardController extends Controller
             'tyres_month' => $tyreSalesQty($monthStart, $monthEnd),
             'tyres_year' => $tyreSalesQty($yearStart, $yearEnd),
             'tyres_purchased_month' => $tyrePurchaseQty($monthStart, $monthEnd),
+            'tyres_purchased_year' => $tyrePurchaseQty($yearStart, $yearEnd),
 
             // Sales by Commercial (This Month)
             'sales_by_commercial' => $salesByCommercial,

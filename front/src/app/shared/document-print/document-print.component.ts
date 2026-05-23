@@ -11,6 +11,7 @@ export type DocumentType = 'sale' | 'purchase' | 'service_order';
 export interface PrintLine {
   label: string;
   reference?: string;
+  details?: string;
   qty: number;
   unit?: string;
   unit_price: number;
