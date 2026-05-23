@@ -33,6 +33,7 @@ export class PurchasesPageComponent implements OnInit {
   filterSearch = signal('');
   filterStatus = signal('');
   filterPaymentStatus = signal('');
+  filterPaymentMethod = signal('');
   filterSupplier = signal('');
   filterCommercial = signal('');
   filterDateFrom = signal('');
@@ -71,6 +72,7 @@ export class PurchasesPageComponent implements OnInit {
       search: this.filterSearch(),
       status: this.filterStatus(),
       payment_status: this.filterPaymentStatus(),
+      payment_method: this.filterPaymentMethod(),
       supplier_id: this.filterSupplier(),
       commercial_id: this.filterCommercial(),
       date_from: this.filterDateFrom(),
@@ -132,6 +134,7 @@ export class PurchasesPageComponent implements OnInit {
     this.filterSearch.set('');
     this.filterStatus.set('');
     this.filterPaymentStatus.set('');
+    this.filterPaymentMethod.set('');
     this.filterSupplier.set('');
     this.filterCommercial.set('');
     this.filterDateFrom.set('');

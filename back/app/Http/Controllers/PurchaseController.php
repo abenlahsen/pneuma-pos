@@ -129,7 +129,7 @@ class PurchaseController extends Controller
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
-        $rows = [['Date', 'Fournisseur', 'Commercial', 'Statut', 'Paiement', 'Facture', 'Remise (%)', 'Qté totale', 'Total HT', 'Net']];
+        $rows = [['Date', 'Fournisseur', 'Commercial', 'Statut', 'Paiement', 'Mode paiement', 'Facture', 'Remise (%)', 'Qté totale', 'Total HT', 'Net']];
 
         foreach ($purchases as $purchase) {
             $rows[] = [
@@ -138,6 +138,7 @@ class PurchaseController extends Controller
                 $purchase->commercial?->name ?? '',
                 $purchase->status ?? '',
                 $purchase->payment_status ?? '',
+                $purchase->payment_method ?? '',
                 $purchase->with_invoice ? 'Oui' : 'Non',
                 (float) ($purchase->discount ?? 0),
                 (int) ($purchase->total_quantity ?? 0),

@@ -92,6 +92,10 @@ class SaleController extends Controller
             $query->where('payment_status', (string) $request->string('payment_status'));
         }
 
+        if ($request->filled('payment_method') && Schema::hasColumn('sales', 'payment_method')) {
+            $query->where('payment_method', (string) $request->string('payment_method'));
+        }
+
         if ($request->filled('brand') && Schema::hasColumn('sales', 'brand')) {
             $query->where('brand', (string) $request->string('brand'));
         }
@@ -248,6 +252,10 @@ class SaleController extends Controller
 
         if ($request->filled('payment_status') && Schema::hasColumn('sales', 'payment_status')) {
             $query->where('payment_status', (string) $request->string('payment_status'));
+        }
+
+        if ($request->filled('payment_method') && Schema::hasColumn('sales', 'payment_method')) {
+            $query->where('payment_method', (string) $request->string('payment_method'));
         }
 
         if ($request->filled('brand') && Schema::hasColumn('sales', 'brand')) {

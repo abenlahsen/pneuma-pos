@@ -40,6 +40,7 @@ export class SalesPageComponent implements OnInit {
   cities = signal<string[]>([]);
   filterStatus = signal('');
   filterPaymentStatus = signal('');
+  filterPaymentMethod = signal('');
   filterCarrier = signal('');
   filterPartner = signal('');
   filterCommercial = signal<string>('');
@@ -127,6 +128,7 @@ export class SalesPageComponent implements OnInit {
       city: this.filterCity(),
       status: this.filterStatus(),
       payment_status: this.filterPaymentStatus(),
+      payment_method: this.filterPaymentMethod(),
       carrier_id: this.filterCarrier(),
       partner_id: this.filterPartner(),
       commercial_id: this.filterCommercial(),
@@ -163,6 +165,7 @@ export class SalesPageComponent implements OnInit {
     this.filterCity.set('');
     this.filterStatus.set('');
     this.filterPaymentStatus.set('');
+    this.filterPaymentMethod.set('');
     this.filterCarrier.set('');
     this.filterPartner.set('');
     this.filterCommercial.set('');
