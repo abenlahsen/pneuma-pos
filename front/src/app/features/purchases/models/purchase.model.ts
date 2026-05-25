@@ -50,6 +50,10 @@ export interface PurchaseSummary {
   total_achats: number;
   total_paye: number;
   reste_a_payer: number;
+  unpaid_en_cours: number;
+  unpaid_recu_termine: number;
+  ca_avec_facture: number;
+  ca_sans_facture: number;
 }
 
 export interface PurchasePayment {

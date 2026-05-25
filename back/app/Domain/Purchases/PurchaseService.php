@@ -176,10 +176,36 @@ class PurchaseService
         $totalPaye = (clone $query)->where('payment_status', 'PAYE')->sum('net_amount') ?? 0;
         $resteAPayer = $totalAchats - $totalPaye;
 
+        $unpaidEnCours = (function () use ($query): float {
+            $q = (clone $query)
+                ->where('status', 'EN COURS')
+                ->whereIn('payment_status', ['NON PAYE', 'PARTIEL']);
+            $totalSale = (float) (clone $q)->sum('net_amount');
+            $totalPaid = (float) \DB::table('purchase_payments')
+                ->whereIn('purchase_id', (clone $q)->select('id'))
+                ->sum('amount');
+            return round($totalSale - $totalPaid, 2);
+        })();
+
+        $unpaidRecuTermine = (function () use ($query): float {
+            $q = (clone $query)
+                ->whereIn('status', ['RECU', 'TERMINE'])
+                ->whereIn('payment_status', ['NON PAYE', 'PARTIEL']);
+            $totalSale = (float) (clone $q)->sum('net_amount');
+            $totalPaid = (float) \DB::table('purchase_payments')
+                ->whereIn('purchase_id', (clone $q)->select('id'))
+                ->sum('amount');
+            return round($totalSale - $totalPaid, 2);
+        })();
+
         return [
-            'total_achats' => round((float) $totalAchats, 2),
-            'total_paye' => round((float) $totalPaye, 2),
-            'reste_a_payer' => round((float) $resteAPayer, 2),
+            'total_achats'       => round((float) $totalAchats, 2),
+            'total_paye'         => round((float) $totalPaye, 2),
+            'reste_a_payer'      => round((float) $resteAPayer, 2),
+            'unpaid_en_cours'    => $unpaidEnCours,
+            'unpaid_recu_termine' => $unpaidRecuTermine,
+            'ca_avec_facture'    => round((float) (clone $query)->where('with_invoice', true)->sum('net_amount'), 2),
+            'ca_sans_facture'    => round((float) (clone $query)->where('with_invoice', false)->sum('net_amount'), 2),
         ];
     }
 
