@@ -17,17 +17,26 @@
 
   <!-- Résumé financier -->
   <div class="summary-cards">
-    <div class="summary-card">
-      <div class="card-label">CA TOTAL</div>
-      <div class="card-value">{{ summary().total_revenue | number:'1.2-2' }} DH</div>
+    <div class="card summary-card income">
+      <div class="card-icon">🔧</div>
+      <div class="card-content">
+        <p class="card-label">CA Total</p>
+        <h3 class="card-value">{{ summary().total_revenue | number:'1.2-2' }} DH</h3>
+      </div>
     </div>
-    <div class="summary-card summary-card--success">
-      <div class="card-label">PAYÉ</div>
-      <div class="card-value">{{ summary().total_paid | number:'1.2-2' }} DH</div>
+    <div class="card summary-card balance">
+      <div class="card-icon">✅</div>
+      <div class="card-content">
+        <p class="card-label">Payé</p>
+        <h3 class="card-value">{{ summary().total_paid | number:'1.2-2' }} DH</h3>
+      </div>
     </div>
-    <div class="summary-card summary-card--danger">
-      <div class="card-label">RESTE À PAYER</div>
-      <div class="card-value">{{ summary().remaining | number:'1.2-2' }} DH</div>
+    <div class="card summary-card expense">
+      <div class="card-icon">⏳</div>
+      <div class="card-content">
+        <p class="card-label">Reste à Payer</p>
+        <h3 class="card-value">{{ summary().remaining | number:'1.2-2' }} DH</h3>
+      </div>
     </div>
   </div>
 
