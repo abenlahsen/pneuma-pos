@@ -102,6 +102,8 @@ export interface SaleSummary {
   sales_en_cours: number;
   unpaid_en_cours: number;
   unpaid_livre_monte: number;
+  ca_avec_facture: number;
+  ca_sans_facture: number;
 }
 
 export interface SaleFilters {
