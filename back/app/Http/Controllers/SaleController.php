@@ -483,7 +483,26 @@ class SaleController extends Controller
                 : $tyreSaleQty((clone $query)->whereDate($dateColumn, '>=', $monthStart)->whereDate($dateColumn, '<=', $monthEnd)),
             'tyres_en_cours' => $tyreSaleQty((clone $query)->where('status', 'EN COURS')),
             'sales_en_cours' => (int) (clone $query)->where('status', 'EN COURS')->count(),
-            'total_unpaid' => round((float) (clone $query)->whereIn('payment_status', ['NON PAYE', 'NON PAYÉ'])->sum('total_sale'), 2),
+            'unpaid_en_cours' => (function () use ($query): float {
+                $q = (clone $query)
+                    ->where('status', 'EN COURS')
+                    ->whereIn('payment_status', ['NON PAYE', 'NON PAYÉ', 'PARTIEL']);
+                $totalSale = (float) (clone $q)->sum('total_sale');
+                $totalPaid = (float) DB::table('payments')
+                    ->whereIn('sale_id', (clone $q)->select('id'))
+                    ->sum('amount');
+                return round($totalSale - $totalPaid, 2);
+            })(),
+            'unpaid_livre_monte' => (function () use ($query): float {
+                $q = (clone $query)
+                    ->whereIn('status', ['LIVRE', 'MONTE'])
+                    ->whereIn('payment_status', ['NON PAYE', 'NON PAYÉ', 'PARTIEL']);
+                $totalSale = (float) (clone $q)->sum('total_sale');
+                $totalPaid = (float) DB::table('payments')
+                    ->whereIn('sale_id', (clone $q)->select('id'))
+                    ->sum('amount');
+                return round($totalSale - $totalPaid, 2);
+            })(),
         ]);
     }
 
