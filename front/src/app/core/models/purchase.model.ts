@@ -25,6 +25,7 @@ export interface Purchase {
   items?: PurchaseItem[];
   status: 'EN COURS' | 'RECU' | 'TERMINE' | 'ANNULE' | 'RETOUR';
   payment_status: 'PAYE' | 'NON PAYE' | 'PARTIEL';
+  payment_method?: string | null;
   payments?: PurchasePayment[];
   supplier?: Supplier;
   commercial?: { id: number; name: string } | null;
@@ -40,6 +41,7 @@ export interface PurchasePayload {
   commercial_id?: number | null;
   status: 'EN COURS' | 'RECU' | 'TERMINE' | 'ANNULE' | 'RETOUR';
   payment_status: 'PAYE' | 'NON PAYE' | 'PARTIEL';
+  payment_method?: string | null;
   items: PurchaseItem[];
 }
 

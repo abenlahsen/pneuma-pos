@@ -111,6 +111,10 @@
               {{ purchase.payment_status }}
             </span>
           </div>
+          <div class="detail-item" *ngIf="purchase.payment_method">
+            <span class="label">Mode de paiement</span>
+            <span class="value">{{ purchase.payment_method }}</span>
+          </div>
         </div>
       </div>
 
