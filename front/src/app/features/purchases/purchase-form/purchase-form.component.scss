@@ -1,27 +1,72 @@
-@use '../../variables' as *;
+// ── Design tokens ─────────────────────────────────────────────────────────────
+$_red:      #ff2d37;
+$_red-dark: #e8000b;
+$_text:     #0f172a;
+$_strong:   #1e293b;
+$_label:    #334155;
+$_muted:    #64748b;
+$_dim:      #94a3b8;
+$_surface:  #ffffff;
+$_surface2: #f8fafc;
+$_border:   #e8edf3;
+$_border2:  #d0d9e4;
 
+$_shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.04);
+
+$_radius-sm: 8px;
+$_radius-md: 12px;
+
+// ── Loading state ─────────────────────────────────────────────────────────────
 .loading-overlay {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 3rem;
-  color: $primary;
-  font-size: 1rem;
+  color: $_muted;
+  font-size: 0.9rem;
 }
 
-.p-6 { padding: 1.5rem; }
+// ── Utility shims ─────────────────────────────────────────────────────────────
+.p-6  { padding: 1.5rem; }
 .mb-4 { margin-bottom: 1rem; }
 .mb-2 { margin-bottom: 0.5rem; }
 .mt-4 { margin-top: 1rem; }
 .mr-2 { margin-right: 0.5rem; }
 .text-right { text-align: right; }
-.text-muted { color: #718096; font-size: 0.8rem; display: block; margin-top: 0.25rem; }
+.text-muted { color: $_muted; font-size: 0.8125rem; display: block; margin-top: 0.25rem; }
 
+// ── Buttons ───────────────────────────────────────────────────────────────────
 .btn {
-  padding: 0.5rem 1rem; border-radius: 8px; border: none; font-weight: 500;
-  cursor: pointer; transition: all 0.2s; font-size: 0.875rem;
-  &-primary { background: $primary; color: white; &:hover { filter: brightness(0.95); } &:disabled { opacity: 0.6; cursor: not-allowed; } }
-  &-secondary { background: #f7fafc; color: #2d3748; border: 1px solid $border-color; &:hover { background: #edf2f7; } }
+  padding: 0.55rem 1.1rem;
+  border-radius: $_radius-sm;
+  border: 1.5px solid transparent;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+
+  &-primary {
+    background: $_red;
+    color: white;
+    border-color: $_red;
+    box-shadow: 0 2px 6px rgba(255, 45, 55, 0.3);
+
+    &:hover { background: $_red-dark; box-shadow: 0 4px 10px rgba(255, 45, 55, 0.4); transform: translateY(-1px); }
+    &:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+  }
+
+  &-secondary {
+    background: $_surface;
+    color: $_strong;
+    border-color: $_border2;
+    box-shadow: $_shadow-sm;
+
+    &:hover { background: $_surface2; border-color: #bcc6d4; }
+  }
 }
 
 .btn-icon {
@@ -29,108 +74,115 @@
   border: none;
   cursor: pointer;
   font-size: 1rem;
-  padding: 0.2rem 0.4rem;
-  border-radius: 4px;
-  &:hover { background: #fee; }
+  padding: 0.25rem 0.4rem;
+  border-radius: 6px;
+  color: $_muted;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover { background: rgba(239, 68, 68, 0.08); color: #dc2626; }
 }
 
-.text-danger { color: #e53e3e; }
-.form-actions { display: flex; justify-content: flex-end; gap: 0.75rem; }
+.text-danger  { color: #dc2626; }
+.text-warning { color: #a16207; }
 
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+// ── Form section ──────────────────────────────────────────────────────────────
 .form-section {
-  background: $bg-body;
+  background: $_surface2;
   padding: 1.25rem;
-  border-radius: $radius;
-  border: 1px solid $border-color;
-  margin-bottom: 1.5rem;
+  border-radius: $_radius-md;
+  border: 1px solid $_border;
+  margin-bottom: 1.25rem;
 }
 
 .section-title {
   margin: 0 0 1rem;
-  font-size: 1.1rem;
-  color: $primary;
-  border-bottom: 2px solid rgba($primary, 0.2);
-  padding-bottom: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: $_dim;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding-bottom: 0.625rem;
+  border-bottom: 1px solid $_border;
 }
 
+// ── Info grid ─────────────────────────────────────────────────────────────────
 .info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  gap: 0.875rem;
 
   .form-group.checkbox-control {
     flex-direction: row;
     align-items: center;
     gap: 0.5rem;
-    margin-top: 1.5rem;
+    margin-top: 1.25rem;
 
-    input[type="checkbox"] {
-      width: 1.2rem;
-      height: 1.2rem;
-      accent-color: $primary;
+    input[type='checkbox'] {
+      width: 1.1rem;
+      height: 1.1rem;
+      accent-color: $_red;
       cursor: pointer;
     }
   }
 }
 
-.row { display: flex; flex-wrap: wrap; margin: 0 -0.5rem; }
+// ── Bootstrap-style grid shims ────────────────────────────────────────────────
+.row           { display: flex; flex-wrap: wrap; margin: 0 -0.5rem; }
 .align-items-end { align-items: flex-end; }
-.w-100 { width: 100%; }
-.btn-block { width: 100%; }
-.col-md-6 { flex: 0 0 50%; max-width: 50%; padding: 0 0.5rem; }
-.col-md-4 { flex: 0 0 33.3333%; max-width: 33.3333%; padding: 0 0.5rem; }
-.col-md-3 { flex: 0 0 25%; max-width: 25%; padding: 0 0.5rem; }
-.col-md-2 { flex: 0 0 16.6666%; max-width: 16.6666%; padding: 0 0.5rem; }
-.col-md-1 { flex: 0 0 8.3333%; max-width: 8.3333%; padding: 0 0.5rem; }
+.w-100         { width: 100%; }
+.btn-block     { width: 100%; }
+.col-md-6  { flex: 0 0 50%;      max-width: 50%;      padding: 0 0.5rem; }
+.col-md-4  { flex: 0 0 33.3333%; max-width: 33.3333%; padding: 0 0.5rem; }
+.col-md-3  { flex: 0 0 25%;      max-width: 25%;      padding: 0 0.5rem; }
+.col-md-2  { flex: 0 0 16.6666%; max-width: 16.6666%; padding: 0 0.5rem; }
+.col-md-1  { flex: 0 0 8.3333%;  max-width: 8.3333%;  padding: 0 0.5rem; }
 
+// ── Form group ────────────────────────────────────────────────────────────────
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  
+  gap: 0.35rem;
+
   label {
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: $_label;
+    letter-spacing: 0.01em;
   }
-  
+
   .form-control {
-    padding: 0.5rem;
-    border: 1px solid $border-color;
-    border-radius: 4px;
+    padding: 0.55rem 0.75rem;
+    border: 1.5px solid $_border2;
+    border-radius: $_radius-sm;
     font-size: 0.875rem;
-    
+    color: $_text;
+    background: $_surface;
+    transition: border-color 0.15s, box-shadow 0.15s;
+
+    &::placeholder { color: $_dim; }
+
     &:focus {
       outline: none;
-      border-color: $primary;
-      box-shadow: 0 0 0 3px rgba($primary, 0.1);
+      border-color: $_red;
+      box-shadow: 0 0 0 3px rgba(255, 45, 55, 0.1);
     }
   }
 }
 
-@media (max-width: 768px) {
-  .col-md-6, .col-md-4, .col-md-3, .col-md-2, .col-md-1 {
-    flex: 0 0 100%;
-    max-width: 100%;
-  }
-
-  .form-actions {
-    flex-direction: column-reverse;
-
-    .btn {
-      width: 100%;
-      text-align: center;
-    }
-  }
-}
-
-
+// ── Totals block ──────────────────────────────────────────────────────────────
 .totals-block {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 0.4rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid $border-color;
+  padding-top: 0.75rem;
+  border-top: 1px solid $_border;
 }
 
 .totals-row {
@@ -143,54 +195,80 @@
 
 .totals-label {
   font-size: 0.875rem;
-  color: #4a5568;
+  color: $_muted;
   white-space: nowrap;
 }
 
 .totals-value {
   font-size: 0.9rem;
+  font-weight: 600;
   min-width: 110px;
   text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: $_strong;
 }
 
-.totals-total .totals-label,
-.totals-total .totals-value {
-  font-size: 1rem;
-  color: $primary;
+.totals-total {
+  .totals-label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: $_text;
+  }
+
+  .totals-value {
+    font-size: 1rem;
+    font-weight: 800;
+    color: $_text;
+    letter-spacing: -0.01em;
+  }
 }
 
 .totals-remise .totals-label {
-  color: #4a5568;
+  color: $_muted;
 }
 
 .remise-input {
   width: 80px;
   text-align: right;
-  padding: 0.25rem 0.5rem;
-  border: 1px solid $border-color;
-  border-radius: 4px;
+  padding: 0.3rem 0.5rem;
+  border: 1.5px solid $_border2;
+  border-radius: 6px;
   font-size: 0.875rem;
+  color: $_text;
+  background: $_surface;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
   &:focus {
     outline: none;
-    border-color: $primary;
-    box-shadow: 0 0 0 3px rgba($primary, 0.1);
+    border-color: $_red;
+    box-shadow: 0 0 0 3px rgba(255, 45, 55, 0.1);
   }
 }
 
-.text-warning { color: #d97706; }
-
+// ── Product link ──────────────────────────────────────────────────────────────
 .product-link {
   background: none;
   border: none;
   padding: 0;
-  color: $primary;
+  color: $_red;
   font-size: 0.8rem;
   margin-left: 0.35rem;
-  opacity: 0.7;
+  opacity: 0.75;
   cursor: pointer;
+  transition: opacity 0.15s;
 
-  &:hover {
-    opacity: 1;
-    text-decoration: underline;
+  &:hover { opacity: 1; text-decoration: underline; }
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .col-md-6, .col-md-4, .col-md-3, .col-md-2, .col-md-1 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+    .btn { width: 100%; justify-content: center; }
   }
 }
