@@ -192,13 +192,8 @@ $_border2:  #d0d9e4;
   font-size: 0.9rem;
 }
 
-// ── Summary card variants (sans icône) ────────────────────────────────────────
-.summary-card--success {
-  border-top: 3px solid #22c55e;
-  .card-value { color: #15803d; }
-}
-
-.summary-card--danger {
-  border-top: 3px solid #ef4444;
-  .card-value { color: #dc2626; }
+// ── Summary card content wrapper ──────────────────────────────────────────────
+.card-content {
+  flex: 1;
+  min-width: 0;
 }
