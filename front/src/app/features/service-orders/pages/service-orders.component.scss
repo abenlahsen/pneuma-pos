@@ -1,5 +1,182 @@
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
 
-// Service orders modal is wider
+// ── Service orders modal is wider ─────────────────────────────────────────────
 .modal-container { max-width: 960px; }
+
+// ── Design tokens (mirror _page-layout) ──────────────────────────────────────
+$_red:      #ff2d37;
+$_amber:    #d97706;
+$_text:     #0f172a;
+$_muted:    #64748b;
+$_dim:      #94a3b8;
+$_surface:  #ffffff;
+$_surface2: #f8fafc;
+$_border:   #e8edf3;
+$_border2:  #d0d9e4;
+
+// ── Filter group (alias de form-group pour les filtres) ───────────────────────
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: $_muted;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .form-control {
+    padding: 0.45rem 0.7rem;
+    border: 1px solid $_border2;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: $_text;
+    background: $_surface;
+    width: 100%;
+    transition: border-color 0.18s, box-shadow 0.18s;
+
+    &:focus {
+      outline: none;
+      border-color: $_red;
+      box-shadow: 0 0 0 3px rgba(255, 45, 55, 0.1);
+    }
+  }
+}
+
+// ── Data table (alias de .table pour ce module) ───────────────────────────────
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    background: $_surface2;
+    font-weight: 700;
+    font-size: 0.65rem;
+    color: $_dim;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.6rem 0.875rem;
+    border-bottom: 2px solid $_border;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  td {
+    padding: 0.65rem 0.875rem;
+    border-bottom: 1px solid $_border;
+    font-size: 0.8125rem;
+    color: $_text;
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: $_surface2; }
+}
+
+// ── Table cells ───────────────────────────────────────────────────────────────
+.amount-cell {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: right;
+  letter-spacing: -0.01em;
+}
+
+.status-cell { white-space: nowrap; }
+
+// ── Client / vehicle cells ────────────────────────────────────────────────────
+.client-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: $_text;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.client-linked { font-size: 0.8rem; opacity: 0.7; }
+
+.client-phone {
+  font-size: 0.78rem;
+  color: $_muted;
+  margin-top: 0.1rem;
+}
+
+.vehicle-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: $_text;
+}
+
+.mileage {
+  font-size: 0.78rem;
+  color: $_muted;
+  margin-top: 0.1rem;
+}
+
+// ── Service type badges ───────────────────────────────────────────────────────
+.service-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.badge-type {
+  background: rgba(255, 45, 55, 0.08);
+  color: $_red;
+}
+
+.badge-part-type {
+  background: rgba(217, 119, 6, 0.10);
+  color: $_amber;
+}
+
+.badge-more {
+  background: $_surface2;
+  color: $_muted;
+  border: 1px solid $_border2;
+}
+
+// ── Action buttons ────────────────────────────────────────────────────────────
+.action-buttons {
+  display: flex;
+  gap: 0.3rem;
+  justify-content: center;
+}
+
+.btn-icon--danger {
+  &:hover {
+    background: #fee2e2 !important;
+    border-color: #fca5a5 !important;
+    color: #dc2626;
+  }
+}
+
+// ── Loading / empty states ────────────────────────────────────────────────────
+.loading-state {
+  padding: 3rem;
+  text-align: center;
+  color: $_muted;
+  font-size: 0.9rem;
+}
+
+.empty-state {
+  padding: 3rem;
+  text-align: center;
+  color: $_dim;
+  font-size: 0.9rem;
+}
+
+// ── Summary card variants (sans icône) ────────────────────────────────────────
+.summary-card--success {
+  border-top: 3px solid #22c55e;
+  .card-value { color: #15803d; }
+}
+
+.summary-card--danger {
+  border-top: 3px solid #ef4444;
+  .card-value { color: #dc2626; }
+}
