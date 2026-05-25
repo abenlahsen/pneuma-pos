@@ -64,6 +64,22 @@
         <h3 class="card-value">{{ summary().unpaid_livre_monte | number:'1.2-2' }} DH</h3>
       </div>
     </div>
+
+    <div class="card summary-card income">
+      <div class="card-icon">🧾</div>
+      <div class="card-content">
+        <p class="card-label">CA avec facture</p>
+        <h3 class="card-value">{{ summary().ca_avec_facture | number:'1.2-2' }} DH</h3>
+      </div>
+    </div>
+
+    <div class="card summary-card balance">
+      <div class="card-icon">🪙</div>
+      <div class="card-content">
+        <p class="card-label">CA sans facture</p>
+        <h3 class="card-value">{{ summary().ca_sans_facture | number:'1.2-2' }} DH</h3>
+      </div>
+    </div>
   </div>
 
   <div class="card filters-section">

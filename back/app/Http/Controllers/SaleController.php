@@ -503,6 +503,8 @@ class SaleController extends Controller
                     ->sum('amount');
                 return round($totalSale - $totalPaid, 2);
             })(),
+            'ca_avec_facture'   => round((float) (clone $query)->where('with_invoice', true)->sum('total_sale'), 2),
+            'ca_sans_facture'   => round((float) (clone $query)->where('with_invoice', false)->sum('total_sale'), 2),
         ]);
     }
 
