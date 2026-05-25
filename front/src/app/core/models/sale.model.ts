@@ -100,7 +100,8 @@ export interface SaleSummary {
   tyres_today: number;
   tyres_en_cours: number;
   sales_en_cours: number;
-  total_unpaid: number;
+  unpaid_en_cours: number;
+  unpaid_livre_monte: number;
 }
 
 export interface SaleFilters {

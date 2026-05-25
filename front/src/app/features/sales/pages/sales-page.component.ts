@@ -25,7 +25,7 @@ import { CityService } from '../../../core/services/city.service';
 })
 export class SalesPageComponent implements OnInit {
   sales = signal<Sale[]>([]);
-  summary = signal<SaleSummary>({ tyres_this_month: 0, tyres_today: 0, tyres_en_cours: 0, sales_en_cours: 0, total_unpaid: 0 });
+  summary = signal<SaleSummary>({ tyres_this_month: 0, tyres_today: 0, tyres_en_cours: 0, sales_en_cours: 0, unpaid_en_cours: 0, unpaid_livre_monte: 0 });
   filterOptions = signal<SaleFilters>({ brands: [], clients: [], cities: [], statuses: [], carriers: [], partners: [], payment_statuses: [], commercials: [] });
 
   currentPage = signal(1);
