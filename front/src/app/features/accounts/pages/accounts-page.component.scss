@@ -1,2 +1,205 @@
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
+
+// ── Design tokens ─────────────────────────────────────────────────────────────
+$_red:      #ff2d37;
+$_text:     #0f172a;
+$_strong:   #1e293b;
+$_muted:    #64748b;
+$_dim:      #94a3b8;
+$_surface:  #ffffff;
+$_surface2: #f8fafc;
+$_border:   #e8edf3;
+$_border2:  #d0d9e4;
+
+$_shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.04);
+$_shadow-md: 0 1px 3px rgba(15, 23, 42, 0.05), 0 4px 12px rgba(15, 23, 42, 0.08);
+
+// ── Utility shims ─────────────────────────────────────────────────────────────
+.mt-4         { margin-top: 1.5rem; }
+.m-0          { margin: 0; }
+.p-3          { padding: 1rem 1.25rem; }
+.py-4         { padding-top: 1rem; padding-bottom: 1rem; }
+.border-bottom { border-bottom: 1px solid $_border; }
+
+// ── Back button ───────────────────────────────────────────────────────────────
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: none;
+  color: $_muted;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 0.35rem;
+  transition: color 0.15s;
+
+  &:hover { color: $_text; }
+}
+
+// ── Accounts grid ─────────────────────────────────────────────────────────────
+.accounts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+// ── Account card ──────────────────────────────────────────────────────────────
+.account-card {
+  background: $_surface;
+  border: 1px solid $_border;
+  border-radius: 14px;
+  box-shadow: $_shadow-md;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+    border-color: $_border2;
+  }
+
+  &.inactive {
+    opacity: 0.6;
+    filter: grayscale(0.2);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 1.25rem 1.25rem 0.75rem;
+    border-bottom: none;
+
+    .icon {
+      font-size: 1.5rem;
+      width: 46px;
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: $_surface2;
+      border: 1px solid $_border;
+      border-radius: 11px;
+      flex-shrink: 0;
+    }
+
+    .info {
+      flex: 1;
+      min-width: 0;
+
+      h3 {
+        margin: 0 0 0.15rem;
+        font-size: 0.9375rem;
+        font-weight: 700;
+        color: $_text;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .type {
+        font-size: 0.75rem;
+        color: $_muted;
+        font-weight: 500;
+      }
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.25rem;
+      flex-shrink: 0;
+    }
+  }
+
+  .card-body {
+    padding: 0.75rem 1.25rem 1.25rem;
+
+    .balance {
+      font-size: 1.625rem;
+      font-weight: 800;
+      color: $_text;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+
+      &.negative { color: #dc2626; }
+    }
+
+    .kpi-sub {
+      margin: 0.4rem 0 0;
+      font-size: 0.8rem;
+      color: $_muted;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .desc {
+      margin: 0.5rem 0 0;
+      font-size: 0.8125rem;
+      color: $_dim;
+      font-style: italic;
+    }
+  }
+}
+
+// ── Summary card extras (card-content/card-hint not in mixin) ─────────────────
+.card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: $_muted;
+  font-style: italic;
+}
+
+// ── Summary card extra variants ───────────────────────────────────────────────
+.summary-card.expected {
+  .card-icon { background: rgba(234, 179, 8, 0.1); color: #a16207; }
+  .card-value { color: #a16207; }
+}
+
+.summary-card.balance.negative {
+  border-top: 3px solid #ef4444;
+  .card-icon { background: rgba(239, 68, 68, 0.08); color: #dc2626; }
+  .card-value { color: #dc2626; }
+}
+
+// ── Transaction table extras ──────────────────────────────────────────────────
+.pending-row td { background: rgba(234, 179, 8, 0.04); }
+
+.amount-income  {
+  color: #15803d;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.amount-expense {
+  color: #dc2626;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.badge-income  { background: rgba(34, 197, 94, 0.10);  color: #15803d; }
+.badge-expense { background: rgba(239, 68, 68, 0.10);  color: #dc2626; }
+.badge-pending { background: rgba(234, 179, 8, 0.12);  color: #a16207; }
+
+.desc-col {
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .accounts-grid { grid-template-columns: 1fr; }
+}
