@@ -8,7 +8,7 @@ import { Account, AccountPayload } from '../../../core/models/account.model';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './account-form.component.html',
-  styleUrls: ['../../../features/cash-flow/transaction-form/transaction-form.component.scss']
+  styleUrls: ['./account-form.component.scss']
 })
 export class AccountFormComponent implements OnInit {
   @Input() account: Account | null = null;

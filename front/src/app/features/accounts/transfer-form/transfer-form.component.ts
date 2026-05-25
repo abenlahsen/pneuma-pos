@@ -8,7 +8,7 @@ import { Account, TransferPayload } from '../../../core/models/account.model';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './transfer-form.component.html',
-  styleUrls: ['../../../features/cash-flow/transaction-form/transaction-form.component.scss']
+  styleUrls: ['./transfer-form.component.scss']
 })
 export class TransferFormComponent implements OnInit {
   @Input() accounts: Account[] = [];
