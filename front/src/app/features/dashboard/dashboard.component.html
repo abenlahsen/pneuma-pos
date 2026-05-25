@@ -256,6 +256,8 @@
                 <th>Pneus Vendus</th>
                 <th>Chiffre d'Affaires</th>
                 <th>Marge Brute</th>
+                <th>Marge / Pneu</th>
+                <th>% Marge</th>
                 <th>Impayés</th>
               </tr>
             </thead>
@@ -271,6 +273,12 @@
                 <td class="font-numeric">{{ com.total_sales | number:'1.2-2' }} <small>DH</small></td>
                 <td class="font-numeric" [class.negative]="com.total_margin < 0">
                   {{ com.total_margin | number:'1.2-2' }} <small>DH</small>
+                </td>
+                <td class="font-numeric" [class.negative]="com.avg_margin_per_tyre < 0">
+                  {{ com.avg_margin_per_tyre | number:'1.2-2' }} <small>DH</small>
+                </td>
+                <td class="font-numeric" [class.negative]="com.margin_rate < 0">
+                  {{ com.margin_rate | number:'1.1-1' }}<small>%</small>
                 </td>
                 <td class="font-numeric" [class.negative]="com.total_unpaid > 0">
                   {{ com.total_unpaid | number:'1.2-2' }} <small>DH</small>

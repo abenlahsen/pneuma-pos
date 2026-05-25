@@ -92,12 +92,18 @@ class DashboardController extends Controller
             ->orderByDesc('total_sales')
             ->get()
             ->map(function ($item) {
+                $totalSales = (float) $item->total_sales;
+                $totalMargin = (float) $item->total_margin;
+                $totalTyres = (int) $item->total_tyres;
+
                 return [
-                    'commercial_name' => $item->commercial_name ?? 'Non assigné',
-                    'total_sales' => round((float) $item->total_sales, 2),
-                    'total_tyres' => (int) $item->total_tyres,
-                    'total_margin' => round((float) $item->total_margin, 2),
-                    'total_unpaid' => round((float) $item->total_unpaid, 2),
+                    'commercial_name'    => $item->commercial_name ?? 'Non assigné',
+                    'total_sales'        => round($totalSales, 2),
+                    'total_tyres'        => $totalTyres,
+                    'total_margin'       => round($totalMargin, 2),
+                    'total_unpaid'       => round((float) $item->total_unpaid, 2),
+                    'avg_margin_per_tyre' => $totalTyres > 0 ? round($totalMargin / $totalTyres, 2) : 0,
+                    'margin_rate'        => $totalSales > 0 ? round(($totalMargin / $totalSales) * 100, 1) : 0,
                 ];
             })
             ->toArray();

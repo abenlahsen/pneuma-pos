@@ -31,5 +31,7 @@ export interface DashboardKpi {
     total_tyres: number;
     total_margin: number;
     total_unpaid: number;
+    avg_margin_per_tyre: number;
+    margin_rate: number;
   }[];
 }

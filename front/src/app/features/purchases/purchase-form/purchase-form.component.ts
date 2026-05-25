@@ -58,6 +58,7 @@ export class PurchaseFormComponent implements OnInit {
     items: [],
     status: 'EN COURS',
     payment_status: 'NON PAYE',
+    payment_method: null,
   };
 
   loadingForm = signal(false);
@@ -89,6 +90,7 @@ export class PurchaseFormComponent implements OnInit {
           items: this.purchase!.items ? JSON.parse(JSON.stringify(this.purchase!.items)) : [],
           status: this.purchase!.status,
           payment_status: this.purchase!.payment_status,
+          payment_method: this.purchase!.payment_method || null,
         };
         this.loadingForm.set(false);
       },
