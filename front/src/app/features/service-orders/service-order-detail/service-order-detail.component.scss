@@ -1,25 +1,39 @@
-@use 'sass:color';
-@use '../../variables' as *;
+// ── Design tokens ─────────────────────────────────────────────────────────────
+$_red:      #ff2d37;
+$_text:     #0f172a;
+$_strong:   #1e293b;
+$_muted:    #64748b;
+$_dim:      #94a3b8;
+$_surface:  #ffffff;
+$_surface2: #f8fafc;
+$_border:   #e8edf3;
+$_border2:  #d0d9e4;
+
+$_shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
 
 .modal-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 1rem;
+  padding: 1.5rem;
+  backdrop-filter: blur(2px);
 }
 
 .modal-content {
-  background: white;
-  border-radius: 12px;
+  background: $_surface;
+  border-radius: 14px;
+  border: 1px solid $_border;
   width: 100%;
   max-width: 1100px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  box-shadow: $_shadow;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-header {
@@ -27,91 +41,132 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid $border-color;
+  border-bottom: 1px solid $_border;
+  background: $_surface2;
+  border-radius: 14px 14px 0 0;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 
-  h2 { margin: 0; font-size: 1.2rem; color: $text-dark; }
+  h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: $_text;
+    letter-spacing: -0.01em;
+  }
 
   .btn-close {
     background: none;
-    border: none;
-    font-size: 1.2rem;
-    color: $text-muted;
+    border: 1.5px solid $_border2;
+    border-radius: 8px;
+    font-size: 1rem;
+    color: $_muted;
     cursor: pointer;
     padding: 0.25rem 0.5rem;
-    border-radius: 6px;
-    &:hover { background: $bg-body; color: $text-dark; }
+    transition: all 0.15s;
+
+    &:hover {
+      background: $_border;
+      color: $_text;
+      border-color: #bcc6d4;
+    }
   }
 }
 
-.detail-body { padding: 1.5rem; }
+.detail-body {
+  padding: 1.5rem;
+  flex: 1;
+}
 
 .detail-section {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
 
   &.meta { margin-bottom: 0; }
+  &:last-child { margin-bottom: 0; }
 
   .section-title {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: $primary;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: $_muted;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 0 0 0.75rem;
+    letter-spacing: 0.08em;
+    margin: 0 0 0.875rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid $border-color;
+    border-bottom: 1px solid $_border;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &::before {
+      content: '';
+      display: inline-block;
+      width: 3px;
+      height: 12px;
+      background: $_red;
+      border-radius: 2px;
+    }
   }
 }
 
 .detail-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 0.75rem;
+  gap: 0.875rem;
 }
 
 .detail-item {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.25rem;
 
   &.full { grid-column: 1 / -1; }
 
   .label {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: $text-muted;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: $_dim;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.06em;
   }
 
   .value {
-    font-size: 0.95rem;
-    color: $text-dark;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: $_strong;
   }
 }
 
+// ── Utilities ─────────────────────────────────────────────────────────────────
 .fw-semibold { font-weight: 600; }
-.text-muted { color: $text-muted; }
+.text-muted  { color: $_muted; }
 .text-center { text-align: center; }
-.text-right { text-align: right; }
-.mt-3 { margin-top: 0.75rem; }
+.text-right  { text-align: right; }
+.mt-3        { margin-top: 0.75rem; }
 
+// ── Badges ────────────────────────────────────────────────────────────────────
 .badge {
-  display: inline-block;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
   width: fit-content;
 }
-.badge-success { background: rgba(72, 187, 120, 0.12); color: #48bb78; }
-.badge-warning { background: rgba(237, 137, 54, 0.12); color: #ed8936; }
-.badge-danger  { background: rgba(245, 101, 101, 0.12); color: #f56565; }
-.badge-type      { background: rgba(102, 126, 234, 0.12); color: $primary; }
-.badge-part-inline { background: rgba(72, 187, 120, 0.12); color: #2f855a; }
 
+.badge-success      { background: rgba(34, 197, 94, 0.10);  color: #15803d; }
+.badge-warning      { background: rgba(234, 179, 8, 0.12);  color: #a16207; }
+.badge-danger       { background: rgba(239, 68, 68, 0.10);  color: #dc2626; }
+.badge-type         { background: rgba(255, 45, 55, 0.08);  color: $_red; }
+.badge-part-inline  { background: rgba(34, 197, 94, 0.10);  color: #15803d; }
+
+// ── Item detail helpers ───────────────────────────────────────────────────────
 .item-desc {
   font-size: 0.8rem;
-  color: $text-muted;
+  color: $_muted;
   margin-top: 0.2rem;
 }
 
@@ -119,18 +174,22 @@
   display: flex;
   gap: 0.75rem;
   font-size: 0.8rem;
-  color: $text-muted;
+  color: $_muted;
   margin-top: 0.2rem;
 }
 
 .item-ref {
   font-size: 0.8rem;
-  color: $text-muted;
+  color: $_muted;
   margin-top: 0.2rem;
+  font-family: ui-monospace, 'Courier New', monospace;
 }
 
+// ── Table ─────────────────────────────────────────────────────────────────────
 .table-responsive {
   overflow-x: auto;
+  border: 1px solid $_border;
+  border-radius: 10px;
 }
 
 .table {
@@ -138,47 +197,86 @@
   border-collapse: collapse;
 
   th {
-    padding: 0.6rem 0.75rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: $text-muted;
+    padding: 0.6rem 0.875rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: $_dim;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    border-bottom: 2px solid $border-color;
+    letter-spacing: 0.07em;
+    border-bottom: 2px solid $_border;
     white-space: nowrap;
+    background: $_surface2;
   }
 
   td {
-    padding: 0.85rem 0.75rem;
-    border-bottom: 1px solid $border-color;
+    padding: 0.8rem 0.875rem;
+    border-bottom: 1px solid $_border;
     vertical-align: top;
+    color: $_strong;
+    font-size: 0.875rem;
   }
 
-  tbody tr:last-child td {
-    border-bottom: none;
-  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: $_surface2; }
 }
 
 .description-cell {
-  color: $text-dark;
-  font-size: 0.9rem;
+  color: $_text;
+  font-size: 0.875rem;
   max-width: 320px;
 }
 
+// ── Footer ────────────────────────────────────────────────────────────────────
 .modal-footer {
   padding: 1rem 1.5rem;
-  border-top: 1px solid $border-color;
+  border-top: 1px solid $_border;
+  background: $_surface2;
+  border-radius: 0 0 14px 14px;
   display: flex;
   justify-content: flex-end;
+  gap: 0.5rem;
+  flex-shrink: 0;
 
   .btn {
-    padding: 0.5rem 1.5rem;
+    padding: 0.575rem 1.1rem;
     border-radius: 8px;
-    border: 1px solid $border-color;
-    background: $bg-body;
-    color: $text-dark;
+    border: 1.5px solid $_border2;
+    background: $_surface;
+    color: $_strong;
     cursor: pointer;
-    font-weight: 500;
-    &:hover { background: color.adjust($bg-body, $lightness: -3%); }
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+
+    &:hover { background: $_surface2; border-color: #bcc6d4; }
+
+    &.btn-primary {
+      background: $_red;
+      color: white;
+      border-color: $_red;
+      box-shadow: 0 2px 6px rgba(255, 45, 55, 0.3);
+
+      &:hover {
+        background: #e8000b;
+        box-shadow: 0 4px 10px rgba(255, 45, 55, 0.4);
+        transform: translateY(-1px);
+      }
+    }
   }
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .modal-overlay { padding: 0.75rem; }
+  .detail-body { padding: 1rem; }
+  .detail-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 480px) {
+  .detail-grid { grid-template-columns: 1fr; }
+  .modal-content { max-height: 95vh; }
 }
