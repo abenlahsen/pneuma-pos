@@ -139,7 +139,7 @@
               <td>{{ t.category || '—' }}</td>
               <td class="desc-col" [title]="t.description">{{ t.description }}</td>
               <td>{{ t.person || '—' }}</td>
-              <td>{{ t.partner || '—' }}</td>
+              <td>{{ t.partner?.name || '—' }}</td>
               <td>{{ t.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
             </tr>
           } @empty {
