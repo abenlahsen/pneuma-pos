@@ -79,12 +79,12 @@
 
       <div class="form-group">
         <label for="txn-partner">Partenaire</label>
-        <input type="text" id="txn-partner" formControlName="partner" list="partner-list" placeholder="Ex: DAS TANGER, MARKET RABAT..." />
-        <datalist id="partner-list">
-          @for (p of filterOptions.partners; track p) {
-            <option [value]="p"></option>
+        <select id="txn-partner" formControlName="partner_id">
+          <option [ngValue]="null">-- Aucun --</option>
+          @for (p of filterOptions.partners; track p.id) {
+            <option [ngValue]="p.id">{{ p.name }}</option>
           }
-        </datalist>
+        </select>
       </div>
 
       <div class="form-group">

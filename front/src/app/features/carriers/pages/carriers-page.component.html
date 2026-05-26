@@ -39,6 +39,7 @@
       <table class="table">
         <thead>
           <tr>
+            <th class="text-center">Actions</th>
             <th class="sortable" (click)="toggleSort('name')">
               Société
               <span class="sort-icon">{{ sortBy() === 'name' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span>
@@ -51,7 +52,6 @@
               Email
               <span class="sort-icon">{{ sortBy() === 'email' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span>
             </th>
-            <th class="text-center">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -67,10 +67,7 @@
             </td>
           </tr>
           <tr *ngFor="let c of carriers()">
-            <td class="fw-semibold">{{ c.name }}</td>
-            <td>{{ c.phone || '-' }}</td>
-            <td>{{ c.email || '-' }}</td>
-            <td class="text-center">
+            <td class="text-center actions-cell">
               <button
                 class="btn-icon btn-sm text-primary"
                 (click)="openEditForm(c)"
@@ -91,6 +88,9 @@
                 <span *ngIf="deletingCarrierId() === c.id" class="inline-spinner"></span>
               </button>
             </td>
+            <td class="fw-semibold">{{ c.name }}</td>
+            <td>{{ c.phone || '-' }}</td>
+            <td>{{ c.email || '-' }}</td>
           </tr>
         </tbody>
       </table>

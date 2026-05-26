@@ -33,7 +33,7 @@ export class TransactionFormComponent implements OnInit {
       method: [this.transaction?.method || ''],
       description: [this.transaction?.description || '', [Validators.required]],
       person: [this.transaction?.person || ''],
-      partner: [this.transaction?.partner || ''],
+      partner_id: [this.transaction?.partner_id ?? null],
     });
   }
 
