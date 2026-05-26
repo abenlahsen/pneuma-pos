@@ -119,7 +119,7 @@
               <td>{{ t.method || '—' }}</td>
               <td>{{ t.category || '—' }}</td>
               <td class="desc-col">{{ t.description }}</td>
-              <td>{{ t.partner || '—' }}</td>
+              <td>{{ t.partner?.name || '—' }}</td>
             </tr>
           </tbody>
         </table>
@@ -162,7 +162,7 @@
               <td>{{ t.method || '—' }}</td>
               <td>{{ t.category || '—' }}</td>
               <td class="desc-col">{{ t.description }}</td>
-              <td>{{ t.partner || '—' }}</td>
+              <td>{{ t.partner?.name || '—' }}</td>
             </tr>
             <tr *ngIf="!loadingTransactions() && settledTransactions().length === 0">
               <td colspan="7" class="empty-state">Aucune transaction pour ce compte.</td>

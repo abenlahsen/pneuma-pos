@@ -46,6 +46,7 @@
       <table class="table">
         <thead>
           <tr>
+            <th class="text-center">Actions</th>
             <th class="sortable" (click)="toggleSort('name')">
               Nom
               <span class="sort-icon">{{ sortBy() === 'name' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span>
@@ -66,7 +67,6 @@
               Parallélisme (DH)
               <span class="sort-icon">{{ sortBy() === 'alignment_price' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span>
             </th>
-            <th class="text-center">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -82,12 +82,7 @@
             </td>
           </tr>
           <tr *ngFor="let p of partners()">
-            <td class="fw-semibold">{{ p.name }}</td>
-            <td>{{ p.city || '-' }}</td>
-            <td>{{ p.phone || '-' }}</td>
-            <td class="text-right">{{ p.montage_price != null ? (p.montage_price | number:'1.2-2') : '-' }}</td>
-            <td class="text-right">{{ p.alignment_price != null ? (p.alignment_price | number:'1.2-2') : '-' }}</td>
-            <td class="text-center">
+            <td class="text-center actions-cell">
               <button
                 class="btn-icon btn-sm text-primary"
                 (click)="openEditForm(p)"
@@ -108,6 +103,11 @@
                 <span *ngIf="deletingPartnerId() === p.id" class="inline-spinner"></span>
               </button>
             </td>
+            <td class="fw-semibold">{{ p.name }}</td>
+            <td>{{ p.city || '-' }}</td>
+            <td>{{ p.phone || '-' }}</td>
+            <td class="text-right">{{ p.montage_price != null ? (p.montage_price | number:'1.2-2') : '-' }}</td>
+            <td class="text-right">{{ p.alignment_price != null ? (p.alignment_price | number:'1.2-2') : '-' }}</td>
           </tr>
         </tbody>
       </table>
