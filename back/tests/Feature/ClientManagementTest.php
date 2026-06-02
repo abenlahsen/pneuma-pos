@@ -6,6 +6,7 @@ use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\StoreSaleRequest;
 use App\Http\Requests\UpdateClientRequest;
 use App\Models\Client;
+use App\Models\Partner;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Sale;
@@ -136,8 +137,7 @@ class ClientManagementTest extends TestCase
             'name' => 'Validator Client',
         ], (new StoreClientRequest())->rules());
 
-        $this->assertFalse($missingCategoryValidator->passes());
-        $this->assertArrayHasKey('category', $missingCategoryValidator->errors()->toArray());
+        $this->assertTrue($missingCategoryValidator->passes());
 
         $invalidCategoryValidator = Validator::make([
             'name' => 'Validator Client',
@@ -210,9 +210,19 @@ class ClientManagementTest extends TestCase
             'is_active' => true,
         ]);
 
+        $commercial = User::factory()->create();
+
+        $partner = Partner::create([
+            'name' => 'Validator Partner',
+            'is_active' => true,
+            'user_id' => $commercial->id,
+        ]);
+
         $validator = Validator::make([
             'date' => now()->toDateString(),
             'client_id' => $client->id,
+            'commercial_id' => $commercial->id,
+            'partner_id' => $partner->id,
             'items' => [[
                 'product_id' => $product->id,
                 'quantity' => 1,

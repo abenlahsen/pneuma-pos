@@ -3,10 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\Account;
+use App\Models\Brand;
+use App\Models\Product;
 use App\Models\Sale;
+use App\Models\SaleItem;
 use App\Models\Purchase;
 use App\Models\Stock;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Route;
@@ -117,7 +121,23 @@ class DashboardAndPermissionTest extends TestCase
 
         $today = now()->toDateString();
 
-        Sale::query()->create([
+        $brand = Brand::firstOrCreate(['name' => 'TestBrandKPI'], ['is_active' => true]);
+        $product = Product::query()->create([
+            'reference' => 'KPI-TYRE-' . uniqid(),
+            'type' => 'tyre',
+            'brand_id' => $brand->id,
+            'is_active' => true,
+        ]);
+        DB::table('product_tyres')->insert([
+            'product_id' => $product->id,
+            'tire_width' => 205,
+            'tire_height' => 55,
+            'tire_diameter' => 16,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $sale = Sale::query()->create([
             'date' => $today,
             'total_quantity' => 4,
             'total_purchase' => 400.00,
@@ -126,6 +146,18 @@ class DashboardAndPermissionTest extends TestCase
             'status' => 'EN COURS',
             'payment_status' => 'NON PAYE',
             'created_by' => $this->admin->id,
+        ]);
+
+        SaleItem::query()->create([
+            'sale_id' => $sale->id,
+            'product_id' => $product->id,
+            'quantity' => 4,
+            'purchase_price' => 100.00,
+            'selling_price' => 200.00,
+            'discount' => 0,
+            'total_purchase' => 400.00,
+            'total_sale' => 800.00,
+            'margin' => 400.00,
         ]);
 
         $response = $this->getJson('/api/dashboard-kpi');

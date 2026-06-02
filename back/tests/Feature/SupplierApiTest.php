@@ -163,13 +163,23 @@ class SupplierApiTest extends TestCase
 
     protected function createSupplier($attributes = [])
     {
+        if (! array_key_exists('user_id', $attributes)) {
+            $attributes['user_id'] = User::query()->create([
+                'name' => 'Supplier Creator',
+                'email' => fake()->unique()->safeEmail(),
+                'password' => 'password',
+                'phone' => '0600000001',
+                'commission_rate' => 0,
+                'must_change_password' => false,
+            ])->id;
+        }
+
         return Supplier::query()->create(array_merge([
             'name' => 'Supplier '.fake()->unique()->company(),
             'contact_person' => 'John Doe',
             'phone' => '0612345678',
             'email' => fake()->unique()->safeEmail(),
             'address' => '123 Supplier Street',
-            'user_id' => null,
         ], $attributes));
     }
 

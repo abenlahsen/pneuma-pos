@@ -64,7 +64,7 @@ class StockTest extends TestCase
         ]);
         $this->user->assignRole($admin);
 
-        $this->brand = Brand::query()->create(['name' => 'Michelin', 'is_active' => true]);
+        $this->brand = Brand::query()->create(['name' => 'TestBrand-' . uniqid(), 'is_active' => true]);
 
         $this->tyreProd = Product::query()->create([
             'reference' => 'TYRE-' . fake()->unique()->numerify('###'),
@@ -319,9 +319,38 @@ class StockTest extends TestCase
     {
         Sanctum::actingAs($this->user, [], 'web');
 
-        $response = $this->getJson('/api/stocks?brand=Michelin');
+        $response = $this->getJson('/api/stocks?brand=' . urlencode($this->brand->name));
         $response->assertOk();
         $this->assertGreaterThanOrEqual(1, $response->json('total'));
+    }
+
+    public function test_index_filters_by_dimension_shorthand(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        // 2055516 → width=205, height=55, diameter=16 (matches the setUp tire)
+        $response = $this->getJson('/api/stocks?search=2055516');
+        $response->assertOk();
+        $this->assertGreaterThanOrEqual(1, $response->json('total'));
+    }
+
+    public function test_index_filters_by_dimension_standard_format(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $response = $this->getJson('/api/stocks?search=' . urlencode('205/55R16'));
+        $response->assertOk();
+        $this->assertGreaterThanOrEqual(1, $response->json('total'));
+    }
+
+    public function test_index_search_returns_empty_for_nonmatching_dimensions(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        // 1956515 → 195/65R15 — no such tire in setUp
+        $response = $this->getJson('/api/stocks?search=1956515');
+        $response->assertOk();
+        $this->assertEquals(0, $response->json('total'));
     }
 
     // -------------------------------------------------------------------------
@@ -353,7 +382,7 @@ class StockTest extends TestCase
         $response->assertOk()
             ->assertJsonStructure(['brands', 'depots', 'zones', 'countries']);
 
-        $this->assertContains('Michelin', $response->json('brands'));
+        $this->assertContains($this->brand->name, $response->json('brands'));
         $this->assertContains('Depot1', $response->json('depots'));
         $this->assertContains('France', $response->json('countries'));
     }
@@ -663,7 +692,7 @@ class StockTest extends TestCase
 
     public function test_movements_filters_by_stock_id(): void
     {
-        $otherBrand = Brand::query()->create(['name' => 'Pirelli', 'is_active' => true]);
+        $otherBrand = Brand::query()->create(['name' => 'TestBrand2-' . uniqid(), 'is_active' => true]);
         $otherProd = Product::query()->create([
             'reference' => 'OTHER-' . fake()->unique()->numerify('###'),
             'type' => 'tyre',

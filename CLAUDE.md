@@ -48,8 +48,14 @@ php artisan migrate --seed       # Setup DB with default admin user
 php artisan serve                # Dev server on :8000
 php artisan test                 # Run PHPUnit tests (uses pneuma_pos_test MySQL DB)
 php artisan test --filter=TestName   # Run a single test
+php artisan test --coverage      # Run with coverage report (PCOV is active in the Docker container)
 ./vendor/bin/pint                # Code style fixer (Laravel Pint)
 ```
+
+**Testing conventions**:
+- `tests/Feature/` — HTTP-layer tests using `DatabaseTransactions`. Cover auth, permissions, validation, and happy paths for each API endpoint.
+- `tests/Unit/` — Pure-logic tests with no HTTP stack. Use for static helpers and model methods that don't require DB writes (e.g. `Stock::parseSearchQuery()`, model relation type assertions). Instantiate models with `new Model()` to call relation builder methods without persisting.
+- **Coverage baseline**: ~74 % (as of 2026-06-02). Target: keep it above this threshold when adding new features.
 
 ### Frontend (Angular)
 ```bash
@@ -89,13 +95,14 @@ Config (`e2e/playwright.config.ts`): `timeout: 30_000` per test, `expect: { time
 
 **API Routes** (`back/routes/api.php` → split into `back/routes/api/`):
 - `auth.php` — Public: `POST /api/login`
-- `sales.php` — CRUD + payments (`/api/sales/{sale}/payments`) + `GET /api/sales/export` (Excel export with active filters, route declared before `sales/{sale}` to avoid conflict)
-- `purchases.php` — CRUD + payments (`/api/purchases/{purchase}/payments`) + `GET /api/purchases/export` (Excel export with active filters, route declared before `purchases/{purchase}`)
-- `clients.php` — Full client CRUD + `/api/clients/{client}/profile`, `/api/clients/{client}/statement`, `/api/clients/duplicates/check`
-- `catalog.php` — CRUD for `suppliers`, `carriers`, `partners`, `brands`, `products`; also registers duplicate client CRUD (registered before `clients.php`, so these routes take precedence for basic CRUD — the extended endpoints come from `clients.php`); `GET /api/cities` (returns ordered list of city names, no permission required)
-- `stock.php` — CRUD (`/api/stocks`) + `POST /api/stocks/import` (Excel import) + `GET /api/stocks/export` (Excel export of available stock) + `GET /api/stock-movements` (audit trail)
-- `accounts.php` — CRUD for accounts + cash-flow transactions + `POST /api/accounts/transfer`
+- `sales.php` — CRUD + payments (`/api/sales/{sale}/payments`) + `GET /api/sales/export` (Excel export with active filters, route declared before `sales/{sale}` to avoid conflict) + `GET /api/sales-summary` (KPI cards for the Sales list page — see below)
+- `purchases.php` — CRUD + payments (`/api/purchases/{purchase}/payments`) + `GET /api/purchases/export` (Excel export with active filters, route declared before `purchases/{purchase}`) + `GET /api/purchases-summary`
+- `clients.php` — Full client CRUD + `/api/clients/{client}/profile`, `/api/clients/{client}/statement`, `/api/clients/duplicates/check`; also vehicle routes: `GET /api/clients/{client}/vehicles`, `POST /api/clients/{client}/vehicles`
+- `catalog.php` — CRUD for `suppliers`, `carriers`, `partners`, `brands`, `products`; supplier extended endpoints: `GET /api/suppliers/{supplier}/profile`, `GET /api/suppliers/{supplier}/statement`; also registers duplicate client CRUD (registered before `clients.php`, so these routes take precedence for basic CRUD — the extended endpoints come from `clients.php`); `GET /api/cities` (returns ordered list of city names, no permission required)
+- `stock.php` — CRUD (`/api/stocks`) + `POST /api/stocks/import` (Excel import) + `GET /api/stocks/export` (Excel export of available stock) + `GET /api/stock-movements` (audit trail) + `GET /api/stocks-summary` (total_articles, total_quantity, total_purchase_value)
+- `accounts.php` — CRUD for accounts + cash-flow transactions + `POST /api/accounts/transfer` + `GET /api/transactions-summary`
 - `service_orders.php` — CRUD (`/api/service-orders`) + payments (`/api/service-orders/{id}/payments`) + item sync (`/api/service-orders/{id}/items/sync`) + `GET /api/service-orders-summary` + `GET /api/service-orders-filters`
+- `clients.php` also: vehicle detail/edit/delete: `GET/PUT/DELETE /api/vehicles/{vehicle}` (permission: view/edit clients)
 - `admin.php` — CRUD for `users` and `roles`/`permissions` + `GET /api/dashboard-kpi` (Administrator only); `require`s `settings.php`
 - `settings.php` — `GET/PUT /api/settings/company` (company profile, logo, theme)
 - All protected routes require `Authorization: Bearer {token}` and `permission:` middleware
@@ -122,6 +129,7 @@ Config (`e2e/playwright.config.ts`): `timeout: 30_000` per test, `expect: { time
 - `Client` — with credit limit, opening balance, payment terms, default payment method, category. The `city` field is a **virtual accessor/mutator** backed by `city_id` FK → `cities.id`: reads return the city name string, writes accept a city name string and resolve it to `city_id`. The API surface is unchanged (always a string), but the DB column is a FK. Eager-load `cityRelation` to avoid N+1. Filter by city uses `where('city_id', City::where('name', ...)->value('id'))`.
 - `CompanySetting` — singleton row; stores company name, legal name, full address (address, city, state, postal_code, country), contact (phone, email), legal identifiers (rc, ice, tax_id/IF, cnss, patente), logo path, favicon, and theme/layout fields. The `city` field uses the same FK accessor/mutator pattern as `Client`.
 - `Partner` — standard catalog entity. The `city` field uses the same FK accessor/mutator pattern as `Client`.
+- `Vehicle` — linked to a `Client` (BelongsTo). Fields: `plate`, `brand`, `model_name`, `circulation_month`, `circulation_year`, `vin`, `notes`, `is_active`, `created_by`, `updated_by`. Has `displayName` accessor (`"Brand Model — PLATE (MM/YYYY)"`). Relationships: `client()`, `serviceOrders()` (HasMany), `sales()` (HasMany), `creator()`, `updater()`. Scoped by `scopeActive()`. Managed via the client profile page — not a standalone list page.
 - `Brand`, `Supplier`, `Carrier`, `User`, `Account` — standard catalog/reference entities.
 
 Each payment creation (Payment, PurchasePayment, ServicePayment) auto-creates a corresponding `Transaction` record.
@@ -183,6 +191,19 @@ This is a **tire shop POS** (French: pneus). A `Sale` has header-level fields (c
 
 The **Service Auto** module manages automotive service orders (repairs, oil changes, etc.). A `ServiceOrder` links to a `Client` (optional), has a vehicle + mileage, and contains multiple `ServiceItem` rows of two types: `service` lines (prestation: labor_cost × quantity) and `part` lines (pièce: unit_price × quantity, linked to a `Product`). Parts cost on service lines is always 0 — parts are tracked via dedicated part lines. Order-level discount and net_amount are auto-calculated. Status values: `EN COURS` | `TERMINÉE` | `ANNULÉE`. Payment status: `NON PAYE` | `PARTIEL` | `PAYE`. Payments are tracked via `ServicePayment` which optionally creates a `Transaction` for cash-flow integration. The frontend feature is at `/service-orders` (French UI uses "Service Auto", "Prestations", "Ordre de service").
 
+**`with_invoice` field** (Sales and Purchases): boolean column that flags whether a sale/purchase is invoiced. Drives two KPI cards on both the Sales and Purchases summary panels: `ca_avec_facture` (sum of `total_sale` where `with_invoice = true`) and `ca_sans_facture` (sum where `with_invoice = false`). Also available as a filter param (`?with_invoice=true|false`) on the list and export endpoints. Shown in Excel export as "Oui"/"Non".
+
+**Module summary endpoints** — each list page loads a summary bar via a dedicated endpoint that accepts the same filters as the list (minus `page`/`per_page`):
+- `GET /api/sales-summary` → `{ total_sales, total_quantity, total_margin, unpaid_en_cours, unpaid_livre_monte, ca_avec_facture, ca_sans_facture }`
+- `GET /api/purchases-summary` → analogous fields for purchases (`ca_avec_facture`, `ca_sans_facture`, unpaid splits)
+- `GET /api/stocks-summary` → `{ total_articles, total_quantity, total_purchase_value }`
+- `GET /api/service-orders-summary` → totals for the service order list
+- `GET /api/transactions-summary` → `{ pending_income, pending_expense }` (no `status` param — always across all filters)
+
+**Sales/Purchases unpaid split**: `unpaid_en_cours` = remaining balance on sales with status `EN COURS`; `unpaid_livre_monte` = remaining balance on sales with status `LIVRE` or `MONTE`. Both use the actual paid amount from the `payments` table, not just the `payment_status` flag.
+
+**Supplier profile/statement**: `GET /api/suppliers/{supplier}/profile` and `GET /api/suppliers/{supplier}/statement` — analogous to the client profile/statement endpoints. Same permission: `view suppliers`.
+
 **Sales statuses** (DB values, don't change): `EN COURS` | `LIVRE` | `MONTE` | `TERMINEE` | `ANNULE`. Display labels use feminine French: "Livrée", "Annulée", "Terminée". `TERMINEE` is the "finished/collected" terminal state added alongside `LIVRE`.
 
 **Cash Flow module** (`/cash-flow`, `GET /api/transactions`): displays all transactions with two distinct sections:
@@ -204,7 +225,16 @@ Two deploy scripts, both run from WSL Ubuntu-24.04:
 
 **DB backup**: Both scripts use `mariadb-dump` (falls back to `mysqldump`) with credentials passed via `--user`/`--password`/`--host` flags. The `--defaults-extra-file` approach was removed because it fails on MariaDB 11.4 with passwords containing `@` or similar characters.
 
-**Dashboard KPIs** (`DashboardController::kpi`): returns today/month/year sales amounts, tyres sold counts, margins, stock value, unpaid sales/purchases, cash balance, and `sales_by_commercial` (grouped by commercial with `total_sales`, `total_tyres`, `total_margin`). Only visible to Administrator role. The "Pneus vendus" KPI (`tyres_today`, `tyres_this_month`, `tyres_en_cours`) counts only `sale_items` joined to `products` where `products.type = 'tyre'` — parts and services are excluded.
+**Dashboard KPIs** (`DashboardController::kpi`): Only visible to Administrator role. Returns:
+- **Sales** (today / month / year): `sales_today`, `sales_this_month`, `sales_this_year` (total_sale amounts)
+- **Pneus vendus** (today / month / en cours): `tyres_today`, `tyres_this_month`, `tyres_en_cours` — counts only `sale_items` joined to `products` where `products.type = 'tyre'`; parts and services are excluded
+- **Marge brute**: `margin_today`, `margin_month`, `margin_year`
+- **Marge nette** (brute − dépenses): `net_margin_today`, `net_margin_month`, `net_margin_year`
+- **Dépenses** (Transaction type=expense): `expenses_today`, `expenses_month`, `expenses_year`
+- **Achats** (today): `purchases_today` amount
+- **Prix moyen / pneu**: `avg_price_tyre_today`, `avg_price_tyre_month`, `avg_price_tyre_year`
+- **Stock & cash**: `stock_value` (sum of quantity × purchase_price), `cash_balance` (sum of account balances), `unpaid_sales`, `unpaid_purchases`
+- **Commerciaux**: `sales_by_commercial` array — each entry has `total_sales`, `total_tyres`, `total_margin`, `total_unpaid`
 
 ## Design System
 Read `front/DESIGN_SYSTEM.md` before making any frontend UI changes.

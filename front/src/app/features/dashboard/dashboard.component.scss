@@ -352,6 +352,13 @@ $text-dim:     #94a3b8;
 
     &:hover td { background: $surface-2; }
   }
+
+  .empty-row {
+    text-align: center !important;
+    color: $text-dim;
+    font-style: italic;
+    padding: 2rem 1.5rem;
+  }
 }
 
 .user-cell {

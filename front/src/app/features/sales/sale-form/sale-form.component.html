@@ -308,8 +308,8 @@
           <input type="text" name="tracking_number" [(ngModel)]="formData.tracking_number" placeholder="Ex: TR-20260321-001">
         </div>
         <div class="form-control">
-          <label>Partenaire</label>
-          <select name="partner_id" [(ngModel)]="formData.partner_id">
+          <label>Partenaire *</label>
+          <select name="partner_id" [(ngModel)]="formData.partner_id" required>
             <option [ngValue]="null">-- Sélectionner --</option>
             <option *ngFor="let p of partners()" [ngValue]="p.id">{{ p.name }} {{ p.city ? '(' + p.city + ')' : '' }}</option>
           </select>

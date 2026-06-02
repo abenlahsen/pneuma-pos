@@ -488,6 +488,14 @@ class SaleControllerTest extends TestCase
         ]);
     }
 
+    private function createPartner($name = 'Partenaire Test')
+    {
+        return Partner::query()->create([
+            'name' => $name,
+            'user_id' => $this->user->id,
+        ]);
+    }
+
     public function test_index_requires_authentication()
     {
         $response = $this->getJson('/api/sales');
@@ -640,6 +648,11 @@ class SaleControllerTest extends TestCase
 
     public function test_summary_returns_sales_page_kpis()
     {
+        // A date within the current month but guaranteed ≠ today
+        $otherDayThisMonth = now()->day === 1
+            ? now()->addDay()->toDateString()
+            : now()->startOfMonth()->toDateString();
+
         $this->createSale([
             'date' => now()->toDateString(),
             'total_quantity' => 4,
@@ -649,7 +662,7 @@ class SaleControllerTest extends TestCase
         ]);
 
         $this->createSale([
-            'date' => now()->startOfMonth()->addDay()->toDateString(),
+            'date' => $otherDayThisMonth,
             'total_quantity' => 6,
             'total_sale' => 900,
             'status' => 'LIVRE',
@@ -657,7 +670,7 @@ class SaleControllerTest extends TestCase
         ]);
 
         $this->createSale([
-            'date' => now()->subMonth()->startOfMonth()->addDay()->toDateString(),
+            'date' => now()->subMonth()->startOfMonth()->toDateString(),
             'total_quantity' => 5,
             'total_sale' => 700,
             'status' => 'EN COURS',
@@ -671,7 +684,7 @@ class SaleControllerTest extends TestCase
             ->assertJsonPath('tyres_this_month', 10)
             ->assertJsonPath('tyres_en_cours', 9)
             ->assertJsonPath('sales_en_cours', 2)
-            ->assertJsonPath('total_unpaid', 1300);
+            ->assertJsonPath('unpaid_en_cours', 1300);
     }
 
     public function test_store_creates_sale()
@@ -699,10 +712,13 @@ class SaleControllerTest extends TestCase
             'user_id' => $this->user->id,
         ]);
 
+        $partner = $this->createPartner();
+
         $payload = [
             'date' => '2026-03-15',
             'client' => 'New Client',
             'commercial_id' => $this->user->id,
+            'partner_id' => $partner->id,
             'items' => [[
                 'product_id' => $product->id,
                 'stock_id' => $stock->id,
@@ -865,10 +881,12 @@ class SaleControllerTest extends TestCase
     public function test_store_decrements_stock_and_records_sale_out_movement()
     {
         [$product, $stock] = $this->createProductWithStock(10);
+        $partner = $this->createPartner();
 
         $payload = [
             'date' => '2026-03-15',
             'commercial_id' => $this->user->id,
+            'partner_id' => $partner->id,
             'client' => 'Client Stock Test',
             'items' => [[
                 'product_id' => $product->id,
@@ -902,10 +920,12 @@ class SaleControllerTest extends TestCase
     {
         [$product1, $stock1] = $this->createProductWithStock(10);
         [$product2, $stock2] = $this->createProductWithStock(20);
+        $partner = $this->createPartner();
 
         $payload = [
             'date' => '2026-03-15',
             'commercial_id' => $this->user->id,
+            'partner_id' => $partner->id,
             'client' => 'Multi Item Client',
             'items' => [
                 [
@@ -937,10 +957,12 @@ class SaleControllerTest extends TestCase
     public function test_store_item_without_stock_id_skips_stock_movement()
     {
         [$product] = $this->createProductWithStock(10);
+        $partner = $this->createPartner();
 
         $payload = [
             'date' => '2026-03-15',
             'commercial_id' => $this->user->id,
+            'partner_id' => $partner->id,
             'client' => 'No Stock Client',
             'items' => [[
                 'product_id' => $product->id,
@@ -1132,14 +1154,37 @@ class SaleControllerTest extends TestCase
         $this->assertContains('Ali Filtre', $names);
     }
 
+    public function test_store_requires_partner_id(): void
+    {
+        [$product, $stock] = $this->createProductWithStock(10);
+
+        $payload = [
+            'date' => '2026-03-15',
+            'commercial_id' => $this->user->id,
+            'items' => [[
+                'product_id' => $product->id,
+                'stock_id' => $stock->id,
+                'quantity' => 1,
+                'purchase_price' => 100,
+                'selling_price' => 150,
+            ]],
+        ];
+
+        $this->postJson('/api/sales', $payload, $this->authHeaders())
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['partner_id']);
+    }
+
     public function test_manager_can_create_a_sale(): void
     {
         [$product, $stock] = $this->createProductWithStock(10);
         $manager = $this->makeManager();
+        $partner = $this->createPartner();
 
         $payload = [
             'date' => '2026-03-15',
             'commercial_id' => $manager->id,
+            'partner_id' => $partner->id,
             'client' => 'Client Manager Test',
             'items' => [[
                 'product_id' => $product->id,
@@ -1194,10 +1239,12 @@ class SaleControllerTest extends TestCase
     {
         [$product, $stock] = $this->createProductWithStock(10);
         $commercial = $this->makeCommercial();
+        $partner = $this->createPartner();
 
         $payload = [
             'date' => '2026-03-15',
             'commercial_id' => $commercial->id,
+            'partner_id' => $partner->id,
             'client' => 'Client Commercial Test',
             'items' => [[
                 'product_id' => $product->id,
