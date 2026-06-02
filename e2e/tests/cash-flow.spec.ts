@@ -48,7 +48,7 @@ test.describe.serial('Cash Flow', () => {
   });
 
   test('affiche la section "Transactions réalisées"', async ({ page }) => {
-    await expect(page.locator('.section-title, .section-header', { hasText: 'Transactions réalisées' })).toBeVisible();
+    await expect(page.locator('.section-title', { hasText: 'Transactions réalisées' })).toBeVisible();
   });
 
   test('affiche le tableau des transactions ou un état vide', async ({ page }) => {

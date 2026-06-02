@@ -42,7 +42,7 @@ test.describe.serial('Fournisseurs', () => {
   test('affiche le tableau des fournisseurs ou un état vide', async ({ page }) => {
     const table = page.locator('table');
     const emptyState = page.locator('td:has-text("Aucun fournisseur trouvé.")');
-    await expect(table.or(emptyState)).toBeVisible();
+    await expect(table.or(emptyState).first()).toBeVisible();
   });
 
   test('le bouton "Nouveau Fournisseur" est visible', async ({ page }) => {

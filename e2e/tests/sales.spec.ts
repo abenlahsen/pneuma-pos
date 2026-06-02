@@ -7,12 +7,12 @@ test.describe('Ventes', () => {
     await expect(page.locator('h1')).toContainText('Ventes');
   });
 
-  test('affiche les 5 cartes de résumé', async ({ page }) => {
+  test('affiche les 8 cartes de résumé', async ({ page }) => {
     const cards = page.locator('.summary-card');
-    await expect(cards).toHaveCount(5);
+    await expect(cards).toHaveCount(8);
     await expect(page.locator('.card-label', { hasText: 'Pneus vendus aujourd\'hui' })).toBeVisible();
     await expect(page.locator('.card-label', { hasText: 'Pneus vendus ce mois' })).toBeVisible();
-    await expect(page.locator('.card-label', { hasText: 'Montant impayé' })).toBeVisible();
+    await expect(page.locator('.card-label', { hasText: 'Impayé en cours' })).toBeVisible();
   });
 
   test('affiche la section filtres avec les champs attendus', async ({ page }) => {
@@ -25,7 +25,7 @@ test.describe('Ventes', () => {
   test('affiche le tableau des ventes ou un état vide', async ({ page }) => {
     const table = page.locator('table');
     const emptyState = page.locator('td:has-text("Aucune vente")');
-    await expect(table.or(emptyState)).toBeVisible();
+    await expect(table.or(emptyState).first()).toBeVisible();
   });
 
   test('le bouton "Nouvelle Vente" est visible pour admin', async ({ page }) => {

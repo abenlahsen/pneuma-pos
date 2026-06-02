@@ -65,8 +65,8 @@ test.describe.serial('Clients', () => {
     await page.fill('input[name="name"]', TEST_CLIENT);
     await page.selectOption('select[name="category"]', 'Paticulier');
     await page.fill('input[name="phone"]', '0612345678');
-    // Use placeholder-based selector to avoid matching the page's filter city input
-    await page.fill('input[placeholder="Ex: Casablanca"]', 'Casablanca');
+    // City is now a select (CityService dropdown)
+    await page.selectOption('.modal-container select[name="city"]', 'Casablanca');
     // Wait for Angular (zoneless) to update form validity and enable submit
     await expect(page.locator('.modal-container button[type="submit"]')).toBeEnabled({ timeout: 5_000 });
 
@@ -94,10 +94,10 @@ test.describe.serial('Clients', () => {
   });
 
   test('rechercher le client par ville "Casablanca"', async ({ page }) => {
-    await page.fill('input[placeholder="Filtrer par ville"]', 'Casablanca');
+    // City filter is now a select (CityService dropdown) — triggers applyFilters() on change
     await Promise.all([
       page.waitForResponse(r => r.url().includes('/api/clients') && r.url().includes('city') && r.request().method() === 'GET'),
-      page.click('button[title="Rechercher"]'),
+      page.selectOption('select[name="city"]', 'Casablanca'),
     ]);
 
     await expect(page.locator('.btn-link.client-link', { hasText: TEST_CLIENT })).toBeVisible();

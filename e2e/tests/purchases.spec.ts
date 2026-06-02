@@ -16,7 +16,7 @@ test.describe('Achats', () => {
   test('affiche les filtres : Fournisseur, Statut, Paiement, dates', async ({ page }) => {
     await expect(page.locator('label:has-text("Fournisseur")')).toBeVisible();
     await expect(page.locator('label:has-text("Statut")')).toBeVisible();
-    await expect(page.locator('label:has-text("Paiement")')).toBeVisible();
+    await expect(page.locator('label').filter({ hasText: /^Paiement$/ })).toBeVisible();
     await expect(page.locator('label:has-text("Du")')).toBeVisible();
     await expect(page.locator('label:has-text("Au")')).toBeVisible();
   });
@@ -24,7 +24,7 @@ test.describe('Achats', () => {
   test('affiche le tableau des achats ou un état vide', async ({ page }) => {
     const table = page.locator('table');
     const emptyState = page.locator('td:has-text("Aucun achat trouvé.")');
-    await expect(table.or(emptyState)).toBeVisible();
+    await expect(table.or(emptyState).first()).toBeVisible();
   });
 
   test('le bouton "+ Nouvel achat" est visible', async ({ page }) => {
@@ -70,7 +70,7 @@ test.describe('Achats', () => {
   });
 
   test('filtrer par paiement "Non payé"', async ({ page }) => {
-    const paymentSelect = page.locator('label:has-text("Paiement")').locator('..').locator('select');
+    const paymentSelect = page.locator('label').filter({ hasText: /^Paiement$/ }).locator('..').locator('select');
     await paymentSelect.selectOption({ label: 'Non payé' });
     await page.waitForLoadState('networkidle');
     await expect(page.locator('h1')).toContainText('Achats');
