@@ -183,23 +183,23 @@ test.describe.serial('Accès par rôle — Manager & Commercial', () => {
   test('Manager : les boutons Modifier et Supprimer sont visibles sur /brands', async ({ page }) => {
     await navigateAs(page, managerToken, '/brands');
 
-    // Attendre qu'au moins une marque existe dans la liste
-    const rows = page.locator('tbody tr');
-    const count = await rows.count();
-    test.skip(count === 0, 'Aucune marque en base — test ignoré');
+    // Wait for brand data AND permissions to load (permissions drive *ngIf on buttons)
+    const rows = page.locator('tbody tr').filter({ hasText: /[A-Z]/ });
+    const hasData = await rows.first().isVisible().catch(() => false);
+    test.skip(!hasData, 'Aucune marque en base — test ignoré');
 
-    await expect(rows.first().locator('button[title="Modifier"]')).toBeVisible();
+    await expect(rows.first().locator('button[title="Modifier"]')).toBeVisible({ timeout: 12_000 });
     await expect(rows.first().locator('button[title="Supprimer"]')).toBeVisible();
   });
 
   test('Commercial : le bouton Supprimer est absent sur /brands (pas de delete brands)', async ({ page }) => {
     await navigateAs(page, commercialToken, '/brands');
 
-    const rows = page.locator('tbody tr');
-    const count = await rows.count();
-    test.skip(count === 0, 'Aucune marque en base — test ignoré');
+    const rows = page.locator('tbody tr').filter({ hasText: /[A-Z]/ });
+    const hasData = await rows.first().isVisible().catch(() => false);
+    test.skip(!hasData, 'Aucune marque en base — test ignoré');
 
-    await expect(rows.first().locator('button[title="Modifier"]')).toBeVisible();
+    await expect(rows.first().locator('button[title="Modifier"]')).toBeVisible({ timeout: 12_000 });
     await expect(rows.first().locator('button[title="Supprimer"]')).not.toBeAttached();
   });
 });

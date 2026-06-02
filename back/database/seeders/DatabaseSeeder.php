@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RolesAndPermissionsSeeder::class);
         $this->call(CitiesSeeder::class);
+        $this->call(CatalogSeedDataSeeder::class);
 
         $email = env('ADMIN_EMAIL', 'admin@pneuma.pos');
         $generated = null;

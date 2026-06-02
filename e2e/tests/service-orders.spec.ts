@@ -23,7 +23,7 @@ test.describe('Service Auto', () => {
   test('affiche le tableau des interventions ou un état vide', async ({ page }) => {
     const table = page.locator('table.data-table');
     const emptyState = page.locator('div.empty-state');
-    await expect(table.or(emptyState)).toBeVisible({ timeout: 20_000 });
+    await expect(table.or(emptyState).first()).toBeVisible({ timeout: 20_000 });
   });
 
   test('le bouton "+ Nouvelle intervention" est visible pour admin', async ({ page }) => {
