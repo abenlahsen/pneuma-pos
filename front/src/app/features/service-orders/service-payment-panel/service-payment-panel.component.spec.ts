@@ -147,7 +147,7 @@ describe('ServicePaymentPanelComponent', () => {
       expect(comp.paymentMethods).toContain('Espèces');
       expect(comp.paymentMethods).toContain('Chèque');
       expect(comp.paymentMethods).toContain('Virement');
-      expect(comp.paymentMethods).toContain('Carte');
+      expect(comp.paymentMethods).toContain('Carte bancaire');
     });
   });
 });

@@ -53,7 +53,7 @@ class ProductCrudTest extends TestCase
         ]);
         $this->user->assignRole($admin);
 
-        $this->brand = Brand::query()->create(['name' => 'Michelin', 'is_active' => true]);
+        $this->brand = Brand::query()->create(['name' => 'TestBrand-' . uniqid(), 'is_active' => true]);
 
         $this->tyreProduct = Product::query()->create([
             'reference' => 'MIC-2055516-' . fake()->unique()->numerify('###'),

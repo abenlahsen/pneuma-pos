@@ -7,6 +7,10 @@ return new class extends Migration
 {
     public function up()
     {
+        if (app()->environment('testing')) {
+            return;
+        }
+
         $jsonPath = database_path('data/stock_seed.json');
 
         if (! file_exists($jsonPath)) {

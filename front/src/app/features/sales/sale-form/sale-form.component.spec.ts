@@ -91,13 +91,13 @@ describe('SaleFormComponent', () => {
       expect(emitted[0].service).toBe('Alignement');
     });
 
-    it('sets null logistics fields when not provided', () => {
+    it('allows null optional logistics fields when partner_id is set', () => {
       comp.formData = {
         ...comp.formData,
         commercial_id: 1,
         carrier_id: null,
         tracking_number: '',
-        partner_id: null,
+        partner_id: 4,
         service: '',
         items: [oneItem() as any],
       };
@@ -106,9 +106,10 @@ describe('SaleFormComponent', () => {
       comp.save.subscribe((p) => emitted.push(p));
       comp.onSubmit();
 
+      expect(emitted).toHaveLength(1);
       expect(emitted[0].carrier_id).toBeNull();
       expect(emitted[0].tracking_number).toBe('');
-      expect(emitted[0].partner_id).toBeNull();
+      expect(emitted[0].partner_id).toBe(4);
       expect(emitted[0].service).toBe('');
     });
   });
@@ -116,7 +117,31 @@ describe('SaleFormComponent', () => {
   describe('onSubmit', () => {
     it('does not emit when items list is empty', () => {
       vi.spyOn(window, 'alert').mockReturnValue(undefined);
-      comp.formData = { ...comp.formData, items: [] };
+      comp.formData = { ...comp.formData, commercial_id: 1, partner_id: 1, items: [] };
+
+      const emitted: any[] = [];
+      comp.save.subscribe((p) => emitted.push(p));
+      comp.onSubmit();
+
+      expect(emitted).toHaveLength(0);
+      vi.restoreAllMocks();
+    });
+
+    it('does not emit when commercial_id is missing', () => {
+      vi.spyOn(window, 'alert').mockReturnValue(undefined);
+      comp.formData = { ...comp.formData, commercial_id: null, partner_id: 1, items: [oneItem() as any] };
+
+      const emitted: any[] = [];
+      comp.save.subscribe((p) => emitted.push(p));
+      comp.onSubmit();
+
+      expect(emitted).toHaveLength(0);
+      vi.restoreAllMocks();
+    });
+
+    it('does not emit when partner_id is missing', () => {
+      vi.spyOn(window, 'alert').mockReturnValue(undefined);
+      comp.formData = { ...comp.formData, commercial_id: 1, partner_id: null, items: [oneItem() as any] };
 
       const emitted: any[] = [];
       comp.save.subscribe((p) => emitted.push(p));

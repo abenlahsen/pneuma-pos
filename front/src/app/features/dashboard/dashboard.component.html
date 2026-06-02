@@ -245,7 +245,7 @@
         </div>
       </div>
 
-      <div class="commercials-section" *ngIf="k.sales_by_commercial && k.sales_by_commercial.length > 0">
+      <div class="commercials-section">
         <h3 class="section-title">Performances Commerciaux ({{ selectedMonth() }})</h3>
 
         <div class="modern-table-container">
@@ -283,6 +283,9 @@
                 <td class="font-numeric" [class.negative]="com.total_unpaid > 0">
                   {{ com.total_unpaid | number:'1.2-2' }} <small>DH</small>
                 </td>
+              </tr>
+              <tr *ngIf="k.sales_by_commercial.length === 0">
+                <td colspan="7" class="empty-row">Aucune vente ce mois-ci</td>
               </tr>
             </tbody>
           </table>

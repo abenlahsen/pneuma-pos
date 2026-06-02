@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\City;
 use App\Models\CompanySetting;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
@@ -239,6 +240,8 @@ class CompanySettingsApiTest extends TestCase
 
     public function test_show_returns_persisted_settings(): void
     {
+        City::firstOrCreate(['name' => 'Casablanca']);
+
         CompanySetting::query()->create([
             'company_name' => 'Pneuma SARL',
             'legal_name' => 'Pneuma Trading SARL',

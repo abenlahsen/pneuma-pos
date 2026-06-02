@@ -30,7 +30,7 @@ class StoreSaleRequest extends FormRequest
             'commercial_id' => ['required', 'exists:users,id'],
             'carrier_id' => ['nullable', 'exists:carriers,id'],
             'tracking_number' => ['nullable', 'string', 'max:255'],
-            'partner_id' => ['nullable', 'exists:partners,id'],
+            'partner_id' => ['required', 'exists:partners,id'],
             'service' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'string'],
             'payment_status' => ['nullable', 'string'],

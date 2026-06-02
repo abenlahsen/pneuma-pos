@@ -562,6 +562,10 @@ export class SaleFormComponent implements OnInit, OnDestroy {
       alert('Veuillez sélectionner un commercial.');
       return;
     }
+    if (!this.formData.partner_id) {
+      alert('Veuillez sélectionner un partenaire.');
+      return;
+    }
     if (!this.formData.items || this.formData.items.length === 0) {
       alert('Veuillez ajouter au moins un produit.');
       return;

@@ -163,9 +163,25 @@ class CarrierApiTest extends TestCase
         ], $overrides);
     }
 
+    protected function createCarrier($attributes = [])
+    {
+        if (! array_key_exists('user_id', $attributes)) {
+            $attributes['user_id'] = User::query()->create([
+                'name' => 'Carrier Creator',
+                'email' => fake()->unique()->safeEmail(),
+                'password' => 'password',
+                'phone' => '0600000002',
+                'commission_rate' => 0,
+                'must_change_password' => false,
+            ])->id;
+        }
+
+        return Carrier::query()->create(array_merge($this->carrierPayload(), $attributes));
+    }
+
     public function test_carriers_endpoints_require_authentication()
     {
-        $carrier = Carrier::query()->create($this->carrierPayload(['email' => 'auth-check@example.com']));
+        $carrier = $this->createCarrier(['email' => 'auth-check@example.com']);
 
         $this->getJson($this->baseUrl)->assertUnauthorized();
         $this->getJson($this->baseUrl.'/'.$carrier->id)->assertUnauthorized();
@@ -176,7 +192,7 @@ class CarrierApiTest extends TestCase
 
     public function test_index_requires_view_carriers_permission()
     {
-        Carrier::query()->create($this->carrierPayload(['email' => 'view-required@example.com']));
+        $this->createCarrier(['email' => 'view-required@example.com']);
         $this->authenticateWithPermissions();
 
         $this->getJson($this->baseUrl)->assertForbidden();
@@ -186,18 +202,9 @@ class CarrierApiTest extends TestCase
     {
         $this->authenticateWithPermissions(['view carriers']);
 
-        Carrier::query()->create($this->carrierPayload([
-            'name' => 'First Carrier',
-            'email' => 'first@example.com',
-        ]));
-        Carrier::query()->create($this->carrierPayload([
-            'name' => 'Second Carrier',
-            'email' => 'second@example.com',
-        ]));
-        Carrier::query()->create($this->carrierPayload([
-            'name' => 'Third Carrier',
-            'email' => 'third@example.com',
-        ]));
+        $this->createCarrier(['name' => 'First Carrier', 'email' => 'first@example.com']);
+        $this->createCarrier(['name' => 'Second Carrier', 'email' => 'second@example.com']);
+        $this->createCarrier(['name' => 'Third Carrier', 'email' => 'third@example.com']);
 
         $response = $this->getJson($this->baseUrl.'?per_page=2');
 
@@ -256,7 +263,7 @@ class CarrierApiTest extends TestCase
 
     public function test_show_requires_view_carriers_permission()
     {
-        $carrier = Carrier::query()->create($this->carrierPayload(['email' => 'show-forbidden@example.com']));
+        $carrier = $this->createCarrier(['email' => 'show-forbidden@example.com']);
         $this->authenticateWithPermissions();
 
         $this->getJson($this->baseUrl.'/'.$carrier->id)->assertForbidden();
@@ -266,10 +273,7 @@ class CarrierApiTest extends TestCase
     {
         $this->authenticateWithPermissions(['view carriers']);
 
-        $carrier = Carrier::query()->create($this->carrierPayload([
-            'name' => 'Visible Carrier',
-            'email' => 'visible@example.com',
-        ]));
+        $carrier = $this->createCarrier(['name' => 'Visible Carrier', 'email' => 'visible@example.com']);
 
         $this->getJson($this->baseUrl.'/'.$carrier->id)
             ->assertOk()
@@ -282,7 +286,7 @@ class CarrierApiTest extends TestCase
 
     public function test_update_requires_edit_carriers_permission()
     {
-        $carrier = Carrier::query()->create($this->carrierPayload(['email' => 'update-forbidden@example.com']));
+        $carrier = $this->createCarrier(['email' => 'update-forbidden@example.com']);
         $this->authenticateWithPermissions();
 
         $this->putJson($this->baseUrl.'/'.$carrier->id, $this->carrierPayload([
@@ -295,7 +299,7 @@ class CarrierApiTest extends TestCase
     {
         $this->authenticateWithPermissions(['edit carriers']);
 
-        $carrier = Carrier::query()->create($this->carrierPayload(['email' => 'before-update@example.com']));
+        $carrier = $this->createCarrier(['email' => 'before-update@example.com']);
 
         $payload = $this->carrierPayload([
             'name' => 'Updated Carrier',
@@ -321,7 +325,7 @@ class CarrierApiTest extends TestCase
 
     public function test_delete_requires_delete_carriers_permission()
     {
-        $carrier = Carrier::query()->create($this->carrierPayload(['email' => 'delete-forbidden@example.com']));
+        $carrier = $this->createCarrier(['email' => 'delete-forbidden@example.com']);
         $this->authenticateWithPermissions();
 
         $this->deleteJson($this->baseUrl.'/'.$carrier->id)->assertForbidden();
@@ -331,7 +335,7 @@ class CarrierApiTest extends TestCase
     {
         $this->authenticateWithPermissions(['delete carriers']);
 
-        $carrier = Carrier::query()->create($this->carrierPayload(['email' => 'delete-me@example.com']));
+        $carrier = $this->createCarrier(['email' => 'delete-me@example.com']);
 
         $this->deleteJson($this->baseUrl.'/'.$carrier->id)
             ->assertNoContent();

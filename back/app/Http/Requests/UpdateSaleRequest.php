@@ -30,7 +30,7 @@ class UpdateSaleRequest extends FormRequest
             'commercial_id' => ['sometimes', 'required', 'exists:users,id'],
             'carrier_id' => ['sometimes', 'nullable', 'exists:carriers,id'],
             'tracking_number' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'partner_id' => ['sometimes', 'nullable', 'exists:partners,id'],
+            'partner_id' => ['sometimes', 'required', 'exists:partners,id'],
             'service' => ['sometimes', 'nullable', 'string', 'max:255'],
             'status' => ['sometimes', 'nullable', 'string'],
             'payment_status' => ['sometimes', 'nullable', 'string'],
