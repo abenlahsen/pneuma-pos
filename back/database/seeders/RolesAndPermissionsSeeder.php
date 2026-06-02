@@ -215,6 +215,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view stock',
             'view stock-movements',
             'view suppliers',
+            'view settings',
         ]);
     }
 }
