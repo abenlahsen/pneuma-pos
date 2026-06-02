@@ -202,10 +202,11 @@
             <th class="sortable" (click)="toggleSort('client')">Client <span class="sort-icon">{{ sortBy() === 'client' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th>Commercial</th>
             <th class="sortable" (click)="toggleSort('total_quantity')">Qte <span class="sort-icon">{{ sortBy() === 'total_quantity' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th>Partenaire</th>
+            <th>Mode paiement</th>
             <th class="sortable text-right" (click)="toggleSort('total_sale')">Total Vente <span class="sort-icon">{{ sortBy() === 'total_sale' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable text-right" (click)="toggleSort('margin')">Marge <span class="sort-icon">{{ sortBy() === 'margin' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('payment_status')">Paiement <span class="sort-icon">{{ sortBy() === 'payment_status' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
-            <th>Mode paiement</th>
             <th class="sortable" (click)="toggleSort('status')">Statut <span class="sort-icon">{{ sortBy() === 'status' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('created_at')">Créé le <span class="sort-icon">{{ sortBy() === 'created_at' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('updated_at')">Modifié le <span class="sort-icon">{{ sortBy() === 'updated_at' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
@@ -213,7 +214,7 @@
         </thead>
         <tbody>
           <tr *ngIf="loading()">
-            <td colspan="13" class="text-center py-4">
+            <td colspan="14" class="text-center py-4">
               <div class="spinner"></div> Chargement...
             </td>
           </tr>
@@ -247,6 +248,8 @@
             </td>
             <td>{{ sale.commercial?.name || '-' }}</td>
             <td>{{ sale.total_quantity }}</td>
+            <td>{{ sale.partner?.name || '-' }}</td>
+            <td>{{ sale.payment_method || '-' }}</td>
             <td class="text-right fw-semibold">
               {{ sale.total_sale | number:'1.2-2' }}
             </td>
@@ -261,7 +264,6 @@
                 {{ sale.payment_status || 'NON PAYÉ' }}
               </span>
             </td>
-            <td>{{ sale.payment_method || '-' }}</td>
             <td class="status-cell">
               <select class="status-select"
                       [class.bg-en-cours]="sale.status === 'EN COURS'"
