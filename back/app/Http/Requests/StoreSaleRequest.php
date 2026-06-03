@@ -34,7 +34,7 @@ class StoreSaleRequest extends FormRequest
             'service' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'string'],
             'payment_status' => ['nullable', 'string'],
-            'payment_method' => ['nullable', 'string'],
+            'payment_method' => ['required', 'string'],
             'delivery_date' => ['nullable', 'date'],
             'comments' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],

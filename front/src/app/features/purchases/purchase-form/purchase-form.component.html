@@ -49,8 +49,7 @@
       </div>
       <div class="form-group">
         <label>Mode de Paiement</label>
-        <select class="form-control" [(ngModel)]="formData.payment_method" name="payment_method">
-          <option [ngValue]="null">-- Sélectionner --</option>
+        <select class="form-control" [(ngModel)]="formData.payment_method" name="payment_method" required>
           <option value="ESPECE">Espèces</option>
           <option value="VIREMENT">Virement</option>
           <option value="CHEQUE">Chèque</option>

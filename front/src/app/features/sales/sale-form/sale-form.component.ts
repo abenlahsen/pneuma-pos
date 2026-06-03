@@ -558,6 +558,10 @@ export class SaleFormComponent implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
+    if (!this.formData.payment_method) {
+      alert('Veuillez sélectionner un mode de paiement.');
+      return;
+    }
     if (!this.formData.commercial_id) {
       alert('Veuillez sélectionner un commercial.');
       return;

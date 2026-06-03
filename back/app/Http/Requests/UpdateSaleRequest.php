@@ -34,7 +34,7 @@ class UpdateSaleRequest extends FormRequest
             'service' => ['sometimes', 'nullable', 'string', 'max:255'],
             'status' => ['sometimes', 'nullable', 'string'],
             'payment_status' => ['sometimes', 'nullable', 'string'],
-            'payment_method' => ['sometimes', 'nullable', 'string'],
+            'payment_method' => ['sometimes', 'required', 'string'],
             'delivery_date' => ['sometimes', 'nullable', 'date'],
             'comments' => ['sometimes', 'nullable', 'string'],
             'items' => ['sometimes', 'required', 'array', 'min:1'],
