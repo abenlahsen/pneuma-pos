@@ -25,13 +25,16 @@ export interface DashboardKpi {
   unpaid_sales: number;
   unpaid_purchases: number;
   cash_balance: number;
-  sales_by_commercial: {
-    commercial_name: string;
-    total_sales: number;
-    total_tyres: number;
-    total_margin: number;
-    total_unpaid: number;
-    avg_margin_per_tyre: number;
-    margin_rate: number;
-  }[];
+  sales_by_commercial: CommercialPerf[];
+  sales_by_commercial_year: CommercialPerf[];
+}
+
+export interface CommercialPerf {
+  commercial_name: string;
+  total_sales: number;
+  total_tyres: number;
+  total_margin: number;
+  total_unpaid: number;
+  avg_margin_per_tyre: number;
+  margin_rate: number;
 }

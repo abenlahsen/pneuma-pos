@@ -83,30 +83,53 @@ class DashboardController extends Controller
             ->whereBetween('date', [$yearStart, $yearEnd])
             ->sum('amount'), 2);
 
-        $salesByCommercial = DB::table('sales')
-            ->leftJoin('users', 'sales.commercial_id', '=', 'users.id')
-            ->leftJoinSub($tyreItemsSub, 'tyre_items', 'tyre_items.sale_id', '=', 'sales.id')
-            ->whereBetween('sales.date', [$monthStart, $monthEnd])
-            ->selectRaw("users.name as commercial_name, SUM(sales.total_sale) as total_sales, COALESCE(SUM(tyre_items.tyre_qty), 0) as total_tyres, SUM(sales.margin) as total_margin, SUM(CASE WHEN sales.payment_status IN ('NON PAYE', 'NON PAYÉ', 'PARTIEL') THEN sales.total_sale - COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.sale_id = sales.id), 0) ELSE 0 END) as total_unpaid")
-            ->groupBy('sales.commercial_id', 'users.name')
-            ->orderByDesc('total_sales')
-            ->get()
-            ->map(function ($item) {
+        $mapCommercials = function ($rows): array {
+            return $rows->map(function ($item) {
                 $totalSales = (float) $item->total_sales;
                 $totalMargin = (float) $item->total_margin;
                 $totalTyres = (int) $item->total_tyres;
 
                 return [
-                    'commercial_name'    => $item->commercial_name ?? 'Non assigné',
-                    'total_sales'        => round($totalSales, 2),
-                    'total_tyres'        => $totalTyres,
-                    'total_margin'       => round($totalMargin, 2),
-                    'total_unpaid'       => round((float) $item->total_unpaid, 2),
+                    'commercial_name'     => $item->commercial_name ?? 'Non assigné',
+                    'total_sales'         => round($totalSales, 2),
+                    'total_tyres'         => $totalTyres,
+                    'total_margin'        => round($totalMargin, 2),
+                    'total_unpaid'        => round((float) $item->total_unpaid, 2),
                     'avg_margin_per_tyre' => $totalTyres > 0 ? round($totalMargin / $totalTyres, 2) : 0,
-                    'margin_rate'        => $totalSales > 0 ? round(($totalMargin / $totalSales) * 100, 1) : 0,
+                    'margin_rate'         => $totalSales > 0 ? round(($totalMargin / $totalSales) * 100, 1) : 0,
                 ];
-            })
-            ->toArray();
+            })->toArray();
+        };
+
+        $commercialSelectRaw = "users.name as commercial_name,
+            SUM(sales.total_sale) as total_sales,
+            COALESCE(SUM(tyre_items.tyre_qty), 0) as total_tyres,
+            SUM(sales.margin) as total_margin,
+            SUM(CASE WHEN sales.payment_status IN ('NON PAYE', 'NON PAYÉ', 'PARTIEL')
+                THEN sales.total_sale - COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.sale_id = sales.id), 0)
+                ELSE 0 END) as total_unpaid";
+
+        $salesByCommercial = $mapCommercials(
+            DB::table('sales')
+                ->leftJoin('users', 'sales.commercial_id', '=', 'users.id')
+                ->leftJoinSub($tyreItemsSub, 'tyre_items', 'tyre_items.sale_id', '=', 'sales.id')
+                ->whereBetween('sales.date', [$monthStart, $monthEnd])
+                ->selectRaw($commercialSelectRaw)
+                ->groupBy('sales.commercial_id', 'users.name')
+                ->orderByDesc('total_sales')
+                ->get()
+        );
+
+        $salesByCommercialYear = $mapCommercials(
+            DB::table('sales')
+                ->leftJoin('users', 'sales.commercial_id', '=', 'users.id')
+                ->leftJoinSub($tyreItemsSub, 'tyre_items', 'tyre_items.sale_id', '=', 'sales.id')
+                ->whereBetween('sales.date', [$yearStart, $yearEnd])
+                ->selectRaw($commercialSelectRaw)
+                ->groupBy('sales.commercial_id', 'users.name')
+                ->orderByDesc('total_sales')
+                ->get()
+        );
 
         return response()->json([
             // Today
@@ -134,8 +157,9 @@ class DashboardController extends Controller
             'tyres_purchased_month' => $tyrePurchaseQty($monthStart, $monthEnd),
             'tyres_purchased_year' => $tyrePurchaseQty($yearStart, $yearEnd),
 
-            // Sales by Commercial (This Month)
+            // Sales by Commercial
             'sales_by_commercial' => $salesByCommercial,
+            'sales_by_commercial_year' => $salesByCommercialYear,
 
             // Stock
             'stock_quantity' => (int) Stock::sum('quantity'),
