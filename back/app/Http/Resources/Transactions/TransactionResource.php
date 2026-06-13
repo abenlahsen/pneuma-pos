@@ -30,7 +30,7 @@ class TransactionResource extends JsonResource
             'date' => $this->date?->format('Y-m-d'),
             'description' => $this->description,
             'reference' => $this->reference,
-            'account' => $this->whenLoaded('account'),
+            'account' => $this->whenLoaded('account', fn ($a) => ['id' => $a->id, 'name' => $a->name, 'type' => $a->type]),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
