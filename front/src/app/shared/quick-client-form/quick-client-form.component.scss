@@ -1,0 +1,121 @@
+@use '../../features/_variables' as *;
+
+$_red:     $primary;
+$_text:    #0f172a;
+$_muted:   #64748b;
+$_dim:     #94a3b8;
+$_surface: #ffffff;
+$_border:  #e8edf3;
+$_border2: #d0d9e4;
+
+.qcf-card {
+  background: $_surface;
+  border: 1.5px solid $_border2;
+  border-radius: 10px;
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.qcf-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+
+  h4 {
+    margin: 0 0 0.15rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: $_text;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: $_muted;
+  }
+}
+
+.qcf-close {
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+  border: 1.5px solid $_border2;
+  background: $_surface;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: $_muted;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  &:hover { background: #f8fafc; border-color: #bcc6d4; color: $_text; }
+}
+
+.qcf-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.qcf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  &--full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #334155;
+
+    .required { color: $_red; margin-left: 2px; }
+  }
+}
+
+.qcf-input {
+  padding: 0.55rem 0.8rem;
+  border: 1.5px solid $_border2;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: $_text;
+  background: $_surface;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    outline: none;
+    border-color: $_red;
+    box-shadow: 0 0 0 3px rgba(255, 45, 55, 0.1);
+  }
+
+  &::placeholder { color: $_dim; }
+}
+
+.qcf-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.qcf-btn-primary {
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  border: none;
+  background: $_red;
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 2px 6px rgba(255, 45, 55, 0.25);
+
+  &:hover:not(:disabled) { filter: brightness(0.92); }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+}
+
+@media (max-width: 480px) {
+  .qcf-grid { grid-template-columns: 1fr; }
+}

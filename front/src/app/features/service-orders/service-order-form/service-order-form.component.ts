@@ -13,6 +13,7 @@ import { Client } from '../../clients/models/client.model';
 import { ProductService } from '../../products/data-access/product.service';
 import { Vehicle } from '../../../features/vehicles/models/vehicle.model';
 import { VehicleSelectorComponent } from '../../../shared/vehicle-selector/vehicle-selector.component';
+import { QuickClientFormComponent } from '../../../shared/quick-client-form/quick-client-form.component';
 
 interface ServiceProductOption {
   id: number;
@@ -49,7 +50,7 @@ type AnyLineForm = ServiceLineForm | PartLineForm;
 @Component({
   selector: 'app-service-order-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, VehicleSelectorComponent],
+  imports: [CommonModule, FormsModule, VehicleSelectorComponent, QuickClientFormComponent],
   templateUrl: './service-order-form.component.html',
   styleUrls: ['./service-order-form.component.scss'],
 })
@@ -65,6 +66,10 @@ export class ServiceOrderFormComponent implements OnInit {
   private serviceOrderService = inject(ServiceOrderService);
 
   serviceProducts = signal<ServiceProductOption[]>([]);
+  quickServiceChips = computed(() => this.serviceProducts().slice(0, 6));
+  activeServiceDropdown = signal<number>(-1);
+
+  showQuickCreate = signal(false);
 
   // Form header fields
   date = signal(new Date().toISOString().split('T')[0]);
@@ -105,10 +110,8 @@ export class ServiceOrderFormComponent implements OnInit {
   );
 
   readonly vehicleValid = computed(() => {
-    if (this.client_id()) {
-      return this.vehicle_id() !== null;
-    }
-    return this.vehicle().trim().length > 0;
+    if (this.client_id()) return true;          // véhicule optionnel quand client lié
+    return this.vehicle().trim().length > 0;    // requis en saisie libre
   });
 
   hasValidLines = computed(() =>
@@ -229,6 +232,19 @@ export class ServiceOrderFormComponent implements OnInit {
     });
   }
 
+  // --- Quick client creation ---
+
+  openQuickCreate(): void {
+    this.showQuickCreate.set(true);
+    this.showClientSuggestions.set(false);
+  }
+
+  onQuickClientCreated(client: Client): void {
+    this.clients.update(list => [client, ...list.filter(c => c.id !== client.id)]);
+    this.selectClient(client);
+    this.showQuickCreate.set(false);
+  }
+
   // --- Lines management ---
 
   addServiceLine(): void {
@@ -302,17 +318,44 @@ export class ServiceOrderFormComponent implements OnInit {
     } as Partial<PartLineForm>);
   }
 
-  // --- Service type selection from catalog ---
+  // --- Quick-add chips ---
 
-  onServiceTypeChange(index: number, productId: string): void {
-    const id = Number(productId);
-    const product = this.serviceProducts().find(p => p.id === id);
-    if (product) {
-      this.updateLine(index, {
-        service_type: product.profile ?? '',
-        labor_cost: Number(product.selling_price) || 0,
-      } as Partial<ServiceLineForm>);
-    }
+  addQuickServiceLine(product: ServiceProductOption): void {
+    this.lines.update(l => [...l, {
+      item_type: 'service',
+      service_type: product.profile ?? '',
+      description: '',
+      quantity: 1,
+      parts_cost: 0,
+      labor_cost: Number(product.selling_price) || 0,
+    }]);
+  }
+
+  // --- Service type autocomplete ---
+
+  filteredServiceSuggestions(query: string): ServiceProductOption[] {
+    if (!query.trim()) return this.serviceProducts().slice(0, 8);
+    const q = query.toLowerCase();
+    return this.serviceProducts()
+      .filter(p => (p.profile ?? '').toLowerCase().includes(q) || (p.reference ?? '').toLowerCase().includes(q))
+      .slice(0, 8);
+  }
+
+  onServiceTypeInput(index: number, value: string): void {
+    this.updateLine(index, { service_type: value } as Partial<ServiceLineForm>);
+    this.activeServiceDropdown.set(index);
+  }
+
+  selectServiceFromCatalog(index: number, product: ServiceProductOption): void {
+    this.updateLine(index, {
+      service_type: product.profile ?? '',
+      labor_cost: Number(product.selling_price) || 0,
+    } as Partial<ServiceLineForm>);
+    this.activeServiceDropdown.set(-1);
+  }
+
+  closeServiceDropdown(): void {
+    this.activeServiceDropdown.set(-1);
   }
 
   // --- Client ---

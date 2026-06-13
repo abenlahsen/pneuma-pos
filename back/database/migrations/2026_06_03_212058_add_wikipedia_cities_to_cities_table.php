@@ -1,29 +1,13 @@
 <?php
 
-namespace Database\Seeders;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\DB;
 
-use App\Models\City;
-use Illuminate\Database\Seeder;
-
-class CitiesSeeder extends Seeder
+return new class extends Migration
 {
-    public function run(): void
+    private function cities(): array
     {
-        $cities = [
-            // Villes déjà présentes (orthographe conservée pour compatibilité données existantes)
-            'Agadir', 'Aïn Harrouda', 'Al Hoceïma', 'Asilah', 'Azemmour', 'Azilal',
-            'Beni Mellal', 'Benguerir', 'Berkane', 'Berrechid', 'Bouskoura', 'Boujdour',
-            'Boulemane', 'Casablanca', 'Chefchaouen', 'Dakhla', 'Dar Bouazza',
-            'El Jadida', 'El Kelaa des Sraghna', 'Errachidia', 'Essaouira', 'Fès',
-            'Figuig', 'Guelmim', 'Guercif', 'Ifrane', 'Inezgane', 'Kénitra',
-            'Khémisset', 'Khénifra', 'Khouribga', 'Ksar el-Kébir', 'Laâyoune',
-            'Larache', 'Marrakech', 'Martil', 'Meknès', 'Midelt', 'Mohammedia',
-            'Nador', 'Ouarzazate', 'Oued Zem', 'Oujda', 'Rabat', 'Safi', 'Salé',
-            'Settat', 'Sidi Bennour', 'Sidi Ifni', 'Sidi Kacem', 'Sidi Slimane',
-            'Smara', 'Tan-Tan', 'Tanger', 'Taounate', 'Taourirt', 'Taroudannt',
-            'Taza', 'Temara', 'Tétouan', 'Tiflet', 'Tinghir', 'Tiznit', 'Zagora',
-
-            // Villes issues de Wikipedia (fr.wikipedia.org/wiki/Liste_des_villes_du_Maroc)
+        return [
             'Afourar', 'Aghbala', 'Aghbalou', 'Agdz', 'Agouraï', 'Aguelmous', 'Ahfir',
             'Aïn Leuh', 'Aïn Beni Mathar', 'Aïn Cheggag', 'Aïn Dorij', 'Aïn El-Aouda',
             'Aïn Erreggada', 'Aïn Jemaa', 'Aïn Karma', 'Aïn Taoujdate',
@@ -32,7 +16,7 @@ class CitiesSeeder extends Seeder
             'Alnif', 'Amalou Ighriben', 'Amizmiz', 'Aoufous', 'Aoulouz', 'Aourir',
             'Arbaoua', 'Arfoud', 'Assa', 'Assahrij', 'Azrou',
             'Bab Berred', 'Bab Taza', 'Bejaâd', 'Ben Ahmed', 'Ben Slimane',
-            'Ben Taïeb', 'Ben Yakhlef', 'Bhalil', 'Biougra',
+            'Ben Taïeb', 'Ben Yakhlef', 'Berkane', 'Bhalil', 'Biougra',
             'Bni Ansar', 'Bni Bouayach', 'Bni Chiker', 'Bni Drar', 'Bni Hadifa', 'Bni Tadjite',
             'Bouanane', 'Bouarfa', 'Boudnib', 'Bouguedra', 'Bouhdila', 'Bouizakarne',
             'Boujniba', 'Boulanouare', 'Boumalne-Dadès', 'Boumia', 'Bouznika',
@@ -88,9 +72,17 @@ class CitiesSeeder extends Seeder
             'Zag', 'Zaïda', 'Zaïo', 'Zaouïat Bougrine', 'Zaouïat Cheikh',
             'Zeghanghane', 'Zemamra', 'Zirara', 'Zoumi', 'Zrarda',
         ];
-
-        foreach ($cities as $name) {
-            City::firstOrCreate(['name' => $name]);
-        }
     }
-}
+
+    public function up(): void
+    {
+        DB::table('cities')->insertOrIgnore(
+            array_map(fn($name) => ['name' => $name], $this->cities())
+        );
+    }
+
+    public function down(): void
+    {
+        DB::table('cities')->whereIn('name', $this->cities())->delete();
+    }
+};
