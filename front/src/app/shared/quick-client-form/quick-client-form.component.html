@@ -1,0 +1,48 @@
+<div class="qcf-card">
+  <div class="qcf-header">
+    <div>
+      <h4>Création rapide du client</h4>
+      <p>Créez et liez le client sans quitter le formulaire.</p>
+    </div>
+    <button type="button" class="qcf-close" (click)="cancel()">Fermer</button>
+  </div>
+
+  <div class="qcf-grid">
+    <div class="qcf-field">
+      <label>Nom <span class="required">*</span></label>
+      <input type="text" class="qcf-input" name="qcfName" [(ngModel)]="client.name" placeholder="Nom du client" />
+    </div>
+    <div class="qcf-field">
+      <label>Téléphone</label>
+      <input type="text" class="qcf-input" name="qcfPhone" [(ngModel)]="client.phone" placeholder="06 XX XX XX XX" />
+    </div>
+    <div class="qcf-field">
+      <label>Type</label>
+      <select class="qcf-input" name="qcfCategory" [(ngModel)]="client.category">
+        <option value="">— Sélectionner —</option>
+        <option *ngFor="let opt of categoryOptions" [value]="opt">{{ opt }}</option>
+      </select>
+    </div>
+    <div class="qcf-field">
+      <label>Ville</label>
+      <select class="qcf-input" name="qcfCity" [(ngModel)]="client.city">
+        <option value="">— Sélectionner —</option>
+        <option *ngFor="let c of cities()" [value]="c">{{ c }}</option>
+      </select>
+    </div>
+    <div class="qcf-field qcf-field--full">
+      <label>Adresse</label>
+      <input type="text" class="qcf-input" name="qcfAddress" [(ngModel)]="client.address" />
+    </div>
+    <div class="qcf-field qcf-field--full">
+      <label>Email</label>
+      <input type="text" class="qcf-input" name="qcfEmail" [(ngModel)]="client.email" placeholder="exemple@domaine.com" />
+    </div>
+  </div>
+
+  <div class="qcf-actions">
+    <button type="button" class="qcf-btn-primary" [disabled]="saving() || !client.name.trim()" (click)="save()">
+      {{ saving() ? 'Création...' : 'Créer et lier' }}
+    </button>
+  </div>
+</div>

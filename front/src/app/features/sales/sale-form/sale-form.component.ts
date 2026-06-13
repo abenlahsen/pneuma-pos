@@ -18,11 +18,12 @@ import { Client, ClientPayload, ClientProfileResponse } from '../../clients/mode
 import { CityService } from '../../../core/services/city.service';
 import { Vehicle } from '../../vehicles/models/vehicle.model';
 import { VehicleSelectorComponent } from '../../../shared/vehicle-selector/vehicle-selector.component';
+import { QuickClientFormComponent } from '../../../shared/quick-client-form/quick-client-form.component';
 
 @Component({
   selector: 'app-sale-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductDetailComponent, VehicleSelectorComponent],
+  imports: [CommonModule, FormsModule, ProductDetailComponent, VehicleSelectorComponent, QuickClientFormComponent],
   templateUrl: './sale-form.component.html',
   styleUrl: './sale-form.component.scss'
 })
@@ -65,21 +66,10 @@ export class SaleFormComponent implements OnInit, OnDestroy {
   clientSearch = signal('');
   showClientSuggestions = signal(false);
   showQuickCreate = signal(false);
-  creatingClient = signal(false);
   loadingSearch = signal(false);
 
   private readonly clientSearchSubject = new Subject<string>();
   private readonly destroy$ = new Subject<void>();
-
-  quickClient: ClientPayload = {
-    name: '',
-    phone: '',
-    email: '',
-    city: '',
-    address: '',
-    notes: '',
-    is_active: true,
-  };
 
   formData: Partial<SalePayload> = {
     date: new Date().toISOString().split('T')[0],
@@ -458,7 +448,6 @@ export class SaleFormComponent implements OnInit, OnDestroy {
     this.clientSearch.set(value);
     this.showClientSuggestions.set(true);
     this.clientSearchSubject.next(value);
-    this.prefillQuickClient();
     this.updateDuplicateWarnings();
   }
 
@@ -476,15 +465,6 @@ export class SaleFormComponent implements OnInit, OnDestroy {
     this.showQuickCreate.set(false);
     this.vehicle_id.set(null);
     this.saleVehicleMileage.set(null);
-    this.quickClient = {
-      name: '',
-      phone: '',
-      email: '',
-      city: '',
-      address: '',
-      notes: '',
-      is_active: true,
-    };
     this.updateDuplicateWarnings();
 
     if (client.id) {
@@ -514,47 +494,19 @@ export class SaleFormComponent implements OnInit, OnDestroy {
     }
 
     this.clientSearch.set(this.formData.client || '');
-    this.prefillQuickClient();
     this.clientSearchSubject.next(this.clientSearch());
     this.updateDuplicateWarnings();
   }
 
   openQuickCreate(): void {
-    this.prefillQuickClient();
     this.showQuickCreate.set(true);
     this.showClientSuggestions.set(false);
   }
 
-  cancelQuickCreate(): void {
+  onQuickClientCreated(client: Client): void {
+    this.clients.update(list => [client, ...list.filter(c => c.id !== client.id)]);
+    this.selectClient(client);
     this.showQuickCreate.set(false);
-    this.quickClient = { name: '', phone: '', email: '', city: '', address: '', notes: '', is_active: true };
-  }
-
-  saveQuickClient(): void {
-    if (!this.quickClient.name?.trim()) {
-      return;
-    }
-
-    this.creatingClient.set(true);
-
-    this.clientService.createClient({
-      ...this.quickClient,
-      is_active: true,
-    }).pipe(
-      finalize(() => this.creatingClient.set(false))
-    ).subscribe({
-      next: (client) => {
-        this.clients.set([client, ...this.clients().filter((existing) => existing.id !== client.id)]);
-        this.selectClient(client);
-        this.showQuickCreate.set(false);
-      },
-      error: (err) => {
-        const errors: Record<string, string[]> = err?.error?.errors ?? {};
-        const messages = Object.values(errors).flat();
-        const detail = messages.length ? '\n' + messages.join('\n') : '';
-        alert('Erreur lors de la création rapide du client.' + detail);
-      }
-    });
   }
 
   onSubmit(): void {
@@ -667,8 +619,8 @@ export class SaleFormComponent implements OnInit, OnDestroy {
 
   updateDuplicateWarnings(): void {
     const selectedId = this.selectedClient()?.id;
-    const name = (this.quickClient.name || this.formData.client || this.clientSearch()).trim().toLowerCase();
-    const phone = (this.quickClient.phone || this.formData.client_phone || '').trim().toLowerCase();
+    const name = (this.formData.client || this.clientSearch()).trim().toLowerCase();
+    const phone = (this.formData.client_phone || '').trim().toLowerCase();
 
     this.duplicateMatches.set(
       this.clients().filter((client) => {
@@ -684,14 +636,6 @@ export class SaleFormComponent implements OnInit, OnDestroy {
     );
   }
 
-  private prefillQuickClient(): void {
-    this.quickClient = {
-      ...this.quickClient,
-      name: this.quickClient.name || this.formData.client || this.clientSearch(),
-      phone: this.quickClient.phone || this.formData.client_phone || '',
-      city: this.quickClient.city || '',
-    };
-  }
 
   private hasManualClientChanged(selected: Client): boolean {
     return (this.formData.client || '').trim() !== (selected.name || '').trim()

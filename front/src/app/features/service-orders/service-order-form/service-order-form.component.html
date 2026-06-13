@@ -17,6 +17,7 @@
             <p>Liez un client existant ou saisissez le nom manuellement ci-dessous.</p>
           </div>
           <div class="client-panel-actions">
+            <button type="button" class="btn btn-secondary" (click)="openQuickCreate()">Créer rapidement</button>
             <button
               type="button"
               class="btn btn-secondary"
@@ -52,6 +53,13 @@
           </div>
         </div>
 
+        <app-quick-client-form
+          *ngIf="showQuickCreate()"
+          [initialName]="clientSearch()"
+          (clientCreated)="onQuickClientCreated($event)"
+          (cancelled)="showQuickCreate.set(false)"
+        />
+
         <div class="selected-client" *ngIf="selectedClient()">
           <div>
             <strong>{{ selectedClient()!.name }}</strong>
@@ -65,7 +73,7 @@
       <ng-container *ngIf="client_id()">
         <app-vehicle-selector
           [clientId]="client_id()"
-          [required]="true"
+          [required]="false"
           [selectedVehicleId]="vehicle_id()"
           (vehicleSelected)="onVehicleSelected($event)"
         />
@@ -129,6 +137,12 @@
         </div>
       </div>
 
+      <div class="quick-chips" *ngIf="quickServiceChips().length > 0">
+        <button type="button" class="chip" *ngFor="let p of quickServiceChips()" (click)="addQuickServiceLine(p)">
+          + {{ p.profile }}
+        </button>
+      </div>
+
       <div class="lines-list">
         <div
           class="line-row"
@@ -136,177 +150,95 @@
           [class.line-row--service]="line.item_type === 'service'"
           [class.line-row--part]="line.item_type === 'part'"
         >
-          <div class="line-row-header">
-            <span class="line-badge" [class.badge-service]="line.item_type === 'service'" [class.badge-part]="line.item_type === 'part'">
-              {{ line.item_type === 'service' ? '🔧 Prestation' : '🔩 Pièce' }}
-            </span>
-            <span class="line-number">#{{ i + 1 }}</span>
-            <button
-              type="button"
-              class="btn-remove-line"
-              (click)="removeLine(i)"
-              [disabled]="lines().length === 1"
-              title="Supprimer cette ligne"
-            >✕</button>
-          </div>
-
-          <!-- Ligne PRESTATION -->
+          <!-- Ligne PRESTATION — une seule ligne -->
           <ng-container *ngIf="line.item_type === 'service'">
-            <div class="form-group">
-              <label>Type de prestation <span class="required">*</span></label>
-              <div class="service-type-row">
-                <select
-                  class="form-control"
-                  [name]="'svc_catalog_' + i"
-                  (change)="onServiceTypeChange(i, $any($event.target).value)"
-                >
-                  <option value="">— Sélectionner depuis le catalogue —</option>
-                  <option *ngFor="let p of serviceProducts()" [value]="p.id">
-                    {{ p.profile }}{{ p.reference ? ' (' + p.reference + ')' : '' }}
-                    {{ p.selling_price ? ' — ' + p.selling_price + ' DH' : '' }}
-                  </option>
-                </select>
-                <span class="or-separator">ou</span>
+            <div class="line-inline">
+              <span class="line-badge badge-service">🔧 #{{ i + 1 }}</span>
+              <div class="line-field-type autocomplete-wrapper">
                 <input
                   type="text"
                   class="form-control"
                   [name]="'svc_type_' + i"
                   [ngModel]="asService(line).service_type"
-                  (ngModelChange)="updateLine(i, { service_type: $event })"
-                  placeholder="Saisir librement…"
-                />
-              </div>
-            </div>
-            <div class="service-costs-row">
-              <div class="form-group">
-                <label>Quantité</label>
-                <input
-                  type="number"
-                  class="form-control"
-                  [name]="'svc_qty_' + i"
-                  [ngModel]="asService(line).quantity"
-                  (ngModelChange)="updateLine(i, { quantity: +$event || 1 })"
-                  min="1" step="1"
-                />
-              </div>
-              <div class="form-group">
-                <label>M.O. (DH)</label>
-                <input
-                  type="number"
-                  class="form-control"
-                  [name]="'labor_' + i"
-                  [ngModel]="asService(line).labor_cost"
-                  (ngModelChange)="updateLine(i, { labor_cost: +$event || 0 })"
-                  min="0" step="0.01"
-                />
-              </div>
-              <div class="form-group">
-                <label>Total</label>
-                <div class="line-total-value">
-                  {{ serviceLineTotal(asService(line)) | number:'1.2-2' }} DH
-                </div>
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Description</label>
-              <input
-                type="text"
-                class="form-control"
-                [name]="'svc_desc_' + i"
-                [ngModel]="asService(line).description"
-                (ngModelChange)="updateLine(i, { description: $event })"
-                placeholder="Détails de l'intervention…"
-              />
-            </div>
-          </ng-container>
-
-          <!-- Ligne PIÈCE -->
-          <ng-container *ngIf="line.item_type === 'part'">
-            <div class="form-group part-search-wrapper">
-              <label>Pièce <span class="required">*</span></label>
-              <div class="search-input-row">
-                <input
-                  type="text"
-                  class="form-control"
-                  [name]="'part_search_' + i"
-                  [ngModel]="asPart(line).searchQuery"
-                  (ngModelChange)="searchPartsFor(i, $event)"
-                  placeholder="Rechercher par nom, référence, OEM…"
+                  (ngModelChange)="onServiceTypeInput(i, $event)"
+                  (focus)="activeServiceDropdown.set(i)"
+                  (blur)="closeServiceDropdown()"
+                  placeholder="Prestation…"
                   autocomplete="off"
                 />
-                <span class="search-spinner" *ngIf="asPart(line).searching">⏳</span>
-              </div>
-
-              <div class="parts-dropdown" *ngIf="asPart(line).searchResults.length > 0">
-                <div
-                  class="part-result-item"
-                  *ngFor="let part of asPart(line).searchResults"
-                  (mousedown)="selectPart(i, part)"
-                >
-                  <div class="part-result-main">
-                    <span class="part-name">{{ part.name }}</span>
-                    <span class="part-ref" *ngIf="part.reference">Réf: {{ part.reference }}</span>
-                    <span class="part-oem" *ngIf="part.oem_reference">OEM: {{ part.oem_reference }}</span>
-                  </div>
-                  <div class="part-result-stock" [class.stock-ok]="part.total_quantity > 0" [class.stock-empty]="part.total_quantity === 0">
-                    Stock: {{ part.total_quantity }}
-                  </div>
+                <div class="service-suggestions" *ngIf="activeServiceDropdown() === i && serviceProducts().length > 0">
+                  <button type="button" class="suggestion-item"
+                    *ngFor="let p of filteredServiceSuggestions(asService(line).service_type)"
+                    (mousedown)="selectServiceFromCatalog(i, p)">
+                    <span class="sug-name">{{ p.profile }}</span>
+                    <span class="sug-price" *ngIf="p.selling_price">{{ p.selling_price | number:'1.2-2' }} DH</span>
+                  </button>
                 </div>
               </div>
-
-              <div class="selected-part-tag" *ngIf="asPart(line).product_id">
-                ✓ {{ asPart(line).product_name }}
-                <span class="part-tag-ref" *ngIf="asPart(line).product_reference">
-                  ({{ asPart(line).product_reference }})
-                </span>
-                <button type="button" class="btn-clear-part" (click)="clearPartSelection(i)">✕</button>
-              </div>
+              <input type="number" class="form-control line-field-qty"
+                [name]="'svc_qty_' + i" [ngModel]="asService(line).quantity"
+                (ngModelChange)="updateLine(i, { quantity: +$event || 1 })"
+                min="1" step="1" placeholder="Qté" aria-label="Quantité" />
+              <input type="number" class="form-control line-field-mo"
+                [name]="'labor_' + i" [ngModel]="asService(line).labor_cost"
+                (ngModelChange)="updateLine(i, { labor_cost: +$event || 0 })"
+                min="0" step="0.01" placeholder="M.O. DH" aria-label="Main d'œuvre" />
+              <div class="line-total-value">{{ serviceLineTotal(asService(line)) | number:'1.2-2' }} DH</div>
+              <button type="button" class="btn-remove-line" (click)="removeLine(i)"
+                [disabled]="lines().length === 1" title="Supprimer">✕</button>
             </div>
+          </ng-container>
 
-            <div class="stock-info" *ngIf="asPart(line).product_id">
-              <span
-                [class.text-danger]="asPart(line).total_quantity === 0"
-                [class.text-warning]="asPart(line).total_quantity > 0 && asPart(line).quantity > asPart(line).total_quantity"
-              >
-                Stock disponible : {{ asPart(line).total_quantity }} {{ asPart(line).unit }}
-              </span>
-              <span class="text-danger" *ngIf="asPart(line).quantity > asPart(line).total_quantity && asPart(line).total_quantity > 0">
-                &nbsp;⚠ Qté demandée supérieure au stock
-              </span>
-              <span class="text-danger" *ngIf="asPart(line).total_quantity === 0">
-                &nbsp;⚠ Rupture de stock
-              </span>
-            </div>
-
-            <div class="part-fields">
-              <div class="form-group">
-                <label>Quantité</label>
-                <input
-                  type="number"
-                  class="form-control"
-                  [name]="'part_qty_' + i"
-                  [ngModel]="asPart(line).quantity"
-                  (ngModelChange)="updateLine(i, { quantity: +$event || 1 })"
-                  min="1" step="1"
-                />
+          <!-- Ligne PIÈCE — une seule ligne -->
+          <ng-container *ngIf="line.item_type === 'part'">
+            <div class="line-inline">
+              <span class="line-badge badge-part">🔩 #{{ i + 1 }}</span>
+              <div class="line-field-search autocomplete-wrapper">
+                <ng-container *ngIf="!asPart(line).product_id">
+                  <input type="text" class="form-control"
+                    [name]="'part_search_' + i"
+                    [ngModel]="asPart(line).searchQuery"
+                    (ngModelChange)="searchPartsFor(i, $event)"
+                    placeholder="Rechercher pièce…"
+                    autocomplete="off" />
+                  <span class="search-spinner" *ngIf="asPart(line).searching">⏳</span>
+                  <div class="parts-dropdown" *ngIf="asPart(line).searchResults.length > 0">
+                    <div class="part-result-item" *ngFor="let part of asPart(line).searchResults" (mousedown)="selectPart(i, part)">
+                      <div class="part-result-main">
+                        <span class="part-name">{{ part.name }}</span>
+                        <span class="part-ref" *ngIf="part.reference">Réf: {{ part.reference }}</span>
+                      </div>
+                      <div class="part-result-stock" [class.stock-ok]="part.total_quantity > 0" [class.stock-empty]="part.total_quantity === 0">
+                        {{ part.total_quantity }}
+                      </div>
+                    </div>
+                  </div>
+                </ng-container>
+                <ng-container *ngIf="asPart(line).product_id">
+                  <div class="selected-part-tag">
+                    ✓ {{ asPart(line).product_name }}
+                    <span class="part-tag-ref" *ngIf="asPart(line).product_reference">({{ asPart(line).product_reference }})</span>
+                    <button type="button" class="btn-clear-part" (click)="clearPartSelection(i)">✕</button>
+                  </div>
+                  <span class="stock-badge"
+                    [class.stock-badge--ok]="asPart(line).total_quantity > 0 && asPart(line).quantity <= asPart(line).total_quantity"
+                    [class.stock-badge--warn]="asPart(line).total_quantity > 0 && asPart(line).quantity > asPart(line).total_quantity"
+                    [class.stock-badge--empty]="asPart(line).total_quantity === 0">
+                    Stock: {{ asPart(line).total_quantity }}
+                  </span>
+                </ng-container>
               </div>
-              <div class="form-group">
-                <label>Prix unitaire (DH)</label>
-                <input
-                  type="number"
-                  class="form-control"
-                  [name]="'part_price_' + i"
-                  [ngModel]="asPart(line).unit_price"
-                  (ngModelChange)="updateLine(i, { unit_price: +$event || 0 })"
-                  min="0" step="0.01"
-                />
-              </div>
-              <div class="form-group">
-                <label>Total</label>
-                <div class="line-total-value">
-                  {{ partLineTotal(asPart(line)) | number:'1.2-2' }} DH
-                </div>
-              </div>
+              <input type="number" class="form-control line-field-qty"
+                [name]="'part_qty_' + i" [ngModel]="asPart(line).quantity"
+                (ngModelChange)="updateLine(i, { quantity: +$event || 1 })"
+                min="1" step="1" placeholder="Qté" aria-label="Quantité" />
+              <input type="number" class="form-control line-field-price"
+                [name]="'part_price_' + i" [ngModel]="asPart(line).unit_price"
+                (ngModelChange)="updateLine(i, { unit_price: +$event || 0 })"
+                min="0" step="0.01" placeholder="Prix DH" aria-label="Prix unitaire" />
+              <div class="line-total-value">{{ partLineTotal(asPart(line)) | number:'1.2-2' }} DH</div>
+              <button type="button" class="btn-remove-line" (click)="removeLine(i)"
+                [disabled]="lines().length === 1" title="Supprimer">✕</button>
             </div>
           </ng-container>
 
@@ -314,42 +246,7 @@
       </div>
     </div>
 
-    <!-- Section 3 : Tarification -->
-    <div class="form-section">
-      <h3 class="section-title">Tarification</h3>
-      <div class="form-grid form-grid--narrow">
-        <div class="form-group">
-          <label>Remise (%)</label>
-          <input
-            type="number"
-            [ngModel]="discount()"
-            (ngModelChange)="discount.set(+$event || 0)"
-            name="discount"
-            min="0"
-            max="100"
-            step="0.01"
-            class="form-control"
-          />
-        </div>
-      </div>
-
-      <div class="totals-preview">
-        <div class="total-row">
-          <span>Total brut</span>
-          <span class="total-value">{{ totalAmount() | number:'1.2-2' }} DH</span>
-        </div>
-        <div class="total-row" *ngIf="discount() > 0">
-          <span>Remise</span>
-          <span class="total-value discount">{{ discount() | number:'1.0-2' }} %</span>
-        </div>
-        <div class="total-row total-net">
-          <span>Net à payer</span>
-          <span class="total-value net">{{ netAmount() | number:'1.2-2' }} DH</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 4 : Suivi -->
+    <!-- Section 3 : Suivi -->
     <div class="form-section">
       <h3 class="section-title">Suivi</h3>
       <div class="form-grid">
@@ -389,6 +286,19 @@
             <option *ngFor="let c of initialCommercials" [value]="c.id">{{ c.name }}</option>
           </select>
         </div>
+        <div class="form-group">
+          <label>Remise (%)</label>
+          <input
+            type="number"
+            [ngModel]="discount()"
+            (ngModelChange)="discount.set(+$event || 0)"
+            name="discount"
+            min="0"
+            max="100"
+            step="0.01"
+            class="form-control"
+          />
+        </div>
         <div class="form-group form-group--full">
           <label>Notes internes</label>
           <textarea
@@ -407,9 +317,13 @@
       <div class="stock-block-msg" *ngIf="hasStockError()">
         ⛔ {{ stockErrorMessage() }}
       </div>
+      <div class="footer-totals" *ngIf="totalAmount() > 0">
+        <span class="footer-total-net">{{ netAmount() | number:'1.2-2' }} DH</span>
+        <span class="footer-discount" *ngIf="discount() > 0">remise {{ discount() }}%</span>
+      </div>
       <button type="button" class="btn btn-secondary" (click)="onCancel()">Annuler</button>
       <button type="submit" class="btn btn-primary" [disabled]="orderForm.invalid || !hasValidLines() || hasStockError() || !vehicleValid()">
-        {{ isEditing ? 'Enregistrer les modifications' : 'Créer l\'intervention' }}
+        {{ isEditing ? 'Enregistrer' : 'Créer l\'intervention' }}
       </button>
     </div>
   </form>

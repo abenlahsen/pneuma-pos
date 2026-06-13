@@ -63,51 +63,12 @@
         </ul>
       </div>
 
-      <div class="quick-create-card" *ngIf="showQuickCreate()">
-        <div class="client-panel-header compact">
-          <div>
-            <h4>Création rapide du client</h4>
-            <p>Créez et liez le client sans quitter la vente.</p>
-          </div>
-          <button type="button" class="btn btn-secondary" (click)="cancelQuickCreate()">Fermer</button>
-        </div>
-
-        <div class="form-grid">
-          <div class="form-control">
-            <label>Nom *</label>
-            <input type="text" name="quickClientName" [(ngModel)]="quickClient.name" (ngModelChange)="updateDuplicateWarnings()">
-          </div>
-          <div class="form-control">
-            <label>Téléphone</label>
-            <input type="text" name="quickClientPhone" [(ngModel)]="quickClient.phone" (ngModelChange)="updateDuplicateWarnings()">
-          </div>
-          <div class="form-control">
-            <label>Email</label>
-            <input type="text" name="quickClientEmail" [(ngModel)]="quickClient.email" placeholder="exemple@domaine.com">
-          </div>
-          <div class="form-control">
-            <label>Ville</label>
-            <select name="quickClientCity" [(ngModel)]="quickClient.city">
-              <option value="">— Sélectionner —</option>
-              <option *ngFor="let c of cities()" [value]="c">{{ c }}</option>
-            </select>
-          </div>
-          <div class="form-control full-width">
-            <label>Adresse</label>
-            <input type="text" name="quickClientAddress" [(ngModel)]="quickClient.address">
-          </div>
-          <div class="form-control full-width">
-            <label>Notes</label>
-            <textarea name="quickClientNotes" rows="3" [(ngModel)]="quickClient.notes"></textarea>
-          </div>
-        </div>
-
-        <div class="inline-actions">
-          <button type="button" class="btn btn-primary" [disabled]="creatingClient() || !quickClient.name.trim()" (click)="saveQuickClient()">
-            {{ creatingClient() ? 'Création...' : 'Créer et lier' }}
-          </button>
-        </div>
-      </div>
+      <app-quick-client-form
+        *ngIf="showQuickCreate()"
+        [initialName]="clientSearch()"
+        (clientCreated)="onQuickClientCreated($event)"
+        (cancelled)="showQuickCreate.set(false)"
+      />
 
       <div class="account-banner" *ngIf="selectedClient() && (clientProfile() || loadingClientProfile())">
         <div class="account-banner-header">

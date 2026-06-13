@@ -2,7 +2,7 @@
 @include layout.page-layout();
 
 // ── Service orders modal is wider ─────────────────────────────────────────────
-.modal-container { max-width: 960px; }
+.modal-container { max-width: 1200px; }
 
 // ── Design tokens (mirror _page-layout) ──────────────────────────────────────
 $_red:      #ff2d37;
