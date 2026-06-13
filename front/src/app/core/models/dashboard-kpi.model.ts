@@ -17,7 +17,9 @@ export interface DashboardKpi {
   total_sale_year: number;
   total_purchase_year: number;
   tyres_month: number;
+  parts_month: number;
   tyres_year: number;
+  parts_year: number;
   tyres_purchased_month: number;
   tyres_purchased_year: number;
   stock_quantity: number;

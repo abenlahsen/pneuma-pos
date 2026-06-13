@@ -96,7 +96,10 @@
               ≈ {{ (k.sales_month_amount / k.tyres_month) | number:'1.2-2' }} DH / pneu
             </span>
           </div>
-          <div class="kpi-badge">{{ k.tyres_month }} Pneus vendus</div>
+          <div class="kpi-badges">
+            <div class="kpi-badge">{{ k.tyres_month }} Pneus vendus</div>
+            <div class="kpi-badge kpi-badge--parts" *ngIf="k.parts_month > 0">{{ k.parts_month }} Pièces vendues</div>
+          </div>
         </div>
         <div class="kpi-card" [class.negative-card]="k.margin_month < 0">
           <div class="kpi-icon">📈</div>
@@ -213,7 +216,10 @@
               ≈ {{ (k.total_sale_year / k.tyres_year) | number:'1.2-2' }} DH / pneu
             </span>
           </div>
-          <div class="kpi-badge">{{ k.tyres_year }} Pneus vendus</div>
+          <div class="kpi-badges">
+            <div class="kpi-badge">{{ k.tyres_year }} Pneus vendus</div>
+            <div class="kpi-badge kpi-badge--parts" *ngIf="k.parts_year > 0">{{ k.parts_year }} Pièces vendues</div>
+          </div>
         </div>
         <div class="kpi-card" [class.negative-card]="k.margin_year < 0">
           <div class="kpi-icon">📈</div>
