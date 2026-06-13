@@ -51,6 +51,24 @@ class DashboardController extends Controller
             return (int) $q->sum('sale_items.quantity');
         };
 
+        $partsSoldQty = function (string $start, ?string $end = null): int {
+            $q = DB::table('sale_items')
+                ->join('products', 'sale_items.product_id', '=', 'products.id')
+                ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+                ->where('products.type', 'part');
+            $end ? $q->whereBetween('sales.date', [$start, $end]) : $q->whereDate('sales.date', $start);
+            $fromSales = (int) $q->sum('sale_items.quantity');
+
+            $sq = DB::table('service_items')
+                ->join('service_orders', 'service_items.service_order_id', '=', 'service_orders.id')
+                ->where('service_items.item_type', 'part')
+                ->where('service_orders.status', '!=', 'ANNULÉE');
+            $end ? $sq->whereBetween('service_orders.date', [$start, $end]) : $sq->whereDate('service_orders.date', $start);
+            $fromService = (int) $sq->sum('service_items.quantity');
+
+            return $fromSales + $fromService;
+        };
+
         $tyrePurchaseQty = fn (string $start, string $end): int => (int) DB::table('purchase_items')
             ->join('products', 'purchase_items.product_id', '=', 'products.id')
             ->join('purchases', 'purchase_items.purchase_id', '=', 'purchases.id')
@@ -194,7 +212,9 @@ class DashboardController extends Controller
             'total_sale_year' => $salesYearAmount + $caServiceYear,
             'total_purchase_year' => round((clone $purchasesYear)->sum('total_price'), 2),
             'tyres_month' => $tyreSalesQty($monthStart, $monthEnd),
+            'parts_month' => $partsSoldQty($monthStart, $monthEnd),
             'tyres_year' => $tyreSalesQty($yearStart, $yearEnd),
+            'parts_year' => $partsSoldQty($yearStart, $yearEnd),
             'tyres_purchased_month' => $tyrePurchaseQty($monthStart, $monthEnd),
             'tyres_purchased_year' => $tyrePurchaseQty($yearStart, $yearEnd),
 
