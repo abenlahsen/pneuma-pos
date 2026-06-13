@@ -76,6 +76,13 @@ class DashboardController extends Controller
             ->whereBetween('purchases.date', [$start, $end])
             ->sum('purchase_items.quantity');
 
+        $partsPurchasedQty = fn (string $start, string $end): int => (int) DB::table('purchase_items')
+            ->join('products', 'purchase_items.product_id', '=', 'products.id')
+            ->join('purchases', 'purchase_items.purchase_id', '=', 'purchases.id')
+            ->where('products.type', 'part')
+            ->whereBetween('purchases.date', [$start, $end])
+            ->sum('purchase_items.quantity');
+
         $purchasesTotalLifetime = (float) Purchase::sum('total_price');
         $purchasesPaidLifetime = (float) Purchase::where('payment_status', 'PAYE')->sum('total_price');
 
@@ -216,7 +223,9 @@ class DashboardController extends Controller
             'tyres_year' => $tyreSalesQty($yearStart, $yearEnd),
             'parts_year' => $partsSoldQty($yearStart, $yearEnd),
             'tyres_purchased_month' => $tyrePurchaseQty($monthStart, $monthEnd),
+            'parts_purchased_month' => $partsPurchasedQty($monthStart, $monthEnd),
             'tyres_purchased_year' => $tyrePurchaseQty($yearStart, $yearEnd),
+            'parts_purchased_year' => $partsPurchasedQty($yearStart, $yearEnd),
 
             // Sales by Commercial
             'sales_by_commercial' => $salesByCommercial,
