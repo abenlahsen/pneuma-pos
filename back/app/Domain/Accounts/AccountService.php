@@ -15,7 +15,31 @@ class AccountService
      */
     public function list(array $filters = [])
     {
-        $query = Account::query();
+        $today = now()->toDateString();
+
+        $query = Account::query()->selectRaw("
+            accounts.*,
+            COALESCE((
+                SELECT SUM(t.amount) FROM transactions t
+                WHERE t.account_id = accounts.id AND t.type = 'income'
+                AND (t.method NOT IN ('Chèque','Effet') OR t.method IS NULL OR t.date <= ?)
+            ), 0) AS settled_income,
+            COALESCE((
+                SELECT SUM(t.amount) FROM transactions t
+                WHERE t.account_id = accounts.id AND t.type = 'expense'
+                AND (t.method NOT IN ('Chèque','Effet') OR t.method IS NULL OR t.date <= ?)
+            ), 0) AS settled_expense,
+            COALESCE((
+                SELECT SUM(t.amount) FROM transactions t
+                WHERE t.account_id = accounts.id AND t.type = 'income'
+                AND t.method IN ('Chèque','Effet') AND t.date > ?
+            ), 0) AS pending_income,
+            COALESCE((
+                SELECT SUM(t.amount) FROM transactions t
+                WHERE t.account_id = accounts.id AND t.type = 'expense'
+                AND t.method IN ('Chèque','Effet') AND t.date > ?
+            ), 0) AS pending_expense
+        ", [$today, $today, $today, $today]);
 
         if (! empty($filters['search'])) {
             $query->where('name', 'like', '%' . $filters['search'] . '%');
