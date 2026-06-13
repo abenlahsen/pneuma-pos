@@ -141,6 +141,53 @@
         </div>
       </div>
 
+      <!-- Performances par mois -->
+      <div class="commercials-section">
+        <h3 class="section-title">Performances Commerciaux — {{ selectedMonth() }}</h3>
+        <div class="modern-table-container">
+          <table class="modern-table">
+            <thead>
+              <tr>
+                <th>Commercial</th>
+                <th>Pneus Vendus</th>
+                <th>Chiffre d'Affaires</th>
+                <th>Marge Brute</th>
+                <th>Marge / Pneu</th>
+                <th>% Marge</th>
+                <th>Impayés</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let com of k.sales_by_commercial">
+                <td>
+                  <div class="user-cell">
+                    <div class="avatar">{{ com.commercial_name.charAt(0) | uppercase }}</div>
+                    <span class="user-name">{{ com.commercial_name }}</span>
+                  </div>
+                </td>
+                <td class="font-numeric">{{ com.total_tyres }}</td>
+                <td class="font-numeric">{{ com.total_sales | number:'1.2-2' }} <small>DH</small></td>
+                <td class="font-numeric" [class.negative]="com.total_margin < 0">
+                  {{ com.total_margin | number:'1.2-2' }} <small>DH</small>
+                </td>
+                <td class="font-numeric" [class.negative]="com.avg_margin_per_tyre < 0">
+                  {{ com.avg_margin_per_tyre | number:'1.2-2' }} <small>DH</small>
+                </td>
+                <td class="font-numeric" [class.negative]="com.margin_rate < 0">
+                  {{ com.margin_rate | number:'1.1-1' }}<small>%</small>
+                </td>
+                <td class="font-numeric" [class.negative]="com.total_unpaid > 0">
+                  {{ com.total_unpaid | number:'1.2-2' }} <small>DH</small>
+                </td>
+              </tr>
+              <tr *ngIf="k.sales_by_commercial.length === 0">
+                <td colspan="7" class="empty-row">Aucune vente ce mois-ci</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Cette année -->
       <div class="kpi-group-header">
         <h4 class="kpi-group-title">📈 Cette année</h4>
@@ -211,6 +258,53 @@
         </div>
       </div>
 
+      <!-- Performances par année -->
+      <div class="commercials-section">
+        <h3 class="section-title">Performances Commerciaux — {{ selectedYear() }}</h3>
+        <div class="modern-table-container">
+          <table class="modern-table">
+            <thead>
+              <tr>
+                <th>Commercial</th>
+                <th>Pneus Vendus</th>
+                <th>Chiffre d'Affaires</th>
+                <th>Marge Brute</th>
+                <th>Marge / Pneu</th>
+                <th>% Marge</th>
+                <th>Impayés</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let com of k.sales_by_commercial_year">
+                <td>
+                  <div class="user-cell">
+                    <div class="avatar">{{ com.commercial_name.charAt(0) | uppercase }}</div>
+                    <span class="user-name">{{ com.commercial_name }}</span>
+                  </div>
+                </td>
+                <td class="font-numeric">{{ com.total_tyres }}</td>
+                <td class="font-numeric">{{ com.total_sales | number:'1.2-2' }} <small>DH</small></td>
+                <td class="font-numeric" [class.negative]="com.total_margin < 0">
+                  {{ com.total_margin | number:'1.2-2' }} <small>DH</small>
+                </td>
+                <td class="font-numeric" [class.negative]="com.avg_margin_per_tyre < 0">
+                  {{ com.avg_margin_per_tyre | number:'1.2-2' }} <small>DH</small>
+                </td>
+                <td class="font-numeric" [class.negative]="com.margin_rate < 0">
+                  {{ com.margin_rate | number:'1.1-1' }}<small>%</small>
+                </td>
+                <td class="font-numeric" [class.negative]="com.total_unpaid > 0">
+                  {{ com.total_unpaid | number:'1.2-2' }} <small>DH</small>
+                </td>
+              </tr>
+              <tr *ngIf="k.sales_by_commercial_year.length === 0">
+                <td colspan="7" class="empty-row">Aucune vente cette année</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Général -->
       <h4 class="kpi-group-title">🏦 Général</h4>
       <div class="kpi-grid">
@@ -245,52 +339,6 @@
         </div>
       </div>
 
-      <div class="commercials-section">
-        <h3 class="section-title">Performances Commerciaux ({{ selectedMonth() }})</h3>
-
-        <div class="modern-table-container">
-          <table class="modern-table">
-            <thead>
-              <tr>
-                <th>Commercial</th>
-                <th>Pneus Vendus</th>
-                <th>Chiffre d'Affaires</th>
-                <th>Marge Brute</th>
-                <th>Marge / Pneu</th>
-                <th>% Marge</th>
-                <th>Impayés</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let com of k.sales_by_commercial">
-                <td>
-                  <div class="user-cell">
-                    <div class="avatar">{{ com.commercial_name.charAt(0) | uppercase }}</div>
-                    <span class="user-name">{{ com.commercial_name }}</span>
-                  </div>
-                </td>
-                <td class="font-numeric">{{ com.total_tyres }}</td>
-                <td class="font-numeric">{{ com.total_sales | number:'1.2-2' }} <small>DH</small></td>
-                <td class="font-numeric" [class.negative]="com.total_margin < 0">
-                  {{ com.total_margin | number:'1.2-2' }} <small>DH</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.avg_margin_per_tyre < 0">
-                  {{ com.avg_margin_per_tyre | number:'1.2-2' }} <small>DH</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.margin_rate < 0">
-                  {{ com.margin_rate | number:'1.1-1' }}<small>%</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.total_unpaid > 0">
-                  {{ com.total_unpaid | number:'1.2-2' }} <small>DH</small>
-                </td>
-              </tr>
-              <tr *ngIf="k.sales_by_commercial.length === 0">
-                <td colspan="7" class="empty-row">Aucune vente ce mois-ci</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
 
     <div class="quick-links">
