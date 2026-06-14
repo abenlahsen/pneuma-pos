@@ -160,24 +160,20 @@ class DashboardController extends Controller
             })->toArray();
         };
 
-        // Merge sales rows with service-order rows per commercial.
-        // Service items: service lines cost=0, part lines cost=qty×purchase_price.
-        $mergeWithSo = function ($salesRows, $soRows): \Illuminate\Support\Collection {
-            $salesMap = collect($salesRows)->keyBy(fn ($r) => $r->commercial_name ?? 'Non assigné');
-            $soMap    = collect($soRows)->keyBy(fn ($r) => $r->commercial_name ?? 'Non assigné');
+        $mapServiceCommercials = function ($rows): array {
+            return collect($rows)->map(function ($item) {
+                $ca     = (float) ($item->so_ca     ?? 0);
+                $margin = (float) ($item->so_margin ?? 0);
 
-            return $salesMap->keys()->merge($soMap->keys())->unique()->map(function ($name) use ($salesMap, $soMap) {
-                $s  = $salesMap->get($name);
-                $so = $soMap->get($name);
-
-                return (object) [
-                    'commercial_name' => $name,
-                    'total_sales'     => (float) ($s?->total_sales  ?? 0) + (float) ($so?->so_ca     ?? 0),
-                    'total_tyres'     => (int)   ($s?->total_tyres  ?? 0),
-                    'total_margin'    => (float) ($s?->total_margin ?? 0) + (float) ($so?->so_margin ?? 0),
-                    'total_unpaid'    => (float) ($s?->total_unpaid ?? 0) + (float) ($so?->so_unpaid ?? 0),
+                return [
+                    'commercial_name' => $item->commercial_name ?? 'Non assigné',
+                    'total_ca'        => round($ca, 2),
+                    'total_orders'    => (int) ($item->so_count ?? 0),
+                    'total_margin'    => round($margin, 2),
+                    'total_unpaid'    => round((float) ($item->so_unpaid ?? 0), 2),
+                    'margin_rate'     => $ca > 0 ? round(($margin / $ca) * 100, 1) : 0,
                 ];
-            })->sortByDesc(fn ($r) => $r->total_sales)->values();
+            })->sortByDesc(fn ($r) => $r['total_ca'])->values()->toArray();
         };
 
         $commercialSelectRaw = "COALESCE(users.name, 'Non assigné') as commercial_name,
@@ -190,6 +186,7 @@ class DashboardController extends Controller
 
         // Service-order aggregation per commercial (margin: service lines cost=0, part lines cost from stock)
         $soCommercialRaw = "COALESCE(users.name, 'Non assigné') as commercial_name,
+            COUNT(service_orders.id) as so_count,
             SUM(service_orders.net_amount) as so_ca,
             SUM((
                 SELECT COALESCE(SUM(CASE
@@ -239,8 +236,10 @@ class DashboardController extends Controller
             ->groupBy('sales.commercial_id', 'users.name')
             ->get();
 
-        $salesByCommercial     = $mapCommercials($mergeWithSo($rawSalesMonth, $soByMonth));
-        $salesByCommercialYear = $mapCommercials($mergeWithSo($rawSalesYear,  $soByYear));
+        $salesByCommercial          = $mapCommercials($rawSalesMonth);
+        $salesByCommercialYear      = $mapCommercials($rawSalesYear);
+        $serviceByCommercial        = $mapServiceCommercials($soByMonth);
+        $serviceByCommercialYear    = $mapServiceCommercials($soByYear);
 
         $salesTodayAmount  = round((clone $salesToday)->sum('total_sale'), 2);
         $marginSalesToday  = round((clone $salesToday)->sum('margin'), 2);
@@ -280,8 +279,10 @@ class DashboardController extends Controller
             'parts_purchased_year' => $partsPurchasedQty($yearStart, $yearEnd),
 
             // Sales by Commercial
-            'sales_by_commercial' => $salesByCommercial,
-            'sales_by_commercial_year' => $salesByCommercialYear,
+            'sales_by_commercial'          => $salesByCommercial,
+            'sales_by_commercial_year'     => $salesByCommercialYear,
+            'service_by_commercial'        => $serviceByCommercial,
+            'service_by_commercial_year'   => $serviceByCommercialYear,
 
             // Stock
             'stock_quantity' => (int) Stock::sum('quantity'),
