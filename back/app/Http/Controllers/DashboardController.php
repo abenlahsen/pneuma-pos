@@ -160,7 +160,27 @@ class DashboardController extends Controller
             })->toArray();
         };
 
-        $commercialSelectRaw = "users.name as commercial_name,
+        // Merge sales rows with service-order rows per commercial.
+        // Service items: service lines cost=0, part lines cost=qty×purchase_price.
+        $mergeWithSo = function ($salesRows, $soRows): \Illuminate\Support\Collection {
+            $salesMap = collect($salesRows)->keyBy(fn ($r) => $r->commercial_name ?? 'Non assigné');
+            $soMap    = collect($soRows)->keyBy(fn ($r) => $r->commercial_name ?? 'Non assigné');
+
+            return $salesMap->keys()->merge($soMap->keys())->unique()->map(function ($name) use ($salesMap, $soMap) {
+                $s  = $salesMap->get($name);
+                $so = $soMap->get($name);
+
+                return (object) [
+                    'commercial_name' => $name,
+                    'total_sales'     => (float) ($s?->total_sales  ?? 0) + (float) ($so?->so_ca     ?? 0),
+                    'total_tyres'     => (int)   ($s?->total_tyres  ?? 0),
+                    'total_margin'    => (float) ($s?->total_margin ?? 0) + (float) ($so?->so_margin ?? 0),
+                    'total_unpaid'    => (float) ($s?->total_unpaid ?? 0) + (float) ($so?->so_unpaid ?? 0),
+                ];
+            })->sortByDesc(fn ($r) => $r->total_sales)->values();
+        };
+
+        $commercialSelectRaw = "COALESCE(users.name, 'Non assigné') as commercial_name,
             SUM(sales.total_sale) as total_sales,
             COALESCE(SUM(tyre_items.tyre_qty), 0) as total_tyres,
             SUM(sales.margin) as total_margin,
@@ -168,27 +188,59 @@ class DashboardController extends Controller
                 THEN sales.total_sale - COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.sale_id = sales.id), 0)
                 ELSE 0 END) as total_unpaid";
 
-        $salesByCommercial = $mapCommercials(
-            DB::table('sales')
-                ->leftJoin('users', 'sales.commercial_id', '=', 'users.id')
-                ->leftJoinSub($tyreItemsSub, 'tyre_items', 'tyre_items.sale_id', '=', 'sales.id')
-                ->whereBetween('sales.date', [$monthStart, $monthEnd])
-                ->selectRaw($commercialSelectRaw)
-                ->groupBy('sales.commercial_id', 'users.name')
-                ->orderByDesc('total_sales')
-                ->get()
-        );
+        // Service-order aggregation per commercial (margin: service lines cost=0, part lines cost from stock)
+        $soCommercialRaw = "COALESCE(users.name, 'Non assigné') as commercial_name,
+            SUM(service_orders.net_amount) as so_ca,
+            SUM((
+                SELECT COALESCE(SUM(CASE
+                    WHEN si.item_type = 'service' THEN si.line_total
+                    ELSE si.line_total - si.quantity * COALESCE(stk.purchase_price, 0)
+                END), 0)
+                FROM service_items si
+                LEFT JOIN stocks stk ON si.stock_id = stk.id
+                WHERE si.service_order_id = service_orders.id
+            )) as so_margin,
+            SUM(CASE WHEN service_orders.payment_status IN ('NON PAYE', 'PARTIEL')
+                THEN service_orders.net_amount - COALESCE((
+                    SELECT SUM(sp.amount) FROM service_payments sp
+                    WHERE sp.service_order_id = service_orders.id
+                ), 0)
+                ELSE 0 END) as so_unpaid";
 
-        $salesByCommercialYear = $mapCommercials(
-            DB::table('sales')
-                ->leftJoin('users', 'sales.commercial_id', '=', 'users.id')
-                ->leftJoinSub($tyreItemsSub, 'tyre_items', 'tyre_items.sale_id', '=', 'sales.id')
-                ->whereBetween('sales.date', [$yearStart, $yearEnd])
-                ->selectRaw($commercialSelectRaw)
-                ->groupBy('sales.commercial_id', 'users.name')
-                ->orderByDesc('total_sales')
-                ->get()
-        );
+        $soByMonth = DB::table('service_orders')
+            ->leftJoin('users', 'service_orders.commercial_id', '=', 'users.id')
+            ->where('service_orders.status', '!=', 'ANNULÉE')
+            ->whereBetween('service_orders.date', [$monthStart, $monthEnd])
+            ->selectRaw($soCommercialRaw)
+            ->groupBy('service_orders.commercial_id', 'users.name')
+            ->get();
+
+        $soByYear = DB::table('service_orders')
+            ->leftJoin('users', 'service_orders.commercial_id', '=', 'users.id')
+            ->where('service_orders.status', '!=', 'ANNULÉE')
+            ->whereBetween('service_orders.date', [$yearStart, $yearEnd])
+            ->selectRaw($soCommercialRaw)
+            ->groupBy('service_orders.commercial_id', 'users.name')
+            ->get();
+
+        $rawSalesMonth = DB::table('sales')
+            ->leftJoin('users', 'sales.commercial_id', '=', 'users.id')
+            ->leftJoinSub($tyreItemsSub, 'tyre_items', 'tyre_items.sale_id', '=', 'sales.id')
+            ->whereBetween('sales.date', [$monthStart, $monthEnd])
+            ->selectRaw($commercialSelectRaw)
+            ->groupBy('sales.commercial_id', 'users.name')
+            ->get();
+
+        $rawSalesYear = DB::table('sales')
+            ->leftJoin('users', 'sales.commercial_id', '=', 'users.id')
+            ->leftJoinSub($tyreItemsSub, 'tyre_items', 'tyre_items.sale_id', '=', 'sales.id')
+            ->whereBetween('sales.date', [$yearStart, $yearEnd])
+            ->selectRaw($commercialSelectRaw)
+            ->groupBy('sales.commercial_id', 'users.name')
+            ->get();
+
+        $salesByCommercial     = $mapCommercials($mergeWithSo($rawSalesMonth, $soByMonth));
+        $salesByCommercialYear = $mapCommercials($mergeWithSo($rawSalesYear,  $soByYear));
 
         $salesTodayAmount  = round((clone $salesToday)->sum('total_sale'), 2);
         $marginSalesToday  = round((clone $salesToday)->sum('margin'), 2);
