@@ -31,6 +31,17 @@ export interface DashboardKpi {
   cash_balance: number;
   sales_by_commercial: CommercialPerf[];
   sales_by_commercial_year: CommercialPerf[];
+  service_by_commercial: ServiceCommercialPerf[];
+  service_by_commercial_year: ServiceCommercialPerf[];
+}
+
+export interface ServiceCommercialPerf {
+  commercial_name: string;
+  total_ca: number;
+  total_orders: number;
+  total_margin: number;
+  total_unpaid: number;
+  margin_rate: number;
 }
 
 export interface CommercialPerf {
