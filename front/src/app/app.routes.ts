@@ -146,6 +146,13 @@ export const routes: Routes = [
       import('./features/settings/pages/company-settings-page.component').then((m) => m.CompanySettingsPageComponent),
   },
   {
+    path: 'activity-log',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'view activity-log' },
+    loadComponent: () =>
+      import('./features/activity-log/pages/activity-log-page.component').then((m) => m.ActivityLogPageComponent),
+  },
+  {
     path: '**',
     redirectTo: 'dashboard',
   },

@@ -5,11 +5,15 @@ namespace App\Domain\ServiceOrders;
 use App\Models\ServiceItem;
 use App\Models\ServiceOrder;
 use App\Models\Transaction;
+use App\Services\ActivityLogService;
 use Illuminate\Support\Facades\DB;
 
 class ServiceOrderService
 {
-    public function __construct(private StockDeductionService $stockDeduction) {}
+    public function __construct(
+        private StockDeductionService $stockDeduction,
+        private ActivityLogService $activityLog,
+    ) {}
 
     public function create(array $validated, ?int $userId): ServiceOrder
     {
@@ -43,13 +47,23 @@ class ServiceOrderService
 
             $this->stockDeduction->deductForOrder($order, $userId);
 
-            return $order->fresh()->load(['commercial', 'items.product', 'clientRecord']);
+            $loaded = $order->fresh()->load(['commercial', 'items.product', 'clientRecord']);
+
+            $this->activityLog->logServiceOrderCreated($loaded, $userId, ActivityLogService::resolveUserName($userId));
+
+            return $loaded;
         });
     }
 
     public function update(ServiceOrder $order, array $validated, ?int $userId): ServiceOrder
     {
-        return DB::transaction(function () use ($order, $validated, $userId) {
+        $oldState = [
+            'status'         => $order->status,
+            'payment_status' => $order->payment_status,
+            'net_amount'     => (float) $order->net_amount,
+        ];
+
+        return DB::transaction(function () use ($order, $validated, $userId, $oldState) {
             $items = $validated['items'] ?? null;
             unset($validated['items']);
 
@@ -82,12 +96,29 @@ class ServiceOrderService
                 $this->stockDeduction->restoreForOrder($order, $userId);
             }
 
-            return $order->fresh()->load(['commercial', 'items.product', 'clientRecord']);
+            $loaded = $order->fresh()->load(['commercial', 'items.product', 'clientRecord']);
+
+            $newState = [
+                'status'         => $loaded->status,
+                'payment_status' => $loaded->payment_status,
+                'net_amount'     => (float) $loaded->net_amount,
+            ];
+
+            $this->activityLog->logServiceOrderUpdated($loaded, $oldState, $newState, $userId, ActivityLogService::resolveUserName($userId));
+
+            return $loaded;
         });
     }
 
     public function delete(ServiceOrder $order, ?int $userId = null): void
     {
+        $snapshot = [
+            'id'             => $order->id,
+            'net_amount'     => $order->net_amount,
+            'payment_status' => $order->payment_status,
+            'status'         => $order->status,
+        ];
+
         DB::transaction(function () use ($order, $userId) {
             $this->stockDeduction->restoreForOrder($order, $userId);
 
@@ -100,6 +131,8 @@ class ServiceOrderService
 
             $order->delete();
         });
+
+        $this->activityLog->logServiceOrderDeleted($snapshot, $userId, ActivityLogService::resolveUserName($userId));
     }
 
     public function syncItems(ServiceOrder $order, array $items, ?int $userId): void

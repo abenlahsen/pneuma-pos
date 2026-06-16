@@ -2,13 +2,16 @@
 
 namespace App\Domain\ServiceOrders;
 
+use App\Models\ActivityLog;
 use App\Models\ServiceOrder;
 use App\Models\ServicePayment;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\ActivityLogService;
 
 class ServicePaymentService
 {
+    public function __construct(private ActivityLogService $activityLog) {}
     public function listForOrder(ServiceOrder $order): array
     {
         $payments = $order->payments()->with('transaction.account', 'account')->latest('date')->get();
@@ -61,12 +64,26 @@ class ServicePaymentService
 
         $this->refreshPaymentStatus($order);
 
+        $this->activityLog->logPaymentAdded(
+            ActivityLog::ENTITY_SERVICE_ORDER,
+            $order->id,
+            "Ordre de service #{$order->id}",
+            (float) $validated['amount'],
+            $method ?? 'Espèces',
+            $validated['reference'] ?? null,
+            $user->id,
+            $user->name,
+        );
+
         return $payment->load('transaction.account', 'account');
     }
 
-    public function deletePayment(ServiceOrder $order, ServicePayment $payment): void
+    public function deletePayment(ServiceOrder $order, ServicePayment $payment, ?int $userId = null, ?string $userName = null): void
     {
         abort_unless($payment->service_order_id === $order->id, 404);
+
+        $amount = (float) $payment->amount;
+        $method = $payment->method ?? '';
 
         if ($payment->transaction_id) {
             Transaction::where('id', $payment->transaction_id)->delete();
@@ -75,6 +92,16 @@ class ServicePaymentService
         $payment->delete();
 
         $this->refreshPaymentStatus($order);
+
+        $this->activityLog->logPaymentDeleted(
+            ActivityLog::ENTITY_SERVICE_ORDER,
+            $order->id,
+            "Ordre de service #{$order->id}",
+            $amount,
+            $method,
+            $userId,
+            $userName,
+        );
     }
 
     private function describeOrderItems(ServiceOrder $order): string

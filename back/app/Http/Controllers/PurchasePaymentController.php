@@ -39,9 +39,14 @@ class PurchasePaymentController extends Controller
         return response()->json($payment, 201);
     }
 
-    public function destroy(Purchase $purchase, PurchasePayment $payment): JsonResponse
+    public function destroy(Request $request, Purchase $purchase, PurchasePayment $payment): JsonResponse
     {
-        $this->purchasePaymentService->deletePayment($purchase, $payment);
+        $this->purchasePaymentService->deletePayment(
+            $purchase,
+            $payment,
+            $request->user()?->id,
+            $request->user()?->name,
+        );
 
         return response()->json(null, 204);
     }

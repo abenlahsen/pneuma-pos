@@ -1,0 +1,193 @@
+@use '../../_page-layout' as layout;
+@include layout.page-layout();
+
+$_red:     #ff2d37;
+$_text:    #0f172a;
+$_muted:   #64748b;
+$_surface: #ffffff;
+$_border:  #e8edf3;
+$_bg:      #f7fafc;
+
+// ── Filters bar ───────────────────────────────────────────────────────────────
+.filters-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+
+  .filter-input,
+  .filter-select {
+    height: 2.1rem;
+    padding: 0 0.65rem;
+    border: 1px solid $_border;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    background: $_surface;
+    color: $_text;
+    outline: none;
+
+    &:focus { border-color: $_red; box-shadow: 0 0 0 2px rgba(255, 45, 55, 0.12); }
+  }
+
+  .filter-search { min-width: 200px; }
+  .filter-select { min-width: 160px; }
+}
+
+.btn-apply,
+.btn-reset {
+  height: 2.1rem;
+  padding: 0 0.9rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s;
+}
+
+.btn-apply {
+  background: $_red;
+  color: #fff;
+  &:hover { background: #cc0a13; }
+}
+
+.btn-reset {
+  background: $_bg;
+  color: $_muted;
+  border: 1px solid $_border;
+  &:hover { background: #edf2f7; }
+}
+
+// ── Table ─────────────────────────────────────────────────────────────────────
+.table-card {
+  background: $_surface;
+  border: 1px solid $_border;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.loading-overlay {
+  padding: 3rem;
+  text-align: center;
+  color: $_muted;
+  font-size: 0.9rem;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+
+  thead tr {
+    background: $_bg;
+    border-bottom: 2px solid $_border;
+  }
+
+  th {
+    padding: 0.7rem 1rem;
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: $_muted;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid $_border;
+    color: $_text;
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: rgba(0, 0, 0, 0.016); }
+}
+
+.cell-date {
+  white-space: nowrap;
+  color: $_muted;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.cell-description { max-width: 480px; }
+.cell-user { white-space: nowrap; }
+
+// ── Badges entité ─────────────────────────────────────────────────────────────
+.entity-badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+
+  &.entity-vente   { background: rgba(255, 45, 55, 0.08); color: #c0020b; }
+  &.entity-achat   { background: rgba(59, 130, 246, 0.1); color: #1d4ed8; }
+  &.entity-service { background: rgba(168, 85, 247, 0.1); color: #7c3aed; }
+}
+
+// ── Badges action ─────────────────────────────────────────────────────────────
+.action-badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &.badge-success { background: rgba(72, 187, 120, 0.12); color: #276749; }
+  &.badge-blue    { background: rgba(59, 130, 246, 0.1);  color: #1d4ed8; }
+  &.badge-danger  { background: rgba(245, 101, 101, 0.12); color: #c53030; }
+  &.badge-purple  { background: rgba(168, 85, 247, 0.1);  color: #6d28d9; }
+  &.badge-warning { background: rgba(237, 137, 54, 0.12); color: #c05621; }
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: $_muted;
+  font-size: 0.9rem;
+}
+
+// ── Pagination ────────────────────────────────────────────────────────────────
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.875rem 1rem;
+  border-top: 1px solid $_border;
+  flex-wrap: wrap;
+}
+
+.page-btn {
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.5rem;
+  border: 1px solid $_border;
+  border-radius: 6px;
+  background: $_surface;
+  color: $_text;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+
+  &:hover:not([disabled]):not(.active) { background: $_bg; }
+  &.active { background: $_red; border-color: $_red; color: #fff; }
+  &[disabled] { opacity: 0.4; cursor: not-allowed; }
+}
+
+.page-info {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: $_muted;
+}
