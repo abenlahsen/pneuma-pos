@@ -2,13 +2,16 @@
 
 namespace App\Domain\Purchases;
 
+use App\Models\ActivityLog;
 use App\Models\Purchase;
 use App\Models\PurchasePayment;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\ActivityLogService;
 
 class PurchasePaymentService
 {
+    public function __construct(private ActivityLogService $activityLog) {}
     public function listForPurchase(Purchase $purchase): array
     {
         $purchase->load(['payments.transaction.account']);
@@ -59,14 +62,28 @@ class PurchasePaymentService
 
         $this->refreshPaymentStatus($purchase);
 
+        $this->activityLog->logPaymentAdded(
+            ActivityLog::ENTITY_ACHAT,
+            $purchase->id,
+            "Achat #{$purchase->id}",
+            (float) $validated['amount'],
+            $validated['method'],
+            $validated['reference'] ?? null,
+            $user->id,
+            $user->name,
+        );
+
         return $payment->load('transaction.account');
     }
 
-    public function deletePayment(Purchase $purchase, PurchasePayment $payment): void
+    public function deletePayment(Purchase $purchase, PurchasePayment $payment, ?int $userId = null, ?string $userName = null): void
     {
         if ((int) $payment->purchase_id !== (int) $purchase->id) {
             abort(404);
         }
+
+        $amount = (float) $payment->amount;
+        $method = $payment->method ?? '';
 
         if ($payment->transaction_id) {
             Transaction::where('id', $payment->transaction_id)->delete();
@@ -75,6 +92,16 @@ class PurchasePaymentService
         $payment->delete();
 
         $this->refreshPaymentStatus($purchase->fresh('payments'));
+
+        $this->activityLog->logPaymentDeleted(
+            ActivityLog::ENTITY_ACHAT,
+            $purchase->id,
+            "Achat #{$purchase->id}",
+            $amount,
+            $method,
+            $userId,
+            $userName,
+        );
     }
 
     public function refreshPaymentStatus(Purchase $purchase): Purchase

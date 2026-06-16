@@ -40,9 +40,14 @@ class PaymentController extends Controller
     /**
      * Delete a payment and its linked transaction.
      */
-    public function destroy(Sale $sale, Payment $payment): JsonResponse
+    public function destroy(Sale $sale, Payment $payment, \Illuminate\Http\Request $request): JsonResponse
     {
-        $this->salePaymentService->deletePayment($sale, $payment);
+        $this->salePaymentService->deletePayment(
+            $sale,
+            $payment,
+            $request->user()?->id,
+            $request->user()?->name,
+        );
 
         return response()->json(null, 204);
     }

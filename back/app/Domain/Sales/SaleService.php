@@ -7,6 +7,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Stock;
 use App\Models\Transaction;
+use App\Services\ActivityLogService;
 use App\Services\StockMovementService;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +15,10 @@ use Illuminate\Support\Facades\Schema;
 
 class SaleService
 {
-    public function __construct(private StockMovementService $movements) {}
+    public function __construct(
+        private StockMovementService $movements,
+        private ActivityLogService $activityLog,
+    ) {}
 
     public function create(array $validated, ?int $userId = null): Sale
     {
@@ -27,7 +31,11 @@ class SaleService
 
             $this->persistItems($sale, $items, $userId);
 
-            return $sale->fresh(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
+            $fresh = $sale->fresh(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
+
+            $this->activityLog->logSaleCreated($fresh, $userId, ActivityLogService::resolveUserName($userId));
+
+            return $fresh;
         });
     }
 
@@ -35,6 +43,13 @@ class SaleService
     {
         return DB::transaction(function () use ($sale, $validated, $userId) {
             $items = $validated['items'] ?? null;
+
+            $oldState = [
+                'status'         => $sale->status,
+                'payment_status' => $sale->payment_status,
+                'total_sale'     => (float) $sale->total_sale,
+                'total_quantity' => (int) $sale->total_quantity,
+            ];
 
             $saleData = $items !== null
                 ? $this->prepareSalePayload($validated, $items, $sale)
@@ -48,13 +63,32 @@ class SaleService
                 $this->persistItems($sale, $items, $userId);
             }
 
-            return $sale->fresh(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
+            $fresh = $sale->fresh(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
+
+            $newState = [
+                'status'         => $fresh->status,
+                'payment_status' => $fresh->payment_status,
+                'total_sale'     => (float) $fresh->total_sale,
+                'total_quantity' => (int) $fresh->total_quantity,
+            ];
+
+            $this->activityLog->logSaleUpdated($fresh, $oldState, $newState, $userId, ActivityLogService::resolveUserName($userId));
+
+            return $fresh;
         });
     }
 
     public function delete(Sale $sale, ?int $userId = null): void
     {
         DB::transaction(function () use ($sale, $userId) {
+            $snapshot = [
+                'id'             => $sale->id,
+                'total_sale'     => $sale->total_sale,
+                'total_quantity' => $sale->total_quantity,
+                'payment_status' => $sale->payment_status,
+                'status'         => $sale->status,
+            ];
+
             $this->restoreStockForItems($sale, $userId);
 
             $transactionIds = $sale->payments()->whereNotNull('transaction_id')->pluck('transaction_id');
@@ -65,6 +99,8 @@ class SaleService
             }
 
             $sale->delete();
+
+            $this->activityLog->logSaleDeleted($snapshot, $userId, ActivityLogService::resolveUserName($userId));
         });
     }
 

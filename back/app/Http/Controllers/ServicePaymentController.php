@@ -29,9 +29,14 @@ class ServicePaymentController extends Controller
         return response()->json((new ServicePaymentResource($payment))->resolve(), 201);
     }
 
-    public function destroy(ServiceOrder $serviceOrder, ServicePayment $servicePayment): JsonResponse
+    public function destroy(\Illuminate\Http\Request $request, ServiceOrder $serviceOrder, ServicePayment $servicePayment): JsonResponse
     {
-        $this->servicePaymentService->deletePayment($serviceOrder, $servicePayment);
+        $this->servicePaymentService->deletePayment(
+            $serviceOrder,
+            $servicePayment,
+            $request->user()?->id,
+            $request->user()?->name,
+        );
 
         return response()->json(null, 204);
     }

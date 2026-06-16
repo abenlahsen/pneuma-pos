@@ -2,13 +2,16 @@
 
 namespace App\Domain\Sales;
 
+use App\Models\ActivityLog;
 use App\Models\Payment;
 use App\Models\Sale;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\ActivityLogService;
 
 class SalePaymentService
 {
+    public function __construct(private ActivityLogService $activityLog) {}
     public function listForSale(Sale $sale): array
     {
         $payments = $sale->payments()->with('transaction.account')->latest('date')->get();
@@ -55,12 +58,26 @@ class SalePaymentService
 
         $this->refreshPaymentStatus($sale);
 
+        $this->activityLog->logPaymentAdded(
+            ActivityLog::ENTITY_VENTE,
+            $sale->id,
+            "Vente #{$sale->id}",
+            (float) $validated['amount'],
+            $validated['method'] ?? 'Espèces',
+            $validated['reference'] ?? null,
+            $user->id,
+            $user->name,
+        );
+
         return $payment->load('transaction.account');
     }
 
-    public function deletePayment(Sale $sale, Payment $payment): void
+    public function deletePayment(Sale $sale, Payment $payment, ?int $userId = null, ?string $userName = null): void
     {
         abort_unless($payment->sale_id === $sale->id, 404);
+
+        $amount = (float) $payment->amount;
+        $method = $payment->method ?? '';
 
         if ($payment->transaction_id) {
             Transaction::where('id', $payment->transaction_id)->delete();
@@ -69,6 +86,16 @@ class SalePaymentService
         $payment->delete();
 
         $this->refreshPaymentStatus($sale);
+
+        $this->activityLog->logPaymentDeleted(
+            ActivityLog::ENTITY_VENTE,
+            $sale->id,
+            "Vente #{$sale->id}",
+            $amount,
+            $method,
+            $userId,
+            $userName,
+        );
     }
 
     public function refreshPaymentStatus(Sale $sale): void

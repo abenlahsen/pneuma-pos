@@ -1,0 +1,132 @@
+<div class="page-wrapper">
+  <!-- En-tête page -->
+  <div class="page-header">
+    <div class="page-title-group">
+      <h1 class="page-title">📋 Journal d'activité</h1>
+      <span class="page-subtitle">{{ total() }} entrée(s)</span>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filters-bar">
+    <input
+      class="filter-input filter-search"
+      type="text"
+      placeholder="Rechercher…"
+      [ngModel]="filterSearch()"
+      (ngModelChange)="filterSearch.set($event)"
+      (keyup.enter)="applyFilters()"
+    />
+
+    <select
+      class="filter-select"
+      [ngModel]="filterEntityType()"
+      (ngModelChange)="filterEntityType.set($event); applyFilters()"
+    >
+      <option value="">Tous les types</option>
+      @for (t of filters().entityTypes; track t) {
+        <option [value]="t">{{ entityTypeLabel(t) }}</option>
+      }
+    </select>
+
+    <select
+      class="filter-select"
+      [ngModel]="filterAction()"
+      (ngModelChange)="filterAction.set($event); applyFilters()"
+    >
+      <option value="">Toutes les actions</option>
+      @for (a of filters().actions; track a) {
+        <option [value]="a">{{ actionLabel(a) }}</option>
+      }
+    </select>
+
+    <select
+      class="filter-select"
+      [ngModel]="filterUserId()"
+      (ngModelChange)="filterUserId.set($event); applyFilters()"
+    >
+      <option value="">Tous les utilisateurs</option>
+      @for (u of filters().users; track u.id) {
+        <option [value]="u.id">{{ u.name }}</option>
+      }
+    </select>
+
+    <input
+      class="filter-input"
+      type="date"
+      [ngModel]="filterDateFrom()"
+      (ngModelChange)="filterDateFrom.set($event)"
+      (change)="applyFilters()"
+    />
+    <input
+      class="filter-input"
+      type="date"
+      [ngModel]="filterDateTo()"
+      (ngModelChange)="filterDateTo.set($event)"
+      (change)="applyFilters()"
+    />
+
+    <button class="btn-apply" (click)="applyFilters()">🔍 Filtrer</button>
+    <button class="btn-reset" (click)="resetFilters()">Réinitialiser</button>
+  </div>
+
+  <!-- Tableau -->
+  <div class="table-card">
+    @if (loading()) {
+      <div class="loading-overlay">Chargement…</div>
+    } @else {
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>DATE / HEURE</th>
+              <th>TYPE</th>
+              <th>ACTION</th>
+              <th>DESCRIPTION</th>
+              <th>UTILISATEUR</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (log of logs(); track log.id) {
+              <tr>
+                <td class="cell-date">{{ log.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>
+                  <span class="entity-badge" [class]="entityClass(log.entity_type)">
+                    {{ entityTypeLabel(log.entity_type) }}
+                  </span>
+                </td>
+                <td>
+                  <span class="action-badge" [class]="actionClass(log.action)">
+                    {{ actionLabel(log.action) }}
+                  </span>
+                </td>
+                <td class="cell-description">{{ log.description }}</td>
+                <td class="cell-user">{{ log.user_name || '—' }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="empty-state">Aucune entrée trouvée</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      @if (lastPage() > 1) {
+        <div class="pagination">
+          <button class="page-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">‹</button>
+          @for (p of pages(); track p) {
+            <button
+              class="page-btn"
+              [class.active]="p === currentPage()"
+              (click)="goToPage(p)"
+            >{{ p }}</button>
+          }
+          <button class="page-btn" [disabled]="currentPage() === lastPage()" (click)="goToPage(currentPage() + 1)">›</button>
+          <span class="page-info">Page {{ currentPage() }} / {{ lastPage() }}</span>
+        </div>
+      }
+    }
+  </div>
+</div>

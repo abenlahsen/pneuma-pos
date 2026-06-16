@@ -58,6 +58,7 @@ export class NavbarComponent {
     { label: '👥 Utilisateurs', route: '/users', permission: 'view users' },
     { label: '🔐 Rôles', route: '/roles', permission: 'view roles' },
     { label: '⚙️ Paramètres', route: '/settings', permission: 'view settings' },
+    { label: '📋 Journal d\'activité', route: '/activity-log', permission: 'view activity-log' },
   ];
 
   visibleNavItems = computed(() => {

@@ -13,4 +13,5 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     require __DIR__ . '/api/stock.php';
     require __DIR__ . '/api/service_orders.php';
     require __DIR__ . '/api/admin.php';
+    require __DIR__ . '/api/activity_logs.php';
 });

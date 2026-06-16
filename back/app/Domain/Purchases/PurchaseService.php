@@ -8,6 +8,7 @@ use App\Models\Stock;
 use App\Models\Supplier;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\ActivityLogService;
 use App\Services\StockMovementService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -15,10 +16,12 @@ use Illuminate\Support\Facades\DB;
 class PurchaseService
 {
     protected StockMovementService $movements;
+    protected ActivityLogService $activityLog;
 
-    public function __construct(StockMovementService $movements)
+    public function __construct(StockMovementService $movements, ActivityLogService $activityLog)
     {
         $this->movements = $movements;
+        $this->activityLog = $activityLog;
     }
 
     /**
@@ -84,7 +87,11 @@ class PurchaseService
             return $purchase;
         });
 
-        return $this->loadRelations($purchase);
+        $loaded = $this->loadRelations($purchase);
+
+        $this->activityLog->logPurchaseCreated($loaded, $userId, ActivityLogService::resolveUserName($userId));
+
+        return $loaded;
     }
 
     /**
@@ -96,6 +103,12 @@ class PurchaseService
         $itemsData = $validated['items'] ?? [];
         $discount = (float) ($validated['discount'] ?? 0);
         $totals = $this->calculateTotals($itemsData, $discount);
+
+        $oldState = [
+            'status'         => $purchase->status,
+            'payment_status' => $purchase->payment_status,
+            'net_amount'     => (float) $purchase->net_amount,
+        ];
 
         DB::transaction(function () use ($purchase, $validated, $itemsData, $totals, $userId, $oldStatus) {
             if (! in_array($oldStatus, ['ANNULE', 'RETOUR'], true)) {
@@ -115,11 +128,29 @@ class PurchaseService
             $this->createItemsAndApplyStock($purchase, $itemsData, $newStatus, $userId);
         });
 
-        return $this->loadRelations($purchase->fresh());
+        $loaded = $this->loadRelations($purchase->fresh());
+
+        $newState = [
+            'status'         => $loaded->status,
+            'payment_status' => $loaded->payment_status,
+            'net_amount'     => (float) $loaded->net_amount,
+        ];
+
+        $this->activityLog->logPurchaseUpdated($loaded, $oldState, $newState, $userId, ActivityLogService::resolveUserName($userId));
+
+        return $loaded;
     }
 
     public function delete(Purchase $purchase, $userId)
     {
+        $snapshot = [
+            'id'             => $purchase->id,
+            'net_amount'     => $purchase->net_amount,
+            'total_quantity' => $purchase->total_quantity,
+            'payment_status' => $purchase->payment_status,
+            'status'         => $purchase->status,
+        ];
+
         DB::transaction(function () use ($purchase, $userId) {
             if (! in_array($purchase->status, ['ANNULE', 'RETOUR'], true)) {
                 $this->restoreStockForItems($purchase, $userId);
@@ -134,6 +165,8 @@ class PurchaseService
 
             $purchase->delete();
         });
+
+        $this->activityLog->logPurchaseDeleted($snapshot, $userId, ActivityLogService::resolveUserName($userId));
     }
 
     /**
