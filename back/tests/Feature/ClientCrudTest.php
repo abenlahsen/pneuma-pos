@@ -328,6 +328,55 @@ class ClientCrudTest extends TestCase
             ->assertJsonValidationErrors(['category']);
     }
 
+    public function test_store_without_category_succeeds_and_uses_db_default(): void
+    {
+        // Regression: StoreClientRequest had no 'category' rule → NULL was sent to DB
+        // → SQLSTATE[23000] NOT NULL constraint violation on 'category' column.
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $response = $this->postJson('/api/clients', [
+            'name' => 'Client Sans Catégorie',
+            'phone' => '0655555555',
+        ]);
+
+        $response->assertCreated();
+
+        $this->assertDatabaseHas('clients', [
+            'name' => 'Client Sans Catégorie',
+            'phone' => '0655555555',
+        ]);
+    }
+
+    public function test_store_accepts_particulier_with_correct_spelling(): void
+    {
+        // Regression: Rule::in had 'Paticulier' (typo). After frontend fix the correct
+        // spelling 'Particulier' was rejected by validation (422).
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $response = $this->postJson('/api/clients', [
+            'name' => 'Client Particulier',
+            'phone' => '0644444444',
+            'category' => 'Particulier',
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.category', 'Particulier');
+    }
+
+    public function test_store_accepts_entreprise_category(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $response = $this->postJson('/api/clients', [
+            'name' => 'Client Entreprise',
+            'phone' => '0633333333',
+            'category' => 'Entreprise',
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.category', 'Entreprise');
+    }
+
     public function test_store_validates_unique_phone(): void
     {
         Sanctum::actingAs($this->user, [], 'web');

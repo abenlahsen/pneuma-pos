@@ -5,9 +5,11 @@ namespace Tests\Feature;
 use App\Models\Brand;
 use App\Models\Product;
 use App\Models\Purchase;
+use App\Models\PurchasePayment;
 use App\Models\Stock;
 use App\Models\StockMovement;
 use App\Models\Supplier;
+use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -412,6 +414,52 @@ class PurchaseCrudTest extends TestCase
         $this->assertEquals($before, $this->stock->quantity);
     }
 
+    public function test_destroy_also_deletes_linked_payments_and_transactions(): void
+    {
+        // Regression: PurchaseService::delete() must clean up Transaction records
+        // linked to purchase payments — the DB cascade removes payments but the
+        // Transaction rows are not FK-linked to purchases directly, so they must
+        // be deleted explicitly in application code before $purchase->delete().
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $purchase = $this->createPurchase(['status' => 'EN COURS', 'payment_status' => 'NON PAYE']);
+
+        $accountId = DB::table('accounts')->insertGetId([
+            'name' => 'Caisse achat test',
+            'type' => 'cash',
+            'initial_balance' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $transaction = Transaction::query()->create([
+            'date' => now()->toDateString(),
+            'amount' => 300.00,
+            'type' => 'expense',
+            'category' => 'Achat',
+            'method' => 'Espèces',
+            'description' => "Paiement achat #{$purchase->id}",
+            'person' => $this->supplier->name ?? 'Fournisseur',
+            'user_id' => $this->user->id,
+            'account_id' => $accountId,
+        ]);
+
+        $payment = PurchasePayment::query()->create([
+            'purchase_id' => $purchase->id,
+            'transaction_id' => $transaction->id,
+            'amount' => 300.00,
+            'date' => now()->toDateString(),
+            'method' => 'Espèces',
+            'user_id' => $this->user->id,
+        ]);
+
+        $this->deleteJson("/api/purchases/{$purchase->id}")->assertNoContent();
+
+        $this->assertDatabaseMissing('purchases', ['id' => $purchase->id]);
+        $this->assertDatabaseMissing('purchase_payments', ['id' => $payment->id]);
+        $this->assertDatabaseMissing('transactions', ['id' => $transaction->id]);
+    }
+
     // -------------------------------------------------------------------------
     // GET /api/purchases/export
     // -------------------------------------------------------------------------
@@ -530,6 +578,8 @@ class PurchaseCrudTest extends TestCase
         $this->ensurePurchasesTable();
         $this->ensurePurchaseItemsTable();
         $this->ensurePurchasePaymentsTable();
+        $this->ensureAccountsTable();
+        $this->ensureTransactionsTable();
     }
 
     private function ensureUsersTable(): void
@@ -792,6 +842,44 @@ class PurchaseCrudTest extends TestCase
             $table->string('method')->nullable();
             $table->string('reference')->nullable();
             $table->string('notes', 1000)->nullable();
+            $table->timestamps();
+        });
+    }
+
+    private function ensureAccountsTable(): void
+    {
+        if (Schema::hasTable('accounts')) {
+            return;
+        }
+        Schema::create('accounts', function (Blueprint $table) {
+            $table->id();
+            $table->string('name', 100)->unique();
+            $table->enum('type', ['cash', 'bank', 'person']);
+            $table->text('description')->nullable();
+            $table->decimal('initial_balance', 12, 2)->default(0);
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
+    }
+
+    private function ensureTransactionsTable(): void
+    {
+        if (Schema::hasTable('transactions')) {
+            return;
+        }
+        Schema::create('transactions', function (Blueprint $table) {
+            $table->id();
+            $table->date('date')->nullable();
+            $table->decimal('amount', 12, 2)->default(0);
+            $table->string('type', 20)->nullable();
+            $table->string('category', 50)->nullable();
+            $table->string('method', 50)->nullable();
+            $table->text('description')->nullable();
+            $table->string('person', 255)->nullable();
+            $table->unsignedBigInteger('partner_id')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->unsignedBigInteger('account_id')->nullable();
+            $table->unsignedBigInteger('transfer_id')->nullable();
             $table->timestamps();
         });
     }

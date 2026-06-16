@@ -6,9 +6,11 @@ use App\Models\Brand;
 use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Partner;
+use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Stock;
+use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -755,6 +757,46 @@ class SaleControllerTest extends TestCase
 
         $response->assertStatus(204);
         $this->assertDatabaseMissing('sales', ['id' => $sale->id]);
+    }
+
+    public function test_destroy_also_deletes_linked_payments_and_transactions(): void
+    {
+        $sale = $this->createSale();
+
+        $account = DB::table('accounts')->insertGetId([
+            'name' => 'Caisse test',
+            'type' => 'cash',
+            'initial_balance' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $transaction = Transaction::query()->create([
+            'date' => now()->toDateString(),
+            'amount' => 500.00,
+            'type' => 'income',
+            'category' => 'Produit',
+            'method' => 'Espèces',
+            'description' => 'Test',
+            'person' => '',
+            'user_id' => $this->user->id,
+            'account_id' => $account,
+        ]);
+
+        $payment = Payment::query()->create([
+            'sale_id' => $sale->id,
+            'transaction_id' => $transaction->id,
+            'amount' => 500.00,
+            'date' => now()->toDateString(),
+            'method' => 'Espèces',
+            'user_id' => $this->user->id,
+        ]);
+
+        $this->deleteJson("/api/sales/{$sale->id}", [], $this->authHeaders())->assertStatus(204);
+
+        $this->assertDatabaseMissing('sales', ['id' => $sale->id]);
+        $this->assertDatabaseMissing('payments', ['id' => $payment->id]);
+        $this->assertDatabaseMissing('transactions', ['id' => $transaction->id]);
     }
 
     // ── Logistics field tests ────────────────────────────────────────────────

@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Stock;
+use App\Models\Transaction;
 use App\Services\StockMovementService;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -55,6 +56,14 @@ class SaleService
     {
         DB::transaction(function () use ($sale, $userId) {
             $this->restoreStockForItems($sale, $userId);
+
+            $transactionIds = $sale->payments()->whereNotNull('transaction_id')->pluck('transaction_id');
+            $sale->payments()->delete();
+
+            if ($transactionIds->isNotEmpty()) {
+                Transaction::whereIn('id', $transactionIds)->delete();
+            }
+
             $sale->delete();
         });
     }
