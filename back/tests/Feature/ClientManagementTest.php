@@ -149,7 +149,7 @@ class ClientManagementTest extends TestCase
 
         $validCategoryValidator = Validator::make([
             'name' => 'Validator Client',
-            'category' => 'Paticulier',
+            'category' => 'Particulier',
         ], (new StoreClientRequest())->rules());
 
         $this->assertTrue($validCategoryValidator->passes(), json_encode($validCategoryValidator->errors()->toArray()));
@@ -223,6 +223,7 @@ class ClientManagementTest extends TestCase
             'client_id' => $client->id,
             'commercial_id' => $commercial->id,
             'partner_id' => $partner->id,
+            'payment_method' => 'Espèces',
             'items' => [[
                 'product_id' => $product->id,
                 'quantity' => 1,

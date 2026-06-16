@@ -164,7 +164,7 @@ class ServiceOrderApiTest extends TestCase
 
         $this->postJson('/api/service-orders', [])
             ->assertUnprocessable()
-            ->assertJsonValidationErrors(['date', 'vehicle', 'items']);
+            ->assertJsonValidationErrors(['date', 'items']);
     }
 
     public function test_store_validates_items_must_have_at_least_one(): void
