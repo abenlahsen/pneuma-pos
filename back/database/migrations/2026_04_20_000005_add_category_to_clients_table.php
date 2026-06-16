@@ -13,7 +13,7 @@ return new class extends Migration
         }
 
         Schema::table('clients', function (Blueprint $table) {
-            $table->string('category', 32)->default('Paticulier')->after('name');
+            $table->string('category', 32)->default('Particulier')->after('name');
         });
     }
 

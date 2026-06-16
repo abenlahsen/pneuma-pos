@@ -22,7 +22,7 @@ export class ClientFormComponent implements OnInit {
 
   formData: ClientPayload = {
     name: '',
-    category: 'Paticulier',
+    category: 'Particulier',
     phone: '',
     email: '',
     city: '',
@@ -40,7 +40,7 @@ export class ClientFormComponent implements OnInit {
     if (this.client) {
       this.formData = {
         name: this.client.name ?? '',
-        category: this.client.category ?? 'Paticulier',
+        category: this.client.category ?? 'Particulier',
         phone: this.client.phone ?? '',
         email: this.client.email ?? '',
         city: this.client.city ?? '',
