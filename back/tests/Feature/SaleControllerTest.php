@@ -721,6 +721,7 @@ class SaleControllerTest extends TestCase
             'client' => 'New Client',
             'commercial_id' => $this->user->id,
             'partner_id' => $partner->id,
+            'payment_method' => 'Espèces',
             'items' => [[
                 'product_id' => $product->id,
                 'stock_id' => $stock->id,
@@ -929,6 +930,7 @@ class SaleControllerTest extends TestCase
             'date' => '2026-03-15',
             'commercial_id' => $this->user->id,
             'partner_id' => $partner->id,
+            'payment_method' => 'Espèces',
             'client' => 'Client Stock Test',
             'items' => [[
                 'product_id' => $product->id,
@@ -968,6 +970,7 @@ class SaleControllerTest extends TestCase
             'date' => '2026-03-15',
             'commercial_id' => $this->user->id,
             'partner_id' => $partner->id,
+            'payment_method' => 'Espèces',
             'client' => 'Multi Item Client',
             'items' => [
                 [
@@ -1005,6 +1008,7 @@ class SaleControllerTest extends TestCase
             'date' => '2026-03-15',
             'commercial_id' => $this->user->id,
             'partner_id' => $partner->id,
+            'payment_method' => 'Espèces',
             'client' => 'No Stock Client',
             'items' => [[
                 'product_id' => $product->id,
@@ -1227,6 +1231,7 @@ class SaleControllerTest extends TestCase
             'date' => '2026-03-15',
             'commercial_id' => $manager->id,
             'partner_id' => $partner->id,
+            'payment_method' => 'Espèces',
             'client' => 'Client Manager Test',
             'items' => [[
                 'product_id' => $product->id,
@@ -1287,6 +1292,7 @@ class SaleControllerTest extends TestCase
             'date' => '2026-03-15',
             'commercial_id' => $commercial->id,
             'partner_id' => $partner->id,
+            'payment_method' => 'Espèces',
             'client' => 'Client Commercial Test',
             'items' => [[
                 'product_id' => $product->id,

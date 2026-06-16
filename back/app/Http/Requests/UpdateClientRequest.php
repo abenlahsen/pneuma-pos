@@ -18,7 +18,7 @@ class UpdateClientRequest extends FormRequest
 
         return [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'category' => ['sometimes', 'required', 'string', Rule::in(['Paticulier', 'Entreprise'])],
+            'category' => ['sometimes', 'required', 'string', Rule::in(['Particulier', 'Entreprise'])],
             'phone' => [
                 'nullable',
                 'string',

@@ -483,6 +483,31 @@ class ClientCrudTest extends TestCase
         ]);
     }
 
+    public function test_update_accepts_particulier_with_correct_spelling(): void
+    {
+        // Regression: UpdateClientRequest had Rule::in(['Paticulier', 'Entreprise'])
+        // (typo). After the frontend fix, updating category to 'Particulier' (correct)
+        // would be rejected with 422.
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $response = $this->putJson("/api/clients/{$this->client->id}", [
+            'category' => 'Particulier',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.category', 'Particulier');
+    }
+
+    public function test_update_rejects_invalid_category(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $this->putJson("/api/clients/{$this->client->id}", [
+            'category' => 'InvalidType',
+        ])->assertUnprocessable()
+            ->assertJsonValidationErrors(['category']);
+    }
+
     // -------------------------------------------------------------------------
     // DELETE /api/clients/{client}
     // -------------------------------------------------------------------------

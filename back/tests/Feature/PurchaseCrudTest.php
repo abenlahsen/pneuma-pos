@@ -512,6 +512,7 @@ class PurchaseCrudTest extends TestCase
             'commercial_id' => $this->user->id,
             'status' => 'EN COURS',
             'payment_status' => 'NON PAYE',
+            'payment_method' => 'ESPECE',
             'items' => [
                 ['product_id' => $this->product->id, 'stock_id' => $this->stock->id, 'quantity' => 4, 'unit_price' => 100],
             ],
