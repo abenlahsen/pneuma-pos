@@ -58,8 +58,13 @@ export class NavbarComponent {
     { label: '👥 Utilisateurs', route: '/users', permission: 'view users' },
     { label: '🔐 Rôles', route: '/roles', permission: 'view roles' },
     { label: '⚙️ Paramètres', route: '/settings', permission: 'view settings' },
-    { label: '📋 Journal d\'activité', route: '/activity-log', permission: 'view activity-log' },
-    { label: '📈 Historique KPIs', route: '/kpi-history', permission: 'view activity-log' },
+    {
+      label: '🕓 Historique',
+      children: [
+        { label: '📋 Activité', route: '/activity-log', permission: 'view activity-log' },
+        { label: '📈 KPI', route: '/kpi-history', permission: 'view activity-log' },
+      ]
+    },
   ];
 
   visibleNavItems = computed(() => {
