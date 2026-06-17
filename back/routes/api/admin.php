@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/dashboard-kpi', [\App\Http\Controllers\DashboardController::class, 'kpi'])
     ->middleware('role:Administrator');
 
+// KPI history (daily snapshots)
+Route::get('/kpi-history', [\App\Http\Controllers\KpiHistoryController::class, 'index'])
+    ->middleware('role:Administrator');
+
 // ACL: Roles & Permissions
 Route::middleware('permission:view roles')->group(function () {
     Route::get('roles', [RoleController::class, 'index']);
