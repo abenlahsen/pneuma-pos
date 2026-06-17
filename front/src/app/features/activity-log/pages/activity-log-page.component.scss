@@ -119,6 +119,28 @@ $_bg:      #f7fafc;
 .cell-description { max-width: 480px; }
 .cell-user { white-space: nowrap; }
 
+.cell-actions {
+  white-space: nowrap;
+  width: 3rem;
+  text-align: center;
+}
+
+.btn-detail {
+  background: none;
+  border: 1px solid $_border;
+  border-radius: 6px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: $_muted;
+  transition: background 0.12s, color 0.12s;
+
+  &:hover {
+    background: $_bg;
+    color: $_text;
+  }
+}
+
 // ── Badges entité ─────────────────────────────────────────────────────────────
 .entity-badge {
   display: inline-block;
@@ -190,4 +212,170 @@ $_bg:      #f7fafc;
   margin-left: auto;
   font-size: 0.8rem;
   color: $_muted;
+}
+
+// ── Detail modal ──────────────────────────────────────────────────────────────
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.detail-modal {
+  background: $_surface;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 680px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.detail-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid $_border;
+  flex-shrink: 0;
+
+  .detail-modal-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    font-size: 0.9rem;
+    flex-wrap: wrap;
+  }
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: $_muted;
+  cursor: pointer;
+  padding: 0.25rem 0.4rem;
+  border-radius: 4px;
+  line-height: 1;
+  flex-shrink: 0;
+
+  &:hover { background: $_bg; color: $_text; }
+}
+
+.detail-modal-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 1.25rem;
+  background: $_bg;
+  border-bottom: 1px solid $_border;
+  font-size: 0.8rem;
+  color: $_muted;
+  flex-shrink: 0;
+}
+
+.meta-sep { color: $_border; }
+
+.detail-description {
+  color: $_text;
+  font-style: italic;
+}
+
+.detail-modal-body {
+  overflow-y: auto;
+  padding: 1.25rem;
+  flex: 1;
+}
+
+.snapshot-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: $_muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.75rem;
+}
+
+.snapshot-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+
+  th {
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: $_muted;
+    background: $_bg;
+    border-bottom: 2px solid $_border;
+  }
+
+  td {
+    padding: 0.55rem 0.75rem;
+    border-bottom: 1px solid $_border;
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  .col-field {
+    color: $_muted;
+    font-size: 0.8rem;
+    width: 35%;
+    font-weight: 500;
+  }
+
+  .col-value {
+    color: $_text;
+    word-break: break-word;
+  }
+
+  .val-before { color: #c53030; }
+  .val-after  { color: #276749; }
+
+  .row-changed {
+    background: rgba(251, 191, 36, 0.08);
+
+    .col-field { font-weight: 700; color: $_text; }
+  }
+}
+
+// ── Payment detail ─────────────────────────────────────────────────────────────
+.payment-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.payment-row {
+  display: flex;
+  gap: 1rem;
+  align-items: baseline;
+  padding: 0.6rem 0.75rem;
+  background: $_bg;
+  border-radius: 6px;
+}
+
+.payment-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: $_muted;
+  min-width: 100px;
+}
+
+.payment-value {
+  font-size: 0.9rem;
+  color: $_text;
+  font-weight: 500;
 }

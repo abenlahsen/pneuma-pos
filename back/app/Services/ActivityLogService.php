@@ -11,14 +11,76 @@ use App\Models\User;
 class ActivityLogService
 {
     // -------------------------------------------------------------------------
+    // Snapshots
+    // -------------------------------------------------------------------------
+
+    public function buildSaleSnapshot(Sale $sale): array
+    {
+        $snapshot = [
+            'date'           => $sale->date ? (string) $sale->date : null,
+            'status'         => $sale->status,
+            'payment_status' => $sale->payment_status,
+            'total_sale'     => (float) $sale->total_sale,
+            'total_purchase' => (float) $sale->total_purchase,
+            'total_quantity' => (int) $sale->total_quantity,
+            'margin'         => (float) $sale->margin,
+            'payment_method' => $sale->payment_method,
+            'with_invoice'   => (bool) $sale->with_invoice,
+            'client'         => $sale->linkedClient?->name,
+            'commercial'     => $sale->commercial?->name,
+            'carrier'        => $sale->linkedCarrier?->name,
+            'partner'        => $sale->linkedPartner?->name,
+        ];
+
+        return array_filter($snapshot, fn ($v) => $v !== null && $v !== '');
+    }
+
+    public function buildPurchaseSnapshot(Purchase $purchase): array
+    {
+        $snapshot = [
+            'date'           => $purchase->date ? (string) $purchase->date : null,
+            'status'         => $purchase->status,
+            'payment_status' => $purchase->payment_status,
+            'net_amount'     => (float) $purchase->net_amount,
+            'total_quantity' => (int) $purchase->total_quantity,
+            'payment_method' => $purchase->payment_method,
+            'with_invoice'   => (bool) $purchase->with_invoice,
+            'discount'       => (float) $purchase->discount,
+            'supplier'       => $purchase->supplier?->name,
+            'commercial'     => $purchase->commercial?->name,
+        ];
+
+        return array_filter($snapshot, fn ($v) => $v !== null && $v !== '');
+    }
+
+    public function buildServiceOrderSnapshot(ServiceOrder $order): array
+    {
+        $snapshot = [
+            'date'           => $order->date ? (string) $order->date : null,
+            'status'         => $order->status,
+            'payment_status' => $order->payment_status,
+            'net_amount'     => (float) $order->net_amount,
+            'total_amount'   => (float) $order->total_amount,
+            'discount'       => (float) $order->discount,
+            'vehicle'        => $order->vehicle,
+            'mileage'        => $order->mileage ? (int) $order->mileage : null,
+            'notes'          => $order->notes,
+            'client'         => $order->clientRecord?->name,
+            'commercial'     => $order->commercial?->name,
+        ];
+
+        return array_filter($snapshot, fn ($v) => $v !== null && $v !== '');
+    }
+
+    // -------------------------------------------------------------------------
     // Ventes
     // -------------------------------------------------------------------------
 
-    public function logSaleCreated(Sale $sale, ?int $userId, ?string $userName): void
+    public function logSaleCreated(Sale $sale, array $snapshot, ?int $userId, ?string $userName): void
     {
-        $clientName = $sale->linkedClient?->name ?? null;
         $qty = (int) $sale->total_quantity;
         $total = number_format((float) $sale->total_sale, 2, '.', ' ');
+        $clientName = $snapshot['client'] ?? null;
         $desc = "Vente #{$sale->id} créée — {$qty} article(s), CA : {$total} MAD"
             . ($clientName ? " — Client : {$clientName}" : '');
 
@@ -28,28 +90,16 @@ class ActivityLogService
             'entity_id'    => $sale->id,
             'entity_label' => "Vente #{$sale->id}",
             'description'  => $desc,
-            'properties'   => [
-                'total_sale'      => $sale->total_sale,
-                'total_quantity'  => $sale->total_quantity,
-                'payment_status'  => $sale->payment_status,
-                'status'          => $sale->status,
-                'client'          => $clientName,
-            ],
-            'user_id'   => $userId,
-            'user_name' => $userName,
+            'properties'   => ['before' => null, 'after' => $snapshot],
+            'user_id'      => $userId,
+            'user_name'    => $userName,
         ]);
     }
 
-    public function logSaleUpdated(Sale $sale, array $oldState, array $newState, ?int $userId, ?string $userName): void
+    public function logSaleUpdated(Sale $sale, array $before, array $after, ?int $userId, ?string $userName): void
     {
-        $diff = $this->buildDiff($oldState, $newState);
         $desc = "Vente #{$sale->id} modifiée";
-
-        if (isset($diff['status'])) {
-            $desc .= " — Statut : {$diff['status']['from']} → {$diff['status']['to']}";
-        } elseif (isset($diff['payment_status'])) {
-            $desc .= " — Paiement : {$diff['payment_status']['from']} → {$diff['payment_status']['to']}";
-        }
+        $desc .= $this->buildUpdateSuffix($before, $after);
 
         $this->insert([
             'action'       => ActivityLog::ACTION_UPDATE,
@@ -57,27 +107,28 @@ class ActivityLogService
             'entity_id'    => $sale->id,
             'entity_label' => "Vente #{$sale->id}",
             'description'  => $desc,
-            'properties'   => $diff ?: null,
-            'user_id'   => $userId,
-            'user_name' => $userName,
+            'properties'   => ['before' => $before, 'after' => $after],
+            'user_id'      => $userId,
+            'user_name'    => $userName,
         ]);
     }
 
-    public function logSaleDeleted(array $snapshot, ?int $userId, ?string $userName): void
+    public function logSaleDeleted(array $before, ?int $userId, ?string $userName): void
     {
-        $total = number_format((float) ($snapshot['total_sale'] ?? 0), 2, '.', ' ');
-        $status = $snapshot['payment_status'] ?? '';
-        $desc = "Vente #{$snapshot['id']} supprimée — CA : {$total} MAD ({$status})";
+        $total = number_format((float) ($before['total_sale'] ?? 0), 2, '.', ' ');
+        $status = $before['payment_status'] ?? '';
+        $id = $before['id'];
+        $desc = "Vente #{$id} supprimée — CA : {$total} MAD ({$status})";
 
         $this->insert([
             'action'       => ActivityLog::ACTION_DELETE,
             'entity_type'  => ActivityLog::ENTITY_VENTE,
-            'entity_id'    => $snapshot['id'],
-            'entity_label' => "Vente #{$snapshot['id']}",
+            'entity_id'    => $id,
+            'entity_label' => "Vente #{$id}",
             'description'  => $desc,
-            'properties'   => $snapshot,
-            'user_id'   => $userId,
-            'user_name' => $userName,
+            'properties'   => ['before' => $before, 'after' => null],
+            'user_id'      => $userId,
+            'user_name'    => $userName,
         ]);
     }
 
@@ -85,11 +136,11 @@ class ActivityLogService
     // Achats
     // -------------------------------------------------------------------------
 
-    public function logPurchaseCreated(Purchase $purchase, ?int $userId, ?string $userName): void
+    public function logPurchaseCreated(Purchase $purchase, array $snapshot, ?int $userId, ?string $userName): void
     {
-        $supplierName = $purchase->supplier?->name ?? null;
         $qty = (int) $purchase->total_quantity;
         $total = number_format((float) $purchase->net_amount, 2, '.', ' ');
+        $supplierName = $snapshot['supplier'] ?? null;
         $desc = "Achat #{$purchase->id} créé — {$qty} article(s), Montant : {$total} MAD"
             . ($supplierName ? " — Fournisseur : {$supplierName}" : '');
 
@@ -99,28 +150,16 @@ class ActivityLogService
             'entity_id'    => $purchase->id,
             'entity_label' => "Achat #{$purchase->id}",
             'description'  => $desc,
-            'properties'   => [
-                'net_amount'      => $purchase->net_amount,
-                'total_quantity'  => $purchase->total_quantity,
-                'payment_status'  => $purchase->payment_status,
-                'status'          => $purchase->status,
-                'supplier'        => $supplierName,
-            ],
-            'user_id'   => $userId,
-            'user_name' => $userName,
+            'properties'   => ['before' => null, 'after' => $snapshot],
+            'user_id'      => $userId,
+            'user_name'    => $userName,
         ]);
     }
 
-    public function logPurchaseUpdated(Purchase $purchase, array $oldState, array $newState, ?int $userId, ?string $userName): void
+    public function logPurchaseUpdated(Purchase $purchase, array $before, array $after, ?int $userId, ?string $userName): void
     {
-        $diff = $this->buildDiff($oldState, $newState);
         $desc = "Achat #{$purchase->id} modifié";
-
-        if (isset($diff['status'])) {
-            $desc .= " — Statut : {$diff['status']['from']} → {$diff['status']['to']}";
-        } elseif (isset($diff['payment_status'])) {
-            $desc .= " — Paiement : {$diff['payment_status']['from']} → {$diff['payment_status']['to']}";
-        }
+        $desc .= $this->buildUpdateSuffix($before, $after);
 
         $this->insert([
             'action'       => ActivityLog::ACTION_UPDATE,
@@ -128,27 +167,28 @@ class ActivityLogService
             'entity_id'    => $purchase->id,
             'entity_label' => "Achat #{$purchase->id}",
             'description'  => $desc,
-            'properties'   => $diff ?: null,
-            'user_id'   => $userId,
-            'user_name' => $userName,
+            'properties'   => ['before' => $before, 'after' => $after],
+            'user_id'      => $userId,
+            'user_name'    => $userName,
         ]);
     }
 
-    public function logPurchaseDeleted(array $snapshot, ?int $userId, ?string $userName): void
+    public function logPurchaseDeleted(array $before, ?int $userId, ?string $userName): void
     {
-        $total = number_format((float) ($snapshot['net_amount'] ?? 0), 2, '.', ' ');
-        $status = $snapshot['payment_status'] ?? '';
-        $desc = "Achat #{$snapshot['id']} supprimé — Montant : {$total} MAD ({$status})";
+        $total = number_format((float) ($before['net_amount'] ?? 0), 2, '.', ' ');
+        $status = $before['payment_status'] ?? '';
+        $id = $before['id'];
+        $desc = "Achat #{$id} supprimé — Montant : {$total} MAD ({$status})";
 
         $this->insert([
             'action'       => ActivityLog::ACTION_DELETE,
             'entity_type'  => ActivityLog::ENTITY_ACHAT,
-            'entity_id'    => $snapshot['id'],
-            'entity_label' => "Achat #{$snapshot['id']}",
+            'entity_id'    => $id,
+            'entity_label' => "Achat #{$id}",
             'description'  => $desc,
-            'properties'   => $snapshot,
-            'user_id'   => $userId,
-            'user_name' => $userName,
+            'properties'   => ['before' => $before, 'after' => null],
+            'user_id'      => $userId,
+            'user_name'    => $userName,
         ]);
     }
 
@@ -156,11 +196,11 @@ class ActivityLogService
     // Service Auto
     // -------------------------------------------------------------------------
 
-    public function logServiceOrderCreated(ServiceOrder $order, ?int $userId, ?string $userName): void
+    public function logServiceOrderCreated(ServiceOrder $order, array $snapshot, ?int $userId, ?string $userName): void
     {
-        $clientName = $order->clientRecord?->name ?? $order->client ?? null;
-        $vehicle = $order->vehicle ?? '';
         $total = number_format((float) $order->net_amount, 2, '.', ' ');
+        $clientName = $snapshot['client'] ?? null;
+        $vehicle = $snapshot['vehicle'] ?? null;
         $desc = "Ordre de service #{$order->id} créé — {$total} MAD"
             . ($clientName ? " — {$clientName}" : '')
             . ($vehicle ? " — {$vehicle}" : '');
@@ -171,28 +211,16 @@ class ActivityLogService
             'entity_id'    => $order->id,
             'entity_label' => "Ordre de service #{$order->id}",
             'description'  => $desc,
-            'properties'   => [
-                'net_amount'     => $order->net_amount,
-                'payment_status' => $order->payment_status,
-                'status'         => $order->status,
-                'client'         => $clientName,
-                'vehicle'        => $vehicle,
-            ],
-            'user_id'   => $userId,
-            'user_name' => $userName,
+            'properties'   => ['before' => null, 'after' => $snapshot],
+            'user_id'      => $userId,
+            'user_name'    => $userName,
         ]);
     }
 
-    public function logServiceOrderUpdated(ServiceOrder $order, array $oldState, array $newState, ?int $userId, ?string $userName): void
+    public function logServiceOrderUpdated(ServiceOrder $order, array $before, array $after, ?int $userId, ?string $userName): void
     {
-        $diff = $this->buildDiff($oldState, $newState);
         $desc = "Ordre de service #{$order->id} modifié";
-
-        if (isset($diff['status'])) {
-            $desc .= " — Statut : {$diff['status']['from']} → {$diff['status']['to']}";
-        } elseif (isset($diff['payment_status'])) {
-            $desc .= " — Paiement : {$diff['payment_status']['from']} → {$diff['payment_status']['to']}";
-        }
+        $desc .= $this->buildUpdateSuffix($before, $after);
 
         $this->insert([
             'action'       => ActivityLog::ACTION_UPDATE,
@@ -200,32 +228,33 @@ class ActivityLogService
             'entity_id'    => $order->id,
             'entity_label' => "Ordre de service #{$order->id}",
             'description'  => $desc,
-            'properties'   => $diff ?: null,
-            'user_id'   => $userId,
-            'user_name' => $userName,
+            'properties'   => ['before' => $before, 'after' => $after],
+            'user_id'      => $userId,
+            'user_name'    => $userName,
         ]);
     }
 
-    public function logServiceOrderDeleted(array $snapshot, ?int $userId, ?string $userName): void
+    public function logServiceOrderDeleted(array $before, ?int $userId, ?string $userName): void
     {
-        $total = number_format((float) ($snapshot['net_amount'] ?? 0), 2, '.', ' ');
-        $status = $snapshot['payment_status'] ?? '';
-        $desc = "Ordre de service #{$snapshot['id']} supprimé — {$total} MAD ({$status})";
+        $total = number_format((float) ($before['net_amount'] ?? 0), 2, '.', ' ');
+        $status = $before['payment_status'] ?? '';
+        $id = $before['id'];
+        $desc = "Ordre de service #{$id} supprimé — {$total} MAD ({$status})";
 
         $this->insert([
             'action'       => ActivityLog::ACTION_DELETE,
             'entity_type'  => ActivityLog::ENTITY_SERVICE_ORDER,
-            'entity_id'    => $snapshot['id'],
-            'entity_label' => "Ordre de service #{$snapshot['id']}",
+            'entity_id'    => $id,
+            'entity_label' => "Ordre de service #{$id}",
             'description'  => $desc,
-            'properties'   => $snapshot,
-            'user_id'   => $userId,
-            'user_name' => $userName,
+            'properties'   => ['before' => $before, 'after' => null],
+            'user_id'      => $userId,
+            'user_name'    => $userName,
         ]);
     }
 
     // -------------------------------------------------------------------------
-    // Paiements (générique)
+    // Paiements (inchangé)
     // -------------------------------------------------------------------------
 
     public function logPaymentAdded(
@@ -311,23 +340,24 @@ class ActivityLogService
         return User::find($userId)?->name;
     }
 
-    private function buildDiff(array $oldState, array $newState): array
+    private function buildUpdateSuffix(array $before, array $after): string
     {
-        $diff = [];
-
-        foreach ($newState as $key => $newValue) {
-            $oldValue = $oldState[$key] ?? null;
-
-            if (is_float($newValue) || is_float($oldValue)) {
-                if (abs((float) $oldValue - (float) $newValue) > 0.01) {
-                    $diff[$key] = ['from' => $oldValue, 'to' => $newValue];
-                }
-            } elseif ($oldValue !== $newValue) {
-                $diff[$key] = ['from' => $oldValue, 'to' => $newValue];
-            }
+        if (isset($after['status']) && ($before['status'] ?? null) !== $after['status']) {
+            return " — Statut : " . ($before['status'] ?? '?') . " → {$after['status']}";
         }
 
-        return $diff;
+        if (isset($after['payment_status']) && ($before['payment_status'] ?? null) !== $after['payment_status']) {
+            return " — Paiement : " . ($before['payment_status'] ?? '?') . " → {$after['payment_status']}";
+        }
+
+        $totalKey = isset($after['total_sale']) ? 'total_sale' : (isset($after['net_amount']) ? 'net_amount' : null);
+        if ($totalKey && isset($before[$totalKey]) && abs((float) $before[$totalKey] - (float) $after[$totalKey]) > 0.01) {
+            $old = number_format((float) $before[$totalKey], 2, '.', ' ');
+            $new = number_format((float) $after[$totalKey], 2, '.', ' ');
+            return " — Montant : {$old} → {$new} MAD";
+        }
+
+        return '';
     }
 
     private function insert(array $attributes): void
