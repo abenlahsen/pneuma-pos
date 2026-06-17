@@ -8,6 +8,14 @@ $_surface: #ffffff;
 $_border:  #e8edf3;
 $_bg:      #f7fafc;
 
+// ── Page header ───────────────────────────────────────────────────────────────
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
 // ── Filters bar ───────────────────────────────────────────────────────────────
 .filters-bar {
   display: flex;

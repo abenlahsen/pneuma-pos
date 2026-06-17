@@ -19,7 +19,7 @@ $_danger:  #ef4444;
 .page-header {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  justify-content: space-between;
   margin-bottom: 1.5rem;
 }
 .header-left { display: flex; align-items: center; gap: 0.75rem; }
