@@ -399,3 +399,18 @@ $_border2:  #d0d9e4;
   color: $_muted;
   font-size: 0.9rem;
 }
+
+@media (max-width: 480px) {
+  .panel-body    { padding: 1rem; }
+  .panel-header  { padding: 1rem; }
+
+  .add-payment-form { padding: 1rem; }
+
+  .form-grid { grid-template-columns: 1fr; }
+
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+    .btn { width: 100%; justify-content: center; }
+  }
+}
