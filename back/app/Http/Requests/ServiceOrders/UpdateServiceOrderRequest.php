@@ -33,7 +33,7 @@ class UpdateServiceOrderRequest extends FormRequest
             'status' => ['nullable', 'string', 'in:EN COURS,TERMINE,ANNULE'],
             'payment_status' => ['nullable', 'string'],
             'notes' => ['nullable', 'string', 'max:2000'],
-            'commercial_id' => ['nullable', 'exists:users,id'],
+            'commercial_id' => ['sometimes', 'required', 'exists:users,id'],
             'client_id' => ['nullable', 'exists:clients,id'],
         ];
     }
