@@ -275,14 +275,15 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Commercial</label>
+          <label>Commercial *</label>
           <select
             [ngModel]="commercial_id()"
             (ngModelChange)="commercial_id.set($event ? +$event : null)"
             name="commercial_id"
             class="form-control"
+            required
           >
-            <option [ngValue]="null">-- Aucun --</option>
+            <option [ngValue]="null">-- Sélectionner un commercial --</option>
             <option *ngFor="let c of initialCommercials" [value]="c.id">{{ c.name }}</option>
           </select>
         </div>
