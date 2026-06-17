@@ -67,7 +67,12 @@ class TransactionController extends Controller
      */
     public function update(UpdateTransactionRequest $request, Transaction $transaction): JsonResponse
     {
-        $transaction = $this->transactionService->update($transaction, $request->validated());
+        $transaction = $this->transactionService->update(
+            $transaction,
+            $request->validated(),
+            $request->user()->id,
+            $request->user()->name,
+        );
 
         return response()->json((new TransactionResource($transaction))->resolve($request));
     }
@@ -75,9 +80,9 @@ class TransactionController extends Controller
     /**
      * Remove the specified transaction.
      */
-    public function destroy(Transaction $transaction): JsonResponse
+    public function destroy(Request $request, Transaction $transaction): JsonResponse
     {
-        $this->transactionService->delete($transaction);
+        $this->transactionService->delete($transaction, $request->user()->id, $request->user()->name);
 
         return response()->json(null, 204);
     }

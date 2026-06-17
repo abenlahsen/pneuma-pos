@@ -137,6 +137,23 @@ class PurchaseService
         return $loaded;
     }
 
+    public function patchStatus(Purchase $purchase, string $status, $userId): void
+    {
+        $purchase->loadMissing(['supplier', 'commercial']);
+        $before = $this->activityLog->buildPurchaseSnapshot($purchase);
+
+        $purchase->update(['status' => $status]);
+
+        $after = $this->activityLog->buildPurchaseSnapshot($purchase->fresh(['supplier', 'commercial']));
+        $this->activityLog->logPurchaseUpdated(
+            $purchase,
+            $before,
+            $after,
+            $userId,
+            ActivityLogService::resolveUserName($userId),
+        );
+    }
+
     private function refreshPaymentStatus(Purchase $purchase): void
     {
         $totalPaid = (float) $purchase->payments()->sum('amount');

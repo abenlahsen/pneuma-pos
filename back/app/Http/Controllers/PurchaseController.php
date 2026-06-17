@@ -108,9 +108,9 @@ class PurchaseController extends Controller
             'status' => 'required|string|in:EN COURS,RECU,TERMINE,ANNULE,RETOUR',
         ]);
 
-        $purchase->update(['status' => $validated['status']]);
+        $this->purchaseService->patchStatus($purchase, $validated['status'], $request->user()->id);
 
-        return response()->json(['status' => $purchase->status]);
+        return response()->json(['status' => $validated['status']]);
     }
 
     public function destroy(Request $request, Purchase $purchase): JsonResponse

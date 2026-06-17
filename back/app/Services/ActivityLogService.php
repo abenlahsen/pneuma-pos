@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Models\Account;
 use App\Models\ActivityLog;
 use App\Models\Purchase;
 use App\Models\Sale;
 use App\Models\ServiceOrder;
+use App\Models\Transaction;
 use App\Models\User;
 
 class ActivityLogService
@@ -70,6 +72,31 @@ class ActivityLogService
         ];
 
         return array_filter($snapshot, fn ($v) => $v !== null && $v !== '');
+    }
+
+    public function buildCompteSnapshot(Account $account): array
+    {
+        return array_filter([
+            'name'            => $account->name,
+            'type'            => $account->type,
+            'description'     => $account->description,
+            'initial_balance' => (float) $account->initial_balance,
+            'is_active'       => (bool) $account->is_active,
+        ], fn ($v) => $v !== null && $v !== '');
+    }
+
+    public function buildTransactionSnapshot(Transaction $transaction): array
+    {
+        return array_filter([
+            'date'        => $transaction->date ? (string) $transaction->date : null,
+            'type'        => $transaction->type,
+            'amount'      => (float) $transaction->amount,
+            'category'    => $transaction->category,
+            'method'      => $transaction->method,
+            'description' => $transaction->description,
+            'person'      => $transaction->person,
+            'account'     => $transaction->account?->name,
+        ], fn ($v) => $v !== null && $v !== '');
     }
 
     // -------------------------------------------------------------------------
@@ -254,6 +281,141 @@ class ActivityLogService
     }
 
     // -------------------------------------------------------------------------
+    // Comptes
+    // -------------------------------------------------------------------------
+
+    public function logCompteCreated(Account $account, array $snapshot, ?int $userId, ?string $userName): void
+    {
+        $type = $account->type ?? '';
+        $desc = "Compte '{$account->name}' créé" . ($type ? " — {$type}" : '');
+
+        $this->insert([
+            'action'       => ActivityLog::ACTION_CREATE,
+            'entity_type'  => ActivityLog::ENTITY_COMPTE,
+            'entity_id'    => $account->id,
+            'entity_label' => "Compte '{$account->name}'",
+            'description'  => $desc,
+            'properties'   => ['before' => null, 'after' => $snapshot],
+            'user_id'      => $userId,
+            'user_name'    => $userName,
+        ]);
+    }
+
+    public function logCompteUpdated(Account $account, array $before, array $after, ?int $userId, ?string $userName): void
+    {
+        $desc = "Compte '{$account->name}' modifié";
+        $desc .= $this->buildUpdateSuffix($before, $after);
+
+        $this->insert([
+            'action'       => ActivityLog::ACTION_UPDATE,
+            'entity_type'  => ActivityLog::ENTITY_COMPTE,
+            'entity_id'    => $account->id,
+            'entity_label' => "Compte '{$account->name}'",
+            'description'  => $desc,
+            'properties'   => ['before' => $before, 'after' => $after],
+            'user_id'      => $userId,
+            'user_name'    => $userName,
+        ]);
+    }
+
+    public function logCompteDeleted(array $before, ?int $userId, ?string $userName): void
+    {
+        $name = $before['name'] ?? '?';
+        $desc = "Compte '{$name}' supprimé";
+
+        $this->insert([
+            'action'       => ActivityLog::ACTION_DELETE,
+            'entity_type'  => ActivityLog::ENTITY_COMPTE,
+            'entity_id'    => 0,
+            'entity_label' => "Compte '{$name}'",
+            'description'  => $desc,
+            'properties'   => ['before' => $before, 'after' => null],
+            'user_id'      => $userId,
+            'user_name'    => $userName,
+        ]);
+    }
+
+    // -------------------------------------------------------------------------
+    // Transactions
+    // -------------------------------------------------------------------------
+
+    public function logTransactionCreated(Transaction $transaction, array $snapshot, ?int $userId, ?string $userName): void
+    {
+        $amountFmt = number_format((float) $transaction->amount, 2, '.', ' ');
+        $type = $transaction->type === 'income' ? 'Entrée' : 'Dépense';
+        $category = $snapshot['category'] ?? '';
+        $desc = "Transaction #{$transaction->id} créée — {$type}, {$amountFmt} MAD"
+            . ($category ? " ({$category})" : '');
+
+        $this->insert([
+            'action'       => ActivityLog::ACTION_CREATE,
+            'entity_type'  => ActivityLog::ENTITY_TRANSACTION,
+            'entity_id'    => $transaction->id,
+            'entity_label' => "Transaction #{$transaction->id}",
+            'description'  => $desc,
+            'properties'   => ['before' => null, 'after' => $snapshot],
+            'user_id'      => $userId,
+            'user_name'    => $userName,
+        ]);
+    }
+
+    public function logTransactionUpdated(Transaction $transaction, array $before, array $after, ?int $userId, ?string $userName): void
+    {
+        $desc = "Transaction #{$transaction->id} modifiée";
+        $desc .= $this->buildUpdateSuffix($before, $after);
+
+        $this->insert([
+            'action'       => ActivityLog::ACTION_UPDATE,
+            'entity_type'  => ActivityLog::ENTITY_TRANSACTION,
+            'entity_id'    => $transaction->id,
+            'entity_label' => "Transaction #{$transaction->id}",
+            'description'  => $desc,
+            'properties'   => ['before' => $before, 'after' => $after],
+            'user_id'      => $userId,
+            'user_name'    => $userName,
+        ]);
+    }
+
+    public function logTransactionDeleted(array $before, ?int $userId, ?string $userName): void
+    {
+        $id = $before['id'];
+        $amountFmt = number_format((float) ($before['amount'] ?? 0), 2, '.', ' ');
+        $desc = "Transaction #{$id} supprimée — {$amountFmt} MAD";
+
+        $this->insert([
+            'action'       => ActivityLog::ACTION_DELETE,
+            'entity_type'  => ActivityLog::ENTITY_TRANSACTION,
+            'entity_id'    => $id,
+            'entity_label' => "Transaction #{$id}",
+            'description'  => $desc,
+            'properties'   => ['before' => $before, 'after' => null],
+            'user_id'      => $userId,
+            'user_name'    => $userName,
+        ]);
+    }
+
+    public function logTransferDone(string $sourceAccountName, string $destAccountName, float $amount, int $transactionId, ?int $userId, ?string $userName): void
+    {
+        $amountFmt = number_format($amount, 2, '.', ' ');
+        $desc = "Transfert de {$amountFmt} MAD de '{$sourceAccountName}' vers '{$destAccountName}'";
+
+        $this->insert([
+            'action'       => ActivityLog::ACTION_CREATE,
+            'entity_type'  => ActivityLog::ENTITY_TRANSACTION,
+            'entity_id'    => $transactionId,
+            'entity_label' => "Transfert {$sourceAccountName} → {$destAccountName}",
+            'description'  => $desc,
+            'properties'   => [
+                'source_account' => $sourceAccountName,
+                'dest_account'   => $destAccountName,
+                'amount'         => $amount,
+            ],
+            'user_id'   => $userId,
+            'user_name' => $userName,
+        ]);
+    }
+
+    // -------------------------------------------------------------------------
     // Paiements (inchangé)
     // -------------------------------------------------------------------------
 
@@ -350,7 +512,9 @@ class ActivityLogService
             return " — Paiement : " . ($before['payment_status'] ?? '?') . " → {$after['payment_status']}";
         }
 
-        $totalKey = isset($after['total_sale']) ? 'total_sale' : (isset($after['net_amount']) ? 'net_amount' : null);
+        $totalKey = isset($after['total_sale']) ? 'total_sale'
+            : (isset($after['net_amount']) ? 'net_amount'
+            : (isset($after['amount']) ? 'amount' : null));
         if ($totalKey && isset($before[$totalKey]) && abs((float) $before[$totalKey] - (float) $after[$totalKey]) > 0.01) {
             $old = number_format((float) $before[$totalKey], 2, '.', ' ');
             $new = number_format((float) $after[$totalKey], 2, '.', ' ');
