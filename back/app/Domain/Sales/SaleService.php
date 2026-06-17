@@ -31,9 +31,10 @@ class SaleService
 
             $this->persistItems($sale, $items, $userId);
 
-            $fresh = $sale->fresh(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
+            $fresh = $sale->fresh(['linkedClient.cityRelation', 'commercial', 'linkedCarrier', 'linkedPartner', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
 
-            $this->activityLog->logSaleCreated($fresh, $userId, ActivityLogService::resolveUserName($userId));
+            $snapshot = $this->activityLog->buildSaleSnapshot($fresh);
+            $this->activityLog->logSaleCreated($fresh, $snapshot, $userId, ActivityLogService::resolveUserName($userId));
 
             return $fresh;
         });
@@ -41,15 +42,11 @@ class SaleService
 
     public function update(Sale $sale, array $validated, ?int $userId = null): Sale
     {
-        return DB::transaction(function () use ($sale, $validated, $userId) {
-            $items = $validated['items'] ?? null;
+        $sale->loadMissing(['linkedClient', 'commercial', 'linkedCarrier', 'linkedPartner']);
+        $beforeSnapshot = $this->activityLog->buildSaleSnapshot($sale);
 
-            $oldState = [
-                'status'         => $sale->status,
-                'payment_status' => $sale->payment_status,
-                'total_sale'     => (float) $sale->total_sale,
-                'total_quantity' => (int) $sale->total_quantity,
-            ];
+        return DB::transaction(function () use ($sale, $validated, $userId, $beforeSnapshot) {
+            $items = $validated['items'] ?? null;
 
             $saleData = $items !== null
                 ? $this->prepareSalePayload($validated, $items, $sale)
@@ -63,31 +60,33 @@ class SaleService
                 $this->persistItems($sale, $items, $userId);
             }
 
-            $fresh = $sale->fresh(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
+            $fresh = $sale->fresh(['linkedClient.cityRelation', 'commercial', 'linkedCarrier', 'linkedPartner', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
 
-            $newState = [
-                'status'         => $fresh->status,
-                'payment_status' => $fresh->payment_status,
-                'total_sale'     => (float) $fresh->total_sale,
-                'total_quantity' => (int) $fresh->total_quantity,
-            ];
+            $this->refreshPaymentStatus($fresh);
+            $fresh->refresh();
 
-            $this->activityLog->logSaleUpdated($fresh, $oldState, $newState, $userId, ActivityLogService::resolveUserName($userId));
+            $afterSnapshot = $this->activityLog->buildSaleSnapshot($fresh);
+            $this->activityLog->logSaleUpdated($fresh, $beforeSnapshot, $afterSnapshot, $userId, ActivityLogService::resolveUserName($userId));
 
             return $fresh;
         });
     }
 
+    private function refreshPaymentStatus(Sale $sale): void
+    {
+        $totalPaid = (float) $sale->payments()->sum('amount');
+        $totalSale = (float) $sale->total_sale;
+        $status = $totalPaid <= 0 ? 'NON PAYÉ'
+                : ($totalPaid >= $totalSale ? 'PAYÉ' : 'PARTIEL');
+        $sale->update(['payment_status' => $status]);
+    }
+
     public function delete(Sale $sale, ?int $userId = null): void
     {
-        DB::transaction(function () use ($sale, $userId) {
-            $snapshot = [
-                'id'             => $sale->id,
-                'total_sale'     => $sale->total_sale,
-                'total_quantity' => $sale->total_quantity,
-                'payment_status' => $sale->payment_status,
-                'status'         => $sale->status,
-            ];
+        $sale->loadMissing(['linkedClient', 'commercial', 'linkedCarrier', 'linkedPartner']);
+        $beforeSnapshot = array_merge(['id' => $sale->id], $this->activityLog->buildSaleSnapshot($sale));
+
+        DB::transaction(function () use ($sale, $userId, $beforeSnapshot) {
 
             $this->restoreStockForItems($sale, $userId);
 
@@ -100,7 +99,7 @@ class SaleService
 
             $sale->delete();
 
-            $this->activityLog->logSaleDeleted($snapshot, $userId, ActivityLogService::resolveUserName($userId));
+            $this->activityLog->logSaleDeleted($beforeSnapshot, $userId, ActivityLogService::resolveUserName($userId));
         });
     }
 

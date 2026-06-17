@@ -24,10 +24,17 @@
         <span>Total payé</span>
         <strong class="text-success">{{ totalPaid() | number:'1.2-2' }} DH</strong>
       </div>
-      <div class="summary-row">
-        <span>Reste à payer</span>
-        <strong class="text-danger">{{ remaining() | number:'1.2-2' }} DH</strong>
-      </div>
+      @if (remaining() >= 0) {
+        <div class="summary-row">
+          <span>Reste à payer</span>
+          <strong class="text-danger">{{ remaining() | number:'1.2-2' }} DH</strong>
+        </div>
+      } @else {
+        <div class="summary-row overpaid-warning">
+          <span>⚠️ Trop-perçu</span>
+          <strong>{{ (-remaining()) | number:'1.2-2' }} DH</strong>
+        </div>
+      }
 
       <div class="progress-bar-wrapper">
         <div class="progress-bar">
