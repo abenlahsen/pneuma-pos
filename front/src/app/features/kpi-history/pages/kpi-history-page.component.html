@@ -4,7 +4,7 @@
       <h1 class="page-title">📈 Historique KPIs</h1>
       <span class="total-badge">{{ totalItems() }} snapshot{{ totalItems() > 1 ? 's' : '' }}</span>
     </div>
-    <app-auto-refresh-control pageKey="kpi-history" (refresh)="load()" />
+    <app-auto-refresh-control pageKey="kpi-history" [defaultIntervalMs]="300000" (refresh)="load()" />
   </div>
 
   <!-- Filters -->
