@@ -33,6 +33,7 @@ $_border2:  #d0d9e4;
   display: flex;
   flex-direction: column;
   box-shadow: -8px 0 40px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
 }
 
 // ── Header ────────────────────────────────────────────────────────────────────
@@ -89,6 +90,7 @@ $_border2:  #d0d9e4;
 .panel-body {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -228,6 +230,7 @@ $_border2:  #d0d9e4;
   border: 1px solid $_border;
   border-radius: 10px;
   overflow: hidden;
+  table-layout: fixed;
 
   th {
     text-align: left;
@@ -236,17 +239,23 @@ $_border2:  #d0d9e4;
     font-weight: 700;
     letter-spacing: 0.07em;
     text-transform: uppercase;
-    padding: 0.6rem 0.875rem;
+    padding: 0.6rem 0.75rem;
     border-bottom: 2px solid $_border;
     background: $_surface2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   td {
-    padding: 0.65rem 0.875rem;
+    padding: 0.55rem 0.75rem;
     color: $_strong;
     border-bottom: 1px solid $_border;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 
-    &:last-child { width: 2rem; text-align: center; }
+    &:last-child { width: 2.5rem; min-width: 2.5rem; text-align: center; }
   }
 
   tbody tr:last-child td { border-bottom: none; }
