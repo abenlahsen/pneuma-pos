@@ -595,6 +595,8 @@ $_danger:    #ef4444;
 
   // ── Utilities ─────────────────────────────────────────────────────────────
   .actions-cell { white-space: nowrap; }
+  .col-id  { width: 3.5rem; }
+  .cell-id { font-size: 0.78rem; font-variant-numeric: tabular-nums; color: $_muted; font-weight: 500; white-space: nowrap; }
   .text-right   { text-align: right !important; }
   .text-center  { text-align: center !important; }
   .fw-medium    { font-weight: 500; }

@@ -2,7 +2,38 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivityLogService } from '../data-access/activity-log.service';
-import { ActivityLog, ActivityLogFilters, ActivityLogParams } from '../models/activity-log.model';
+import { ActivityLog, ActivityLogFilters, ActivityLogParams, ActivityLogSnapshot } from '../models/activity-log.model';
+
+const FIELD_LABELS: Record<string, string> = {
+  date: 'Date',
+  status: 'Statut',
+  payment_status: 'Statut paiement',
+  total_sale: 'Total vente (MAD)',
+  total_purchase: 'Total achat (MAD)',
+  total_quantity: 'Quantité',
+  margin: 'Marge (MAD)',
+  net_amount: 'Montant net (MAD)',
+  total_amount: 'Montant total (MAD)',
+  payment_method: 'Mode de paiement',
+  with_invoice: 'Avec facture',
+  discount: 'Remise (%)',
+  client: 'Client',
+  commercial: 'Commercial',
+  carrier: 'Transporteur',
+  partner: 'Partenaire',
+  supplier: 'Fournisseur',
+  vehicle: 'Véhicule',
+  mileage: 'Kilométrage',
+  notes: 'Notes',
+};
+
+export interface FieldRow {
+  key: string;
+  label: string;
+  before: unknown;
+  after: unknown;
+  changed: boolean;
+}
 
 @Component({
   selector: 'app-activity-log-page',
@@ -28,6 +59,8 @@ export class ActivityLogPageComponent implements OnInit {
   filterDateFrom = signal('');
   filterDateTo = signal('');
   filterSearch = signal('');
+
+  selectedLog = signal<ActivityLog | null>(null);
 
   constructor(private activityLogService: ActivityLogService) {}
 
@@ -87,6 +120,63 @@ export class ActivityLogPageComponent implements OnInit {
     if (page < 1 || page > this.lastPage()) return;
     this.currentPage.set(page);
     this.loadData();
+  }
+
+  openDetail(log: ActivityLog): void {
+    this.selectedLog.set(log);
+  }
+
+  closeDetail(): void {
+    this.selectedLog.set(null);
+  }
+
+  isPaymentAction(log: ActivityLog): boolean {
+    return log.action === 'PAYMENT_ADD' || log.action === 'PAYMENT_DELETE';
+  }
+
+  getFieldRows(log: ActivityLog): FieldRow[] {
+    const props = log.properties;
+    if (!props) return [];
+
+    if (this.isPaymentAction(log)) return [];
+
+    const before = (props.before ?? {}) as ActivityLogSnapshot;
+    const after = (props.after ?? {}) as ActivityLogSnapshot;
+
+    const allKeys = new Set([
+      ...Object.keys(before),
+      ...Object.keys(after),
+    ]);
+    allKeys.delete('id');
+
+    const rows: FieldRow[] = [];
+    for (const key of allKeys) {
+      const bVal = before[key] ?? null;
+      const aVal = after[key] ?? null;
+      rows.push({
+        key,
+        label: FIELD_LABELS[key] ?? key,
+        before: bVal,
+        after: aVal,
+        changed: log.action === 'UPDATE' && String(bVal) !== String(aVal),
+      });
+    }
+
+    return rows;
+  }
+
+  formatValue(val: unknown): string {
+    if (val === null || val === undefined) return '—';
+    if (typeof val === 'boolean') return val ? 'Oui' : 'Non';
+    if (typeof val === 'number') return String(val);
+    return String(val);
+  }
+
+  detailTitle(log: ActivityLog): string {
+    if (log.action === 'CREATE') return 'Données à la création';
+    if (log.action === 'DELETE') return 'Données au moment de la suppression';
+    if (log.action === 'UPDATE') return 'Avant / Après modification';
+    return 'Détail';
   }
 
   actionLabel(action: string): string {

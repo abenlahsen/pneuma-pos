@@ -84,6 +84,7 @@
               <th>ACTION</th>
               <th>DESCRIPTION</th>
               <th>UTILISATEUR</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -102,10 +103,17 @@
                 </td>
                 <td class="cell-description">{{ log.description }}</td>
                 <td class="cell-user">{{ log.user_name || '—' }}</td>
+                <td class="cell-actions">
+                  @if (log.properties) {
+                    <button class="btn-detail" (click)="openDetail(log)" title="Voir le détail">
+                      👁
+                    </button>
+                  }
+                </td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="5" class="empty-state">Aucune entrée trouvée</td>
+                <td colspan="6" class="empty-state">Aucune entrée trouvée</td>
               </tr>
             }
           </tbody>
@@ -130,3 +138,89 @@
     }
   </div>
 </div>
+
+<!-- Modal de détail -->
+@if (selectedLog(); as log) {
+  <div class="modal-overlay" (click)="closeDetail()">
+    <div class="detail-modal" (click)="$event.stopPropagation()">
+      <div class="detail-modal-header">
+        <div class="detail-modal-title">
+          <span class="entity-badge" [class]="entityClass(log.entity_type)">{{ entityTypeLabel(log.entity_type) }}</span>
+          <span class="action-badge" [class]="actionClass(log.action)">{{ actionLabel(log.action) }}</span>
+          <strong>{{ log.entity_label }}</strong>
+        </div>
+        <button class="btn-close" (click)="closeDetail()">✕</button>
+      </div>
+
+      <div class="detail-modal-meta">
+        <span>{{ log.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+        @if (log.user_name) {
+          <span class="meta-sep">·</span>
+          <span>{{ log.user_name }}</span>
+        }
+        <span class="meta-sep">·</span>
+        <span class="detail-description">{{ log.description }}</span>
+      </div>
+
+      <div class="detail-modal-body">
+        <!-- Paiement -->
+        @if (isPaymentAction(log)) {
+          <div class="payment-detail">
+            <div class="payment-row">
+              <span class="payment-label">Montant</span>
+              <span class="payment-value">{{ log.properties?.amount | number:'1.2-2' }} MAD</span>
+            </div>
+            <div class="payment-row">
+              <span class="payment-label">Méthode</span>
+              <span class="payment-value">{{ log.properties?.method }}</span>
+            </div>
+            @if (log.properties?.reference) {
+              <div class="payment-row">
+                <span class="payment-label">Référence</span>
+                <span class="payment-value">{{ log.properties?.reference }}</span>
+              </div>
+            }
+          </div>
+        } @else {
+          <!-- Titre du tableau -->
+          <p class="snapshot-title">{{ detailTitle(log) }}</p>
+
+          <table class="snapshot-table">
+            <thead>
+              <tr>
+                <th class="col-field">Champ</th>
+                @if (log.action === 'UPDATE') {
+                  <th class="col-value">Avant</th>
+                  <th class="col-value">Après</th>
+                } @else if (log.action === 'CREATE') {
+                  <th class="col-value">Valeur</th>
+                } @else {
+                  <th class="col-value">Valeur</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of getFieldRows(log); track row.key) {
+                <tr [class.row-changed]="row.changed">
+                  <td class="col-field">{{ row.label }}</td>
+                  @if (log.action === 'UPDATE') {
+                    <td class="col-value val-before">{{ formatValue(row.before) }}</td>
+                    <td class="col-value val-after">{{ formatValue(row.after) }}</td>
+                  } @else if (log.action === 'CREATE') {
+                    <td class="col-value">{{ formatValue(row.after) }}</td>
+                  } @else {
+                    <td class="col-value">{{ formatValue(row.before) }}</td>
+                  }
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="3" class="empty-state">Aucune donnée disponible</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+  </div>
+}

@@ -197,6 +197,7 @@
         <thead>
           <tr>
             <th class="text-center">Actions</th>
+            <th class="text-center col-id">#</th>
             <th class="sortable" (click)="toggleSort('date')">Date <span class="sort-icon">{{ sortBy() === 'date' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="text-center">Facture</th>
             <th class="sortable" (click)="toggleSort('client')">Client <span class="sort-icon">{{ sortBy() === 'client' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
@@ -214,13 +215,13 @@
         </thead>
         <tbody>
           <tr *ngIf="loading()">
-            <td colspan="14" class="text-center py-4">
+            <td colspan="15" class="text-center py-4">
               <div class="spinner"></div> Chargement...
             </td>
           </tr>
 
           <tr *ngIf="!loading() && sales().length === 0">
-            <td colspan="13" class="text-center py-4 text-muted">
+            <td colspan="15" class="text-center py-4 text-muted">
               Aucune vente trouvée.
             </td>
           </tr>
@@ -235,6 +236,7 @@
                 <span *ngIf="deletingSaleId() === sale.id" class="inline-spinner"></span>
               </button>
             </td>
+            <td class="text-center cell-id">{{ sale.id }}</td>
             <td>{{ sale.date | date:'dd/MM/yyyy' }}</td>
             <td class="text-center">
               <span class="badge" [class.badge-success]="sale.with_invoice" [class.badge-secondary]="!sale.with_invoice">
