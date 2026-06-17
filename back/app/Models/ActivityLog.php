@@ -18,6 +18,8 @@ class ActivityLog extends Model
     const ENTITY_VENTE         = 'vente';
     const ENTITY_ACHAT         = 'achat';
     const ENTITY_SERVICE_ORDER = 'service_order';
+    const ENTITY_COMPTE        = 'compte';
+    const ENTITY_TRANSACTION   = 'transaction';
 
     protected $fillable = [
         'action',

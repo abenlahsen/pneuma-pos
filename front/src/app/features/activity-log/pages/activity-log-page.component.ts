@@ -26,6 +26,19 @@ const FIELD_LABELS: Record<string, string> = {
   vehicle: 'Véhicule',
   mileage: 'Kilométrage',
   notes: 'Notes',
+  // Comptes & Transactions
+  name: 'Nom',
+  type: 'Type',
+  description: 'Description',
+  initial_balance: 'Solde initial (MAD)',
+  is_active: 'Actif',
+  amount: 'Montant (MAD)',
+  category: 'Catégorie',
+  method: 'Méthode',
+  person: 'Personne',
+  account: 'Compte',
+  source_account: 'Compte source',
+  dest_account: 'Compte destination',
 };
 
 export interface FieldRow {
@@ -196,6 +209,8 @@ export class ActivityLogPageComponent implements OnInit {
       vente: 'Vente',
       achat: 'Achat',
       service_order: 'Service Auto',
+      compte: 'Compte',
+      transaction: 'Transaction',
     };
     return map[type] ?? type;
   }
@@ -216,6 +231,8 @@ export class ActivityLogPageComponent implements OnInit {
       vente: 'entity-vente',
       achat: 'entity-achat',
       service_order: 'entity-service',
+      compte: 'entity-compte',
+      transaction: 'entity-transaction',
     };
     return map[type] ?? '';
   }

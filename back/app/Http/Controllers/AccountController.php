@@ -64,7 +64,7 @@ class AccountController extends Controller
      */
     public function store(StoreAccountRequest $request): JsonResponse
     {
-        $account = $this->accountService->create($request->validated());
+        $account = $this->accountService->create($request->validated(), $request->user()->id);
 
         return response()->json((new AccountResource($account))->resolve($request), 201);
     }
@@ -74,7 +74,7 @@ class AccountController extends Controller
      */
     public function update(UpdateAccountRequest $request, Account $account): JsonResponse
     {
-        $account = $this->accountService->update($account, $request->validated());
+        $account = $this->accountService->update($account, $request->validated(), $request->user()->id);
 
         return response()->json((new AccountResource($account))->resolve($request));
     }
@@ -82,9 +82,9 @@ class AccountController extends Controller
     /**
      * Delete an account (only if it has no transactions).
      */
-    public function destroy(Account $account): JsonResponse
+    public function destroy(Request $request, Account $account): JsonResponse
     {
-        $response = $this->accountService->delete($account);
+        $response = $this->accountService->delete($account, $request->user()->id);
 
         if ($response instanceof JsonResponse) {
             return $response;

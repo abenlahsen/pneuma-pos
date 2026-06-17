@@ -8,12 +8,15 @@ use App\Models\Payment;
 use App\Models\PurchasePayment;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\ActivityLogService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 class TransactionService
 {
+    public function __construct(private ActivityLogService $activityLog) {}
+
     /**
      * @param  array<string, mixed>  $filters
      */
@@ -38,26 +41,43 @@ class TransactionService
             ['user_id' => $user->id],
         ));
 
-        return $transaction->load('account');
+        $transaction->load('account');
+
+        $snapshot = $this->activityLog->buildTransactionSnapshot($transaction);
+        $this->activityLog->logTransactionCreated($transaction, $snapshot, $user->id, $user->name);
+
+        return $transaction;
     }
 
     /**
      * @param  array<string, mixed>  $validated
      */
-    public function update(Transaction $transaction, array $validated): Transaction
+    public function update(Transaction $transaction, array $validated, ?int $userId = null, ?string $userName = null): Transaction
     {
         $this->guardLinkedToCompleted($transaction);
+
+        $transaction->load('account');
+        $before = $this->activityLog->buildTransactionSnapshot($transaction);
 
         $transaction->update($validated);
+        $fresh = $transaction->fresh()->load('account');
 
-        return $transaction->fresh()->load('account');
+        $after = $this->activityLog->buildTransactionSnapshot($fresh);
+        $this->activityLog->logTransactionUpdated($fresh, $before, $after, $userId, $userName);
+
+        return $fresh;
     }
 
-    public function delete(Transaction $transaction): void
+    public function delete(Transaction $transaction, ?int $userId = null, ?string $userName = null): void
     {
         $this->guardLinkedToCompleted($transaction);
 
+        $transaction->load('account');
+        $before = array_merge(['id' => $transaction->id], $this->activityLog->buildTransactionSnapshot($transaction));
+
         $transaction->delete();
+
+        $this->activityLog->logTransactionDeleted($before, $userId, $userName);
     }
 
     private function guardLinkedToCompleted(Transaction $transaction): void

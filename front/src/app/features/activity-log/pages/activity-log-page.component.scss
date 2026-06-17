@@ -159,9 +159,11 @@ $_bg:      #f7fafc;
   letter-spacing: 0.02em;
   white-space: nowrap;
 
-  &.entity-vente   { background: rgba(255, 45, 55, 0.08); color: #c0020b; }
-  &.entity-achat   { background: rgba(59, 130, 246, 0.1); color: #1d4ed8; }
-  &.entity-service { background: rgba(168, 85, 247, 0.1); color: #7c3aed; }
+  &.entity-vente       { background: rgba(255, 45, 55, 0.08);  color: #c0020b; }
+  &.entity-achat       { background: rgba(59, 130, 246, 0.1);  color: #1d4ed8; }
+  &.entity-service     { background: rgba(168, 85, 247, 0.1);  color: #7c3aed; }
+  &.entity-compte      { background: rgba(16, 185, 129, 0.10); color: #065f46; }
+  &.entity-transaction { background: rgba(245, 158, 11, 0.12); color: #92400e; }
 }
 
 // ── Badges action ─────────────────────────────────────────────────────────────

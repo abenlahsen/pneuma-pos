@@ -5,11 +5,14 @@ namespace App\Domain\Accounts;
 use App\Models\Account;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
 
 class AccountService
 {
+    public function __construct(private ActivityLogService $activityLog) {}
+
     /**
      * @param  array<string, mixed>  $filters
      */
@@ -68,11 +71,16 @@ class AccountService
      * @param  array<string, mixed>  $validated
      * @return Account
      */
-    public function create($validated)
+    public function create($validated, ?int $userId = null)
     {
         $validated['initial_balance'] = $validated['initial_balance'] ?? 0;
 
-        return Account::create($validated);
+        $account = Account::create($validated);
+
+        $snapshot = $this->activityLog->buildCompteSnapshot($account);
+        $this->activityLog->logCompteCreated($account, $snapshot, $userId, ActivityLogService::resolveUserName($userId));
+
+        return $account;
     }
 
     /**
@@ -80,18 +88,24 @@ class AccountService
      * @param  array<string, mixed>  $validated
      * @return Account
      */
-    public function update($account, $validated)
+    public function update($account, $validated, ?int $userId = null)
     {
-        $account->update($validated);
+        $before = $this->activityLog->buildCompteSnapshot($account);
 
-        return $account->fresh();
+        $account->update($validated);
+        $fresh = $account->fresh();
+
+        $after = $this->activityLog->buildCompteSnapshot($fresh);
+        $this->activityLog->logCompteUpdated($fresh, $before, $after, $userId, ActivityLogService::resolveUserName($userId));
+
+        return $fresh;
     }
 
     /**
      * @param  Account  $account
      * @return JsonResponse|null
      */
-    public function delete($account)
+    public function delete($account, ?int $userId = null)
     {
         if ($account->transactions()->exists()) {
             return response()->json([
@@ -99,7 +113,9 @@ class AccountService
             ], 422);
         }
 
+        $before = $this->activityLog->buildCompteSnapshot($account);
         $account->delete();
+        $this->activityLog->logCompteDeleted($before, $userId, ActivityLogService::resolveUserName($userId));
 
         return null;
     }
@@ -145,6 +161,15 @@ class AccountService
             'account_id' => $destAccount->id,
             'transfer_id' => $transferId,
         ]);
+
+        $this->activityLog->logTransferDone(
+            $sourceAccount->name,
+            $destAccount->name,
+            (float) $validated['amount'],
+            $expense->id,
+            $user->id,
+            $user->name,
+        );
 
         return response()->json([
             'message' => 'Transfert effectué avec succès.',
