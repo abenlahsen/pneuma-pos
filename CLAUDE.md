@@ -105,9 +105,10 @@ Config (`e2e/playwright.config.ts`): `timeout: 30_000` per test, `expect: { time
 - `clients.php` also: vehicle detail/edit/delete: `GET/PUT/DELETE /api/vehicles/{vehicle}` (permission: view/edit clients)
 - `admin.php` — CRUD for `users` and `roles`/`permissions` + `GET /api/dashboard-kpi` (Administrator only); `require`s `settings.php`
 - `settings.php` — `GET/PUT /api/settings/company` (company profile, logo, theme)
+- `activity_logs.php` — `GET /api/activity-logs` (paginated, filterable) + `GET /api/activity-logs-filters`; permission `view activity-log` (Administrator only)
 - All protected routes require `Authorization: Bearer {token}` and `permission:` middleware
 
-**Domain Services** (`back/app/Domain/`): Business logic is extracted from controllers into domain service classes. Each module has its own service (e.g., `Domain/Sales/SaleService.php`, `Domain/Clients/ClientService.php`, `Domain/Stock/StockService.php`, `Domain/ServiceOrders/ServiceOrderService.php`, `Domain/ServiceOrders/ServicePaymentService.php`). Controllers are thin — they delegate to domain services and return API Resources.
+**Domain Services** (`back/app/Domain/`): Business logic is extracted from controllers into domain service classes. Each module has its own service (e.g., `Domain/Sales/SaleService.php`, `Domain/Clients/ClientService.php`, `Domain/Stock/StockService.php`, `Domain/ServiceOrders/ServiceOrderService.php`, `Domain/ServiceOrders/ServicePaymentService.php`). Controllers are thin — they delegate to domain services and return API Resources. `Services/ActivityLogService.php` is a cross-domain service injected into all domain services (same pattern as `StockMovementService`) — it records CREATE, UPDATE, DELETE, PAYMENT_ADD, PAYMENT_DELETE events to the `activity_logs` table.
 
 **API Resources** (`back/app/Http/Resources/`): Laravel JSON Resources handle response serialization. Grouped by module (e.g., `Resources/Clients/ClientResource.php`, `Resources/Clients/ClientProfileResource.php`). Response envelope convention: **list endpoints** return `{ "data": [...], "meta": {...}, "total": N, ... }` (manual wrapping via `['data' => Resource::collection(...)->resolve()]`); **single-item endpoints** (show/store/update) return a **flat object** (no `data` wrapper) via `(new Resource($model))->resolve()`. Angular services type single-item responses as the model directly (e.g., `http.get<ServiceOrder>(url)`).
 
@@ -119,6 +120,7 @@ Config (`e2e/playwright.config.ts`): `timeout: 30_000` per test, `expect: { time
 - `Product` — catalog entry with a `type` field (`tyre` | `part` | `service`). Each type has a dedicated sub-table joined 1:1 by `product_id` as PK: `ProductTyre` (dimensions, EU label), `ProductPart`, `ProductService`. Use `$product->details()` to get the type-specific sub-model.
 - `Stock` — inventory lots linked to `Product` via `product_id`. Tire dimensions are on the related `ProductTyre`, not on `Stock` itself. `Stock::parseSearchQuery()` parses shorthand queries like "2055516" or "205/55R16" into width/height/diameter components.
 - `StockMovement` — append-only audit trail written whenever stock quantity changes.
+- `ActivityLog` — append-only audit trail for user actions. Fields: `action` (CREATE|UPDATE|DELETE|PAYMENT_ADD|PAYMENT_DELETE), `entity_type` (vente|achat|service_order), `entity_id`, `entity_label`, `description` (human-readable French phrase), `properties` (JSON diff for UPDATE, snapshot for CREATE/DELETE, payment details for PAYMENT_*), `user_id` (nullable FK, nullOnDelete), `user_name` (denormalized — survives user deletion), `created_at` (no `updated_at` — immutable). Written by `ActivityLogService` injected into domain services.
 - `Transaction` — cash-flow entry linked to an `Account`. Auto-created when a `Payment`, `PurchasePayment`, or `ServicePayment` is saved. Has two scopes: `pending()` (Chèque/Effet with `date > today`) and `settled()` (everything else). The `TransactionService` accepts a `status` filter param (`pending` | `settled`) to split the list. Editing or deleting a transaction that is linked to a fully-paid sale (`payment_status = 'PAYÉ'`) or purchase (`payment_status = 'PAYE'`) is blocked by `TransactionService::guardLinkedToCompleted()` — the user must modify the sale/purchase payment status first. `partner_id` is a nullable FK to `partners` — set manually by the user on cash-flow transactions (not auto-populated from sale/purchase payments).
 - `Payment` / `PurchasePayment` — payment records linked to their parent sale/purchase and to a `Transaction`. Deleting a payment also deletes its linked `Transaction`.
 - `ServiceOrder` — header record (date, vehicle, mileage, totals, discount, status, payment_status, client_id, commercial_id). Line items live in `ServiceItem` (HasMany). Payments via `ServicePayment` (HasMany).
@@ -136,7 +138,7 @@ Each payment creation (Payment, PurchasePayment, ServicePayment) auto-creates a 
 
 **Authentication**: Sanctum stateless tokens stored client-side. All previous tokens are revoked on new login (single active session).
 
-**ACL**: Spatie Laravel Permission with roles (Administrator, Commercial, Manager, Driver) and granular permissions per resource (view, create, edit, delete + special ones like `import stock`, `manage sale-payments`, `transfer accounts`, `manage service-payments`). The `RolesAndPermissionsSeeder` manages all permissions and role assignments across all modules. All API routes are protected with `permission:` middleware. Frontend uses `authService.hasPermission()` to conditionally show UI elements and `permissionGuard` on routes.
+**ACL**: Spatie Laravel Permission with roles (Administrator, Commercial, Manager, Driver) and granular permissions per resource (view, create, edit, delete + special ones like `import stock`, `manage sale-payments`, `transfer accounts`, `manage service-payments`, `view activity-log`). The `RolesAndPermissionsSeeder` manages all permissions and role assignments across all modules. All API routes are protected with `permission:` middleware. Frontend uses `authService.hasPermission()` to conditionally show UI elements and `permissionGuard` on routes. `view activity-log` is assigned to Administrator only — explicitly excluded from Manager.
 
 ### Frontend Structure
 
@@ -145,7 +147,7 @@ Each payment creation (Payment, PurchasePayment, ServicePayment) auto-creates a 
 - `components/` — Reusable sub-components (e.g., forms)
 - `data-access/` — HTTP service for the feature (e.g., `client.service.ts`)
 - `models/` — TypeScript interfaces for the feature (e.g., `client.model.ts`)
-- Modules: `sales`, `purchases`, `cash-flow`, `clients`, `suppliers`, `users`, `carriers`, `partners`, `stock`, `roles`, `brands`, `products`, `accounts`, `settings`, `service-orders`
+- Modules: `sales`, `purchases`, `cash-flow`, `clients`, `suppliers`, `users`, `carriers`, `partners`, `stock`, `roles`, `brands`, `products`, `accounts`, `settings`, `service-orders`, `activity-log`
 
 **Shared** (`front/src/app/shared/`): Cross-feature reusable components — `auto-refresh-control` (per-page configurable auto-refresh toggle), `navbar` (top navigation bar), `document-print` (A4 PDF preview modal for sales, purchases, and service orders).
 
@@ -235,6 +237,8 @@ Two deploy scripts, both run from WSL Ubuntu-24.04:
 - **Prix moyen / pneu**: `avg_price_tyre_today`, `avg_price_tyre_month`, `avg_price_tyre_year`
 - **Stock & cash**: `stock_value` (sum of quantity × purchase_price), `cash_balance` (sum of account balances), `unpaid_sales`, `unpaid_purchases`
 - **Commerciaux**: `sales_by_commercial` array — each entry has `total_sales`, `total_tyres`, `total_margin`, `total_unpaid`
+
+**Activity Log** (`GET /api/activity-logs`, Administrator only): append-only audit trail for sales, purchases, and service orders. Actions logged: CREATE (entity created), UPDATE (diff of changed fields), DELETE (snapshot of deleted entity), PAYMENT_ADD, PAYMENT_DELETE. Written by `ActivityLogService` injected into all domain services — same pattern as `StockMovementService`. `deletePayment()` methods on all three payment services accept `?int $userId` and `?string $userName` optional params (passed from their controllers). `user_name` is denormalized so attribution survives user deletion. `properties` JSON: diff object `{field: {from, to}}` for UPDATE, snapshot array for DELETE, `{amount, method, reference}` for payment events. Frontend at `/activity-log`, visible to Administrator only in navbar.
 
 ## Design System
 Read `front/DESIGN_SYSTEM.md` before making any frontend UI changes.
