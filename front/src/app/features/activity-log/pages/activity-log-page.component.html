@@ -5,6 +5,7 @@
       <h1 class="page-title">📋 Journal d'activité</h1>
       <span class="page-subtitle">{{ total() }} entrée(s)</span>
     </div>
+    <app-auto-refresh-control pageKey="activity-log" (refresh)="loadData()" />
   </div>
 
   <!-- Filtres -->
