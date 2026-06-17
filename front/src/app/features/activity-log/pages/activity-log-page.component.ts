@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivityLogService } from '../data-access/activity-log.service';
 import { ActivityLog, ActivityLogFilters, ActivityLogParams, ActivityLogSnapshot } from '../models/activity-log.model';
+import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 
 const FIELD_LABELS: Record<string, string> = {
   date: 'Date',
@@ -38,7 +39,7 @@ export interface FieldRow {
 @Component({
   selector: 'app-activity-log-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AutoRefreshControlComponent],
   templateUrl: './activity-log-page.component.html',
   styleUrls: ['./activity-log-page.component.scss'],
 })
