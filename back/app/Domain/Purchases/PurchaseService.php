@@ -89,7 +89,8 @@ class PurchaseService
 
         $loaded = $this->loadRelations($purchase);
 
-        $this->activityLog->logPurchaseCreated($loaded, $userId, ActivityLogService::resolveUserName($userId));
+        $snapshot = $this->activityLog->buildPurchaseSnapshot($loaded);
+        $this->activityLog->logPurchaseCreated($loaded, $snapshot, $userId, ActivityLogService::resolveUserName($userId));
 
         return $loaded;
     }
@@ -104,11 +105,8 @@ class PurchaseService
         $discount = (float) ($validated['discount'] ?? 0);
         $totals = $this->calculateTotals($itemsData, $discount);
 
-        $oldState = [
-            'status'         => $purchase->status,
-            'payment_status' => $purchase->payment_status,
-            'net_amount'     => (float) $purchase->net_amount,
-        ];
+        $purchase->loadMissing(['supplier', 'commercial']);
+        $beforeSnapshot = $this->activityLog->buildPurchaseSnapshot($purchase);
 
         DB::transaction(function () use ($purchase, $validated, $itemsData, $totals, $userId, $oldStatus) {
             if (! in_array($oldStatus, ['ANNULE', 'RETOUR'], true)) {
@@ -130,26 +128,28 @@ class PurchaseService
 
         $loaded = $this->loadRelations($purchase->fresh());
 
-        $newState = [
-            'status'         => $loaded->status,
-            'payment_status' => $loaded->payment_status,
-            'net_amount'     => (float) $loaded->net_amount,
-        ];
+        $this->refreshPaymentStatus($loaded);
+        $loaded->refresh();
 
-        $this->activityLog->logPurchaseUpdated($loaded, $oldState, $newState, $userId, ActivityLogService::resolveUserName($userId));
+        $afterSnapshot = $this->activityLog->buildPurchaseSnapshot($loaded);
+        $this->activityLog->logPurchaseUpdated($loaded, $beforeSnapshot, $afterSnapshot, $userId, ActivityLogService::resolveUserName($userId));
 
         return $loaded;
     }
 
+    private function refreshPaymentStatus(Purchase $purchase): void
+    {
+        $totalPaid = (float) $purchase->payments()->sum('amount');
+        $netAmount = (float) $purchase->net_amount;
+        $status = $totalPaid <= 0 ? 'NON PAYE'
+                : ($totalPaid >= $netAmount ? 'PAYE' : 'PARTIEL');
+        $purchase->update(['payment_status' => $status]);
+    }
+
     public function delete(Purchase $purchase, $userId)
     {
-        $snapshot = [
-            'id'             => $purchase->id,
-            'net_amount'     => $purchase->net_amount,
-            'total_quantity' => $purchase->total_quantity,
-            'payment_status' => $purchase->payment_status,
-            'status'         => $purchase->status,
-        ];
+        $purchase->loadMissing(['supplier', 'commercial']);
+        $beforeSnapshot = array_merge(['id' => $purchase->id], $this->activityLog->buildPurchaseSnapshot($purchase));
 
         DB::transaction(function () use ($purchase, $userId) {
             if (! in_array($purchase->status, ['ANNULE', 'RETOUR'], true)) {
@@ -166,7 +166,7 @@ class PurchaseService
             $purchase->delete();
         });
 
-        $this->activityLog->logPurchaseDeleted($snapshot, $userId, ActivityLogService::resolveUserName($userId));
+        $this->activityLog->logPurchaseDeleted($beforeSnapshot, $userId, ActivityLogService::resolveUserName($userId));
     }
 
     /**
