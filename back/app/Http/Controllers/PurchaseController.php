@@ -102,6 +102,17 @@ class PurchaseController extends Controller
         return response()->json($purchase);
     }
 
+    public function updateStatus(Request $request, Purchase $purchase): JsonResponse
+    {
+        $validated = $request->validate([
+            'status' => 'required|string|in:EN COURS,RECU,TERMINE,ANNULE,RETOUR',
+        ]);
+
+        $purchase->update(['status' => $validated['status']]);
+
+        return response()->json(['status' => $purchase->status]);
+    }
+
     public function destroy(Request $request, Purchase $purchase): JsonResponse
     {
         if ($purchase->status === 'TERMINE' && ! $request->user()->hasRole('Administrator')) {

@@ -72,6 +72,10 @@ export class PurchaseService {
     return this.http.put<Purchase>(`${this.apiUrl}/${id}`, data);
   }
 
+  patchStatus(id: number, status: string): Observable<{ status: string }> {
+    return this.http.patch<{ status: string }>(`${this.apiUrl}/${id}/status`, { status });
+  }
+
   deletePurchase(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }

@@ -203,17 +203,7 @@ export class PurchasesPageComponent implements OnInit {
     const oldStatus = purchase.status;
     purchase.status = newStatus as Purchase['status'];
 
-    const payload = {
-      date: purchase.date,
-      with_invoice: purchase.with_invoice,
-      supplier_id: purchase.supplier?.id || 0,
-      commercial_id: purchase.commercial?.id || null,
-      items: purchase.items || [],
-      status: purchase.status,
-      payment_status: purchase.payment_status
-    };
-
-    this.purchaseService.updatePurchase(purchase.id, payload).subscribe({
+    this.purchaseService.patchStatus(purchase.id, newStatus).subscribe({
       next: () => {
       },
       error: () => {
