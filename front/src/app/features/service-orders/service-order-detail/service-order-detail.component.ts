@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ServiceOrder } from '../../../core/models/service-order.model';
+import { PaymentStatus, ServiceOrderStatus } from '../../../core/constants/status.constants';
 import { DocumentPrintComponent, PrintDocument, PrintLine } from '../../../shared/document-print/document-print.component';
 
 @Component({
@@ -74,7 +75,7 @@ export class ServiceOrderDetailComponent {
     return Number(item.line_total ?? (Number(item.parts_cost || 0) + Number(item.labor_cost || 0)));
   }
 
-  statusClass(status: string): string {
+  statusClass(status: ServiceOrderStatus): string {
     switch (status) {
       case 'TERMINE': return 'badge-success';
       case 'ANNULE': return 'badge-danger';
@@ -82,7 +83,7 @@ export class ServiceOrderDetailComponent {
     }
   }
 
-  paymentClass(ps: string): string {
+  paymentClass(ps: PaymentStatus): string {
     switch (ps) {
       case 'PAYE': return 'badge-success';
       case 'PARTIEL': return 'badge-warning';

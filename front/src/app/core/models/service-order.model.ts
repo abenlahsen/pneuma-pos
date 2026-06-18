@@ -1,3 +1,5 @@
+import { PaymentStatus, ServiceOrderStatus } from '../constants/status.constants';
+
 export interface ServiceItem {
   id?: number;
   service_order_id?: number;
@@ -33,8 +35,8 @@ export interface ServiceOrder {
   total_amount: number;
   discount: number;
   net_amount: number;
-  status: 'EN COURS' | 'TERMINE' | 'ANNULE';
-  payment_status: 'NON PAYE' | 'PARTIEL' | 'PAYE';
+  status: ServiceOrderStatus;
+  payment_status: PaymentStatus;
   notes?: string | null;
   commercial_id?: number | null;
   commercial?: { id: number; name: string } | null;
@@ -63,8 +65,8 @@ export interface ServiceOrderPayload {
   mileage?: number | null;
   items: ServiceItemPayload[];
   discount: number;
-  status?: string;
-  payment_status?: string;
+  status?: ServiceOrderStatus;
+  payment_status?: PaymentStatus;
   notes?: string | null;
   commercial_id?: number | null;
 }

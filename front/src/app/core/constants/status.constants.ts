@@ -4,6 +4,9 @@ export type SaleStatus = typeof SALE_STATUSES[number];
 export const PURCHASE_STATUSES = ['EN COURS', 'RECU', 'TERMINE', 'ANNULE', 'RETOUR'] as const;
 export type PurchaseStatus = typeof PURCHASE_STATUSES[number];
 
+export const SERVICE_ORDER_STATUSES = ['EN COURS', 'TERMINE', 'ANNULE'] as const;
+export type ServiceOrderStatus = typeof SERVICE_ORDER_STATUSES[number];
+
 export const PAYMENT_STATUSES = ['NON PAYE', 'PAYE', 'PARTIEL'] as const;
 export type PaymentStatus = typeof PAYMENT_STATUSES[number];
 

@@ -2,6 +2,7 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ServiceOrder, ServiceOrderFilters, ServiceOrderPayload, ServiceOrderSummary } from '../../../core/models/service-order.model';
+import { PaymentStatus, ServiceOrderStatus } from '../../../core/constants/status.constants';
 import { ServiceOrderService } from '../data-access/service-order.service';
 import { ServiceOrderFormComponent } from '../service-order-form/service-order-form.component';
 import { ServiceOrderDetailComponent } from '../service-order-detail/service-order-detail.component';
@@ -266,7 +267,7 @@ export class ServiceOrdersComponent implements OnInit {
     });
   }
 
-  statusClass(status: string): string {
+  statusClass(status: ServiceOrderStatus): string {
     switch (status) {
       case 'TERMINE': return 'badge-success';
       case 'ANNULE': return 'badge-danger';
@@ -274,7 +275,7 @@ export class ServiceOrdersComponent implements OnInit {
     }
   }
 
-  paymentClass(ps: string): string {
+  paymentClass(ps: PaymentStatus): string {
     switch (ps) {
       case 'PAYE': return 'badge-success';
       case 'PARTIEL': return 'badge-warning';
