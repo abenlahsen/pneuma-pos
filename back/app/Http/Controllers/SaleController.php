@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Sales\SaleService;
+use App\Enums\SalePaymentStatus;
+use App\Enums\SaleStatus;
 use App\Http\Requests\StoreSaleRequest;
 use App\Http\Requests\UpdateSaleRequest;
 use App\Http\Resources\SaleResource;
@@ -164,7 +166,7 @@ class SaleController extends Controller
 
     public function update(UpdateSaleRequest $request, Sale $sale): JsonResponse
     {
-        if ($sale->status === 'TERMINEE' && ! $request->user()->hasRole('Administrator')) {
+        if ($sale->status === SaleStatus::TERMINEE->value && ! $request->user()->hasRole('Administrator')) {
             return response()->json(['message' => 'Cette vente est terminée et ne peut plus être modifiée.'], 403);
         }
 
@@ -179,7 +181,7 @@ class SaleController extends Controller
 
     public function destroy(Sale $sale, Request $request): Response
     {
-        if ($sale->status === 'TERMINEE' && ! $request->user()->hasRole('Administrator')) {
+        if ($sale->status === SaleStatus::TERMINEE->value && ! $request->user()->hasRole('Administrator')) {
             return response()->json(['message' => 'Cette vente est terminée et ne peut plus être supprimée.'], 403);
         }
 
@@ -481,12 +483,12 @@ class SaleController extends Controller
             'tyres_this_month' => $dateColumn === 'id'
                 ? 0
                 : $tyreSaleQty((clone $query)->whereDate($dateColumn, '>=', $monthStart)->whereDate($dateColumn, '<=', $monthEnd)),
-            'tyres_en_cours' => $tyreSaleQty((clone $query)->where('status', 'EN COURS')),
-            'sales_en_cours' => (int) (clone $query)->where('status', 'EN COURS')->count(),
+            'tyres_en_cours' => $tyreSaleQty((clone $query)->where('status', SaleStatus::EN_COURS->value)),
+            'sales_en_cours' => (int) (clone $query)->where('status', SaleStatus::EN_COURS->value)->count(),
             'unpaid_en_cours' => (function () use ($query): float {
                 $q = (clone $query)
-                    ->where('status', 'EN COURS')
-                    ->whereIn('payment_status', ['NON PAYE', 'PARTIEL']);
+                    ->where('status', SaleStatus::EN_COURS->value)
+                    ->whereIn('payment_status', [SalePaymentStatus::NON_PAYE->value, SalePaymentStatus::PARTIEL->value]);
                 $totalSale = (float) (clone $q)->sum('total_sale');
                 $totalPaid = (float) DB::table('payments')
                     ->whereIn('sale_id', (clone $q)->select('id'))
@@ -495,8 +497,8 @@ class SaleController extends Controller
             })(),
             'unpaid_livre_monte' => (function () use ($query): float {
                 $q = (clone $query)
-                    ->whereIn('status', ['LIVRE', 'MONTE'])
-                    ->whereIn('payment_status', ['NON PAYE', 'PARTIEL']);
+                    ->whereIn('status', [SaleStatus::LIVRE->value, SaleStatus::MONTE->value])
+                    ->whereIn('payment_status', [SalePaymentStatus::NON_PAYE->value, SalePaymentStatus::PARTIEL->value]);
                 $totalSale = (float) (clone $q)->sum('total_sale');
                 $totalPaid = (float) DB::table('payments')
                     ->whereIn('sale_id', (clone $q)->select('id'))

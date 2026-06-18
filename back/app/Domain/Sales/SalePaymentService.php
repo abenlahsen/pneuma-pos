@@ -2,6 +2,7 @@
 
 namespace App\Domain\Sales;
 
+use App\Enums\SalePaymentStatus;
 use App\Models\ActivityLog;
 use App\Models\Payment;
 use App\Models\Sale;
@@ -104,11 +105,11 @@ class SalePaymentService
         $totalSale = (float) $sale->total_sale;
 
         if ($totalPaid <= 0) {
-            $status = 'NON PAYE';
+            $status = SalePaymentStatus::NON_PAYE->value;
         } elseif ($totalPaid >= $totalSale) {
-            $status = 'PAYE';
+            $status = SalePaymentStatus::PAYE->value;
         } else {
-            $status = 'PARTIEL';
+            $status = SalePaymentStatus::PARTIEL->value;
         }
 
         $sale->update(['payment_status' => $status]);
