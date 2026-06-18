@@ -35,7 +35,7 @@ export class QuickClientFormComponent implements OnInit {
     is_active: true,
   };
 
-  readonly categoryOptions = ['Paticulier', 'Entreprise'];
+  readonly categoryOptions = ['Particulier', 'Entreprise'];
 
   ngOnInit(): void {
     this.client = { ...this.client, name: this.initialName };

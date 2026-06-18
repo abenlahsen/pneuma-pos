@@ -91,7 +91,7 @@ class BackfillClientsFromSalesCommand extends Command
             if (! $matchedClientId) {
                 $clientPayload = [
                     'name' => trim((string) $sale->getRawOriginal('client')),
-                    'category' => 'Paticulier',
+                    'category' => 'Particulier',
                     'phone' => $this->nullableTrim($sale->getRawOriginal('client_phone')),
                     'city' => $this->nullableTrim($sale->city),
                     'created_by' => $sale->created_by,

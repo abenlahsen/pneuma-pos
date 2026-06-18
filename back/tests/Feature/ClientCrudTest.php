@@ -57,7 +57,7 @@ class ClientCrudTest extends TestCase
 
         $this->client = Client::query()->create([
             'name' => 'Ahmed Benali',
-            'category' => 'Paticulier',
+            'category' => 'Particulier',
             'phone' => '0612345678',
             'email' => 'ahmed@example.com',
             'city' => 'Casablanca',
@@ -256,11 +256,11 @@ class ClientCrudTest extends TestCase
     {
         Sanctum::actingAs($this->user, [], 'web');
 
-        $response = $this->getJson('/api/clients?category=Paticulier');
+        $response = $this->getJson('/api/clients?category=Particulier');
         $response->assertOk();
 
         foreach ($response->json('data') as $item) {
-            $this->assertEquals('Paticulier', $item['category']);
+            $this->assertEquals('Particulier', $item['category']);
         }
     }
 
@@ -268,7 +268,7 @@ class ClientCrudTest extends TestCase
     {
         Client::query()->create([
             'name' => 'Client Inactif',
-            'category' => 'Paticulier',
+            'category' => 'Particulier',
             'phone' => '0688888888',
             'is_active' => false,
         ]);
@@ -383,7 +383,7 @@ class ClientCrudTest extends TestCase
 
         $this->postJson('/api/clients', [
             'name' => 'Duplicate Phone',
-            'category' => 'Paticulier',
+            'category' => 'Particulier',
             'phone' => '0612345678', // same as $this->client
         ])->assertUnprocessable()
             ->assertJsonValidationErrors(['phone']);

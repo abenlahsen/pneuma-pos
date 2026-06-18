@@ -442,7 +442,7 @@ class SaleControllerTest extends TestCase
             ];
 
             if (Schema::hasColumn('clients', 'category')) {
-                $clientData['category'] = 'Paticulier';
+                $clientData['category'] = 'Particulier';
             }
 
             $client = Client::query()->create($clientData);

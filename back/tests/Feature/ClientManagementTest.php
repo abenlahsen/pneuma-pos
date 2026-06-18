@@ -89,7 +89,7 @@ class ClientManagementTest extends TestCase
 
         $client = Client::create([
             'name' => 'Beta Client',
-            'category' => 'Paticulier',
+            'category' => 'Particulier',
             'phone' => '0700000000',
             'city' => 'Rabat',
             'opening_balance' => 25,
@@ -119,7 +119,7 @@ class ClientManagementTest extends TestCase
         $response
             ->assertOk()
             ->assertJsonPath('data.client.id', $client->id)
-            ->assertJsonPath('data.client.category', 'Paticulier')
+            ->assertJsonPath('data.client.category', 'Particulier')
             ->assertJsonPath('data.summary.sales_count', 1)
             ->assertJsonPath('data.summary.opening_balance', 25)
             ->assertJsonPath('data.summary.total_sales', 120)
@@ -166,7 +166,7 @@ class ClientManagementTest extends TestCase
     {
         $client = Client::create([
             'name' => 'Update Validator Client',
-            'category' => 'Paticulier',
+            'category' => 'Particulier',
             'phone' => '0811111111',
             'is_active' => true,
         ]);
@@ -199,7 +199,7 @@ class ClientManagementTest extends TestCase
     {
         $client = Client::create([
             'name' => 'Validator Client',
-            'category' => 'Paticulier',
+            'category' => 'Particulier',
             'phone' => '0800000000',
             'is_active' => true,
         ]);

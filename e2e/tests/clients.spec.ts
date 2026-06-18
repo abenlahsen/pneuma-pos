@@ -63,7 +63,7 @@ test.describe.serial('Clients', () => {
     await expect(page.locator('.modal-container h2')).toContainText('Nouveau Client');
 
     await page.fill('input[name="name"]', TEST_CLIENT);
-    await page.selectOption('select[name="category"]', 'Paticulier');
+    await page.selectOption('select[name="category"]', 'Particulier');
     await page.fill('input[name="phone"]', '0612345678');
     // City is now a select (CityService dropdown)
     await page.selectOption('.modal-container select[name="city"]', 'Casablanca');
