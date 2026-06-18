@@ -34,6 +34,7 @@ interface ServiceLineForm {
 interface PartLineForm {
   item_type: 'part';
   product_id: number | null;
+  stock_id: number | null;
   product_name: string;
   product_reference: string;
   unit: string;
@@ -162,6 +163,7 @@ export class ServiceOrderFormComponent implements OnInit {
             return {
               item_type: 'part',
               product_id: it.product_id ?? null,
+              stock_id: it.stock_id ?? null,
               product_name: it.product_name ?? '',
               product_reference: it.product_reference ?? '',
               unit: 'pièce',
@@ -256,7 +258,7 @@ export class ServiceOrderFormComponent implements OnInit {
   addPartLine(): void {
     this.lines.update(l => [...l, {
       item_type: 'part',
-      product_id: null, product_name: '', product_reference: '',
+      product_id: null, stock_id: null, product_name: '', product_reference: '',
       unit: 'pièce', quantity: 1, unit_price: 0, total_quantity: 0,
       searchQuery: '', searchResults: [], searching: false,
     }]);
@@ -301,6 +303,7 @@ export class ServiceOrderFormComponent implements OnInit {
   selectPart(index: number, part: PartSearchResult): void {
     this.updateLine(index, {
       product_id: part.id,
+      stock_id: part.stock_id ?? null,
       product_name: part.name,
       product_reference: part.reference ?? '',
       unit: part.unit,
@@ -413,6 +416,7 @@ export class ServiceOrderFormComponent implements OnInit {
         return {
           item_type: 'part' as const,
           product_id: line.product_id,
+          stock_id: line.stock_id ?? null,
           quantity: line.quantity,
           unit_price: line.unit_price,
           sort_order: i,
