@@ -49,6 +49,7 @@ export interface ServiceItemPayload {
   parts_cost?: number;
   labor_cost?: number;
   product_id?: number | null;
+  stock_id?: number | null;
   quantity?: number;
   unit_price?: number;
   sort_order?: number;
@@ -76,6 +77,7 @@ export interface PartSearchResult {
   description?: string | null;
   unit: string;
   total_quantity: number;
+  stock_id?: number | null;
   purchase_price: number;
 }
 

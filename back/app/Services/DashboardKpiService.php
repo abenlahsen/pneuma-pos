@@ -55,7 +55,7 @@ class DashboardKpiService
             $sq = DB::table('service_items')
                 ->join('service_orders', 'service_items.service_order_id', '=', 'service_orders.id')
                 ->where('service_items.item_type', 'part')
-                ->where('service_orders.status', '!=', 'ANNULÉE');
+                ->where('service_orders.status', '!=', 'ANNULE');
             $end ? $sq->whereBetween('service_orders.date', [$start, $end]) : $sq->whereDate('service_orders.date', $start);
             $fromService = (int) $sq->sum('service_items.quantity');
 
@@ -103,17 +103,17 @@ class DashboardKpiService
             ->sum('amount'), 2);
 
         $caServiceToday = round((float) ServiceOrder::whereDate('date', $today)
-            ->where('status', '!=', 'ANNULÉE')->sum('net_amount'), 2);
+            ->where('status', '!=', 'ANNULE')->sum('net_amount'), 2);
         $caServiceMonth = round((float) ServiceOrder::whereBetween('date', [$monthStart, $monthEnd])
-            ->where('status', '!=', 'ANNULÉE')->sum('net_amount'), 2);
+            ->where('status', '!=', 'ANNULE')->sum('net_amount'), 2);
         $caServiceYear  = round((float) ServiceOrder::whereBetween('date', [$yearStart, $yearEnd])
-            ->where('status', '!=', 'ANNULÉE')->sum('net_amount'), 2);
+            ->where('status', '!=', 'ANNULE')->sum('net_amount'), 2);
 
         $serviceMargin = function (string $start, ?string $end = null): float {
             $q = DB::table('service_items')
                 ->join('service_orders', 'service_items.service_order_id', '=', 'service_orders.id')
                 ->leftJoin('stocks', 'service_items.stock_id', '=', 'stocks.id')
-                ->where('service_orders.status', '!=', 'ANNULÉE')
+                ->where('service_orders.status', '!=', 'ANNULE')
                 ->selectRaw("SUM(CASE
                     WHEN service_items.item_type = 'service'
                         THEN service_items.line_total
@@ -194,7 +194,7 @@ class DashboardKpiService
 
         $soByMonth = DB::table('service_orders')
             ->leftJoin('users', 'service_orders.commercial_id', '=', 'users.id')
-            ->where('service_orders.status', '!=', 'ANNULÉE')
+            ->where('service_orders.status', '!=', 'ANNULE')
             ->whereBetween('service_orders.date', [$monthStart, $monthEnd])
             ->selectRaw($soCommercialRaw)
             ->groupBy('service_orders.commercial_id', 'users.name')
@@ -202,7 +202,7 @@ class DashboardKpiService
 
         $soByYear = DB::table('service_orders')
             ->leftJoin('users', 'service_orders.commercial_id', '=', 'users.id')
-            ->where('service_orders.status', '!=', 'ANNULÉE')
+            ->where('service_orders.status', '!=', 'ANNULE')
             ->whereBetween('service_orders.date', [$yearStart, $yearEnd])
             ->selectRaw($soCommercialRaw)
             ->groupBy('service_orders.commercial_id', 'users.name')

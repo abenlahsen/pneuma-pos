@@ -179,6 +179,7 @@ class ServiceOrderController extends Controller
             'description' => $p->description,
             'unit' => $p->unit ?? 'pièce',
             'total_quantity' => (int) $p->stocks_sum_quantity,
+            'stock_id' => $p->stocks->first()?->id,
             'purchase_price' => (float) ($p->stocks->first()?->purchase_price ?? 0),
         ]));
     }
