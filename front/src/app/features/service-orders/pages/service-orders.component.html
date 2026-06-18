@@ -58,9 +58,7 @@
         <select class="form-control"
           [ngModel]="filterStatus()" (ngModelChange)="filterStatus.set($event); applyFilters()">
           <option value="">Tous les statuts</option>
-          <option value="EN COURS">En cours</option>
-          <option value="TERMINE">Terminée</option>
-          <option value="ANNULE">Annulée</option>
+          <option *ngFor="let s of SERVICE_ORDER_STATUSES" [value]="s">{{ SERVICE_ORDER_STATUS_LABELS[s] }}</option>
         </select>
       </div>
       <div class="filter-group">
@@ -68,9 +66,7 @@
         <select class="form-control"
           [ngModel]="filterPaymentStatus()" (ngModelChange)="filterPaymentStatus.set($event); applyFilters()">
           <option value="">Tous</option>
-          <option value="NON PAYE">Non payé</option>
-          <option value="PARTIEL">Partiel</option>
-          <option value="PAYE">Payé</option>
+          <option *ngFor="let s of PAYMENT_STATUSES" [value]="s">{{ PAYMENT_STATUS_LABELS[s] }}</option>
         </select>
       </div>
       <div class="filter-group">
@@ -193,9 +189,7 @@
                     [class.bg-annule]="order.status === 'ANNULE'"
                     [ngModel]="order.status"
                     (change)="updateOrderStatus(order, $event.target)">
-              <option value="EN COURS">En cours</option>
-              <option value="TERMINE">Terminée</option>
-              <option value="ANNULE">Annulée</option>
+              <option *ngFor="let s of SERVICE_ORDER_STATUSES" [value]="s">{{ SERVICE_ORDER_STATUS_LABELS[s] }}</option>
             </select>
           </td>
           <td>

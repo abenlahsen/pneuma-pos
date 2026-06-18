@@ -7,7 +7,7 @@ import {
   ServiceOrder,
   ServiceOrderPayload,
 } from '../../../core/models/service-order.model';
-import { ServiceOrderStatus } from '../../../core/constants/status.constants';
+import { ServiceOrderStatus, SERVICE_ORDER_STATUSES, SERVICE_ORDER_STATUS_LABELS } from '../../../core/constants/status.constants';
 import { ServiceOrderService } from '../data-access/service-order.service';
 import { ClientService } from '../../clients/data-access/client.service';
 import { Client } from '../../clients/models/client.model';
@@ -57,6 +57,9 @@ type AnyLineForm = ServiceLineForm | PartLineForm;
   styleUrls: ['./service-order-form.component.scss'],
 })
 export class ServiceOrderFormComponent implements OnInit {
+  readonly SERVICE_ORDER_STATUSES = SERVICE_ORDER_STATUSES;
+  readonly SERVICE_ORDER_STATUS_LABELS = SERVICE_ORDER_STATUS_LABELS;
+
   @Input() serviceOrder: ServiceOrder | null = null;
   @Input() initialCommercials: { id: number; name: string }[] = [];
 
