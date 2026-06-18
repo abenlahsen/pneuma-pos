@@ -2,6 +2,8 @@
 
 namespace App\Domain\Transactions;
 
+use App\Enums\PurchasePaymentStatus;
+use App\Enums\SalePaymentStatus;
 use App\Models\Account;
 use App\Models\Partner;
 use App\Models\Payment;
@@ -86,7 +88,7 @@ class TransactionService
             ->with('sale:id,payment_status')
             ->first();
 
-        if ($payment?->sale?->payment_status === 'PAYE') {
+        if ($payment?->sale?->payment_status === SalePaymentStatus::PAYE->value) {
             abort(422, "Cette transaction est liée à la vente #{$payment->sale_id} entièrement payée. Modifiez d'abord le statut de paiement de la vente.");
         }
 
@@ -94,7 +96,7 @@ class TransactionService
             ->with('purchase:id,payment_status')
             ->first();
 
-        if ($purchasePayment?->purchase?->payment_status === 'PAYE') {
+        if ($purchasePayment?->purchase?->payment_status === PurchasePaymentStatus::PAYE->value) {
             abort(422, "Cette transaction est liée à l'achat #{$purchasePayment->purchase_id} entièrement payé. Modifiez d'abord le statut de paiement de l'achat.");
         }
     }
