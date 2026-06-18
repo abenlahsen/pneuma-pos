@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Enums\PurchasePaymentStatus;
+use App\Enums\PurchaseStatus;
 use App\Models\Brand;
 use App\Models\Product;
 use App\Models\Purchase;
@@ -883,5 +885,47 @@ class PurchaseCrudTest extends TestCase
             $table->unsignedBigInteger('transfer_id')->nullable();
             $table->timestamps();
         });
+    }
+
+    // -------------------------------------------------------------------------
+    // Enum validation — non-regression
+    // -------------------------------------------------------------------------
+
+    public function test_store_rejects_invalid_status(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $this->postJson('/api/purchases', $this->validPayload(['status' => 'INVALID']))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['status']);
+    }
+
+    public function test_store_rejects_invalid_payment_status(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $this->postJson('/api/purchases', $this->validPayload(['payment_status' => 'PAYÉ']))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['payment_status']);
+    }
+
+    public function test_store_accepts_all_valid_statuses(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        foreach (PurchaseStatus::values() as $status) {
+            $this->postJson('/api/purchases', $this->validPayload(['status' => $status]))
+                ->assertCreated();
+        }
+    }
+
+    public function test_store_accepts_all_valid_payment_statuses(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        foreach (PurchasePaymentStatus::values() as $ps) {
+            $this->postJson('/api/purchases', $this->validPayload(['payment_status' => $ps]))
+                ->assertCreated();
+        }
     }
 }

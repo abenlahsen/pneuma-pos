@@ -260,10 +260,10 @@
             </td>
             <td>
               <span class="badge"
-                [class.badge-danger]="sale.payment_status === 'NON PAYÉ' || sale.payment_status === 'NON PAYE' || !sale.payment_status"
+                [class.badge-danger]="sale.payment_status === 'NON PAYE' || !sale.payment_status"
                 [class.badge-warning]="sale.payment_status === 'PARTIEL'"
-                [class.badge-success]="sale.payment_status === 'PAYÉ' || sale.payment_status === 'PAYE'">
-                {{ sale.payment_status || 'NON PAYÉ' }}
+                [class.badge-success]="sale.payment_status === 'PAYE'">
+                {{ sale.payment_status || 'NON PAYE' }}
               </span>
             </td>
             <td class="status-cell">

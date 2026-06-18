@@ -1,9 +1,10 @@
 import { Vehicle } from '../../vehicles/models/vehicle.model';
+import { ClientCategory } from '../../../core/constants/status.constants';
 
 export interface Client {
   id: number;
   name: string;
-  category?: string | null;
+  category?: ClientCategory | null;
   phone?: string | null;
   email?: string | null;
   city?: string | null;
@@ -22,7 +23,7 @@ export interface Client {
 
 export interface ClientPayload {
   name: string;
-  category?: string | null;
+  category?: ClientCategory | null;
   phone?: string | null;
   email?: string | null;
   city?: string | null;

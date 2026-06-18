@@ -486,7 +486,7 @@ class SaleController extends Controller
             'unpaid_en_cours' => (function () use ($query): float {
                 $q = (clone $query)
                     ->where('status', 'EN COURS')
-                    ->whereIn('payment_status', ['NON PAYE', 'NON PAYÉ', 'PARTIEL']);
+                    ->whereIn('payment_status', ['NON PAYE', 'PARTIEL']);
                 $totalSale = (float) (clone $q)->sum('total_sale');
                 $totalPaid = (float) DB::table('payments')
                     ->whereIn('sale_id', (clone $q)->select('id'))
@@ -496,7 +496,7 @@ class SaleController extends Controller
             'unpaid_livre_monte' => (function () use ($query): float {
                 $q = (clone $query)
                     ->whereIn('status', ['LIVRE', 'MONTE'])
-                    ->whereIn('payment_status', ['NON PAYE', 'NON PAYÉ', 'PARTIEL']);
+                    ->whereIn('payment_status', ['NON PAYE', 'PARTIEL']);
                 $totalSale = (float) (clone $q)->sum('total_sale');
                 $totalPaid = (float) DB::table('payments')
                     ->whereIn('sale_id', (clone $q)->select('id'))

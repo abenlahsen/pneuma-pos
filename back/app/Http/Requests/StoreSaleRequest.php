@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\SalePaymentStatus;
+use App\Enums\SaleStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreSaleRequest extends FormRequest
 {
@@ -32,8 +35,8 @@ class StoreSaleRequest extends FormRequest
             'tracking_number' => ['nullable', 'string', 'max:255'],
             'partner_id' => ['required', 'exists:partners,id'],
             'service' => ['nullable', 'string', 'max:255'],
-            'status' => ['nullable', 'string'],
-            'payment_status' => ['nullable', 'string'],
+            'status' => ['nullable', Rule::in(SaleStatus::values())],
+            'payment_status' => ['nullable', Rule::in(SalePaymentStatus::values())],
             'payment_method' => ['required', 'string'],
             'delivery_date' => ['nullable', 'date'],
             'comments' => ['nullable', 'string'],

@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Enums\SalePaymentStatus;
+use App\Enums\SaleStatus;
 use App\Models\Brand;
 use App\Models\Carrier;
 use App\Models\Client;
@@ -459,7 +461,7 @@ class SaleControllerTest extends TestCase
             'total_sale' => 600,
             'margin' => 200,
             'status' => 'EN COURS',
-            'payment_status' => 'NON PAYÉ',
+            'payment_status' => 'NON PAYE',
             'created_by' => $this->user->id,
         ], $attributes));
 
@@ -1306,5 +1308,69 @@ class SaleControllerTest extends TestCase
         $this->postJson('/api/sales', $payload, $this->tokenFor($commercial))
             ->assertStatus(201)
             ->assertJsonPath('client', 'Client Commercial Test');
+    }
+
+    // -------------------------------------------------------------------------
+    // Enum validation — non-regression
+    // -------------------------------------------------------------------------
+
+    private function validSaleApiPayload(array $overrides = []): array
+    {
+        [$product, $stock] = $this->createProductWithStock(10);
+        $partner = $this->createPartner();
+
+        return array_merge([
+            'date' => '2026-06-01',
+            'client' => 'Validation Client',
+            'commercial_id' => $this->user->id,
+            'partner_id' => $partner->id,
+            'payment_method' => 'Espèces',
+            'status' => SaleStatus::EN_COURS->value,
+            'payment_status' => SalePaymentStatus::NON_PAYE->value,
+            'items' => [[
+                'product_id' => $product->id,
+                'stock_id' => $stock->id,
+                'quantity' => 1,
+                'purchase_price' => 80,
+                'selling_price' => 120,
+            ]],
+        ], $overrides);
+    }
+
+    public function test_store_rejects_invalid_status(): void
+    {
+        $this->postJson('/api/sales', $this->validSaleApiPayload(['status' => 'INVALID']), $this->authHeaders())
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['status']);
+    }
+
+    public function test_store_rejects_accented_payment_status(): void
+    {
+        $this->postJson('/api/sales', $this->validSaleApiPayload(['payment_status' => 'NON PAYÉ']), $this->authHeaders())
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['payment_status']);
+    }
+
+    public function test_store_rejects_accented_paye(): void
+    {
+        $this->postJson('/api/sales', $this->validSaleApiPayload(['payment_status' => 'PAYÉ']), $this->authHeaders())
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['payment_status']);
+    }
+
+    public function test_store_accepts_all_valid_statuses(): void
+    {
+        foreach (SaleStatus::values() as $status) {
+            $this->postJson('/api/sales', $this->validSaleApiPayload(['status' => $status]), $this->authHeaders())
+                ->assertCreated();
+        }
+    }
+
+    public function test_store_accepts_all_valid_payment_statuses(): void
+    {
+        foreach (SalePaymentStatus::values() as $ps) {
+            $this->postJson('/api/sales', $this->validSaleApiPayload(['payment_status' => $ps]), $this->authHeaders())
+                ->assertCreated();
+        }
     }
 }

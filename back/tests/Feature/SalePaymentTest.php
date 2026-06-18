@@ -68,7 +68,7 @@ class SalePaymentTest extends TestCase
             'total_sale' => 1200.00,
             'margin' => 600.00,
             'status' => 'EN COURS',
-            'payment_status' => 'NON PAYÉ',
+            'payment_status' => 'NON PAYE',
             'created_by' => $this->user->id,
         ]);
     }
@@ -125,7 +125,7 @@ class SalePaymentTest extends TestCase
             ->assertJsonPath('total_paid', 400)
             ->assertJsonPath('total_sale', 1200)
             ->assertJsonPath('remaining', 800)
-            ->assertJsonPath('payment_status', 'NON PAYÉ')
+            ->assertJsonPath('payment_status', 'NON PAYE')
             ->assertJsonCount(1, 'payments');
     }
 
@@ -239,7 +239,7 @@ class SalePaymentTest extends TestCase
 
         $this->assertDatabaseHas('sales', [
             'id' => $this->sale->id,
-            'payment_status' => 'PAYÉ',
+            'payment_status' => 'PAYE',
         ]);
     }
 
@@ -259,7 +259,7 @@ class SalePaymentTest extends TestCase
 
         $this->assertDatabaseHas('sales', [
             'id' => $this->sale->id,
-            'payment_status' => 'PAYÉ',
+            'payment_status' => 'PAYE',
         ]);
     }
 
@@ -305,7 +305,7 @@ class SalePaymentTest extends TestCase
             'total_sale' => 400.00,
             'margin' => 200.00,
             'status' => 'EN COURS',
-            'payment_status' => 'NON PAYÉ',
+            'payment_status' => 'NON PAYE',
             'created_by' => $this->user->id,
         ]);
 
@@ -322,11 +322,11 @@ class SalePaymentTest extends TestCase
 
         $payment = $this->createPayment(1200.00);
 
-        $this->assertDatabaseHas('sales', ['id' => $this->sale->id, 'payment_status' => 'PAYÉ']);
+        $this->assertDatabaseHas('sales', ['id' => $this->sale->id, 'payment_status' => 'PAYE']);
 
         $this->deleteJson("/api/sales/{$this->sale->id}/payments/{$payment->id}");
 
-        $this->assertDatabaseHas('sales', ['id' => $this->sale->id, 'payment_status' => 'NON PAYÉ']);
+        $this->assertDatabaseHas('sales', ['id' => $this->sale->id, 'payment_status' => 'NON PAYE']);
     }
 
     public function test_destroy_reverts_payment_status_to_partiel_when_partial_remains(): void
@@ -336,7 +336,7 @@ class SalePaymentTest extends TestCase
         $first = $this->createPayment(700.00);
         $second = $this->createPayment(500.00);
 
-        $this->assertDatabaseHas('sales', ['id' => $this->sale->id, 'payment_status' => 'PAYÉ']);
+        $this->assertDatabaseHas('sales', ['id' => $this->sale->id, 'payment_status' => 'PAYE']);
 
         $this->deleteJson("/api/sales/{$this->sale->id}/payments/{$second->id}");
 

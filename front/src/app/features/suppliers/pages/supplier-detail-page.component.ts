@@ -113,9 +113,9 @@ export class SupplierDetailPageComponent implements OnInit {
 
   paymentStatusClass(status: string | null | undefined): string {
     const s = (status ?? '').toUpperCase();
-    if (s === 'PAYE' || s === 'PAYÉ') return 'badge-success';
+    if (s === 'PAYE') return 'badge-success';
     if (s === 'PARTIEL') return 'badge-warning';
-    if (s === 'NON PAYE' || s === 'NON PAYÉ') return 'badge-danger';
+    if (s === 'NON PAYE') return 'badge-danger';
     return 'badge-neutral';
   }
 

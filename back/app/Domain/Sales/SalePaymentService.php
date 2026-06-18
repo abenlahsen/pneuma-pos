@@ -104,9 +104,9 @@ class SalePaymentService
         $totalSale = (float) $sale->total_sale;
 
         if ($totalPaid <= 0) {
-            $status = 'NON PAYÉ';
+            $status = 'NON PAYE';
         } elseif ($totalPaid >= $totalSale) {
-            $status = 'PAYÉ';
+            $status = 'PAYE';
         } else {
             $status = 'PARTIEL';
         }

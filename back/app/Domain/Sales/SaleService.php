@@ -76,8 +76,8 @@ class SaleService
     {
         $totalPaid = (float) $sale->payments()->sum('amount');
         $totalSale = (float) $sale->total_sale;
-        $status = $totalPaid <= 0 ? 'NON PAYÉ'
-                : ($totalPaid >= $totalSale ? 'PAYÉ' : 'PARTIEL');
+        $status = $totalPaid <= 0 ? 'NON PAYE'
+                : ($totalPaid >= $totalSale ? 'PAYE' : 'PARTIEL');
         $sale->update(['payment_status' => $status]);
     }
 

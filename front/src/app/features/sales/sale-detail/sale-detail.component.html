@@ -155,7 +155,7 @@
           </div>
           <div class="detail-item">
             <span class="label">Paiement</span>
-            <span class="value badge" [class.badge-success]="sale.payment_status === 'PAYE' || sale.payment_status === 'PAYÉ'" [class.badge-warning]="sale.payment_status === 'PARTIEL'" [class.badge-danger]="sale.payment_status === 'NON PAYE' || sale.payment_status === 'NON PAYÉ'">{{ sale.payment_status }}</span>
+            <span class="value badge" [class.badge-success]="sale.payment_status === 'PAYE'" [class.badge-warning]="sale.payment_status === 'PARTIEL'" [class.badge-danger]="sale.payment_status === 'NON PAYE'">{{ sale.payment_status }}</span>
           </div>
           <div class="detail-item">
             <span class="label">Date Livraison</span>

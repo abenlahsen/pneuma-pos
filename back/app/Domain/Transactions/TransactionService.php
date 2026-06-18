@@ -86,7 +86,7 @@ class TransactionService
             ->with('sale:id,payment_status')
             ->first();
 
-        if ($payment?->sale?->payment_status === 'PAYÉ') {
+        if ($payment?->sale?->payment_status === 'PAYE') {
             abort(422, "Cette transaction est liée à la vente #{$payment->sale_id} entièrement payée. Modifiez d'abord le statut de paiement de la vente.");
         }
 
