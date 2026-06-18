@@ -1,6 +1,7 @@
 import { Product } from './product.model';
 import { Supplier } from './supplier.model';
 import { Stock } from './stock.model';
+import { PurchaseStatus, PaymentStatus } from '../constants/status.constants';
 
 export interface PurchaseItem {
   id?: number;
@@ -23,8 +24,8 @@ export interface Purchase {
   discount?: number;
   net_amount?: number;
   items?: PurchaseItem[];
-  status: 'EN COURS' | 'RECU' | 'TERMINE' | 'ANNULE' | 'RETOUR';
-  payment_status: 'PAYE' | 'NON PAYE' | 'PARTIEL';
+  status: PurchaseStatus;
+  payment_status: PaymentStatus;
   payment_method?: string | null;
   payments?: PurchasePayment[];
   supplier?: Supplier;
@@ -39,8 +40,8 @@ export interface PurchasePayload {
   discount?: number;
   supplier_id: number;
   commercial_id?: number | null;
-  status: 'EN COURS' | 'RECU' | 'TERMINE' | 'ANNULE' | 'RETOUR';
-  payment_status: 'PAYE' | 'NON PAYE' | 'PARTIEL';
+  status: PurchaseStatus;
+  payment_status: PaymentStatus;
   payment_method?: string | null;
   items: PurchaseItem[];
 }

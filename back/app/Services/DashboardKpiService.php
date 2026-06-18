@@ -169,7 +169,7 @@ class DashboardKpiService
             SUM(sales.total_sale) as total_sales,
             COALESCE(SUM(tyre_items.tyre_qty), 0) as total_tyres,
             SUM(sales.margin) as total_margin,
-            SUM(CASE WHEN sales.payment_status IN ('NON PAYE', 'NON PAYÉ', 'PARTIEL')
+            SUM(CASE WHEN sales.payment_status IN ('NON PAYE', 'PARTIEL')
                 THEN sales.total_sale - COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.sale_id = sales.id), 0)
                 ELSE 0 END) as total_unpaid";
 

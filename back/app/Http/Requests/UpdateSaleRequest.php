@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\SalePaymentStatus;
+use App\Enums\SaleStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateSaleRequest extends FormRequest
 {
@@ -32,8 +35,8 @@ class UpdateSaleRequest extends FormRequest
             'tracking_number' => ['sometimes', 'nullable', 'string', 'max:255'],
             'partner_id' => ['sometimes', 'required', 'exists:partners,id'],
             'service' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'status' => ['sometimes', 'nullable', 'string'],
-            'payment_status' => ['sometimes', 'nullable', 'string'],
+            'status' => ['sometimes', 'nullable', Rule::in(SaleStatus::values())],
+            'payment_status' => ['sometimes', 'nullable', Rule::in(SalePaymentStatus::values())],
             'payment_method' => ['sometimes', 'required', 'string'],
             'delivery_date' => ['sometimes', 'nullable', 'date'],
             'comments' => ['sometimes', 'nullable', 'string'],

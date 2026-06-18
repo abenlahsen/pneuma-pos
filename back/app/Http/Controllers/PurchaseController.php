@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Purchases\PurchaseService;
+use App\Enums\PurchasePaymentStatus;
+use App\Enums\PurchaseStatus;
 use App\Models\Purchase;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -47,8 +50,8 @@ class PurchaseController extends Controller
             'discount' => 'nullable|numeric|min:0|max:100',
             'supplier_id' => 'required|exists:suppliers,id',
             'commercial_id' => 'required|exists:users,id',
-            'status' => 'required|string|in:EN COURS,RECU,TERMINE,ANNULE,RETOUR',
-            'payment_status' => 'required|string|in:PAYE,NON PAYE,PARTIEL',
+            'status' => ['required', Rule::in(PurchaseStatus::values())],
+            'payment_status' => ['required', Rule::in(PurchasePaymentStatus::values())],
             'payment_method' => 'required|string|in:ESPECE,VIREMENT,CHEQUE,CARTE,TPE,TRAITE',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
@@ -83,8 +86,8 @@ class PurchaseController extends Controller
             'discount' => 'nullable|numeric|min:0|max:100',
             'supplier_id' => 'required|exists:suppliers,id',
             'commercial_id' => 'required|exists:users,id',
-            'status' => 'required|string|in:EN COURS,RECU,TERMINE,ANNULE,RETOUR',
-            'payment_status' => 'required|string|in:PAYE,NON PAYE,PARTIEL',
+            'status' => ['required', Rule::in(PurchaseStatus::values())],
+            'payment_status' => ['required', Rule::in(PurchasePaymentStatus::values())],
             'payment_method' => 'required|string|in:ESPECE,VIREMENT,CHEQUE,CARTE,TPE,TRAITE',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
@@ -105,7 +108,7 @@ class PurchaseController extends Controller
     public function updateStatus(Request $request, Purchase $purchase): JsonResponse
     {
         $validated = $request->validate([
-            'status' => 'required|string|in:EN COURS,RECU,TERMINE,ANNULE,RETOUR',
+            'status' => ['required', Rule::in(PurchaseStatus::values())],
         ]);
 
         $this->purchaseService->patchStatus($purchase, $validated['status'], $request->user()->id);
