@@ -2,6 +2,7 @@
 
 namespace App\Domain\Purchases;
 
+use App\Enums\PurchasePaymentStatus;
 use App\Models\ActivityLog;
 use App\Models\Purchase;
 use App\Models\PurchasePayment;
@@ -112,11 +113,11 @@ class PurchasePaymentService
         $total = (float) ($purchase->net_amount ?? $purchase->total_price ?? 0);
 
         if ($paid <= 0) {
-            $purchase->payment_status = 'NON PAYE';
+            $purchase->payment_status = PurchasePaymentStatus::NON_PAYE->value;
         } elseif ($paid >= $total) {
-            $purchase->payment_status = 'PAYE';
+            $purchase->payment_status = PurchasePaymentStatus::PAYE->value;
         } else {
-            $purchase->payment_status = 'PARTIEL';
+            $purchase->payment_status = PurchasePaymentStatus::PARTIEL->value;
         }
 
         $purchase->save();

@@ -2,6 +2,8 @@
 
 namespace App\Domain\Purchases;
 
+use App\Enums\PurchasePaymentStatus;
+use App\Enums\PurchaseStatus;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Stock;
@@ -109,7 +111,7 @@ class PurchaseService
         $beforeSnapshot = $this->activityLog->buildPurchaseSnapshot($purchase);
 
         DB::transaction(function () use ($purchase, $validated, $itemsData, $totals, $userId, $oldStatus) {
-            if (! in_array($oldStatus, ['ANNULE', 'RETOUR'], true)) {
+            if (! in_array($oldStatus, [PurchaseStatus::ANNULE->value, PurchaseStatus::RETOUR->value], true)) {
                 $this->restoreStockForItems($purchase, $userId);
             }
 
@@ -158,8 +160,9 @@ class PurchaseService
     {
         $totalPaid = (float) $purchase->payments()->sum('amount');
         $netAmount = (float) $purchase->net_amount;
-        $status = $totalPaid <= 0 ? 'NON PAYE'
-                : ($totalPaid >= $netAmount ? 'PAYE' : 'PARTIEL');
+        $status = $totalPaid <= 0
+                ? PurchasePaymentStatus::NON_PAYE->value
+                : ($totalPaid >= $netAmount ? PurchasePaymentStatus::PAYE->value : PurchasePaymentStatus::PARTIEL->value);
         $purchase->update(['payment_status' => $status]);
     }
 
@@ -169,7 +172,7 @@ class PurchaseService
         $beforeSnapshot = array_merge(['id' => $purchase->id], $this->activityLog->buildPurchaseSnapshot($purchase));
 
         DB::transaction(function () use ($purchase, $userId) {
-            if (! in_array($purchase->status, ['ANNULE', 'RETOUR'], true)) {
+            if (! in_array($purchase->status, [PurchaseStatus::ANNULE->value, PurchaseStatus::RETOUR->value], true)) {
                 $this->restoreStockForItems($purchase, $userId);
             }
 
@@ -223,13 +226,13 @@ class PurchaseService
         }
 
         $totalAchats = (clone $query)->sum('net_amount') ?? 0;
-        $totalPaye = (clone $query)->where('payment_status', 'PAYE')->sum('net_amount') ?? 0;
+        $totalPaye = (clone $query)->where('payment_status', PurchasePaymentStatus::PAYE->value)->sum('net_amount') ?? 0;
         $resteAPayer = $totalAchats - $totalPaye;
 
         $unpaidEnCours = (function () use ($query): float {
             $q = (clone $query)
-                ->where('status', 'EN COURS')
-                ->whereIn('payment_status', ['NON PAYE', 'PARTIEL']);
+                ->where('status', PurchaseStatus::EN_COURS->value)
+                ->whereIn('payment_status', [PurchasePaymentStatus::NON_PAYE->value, PurchasePaymentStatus::PARTIEL->value]);
             $totalSale = (float) (clone $q)->sum('net_amount');
             $totalPaid = (float) \DB::table('purchase_payments')
                 ->whereIn('purchase_id', (clone $q)->select('id'))
@@ -239,8 +242,8 @@ class PurchaseService
 
         $unpaidRecuTermine = (function () use ($query): float {
             $q = (clone $query)
-                ->whereIn('status', ['RECU', 'TERMINE'])
-                ->whereIn('payment_status', ['NON PAYE', 'PARTIEL']);
+                ->whereIn('status', [PurchaseStatus::RECU->value, PurchaseStatus::TERMINE->value])
+                ->whereIn('payment_status', [PurchasePaymentStatus::NON_PAYE->value, PurchasePaymentStatus::PARTIEL->value]);
             $totalSale = (float) (clone $q)->sum('net_amount');
             $totalPaid = (float) \DB::table('purchase_payments')
                 ->whereIn('purchase_id', (clone $q)->select('id'))
@@ -415,7 +418,7 @@ class PurchaseService
                 'unit_price' => $unitPrice,
             ]);
 
-            if (in_array($status, ['ANNULE', 'RETOUR'], true)) {
+            if (in_array($status, [PurchaseStatus::ANNULE->value, PurchaseStatus::RETOUR->value], true)) {
                 continue;
             }
 
