@@ -7,6 +7,9 @@
       <p class="subtitle">{{ total() }} intervention(s) trouvée(s)</p>
     </div>
     <div class="actions">
+      <button class="btn btn-secondary" type="button" (click)="exportOrders()" [disabled]="isExporting()">
+        {{ isExporting() ? 'Export en cours...' : 'Exporter Excel' }}
+      </button>
       <button
         *ngIf="authService.hasPermission('create service-orders')"
         class="btn btn-primary"
@@ -14,6 +17,7 @@
       >+ Nouvelle intervention</button>
     </div>
   </div>
+  <p class="export-error" *ngIf="exportError()">{{ exportError() }}</p>
 
   <!-- Résumé financier -->
   <div class="summary-cards">
