@@ -7,6 +7,7 @@ import {
   ServiceOrder,
   ServiceOrderPayload,
 } from '../../../core/models/service-order.model';
+import { ServiceOrderStatus } from '../../../core/constants/status.constants';
 import { ServiceOrderService } from '../data-access/service-order.service';
 import { ClientService } from '../../clients/data-access/client.service';
 import { Client } from '../../clients/models/client.model';
@@ -79,7 +80,7 @@ export class ServiceOrderFormComponent implements OnInit {
   selectedVehicleObj = signal<Vehicle | null>(null);
   mileage = signal<number | null>(null);
   discount = signal(0);
-  status = signal<string>('EN COURS');
+  status = signal<ServiceOrderStatus>('EN COURS');
   notes = signal('');
   commercial_id = signal<number | null>(null);
 
