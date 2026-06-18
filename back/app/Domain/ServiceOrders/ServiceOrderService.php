@@ -2,6 +2,8 @@
 
 namespace App\Domain\ServiceOrders;
 
+use App\Enums\ServiceOrderPaymentStatus;
+use App\Enums\ServiceOrderStatus;
 use App\Models\ServiceItem;
 use App\Models\ServiceOrder;
 use App\Models\Transaction;
@@ -30,8 +32,8 @@ class ServiceOrderService
                 'discount' => $discount,
                 'total_amount' => 0,
                 'net_amount' => 0,
-                'status' => $validated['status'] ?? 'EN COURS',
-                'payment_status' => $validated['payment_status'] ?? 'NON PAYE',
+                'status' => $validated['status'] ?? ServiceOrderStatus::EN_COURS->value,
+                'payment_status' => $validated['payment_status'] ?? ServiceOrderPaymentStatus::NON_PAYE->value,
                 'notes' => $validated['notes'] ?? null,
                 'commercial_id' => $validated['commercial_id'] ?? null,
                 'created_by' => $userId,
@@ -66,7 +68,7 @@ class ServiceOrderService
             unset($validated['items']);
 
             $newStatus = $validated['status'] ?? null;
-            $cancellingOrder = $newStatus === 'ANNULE' && $order->status !== 'ANNULE';
+            $cancellingOrder = $newStatus === ServiceOrderStatus::ANNULE->value && $order->status !== ServiceOrderStatus::ANNULE->value;
 
             $discount = (float) ($validated['discount'] ?? $order->discount);
 
@@ -110,8 +112,9 @@ class ServiceOrderService
     {
         $totalPaid = (float) $order->payments()->sum('amount');
         $netAmount = (float) $order->net_amount;
-        $status = $totalPaid <= 0 ? 'NON PAYE'
-                : ($totalPaid >= $netAmount ? 'PAYE' : 'PARTIEL');
+        $status = $totalPaid <= 0
+                ? ServiceOrderPaymentStatus::NON_PAYE->value
+                : ($totalPaid >= $netAmount ? ServiceOrderPaymentStatus::PAYE->value : ServiceOrderPaymentStatus::PARTIEL->value);
         $order->update(['payment_status' => $status]);
     }
 
@@ -149,7 +152,7 @@ class ServiceOrderService
 
         $order->recalculateTotals();
 
-        if ($order->status !== 'ANNULE') {
+        if ($order->status !== ServiceOrderStatus::ANNULE->value) {
             $this->stockDeduction->deductForOrder($order, $userId);
         }
     }

@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\ServiceOrders;
 
+use App\Enums\ServiceOrderPaymentStatus;
+use App\Enums\ServiceOrderStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -31,8 +33,8 @@ class UpdateServiceOrderRequest extends FormRequest
             'items.*.description' => ['nullable', 'string', 'max:2000'],
             'items.*.sort_order' => ['nullable', 'integer'],
             'discount' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'status' => ['nullable', 'string', 'in:EN COURS,TERMINE,ANNULE'],
-            'payment_status' => ['nullable', 'string'],
+            'status' => ['nullable', Rule::in(ServiceOrderStatus::values())],
+            'payment_status' => ['nullable', Rule::in(ServiceOrderPaymentStatus::values())],
             'notes' => ['nullable', 'string', 'max:2000'],
             'commercial_id' => ['sometimes', 'required', 'exists:users,id'],
             'client_id' => ['nullable', 'exists:clients,id'],

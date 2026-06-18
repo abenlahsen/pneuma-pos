@@ -7,6 +7,8 @@ use App\Enums\PurchasePaymentStatus;
 use App\Enums\PurchaseStatus;
 use App\Enums\SalePaymentStatus;
 use App\Enums\SaleStatus;
+use App\Enums\ServiceOrderPaymentStatus;
+use App\Enums\ServiceOrderStatus;
 use PHPUnit\Framework\TestCase;
 
 class EnumsTest extends TestCase
@@ -45,5 +47,22 @@ class EnumsTest extends TestCase
     public function test_sale_and_purchase_payment_statuses_are_identical(): void
     {
         $this->assertSame(SalePaymentStatus::values(), PurchasePaymentStatus::values());
+    }
+
+    public function test_service_order_status_values(): void
+    {
+        $this->assertSame(['EN COURS', 'TERMINE', 'ANNULE'], ServiceOrderStatus::values());
+        $this->assertCount(3, ServiceOrderStatus::cases());
+    }
+
+    public function test_service_order_payment_status_values(): void
+    {
+        $this->assertSame(['NON PAYE', 'PAYE', 'PARTIEL'], ServiceOrderPaymentStatus::values());
+    }
+
+    public function test_all_payment_statuses_are_identical(): void
+    {
+        $this->assertSame(SalePaymentStatus::values(), ServiceOrderPaymentStatus::values());
+        $this->assertSame(PurchasePaymentStatus::values(), ServiceOrderPaymentStatus::values());
     }
 }
