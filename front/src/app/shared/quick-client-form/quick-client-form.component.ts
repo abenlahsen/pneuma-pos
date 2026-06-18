@@ -30,7 +30,7 @@ export class QuickClientFormComponent implements OnInit {
     email: '',
     city: '',
     address: '',
-    category: '',
+    category: null,
     notes: '',
     is_active: true,
   };
