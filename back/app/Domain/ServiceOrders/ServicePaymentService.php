@@ -2,6 +2,7 @@
 
 namespace App\Domain\ServiceOrders;
 
+use App\Enums\ServiceOrderPaymentStatus;
 use App\Models\ActivityLog;
 use App\Models\ServiceOrder;
 use App\Models\ServicePayment;
@@ -118,11 +119,11 @@ class ServicePaymentService
         $netAmount = (float) $order->net_amount;
 
         if ($totalPaid <= 0) {
-            $status = 'NON PAYE';
+            $status = ServiceOrderPaymentStatus::NON_PAYE->value;
         } elseif ($totalPaid >= $netAmount) {
-            $status = 'PAYE';
+            $status = ServiceOrderPaymentStatus::PAYE->value;
         } else {
-            $status = 'PARTIEL';
+            $status = ServiceOrderPaymentStatus::PARTIEL->value;
         }
 
         $order->update(['payment_status' => $status]);
