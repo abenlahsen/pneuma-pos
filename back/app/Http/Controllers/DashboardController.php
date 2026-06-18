@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PurchasePaymentStatus;
+use App\Enums\SalePaymentStatus;
 use App\Enums\ServiceOrderStatus;
 use App\Models\Account;
 use App\Models\Purchase;
@@ -85,7 +87,7 @@ class DashboardController extends Controller
             ->sum('purchase_items.quantity');
 
         $purchasesTotalLifetime = (float) Purchase::sum('total_price');
-        $purchasesPaidLifetime = (float) Purchase::where('payment_status', 'PAYE')->sum('total_price');
+        $purchasesPaidLifetime = (float) Purchase::where('payment_status', PurchasePaymentStatus::PAYE->value)->sum('total_price');
 
         $tyreItemsSub = DB::table('sale_items')
             ->join('products', 'sale_items.product_id', '=', 'products.id')
@@ -177,11 +179,16 @@ class DashboardController extends Controller
             })->sortByDesc(fn ($r) => $r['total_ca'])->values()->toArray();
         };
 
+        $saleNonPaye  = SalePaymentStatus::NON_PAYE->value;
+        $salePartiel  = SalePaymentStatus::PARTIEL->value;
+        $soNonPaye    = $saleNonPaye;
+        $soPartiel    = $salePartiel;
+
         $commercialSelectRaw = "COALESCE(users.name, 'Non assigné') as commercial_name,
             SUM(sales.total_sale) as total_sales,
             COALESCE(SUM(tyre_items.tyre_qty), 0) as total_tyres,
             SUM(sales.margin) as total_margin,
-            SUM(CASE WHEN sales.payment_status IN ('NON PAYE', 'PARTIEL')
+            SUM(CASE WHEN sales.payment_status IN ('$saleNonPaye', '$salePartiel')
                 THEN sales.total_sale - COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.sale_id = sales.id), 0)
                 ELSE 0 END) as total_unpaid";
 
@@ -198,7 +205,7 @@ class DashboardController extends Controller
                 LEFT JOIN stocks stk ON si.stock_id = stk.id
                 WHERE si.service_order_id = service_orders.id
             )) as so_margin,
-            SUM(CASE WHEN service_orders.payment_status IN ('NON PAYE', 'PARTIEL')
+            SUM(CASE WHEN service_orders.payment_status IN ('$soNonPaye', '$soPartiel')
                 THEN service_orders.net_amount - COALESCE((
                     SELECT SUM(sp.amount) FROM service_payments sp
                     WHERE sp.service_order_id = service_orders.id
@@ -293,7 +300,7 @@ class DashboardController extends Controller
             ),
 
             // Receivables / payables
-            'unpaid_sales' => round(Sale::where('payment_status', 'NON PAYE')->sum('total_sale'), 2),
+            'unpaid_sales' => round(Sale::where('payment_status', SalePaymentStatus::NON_PAYE->value)->sum('total_sale'), 2),
             'unpaid_purchases' => round($purchasesTotalLifetime - $purchasesPaidLifetime, 2),
 
             // Solde de caisse — cash accounts only (excludes future-dated Chèque/Effet)

@@ -76,7 +76,7 @@ class PurchaseController extends Controller
 
     public function update(Request $request, Purchase $purchase): JsonResponse
     {
-        if ($purchase->status === 'TERMINE' && ! $request->user()->hasRole('Administrator')) {
+        if ($purchase->status === PurchaseStatus::TERMINE->value && ! $request->user()->hasRole('Administrator')) {
             return response()->json(['message' => 'Cet achat est terminé et ne peut plus être modifié.'], 403);
         }
 
@@ -118,7 +118,7 @@ class PurchaseController extends Controller
 
     public function destroy(Request $request, Purchase $purchase): JsonResponse
     {
-        if ($purchase->status === 'TERMINE' && ! $request->user()->hasRole('Administrator')) {
+        if ($purchase->status === PurchaseStatus::TERMINE->value && ! $request->user()->hasRole('Administrator')) {
             return response()->json(['message' => 'Cet achat est terminé et ne peut plus être supprimé.'], 403);
         }
 

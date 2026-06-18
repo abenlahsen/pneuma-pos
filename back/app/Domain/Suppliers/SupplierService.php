@@ -2,6 +2,7 @@
 
 namespace App\Domain\Suppliers;
 
+use App\Enums\PurchasePaymentStatus;
 use App\Models\Supplier;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -96,7 +97,7 @@ class SupplierService
     protected function calcOutstanding(Collection $purchases): float
     {
         return round($purchases->sum(function ($purchase) {
-            if (($purchase->payment_status ?? '') === 'PAYE') {
+            if (($purchase->payment_status ?? '') === PurchasePaymentStatus::PAYE->value) {
                 return 0.0;
             }
             $paid = $purchase->payments->sum('amount');
