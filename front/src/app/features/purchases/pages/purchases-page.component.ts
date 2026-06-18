@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { PurchaseService } from '../data-access/purchase.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Purchase, PurchaseSummary } from '../models/purchase.model';
+import { PurchaseStatus } from '../../../core/constants/status.constants';
 import { PurchaseFormComponent } from '../purchase-form/purchase-form.component';
 import { PurchaseDetailComponent } from '../purchase-detail/purchase-detail.component';
 import { PurchasePaymentsComponent } from '../purchase-payments/purchase-payments.component';
@@ -203,7 +204,7 @@ export class PurchasesPageComponent implements OnInit {
     const oldStatus = purchase.status;
     purchase.status = newStatus as Purchase['status'];
 
-    this.purchaseService.patchStatus(purchase.id, newStatus).subscribe({
+    this.purchaseService.patchStatus(purchase.id, newStatus as PurchaseStatus).subscribe({
       next: () => {
       },
       error: () => {
