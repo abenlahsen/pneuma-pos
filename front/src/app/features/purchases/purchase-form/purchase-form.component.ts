@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { Purchase, PurchasePayload } from '../../../core/models/purchase.model';
+import { PURCHASE_STATUSES, PURCHASE_STATUS_LABELS, PAYMENT_STATUSES, PAYMENT_STATUS_LABELS } from '../../../core/constants/status.constants';
 import { Product } from '../../../core/models/product.model';
 import { ProductDetailComponent } from '../../products/product-detail/product-detail.component';
 import { PurchaseService } from '../../../core/services/purchase.service';
@@ -20,6 +21,11 @@ import { StockService } from '../../../core/services/stock.service';
   styleUrls: ['./purchase-form.component.scss']
 })
 export class PurchaseFormComponent implements OnInit {
+  readonly PURCHASE_STATUSES = PURCHASE_STATUSES;
+  readonly PURCHASE_STATUS_LABELS = PURCHASE_STATUS_LABELS;
+  readonly PAYMENT_STATUSES = PAYMENT_STATUSES;
+  readonly PAYMENT_STATUS_LABELS = PAYMENT_STATUS_LABELS;
+
   @Input() purchase: Purchase | null = null;
   @Output() save = new EventEmitter<void>();
   @Output() cancel = new EventEmitter<void>();

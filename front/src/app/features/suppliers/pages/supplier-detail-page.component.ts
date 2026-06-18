@@ -121,9 +121,9 @@ export class SupplierDetailPageComponent implements OnInit {
 
   purchaseStatusClass(status: string | null | undefined): string {
     const s = (status ?? '').toUpperCase();
-    if (s === 'RECU' || s === 'TERMINÉ' || s === 'TERMINE') return 'badge-success';
+    if (s === 'RECU' || s === 'TERMINE') return 'badge-success';
     if (s === 'EN COURS') return 'badge-warning';
-    if (s === 'ANNULE' || s === 'ANNULÉ' || s === 'RETOUR') return 'badge-danger';
+    if (s === 'ANNULE' || s === 'RETOUR') return 'badge-danger';
     return 'badge-neutral';
   }
 

@@ -32,19 +32,13 @@
       <div class="form-group">
         <label>Statut</label>
         <select class="form-control" [(ngModel)]="formData.status" name="status">
-          <option value="EN COURS">En cours</option>
-          <option value="RECU">Reçu</option>
-          <option value="TERMINE">Terminé</option>
-          <option value="ANNULE">Annulé</option>
-          <option value="RETOUR">Retour</option>
+          <option *ngFor="let s of PURCHASE_STATUSES" [value]="s">{{ PURCHASE_STATUS_LABELS[s] }}</option>
         </select>
       </div>
       <div class="form-group">
         <label>Statut Paiement</label>
         <select class="form-control" [(ngModel)]="formData.payment_status" name="payment_status">
-          <option value="NON PAYE">Non Payé</option>
-          <option value="PARTIEL">Partiel</option>
-          <option value="PAYE">Payé</option>
+          <option *ngFor="let s of PAYMENT_STATUSES" [value]="s">{{ PAYMENT_STATUS_LABELS[s] }}</option>
         </select>
       </div>
       <div class="form-group">

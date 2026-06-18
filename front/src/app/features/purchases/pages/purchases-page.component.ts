@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { PurchaseService } from '../data-access/purchase.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Purchase, PurchaseSummary } from '../models/purchase.model';
-import { PurchaseStatus } from '../../../core/constants/status.constants';
+import { PURCHASE_STATUSES, PURCHASE_STATUS_LABELS, PAYMENT_STATUSES, PAYMENT_STATUS_LABELS, PurchaseStatus } from '../../../core/constants/status.constants';
 import { PurchaseFormComponent } from '../purchase-form/purchase-form.component';
 import { PurchaseDetailComponent } from '../purchase-detail/purchase-detail.component';
 import { PurchasePaymentsComponent } from '../purchase-payments/purchase-payments.component';
@@ -18,6 +18,11 @@ import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-contro
   styleUrls: ['./purchases-page.component.scss']
 })
 export class PurchasesPageComponent implements OnInit {
+  readonly PURCHASE_STATUSES = PURCHASE_STATUSES;
+  readonly PURCHASE_STATUS_LABELS = PURCHASE_STATUS_LABELS;
+  readonly PAYMENT_STATUSES = PAYMENT_STATUSES;
+  readonly PAYMENT_STATUS_LABELS = PAYMENT_STATUS_LABELS;
+
   private purchaseService = inject(PurchaseService);
   public authService = inject(AuthService);
 

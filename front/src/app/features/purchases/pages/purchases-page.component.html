@@ -98,11 +98,7 @@
           <label>Statut</label>
           <select class="form-control" [ngModel]="filterStatus()" (ngModelChange)="filterStatus.set($event); applyFilters()">
             <option value="">Tous</option>
-            <option value="EN COURS">En cours</option>
-            <option value="RECU">Reçu</option>
-            <option value="TERMINE">Terminé</option>
-            <option value="ANNULE">Annulé</option>
-            <option value="RETOUR">Retour</option>
+            <option *ngFor="let s of PURCHASE_STATUSES" [value]="s">{{ PURCHASE_STATUS_LABELS[s] }}</option>
           </select>
         </div>
 
@@ -110,9 +106,7 @@
           <label>Paiement</label>
           <select class="form-control" [ngModel]="filterPaymentStatus()" (ngModelChange)="filterPaymentStatus.set($event); applyFilters()">
             <option value="">Tous</option>
-            <option value="PAYE">Payé</option>
-            <option value="NON PAYE">Non payé</option>
-            <option value="PARTIEL">Partiel</option>
+            <option *ngFor="let s of PAYMENT_STATUSES" [value]="s">{{ PAYMENT_STATUS_LABELS[s] }}</option>
           </select>
         </div>
 
@@ -237,11 +231,7 @@
                       [ngModel]="purchase.status"
                       [disabled]="isPurchaseLocked(purchase)"
                       (change)="updatePurchaseStatus(purchase, $event.target)">
-                <option value="EN COURS">En cours</option>
-                <option value="RECU">Reçu</option>
-                <option value="TERMINE">Terminé</option>
-                <option value="ANNULE">Annulé</option>
-                <option value="RETOUR">Retour</option>
+                <option *ngFor="let s of PURCHASE_STATUSES" [value]="s">{{ PURCHASE_STATUS_LABELS[s] }}</option>
               </select>
             </td>
             <td>{{ purchase.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
