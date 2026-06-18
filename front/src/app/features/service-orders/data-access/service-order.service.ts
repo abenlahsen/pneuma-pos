@@ -78,6 +78,11 @@ export class ServiceOrderService {
     return this.http.delete<void>(`${this.apiUrl}/${orderId}/payments/${paymentId}`);
   }
 
+  exportOrders(filters: Record<string, string> = {}): Observable<Blob> {
+    const params = new HttpParams({ fromObject: filters });
+    return this.http.get(`${this.apiUrl}/export`, { params, responseType: 'blob' });
+  }
+
   searchParts(query: string): Observable<PartSearchResult[]> {
     return this.http.get<PartSearchResult[]>(`${environment.apiUrl}/service-orders-parts-search`, {
       params: { q: query },

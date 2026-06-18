@@ -9,6 +9,7 @@ Route::middleware('permission:view service-orders')->group(function () {
     Route::get('/service-orders-summary', [ServiceOrderController::class, 'summary']);
     Route::get('/service-orders-filters', [ServiceOrderController::class, 'filters']);
     Route::get('/service-orders-parts-search', [ServiceOrderController::class, 'searchParts']);
+    Route::get('service-orders/export', [ServiceOrderController::class, 'export']);
     Route::get('service-orders', [ServiceOrderController::class, 'index']);
     Route::get('service-orders/{serviceOrder}', [ServiceOrderController::class, 'show']);
     Route::get('service-orders/{serviceOrder}/payments', [ServicePaymentController::class, 'index']);

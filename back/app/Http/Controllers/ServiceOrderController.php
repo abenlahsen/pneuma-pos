@@ -14,6 +14,9 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ServiceOrderController extends Controller
 {
@@ -182,6 +185,110 @@ class ServiceOrderController extends Controller
             'stock_id' => $p->stocks->first()?->id,
             'purchase_price' => (float) ($p->stocks->first()?->purchase_price ?? 0),
         ]));
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $query = ServiceOrder::query()
+            ->with(['clientRecord', 'commercial', 'vehicle'])
+            ->withSum('payments', 'amount');
+
+        if ($request->filled('status')) {
+            $query->where('status', (string) $request->string('status'));
+        }
+
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', (string) $request->string('payment_status'));
+        }
+
+        if ($request->filled('product_id')) {
+            $query->whereHas('items', fn ($q) => $q->where('product_id', $request->integer('product_id')));
+        }
+
+        if ($request->filled('commercial_id')) {
+            $query->where('commercial_id', $request->integer('commercial_id'));
+        }
+
+        if ($request->filled('client_id')) {
+            $query->where('client_id', $request->integer('client_id'));
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('date', '>=', (string) $request->string('date_from'));
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('date', '<=', (string) $request->string('date_to'));
+        }
+
+        $query->orderByDesc('date')->orderByDesc('id');
+
+        $fileName = 'service-auto-'.now()->format('Y-m-d-His').'.xlsx';
+        $headers = [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
+            'Cache-Control' => 'max-age=0, no-store, no-cache, must-revalidate',
+            'Pragma' => 'public',
+        ];
+
+        return response()->streamDownload(function () use ($query) {
+            $spreadsheet = new Spreadsheet;
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Service Auto');
+
+            $rows = [[
+                'Date',
+                'Client',
+                'Téléphone',
+                'Véhicule',
+                'Kilométrage',
+                'Commercial',
+                'Statut',
+                'Paiement',
+                'Remise (%)',
+                'Total brut',
+                'Net',
+                'Payé',
+                'Reste',
+            ]];
+
+            $query->get()->each(function (ServiceOrder $order) use (&$rows) {
+                $net    = round((float) ($order->net_amount ?? 0), 2);
+                $paid   = round((float) ($order->payments_sum_amount ?? 0), 2);
+                $reste  = max(0, round($net - $paid, 2));
+
+                $vehicle = $order->vehicle
+                    ? $order->vehicle->display_name
+                    : ($order->vehicle ?? '');
+
+                $rows[] = [
+                    $order->date?->format('Y-m-d') ?? '',
+                    $order->clientRecord?->name ?? '',
+                    $order->clientRecord?->phone ?? '',
+                    $vehicle,
+                    $order->mileage ?? '',
+                    $order->commercial?->name ?? '',
+                    $order->status ?? '',
+                    $order->payment_status ?? '',
+                    round((float) ($order->discount ?? 0), 2),
+                    round((float) ($order->total_amount ?? 0), 2),
+                    $net,
+                    $paid,
+                    $reste,
+                ];
+            });
+
+            $sheet->fromArray($rows, null, 'A1', true);
+            $sheet->getStyle('A1:M1')->getFont()->setBold(true);
+            $sheet->freezePane('A2');
+
+            foreach (range('A', 'M') as $column) {
+                $sheet->getColumnDimension($column)->setAutoSize(true);
+            }
+
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        }, $fileName, $headers);
     }
 
     public function filters(): JsonResponse

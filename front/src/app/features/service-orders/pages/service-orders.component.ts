@@ -47,6 +47,8 @@ export class ServiceOrdersComponent implements OnInit {
   filterDateTo = signal('');
 
   loading = signal(false);
+  isExporting = signal(false);
+  exportError = signal('');
   showForm = signal(false);
   loadingEdit = signal(false);
   loadingDetail = signal(false);
@@ -254,6 +256,29 @@ export class ServiceOrdersComponent implements OnInit {
       range.push(i);
     }
     return range;
+  }
+
+  exportOrders(): void {
+    this.isExporting.set(true);
+    this.exportError.set('');
+    const filters = this.buildFilters();
+    delete filters['page'];
+    delete filters['per_page'];
+    this.serviceOrderService.exportOrders(filters).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `service-auto-${new Date().toISOString().slice(0, 10)}.xlsx`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.isExporting.set(false);
+      },
+      error: () => {
+        this.exportError.set("L'export a échoué. Veuillez réessayer.");
+        this.isExporting.set(false);
+      },
+    });
   }
 
   updateOrderStatus(order: ServiceOrder, target: any): void {
