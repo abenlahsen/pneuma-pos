@@ -8,6 +8,7 @@ import {
   PurchasePayment,
   PurchasePaymentSummary,
 } from '../models/purchase.model';
+import { PurchaseStatus } from '../../../core/constants/status.constants';
 
 @Injectable({
   providedIn: 'root',
@@ -72,8 +73,8 @@ export class PurchaseService {
     return this.http.put<Purchase>(`${this.apiUrl}/${id}`, data);
   }
 
-  patchStatus(id: number, status: string): Observable<{ status: string }> {
-    return this.http.patch<{ status: string }>(`${this.apiUrl}/${id}/status`, { status });
+  patchStatus(id: number, status: PurchaseStatus): Observable<{ status: PurchaseStatus }> {
+    return this.http.patch<{ status: PurchaseStatus }>(`${this.apiUrl}/${id}/status`, { status });
   }
 
   deletePurchase(id: number): Observable<void> {
