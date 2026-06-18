@@ -75,5 +75,5 @@ export interface PurchasePaymentSummary {
   total_paid: number;
   total_purchase: number;
   remaining: number;
-  payment_status: string;
+  payment_status: PaymentStatus;
 }

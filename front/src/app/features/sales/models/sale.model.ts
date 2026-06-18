@@ -1,6 +1,7 @@
 import { Product } from '../../../core/models/product.model';
 import { Stock } from '../../../core/models/stock.model';
 import { Client } from '../../clients/models/client.model';
+import { SaleStatus, PaymentStatus } from '../../../core/constants/status.constants';
 
 export interface SaleItem {
   id?: number;
@@ -70,8 +71,8 @@ export interface Sale {
   payment_method: string;
   commercial_id?: number | null;
   commercial?: { id: number; name: string } | null;
-  status: string;
-  payment_status: string;
+  status: SaleStatus;
+  payment_status: PaymentStatus;
   delivery_date: string;
   comments: string;
   created_at?: string | null;
