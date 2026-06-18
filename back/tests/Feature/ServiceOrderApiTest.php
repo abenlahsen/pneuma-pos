@@ -355,6 +355,71 @@ class ServiceOrderApiTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
+    // GET /api/service-orders/export
+    // -------------------------------------------------------------------------
+
+    public function test_export_streams_xlsx(): void
+    {
+        $this->createOrder(['date' => '2026-05-10']);
+        $this->createOrder(['date' => '2026-05-15']);
+
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $response = $this->get('/api/service-orders/export');
+
+        $response->assertOk();
+        $this->assertStringContainsString(
+            'spreadsheetml',
+            $response->headers->get('Content-Type')
+        );
+    }
+
+    public function test_export_requires_authentication(): void
+    {
+        $this->getJson('/api/service-orders/export')->assertUnauthorized();
+    }
+
+    public function test_export_requires_view_permission(): void
+    {
+        $guest = $this->createUserWithPermissions([]);
+        Sanctum::actingAs($guest, [], 'web');
+
+        $this->get('/api/service-orders/export')->assertForbidden();
+    }
+
+    public function test_export_applies_status_filter(): void
+    {
+        $this->createOrder(['status' => 'EN COURS']);
+        $this->createOrder(['status' => 'TERMINE']);
+
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $response = $this->get('/api/service-orders/export?status=TERMINE');
+
+        $response->assertOk();
+        $this->assertStringContainsString(
+            'spreadsheetml',
+            $response->headers->get('Content-Type')
+        );
+    }
+
+    public function test_export_applies_date_filter(): void
+    {
+        $this->createOrder(['date' => '2026-01-15']);
+        $this->createOrder(['date' => '2026-05-20']);
+
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $response = $this->get('/api/service-orders/export?date_from=2026-05-01&date_to=2026-05-31');
+
+        $response->assertOk();
+        $this->assertStringContainsString(
+            'spreadsheetml',
+            $response->headers->get('Content-Type')
+        );
+    }
+
+    // -------------------------------------------------------------------------
     // GET /api/service-orders-filters
     // -------------------------------------------------------------------------
 
@@ -588,6 +653,7 @@ class ServiceOrderApiTest extends TestCase
             'mileage' => 50000,
             'status' => 'EN COURS',
             'payment_status' => 'NON PAYE',
+            'commercial_id' => $this->user->id,
             'items' => [
                 ['item_type' => 'service', 'service_type' => 'Vidange', 'parts_cost' => 80, 'labor_cost' => 40],
             ],
