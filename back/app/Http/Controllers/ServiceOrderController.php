@@ -24,7 +24,7 @@ class ServiceOrderController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = ServiceOrder::query()->with(['commercial', 'items.product', 'clientRecord']);
+        $query = ServiceOrder::query()->with(['commercial', 'creator', 'items.product', 'clientRecord']);
 
         if ($request->filled('status')) {
             $query->where('status', (string) $request->string('status'));
@@ -141,6 +141,8 @@ class ServiceOrderController extends Controller
         }
 
         $totalRevenue = round((float) (clone $query)->sum('net_amount'), 2);
+        $totalPurchase = round((float) (clone $query)->sum('total_purchase'), 2);
+        $totalMargin = round((float) (clone $query)->sum('margin'), 2);
         $totalPaid = round(
             (float) (clone $query)->withSum('payments', 'amount')->get()->sum('payments_sum_amount'),
             2
@@ -148,6 +150,8 @@ class ServiceOrderController extends Controller
 
         return response()->json([
             'total_revenue' => $totalRevenue,
+            'total_purchase' => $totalPurchase,
+            'total_margin' => $totalMargin,
             'total_paid' => $totalPaid,
             'remaining' => round($totalRevenue - $totalPaid, 2),
         ]);
@@ -247,6 +251,8 @@ class ServiceOrderController extends Controller
                 'Paiement',
                 'Remise (%)',
                 'Total brut',
+                'Coût achat',
+                'Marge brute',
                 'Net',
                 'Payé',
                 'Reste',
@@ -272,6 +278,8 @@ class ServiceOrderController extends Controller
                     $order->payment_status ?? '',
                     round((float) ($order->discount ?? 0), 2),
                     round((float) ($order->total_amount ?? 0), 2),
+                    round((float) ($order->total_purchase ?? 0), 2),
+                    round((float) ($order->margin ?? 0), 2),
                     $net,
                     $paid,
                     $reste,
@@ -279,10 +287,10 @@ class ServiceOrderController extends Controller
             });
 
             $sheet->fromArray($rows, null, 'A1', true);
-            $sheet->getStyle('A1:M1')->getFont()->setBold(true);
+            $sheet->getStyle('A1:O1')->getFont()->setBold(true);
             $sheet->freezePane('A2');
 
-            foreach (range('A', 'M') as $column) {
+            foreach (range('A', 'O') as $column) {
                 $sheet->getColumnDimension($column)->setAutoSize(true);
             }
 

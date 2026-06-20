@@ -97,6 +97,14 @@
             <span class="label">Montant total</span>
             <span class="value">{{ serviceOrder.total_amount | number:'1.2-2' }} DH</span>
           </div>
+          <div class="detail-item" *ngIf="+serviceOrder.total_purchase > 0">
+            <span class="label">Coût d'achat</span>
+            <span class="value">{{ serviceOrder.total_purchase | number:'1.2-2' }} DH</span>
+          </div>
+          <div class="detail-item" *ngIf="+serviceOrder.total_purchase > 0">
+            <span class="label">Marge brute</span>
+            <span class="value fw-semibold" style="color: var(--success, #22c55e)">{{ serviceOrder.margin | number:'1.2-2' }} DH</span>
+          </div>
           <div class="detail-item">
             <span class="label">Remise</span>
             <span class="value">{{ serviceOrder.discount | number:'1.0-2' }} %</span>

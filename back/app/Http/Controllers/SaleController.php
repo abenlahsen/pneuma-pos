@@ -31,7 +31,7 @@ class SaleController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Sale::query()
-            ->with(['linkedClient.cityRelation', 'commercial', 'linkedCarrier', 'linkedPartner', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
+            ->with(['linkedClient.cityRelation', 'commercial', 'creator', 'linkedCarrier', 'linkedPartner', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
 
         if ($request->filled('commercial_id') && Schema::hasColumn('sales', 'commercial_id')) {
             $query->where('commercial_id', $request->integer('commercial_id'));

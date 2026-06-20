@@ -75,6 +75,13 @@ class SaleResource extends JsonResource
                 ] : null,
                 null
             ),
+            'creator' => $this->when(
+                $this->relationLoaded('creator'),
+                fn () => $this->creator ? [
+                    'id' => $this->creator->id,
+                    'name' => $this->creator->name,
+                ] : null
+            ),
             'total_quantity' => (int) ($this->total_quantity ?? 0),
             'total_purchase' => $this->formatMoneyValue($this->total_purchase),
             'total_sale' => $this->formatMoneyValue($this->total_sale),

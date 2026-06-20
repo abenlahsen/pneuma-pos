@@ -200,7 +200,7 @@
             <th class="text-center col-id">#</th>
             <th class="sortable" (click)="toggleSort('date')">Date <span class="sort-icon">{{ sortBy() === 'date' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="text-center">Facture</th>
-            <th class="sortable" (click)="toggleSort('client')">Client <span class="sort-icon">{{ sortBy() === 'client' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th class="sortable col-client" (click)="toggleSort('client')">Client <span class="sort-icon">{{ sortBy() === 'client' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th>Commercial</th>
             <th class="sortable" (click)="toggleSort('total_quantity')">Qte <span class="sort-icon">{{ sortBy() === 'total_quantity' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th>Partenaire</th>
@@ -209,19 +209,20 @@
             <th class="sortable text-right" (click)="toggleSort('margin')">Marge <span class="sort-icon">{{ sortBy() === 'margin' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('payment_status')">Paiement <span class="sort-icon">{{ sortBy() === 'payment_status' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('status')">Statut <span class="sort-icon">{{ sortBy() === 'status' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th>Créé par</th>
             <th class="sortable" (click)="toggleSort('created_at')">Créé le <span class="sort-icon">{{ sortBy() === 'created_at' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('updated_at')">Modifié le <span class="sort-icon">{{ sortBy() === 'updated_at' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
           </tr>
         </thead>
         <tbody>
           <tr *ngIf="loading()">
-            <td colspan="15" class="text-center py-4">
+            <td colspan="16" class="text-center py-4">
               <div class="spinner"></div> Chargement...
             </td>
           </tr>
 
           <tr *ngIf="!loading() && sales().length === 0">
-            <td colspan="15" class="text-center py-4 text-muted">
+            <td colspan="16" class="text-center py-4 text-muted">
               Aucune vente trouvée.
             </td>
           </tr>
@@ -243,7 +244,7 @@
                 {{ sale.with_invoice ? 'Oui' : 'Non' }}
               </span>
             </td>
-            <td>
+            <td class="col-client">
               <a *ngIf="sale.client_id" class="fw-medium link-text client-link" [routerLink]="['/clients', sale.client_id]">{{ getClientName(sale) }}</a>
               <div *ngIf="!sale.client_id" class="fw-medium">{{ getClientName(sale) }}</div>
               <div class="text-small text-muted">{{ getClientPhone(sale) }}{{ getClientPhone(sale) && getClientCity(sale) ? ' — ' : '' }}{{ getClientCity(sale) }}</div>
@@ -255,8 +256,11 @@
             <td class="text-right fw-semibold">
               {{ sale.total_sale | number:'1.2-2' }}
             </td>
-            <td class="text-right fw-semibold" [class.text-success]="(sale.margin || 0) > 0" [class.text-danger]="(sale.margin || 0) < 0">
+            <td class="text-right fw-semibold">
               {{ sale.margin | number:'1.2-2' }}
+              <span class="margin-pct" [class]="marginClass(sale)" *ngIf="(sale.total_sale ?? 0) > 0">
+                {{ marginPct(sale) | number:'1.0-1' }}%
+              </span>
             </td>
             <td>
               <span class="badge"
@@ -279,6 +283,7 @@
                 <option *ngFor="let s of SALE_STATUSES" [value]="s">{{ SALE_STATUS_LABELS[s] }}</option>
               </select>
             </td>
+            <td>{{ sale.creator?.name || '-' }}</td>
             <td>{{ sale.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
             <td>{{ sale.updated_at | date:'dd/MM/yyyy HH:mm' }}</td>
           </tr>

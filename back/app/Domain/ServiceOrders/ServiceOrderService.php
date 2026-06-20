@@ -72,6 +72,11 @@ class ServiceOrderService
 
             $discount = (float) ($validated['discount'] ?? $order->discount);
 
+            $validated['vehicle'] = $this->resolveVehicleSnapshot(array_merge(
+                ['vehicle' => $order->vehicle, 'vehicle_id' => $order->vehicle_id],
+                $validated
+            )) ?: $order->vehicle;
+
             $order->update(array_merge($validated, [
                 'discount' => $discount,
                 'updated_by' => $userId,
@@ -180,12 +185,14 @@ class ServiceOrderService
         if ($type === 'part') {
             $qty = (int) ($itemData['quantity'] ?? 1);
             $price = (float) ($itemData['unit_price'] ?? 0);
+            $purchasePrice = (float) ($itemData['purchase_price'] ?? 0);
 
             return [
                 'item_type' => 'part',
                 'product_id' => $itemData['product_id'] ?? null,
                 'quantity' => $qty,
                 'unit_price' => $price,
+                'purchase_price' => $purchasePrice,
                 'line_total' => $qty * $price,
                 'parts_cost' => 0,
                 'labor_cost' => 0,

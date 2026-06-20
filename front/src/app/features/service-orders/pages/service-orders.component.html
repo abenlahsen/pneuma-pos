@@ -28,6 +28,13 @@
         <h3 class="card-value">{{ summary().total_revenue | number:'1.2-2' }} DH</h3>
       </div>
     </div>
+    <div class="card summary-card margin">
+      <div class="card-icon">📈</div>
+      <div class="card-content">
+        <p class="card-label">Marge brute</p>
+        <h3 class="card-value">{{ summary().total_margin | number:'1.2-2' }} DH</h3>
+      </div>
+    </div>
     <div class="card summary-card balance">
       <div class="card-icon">✅</div>
       <div class="card-content">
@@ -122,9 +129,12 @@
           <th>CLIENT</th>
           <th>VÉHICULE</th>
           <th>PRESTATIONS</th>
-          <th class="text-right">NET (DH)</th>
+          <th class="text-right">MARGE (DH)</th>
           <th>STATUT</th>
           <th>PAIEMENT</th>
+          <th>CRÉÉ PAR</th>
+          <th>CRÉÉ LE</th>
+          <th>MODIFIÉ LE</th>
         </tr>
       </thead>
       <tbody>
@@ -185,7 +195,12 @@
               >+{{ orderProductLabels(order).length - 4 }}</span>
             </div>
           </td>
-          <td class="amount-cell">{{ order.net_amount | number:'1.2-2' }}</td>
+          <td class="amount-cell">
+            <span>{{ order.margin | number:'1.2-2' }}</span>
+            <span class="margin-pct" [class]="marginClass(order)" *ngIf="+order.total_amount > 0">
+              {{ marginPct(order) | number:'1.0-1' }}%
+            </span>
+          </td>
           <td class="status-cell">
             <select class="status-select"
                     [class.bg-en-cours]="order.status === 'EN COURS'"
@@ -201,6 +216,9 @@
               {{ order.payment_status }}
             </span>
           </td>
+          <td>{{ order.creator?.name || '-' }}</td>
+          <td>{{ order.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td>{{ order.updated_at | date:'dd/MM/yyyy HH:mm' }}</td>
         </tr>
       </tbody>
     </table>

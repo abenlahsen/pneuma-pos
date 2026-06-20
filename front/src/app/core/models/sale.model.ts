@@ -84,6 +84,7 @@ export interface Sale {
   payment_method: string;
   commercial_id?: number | null;
   commercial?: { id: number; name: string } | null;
+  creator?: { id: number; name: string } | null;
   status: SaleStatus;
   payment_status: PaymentStatus;
   delivery_date: string;

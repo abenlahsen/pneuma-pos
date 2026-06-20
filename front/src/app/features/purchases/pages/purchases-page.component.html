@@ -173,19 +173,20 @@
             <th class="sortable" (click)="toggleSort('payment_status')">Paiement <span class="sort-icon">{{ sortBy() === 'payment_status' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th>Mode paiement</th>
             <th class="sortable" (click)="toggleSort('status')">Statut <span class="sort-icon">{{ sortBy() === 'status' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th>Créé par</th>
             <th class="sortable" (click)="toggleSort('created_at')">Créé le <span class="sort-icon">{{ sortBy() === 'created_at' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('updated_at')">Modifié le <span class="sort-icon">{{ sortBy() === 'updated_at' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
           </tr>
         </thead>
         <tbody>
           <tr *ngIf="loading()">
-            <td colspan="12" class="text-center py-4">
+            <td colspan="13" class="text-center py-4">
               <div class="spinner"></div> Chargement...
             </td>
           </tr>
 
           <tr *ngIf="!loading() && purchases().length === 0">
-            <td colspan="12" class="text-center py-4 text-muted">
+            <td colspan="13" class="text-center py-4 text-muted">
               Aucun achat trouvé.
             </td>
           </tr>
@@ -234,6 +235,7 @@
                 <option *ngFor="let s of PURCHASE_STATUSES" [value]="s">{{ PURCHASE_STATUS_LABELS[s] }}</option>
               </select>
             </td>
+            <td>{{ purchase.creator?.name || '-' }}</td>
             <td>{{ purchase.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
             <td>{{ purchase.updated_at | date:'dd/MM/yyyy HH:mm' }}</td>
           </tr>

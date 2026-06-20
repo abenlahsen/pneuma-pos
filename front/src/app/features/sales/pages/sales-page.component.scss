@@ -4,3 +4,13 @@
 .summary-cards {
   grid-template-columns: repeat(4, 1fr);
 }
+
+.margin-pct {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  &.margin-low  { color: #dc2626; }
+  &.margin-mid  { color: #d97706; }
+  &.margin-high { color: #16a34a; }
+}

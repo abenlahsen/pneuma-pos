@@ -107,6 +107,16 @@ $_border2:  #d0d9e4;
   letter-spacing: -0.01em;
 }
 
+.margin-pct {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  &.margin-low  { color: #dc2626; }
+  &.margin-mid  { color: #d97706; }
+  &.margin-high { color: #16a34a; }
+}
+
 .status-cell { white-space: nowrap; }
 
 // ── Client / vehicle cells ────────────────────────────────────────────────────
