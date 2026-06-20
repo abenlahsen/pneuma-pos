@@ -31,6 +31,7 @@ export interface Purchase {
   payments?: PurchasePayment[];
   supplier?: Supplier;
   commercial?: { id: number; name: string } | null;
+  creator?: { id: number; name: string } | null;
   created_at?: string;
   updated_at?: string;
 }

@@ -28,6 +28,7 @@ class StoreServiceOrderRequest extends FormRequest
             'items.*.stock_id' => ['nullable', Rule::exists('stocks', 'id')],
             'items.*.quantity' => ['nullable', 'integer', 'min:1'],
             'items.*.unit_price' => ['nullable', 'numeric', 'min:0'],
+            'items.*.purchase_price' => ['nullable', 'numeric', 'min:0'],
             'items.*.parts_cost' => ['nullable', 'numeric', 'min:0'],
             'items.*.labor_cost' => ['nullable', 'numeric', 'min:0'],
             'items.*.description' => ['nullable', 'string', 'max:2000'],

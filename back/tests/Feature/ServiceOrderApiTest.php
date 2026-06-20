@@ -342,7 +342,7 @@ class ServiceOrderApiTest extends TestCase
         $response = $this->getJson('/api/service-orders-summary');
 
         $response->assertOk()
-            ->assertJsonStructure(['total_revenue', 'total_paid', 'remaining']);
+            ->assertJsonStructure(['total_revenue', 'total_purchase', 'total_margin', 'total_paid', 'remaining']);
     }
 
     public function test_summary_filters_by_status(): void

@@ -95,6 +95,11 @@ class Sale extends Model
         return $this->belongsTo(User::class, 'commercial_id');
     }
 
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     public function linkedCarrier(): BelongsTo
     {
         return $this->belongsTo(\App\Models\Carrier::class, 'carrier_id');

@@ -48,6 +48,7 @@ class ServiceOrderResource extends JsonResource
                     'product_reference' => $item->product?->reference,
                     'quantity' => (int) ($item->quantity ?? 1),
                     'unit_price' => number_format((float) ($item->unit_price ?? 0), 2, '.', ''),
+                    'purchase_price' => number_format((float) ($item->purchase_price ?? 0), 2, '.', ''),
                     'total_quantity' => $item->item_type === 'part' ? (int) ($item->product?->stocks_sum_quantity ?? 0) : null,
                     'stock_id' => $item->stock_id,
                     'description' => $item->description,
@@ -58,6 +59,8 @@ class ServiceOrderResource extends JsonResource
                 ])
             ),
             'total_amount' => number_format((float) $this->total_amount, 2, '.', ''),
+            'total_purchase' => number_format((float) $this->total_purchase, 2, '.', ''),
+            'margin' => number_format((float) $this->margin, 2, '.', ''),
             'discount' => number_format((float) $this->discount, 2, '.', ''),
             'net_amount' => number_format((float) $this->net_amount, 2, '.', ''),
             'status' => $this->status,
@@ -69,6 +72,13 @@ class ServiceOrderResource extends JsonResource
                 fn () => $this->commercial ? [
                     'id' => $this->commercial->id,
                     'name' => $this->commercial->name,
+                ] : null
+            ),
+            'creator' => $this->when(
+                $this->relationLoaded('creator'),
+                fn () => $this->creator ? [
+                    'id' => $this->creator->id,
+                    'name' => $this->creator->name,
                 ] : null
             ),
             'payments' => $this->whenLoaded('payments'),

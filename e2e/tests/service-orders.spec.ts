@@ -72,7 +72,7 @@ test.describe('Service Auto', () => {
     await page.getByRole('button', { name: /Nouvelle intervention/ }).click();
     await expect(page.locator('.modal-overlay, .form-overlay').first()).toBeVisible();
 
-    await expect(page.locator('.service-costs-row label', { hasText: 'Quantité' }).first()).toBeVisible();
+    await expect(page.getByLabel('Quantité').first()).toBeVisible();
   });
 
   test('le formulaire de prestation ne contient pas le champ Pièces (DH)', async ({ page }) => {

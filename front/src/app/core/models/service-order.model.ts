@@ -15,6 +15,7 @@ export interface ServiceItem {
   product_reference?: string | null;
   quantity?: number;
   unit_price?: number;
+  purchase_price?: number;
   total_quantity?: number | null;
   stock_id?: number | null;
   // Commun
@@ -33,6 +34,8 @@ export interface ServiceOrder {
   mileage?: number | null;
   items?: ServiceItem[];
   total_amount: number;
+  total_purchase: number;
+  margin: number;
   discount: number;
   net_amount: number;
   status: ServiceOrderStatus;
@@ -40,6 +43,7 @@ export interface ServiceOrder {
   notes?: string | null;
   commercial_id?: number | null;
   commercial?: { id: number; name: string } | null;
+  creator?: { id: number; name: string } | null;
   created_at?: string | null;
   updated_at?: string | null;
 }
@@ -54,6 +58,7 @@ export interface ServiceItemPayload {
   stock_id?: number | null;
   quantity?: number;
   unit_price?: number;
+  purchase_price?: number;
   sort_order?: number;
 }
 
@@ -110,6 +115,8 @@ export interface ServicePaymentPayload {
 
 export interface ServiceOrderSummary {
   total_revenue: number;
+  total_purchase: number;
+  total_margin: number;
   total_paid: number;
   remaining: number;
 }

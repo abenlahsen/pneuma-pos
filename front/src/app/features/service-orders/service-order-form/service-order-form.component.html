@@ -319,6 +319,9 @@
       <div class="footer-totals" *ngIf="totalAmount() > 0">
         <span class="footer-total-net">{{ netAmount() | number:'1.2-2' }} DH</span>
         <span class="footer-discount" *ngIf="discount() > 0">remise {{ discount() }}%</span>
+        <span class="footer-margin" *ngIf="totalPurchase() > 0" title="Marge brute sur les pièces">
+          Marge : {{ totalMargin() | number:'1.2-2' }} DH
+        </span>
       </div>
       <button type="button" class="btn btn-secondary" (click)="onCancel()">Annuler</button>
       <button type="submit" class="btn btn-primary" [disabled]="orderForm.invalid || !hasValidLines() || hasStockError() || !vehicleValid()">

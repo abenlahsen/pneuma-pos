@@ -332,6 +332,19 @@ export class SalesPageComponent implements OnInit {
     });
   }
 
+  marginPct(sale: Sale): number {
+    const base = Number(sale.total_sale ?? 0);
+    if (!base) return 0;
+    return (Number(sale.margin ?? 0) / base) * 100;
+  }
+
+  marginClass(sale: Sale): string {
+    const pct = this.marginPct(sale);
+    if (pct > 20) return 'margin-high';
+    if (pct > 10) return 'margin-mid';
+    return 'margin-low';
+  }
+
   get pages(): number[] {
     const total = this.lastPage();
     const current = this.currentPage();

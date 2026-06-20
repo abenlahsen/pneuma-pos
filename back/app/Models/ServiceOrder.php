@@ -15,6 +15,8 @@ class ServiceOrder extends Model
         'vehicle',
         'mileage',
         'total_amount',
+        'total_purchase',
+        'margin',
         'discount',
         'net_amount',
         'status',
@@ -28,6 +30,8 @@ class ServiceOrder extends Model
     protected $casts = [
         'date' => 'date',
         'total_amount' => 'decimal:2',
+        'total_purchase' => 'decimal:2',
+        'margin' => 'decimal:2',
         'discount' => 'decimal:2',
         'net_amount' => 'decimal:2',
         'mileage' => 'integer',
@@ -35,10 +39,14 @@ class ServiceOrder extends Model
 
     public function recalculateTotals(): void
     {
-        $total = $this->items()->sum('line_total');
+        $items = $this->items()->get(['line_total', 'purchase_price', 'quantity']);
+        $total = $items->sum('line_total');
+        $totalPurchase = $items->sum(fn ($item) => (float) $item->purchase_price * (int) $item->quantity);
         $discountAmount = $total * ((float) ($this->discount ?? 0) / 100);
         $this->updateQuietly([
             'total_amount' => round($total, 2),
+            'total_purchase' => round($totalPurchase, 2),
+            'margin' => round($total - $totalPurchase, 2),
             'net_amount' => max(0, round($total - $discountAmount, 2)),
         ]);
     }

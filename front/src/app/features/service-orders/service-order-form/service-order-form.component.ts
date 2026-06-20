@@ -41,6 +41,7 @@ interface PartLineForm {
   unit: string;
   quantity: number;
   unit_price: number;
+  purchase_price: number;
   total_quantity: number;
   searchQuery: string;
   searchResults: PartSearchResult[];
@@ -114,6 +115,17 @@ export class ServiceOrderFormComponent implements OnInit {
     Math.max(0, this.totalAmount() * (1 - (Number(this.discount()) || 0) / 100))
   );
 
+  totalPurchase = computed(() =>
+    this.lines().reduce((sum, line) => {
+      if (line.item_type === 'part') {
+        return sum + (Number(line.quantity) || 1) * (Number(line.purchase_price) || 0);
+      }
+      return sum;
+    }, 0)
+  );
+
+  totalMargin = computed(() => this.totalAmount() - this.totalPurchase());
+
   readonly vehicleValid = computed(() => {
     if (this.client_id()) return true;          // véhicule optionnel quand client lié
     return this.vehicle().trim().length > 0;    // requis en saisie libre
@@ -173,6 +185,7 @@ export class ServiceOrderFormComponent implements OnInit {
               unit: 'pièce',
               quantity: it.quantity ?? 1,
               unit_price: Number(it.unit_price) || 0,
+              purchase_price: Number(it.purchase_price) || 0,
               total_quantity: it.total_quantity ?? 0,
               searchQuery: it.product_name ?? '',
               searchResults: [],
@@ -263,7 +276,7 @@ export class ServiceOrderFormComponent implements OnInit {
     this.lines.update(l => [...l, {
       item_type: 'part',
       product_id: null, stock_id: null, product_name: '', product_reference: '',
-      unit: 'pièce', quantity: 1, unit_price: 0, total_quantity: 0,
+      unit: 'pièce', quantity: 1, unit_price: 0, purchase_price: 0, total_quantity: 0,
       searchQuery: '', searchResults: [], searching: false,
     }]);
   }
@@ -312,6 +325,7 @@ export class ServiceOrderFormComponent implements OnInit {
       product_reference: part.reference ?? '',
       unit: part.unit,
       unit_price: part.purchase_price,
+      purchase_price: part.purchase_price,
       total_quantity: part.total_quantity,
       searchQuery: part.name,
       searchResults: [],
@@ -423,6 +437,7 @@ export class ServiceOrderFormComponent implements OnInit {
           stock_id: line.stock_id ?? null,
           quantity: line.quantity,
           unit_price: line.unit_price,
+          purchase_price: line.purchase_price,
           sort_order: i,
         };
       }

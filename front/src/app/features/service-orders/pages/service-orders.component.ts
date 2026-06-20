@@ -29,7 +29,7 @@ export class ServiceOrdersComponent implements OnInit {
   readonly PAYMENT_STATUS_LABELS = PAYMENT_STATUS_LABELS;
 
   serviceOrders = signal<ServiceOrder[]>([]);
-  summary = signal<ServiceOrderSummary>({ total_revenue: 0, total_paid: 0, remaining: 0 });
+  summary = signal<ServiceOrderSummary>({ total_revenue: 0, total_purchase: 0, total_margin: 0, total_paid: 0, remaining: 0 });
   filterOptions = signal<ServiceOrderFilters>({ service_products: [], commercials: [], clients: [], accounts: [] });
 
   currentPage = signal(1);
@@ -295,6 +295,19 @@ export class ServiceOrdersComponent implements OnInit {
         alert('Erreur lors de la mise à jour du statut');
       },
     });
+  }
+
+  marginPct(order: ServiceOrder): number {
+    const base = Number(order.total_amount);
+    if (!base) return 0;
+    return (Number(order.margin) / base) * 100;
+  }
+
+  marginClass(order: ServiceOrder): string {
+    const pct = this.marginPct(order);
+    if (pct > 20) return 'margin-high';
+    if (pct > 10) return 'margin-mid';
+    return 'margin-low';
   }
 
   statusClass(status: ServiceOrderStatus): string {
