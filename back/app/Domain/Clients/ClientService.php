@@ -5,6 +5,7 @@ namespace App\Domain\Clients;
 use App\Models\City;
 use App\Models\Client;
 use App\Models\Sale;
+use App\Models\ServiceOrder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -70,20 +71,35 @@ class ClientService
     {
         $client->loadMissing([
             'sales' => fn ($query) => $query->with(['linkedClient', 'payments'])->latest('date')->latest('id'),
+            'serviceOrders' => fn ($query) => $query->with(['payments'])->latest('date')->latest('id'),
         ]);
 
         $sales = $client->sales->values();
-        $latestSale = $sales->sortByDesc(fn (Sale $sale) => $this->sortableDate($sale))->first();
-        $salesHistory = $sales->map(fn (Sale $sale) => $this->mapSale($sale))->values();
+        $serviceOrders = $client->serviceOrders->values();
+
+        $allDates = $sales->map(fn ($s) => $s->sale_date ?? $s->created_at)
+            ->merge($serviceOrders->map(fn ($o) => $o->date ?? $o->created_at))
+            ->filter()
+            ->sortByDesc(fn ($d) => $d->timestamp ?? 0);
+        $lastDate = $allDates->first();
+
+        $salesHistory = $sales->map(fn (Sale $sale) => $this->mapSale($sale));
+        $serviceHistory = $serviceOrders->map(fn (ServiceOrder $order) => $this->mapServiceOrder($order));
+        $allHistory = $salesHistory->merge($serviceHistory)
+            ->sortByDesc(fn ($row) => $row['sale_date'] ?? $row['created_at'] ?? null)
+            ->values();
+
+        $totalSales = $sales->sum(fn (Sale $s) => (float) ($s->total ?? 0));
+        $totalOrders = $serviceOrders->sum(fn (ServiceOrder $o) => (float) ($o->net_amount ?? 0));
 
         return [
             'client' => $client,
-            'sales_count' => $sales->count(),
-            'total_purchased' => round((float) $sales->sum('total'), 2),
-            'last_sale_date' => optional($latestSale)->sale_date ?? optional($latestSale)->created_at,
-            'outstanding_balance' => $this->calculateOutstandingBalance($client, $sales),
-            'sales' => $salesHistory,
-            'sales_history' => $salesHistory,
+            'sales_count' => $sales->count() + $serviceOrders->count(),
+            'total_purchased' => round($totalSales + $totalOrders, 2),
+            'last_sale_date' => optional($lastDate)->toDateString(),
+            'outstanding_balance' => $this->calculateOutstandingBalanceAll($client, $sales, $serviceOrders),
+            'sales' => $allHistory,
+            'sales_history' => $allHistory,
         ];
     }
 
@@ -91,46 +107,83 @@ class ClientService
     {
         $client->loadMissing([
             'sales' => fn ($query) => $query->with(['payments', 'linkedClient'])->latest('date')->latest('id'),
+            'serviceOrders' => fn ($query) => $query->with(['payments'])->latest('date')->latest('id'),
         ]);
 
         $sales = $client->sales->values();
-        $latestSale = $sales->sortByDesc(fn (Sale $sale) => $this->sortableDate($sale))->first();
-        $salesRows = $sales->map(fn (Sale $sale) => $this->mapSale($sale))->values();
+        $serviceOrders = $client->serviceOrders->values();
 
-        $payments = $sales
-            ->flatMap(fn (Sale $sale) => $sale->payments ?? collect())
-            ->sortBy(fn ($payment) => $this->sortablePaymentDate($payment))
+        $allDates = $sales->map(fn ($s) => $s->sale_date ?? $s->created_at)
+            ->merge($serviceOrders->map(fn ($o) => $o->date ?? $o->created_at))
+            ->filter()
+            ->sortByDesc(fn ($d) => $d->timestamp ?? 0);
+        $lastDate = $allDates->first();
+
+        $salesRows = $sales->map(fn (Sale $sale) => $this->mapSale($sale));
+        $serviceRows = $serviceOrders->map(fn (ServiceOrder $order) => $this->mapServiceOrder($order));
+        $allRows = $salesRows->merge($serviceRows)
+            ->sortByDesc(fn ($row) => $row['sale_date'] ?? $row['created_at'] ?? null)
             ->values();
 
-        $paymentRows = $payments->map(function ($payment) {
-            return [
-                'id' => $payment->id,
-                'sale_id' => $payment->sale_id,
-                'date' => $this->formatDate($payment->payment_date ?? $payment->paid_at ?? $payment->created_at),
-                'amount' => round((float) ($payment->amount ?? $payment->amount_paid ?? 0), 2),
-                'payment_method' => $payment->payment_method ?? $payment->method ?? null,
-                'notes' => $payment->notes,
-                'created_at' => $this->formatDateTime($payment->created_at),
-                'updated_at' => $this->formatDateTime($payment->updated_at),
-            ];
-        })->values();
+        $salePayments = $sales
+            ->flatMap(fn (Sale $sale) => $sale->payments ?? collect())
+            ->sortBy(fn ($p) => $this->sortablePaymentDate($p))
+            ->values();
+
+        $servicePayments = $serviceOrders
+            ->flatMap(fn (ServiceOrder $order) => $order->payments ?? collect())
+            ->sortBy(fn ($p) => $p->date?->timestamp ?? $p->created_at?->timestamp ?? 0)
+            ->values();
+
+        $salePaymentRows = $salePayments->map(fn ($payment) => [
+            'id' => $payment->id,
+            'sale_id' => $payment->sale_id,
+            'date' => $this->formatDate($payment->payment_date ?? $payment->paid_at ?? $payment->created_at),
+            'amount' => round((float) ($payment->amount ?? $payment->amount_paid ?? 0), 2),
+            'payment_method' => $payment->payment_method ?? $payment->method ?? null,
+            'notes' => $payment->notes,
+            'created_at' => $this->formatDateTime($payment->created_at),
+            'updated_at' => $this->formatDateTime($payment->updated_at),
+        ])->values();
+
+        $servicePaymentRows = $servicePayments->map(fn ($payment) => [
+            'id' => 'sp_'.$payment->id,
+            'sale_id' => null,
+            'service_order_id' => $payment->service_order_id,
+            'date' => $this->formatDate($payment->date ?? $payment->created_at),
+            'amount' => round((float) ($payment->amount ?? 0), 2),
+            'payment_method' => $payment->method ?? null,
+            'reference' => $payment->reference,
+            'notes' => $payment->notes,
+            'created_at' => $this->formatDateTime($payment->created_at),
+            'updated_at' => $this->formatDateTime($payment->updated_at),
+        ])->values();
+
+        $allPaymentRows = $salePaymentRows->merge($servicePaymentRows)
+            ->sortBy(fn ($row) => $row['date'] ?? null)
+            ->values();
+
+        $totalSales = $sales->sum(fn (Sale $s) => (float) ($s->total ?? 0));
+        $totalOrders = $serviceOrders->sum(fn (ServiceOrder $o) => (float) ($o->net_amount ?? 0));
+        $totalPaidSales = $sales->sum(fn (Sale $s) => (float) ($s->paid_amount ?? 0));
+        $totalPaidOrders = (float) $servicePayments->sum('amount');
 
         $summary = [
-            'sales_count' => $sales->count(),
-            'payments_count' => $payments->count(),
+            'sales_count' => $sales->count() + $serviceOrders->count(),
+            'payments_count' => $salePayments->count() + $servicePayments->count(),
             'opening_balance' => round((float) ($client->opening_balance ?? 0), 2),
-            'total_sales' => round((float) $sales->sum('total'), 2),
-            'total_paid' => round((float) $sales->sum('paid_amount'), 2),
-            'outstanding_balance' => $this->calculateOutstandingBalance($client, $sales),
-            'last_sale_date' => $this->formatDate(optional($latestSale)->sale_date ?? optional($latestSale)->created_at),
+            'total_sales' => round($totalSales + $totalOrders, 2),
+            'total_paid' => round($totalPaidSales + $totalPaidOrders, 2),
+            'outstanding_balance' => $this->calculateOutstandingBalanceAll($client, $sales, $serviceOrders),
+            'last_sale_date' => $this->formatDate($lastDate),
         ];
 
         return [
             'client' => $client,
             'summary' => $summary,
-            'sales' => $salesRows,
-            'payments' => $paymentRows,
-            'entries' => $this->buildEntries($client, $sales, $payments),
+            'sales' => $allRows->all(),
+            'payments' => $allPaymentRows->all(),
+            'entries' => $this->buildAllEntries($client, $sales, $salePayments, $serviceOrders, $servicePayments),
         ];
     }
 
@@ -218,38 +271,68 @@ class ClientService
 
     protected function calculateOutstandingBalance(Client $client, Collection $sales): float
     {
+        return $this->calculateOutstandingBalanceAll($client, $sales, collect());
+    }
+
+    protected function calculateOutstandingBalanceAll(Client $client, Collection $sales, Collection $serviceOrders): float
+    {
         $openingBalance = (float) ($client->opening_balance ?? 0);
-        $salesOutstanding = $sales->sum(function (Sale $sale) {
-            return max((float) ($sale->total ?? 0) - (float) ($sale->paid_amount ?? 0), 0);
+        $salesOutstanding = $sales->sum(fn (Sale $sale) => max((float) ($sale->total ?? 0) - (float) ($sale->paid_amount ?? 0), 0));
+        $ordersOutstanding = $serviceOrders->sum(function (ServiceOrder $order) {
+            $paid = $order->payments ? (float) $order->payments->sum('amount') : 0;
+
+            return max((float) ($order->net_amount ?? 0) - $paid, 0);
         });
 
-        return round($openingBalance + $salesOutstanding, 2);
+        return round($openingBalance + $salesOutstanding + $ordersOutstanding, 2);
     }
 
     protected function mapSale(Sale $sale): array
     {
+        $total = round((float) ($sale->total ?? 0), 2);
+        $paid = round((float) ($sale->paid_amount ?? 0), 2);
+
         return [
             'id' => $sale->id,
+            'type' => 'sale',
             'client_id' => $sale->client_id,
-            'date' => $this->formatDate($sale->sale_date ?? $sale->created_at),
-            'subtotal' => round((float) ($sale->subtotal ?? 0), 2),
-            'discount' => round((float) ($sale->discount ?? 0), 2),
-            'tax' => round((float) ($sale->tax ?? 0), 2),
-            'total' => round((float) ($sale->total ?? 0), 2),
-            'paid_amount' => round((float) ($sale->paid_amount ?? 0), 2),
-            'outstanding_amount' => round(max((float) ($sale->total ?? 0) - (float) ($sale->paid_amount ?? 0), 0), 2),
+            'sale_date' => $this->formatDate($sale->sale_date ?? $sale->created_at),
+            'reference' => $sale->reference,
+            'total_amount' => $total,
+            'amount_paid' => $paid,
+            'balance_due' => round(max($total - $paid, 0), 2),
             'payment_method' => $sale->payment_method,
+            'payment_status' => $sale->payment_status,
             'status' => $sale->status,
             'client' => $sale->client,
             'client_phone' => $sale->client_phone,
-            'city' => $sale->city,
             'notes' => $sale->notes,
             'created_at' => $this->formatDateTime($sale->created_at),
             'updated_at' => $this->formatDateTime($sale->updated_at),
         ];
     }
 
-    protected function buildEntries(Client $client, Collection $sales, Collection $payments): array
+    protected function mapServiceOrder(ServiceOrder $order): array
+    {
+        $total = round((float) ($order->net_amount ?? 0), 2);
+        $paid = round($order->payments ? (float) $order->payments->sum('amount') : 0.0, 2);
+
+        return [
+            'id' => $order->id,
+            'type' => 'service_order',
+            'sale_date' => $order->date?->toDateString(),
+            'reference' => 'OS #'.$order->id,
+            'total_amount' => $total,
+            'amount_paid' => $paid,
+            'balance_due' => round(max($total - $paid, 0), 2),
+            'payment_status' => $order->payment_status,
+            'status' => $order->status,
+            'created_at' => $this->formatDateTime($order->created_at),
+            'updated_at' => $this->formatDateTime($order->updated_at),
+        ];
+    }
+
+    protected function buildAllEntries(Client $client, Collection $sales, Collection $salePayments, Collection $serviceOrders, Collection $servicePayments): array
     {
         $entries = collect();
 
@@ -259,7 +342,7 @@ class ClientService
             $entries->push([
                 'type' => 'opening_balance',
                 'date' => $this->formatDate($client->created_at),
-                'description' => 'Opening balance',
+                'description' => 'Solde d\'ouverture',
                 'sale_id' => null,
                 'payment_id' => null,
                 'debit' => $openingBalance > 0 ? $openingBalance : 0.0,
@@ -272,7 +355,7 @@ class ClientService
             $entries->push([
                 'type' => 'sale',
                 'date' => $this->formatDate($sale->sale_date ?? $sale->created_at),
-                'description' => 'Sale #'.$sale->id,
+                'description' => 'Vente #'.$sale->id,
                 'sale_id' => $sale->id,
                 'payment_id' => null,
                 'debit' => round((float) ($sale->total ?? 0), 2),
@@ -281,16 +364,44 @@ class ClientService
             ]);
         }
 
-        foreach ($payments as $payment) {
+        foreach ($salePayments as $payment) {
             $entries->push([
                 'type' => 'payment',
                 'date' => $this->formatDate($payment->payment_date ?? $payment->paid_at ?? $payment->created_at),
-                'description' => 'Payment #'.$payment->id,
+                'description' => 'Paiement vente #'.$payment->sale_id,
                 'sale_id' => $payment->sale_id,
                 'payment_id' => $payment->id,
                 'debit' => 0.0,
                 'credit' => round((float) ($payment->amount ?? $payment->amount_paid ?? 0), 2),
                 '_sort_date' => $payment->payment_date ?? $payment->paid_at ?? $payment->created_at,
+            ]);
+        }
+
+        foreach ($serviceOrders as $order) {
+            $entries->push([
+                'type' => 'service_order',
+                'date' => $this->formatDate($order->date ?? $order->created_at),
+                'description' => 'Ordre de service #'.$order->id,
+                'sale_id' => null,
+                'service_order_id' => $order->id,
+                'payment_id' => null,
+                'debit' => round((float) ($order->net_amount ?? 0), 2),
+                'credit' => 0.0,
+                '_sort_date' => $order->date ?? $order->created_at,
+            ]);
+        }
+
+        foreach ($servicePayments as $payment) {
+            $entries->push([
+                'type' => 'service_payment',
+                'date' => $this->formatDate($payment->date ?? $payment->created_at),
+                'description' => 'Paiement OS #'.$payment->service_order_id,
+                'sale_id' => null,
+                'service_order_id' => $payment->service_order_id,
+                'payment_id' => $payment->id,
+                'debit' => 0.0,
+                'credit' => round((float) ($payment->amount ?? 0), 2),
+                '_sort_date' => $payment->date ?? $payment->created_at,
             ]);
         }
 

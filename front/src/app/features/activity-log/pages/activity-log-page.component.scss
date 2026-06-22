@@ -121,7 +121,6 @@ $_bg:      #f7fafc;
   white-space: nowrap;
   color: $_muted;
   font-size: 0.8rem;
-  font-variant-numeric: tabular-nums;
 }
 
 .cell-description { max-width: 480px; }
@@ -149,15 +148,19 @@ $_bg:      #f7fafc;
   }
 }
 
-// ── Badges entité ─────────────────────────────────────────────────────────────
-.entity-badge {
+// ── Badges entité & action ────────────────────────────────────────────────────
+.entity-badge,
+.action-badge {
   display: inline-block;
   padding: 0.2rem 0.55rem;
   border-radius: 4px;
   font-size: 0.72rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
   white-space: nowrap;
+}
+
+.entity-badge {
+  letter-spacing: 0.02em;
 
   &.entity-vente       { background: rgba(255, 45, 55, 0.08);  color: #c0020b; }
   &.entity-achat       { background: rgba(59, 130, 246, 0.1);  color: #1d4ed8; }
@@ -166,15 +169,7 @@ $_bg:      #f7fafc;
   &.entity-transaction { background: rgba(245, 158, 11, 0.12); color: #92400e; }
 }
 
-// ── Badges action ─────────────────────────────────────────────────────────────
 .action-badge {
-  display: inline-block;
-  padding: 0.2rem 0.55rem;
-  border-radius: 4px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  white-space: nowrap;
-
   &.badge-success { background: rgba(72, 187, 120, 0.12); color: #276749; }
   &.badge-blue    { background: rgba(59, 130, 246, 0.1);  color: #1d4ed8; }
   &.badge-danger  { background: rgba(245, 101, 101, 0.12); color: #c53030; }
