@@ -60,7 +60,7 @@
       <article class="kpi-card">
         <span class="kpi-icon">🏷️</span>
         <div class="kpi-body">
-          <p class="kpi-label">VENTES</p>
+          <p class="kpi-label">OPÉRATIONS</p>
           <p class="kpi-val">{{ profile()?.sales_count ?? 0 }}</p>
         </div>
       </article>
@@ -84,7 +84,7 @@
       <article class="kpi-card">
         <span class="kpi-icon">📅</span>
         <div class="kpi-body">
-          <p class="kpi-label">DERNIÈRE VENTE</p>
+          <p class="kpi-label">DERNIÈRE OPÉRATION</p>
           <p class="kpi-val kpi-val--date">
             {{ profile()?.last_sale_date ? (profile()!.last_sale_date | date:'dd/MM/yyyy') : '—' }}
           </p>
@@ -213,7 +213,7 @@
         <button type="button" class="tab-btn"
                 [class.active]="activeTab() === 'overview'"
                 (click)="setTab('overview')">
-          🏷️ Historique des ventes
+          🏷️ Historique des opérations
         </button>
         <button type="button" class="tab-btn"
                 [class.active]="activeTab() === 'statement'"
@@ -222,12 +222,12 @@
         </button>
       </div>
 
-      <!-- Historique des ventes -->
+      <!-- Historique des opérations -->
       @if (activeTab() === 'overview') {
         @if (profileLoading()) {
-          <div class="empty-state"><p>Chargement de l'historique des ventes...</p></div>
+          <div class="empty-state"><p>Chargement de l'historique...</p></div>
         } @else if (!salesHistory().length) {
-          <div class="empty-state"><p>Aucun historique de ventes pour ce client.</p></div>
+          <div class="empty-state"><p>Aucun historique pour ce client.</p></div>
         } @else {
           <div class="table-wrapper">
             <table class="table">
@@ -244,7 +244,9 @@
               <tbody>
                 @for (sale of salesHistory(); track trackByRowId($index, sale)) {
                   <tr>
-                    <td class="ref-cell">{{ sale.reference || sale.invoice_number || ('Vente #' + sale.id) }}</td>
+                    <td class="ref-cell">
+                      {{ sale.reference || sale.invoice_number || (sale.type === 'service_order' ? ('OS #' + sale.id) : ('Vente #' + sale.id)) }}
+                    </td>
                     <td>{{ (sale.sale_date || sale.created_at) ? ((sale.sale_date || sale.created_at) | date:'dd/MM/yyyy') : '—' }}</td>
                     <td>
                       <span class="badge" [ngClass]="paymentStatusClass(sale.payment_status)">
@@ -306,7 +308,7 @@
                   <tbody>
                     @for (sale of openInvoices(); track trackByRowId($index, sale)) {
                       <tr>
-                        <td class="ref-cell">{{ sale.reference || sale.invoice_number || ('Vente #' + sale.id) }}</td>
+                        <td class="ref-cell">{{ sale.reference || sale.invoice_number || (sale.type === 'service_order' ? ('OS #' + sale.id) : ('Vente #' + sale.id)) }}</td>
                         <td>{{ (sale.sale_date || sale.created_at) ? ((sale.sale_date || sale.created_at) | date:'dd/MM/yyyy') : '—' }}</td>
                         <td class="col-right num">{{ (sale.total_amount ?? 0) | number:'1.2-2' }} DH</td>
                         <td class="col-right num text-danger">{{ (sale.balance_due ?? 0) | number:'1.2-2' }} DH</td>

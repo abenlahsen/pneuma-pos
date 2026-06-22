@@ -63,6 +63,7 @@ export interface ClientDuplicateCheckResponse {
 
 export interface ClientSalesHistoryRow {
   id: number;
+  type?: 'sale' | 'service_order' | null;
   sale_date?: string | null;
   created_at?: string | null;
   reference?: string | null;
