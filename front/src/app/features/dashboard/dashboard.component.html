@@ -41,20 +41,6 @@
           </div>
           <div class="kpi-badge">{{ k.tyres_today }} Pneus vendus</div>
         </div>
-        <div class="kpi-card" [class.negative-card]="k.margin_today < 0">
-          <div class="kpi-icon">📈</div>
-          <div class="kpi-info">
-            <span class="kpi-label">Marge Brute</span>
-            <span class="kpi-val">{{ k.margin_today | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-        </div>
-        <div class="kpi-card" [class.negative-card]="k.net_margin_today < 0">
-          <div class="kpi-icon">📉</div>
-          <div class="kpi-info">
-            <span class="kpi-label">Marge Nette</span>
-            <span class="kpi-val">{{ k.net_margin_today | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-        </div>
         <div class="kpi-card">
           <div class="kpi-icon">🛒</div>
           <div class="kpi-info">
@@ -68,6 +54,20 @@
           <div class="kpi-info">
             <span class="kpi-label">Dépenses</span>
             <span class="kpi-val">{{ k.expenses_today | number:'1.2-2' }} <small>DH</small></span>
+          </div>
+        </div>
+        <div class="kpi-card" [class.negative-card]="k.margin_today < 0">
+          <div class="kpi-icon">📈</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Marge Brute</span>
+            <span class="kpi-val">{{ k.margin_today | number:'1.2-2' }} <small>DH</small></span>
+          </div>
+        </div>
+        <div class="kpi-card" [class.negative-card]="k.net_margin_today < 0">
+          <div class="kpi-icon">📉</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Marge Nette</span>
+            <span class="kpi-val">{{ k.net_margin_today | number:'1.2-2' }} <small>DH</small></span>
           </div>
         </div>
       </div>
@@ -101,26 +101,6 @@
             <div class="kpi-badge kpi-badge--parts" *ngIf="k.parts_month > 0">{{ k.parts_month }} Pièces vendues</div>
           </div>
         </div>
-        <div class="kpi-card" [class.negative-card]="k.margin_month < 0">
-          <div class="kpi-icon">📈</div>
-          <div class="kpi-info">
-            <span class="kpi-label">Marge Brute</span>
-            <span class="kpi-val">{{ k.margin_month | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_month > 0">
-              ≈ {{ (k.margin_month / k.tyres_month) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-        </div>
-        <div class="kpi-card" [class.negative-card]="k.net_margin_month < 0">
-          <div class="kpi-icon">📉</div>
-          <div class="kpi-info">
-            <span class="kpi-label">Marge Nette</span>
-            <span class="kpi-val">{{ k.net_margin_month | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_month > 0">
-              ≈ {{ (k.net_margin_month / k.tyres_month) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-        </div>
         <div class="kpi-card">
           <div class="kpi-icon">🛒</div>
           <div class="kpi-info">
@@ -142,6 +122,26 @@
             <span class="kpi-val">{{ k.expenses_month | number:'1.2-2' }} <small>DH</small></span>
             <span class="kpi-sub" *ngIf="k.tyres_month > 0">
               ≈ {{ (k.expenses_month / k.tyres_month) | number:'1.2-2' }} DH / pneu
+            </span>
+          </div>
+        </div>
+        <div class="kpi-card" [class.negative-card]="k.margin_month < 0">
+          <div class="kpi-icon">📈</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Marge Brute</span>
+            <span class="kpi-val">{{ k.margin_month | number:'1.2-2' }} <small>DH</small></span>
+            <span class="kpi-sub" *ngIf="k.tyres_month > 0">
+              ≈ {{ (k.margin_month / k.tyres_month) | number:'1.2-2' }} DH / pneu
+            </span>
+          </div>
+        </div>
+        <div class="kpi-card" [class.negative-card]="k.net_margin_month < 0">
+          <div class="kpi-icon">📉</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Marge Nette</span>
+            <span class="kpi-val">{{ k.net_margin_month | number:'1.2-2' }} <small>DH</small></span>
+            <span class="kpi-sub" *ngIf="k.tyres_month > 0">
+              ≈ {{ (k.net_margin_month / k.tyres_month) | number:'1.2-2' }} DH / pneu
             </span>
           </div>
         </div>
@@ -267,30 +267,10 @@
             <div class="kpi-badge kpi-badge--parts" *ngIf="k.parts_year > 0">{{ k.parts_year }} Pièces vendues</div>
           </div>
         </div>
-        <div class="kpi-card" [class.negative-card]="k.margin_year < 0">
-          <div class="kpi-icon">📈</div>
-          <div class="kpi-info">
-            <span class="kpi-label">Marge Brute</span>
-            <span class="kpi-val">{{ k.margin_year | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_year > 0">
-              ≈ {{ (k.margin_year / k.tyres_year) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-        </div>
-        <div class="kpi-card" [class.negative-card]="k.net_margin_year < 0">
-          <div class="kpi-icon">📉</div>
-          <div class="kpi-info">
-            <span class="kpi-label">Marge Nette</span>
-            <span class="kpi-val">{{ k.net_margin_year | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_year > 0">
-              ≈ {{ (k.net_margin_year / k.tyres_year) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-        </div>
         <div class="kpi-card">
           <div class="kpi-icon">🛒</div>
           <div class="kpi-info">
-            <span class="kpi-label">Total Achats</span>
+            <span class="kpi-label">Achats</span>
             <span class="kpi-val">{{ k.total_purchase_year | number:'1.2-2' }} <small>DH</small></span>
             <span class="kpi-sub" *ngIf="k.tyres_purchased_year > 0">
               ≈ {{ (k.total_purchase_year / k.tyres_purchased_year) | number:'1.2-2' }} DH / pneu
@@ -308,6 +288,26 @@
             <span class="kpi-val">{{ k.expenses_year | number:'1.2-2' }} <small>DH</small></span>
             <span class="kpi-sub" *ngIf="k.tyres_year > 0">
               ≈ {{ (k.expenses_year / k.tyres_year) | number:'1.2-2' }} DH / pneu
+            </span>
+          </div>
+        </div>
+        <div class="kpi-card" [class.negative-card]="k.margin_year < 0">
+          <div class="kpi-icon">📈</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Marge Brute</span>
+            <span class="kpi-val">{{ k.margin_year | number:'1.2-2' }} <small>DH</small></span>
+            <span class="kpi-sub" *ngIf="k.tyres_year > 0">
+              ≈ {{ (k.margin_year / k.tyres_year) | number:'1.2-2' }} DH / pneu
+            </span>
+          </div>
+        </div>
+        <div class="kpi-card" [class.negative-card]="k.net_margin_year < 0">
+          <div class="kpi-icon">📉</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Marge Nette</span>
+            <span class="kpi-val">{{ k.net_margin_year | number:'1.2-2' }} <small>DH</small></span>
+            <span class="kpi-sub" *ngIf="k.tyres_year > 0">
+              ≈ {{ (k.net_margin_year / k.tyres_year) | number:'1.2-2' }} DH / pneu
             </span>
           </div>
         </div>

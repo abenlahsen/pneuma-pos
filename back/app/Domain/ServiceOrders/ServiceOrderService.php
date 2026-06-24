@@ -204,6 +204,7 @@ class ServiceOrderService
         $qty = max(1, (int) ($itemData['quantity'] ?? 1));
         $parts = (float) ($itemData['parts_cost'] ?? 0);
         $labor = (float) ($itemData['labor_cost'] ?? 0);
+        $purchasePrice = (float) ($itemData['purchase_price'] ?? 0);
 
         return [
             'item_type' => 'service',
@@ -212,6 +213,7 @@ class ServiceOrderService
             'quantity' => $qty,
             'parts_cost' => $parts,
             'labor_cost' => $labor,
+            'purchase_price' => $purchasePrice,
             'line_total' => $qty * ($parts + $labor),
             'description' => $itemData['description'] ?? null,
             'sort_order' => $itemData['sort_order'] ?? $index,

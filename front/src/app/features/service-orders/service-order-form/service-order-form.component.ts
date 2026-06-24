@@ -28,6 +28,7 @@ interface ServiceLineForm {
   service_type: string;
   description: string;
   quantity: number;
+  purchase_price: number;
   parts_cost: number;
   labor_cost: number;
 }
@@ -99,7 +100,7 @@ export class ServiceOrderFormComponent implements OnInit {
 
   // Lines
   lines = signal<AnyLineForm[]>([
-    { item_type: 'service', service_type: '', description: '', quantity: 1, parts_cost: 0, labor_cost: 0 },
+    { item_type: 'service', service_type: '', description: '', quantity: 1, purchase_price: 0, parts_cost: 0, labor_cost: 0 },
   ]);
 
   totalAmount = computed(() =>
@@ -117,10 +118,7 @@ export class ServiceOrderFormComponent implements OnInit {
 
   totalPurchase = computed(() =>
     this.lines().reduce((sum, line) => {
-      if (line.item_type === 'part') {
-        return sum + (Number(line.quantity) || 1) * (Number(line.purchase_price) || 0);
-      }
-      return sum;
+      return sum + (Number(line.quantity) || 1) * (Number(line.purchase_price) || 0);
     }, 0)
   );
 
@@ -197,6 +195,7 @@ export class ServiceOrderFormComponent implements OnInit {
             service_type: it.service_type ?? '',
             description: it.description ?? '',
             quantity: Number(it.quantity) || 1,
+            purchase_price: Number(it.purchase_price) || 0,
             parts_cost: Number(it.parts_cost) || 0,
             labor_cost: Number(it.labor_cost) || 0,
           } as ServiceLineForm;
@@ -268,7 +267,7 @@ export class ServiceOrderFormComponent implements OnInit {
 
   addServiceLine(): void {
     this.lines.update(l => [...l, {
-      item_type: 'service', service_type: '', description: '', quantity: 1, parts_cost: 0, labor_cost: 0,
+      item_type: 'service', service_type: '', description: '', quantity: 1, purchase_price: 0, parts_cost: 0, labor_cost: 0,
     }]);
   }
 
@@ -347,6 +346,7 @@ export class ServiceOrderFormComponent implements OnInit {
       service_type: product.profile ?? '',
       description: '',
       quantity: 1,
+      purchase_price: 0,
       parts_cost: 0,
       labor_cost: Number(product.selling_price) || 0,
     }]);
@@ -446,6 +446,7 @@ export class ServiceOrderFormComponent implements OnInit {
         service_type: line.service_type || null,
         description: line.description || null,
         quantity: line.quantity,
+        purchase_price: line.purchase_price,
         parts_cost: 0,
         labor_cost: line.labor_cost,
         sort_order: i,

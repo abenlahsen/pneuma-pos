@@ -151,7 +151,8 @@ $_border2:  #d0d9e4;
 
 // ── Description column ────────────────────────────────────────────────────────
 .desc-col {
-  max-width: 200px;
+  min-width: 280px;
+  max-width: 420px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

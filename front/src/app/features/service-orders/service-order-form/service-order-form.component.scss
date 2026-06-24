@@ -742,12 +742,17 @@ textarea.form-control {
   margin-right: auto;
 }
 
+.footer-total-label {
+  font-size: 0.8125rem;
+  color: $_muted;
+
+  strong { color: $_text; font-weight: 600; }
+}
+
 .footer-total-net {
-  font-size: 1.05rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   color: $_red;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
 }
 
 .footer-discount {
@@ -759,6 +764,8 @@ textarea.form-control {
   font-size: 0.8125rem;
   font-weight: 600;
   color: #7c3aed;
+
+  &--negative { color: #c0392b; }
 }
 
 .stock-block-msg {
