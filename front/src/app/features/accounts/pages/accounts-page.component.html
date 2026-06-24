@@ -100,7 +100,6 @@
               <th>Méthode</th>
               <th>Référence</th>
               <th>Description</th>
-              <th>Partenaire</th>
             </tr>
           </thead>
           <tbody>
@@ -119,7 +118,6 @@
               <td>{{ t.method || '—' }}</td>
               <td>{{ t.category || '—' }}</td>
               <td class="desc-col">{{ t.description }}</td>
-              <td>{{ t.partner?.name || '—' }}</td>
             </tr>
           </tbody>
         </table>
@@ -140,12 +138,11 @@
               <th>Méthode</th>
               <th>Catégorie</th>
               <th>Description</th>
-              <th>Partenaire</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngIf="loadingTransactions()">
-              <td colspan="7" class="text-center py-4">Chargement...</td>
+              <td colspan="6" class="text-center py-4">Chargement...</td>
             </tr>
             <tr *ngFor="let t of settledTransactions()" [class.income-row]="t.type === 'income'" [class.expense-row]="t.type === 'expense'">
               <td class="date-cell">{{ t.date | date:'dd/MM/yyyy' }}</td>
@@ -162,10 +159,9 @@
               <td>{{ t.method || '—' }}</td>
               <td>{{ t.category || '—' }}</td>
               <td class="desc-col">{{ t.description }}</td>
-              <td>{{ t.partner?.name || '—' }}</td>
             </tr>
             <tr *ngIf="!loadingTransactions() && settledTransactions().length === 0">
-              <td colspan="7" class="empty-state">Aucune transaction pour ce compte.</td>
+              <td colspan="6" class="empty-state">Aucune transaction pour ce compte.</td>
             </tr>
           </tbody>
         </table>

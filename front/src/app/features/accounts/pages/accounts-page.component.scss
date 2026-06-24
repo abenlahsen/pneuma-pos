@@ -173,31 +173,84 @@ $_shadow-md: 0 1px 3px rgba(15, 23, 42, 0.05), 0 4px 12px rgba(15, 23, 42, 0.08)
   .card-value { color: #dc2626; }
 }
 
-// ── Transaction table extras ──────────────────────────────────────────────────
+// ── Transaction tables ────────────────────────────────────────────────────────
+.table-card { overflow: hidden; }
+.table-responsive { overflow-x: auto; }
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th, td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid $_border;
+    white-space: nowrap;
+    font-size: 0.8125rem;
+    vertical-align: middle;
+  }
+
+  th {
+    background: $_surface2;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: $_muted;
+    text-transform: uppercase;
+  }
+
+  tbody tr:hover { background: rgba($_surface2, 0.5); }
+  tr:last-child td { border-bottom: none; }
+}
+
+.income-row td { border-left: 2px solid rgba(34, 197, 94, 0.25); }
+.expense-row td { border-left: 2px solid rgba(239, 68, 68, 0.2); }
 .pending-row td { background: rgba(234, 179, 8, 0.04); }
 
-.amount-income  {
-  color: #15803d;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
-.amount-expense {
-  color: #dc2626;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.badge-income  { background: rgba(34, 197, 94, 0.10);  color: #15803d; }
-.badge-expense { background: rgba(239, 68, 68, 0.10);  color: #dc2626; }
+.badge-income  { background: rgba(34, 197, 94, 0.12);  color: #15803d; }
+.badge-expense { background: rgba(239, 68, 68, 0.12);  color: #dc2626; }
 .badge-pending { background: rgba(234, 179, 8, 0.12);  color: #a16207; }
 
+.amount-income  { color: #15803d; font-weight: 600; }
+.amount-expense { color: #dc2626; font-weight: 600; }
+
+.date-cell   { color: $_muted; font-variant-numeric: tabular-nums; }
+.amount-cell { font-variant-numeric: tabular-nums; }
+
 .desc-col {
-  max-width: 220px;
-  white-space: nowrap;
+  white-space: normal !important;
+  max-width: 300px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.empty-state {
+  text-align: center;
+  color: $_muted;
+  padding: 2rem 1rem;
+}
+
+.spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid $_border;
+  border-top-color: $_red;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 0.5rem;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
 
 // ── Responsive ────────────────────────────────────────────────────────────────
 @media (max-width: 768px) {
