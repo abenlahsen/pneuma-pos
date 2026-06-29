@@ -273,6 +273,11 @@ export class SaleFormComponent implements OnInit, OnDestroy {
         this.stocks.set(list);
         this.noStockAvailable.set(list.length === 0);
         this.loadingStocks.set(false);
+
+        if (list.length > 0 && !this.currentItem.stock_id) {
+          this.currentItem.stock_id = list[0].id;
+          this.onStockSelected();
+        }
       },
       error: () => this.loadingStocks.set(false),
     });
