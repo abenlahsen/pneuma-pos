@@ -47,6 +47,7 @@ class UpdateCompanySettingsRequest extends FormRequest
             'menu_layout' => ['nullable', 'in:horizontal,vertical'],
             'navbar_variant' => ['nullable', 'in:default,compact,flat'],
             'content_width' => ['nullable', 'in:full,boxed,compact'],
+            'prime_threshold' => ['nullable', 'integer', 'min:0'],
         ];
     }
 }

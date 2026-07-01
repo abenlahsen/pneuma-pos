@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\PrimesController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -8,6 +9,10 @@ use Illuminate\Support\Facades\Route;
 // Admin dashboard KPI snapshot
 Route::get('/dashboard-kpi', [\App\Http\Controllers\DashboardController::class, 'kpi'])
     ->middleware('role:Administrator');
+
+// Primes commerciaux
+Route::get('/primes-commerciaux', [PrimesController::class, 'index'])
+    ->middleware('permission:view primes');
 
 // KPI history (daily snapshots)
 Route::get('/kpi-history', [\App\Http\Controllers\KpiHistoryController::class, 'index'])

@@ -33,6 +33,7 @@ class CompanySetting extends Model
         'menu_layout',
         'navbar_variant',
         'content_width',
+        'prime_threshold',
     ];
 
     protected $appends = [

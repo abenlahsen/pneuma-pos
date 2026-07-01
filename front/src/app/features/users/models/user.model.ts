@@ -6,6 +6,7 @@ export interface ManagedUser {
   email: string;
   phone: string | null;
   commission_rate: number | null;
+  prime_per_tyre: number | null;
   roles: Role[];
   created_at: string;
   updated_at: string;
@@ -18,6 +19,7 @@ export interface UserPayload {
   password_confirmation?: string;
   phone?: string;
   commission_rate?: number;
+  prime_per_tyre?: number;
   role?: string;
 }
 

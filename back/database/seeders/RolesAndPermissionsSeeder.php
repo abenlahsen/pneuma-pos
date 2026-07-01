@@ -109,6 +109,9 @@ class RolesAndPermissionsSeeder extends Seeder
 
             // Activity Log (Administrator only)
             'view activity-log',
+
+            // Primes (Administrator only)
+            'view primes',
         ];
 
         foreach ($permissions as $permission) {
@@ -133,6 +136,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit roles',
             'delete roles',
             'view activity-log',
+            'view primes',
         ]));
 
         $commercial = Role::findOrCreate('Commercial');

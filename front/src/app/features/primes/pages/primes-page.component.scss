@@ -1,0 +1,220 @@
+@use '../../_page-layout' as layout;
+@include layout.page-layout();
+
+$_primary:  #ff2d37;
+$_green:    #22c55e;
+$_red:      #ef4444;
+$_amber:    #f59e0b;
+$_text:     #0f172a;
+$_muted:    #64748b;
+$_surface:  #ffffff;
+$_surface2: #f8fafc;
+$_border:   #e8edf3;
+$_bg:       #f1f5f9;
+
+// ── Month navigation ─────────────────────────────────────────────────────────
+.month-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+
+  .nav-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid $_border;
+    border-radius: 6px;
+    background: $_surface;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.15s;
+
+    &:hover:not(:disabled) { background: $_surface2; }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+  }
+
+  .month-label {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: $_text;
+    min-width: 160px;
+    text-align: center;
+  }
+}
+
+// ── Threshold banner ──────────────────────────────────────────────────────────
+.threshold-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1.25rem;
+  border-radius: 10px;
+  margin-bottom: 1.25rem;
+  border: 1px solid transparent;
+
+  &.eligible {
+    background: rgba($_green, 0.08);
+    border-color: rgba($_green, 0.25);
+  }
+
+  &.not-eligible {
+    background: rgba($_red, 0.06);
+    border-color: rgba($_red, 0.2);
+  }
+
+  .banner-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9375rem;
+    color: $_text;
+  }
+
+  .banner-icon { font-size: 1.25rem; }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+
+    &.badge-success {
+      background: rgba($_green, 0.15);
+      color: darken($_green, 10%);
+    }
+
+    &.badge-danger {
+      background: rgba($_red, 0.12);
+      color: darken($_red, 5%);
+    }
+  }
+}
+
+// ── Summary cards ─────────────────────────────────────────────────────────────
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-card {
+  background: $_surface;
+  border: 1px solid $_border;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+
+  .summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: $_text;
+    line-height: 1.2;
+  }
+
+  .summary-label {
+    font-size: 0.8125rem;
+    color: $_muted;
+    margin-top: 0.25rem;
+  }
+
+  &.highlight.eligible {
+    border-color: rgba($_green, 0.4);
+    .summary-value { color: darken($_green, 8%); }
+  }
+}
+
+// ── Table ──────────────────────────────────────────────────────────────────────
+.card { background: $_surface; border: 1px solid $_border; border-radius: 10px; }
+.card-body { padding: 1.25rem; overflow-x: auto; }
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th, td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid $_border;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+
+  th {
+    background: $_surface2;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    color: $_muted;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  tbody tr:hover { background: rgba($_surface2, 0.6); }
+  tr:last-child td { border-bottom: none; }
+
+  .text-right { text-align: right; }
+
+  .commercial-name { font-weight: 500; color: $_text; }
+
+  .prime-amount { font-weight: 600; color: darken($_green, 8%); }
+  .prime-zero { color: $_muted !important; font-weight: 400 !important; }
+
+  .row-disabled td { color: $_muted; }
+}
+
+.total-row {
+  background: $_surface2;
+  td { border-top: 2px solid $_border; font-size: 0.875rem; }
+}
+
+tfoot .total-row td { border-bottom: none; }
+
+// ── States ────────────────────────────────────────────────────────────────────
+.loading-state {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: $_muted;
+  font-size: 0.9375rem;
+}
+
+.empty-state {
+  text-align: center;
+  color: $_muted;
+  padding: 2rem;
+  font-size: 0.9375rem;
+}
+
+.ineligible-notice {
+  margin-top: 1rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  background: rgba($_red, 0.06);
+  border: 1px solid rgba($_red, 0.18);
+  color: darken($_red, 5%);
+  font-size: 0.875rem;
+
+  &.notice-warning {
+    background: rgba($_amber, 0.08);
+    border-color: rgba($_amber, 0.3);
+    color: darken($_amber, 15%);
+  }
+}
+
+// ── Spinner ───────────────────────────────────────────────────────────────────
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba($_primary, 0.2);
+  border-top-color: $_primary;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }

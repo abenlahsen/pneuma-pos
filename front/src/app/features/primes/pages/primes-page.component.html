@@ -1,0 +1,113 @@
+<div class="page-container">
+  <div class="header">
+    <div class="title-section">
+      <h1>Primes Commerciaux</h1>
+      <p class="subtitle">Calcul des primes mensuelles par commercial basé sur les pneus vendus.</p>
+    </div>
+  </div>
+
+  <!-- Month navigation -->
+  <div class="month-nav">
+    <button class="nav-btn" (click)="prevMonth()">&#8592;</button>
+    <span class="month-label">{{ monthLabel() }}</span>
+    <button class="nav-btn" (click)="nextMonth()" [disabled]="isCurrentMonth()">&#8594;</button>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading()" class="loading-state">
+    <div class="spinner"></div>
+    Chargement...
+  </div>
+
+  <ng-container *ngIf="!loading() && response() as res">
+
+    <!-- Threshold banner -->
+    <div class="threshold-banner" [class.eligible]="res.prime_eligible" [class.not-eligible]="!res.prime_eligible">
+      <div class="banner-left">
+        <span class="banner-icon">🎯</span>
+        <span class="banner-text">
+          Objectif collectif : <strong>{{ res.prime_threshold }} pneus</strong> / mois
+        </span>
+      </div>
+      <div class="banner-right">
+        <span class="status-badge" [class.badge-success]="res.prime_eligible" [class.badge-danger]="!res.prime_eligible">
+          <ng-container *ngIf="res.prime_eligible">
+            ✓ Atteint — {{ res.shop_total_tyres }} pneus vendus
+          </ng-container>
+          <ng-container *ngIf="!res.prime_eligible">
+            ✗ Non atteint — {{ res.shop_total_tyres }} / {{ res.prime_threshold }} pneus
+          </ng-container>
+        </span>
+      </div>
+    </div>
+
+    <!-- Summary card -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="summary-value">{{ res.shop_total_tyres }}</div>
+        <div class="summary-label">Pneus vendus (total shop)</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-value">{{ res.summary.total_commerciaux }}</div>
+        <div class="summary-label">Commerciaux actifs</div>
+      </div>
+      <div class="summary-card highlight" [class.eligible]="res.prime_eligible">
+        <div class="summary-value">{{ formatAmount(res.summary.total_primes) }} DH</div>
+        <div class="summary-label">Total primes du mois</div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+      <div class="card-body">
+        <div *ngIf="res.data.length === 0" class="empty-state">
+          Aucune vente enregistrée pour ce mois.
+        </div>
+
+        <table *ngIf="res.data.length > 0" class="table">
+          <thead>
+            <tr>
+              <th>Commercial</th>
+              <th class="text-right">Pneus (Ventes)</th>
+              <th class="text-right">Pneus (Service)</th>
+              <th class="text-right">Total pneus</th>
+              <th class="text-right">Prime / pneu</th>
+              <th class="text-right">Prime totale</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of res.data" [class.row-disabled]="!res.prime_eligible">
+              <td class="commercial-name">{{ row.commercial_name }}</td>
+              <td class="text-right">{{ row.sale_tyres }}</td>
+              <td class="text-right">{{ row.so_tyres }}</td>
+              <td class="text-right"><strong>{{ row.total_tyres }}</strong></td>
+              <td class="text-right">{{ formatAmount(row.prime_per_tyre) }} DH</td>
+              <td class="text-right prime-amount" [class.prime-zero]="!res.prime_eligible">
+                {{ formatAmount(row.prime_total) }} DH
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td colspan="3"><strong>Total</strong></td>
+              <td class="text-right"><strong>{{ res.shop_total_tyres }}</strong></td>
+              <td></td>
+              <td class="text-right"><strong>{{ formatAmount(res.summary.total_primes) }} DH</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Ineligible notice -->
+    <div *ngIf="!res.prime_eligible && res.prime_threshold > 0" class="ineligible-notice">
+      L'objectif de <strong>{{ res.prime_threshold }} pneus</strong> n'a pas été atteint ce mois-ci
+      ({{ res.shop_total_tyres }} vendus). Aucune prime n'est due.
+    </div>
+
+    <div *ngIf="res.prime_threshold === 0" class="ineligible-notice notice-warning">
+      Aucun seuil configuré. Rendez-vous dans <strong>Paramètres</strong> pour définir l'objectif mensuel.
+    </div>
+
+  </ng-container>
+</div>

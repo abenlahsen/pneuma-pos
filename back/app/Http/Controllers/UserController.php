@@ -66,6 +66,7 @@ class UserController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'phone' => 'nullable|string|max:255',
             'commission_rate' => 'nullable|numeric|min:0|max:100',
+            'prime_per_tyre' => 'nullable|numeric|min:0',
             'role' => 'nullable|string|exists:roles,name',
         ]);
 
@@ -91,6 +92,7 @@ class UserController extends Controller
             'password' => 'nullable|string|min:8|confirmed',
             'phone' => 'nullable|string|max:255',
             'commission_rate' => 'nullable|numeric|min:0|max:100',
+            'prime_per_tyre' => 'nullable|numeric|min:0',
             'role' => 'nullable|string|exists:roles,name',
         ]);
 
