@@ -34,6 +34,7 @@ export class UsersPageComponent implements OnInit {
   formPasswordConfirmation = signal('');
   formPhone = signal('');
   formCommissionRate = signal<number | null>(null);
+  formPrimePerTyre = signal<number | null>(null);
   formRole = signal('');
 
   constructor(
@@ -103,6 +104,7 @@ export class UsersPageComponent implements OnInit {
     this.formPasswordConfirmation.set('');
     this.formPhone.set('');
     this.formCommissionRate.set(null);
+    this.formPrimePerTyre.set(null);
     this.formRole.set('');
     this.showForm.set(true);
   }
@@ -115,6 +117,7 @@ export class UsersPageComponent implements OnInit {
     this.formPasswordConfirmation.set('');
     this.formPhone.set(user.phone || '');
     this.formCommissionRate.set(user.commission_rate);
+    this.formPrimePerTyre.set(user.prime_per_tyre);
     this.formRole.set(user.roles.length > 0 ? user.roles[0].name : '');
     this.showForm.set(true);
   }
@@ -134,6 +137,7 @@ export class UsersPageComponent implements OnInit {
       email: this.formEmail(),
       phone: this.formPhone() || undefined,
       commission_rate: this.formCommissionRate() ?? undefined,
+      prime_per_tyre: this.formPrimePerTyre() ?? undefined,
       role: this.formRole() || undefined,
     };
 

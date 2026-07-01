@@ -139,6 +139,13 @@ export const routes: Routes = [
       import('./features/users/pages/users-page.component').then((m) => m.UsersPageComponent),
   },
   {
+    path: 'primes',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'view primes' },
+    loadComponent: () =>
+      import('./features/primes/pages/primes-page.component').then((m) => m.PrimesPageComponent),
+  },
+  {
     path: 'settings',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view settings' },

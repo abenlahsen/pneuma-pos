@@ -18,6 +18,7 @@ class UserResource extends JsonResource
             'email' => $this->resource->email,
             'phone' => $this->resource->phone,
             'commission_rate' => $this->resource->commission_rate,
+            'prime_per_tyre' => $this->resource->prime_per_tyre,
             'must_change_password' => (bool) $this->resource->must_change_password,
             'roles' => RoleResource::collection($this->whenLoaded('roles')),
             'created_at' => $this->resource->created_at,

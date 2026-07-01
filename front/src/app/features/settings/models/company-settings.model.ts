@@ -29,6 +29,7 @@ export interface CompanySettings {
   menu_layout: MenuLayout;
   navbar_variant: NavbarVariant;
   content_width: ContentWidth;
+  prime_threshold: number;
   created_at?: string | null;
   updated_at?: string | null;
 }
@@ -57,6 +58,7 @@ export interface UpdateCompanySettingsPayload {
   menu_layout: MenuLayout;
   navbar_variant: NavbarVariant;
   content_width: ContentWidth;
+  prime_threshold?: number;
 }
 
 export const DEFAULT_COMPANY_THEME_SETTINGS: Pick<

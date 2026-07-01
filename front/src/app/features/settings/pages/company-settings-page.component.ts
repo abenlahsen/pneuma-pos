@@ -69,6 +69,7 @@ export class CompanySettingsPageComponent implements OnInit {
     menu_layout: (DEFAULT_COMPANY_THEME_SETTINGS as UpdateCompanySettingsPayload & { menu_layout?: MenuLayoutOption }).menu_layout ?? 'vertical',
     navbar_variant: (DEFAULT_COMPANY_THEME_SETTINGS as UpdateCompanySettingsPayload & { navbar_variant?: NavbarVariantOption }).navbar_variant ?? 'default',
     content_width: (DEFAULT_COMPANY_THEME_SETTINGS as UpdateCompanySettingsPayload & { content_width?: ContentWidthOption }).content_width ?? 'full',
+    prime_threshold: 0,
   });
 
   loading = signal(false);
@@ -237,6 +238,7 @@ export class CompanySettingsPageComponent implements OnInit {
       menu_layout: layoutSettings.menu_layout ?? 'vertical',
       navbar_variant: layoutSettings.navbar_variant ?? 'default',
       content_width: layoutSettings.content_width ?? 'full',
+      prime_threshold: settings.prime_threshold ?? 0,
     } as UpdateCompanySettingsPayload;
   }
 

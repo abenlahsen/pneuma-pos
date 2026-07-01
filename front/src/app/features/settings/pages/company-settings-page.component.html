@@ -469,6 +469,32 @@
             </div>
           </div>
 
+          <div class="primes-section">
+            <div class="section-header">
+              <div>
+                <h2>Primes commerciaux</h2>
+                <p class="section-subtitle">Définissez l'objectif collectif mensuel de pneus pour débloquer les primes.</p>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="prime_threshold">Seuil mensuel de pneus (objectif collectif)</label>
+                <input
+                  id="prime_threshold"
+                  type="number"
+                  class="form-control"
+                  [ngModel]="form().prime_threshold"
+                  (ngModelChange)="updateField('prime_threshold', $event)"
+                  name="prime_threshold"
+                  placeholder="350"
+                  min="0"
+                  step="1"
+                />
+                <small class="field-hint">Si le shop vend ≥ ce nombre de pneus sur le mois, tous les commerciaux reçoivent leur prime.</small>
+              </div>
+            </div>
+          </div>
+
           <div class="form-actions">
             <button class="btn btn-primary" type="submit" [disabled]="saving() || loading()">
               {{ saving() ? 'Enregistrement...' : 'Enregistrer' }}
