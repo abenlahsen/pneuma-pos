@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 class PurchaseService
 {
     protected StockMovementService $movements;
+
     protected ActivityLogService $activityLog;
 
     public function __construct(StockMovementService $movements, ActivityLogService $activityLog)
@@ -111,7 +112,7 @@ class PurchaseService
         $beforeSnapshot = $this->activityLog->buildPurchaseSnapshot($purchase);
 
         DB::transaction(function () use ($purchase, $validated, $itemsData, $totals, $userId, $oldStatus) {
-            if (! in_array($oldStatus, [PurchaseStatus::ANNULE->value, PurchaseStatus::RETOUR->value], true)) {
+            if ($this->statusAppliesStock($oldStatus)) {
                 $this->restoreStockForItems($purchase, $userId);
             }
 
@@ -141,10 +142,22 @@ class PurchaseService
 
     public function patchStatus(Purchase $purchase, string $status, $userId): void
     {
-        $purchase->loadMissing(['supplier', 'commercial']);
+        $purchase->loadMissing(['supplier', 'commercial', 'items']);
         $before = $this->activityLog->buildPurchaseSnapshot($purchase);
+        $oldStatus = $purchase->status;
 
-        $purchase->update(['status' => $status]);
+        DB::transaction(function () use ($purchase, $status, $oldStatus, $userId) {
+            $wasApplied = $this->statusAppliesStock($oldStatus);
+            $willApply = $this->statusAppliesStock($status);
+
+            if ($wasApplied && ! $willApply) {
+                $this->restoreStockForItems($purchase, $userId);
+            } elseif (! $wasApplied && $willApply) {
+                $this->applyStockForItems($purchase, $userId);
+            }
+
+            $purchase->update(['status' => $status]);
+        });
 
         $after = $this->activityLog->buildPurchaseSnapshot($purchase->fresh(['supplier', 'commercial']));
         $this->activityLog->logPurchaseUpdated(
@@ -154,6 +167,11 @@ class PurchaseService
             $userId,
             ActivityLogService::resolveUserName($userId),
         );
+    }
+
+    private function statusAppliesStock(?string $status): bool
+    {
+        return ! in_array($status, [PurchaseStatus::ANNULE->value, PurchaseStatus::RETOUR->value], true);
     }
 
     private function refreshPaymentStatus(Purchase $purchase): void
@@ -172,7 +190,7 @@ class PurchaseService
         $beforeSnapshot = array_merge(['id' => $purchase->id], $this->activityLog->buildPurchaseSnapshot($purchase));
 
         DB::transaction(function () use ($purchase, $userId) {
-            if (! in_array($purchase->status, [PurchaseStatus::ANNULE->value, PurchaseStatus::RETOUR->value], true)) {
+            if ($this->statusAppliesStock($purchase->status)) {
                 $this->restoreStockForItems($purchase, $userId);
             }
 
@@ -237,6 +255,7 @@ class PurchaseService
             $totalPaid = (float) \DB::table('purchase_payments')
                 ->whereIn('purchase_id', (clone $q)->select('id'))
                 ->sum('amount');
+
             return round($totalSale - $totalPaid, 2);
         })();
 
@@ -248,17 +267,18 @@ class PurchaseService
             $totalPaid = (float) \DB::table('purchase_payments')
                 ->whereIn('purchase_id', (clone $q)->select('id'))
                 ->sum('amount');
+
             return round($totalSale - $totalPaid, 2);
         })();
 
         return [
-            'total_achats'       => round((float) $totalAchats, 2),
-            'total_paye'         => round((float) $totalPaye, 2),
-            'reste_a_payer'      => round((float) $resteAPayer, 2),
-            'unpaid_en_cours'    => $unpaidEnCours,
+            'total_achats' => round((float) $totalAchats, 2),
+            'total_paye' => round((float) $totalPaye, 2),
+            'reste_a_payer' => round((float) $resteAPayer, 2),
+            'unpaid_en_cours' => $unpaidEnCours,
             'unpaid_recu_termine' => $unpaidRecuTermine,
-            'ca_avec_facture'    => round((float) (clone $query)->where('with_invoice', true)->sum('net_amount'), 2),
-            'ca_sans_facture'    => round((float) (clone $query)->where('with_invoice', false)->sum('net_amount'), 2),
+            'ca_avec_facture' => round((float) (clone $query)->where('with_invoice', true)->sum('net_amount'), 2),
+            'ca_sans_facture' => round((float) (clone $query)->where('with_invoice', false)->sum('net_amount'), 2),
         ];
     }
 
@@ -418,7 +438,7 @@ class PurchaseService
                 'unit_price' => $unitPrice,
             ]);
 
-            if (in_array($status, [PurchaseStatus::ANNULE->value, PurchaseStatus::RETOUR->value], true)) {
+            if (! $this->statusAppliesStock($status)) {
                 continue;
             }
 
@@ -464,6 +484,36 @@ class PurchaseService
             $supplierName = $purchase->supplier?->name ?? null;
             $reason = "Achat #{$purchase->id}".($supplierName ? " — {$supplierName}" : '');
             $this->movements->recordPurchaseOut(
+                $stock->id,
+                $stock->product_id,
+                $before,
+                (int) $stock->quantity,
+                $purchase->id,
+                $userId,
+                $reason
+            );
+        }
+    }
+
+    protected function applyStockForItems(Purchase $purchase, $userId)
+    {
+        foreach ($purchase->items as $item) {
+            if (! $item->stock_id) {
+                continue;
+            }
+
+            $stock = Stock::lockForUpdate()->find($item->stock_id);
+            if (! $stock) {
+                continue;
+            }
+
+            $before = (int) $stock->quantity;
+            $stock->quantity = $before + (int) $item->quantity;
+            $stock->save();
+
+            $supplierName = $purchase->supplier?->name ?? null;
+            $reason = "Achat #{$purchase->id}".($supplierName ? " — {$supplierName}" : '');
+            $this->movements->recordPurchaseIn(
                 $stock->id,
                 $stock->product_id,
                 $before,
