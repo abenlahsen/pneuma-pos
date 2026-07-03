@@ -39,7 +39,7 @@ class UpdateProductRequest extends FormRequest
             'is_active' => 'nullable|boolean',
             'tire_width' => 'nullable|integer|min:0',
             'tire_height' => 'nullable|integer|min:0',
-            'tire_diameter' => 'nullable|integer|min:0',
+            'tire_diameter' => 'nullable|numeric|min:0',
             'tire_load_index' => 'nullable|string|max:20',
             'tire_speed_index' => 'nullable|string|max:10',
             'tire_season' => 'nullable|in:summer,winter,all_season',

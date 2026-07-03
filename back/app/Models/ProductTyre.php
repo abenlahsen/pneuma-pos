@@ -30,7 +30,7 @@ class ProductTyre extends Model
     protected $casts = [
         'tire_width' => 'integer',
         'tire_height' => 'integer',
-        'tire_diameter' => 'integer',
+        'tire_diameter' => 'float',
         'tire_runflat' => 'boolean',
         'tire_reinforced' => 'boolean',
         'eu_noise_db' => 'integer',

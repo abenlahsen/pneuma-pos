@@ -49,6 +49,44 @@ class StockParseSearchQueryTest extends TestCase
         $this->assertSame(17, $result['diameter']);
     }
 
+    // Heavy-truck decimal diameter format: 295/80R22.5
+    public function test_standard_format_with_decimal_diameter(): void
+    {
+        $result = Stock::parseSearchQuery('295/80R22.5');
+
+        $this->assertSame(295, $result['width']);
+        $this->assertSame(80, $result['height']);
+        $this->assertSame(22.5, $result['diameter']);
+    }
+
+    // Heavy-truck decimal diameter without height: 12R17.5
+    public function test_standard_format_with_decimal_diameter_no_height(): void
+    {
+        $result = Stock::parseSearchQuery('12R17.5');
+
+        $this->assertSame(12, $result['width']);
+        $this->assertNull($result['height']);
+        $this->assertSame(17.5, $result['diameter']);
+    }
+
+    // Standalone decimal diameter shorthand: 17.5
+    public function test_standalone_decimal_diameter_shorthand(): void
+    {
+        $result = Stock::parseSearchQuery('17.5');
+
+        $this->assertNull($result['width']);
+        $this->assertNull($result['height']);
+        $this->assertSame(17.5, $result['diameter']);
+    }
+
+    // Standalone decimal diameter shorthand: 22.5
+    public function test_standalone_decimal_diameter_shorthand_22_5(): void
+    {
+        $result = Stock::parseSearchQuery('22.5');
+
+        $this->assertSame(22.5, $result['diameter']);
+    }
+
     // Reference-style with 7+ digits: M2055516
     public function test_reference_style_with_7_digits(): void
     {

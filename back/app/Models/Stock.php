@@ -48,11 +48,17 @@ class Stock extends Model
         foreach ($tokens as $token) {
             if ($token === '') continue;
 
-            // Standard dimension format: 205/55R16, 225/45R17, etc.
-            if (preg_match('/^(\d{2,3})\/?(\d{2,3})?[A-Z]*R(\d{2,3})/i', $token, $m)) {
+            // Standard dimension format: 205/55R16, 225/45R17, 295/80R22.5 (poids lourd), etc.
+            if (preg_match('/^(\d{2,3})\/?(\d{2,3})?[A-Z]*R(\d{2,3}(?:\.\d)?)/i', $token, $m)) {
                 $result['width'] = (int) $m[1];
                 $result['height'] = isset($m[2]) && $m[2] !== '' ? (int) $m[2] : null;
-                $result['diameter'] = (int) $m[3];
+                $result['diameter'] = str_contains($m[3], '.') ? (float) $m[3] : (int) $m[3];
+                continue;
+            }
+
+            // Decimal diameter shorthand (poids lourd): 17.5, 22.5
+            if (preg_match('/^\d{2,3}\.\d$/', $token)) {
+                $result['diameter'] = (float) $token;
                 continue;
             }
 
