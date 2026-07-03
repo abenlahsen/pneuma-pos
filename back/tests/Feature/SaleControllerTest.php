@@ -692,6 +692,39 @@ class SaleControllerTest extends TestCase
             ->assertJsonPath('unpaid_en_cours', 1300);
     }
 
+    public function test_summary_excludes_cancelled_sales_by_default()
+    {
+        $this->createSale([
+            'date' => now()->toDateString(),
+            'total_quantity' => 4,
+            'total_sale' => 600,
+            'with_invoice' => true,
+            'status' => 'EN COURS',
+            'payment_status' => 'NON PAYE',
+        ]);
+
+        $this->createSale([
+            'date' => now()->toDateString(),
+            'total_quantity' => 3,
+            'total_sale' => 450,
+            'with_invoice' => true,
+            'status' => 'ANNULE',
+            'payment_status' => 'NON PAYE',
+        ]);
+
+        // No status filter: the cancelled sale must not inflate the totals.
+        $response = $this->getJson('/api/sales-summary', $this->authHeaders());
+
+        $response->assertOk()
+            ->assertJsonPath('ca_avec_facture', 600);
+
+        // Explicit status=ANNULE filter: the user asked to see it, so it must show up.
+        $filtered = $this->getJson('/api/sales-summary?status=ANNULE', $this->authHeaders());
+
+        $filtered->assertOk()
+            ->assertJsonPath('ca_avec_facture', 450);
+    }
+
     public function test_summary_returns_tyres_period_when_date_filter_active()
     {
         // Inside the filtered range

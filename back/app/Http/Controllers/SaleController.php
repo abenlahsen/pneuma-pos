@@ -440,6 +440,9 @@ class SaleController extends Controller
 
         if ($request->filled('status') && Schema::hasColumn('sales', 'status')) {
             $query->where('status', (string) $request->string('status'));
+        } elseif (Schema::hasColumn('sales', 'status')) {
+            // No explicit status filter: cancelled sales must not inflate the KPI cards.
+            $query->where('status', '!=', SaleStatus::ANNULE->value);
         }
 
         if ($request->filled('payment_status') && Schema::hasColumn('sales', 'payment_status')) {

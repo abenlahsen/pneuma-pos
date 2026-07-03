@@ -175,6 +175,28 @@ class PurchaseCrudTest extends TestCase
             ->assertJsonPath('reste_a_payer', 500);
     }
 
+    public function test_summary_excludes_cancelled_purchases_by_default(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $this->createPurchase(['net_amount' => 1000, 'total_price' => 1000, 'with_invoice' => true, 'status' => 'EN COURS']);
+        $this->createPurchase(['net_amount' => 700, 'total_price' => 700, 'with_invoice' => true, 'status' => 'ANNULE']);
+
+        // No status filter: the cancelled purchase must not inflate the totals.
+        $response = $this->getJson('/api/purchases-summary');
+
+        $response->assertOk()
+            ->assertJsonPath('total_achats', 1000)
+            ->assertJsonPath('ca_avec_facture', 1000);
+
+        // Explicit status=ANNULE filter: the user asked to see it, so it must show up.
+        $filtered = $this->getJson('/api/purchases-summary?status=ANNULE');
+
+        $filtered->assertOk()
+            ->assertJsonPath('total_achats', 700)
+            ->assertJsonPath('ca_avec_facture', 700);
+    }
+
     // -------------------------------------------------------------------------
     // GET /api/purchases-filters
     // -------------------------------------------------------------------------
