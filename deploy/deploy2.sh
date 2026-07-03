@@ -317,6 +317,16 @@ $VPS_SUDO find "$APP_DIR" -type d -exec chmod 755 {} \;
 $VPS_SUDO find "$APP_DIR" -type f -exec chmod 644 {} \;
 $VPS_SUDO chmod -R 775 "$APP_DIR/back/storage" "$APP_DIR/back/bootstrap/cache"
 
+# ── Cron scheduler (drives Schedule::command(...) entries, e.g. kpi:snapshot) ──
+# Uses the absolute php path (not a bare "php") since cron runs jobs with a
+# minimal PATH that may not include the same directories as an interactive shell.
+echo "  → Configuring cron scheduler (Laravel Schedule)..."
+CRON_USER="${WWW_OWNER%%:*}"
+PHP_BIN=\$(command -v php)
+CRON_LINE="* * * * * cd $APP_DIR/back && \$PHP_BIN artisan schedule:run >> /dev/null 2>&1"
+( $VPS_SUDO crontab -u "\$CRON_USER" -l 2>/dev/null | grep -vF "artisan schedule:run"; echo "\$CRON_LINE" ) | $VPS_SUDO crontab -u "\$CRON_USER" -
+echo "  ✓ Cron scheduler configured (runs every minute as \$CRON_USER)"
+
 EOF
 
 # ----------------------------------------------------------

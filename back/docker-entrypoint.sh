@@ -13,4 +13,7 @@ fi
 # Ensure public storage is exposed for uploaded files
 php artisan storage:link 2>/dev/null || true
 
+# Start cron daemon in background for the Laravel scheduler (kpi:snapshot, etc.)
+/usr/sbin/cron
+
 exec "$@"

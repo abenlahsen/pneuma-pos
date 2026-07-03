@@ -4,6 +4,7 @@ FROM php:8.4-fpm
 RUN apt-get update && apt-get install -y \
     git \
     curl \
+    cron \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
@@ -28,6 +29,10 @@ RUN if [ -f "composer.json" ]; then composer install --no-interaction --optimize
 RUN chown -R www-data:www-data /var/www \
     && chmod -R 775 /var/www/storage 2>/dev/null || true \
     && chmod -R 775 /var/www/bootstrap/cache 2>/dev/null || true
+
+# Laravel scheduler (drives Schedule::command(...) entries, e.g. kpi:snapshot)
+COPY docker/cron/pneuma-kpi /etc/cron.d/pneuma-kpi
+RUN chmod 0644 /etc/cron.d/pneuma-kpi
 
 # Entrypoint to fix permissions on mounted volumes
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
