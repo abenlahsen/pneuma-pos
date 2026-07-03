@@ -373,6 +373,84 @@ class PurchaseCrudTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
+    // PATCH /api/purchases/{purchase}/status
+    // -------------------------------------------------------------------------
+
+    public function test_patch_status_requires_edit_purchases_permission(): void
+    {
+        $purchase = $this->createPurchase(['status' => 'EN COURS']);
+        $guest = $this->createUserWithPermissions(['view purchases']);
+        Sanctum::actingAs($guest, [], 'web');
+
+        $this->patchJson("/api/purchases/{$purchase->id}/status", ['status' => 'RECU'])
+            ->assertForbidden();
+    }
+
+    public function test_patch_status_decrements_stock_when_moving_to_annule(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $purchase = $this->createPurchase(['status' => 'RECU']);
+        $before = $this->stock->quantity;
+
+        $this->patchJson("/api/purchases/{$purchase->id}/status", ['status' => 'ANNULE'])
+            ->assertOk();
+
+        $this->stock->refresh();
+        $this->assertEquals($before - 4, $this->stock->quantity);
+        $this->assertDatabaseHas('stock_movements', [
+            'stock_id' => $this->stock->id,
+            'type' => StockMovement::TYPE_PURCHASE_OUT,
+        ]);
+    }
+
+    public function test_patch_status_increments_stock_when_moving_from_annule_to_recu(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $purchase = $this->createPurchase(['status' => 'ANNULE']);
+        $before = $this->stock->quantity;
+
+        $this->patchJson("/api/purchases/{$purchase->id}/status", ['status' => 'RECU'])
+            ->assertOk();
+
+        $this->stock->refresh();
+        $this->assertEquals($before + 4, $this->stock->quantity);
+        $this->assertDatabaseHas('stock_movements', [
+            'stock_id' => $this->stock->id,
+            'type' => StockMovement::TYPE_PURCHASE_IN,
+        ]);
+    }
+
+    public function test_patch_status_does_not_change_stock_between_active_statuses(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $purchase = $this->createPurchase(['status' => 'EN COURS']);
+        $before = $this->stock->quantity;
+
+        $this->patchJson("/api/purchases/{$purchase->id}/status", ['status' => 'RECU'])
+            ->assertOk();
+
+        $this->stock->refresh();
+        $this->assertEquals($before, $this->stock->quantity);
+    }
+
+    public function test_patch_status_does_not_change_stock_between_neutralized_statuses(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $purchase = $this->createPurchase(['status' => 'ANNULE']);
+        $before = $this->stock->quantity;
+
+        $this->patchJson("/api/purchases/{$purchase->id}/status", ['status' => 'RETOUR'])
+            ->assertOk();
+
+        $this->stock->refresh();
+        $this->assertEquals($before, $this->stock->quantity);
+    }
+
+    // -------------------------------------------------------------------------
     // DELETE /api/purchases/{purchase}
     // -------------------------------------------------------------------------
 
