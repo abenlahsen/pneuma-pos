@@ -686,9 +686,42 @@ class SaleControllerTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('tyres_today', 4)
             ->assertJsonPath('tyres_this_month', 10)
+            ->assertJsonPath('tyres_period', null)
             ->assertJsonPath('tyres_en_cours', 9)
             ->assertJsonPath('sales_en_cours', 2)
             ->assertJsonPath('unpaid_en_cours', 1300);
+    }
+
+    public function test_summary_returns_tyres_period_when_date_filter_active()
+    {
+        // Inside the filtered range
+        $this->createSale([
+            'date' => '2026-01-10',
+            'total_quantity' => 3,
+            'total_sale' => 450,
+        ]);
+        $this->createSale([
+            'date' => '2026-01-20',
+            'total_quantity' => 5,
+            'total_sale' => 750,
+        ]);
+
+        // Outside the filtered range — must not count towards tyres_period
+        $this->createSale([
+            'date' => '2026-02-01',
+            'total_quantity' => 9,
+            'total_sale' => 1350,
+        ]);
+
+        $response = $this->getJson(
+            '/api/sales-summary?date_from=2026-01-01&date_to=2026-01-31',
+            $this->authHeaders()
+        );
+
+        $response->assertOk()
+            ->assertJsonPath('tyres_today', null)
+            ->assertJsonPath('tyres_this_month', null)
+            ->assertJsonPath('tyres_period', 8);
     }
 
     public function test_store_creates_sale()

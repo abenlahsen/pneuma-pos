@@ -476,13 +476,24 @@ class SaleController extends Controller
                 ->sum('sale_items.quantity');
         };
 
+        // "Aujourd'hui"/"Ce mois" are fixed calendar windows — combining them with
+        // an arbitrary date_from/date_to filter (AND) would silently produce
+        // misleading near-zero results whenever the filtered period doesn't
+        // overlap today/this month. When a date filter is active, report those
+        // two as null and expose the already-filtered total via tyres_period
+        // instead (the frontend collapses the two cards into one in that case).
+        $hasDateFilter = $request->filled('date_from') || $request->filled('date_to');
+
         return response()->json([
-            'tyres_today' => $dateColumn === 'id'
-                ? 0
+            'tyres_today' => $hasDateFilter || $dateColumn === 'id'
+                ? null
                 : $tyreSaleQty((clone $query)->whereDate($dateColumn, $today)),
-            'tyres_this_month' => $dateColumn === 'id'
-                ? 0
+            'tyres_this_month' => $hasDateFilter || $dateColumn === 'id'
+                ? null
                 : $tyreSaleQty((clone $query)->whereDate($dateColumn, '>=', $monthStart)->whereDate($dateColumn, '<=', $monthEnd)),
+            'tyres_period' => $hasDateFilter
+                ? $tyreSaleQty(clone $query)
+                : null,
             'tyres_en_cours' => $tyreSaleQty((clone $query)->where('status', SaleStatus::EN_COURS->value)),
             'sales_en_cours' => (int) (clone $query)->where('status', SaleStatus::EN_COURS->value)->count(),
             'unpaid_en_cours' => (function () use ($query): float {
@@ -493,6 +504,7 @@ class SaleController extends Controller
                 $totalPaid = (float) DB::table('payments')
                     ->whereIn('sale_id', (clone $q)->select('id'))
                     ->sum('amount');
+
                 return round($totalSale - $totalPaid, 2);
             })(),
             'unpaid_livre_monte' => (function () use ($query): float {
@@ -503,10 +515,11 @@ class SaleController extends Controller
                 $totalPaid = (float) DB::table('payments')
                     ->whereIn('sale_id', (clone $q)->select('id'))
                     ->sum('amount');
+
                 return round($totalSale - $totalPaid, 2);
             })(),
-            'ca_avec_facture'   => round((float) (clone $query)->where('with_invoice', true)->sum('total_sale'), 2),
-            'ca_sans_facture'   => round((float) (clone $query)->where('with_invoice', false)->sum('total_sale'), 2),
+            'ca_avec_facture' => round((float) (clone $query)->where('with_invoice', true)->sum('total_sale'), 2),
+            'ca_sans_facture' => round((float) (clone $query)->where('with_invoice', false)->sum('total_sale'), 2),
         ]);
     }
 
