@@ -5,14 +5,15 @@ namespace Tests\Feature;
 use App\Models\Account;
 use App\Models\Brand;
 use App\Models\Product;
+use App\Models\Purchase;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use App\Models\Purchase;
-use App\Models\Stock;
+use App\Models\Supplier;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use App\Services\DashboardKpiService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\Sanctum;
@@ -26,6 +27,7 @@ class DashboardAndPermissionTest extends TestCase
     use DatabaseTransactions;
 
     private User $admin;
+
     private User $nonAdmin;
 
     protected function setUp(): void
@@ -123,7 +125,7 @@ class DashboardAndPermissionTest extends TestCase
 
         $brand = Brand::firstOrCreate(['name' => 'TestBrandKPI'], ['is_active' => true]);
         $product = Product::query()->create([
-            'reference' => 'KPI-TYRE-' . uniqid(),
+            'reference' => 'KPI-TYRE-'.uniqid(),
             'type' => 'tyre',
             'brand_id' => $brand->id,
             'is_active' => true,
@@ -192,7 +194,7 @@ class DashboardAndPermissionTest extends TestCase
         Sanctum::actingAs($this->admin, [], 'web');
 
         Account::query()->create([
-            'name' => 'Caisse KPI ' . fake()->unique()->numerify('###'),
+            'name' => 'Caisse KPI '.fake()->unique()->numerify('###'),
             'type' => 'cash',
             'initial_balance' => 5000.00,
             'is_active' => true,
@@ -212,6 +214,137 @@ class DashboardAndPermissionTest extends TestCase
 
         $response->assertOk();
         $this->assertIsArray($response->json('sales_by_commercial'));
+    }
+
+    public function test_kpi_excludes_cancelled_sales_and_purchases(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+
+        $today = now()->toDateString();
+
+        $brand = Brand::firstOrCreate(['name' => 'TestBrandKPI2'], ['is_active' => true]);
+        $product = Product::query()->create([
+            'reference' => 'KPI-TYRE2-'.uniqid(),
+            'type' => 'tyre',
+            'brand_id' => $brand->id,
+            'is_active' => true,
+        ]);
+        DB::table('product_tyres')->insert([
+            'product_id' => $product->id,
+            'tire_width' => 205,
+            'tire_height' => 55,
+            'tire_diameter' => 16,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $before = $this->getJson('/api/dashboard-kpi')->json();
+
+        $cancelledSale = Sale::query()->create([
+            'date' => $today,
+            'total_quantity' => 9,
+            'total_purchase' => 900.00,
+            'total_sale' => 9999.00,
+            'margin' => 500.00,
+            'status' => 'ANNULE',
+            'payment_status' => 'NON PAYE',
+            'created_by' => $this->admin->id,
+        ]);
+        SaleItem::query()->create([
+            'sale_id' => $cancelledSale->id,
+            'product_id' => $product->id,
+            'quantity' => 9,
+            'purchase_price' => 100.00,
+            'selling_price' => 1111.00,
+            'discount' => 0,
+            'total_purchase' => 900.00,
+            'total_sale' => 9999.00,
+            'margin' => 500.00,
+        ]);
+
+        $supplier = Supplier::query()->create([
+            'name' => 'Supplier KPI Test',
+            'user_id' => $this->admin->id,
+        ]);
+        Purchase::query()->create([
+            'date' => $today,
+            'supplier_id' => $supplier->id,
+            'total_quantity' => 7,
+            'total_price' => 7777.00,
+            'net_amount' => 7777.00,
+            'status' => 'ANNULE',
+            'payment_status' => 'NON PAYE',
+            'created_by' => $this->admin->id,
+        ]);
+
+        $after = $this->getJson('/api/dashboard-kpi')->json();
+
+        $this->assertEquals($before['sales_today_amount'], $after['sales_today_amount']);
+        $this->assertEquals($before['tyres_today'], $after['tyres_today']);
+        $this->assertEquals($before['purchases_today_amount'], $after['purchases_today_amount']);
+        $this->assertEquals($before['unpaid_sales'], $after['unpaid_sales']);
+        $this->assertEquals($before['unpaid_purchases'], $after['unpaid_purchases']);
+    }
+
+    // DashboardKpiService::calculate() is the engine behind both the live
+    // dashboard and the daily kpi:snapshot command — it duplicates the same
+    // sales/purchases exclusion logic as DashboardController::kpi(), so it
+    // needs its own regression test to keep the two in sync.
+    public function test_dashboard_kpi_service_excludes_cancelled_sales_and_purchases(): void
+    {
+        $today = now()->toDateString();
+
+        $before = app(DashboardKpiService::class)->calculate(now());
+
+        $cancelledSale = Sale::query()->create([
+            'date' => $today,
+            'total_quantity' => 9,
+            'total_purchase' => 900.00,
+            'total_sale' => 9999.00,
+            'margin' => 500.00,
+            'status' => 'ANNULE',
+            'payment_status' => 'NON PAYE',
+            'created_by' => $this->admin->id,
+        ]);
+        SaleItem::query()->create([
+            'sale_id' => $cancelledSale->id,
+            'product_id' => Product::query()->create([
+                'reference' => 'KPI-TYRE3-'.uniqid(),
+                'type' => 'tyre',
+                'brand_id' => Brand::firstOrCreate(['name' => 'TestBrandKPI3'], ['is_active' => true])->id,
+                'is_active' => true,
+            ])->id,
+            'quantity' => 9,
+            'purchase_price' => 100.00,
+            'selling_price' => 1111.00,
+            'discount' => 0,
+            'total_purchase' => 900.00,
+            'total_sale' => 9999.00,
+            'margin' => 500.00,
+        ]);
+
+        $supplier = Supplier::query()->create([
+            'name' => 'Supplier KPI Test 2',
+            'user_id' => $this->admin->id,
+        ]);
+        Purchase::query()->create([
+            'date' => $today,
+            'supplier_id' => $supplier->id,
+            'total_quantity' => 7,
+            'total_price' => 7777.00,
+            'net_amount' => 7777.00,
+            'status' => 'ANNULE',
+            'payment_status' => 'NON PAYE',
+            'created_by' => $this->admin->id,
+        ]);
+
+        $after = app(DashboardKpiService::class)->calculate(now());
+
+        $this->assertEquals($before['sales_today_amount'], $after['sales_today_amount']);
+        $this->assertEquals($before['tyres_today'], $after['tyres_today']);
+        $this->assertEquals($before['purchases_today_amount'], $after['purchases_today_amount']);
+        $this->assertEquals($before['unpaid_sales'], $after['unpaid_sales']);
+        $this->assertEquals($before['unpaid_purchases'], $after['unpaid_purchases']);
     }
 
     // =========================================================================
@@ -284,7 +417,7 @@ class DashboardAndPermissionTest extends TestCase
     {
         Sanctum::actingAs($this->admin, [], 'web');
 
-        $uniqueName = 'custom permission ' . fake()->unique()->numerify('###');
+        $uniqueName = 'custom permission '.fake()->unique()->numerify('###');
 
         $response = $this->postJson('/api/permissions', ['name' => $uniqueName]);
 
@@ -302,7 +435,7 @@ class DashboardAndPermissionTest extends TestCase
     {
         Sanctum::actingAs($this->nonAdmin, [], 'web');
 
-        $perm = Permission::findOrCreate('to delete perm ' . fake()->unique()->numerify('#'), 'web');
+        $perm = Permission::findOrCreate('to delete perm '.fake()->unique()->numerify('#'), 'web');
 
         $this->deleteJson("/api/permissions/{$perm->id}")->assertForbidden();
     }
@@ -311,7 +444,7 @@ class DashboardAndPermissionTest extends TestCase
     {
         Sanctum::actingAs($this->admin, [], 'web');
 
-        $perm = Permission::create(['name' => 'perm to delete ' . fake()->unique()->numerify('###'), 'guard_name' => 'web']);
+        $perm = Permission::create(['name' => 'perm to delete '.fake()->unique()->numerify('###'), 'guard_name' => 'web']);
 
         $this->deleteJson("/api/permissions/{$perm->id}")->assertStatus(204);
 

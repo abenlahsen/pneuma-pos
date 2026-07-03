@@ -220,6 +220,9 @@ class PurchaseService
         }
         if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
+        } else {
+            // No explicit status filter: cancelled/returned purchases must not inflate the KPI cards.
+            $query->whereNotIn('status', [PurchaseStatus::ANNULE->value, PurchaseStatus::RETOUR->value]);
         }
         if (! empty($filters['supplier_id'])) {
             $query->where('supplier_id', $filters['supplier_id']);

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PurchasePaymentStatus;
+use App\Enums\PurchaseStatus;
 use App\Enums\SalePaymentStatus;
+use App\Enums\SaleStatus;
 use App\Enums\ServiceOrderStatus;
 use App\Models\Account;
 use App\Models\Purchase;
@@ -37,28 +39,36 @@ class DashboardController extends Controller
         $yearStart = $yearDate->copy()->startOfYear()->toDateString();
         $yearEnd = $yearDate->copy()->endOfYear()->toDateString();
 
-        $salesToday = Sale::whereDate('date', $today);
-        $purchasesToday = Purchase::whereDate('date', $today);
-        $salesMonth = Sale::whereBetween('date', [$monthStart, $monthEnd]);
-        $salesYear = Sale::whereBetween('date', [$yearStart, $yearEnd]);
-        $purchasesMonth = Purchase::whereBetween('date', [$monthStart, $monthEnd]);
-        $purchasesYear = Purchase::whereBetween('date', [$yearStart, $yearEnd]);
+        // Cancelled sales/purchases (and returned purchases) must not inflate
+        // revenue, margin, or quantity KPIs — matches the exclusion already
+        // applied to Service Auto orders below.
+        $saleAnnule = SaleStatus::ANNULE->value;
+        $purchaseCancelledStatuses = [PurchaseStatus::ANNULE->value, PurchaseStatus::RETOUR->value];
 
-        $tyreSalesQty = function (string $start, ?string $end = null): int {
+        $salesToday = Sale::whereDate('date', $today)->where('status', '!=', $saleAnnule);
+        $purchasesToday = Purchase::whereDate('date', $today)->whereNotIn('status', $purchaseCancelledStatuses);
+        $salesMonth = Sale::whereBetween('date', [$monthStart, $monthEnd])->where('status', '!=', $saleAnnule);
+        $salesYear = Sale::whereBetween('date', [$yearStart, $yearEnd])->where('status', '!=', $saleAnnule);
+        $purchasesMonth = Purchase::whereBetween('date', [$monthStart, $monthEnd])->whereNotIn('status', $purchaseCancelledStatuses);
+        $purchasesYear = Purchase::whereBetween('date', [$yearStart, $yearEnd])->whereNotIn('status', $purchaseCancelledStatuses);
+
+        $tyreSalesQty = function (string $start, ?string $end = null) use ($saleAnnule): int {
             $q = DB::table('sale_items')
                 ->join('products', 'sale_items.product_id', '=', 'products.id')
                 ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
-                ->where('products.type', 'tyre');
+                ->where('products.type', 'tyre')
+                ->where('sales.status', '!=', $saleAnnule);
             $end ? $q->whereBetween('sales.date', [$start, $end]) : $q->whereDate('sales.date', $start);
 
             return (int) $q->sum('sale_items.quantity');
         };
 
-        $partsSoldQty = function (string $start, ?string $end = null): int {
+        $partsSoldQty = function (string $start, ?string $end = null) use ($saleAnnule): int {
             $q = DB::table('sale_items')
                 ->join('products', 'sale_items.product_id', '=', 'products.id')
                 ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
-                ->where('products.type', 'part');
+                ->where('products.type', 'part')
+                ->where('sales.status', '!=', $saleAnnule);
             $end ? $q->whereBetween('sales.date', [$start, $end]) : $q->whereDate('sales.date', $start);
             $fromSales = (int) $q->sum('sale_items.quantity');
 
@@ -76,6 +86,7 @@ class DashboardController extends Controller
             ->join('products', 'purchase_items.product_id', '=', 'products.id')
             ->join('purchases', 'purchase_items.purchase_id', '=', 'purchases.id')
             ->where('products.type', 'tyre')
+            ->whereNotIn('purchases.status', $purchaseCancelledStatuses)
             ->whereBetween('purchases.date', [$start, $end])
             ->sum('purchase_items.quantity');
 
@@ -83,11 +94,14 @@ class DashboardController extends Controller
             ->join('products', 'purchase_items.product_id', '=', 'products.id')
             ->join('purchases', 'purchase_items.purchase_id', '=', 'purchases.id')
             ->where('products.type', 'part')
+            ->whereNotIn('purchases.status', $purchaseCancelledStatuses)
             ->whereBetween('purchases.date', [$start, $end])
             ->sum('purchase_items.quantity');
 
-        $purchasesTotalLifetime = (float) Purchase::sum('total_price');
-        $purchasesPaidLifetime = (float) Purchase::where('payment_status', PurchasePaymentStatus::PAYE->value)->sum('total_price');
+        $purchasesTotalLifetime = (float) Purchase::whereNotIn('status', $purchaseCancelledStatuses)->sum('total_price');
+        $purchasesPaidLifetime = (float) Purchase::where('payment_status', PurchasePaymentStatus::PAYE->value)
+            ->whereNotIn('status', $purchaseCancelledStatuses)
+            ->sum('total_price');
 
         $tyreItemsSub = DB::table('sale_items')
             ->join('products', 'sale_items.product_id', '=', 'products.id')
@@ -143,7 +157,7 @@ class DashboardController extends Controller
 
         $marginServiceToday = $serviceMargin($today);
         $marginServiceMonth = $serviceMargin($monthStart, $monthEnd);
-        $marginServiceYear  = $serviceMargin($yearStart, $yearEnd);
+        $marginServiceYear = $serviceMargin($yearStart, $yearEnd);
 
         $mapCommercials = function ($rows): array {
             return $rows->map(function ($item) {
@@ -152,37 +166,37 @@ class DashboardController extends Controller
                 $totalTyres = (int) $item->total_tyres;
 
                 return [
-                    'commercial_name'     => $item->commercial_name ?? 'Non assigné',
-                    'total_sales'         => round($totalSales, 2),
-                    'total_tyres'         => $totalTyres,
-                    'total_margin'        => round($totalMargin, 2),
-                    'total_unpaid'        => round((float) $item->total_unpaid, 2),
+                    'commercial_name' => $item->commercial_name ?? 'Non assigné',
+                    'total_sales' => round($totalSales, 2),
+                    'total_tyres' => $totalTyres,
+                    'total_margin' => round($totalMargin, 2),
+                    'total_unpaid' => round((float) $item->total_unpaid, 2),
                     'avg_margin_per_tyre' => $totalTyres > 0 ? round($totalMargin / $totalTyres, 2) : 0,
-                    'margin_rate'         => $totalSales > 0 ? round(($totalMargin / $totalSales) * 100, 1) : 0,
+                    'margin_rate' => $totalSales > 0 ? round(($totalMargin / $totalSales) * 100, 1) : 0,
                 ];
             })->toArray();
         };
 
         $mapServiceCommercials = function ($rows): array {
             return collect($rows)->map(function ($item) {
-                $ca     = (float) ($item->so_ca     ?? 0);
+                $ca = (float) ($item->so_ca ?? 0);
                 $margin = (float) ($item->so_margin ?? 0);
 
                 return [
                     'commercial_name' => $item->commercial_name ?? 'Non assigné',
-                    'total_ca'        => round($ca, 2),
-                    'total_orders'    => (int) ($item->so_count ?? 0),
-                    'total_margin'    => round($margin, 2),
-                    'total_unpaid'    => round((float) ($item->so_unpaid ?? 0), 2),
-                    'margin_rate'     => $ca > 0 ? round(($margin / $ca) * 100, 1) : 0,
+                    'total_ca' => round($ca, 2),
+                    'total_orders' => (int) ($item->so_count ?? 0),
+                    'total_margin' => round($margin, 2),
+                    'total_unpaid' => round((float) ($item->so_unpaid ?? 0), 2),
+                    'margin_rate' => $ca > 0 ? round(($margin / $ca) * 100, 1) : 0,
                 ];
             })->sortByDesc(fn ($r) => $r['total_ca'])->values()->toArray();
         };
 
-        $saleNonPaye  = SalePaymentStatus::NON_PAYE->value;
-        $salePartiel  = SalePaymentStatus::PARTIEL->value;
-        $soNonPaye    = $saleNonPaye;
-        $soPartiel    = $salePartiel;
+        $saleNonPaye = SalePaymentStatus::NON_PAYE->value;
+        $salePartiel = SalePaymentStatus::PARTIEL->value;
+        $soNonPaye = $saleNonPaye;
+        $soPartiel = $salePartiel;
 
         $commercialSelectRaw = "COALESCE(users.name, 'Non assigné') as commercial_name,
             SUM(sales.total_sale) as total_sales,
@@ -231,6 +245,7 @@ class DashboardController extends Controller
         $rawSalesMonth = DB::table('sales')
             ->leftJoin('users', 'sales.commercial_id', '=', 'users.id')
             ->leftJoinSub($tyreItemsSub, 'tyre_items', 'tyre_items.sale_id', '=', 'sales.id')
+            ->where('sales.status', '!=', $saleAnnule)
             ->whereBetween('sales.date', [$monthStart, $monthEnd])
             ->selectRaw($commercialSelectRaw)
             ->groupBy('sales.commercial_id', 'users.name')
@@ -239,22 +254,23 @@ class DashboardController extends Controller
         $rawSalesYear = DB::table('sales')
             ->leftJoin('users', 'sales.commercial_id', '=', 'users.id')
             ->leftJoinSub($tyreItemsSub, 'tyre_items', 'tyre_items.sale_id', '=', 'sales.id')
+            ->where('sales.status', '!=', $saleAnnule)
             ->whereBetween('sales.date', [$yearStart, $yearEnd])
             ->selectRaw($commercialSelectRaw)
             ->groupBy('sales.commercial_id', 'users.name')
             ->get();
 
-        $salesByCommercial          = $mapCommercials($rawSalesMonth);
-        $salesByCommercialYear      = $mapCommercials($rawSalesYear);
-        $serviceByCommercial        = $mapServiceCommercials($soByMonth);
-        $serviceByCommercialYear    = $mapServiceCommercials($soByYear);
+        $salesByCommercial = $mapCommercials($rawSalesMonth);
+        $salesByCommercialYear = $mapCommercials($rawSalesYear);
+        $serviceByCommercial = $mapServiceCommercials($soByMonth);
+        $serviceByCommercialYear = $mapServiceCommercials($soByYear);
 
-        $salesTodayAmount  = round((clone $salesToday)->sum('total_sale'), 2);
-        $marginSalesToday  = round((clone $salesToday)->sum('margin'), 2);
-        $salesMonthAmount  = round((clone $salesMonth)->sum('total_sale'), 2);
-        $marginSalesMonth  = round((clone $salesMonth)->sum('margin'), 2);
-        $salesYearAmount   = round((clone $salesYear)->sum('total_sale'), 2);
-        $marginSalesYear   = round((clone $salesYear)->sum('margin'), 2);
+        $salesTodayAmount = round((clone $salesToday)->sum('total_sale'), 2);
+        $marginSalesToday = round((clone $salesToday)->sum('margin'), 2);
+        $salesMonthAmount = round((clone $salesMonth)->sum('total_sale'), 2);
+        $marginSalesMonth = round((clone $salesMonth)->sum('margin'), 2);
+        $salesYearAmount = round((clone $salesYear)->sum('total_sale'), 2);
+        $marginSalesYear = round((clone $salesYear)->sum('margin'), 2);
 
         return response()->json([
             // Today
@@ -287,10 +303,10 @@ class DashboardController extends Controller
             'parts_purchased_year' => $partsPurchasedQty($yearStart, $yearEnd),
 
             // Sales by Commercial
-            'sales_by_commercial'          => $salesByCommercial,
-            'sales_by_commercial_year'     => $salesByCommercialYear,
-            'service_by_commercial'        => $serviceByCommercial,
-            'service_by_commercial_year'   => $serviceByCommercialYear,
+            'sales_by_commercial' => $salesByCommercial,
+            'sales_by_commercial_year' => $salesByCommercialYear,
+            'service_by_commercial' => $serviceByCommercial,
+            'service_by_commercial_year' => $serviceByCommercialYear,
 
             // Stock
             'stock_quantity' => (int) Stock::sum('quantity'),
@@ -300,7 +316,7 @@ class DashboardController extends Controller
             ),
 
             // Receivables / payables
-            'unpaid_sales' => round(Sale::where('payment_status', SalePaymentStatus::NON_PAYE->value)->sum('total_sale'), 2),
+            'unpaid_sales' => round(Sale::where('payment_status', SalePaymentStatus::NON_PAYE->value)->where('status', '!=', $saleAnnule)->sum('total_sale'), 2),
             'unpaid_purchases' => round($purchasesTotalLifetime - $purchasesPaidLifetime, 2),
 
             // Solde de caisse — cash accounts only (excludes future-dated Chèque/Effet)

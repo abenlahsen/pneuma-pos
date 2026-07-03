@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Enums\PurchasePaymentStatus;
+use App\Enums\PurchaseStatus;
 use App\Enums\SalePaymentStatus;
+use App\Enums\SaleStatus;
 use App\Enums\ServiceOrderStatus;
 use App\Models\Account;
 use App\Models\Purchase;
@@ -26,32 +28,40 @@ class DashboardKpiService
     {
         $today = $date->toDateString();
         $monthStart = $date->copy()->startOfMonth()->toDateString();
-        $monthEnd   = $snapshot ? $today : $date->copy()->endOfMonth()->toDateString();
-        $yearStart  = $date->copy()->startOfYear()->toDateString();
-        $yearEnd    = $snapshot ? $today : $date->copy()->endOfYear()->toDateString();
+        $monthEnd = $snapshot ? $today : $date->copy()->endOfMonth()->toDateString();
+        $yearStart = $date->copy()->startOfYear()->toDateString();
+        $yearEnd = $snapshot ? $today : $date->copy()->endOfYear()->toDateString();
 
-        $salesToday      = Sale::whereDate('date', $today);
-        $purchasesToday  = Purchase::whereDate('date', $today);
-        $salesMonth      = Sale::whereBetween('date', [$monthStart, $monthEnd]);
-        $salesYear       = Sale::whereBetween('date', [$yearStart, $yearEnd]);
-        $purchasesMonth  = Purchase::whereBetween('date', [$monthStart, $monthEnd]);
-        $purchasesYear   = Purchase::whereBetween('date', [$yearStart, $yearEnd]);
+        // Cancelled sales/purchases (and returned purchases) must not inflate
+        // revenue, margin, or quantity KPIs — matches the exclusion already
+        // applied to Service Auto orders below.
+        $saleAnnule = SaleStatus::ANNULE->value;
+        $purchaseCancelledStatuses = [PurchaseStatus::ANNULE->value, PurchaseStatus::RETOUR->value];
 
-        $tyreSalesQty = function (string $start, ?string $end = null): int {
+        $salesToday = Sale::whereDate('date', $today)->where('status', '!=', $saleAnnule);
+        $purchasesToday = Purchase::whereDate('date', $today)->whereNotIn('status', $purchaseCancelledStatuses);
+        $salesMonth = Sale::whereBetween('date', [$monthStart, $monthEnd])->where('status', '!=', $saleAnnule);
+        $salesYear = Sale::whereBetween('date', [$yearStart, $yearEnd])->where('status', '!=', $saleAnnule);
+        $purchasesMonth = Purchase::whereBetween('date', [$monthStart, $monthEnd])->whereNotIn('status', $purchaseCancelledStatuses);
+        $purchasesYear = Purchase::whereBetween('date', [$yearStart, $yearEnd])->whereNotIn('status', $purchaseCancelledStatuses);
+
+        $tyreSalesQty = function (string $start, ?string $end = null) use ($saleAnnule): int {
             $q = DB::table('sale_items')
                 ->join('products', 'sale_items.product_id', '=', 'products.id')
                 ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
-                ->where('products.type', 'tyre');
+                ->where('products.type', 'tyre')
+                ->where('sales.status', '!=', $saleAnnule);
             $end ? $q->whereBetween('sales.date', [$start, $end]) : $q->whereDate('sales.date', $start);
 
             return (int) $q->sum('sale_items.quantity');
         };
 
-        $partsSoldQty = function (string $start, ?string $end = null): int {
+        $partsSoldQty = function (string $start, ?string $end = null) use ($saleAnnule): int {
             $q = DB::table('sale_items')
                 ->join('products', 'sale_items.product_id', '=', 'products.id')
                 ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
-                ->where('products.type', 'part');
+                ->where('products.type', 'part')
+                ->where('sales.status', '!=', $saleAnnule);
             $end ? $q->whereBetween('sales.date', [$start, $end]) : $q->whereDate('sales.date', $start);
             $fromSales = (int) $q->sum('sale_items.quantity');
 
@@ -69,6 +79,7 @@ class DashboardKpiService
             ->join('products', 'purchase_items.product_id', '=', 'products.id')
             ->join('purchases', 'purchase_items.purchase_id', '=', 'purchases.id')
             ->where('products.type', 'tyre')
+            ->whereNotIn('purchases.status', $purchaseCancelledStatuses)
             ->whereBetween('purchases.date', [$start, $end])
             ->sum('purchase_items.quantity');
 
@@ -76,11 +87,14 @@ class DashboardKpiService
             ->join('products', 'purchase_items.product_id', '=', 'products.id')
             ->join('purchases', 'purchase_items.purchase_id', '=', 'purchases.id')
             ->where('products.type', 'part')
+            ->whereNotIn('purchases.status', $purchaseCancelledStatuses)
             ->whereBetween('purchases.date', [$start, $end])
             ->sum('purchase_items.quantity');
 
-        $purchasesTotalLifetime = (float) Purchase::sum('total_price');
-        $purchasesPaidLifetime  = (float) Purchase::where('payment_status', PurchasePaymentStatus::PAYE->value)->sum('total_price');
+        $purchasesTotalLifetime = (float) Purchase::whereNotIn('status', $purchaseCancelledStatuses)->sum('total_price');
+        $purchasesPaidLifetime = (float) Purchase::where('payment_status', PurchasePaymentStatus::PAYE->value)
+            ->whereNotIn('status', $purchaseCancelledStatuses)
+            ->sum('total_price');
 
         $tyreItemsSub = DB::table('sale_items')
             ->join('products', 'sale_items.product_id', '=', 'products.id')
@@ -109,7 +123,7 @@ class DashboardKpiService
             ->where('status', '!=', ServiceOrderStatus::ANNULE->value)->sum('net_amount'), 2);
         $caServiceMonth = round((float) ServiceOrder::whereBetween('date', [$monthStart, $monthEnd])
             ->where('status', '!=', ServiceOrderStatus::ANNULE->value)->sum('net_amount'), 2);
-        $caServiceYear  = round((float) ServiceOrder::whereBetween('date', [$yearStart, $yearEnd])
+        $caServiceYear = round((float) ServiceOrder::whereBetween('date', [$yearStart, $yearEnd])
             ->where('status', '!=', ServiceOrderStatus::ANNULE->value)->sum('net_amount'), 2);
 
         $serviceMargin = function (string $start, ?string $end = null): float {
@@ -132,38 +146,38 @@ class DashboardKpiService
 
         $marginServiceToday = $serviceMargin($today);
         $marginServiceMonth = $serviceMargin($monthStart, $monthEnd);
-        $marginServiceYear  = $serviceMargin($yearStart, $yearEnd);
+        $marginServiceYear = $serviceMargin($yearStart, $yearEnd);
 
         $mapCommercials = function ($rows): array {
             return $rows->map(function ($item) {
-                $totalSales  = (float) $item->total_sales;
+                $totalSales = (float) $item->total_sales;
                 $totalMargin = (float) $item->total_margin;
-                $totalTyres  = (int) $item->total_tyres;
+                $totalTyres = (int) $item->total_tyres;
 
                 return [
-                    'commercial_name'     => $item->commercial_name ?? 'Non assigné',
-                    'total_sales'         => round($totalSales, 2),
-                    'total_tyres'         => $totalTyres,
-                    'total_margin'        => round($totalMargin, 2),
-                    'total_unpaid'        => round((float) $item->total_unpaid, 2),
+                    'commercial_name' => $item->commercial_name ?? 'Non assigné',
+                    'total_sales' => round($totalSales, 2),
+                    'total_tyres' => $totalTyres,
+                    'total_margin' => round($totalMargin, 2),
+                    'total_unpaid' => round((float) $item->total_unpaid, 2),
                     'avg_margin_per_tyre' => $totalTyres > 0 ? round($totalMargin / $totalTyres, 2) : 0,
-                    'margin_rate'         => $totalSales > 0 ? round(($totalMargin / $totalSales) * 100, 1) : 0,
+                    'margin_rate' => $totalSales > 0 ? round(($totalMargin / $totalSales) * 100, 1) : 0,
                 ];
             })->toArray();
         };
 
         $mapServiceCommercials = function ($rows): array {
             return collect($rows)->map(function ($item) {
-                $ca     = (float) ($item->so_ca     ?? 0);
+                $ca = (float) ($item->so_ca ?? 0);
                 $margin = (float) ($item->so_margin ?? 0);
 
                 return [
                     'commercial_name' => $item->commercial_name ?? 'Non assigné',
-                    'total_ca'        => round($ca, 2),
-                    'total_orders'    => (int) ($item->so_count ?? 0),
-                    'total_margin'    => round($margin, 2),
-                    'total_unpaid'    => round((float) ($item->so_unpaid ?? 0), 2),
-                    'margin_rate'     => $ca > 0 ? round(($margin / $ca) * 100, 1) : 0,
+                    'total_ca' => round($ca, 2),
+                    'total_orders' => (int) ($item->so_count ?? 0),
+                    'total_margin' => round($margin, 2),
+                    'total_unpaid' => round((float) ($item->so_unpaid ?? 0), 2),
+                    'margin_rate' => $ca > 0 ? round(($margin / $ca) * 100, 1) : 0,
                 ];
             })->sortByDesc(fn ($r) => $r['total_ca'])->values()->toArray();
         };
@@ -217,6 +231,7 @@ class DashboardKpiService
         $rawSalesMonth = DB::table('sales')
             ->leftJoin('users', 'sales.commercial_id', '=', 'users.id')
             ->leftJoinSub($tyreItemsSub, 'tyre_items', 'tyre_items.sale_id', '=', 'sales.id')
+            ->where('sales.status', '!=', $saleAnnule)
             ->whereBetween('sales.date', [$monthStart, $monthEnd])
             ->selectRaw($commercialSelectRaw)
             ->groupBy('sales.commercial_id', 'users.name')
@@ -225,6 +240,7 @@ class DashboardKpiService
         $rawSalesYear = DB::table('sales')
             ->leftJoin('users', 'sales.commercial_id', '=', 'users.id')
             ->leftJoinSub($tyreItemsSub, 'tyre_items', 'tyre_items.sale_id', '=', 'sales.id')
+            ->where('sales.status', '!=', $saleAnnule)
             ->whereBetween('sales.date', [$yearStart, $yearEnd])
             ->selectRaw($commercialSelectRaw)
             ->groupBy('sales.commercial_id', 'users.name')
@@ -234,56 +250,56 @@ class DashboardKpiService
         $marginSalesToday = round((clone $salesToday)->sum('margin'), 2);
         $salesMonthAmount = round((clone $salesMonth)->sum('total_sale'), 2);
         $marginSalesMonth = round((clone $salesMonth)->sum('margin'), 2);
-        $salesYearAmount  = round((clone $salesYear)->sum('total_sale'), 2);
-        $marginSalesYear  = round((clone $salesYear)->sum('margin'), 2);
+        $salesYearAmount = round((clone $salesYear)->sum('total_sale'), 2);
+        $marginSalesYear = round((clone $salesYear)->sum('margin'), 2);
 
         return [
             // Today
-            'sales_today_amount'     => $salesTodayAmount + $caServiceToday,
-            'tyres_today'            => $tyreSalesQty($today),
-            'margin_today'           => $marginSalesToday + $marginServiceToday,
-            'net_margin_today'       => $marginSalesToday + $marginServiceToday - $expensesToday,
+            'sales_today_amount' => $salesTodayAmount + $caServiceToday,
+            'tyres_today' => $tyreSalesQty($today),
+            'margin_today' => $marginSalesToday + $marginServiceToday,
+            'net_margin_today' => $marginSalesToday + $marginServiceToday - $expensesToday,
             'purchases_today_amount' => round((clone $purchasesToday)->sum('total_price'), 2),
-            'tyres_purchased_today'  => $tyrePurchaseQty($today, $today),
-            'expenses_today'         => $expensesToday,
+            'tyres_purchased_today' => $tyrePurchaseQty($today, $today),
+            'expenses_today' => $expensesToday,
 
             // Month
-            'sales_month_amount'     => $salesMonthAmount + $caServiceMonth,
+            'sales_month_amount' => $salesMonthAmount + $caServiceMonth,
             'purchases_month_amount' => round((clone $purchasesMonth)->sum('total_price'), 2),
-            'margin_month'           => $marginSalesMonth + $marginServiceMonth,
-            'net_margin_month'       => $marginSalesMonth + $marginServiceMonth - $expensesMonth,
-            'expenses_month'         => $expensesMonth,
-            'tyres_month'            => $tyreSalesQty($monthStart, $monthEnd),
-            'parts_month'            => $partsSoldQty($monthStart, $monthEnd),
-            'tyres_purchased_month'  => $tyrePurchaseQty($monthStart, $monthEnd),
-            'parts_purchased_month'  => $partsPurchasedQty($monthStart, $monthEnd),
+            'margin_month' => $marginSalesMonth + $marginServiceMonth,
+            'net_margin_month' => $marginSalesMonth + $marginServiceMonth - $expensesMonth,
+            'expenses_month' => $expensesMonth,
+            'tyres_month' => $tyreSalesQty($monthStart, $monthEnd),
+            'parts_month' => $partsSoldQty($monthStart, $monthEnd),
+            'tyres_purchased_month' => $tyrePurchaseQty($monthStart, $monthEnd),
+            'parts_purchased_month' => $partsPurchasedQty($monthStart, $monthEnd),
 
             // Year
-            'margin_year'            => $marginSalesYear + $marginServiceYear,
-            'net_margin_year'        => $marginSalesYear + $marginServiceYear - $expensesYear,
-            'expenses_year'          => $expensesYear,
-            'total_sale_year'        => $salesYearAmount + $caServiceYear,
-            'total_purchase_year'    => round((clone $purchasesYear)->sum('total_price'), 2),
-            'tyres_year'             => $tyreSalesQty($yearStart, $yearEnd),
-            'parts_year'             => $partsSoldQty($yearStart, $yearEnd),
-            'tyres_purchased_year'   => $tyrePurchaseQty($yearStart, $yearEnd),
-            'parts_purchased_year'   => $partsPurchasedQty($yearStart, $yearEnd),
+            'margin_year' => $marginSalesYear + $marginServiceYear,
+            'net_margin_year' => $marginSalesYear + $marginServiceYear - $expensesYear,
+            'expenses_year' => $expensesYear,
+            'total_sale_year' => $salesYearAmount + $caServiceYear,
+            'total_purchase_year' => round((clone $purchasesYear)->sum('total_price'), 2),
+            'tyres_year' => $tyreSalesQty($yearStart, $yearEnd),
+            'parts_year' => $partsSoldQty($yearStart, $yearEnd),
+            'tyres_purchased_year' => $tyrePurchaseQty($yearStart, $yearEnd),
+            'parts_purchased_year' => $partsPurchasedQty($yearStart, $yearEnd),
 
             // By commercial
-            'sales_by_commercial'        => $mapCommercials($rawSalesMonth),
-            'sales_by_commercial_year'   => $mapCommercials($rawSalesYear),
-            'service_by_commercial'      => $mapServiceCommercials($soByMonth),
+            'sales_by_commercial' => $mapCommercials($rawSalesMonth),
+            'sales_by_commercial_year' => $mapCommercials($rawSalesYear),
+            'service_by_commercial' => $mapServiceCommercials($soByMonth),
             'service_by_commercial_year' => $mapServiceCommercials($soByYear),
 
             // Stock (point-in-time — always current)
             'stock_quantity' => (int) Stock::sum('quantity'),
-            'stock_value'    => round(
+            'stock_value' => round(
                 (float) (Stock::selectRaw('SUM(quantity * purchase_price) as t')->value('t') ?? 0),
                 2
             ),
 
             // Receivables / payables (lifetime totals)
-            'unpaid_sales'     => round(Sale::where('payment_status', SalePaymentStatus::NON_PAYE->value)->sum('total_sale'), 2),
+            'unpaid_sales' => round(Sale::where('payment_status', SalePaymentStatus::NON_PAYE->value)->where('status', '!=', $saleAnnule)->sum('total_sale'), 2),
             'unpaid_purchases' => round($purchasesTotalLifetime - $purchasesPaidLifetime, 2),
 
             // Cash balance (always current)
