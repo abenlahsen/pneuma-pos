@@ -347,7 +347,9 @@ class PurchaseService
                             ->orWhereHas('brand', function ($q3) use ($search) {
                                 $q3->where('name', 'like', "%{$search}%");
                             });
-                    });
+                    })
+                    ->orWhere('bl_number', 'like', "%{$search}%")
+                    ->orWhere('invoice_number', 'like', "%{$search}%");
             });
         }
 

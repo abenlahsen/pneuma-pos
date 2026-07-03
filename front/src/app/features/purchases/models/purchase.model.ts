@@ -20,6 +20,8 @@ export interface Purchase {
   id: number;
   date: string;
   with_invoice: boolean;
+  bl_number?: string | null;
+  invoice_number?: string | null;
   total_quantity?: number;
   total_price?: number;
   discount?: number;
@@ -39,6 +41,8 @@ export interface Purchase {
 export interface PurchasePayload {
   date: string;
   with_invoice: boolean;
+  bl_number?: string | null;
+  invoice_number?: string | null;
   discount?: number;
   supplier_id: number;
   commercial_id?: number | null;

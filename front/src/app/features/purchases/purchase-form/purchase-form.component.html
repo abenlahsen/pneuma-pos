@@ -16,6 +16,14 @@
         <input type="checkbox" name="with_invoice" [(ngModel)]="formData.with_invoice">
       </div>
       <div class="form-group">
+        <label>N° BL</label>
+        <input type="text" class="form-control" [(ngModel)]="formData.bl_number" name="bl_number" placeholder="Ex: BL-2026-0456">
+      </div>
+      <div class="form-group" *ngIf="formData.with_invoice">
+        <label>N° Facture</label>
+        <input type="text" class="form-control" [(ngModel)]="formData.invoice_number" name="invoice_number" placeholder="Ex: FAC-2026-0123">
+      </div>
+      <div class="form-group">
         <label>Fournisseur *</label>
         <select class="form-control" [(ngModel)]="formData.supplier_id" name="supplier_id" required>
           <option [ngValue]="null">-- Sélectionner un fournisseur --</option>

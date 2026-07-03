@@ -4,9 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Product;
-use App\Models\Supplier;
-use App\Models\User;
 
 class Purchase extends Model
 {
@@ -15,6 +12,8 @@ class Purchase extends Model
     protected $fillable = [
         'date',
         'with_invoice',
+        'bl_number',
+        'invoice_number',
         'total_quantity',
         'total_price',
         'discount',

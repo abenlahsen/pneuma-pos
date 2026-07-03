@@ -19,19 +19,19 @@ class ActivityLogService
     public function buildSaleSnapshot(Sale $sale): array
     {
         $snapshot = [
-            'date'           => $sale->date ? (string) $sale->date : null,
-            'status'         => $sale->status,
+            'date' => $sale->date ? (string) $sale->date : null,
+            'status' => $sale->status,
             'payment_status' => $sale->payment_status,
-            'total_sale'     => (float) $sale->total_sale,
+            'total_sale' => (float) $sale->total_sale,
             'total_purchase' => (float) $sale->total_purchase,
             'total_quantity' => (int) $sale->total_quantity,
-            'margin'         => (float) $sale->margin,
+            'margin' => (float) $sale->margin,
             'payment_method' => $sale->payment_method,
-            'with_invoice'   => (bool) $sale->with_invoice,
-            'client'         => $sale->linkedClient?->name,
-            'commercial'     => $sale->commercial?->name,
-            'carrier'        => $sale->linkedCarrier?->name,
-            'partner'        => $sale->linkedPartner?->name,
+            'with_invoice' => (bool) $sale->with_invoice,
+            'client' => $sale->linkedClient?->name,
+            'commercial' => $sale->commercial?->name,
+            'carrier' => $sale->linkedCarrier?->name,
+            'partner' => $sale->linkedPartner?->name,
         ];
 
         return array_filter($snapshot, fn ($v) => $v !== null && $v !== '');
@@ -40,16 +40,18 @@ class ActivityLogService
     public function buildPurchaseSnapshot(Purchase $purchase): array
     {
         $snapshot = [
-            'date'           => $purchase->date ? (string) $purchase->date : null,
-            'status'         => $purchase->status,
+            'date' => $purchase->date ? (string) $purchase->date : null,
+            'status' => $purchase->status,
             'payment_status' => $purchase->payment_status,
-            'net_amount'     => (float) $purchase->net_amount,
+            'net_amount' => (float) $purchase->net_amount,
             'total_quantity' => (int) $purchase->total_quantity,
             'payment_method' => $purchase->payment_method,
-            'with_invoice'   => (bool) $purchase->with_invoice,
-            'discount'       => (float) $purchase->discount,
-            'supplier'       => $purchase->supplier?->name,
-            'commercial'     => $purchase->commercial?->name,
+            'with_invoice' => (bool) $purchase->with_invoice,
+            'bl_number' => $purchase->bl_number,
+            'invoice_number' => $purchase->invoice_number,
+            'discount' => (float) $purchase->discount,
+            'supplier' => $purchase->supplier?->name,
+            'commercial' => $purchase->commercial?->name,
         ];
 
         return array_filter($snapshot, fn ($v) => $v !== null && $v !== '');
@@ -58,17 +60,17 @@ class ActivityLogService
     public function buildServiceOrderSnapshot(ServiceOrder $order): array
     {
         $snapshot = [
-            'date'           => $order->date ? (string) $order->date : null,
-            'status'         => $order->status,
+            'date' => $order->date ? (string) $order->date : null,
+            'status' => $order->status,
             'payment_status' => $order->payment_status,
-            'net_amount'     => (float) $order->net_amount,
-            'total_amount'   => (float) $order->total_amount,
-            'discount'       => (float) $order->discount,
-            'vehicle'        => $order->vehicle,
-            'mileage'        => $order->mileage ? (int) $order->mileage : null,
-            'notes'          => $order->notes,
-            'client'         => $order->clientRecord?->name,
-            'commercial'     => $order->commercial?->name,
+            'net_amount' => (float) $order->net_amount,
+            'total_amount' => (float) $order->total_amount,
+            'discount' => (float) $order->discount,
+            'vehicle' => $order->vehicle,
+            'mileage' => $order->mileage ? (int) $order->mileage : null,
+            'notes' => $order->notes,
+            'client' => $order->clientRecord?->name,
+            'commercial' => $order->commercial?->name,
         ];
 
         return array_filter($snapshot, fn ($v) => $v !== null && $v !== '');
@@ -77,25 +79,25 @@ class ActivityLogService
     public function buildCompteSnapshot(Account $account): array
     {
         return array_filter([
-            'name'            => $account->name,
-            'type'            => $account->type,
-            'description'     => $account->description,
+            'name' => $account->name,
+            'type' => $account->type,
+            'description' => $account->description,
             'initial_balance' => (float) $account->initial_balance,
-            'is_active'       => (bool) $account->is_active,
+            'is_active' => (bool) $account->is_active,
         ], fn ($v) => $v !== null && $v !== '');
     }
 
     public function buildTransactionSnapshot(Transaction $transaction): array
     {
         return array_filter([
-            'date'        => $transaction->date ? (string) $transaction->date : null,
-            'type'        => $transaction->type,
-            'amount'      => (float) $transaction->amount,
-            'category'    => $transaction->category,
-            'method'      => $transaction->method,
+            'date' => $transaction->date ? (string) $transaction->date : null,
+            'type' => $transaction->type,
+            'amount' => (float) $transaction->amount,
+            'category' => $transaction->category,
+            'method' => $transaction->method,
             'description' => $transaction->description,
-            'person'      => $transaction->person,
-            'account'     => $transaction->account?->name,
+            'person' => $transaction->person,
+            'account' => $transaction->account?->name,
         ], fn ($v) => $v !== null && $v !== '');
     }
 
@@ -109,17 +111,17 @@ class ActivityLogService
         $total = number_format((float) $sale->total_sale, 2, '.', ' ');
         $clientName = $snapshot['client'] ?? null;
         $desc = "Vente #{$sale->id} créée — {$qty} article(s), CA : {$total} MAD"
-            . ($clientName ? " — Client : {$clientName}" : '');
+            .($clientName ? " — Client : {$clientName}" : '');
 
         $this->insert([
-            'action'       => ActivityLog::ACTION_CREATE,
-            'entity_type'  => ActivityLog::ENTITY_VENTE,
-            'entity_id'    => $sale->id,
+            'action' => ActivityLog::ACTION_CREATE,
+            'entity_type' => ActivityLog::ENTITY_VENTE,
+            'entity_id' => $sale->id,
             'entity_label' => "Vente #{$sale->id}",
-            'description'  => $desc,
-            'properties'   => ['before' => null, 'after' => $snapshot],
-            'user_id'      => $userId,
-            'user_name'    => $userName,
+            'description' => $desc,
+            'properties' => ['before' => null, 'after' => $snapshot],
+            'user_id' => $userId,
+            'user_name' => $userName,
         ]);
     }
 
@@ -129,14 +131,14 @@ class ActivityLogService
         $desc .= $this->buildUpdateSuffix($before, $after);
 
         $this->insert([
-            'action'       => ActivityLog::ACTION_UPDATE,
-            'entity_type'  => ActivityLog::ENTITY_VENTE,
-            'entity_id'    => $sale->id,
+            'action' => ActivityLog::ACTION_UPDATE,
+            'entity_type' => ActivityLog::ENTITY_VENTE,
+            'entity_id' => $sale->id,
             'entity_label' => "Vente #{$sale->id}",
-            'description'  => $desc,
-            'properties'   => ['before' => $before, 'after' => $after],
-            'user_id'      => $userId,
-            'user_name'    => $userName,
+            'description' => $desc,
+            'properties' => ['before' => $before, 'after' => $after],
+            'user_id' => $userId,
+            'user_name' => $userName,
         ]);
     }
 
@@ -148,14 +150,14 @@ class ActivityLogService
         $desc = "Vente #{$id} supprimée — CA : {$total} MAD ({$status})";
 
         $this->insert([
-            'action'       => ActivityLog::ACTION_DELETE,
-            'entity_type'  => ActivityLog::ENTITY_VENTE,
-            'entity_id'    => $id,
+            'action' => ActivityLog::ACTION_DELETE,
+            'entity_type' => ActivityLog::ENTITY_VENTE,
+            'entity_id' => $id,
             'entity_label' => "Vente #{$id}",
-            'description'  => $desc,
-            'properties'   => ['before' => $before, 'after' => null],
-            'user_id'      => $userId,
-            'user_name'    => $userName,
+            'description' => $desc,
+            'properties' => ['before' => $before, 'after' => null],
+            'user_id' => $userId,
+            'user_name' => $userName,
         ]);
     }
 
@@ -169,17 +171,17 @@ class ActivityLogService
         $total = number_format((float) $purchase->net_amount, 2, '.', ' ');
         $supplierName = $snapshot['supplier'] ?? null;
         $desc = "Achat #{$purchase->id} créé — {$qty} article(s), Montant : {$total} MAD"
-            . ($supplierName ? " — Fournisseur : {$supplierName}" : '');
+            .($supplierName ? " — Fournisseur : {$supplierName}" : '');
 
         $this->insert([
-            'action'       => ActivityLog::ACTION_CREATE,
-            'entity_type'  => ActivityLog::ENTITY_ACHAT,
-            'entity_id'    => $purchase->id,
+            'action' => ActivityLog::ACTION_CREATE,
+            'entity_type' => ActivityLog::ENTITY_ACHAT,
+            'entity_id' => $purchase->id,
             'entity_label' => "Achat #{$purchase->id}",
-            'description'  => $desc,
-            'properties'   => ['before' => null, 'after' => $snapshot],
-            'user_id'      => $userId,
-            'user_name'    => $userName,
+            'description' => $desc,
+            'properties' => ['before' => null, 'after' => $snapshot],
+            'user_id' => $userId,
+            'user_name' => $userName,
         ]);
     }
 
@@ -189,14 +191,14 @@ class ActivityLogService
         $desc .= $this->buildUpdateSuffix($before, $after);
 
         $this->insert([
-            'action'       => ActivityLog::ACTION_UPDATE,
-            'entity_type'  => ActivityLog::ENTITY_ACHAT,
-            'entity_id'    => $purchase->id,
+            'action' => ActivityLog::ACTION_UPDATE,
+            'entity_type' => ActivityLog::ENTITY_ACHAT,
+            'entity_id' => $purchase->id,
             'entity_label' => "Achat #{$purchase->id}",
-            'description'  => $desc,
-            'properties'   => ['before' => $before, 'after' => $after],
-            'user_id'      => $userId,
-            'user_name'    => $userName,
+            'description' => $desc,
+            'properties' => ['before' => $before, 'after' => $after],
+            'user_id' => $userId,
+            'user_name' => $userName,
         ]);
     }
 
@@ -208,14 +210,14 @@ class ActivityLogService
         $desc = "Achat #{$id} supprimé — Montant : {$total} MAD ({$status})";
 
         $this->insert([
-            'action'       => ActivityLog::ACTION_DELETE,
-            'entity_type'  => ActivityLog::ENTITY_ACHAT,
-            'entity_id'    => $id,
+            'action' => ActivityLog::ACTION_DELETE,
+            'entity_type' => ActivityLog::ENTITY_ACHAT,
+            'entity_id' => $id,
             'entity_label' => "Achat #{$id}",
-            'description'  => $desc,
-            'properties'   => ['before' => $before, 'after' => null],
-            'user_id'      => $userId,
-            'user_name'    => $userName,
+            'description' => $desc,
+            'properties' => ['before' => $before, 'after' => null],
+            'user_id' => $userId,
+            'user_name' => $userName,
         ]);
     }
 
@@ -229,18 +231,18 @@ class ActivityLogService
         $clientName = $snapshot['client'] ?? null;
         $vehicle = $snapshot['vehicle'] ?? null;
         $desc = "Ordre de service #{$order->id} créé — {$total} MAD"
-            . ($clientName ? " — {$clientName}" : '')
-            . ($vehicle ? " — {$vehicle}" : '');
+            .($clientName ? " — {$clientName}" : '')
+            .($vehicle ? " — {$vehicle}" : '');
 
         $this->insert([
-            'action'       => ActivityLog::ACTION_CREATE,
-            'entity_type'  => ActivityLog::ENTITY_SERVICE_ORDER,
-            'entity_id'    => $order->id,
+            'action' => ActivityLog::ACTION_CREATE,
+            'entity_type' => ActivityLog::ENTITY_SERVICE_ORDER,
+            'entity_id' => $order->id,
             'entity_label' => "Ordre de service #{$order->id}",
-            'description'  => $desc,
-            'properties'   => ['before' => null, 'after' => $snapshot],
-            'user_id'      => $userId,
-            'user_name'    => $userName,
+            'description' => $desc,
+            'properties' => ['before' => null, 'after' => $snapshot],
+            'user_id' => $userId,
+            'user_name' => $userName,
         ]);
     }
 
@@ -250,14 +252,14 @@ class ActivityLogService
         $desc .= $this->buildUpdateSuffix($before, $after);
 
         $this->insert([
-            'action'       => ActivityLog::ACTION_UPDATE,
-            'entity_type'  => ActivityLog::ENTITY_SERVICE_ORDER,
-            'entity_id'    => $order->id,
+            'action' => ActivityLog::ACTION_UPDATE,
+            'entity_type' => ActivityLog::ENTITY_SERVICE_ORDER,
+            'entity_id' => $order->id,
             'entity_label' => "Ordre de service #{$order->id}",
-            'description'  => $desc,
-            'properties'   => ['before' => $before, 'after' => $after],
-            'user_id'      => $userId,
-            'user_name'    => $userName,
+            'description' => $desc,
+            'properties' => ['before' => $before, 'after' => $after],
+            'user_id' => $userId,
+            'user_name' => $userName,
         ]);
     }
 
@@ -269,14 +271,14 @@ class ActivityLogService
         $desc = "Ordre de service #{$id} supprimé — {$total} MAD ({$status})";
 
         $this->insert([
-            'action'       => ActivityLog::ACTION_DELETE,
-            'entity_type'  => ActivityLog::ENTITY_SERVICE_ORDER,
-            'entity_id'    => $id,
+            'action' => ActivityLog::ACTION_DELETE,
+            'entity_type' => ActivityLog::ENTITY_SERVICE_ORDER,
+            'entity_id' => $id,
             'entity_label' => "Ordre de service #{$id}",
-            'description'  => $desc,
-            'properties'   => ['before' => $before, 'after' => null],
-            'user_id'      => $userId,
-            'user_name'    => $userName,
+            'description' => $desc,
+            'properties' => ['before' => $before, 'after' => null],
+            'user_id' => $userId,
+            'user_name' => $userName,
         ]);
     }
 
@@ -287,17 +289,17 @@ class ActivityLogService
     public function logCompteCreated(Account $account, array $snapshot, ?int $userId, ?string $userName): void
     {
         $type = $account->type ?? '';
-        $desc = "Compte '{$account->name}' créé" . ($type ? " — {$type}" : '');
+        $desc = "Compte '{$account->name}' créé".($type ? " — {$type}" : '');
 
         $this->insert([
-            'action'       => ActivityLog::ACTION_CREATE,
-            'entity_type'  => ActivityLog::ENTITY_COMPTE,
-            'entity_id'    => $account->id,
+            'action' => ActivityLog::ACTION_CREATE,
+            'entity_type' => ActivityLog::ENTITY_COMPTE,
+            'entity_id' => $account->id,
             'entity_label' => "Compte '{$account->name}'",
-            'description'  => $desc,
-            'properties'   => ['before' => null, 'after' => $snapshot],
-            'user_id'      => $userId,
-            'user_name'    => $userName,
+            'description' => $desc,
+            'properties' => ['before' => null, 'after' => $snapshot],
+            'user_id' => $userId,
+            'user_name' => $userName,
         ]);
     }
 
@@ -307,14 +309,14 @@ class ActivityLogService
         $desc .= $this->buildUpdateSuffix($before, $after);
 
         $this->insert([
-            'action'       => ActivityLog::ACTION_UPDATE,
-            'entity_type'  => ActivityLog::ENTITY_COMPTE,
-            'entity_id'    => $account->id,
+            'action' => ActivityLog::ACTION_UPDATE,
+            'entity_type' => ActivityLog::ENTITY_COMPTE,
+            'entity_id' => $account->id,
             'entity_label' => "Compte '{$account->name}'",
-            'description'  => $desc,
-            'properties'   => ['before' => $before, 'after' => $after],
-            'user_id'      => $userId,
-            'user_name'    => $userName,
+            'description' => $desc,
+            'properties' => ['before' => $before, 'after' => $after],
+            'user_id' => $userId,
+            'user_name' => $userName,
         ]);
     }
 
@@ -324,14 +326,14 @@ class ActivityLogService
         $desc = "Compte '{$name}' supprimé";
 
         $this->insert([
-            'action'       => ActivityLog::ACTION_DELETE,
-            'entity_type'  => ActivityLog::ENTITY_COMPTE,
-            'entity_id'    => 0,
+            'action' => ActivityLog::ACTION_DELETE,
+            'entity_type' => ActivityLog::ENTITY_COMPTE,
+            'entity_id' => 0,
             'entity_label' => "Compte '{$name}'",
-            'description'  => $desc,
-            'properties'   => ['before' => $before, 'after' => null],
-            'user_id'      => $userId,
-            'user_name'    => $userName,
+            'description' => $desc,
+            'properties' => ['before' => $before, 'after' => null],
+            'user_id' => $userId,
+            'user_name' => $userName,
         ]);
     }
 
@@ -345,17 +347,17 @@ class ActivityLogService
         $type = $transaction->type === 'income' ? 'Entrée' : 'Dépense';
         $category = $snapshot['category'] ?? '';
         $desc = "Transaction #{$transaction->id} créée — {$type}, {$amountFmt} MAD"
-            . ($category ? " ({$category})" : '');
+            .($category ? " ({$category})" : '');
 
         $this->insert([
-            'action'       => ActivityLog::ACTION_CREATE,
-            'entity_type'  => ActivityLog::ENTITY_TRANSACTION,
-            'entity_id'    => $transaction->id,
+            'action' => ActivityLog::ACTION_CREATE,
+            'entity_type' => ActivityLog::ENTITY_TRANSACTION,
+            'entity_id' => $transaction->id,
             'entity_label' => "Transaction #{$transaction->id}",
-            'description'  => $desc,
-            'properties'   => ['before' => null, 'after' => $snapshot],
-            'user_id'      => $userId,
-            'user_name'    => $userName,
+            'description' => $desc,
+            'properties' => ['before' => null, 'after' => $snapshot],
+            'user_id' => $userId,
+            'user_name' => $userName,
         ]);
     }
 
@@ -365,14 +367,14 @@ class ActivityLogService
         $desc .= $this->buildUpdateSuffix($before, $after);
 
         $this->insert([
-            'action'       => ActivityLog::ACTION_UPDATE,
-            'entity_type'  => ActivityLog::ENTITY_TRANSACTION,
-            'entity_id'    => $transaction->id,
+            'action' => ActivityLog::ACTION_UPDATE,
+            'entity_type' => ActivityLog::ENTITY_TRANSACTION,
+            'entity_id' => $transaction->id,
             'entity_label' => "Transaction #{$transaction->id}",
-            'description'  => $desc,
-            'properties'   => ['before' => $before, 'after' => $after],
-            'user_id'      => $userId,
-            'user_name'    => $userName,
+            'description' => $desc,
+            'properties' => ['before' => $before, 'after' => $after],
+            'user_id' => $userId,
+            'user_name' => $userName,
         ]);
     }
 
@@ -383,14 +385,14 @@ class ActivityLogService
         $desc = "Transaction #{$id} supprimée — {$amountFmt} MAD";
 
         $this->insert([
-            'action'       => ActivityLog::ACTION_DELETE,
-            'entity_type'  => ActivityLog::ENTITY_TRANSACTION,
-            'entity_id'    => $id,
+            'action' => ActivityLog::ACTION_DELETE,
+            'entity_type' => ActivityLog::ENTITY_TRANSACTION,
+            'entity_id' => $id,
             'entity_label' => "Transaction #{$id}",
-            'description'  => $desc,
-            'properties'   => ['before' => $before, 'after' => null],
-            'user_id'      => $userId,
-            'user_name'    => $userName,
+            'description' => $desc,
+            'properties' => ['before' => $before, 'after' => null],
+            'user_id' => $userId,
+            'user_name' => $userName,
         ]);
     }
 
@@ -400,17 +402,17 @@ class ActivityLogService
         $desc = "Transfert de {$amountFmt} MAD de '{$sourceAccountName}' vers '{$destAccountName}'";
 
         $this->insert([
-            'action'       => ActivityLog::ACTION_CREATE,
-            'entity_type'  => ActivityLog::ENTITY_TRANSACTION,
-            'entity_id'    => $transactionId,
+            'action' => ActivityLog::ACTION_CREATE,
+            'entity_type' => ActivityLog::ENTITY_TRANSACTION,
+            'entity_id' => $transactionId,
             'entity_label' => "Transfert {$sourceAccountName} → {$destAccountName}",
-            'description'  => $desc,
-            'properties'   => [
+            'description' => $desc,
+            'properties' => [
                 'source_account' => $sourceAccountName,
-                'dest_account'   => $destAccountName,
-                'amount'         => $amount,
+                'dest_account' => $destAccountName,
+                'amount' => $amount,
             ],
-            'user_id'   => $userId,
+            'user_id' => $userId,
             'user_name' => $userName,
         ]);
     }
@@ -440,17 +442,17 @@ class ActivityLogService
         }
 
         $this->insert([
-            'action'       => ActivityLog::ACTION_PAYMENT_ADD,
-            'entity_type'  => $entityType,
-            'entity_id'    => $entityId,
+            'action' => ActivityLog::ACTION_PAYMENT_ADD,
+            'entity_type' => $entityType,
+            'entity_id' => $entityId,
             'entity_label' => $entityLabel,
-            'description'  => $desc,
-            'properties'   => [
-                'amount'    => $amount,
-                'method'    => $method,
+            'description' => $desc,
+            'properties' => [
+                'amount' => $amount,
+                'method' => $method,
                 'reference' => $reference,
             ],
-            'user_id'   => $userId,
+            'user_id' => $userId,
             'user_name' => $userName,
         ]);
     }
@@ -475,16 +477,16 @@ class ActivityLogService
         }
 
         $this->insert([
-            'action'       => ActivityLog::ACTION_PAYMENT_DELETE,
-            'entity_type'  => $entityType,
-            'entity_id'    => $entityId,
+            'action' => ActivityLog::ACTION_PAYMENT_DELETE,
+            'entity_type' => $entityType,
+            'entity_id' => $entityId,
             'entity_label' => $entityLabel,
-            'description'  => $desc,
-            'properties'   => [
+            'description' => $desc,
+            'properties' => [
                 'amount' => $amount,
                 'method' => $method,
             ],
-            'user_id'   => $userId,
+            'user_id' => $userId,
             'user_name' => $userName,
         ]);
     }
@@ -505,11 +507,11 @@ class ActivityLogService
     private function buildUpdateSuffix(array $before, array $after): string
     {
         if (isset($after['status']) && ($before['status'] ?? null) !== $after['status']) {
-            return " — Statut : " . ($before['status'] ?? '?') . " → {$after['status']}";
+            return ' — Statut : '.($before['status'] ?? '?')." → {$after['status']}";
         }
 
         if (isset($after['payment_status']) && ($before['payment_status'] ?? null) !== $after['payment_status']) {
-            return " — Paiement : " . ($before['payment_status'] ?? '?') . " → {$after['payment_status']}";
+            return ' — Paiement : '.($before['payment_status'] ?? '?')." → {$after['payment_status']}";
         }
 
         $totalKey = isset($after['total_sale']) ? 'total_sale'
@@ -518,6 +520,7 @@ class ActivityLogService
         if ($totalKey && isset($before[$totalKey]) && abs((float) $before[$totalKey] - (float) $after[$totalKey]) > 0.01) {
             $old = number_format((float) $before[$totalKey], 2, '.', ' ');
             $new = number_format((float) $after[$totalKey], 2, '.', ' ');
+
             return " — Montant : {$old} → {$new} MAD";
         }
 
