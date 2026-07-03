@@ -17,19 +17,29 @@
   </div>
 
   <div class="summary-cards">
-    <div class="card summary-card info">
-      <div class="card-icon">📅</div>
-      <div class="card-content">
-        <p class="card-label">Pneus vendus aujourd'hui</p>
-        <h3 class="card-value">{{ summary().tyres_today }}</h3>
+    <ng-container *ngIf="!hasDateFilter()">
+      <div class="card summary-card info">
+        <div class="card-icon">📅</div>
+        <div class="card-content">
+          <p class="card-label">Pneus vendus aujourd'hui</p>
+          <h3 class="card-value">{{ summary().tyres_today }}</h3>
+        </div>
       </div>
-    </div>
 
-    <div class="card summary-card info">
-      <div class="card-icon">🛞</div>
+      <div class="card summary-card info">
+        <div class="card-icon">🛞</div>
+        <div class="card-content">
+          <p class="card-label">Pneus vendus ce mois</p>
+          <h3 class="card-value">{{ summary().tyres_this_month }}</h3>
+        </div>
+      </div>
+    </ng-container>
+
+    <div class="card summary-card info" *ngIf="hasDateFilter()">
+      <div class="card-icon">🗓️</div>
       <div class="card-content">
-        <p class="card-label">Pneus vendus ce mois</p>
-        <h3 class="card-value">{{ summary().tyres_this_month }}</h3>
+        <p class="card-label">Pneus vendus (période filtrée)</p>
+        <h3 class="card-value">{{ summary().tyres_period }}</h3>
       </div>
     </div>
 

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -29,7 +29,7 @@ export class SalesPageComponent implements OnInit {
   readonly SALE_STATUS_LABELS = SALE_STATUS_LABELS;
 
   sales = signal<Sale[]>([]);
-  summary = signal<SaleSummary>({ tyres_this_month: 0, tyres_today: 0, tyres_en_cours: 0, sales_en_cours: 0, unpaid_en_cours: 0, unpaid_livre_monte: 0, ca_avec_facture: 0, ca_sans_facture: 0 });
+  summary = signal<SaleSummary>({ tyres_this_month: 0, tyres_today: 0, tyres_period: null, tyres_en_cours: 0, sales_en_cours: 0, unpaid_en_cours: 0, unpaid_livre_monte: 0, ca_avec_facture: 0, ca_sans_facture: 0 });
   filterOptions = signal<SaleFilters>({ brands: [], clients: [], cities: [], statuses: [], carriers: [], partners: [], payment_statuses: [], commercials: [] });
 
   currentPage = signal(1);
@@ -50,6 +50,7 @@ export class SalesPageComponent implements OnInit {
   filterCommercial = signal<string>('');
   filterDateFrom = signal('');
   filterDateTo = signal('');
+  hasDateFilter = computed(() => !!this.filterDateFrom() || !!this.filterDateTo());
   filterWithInvoice = signal('');
   filterAmountMin = signal('');
   filterAmountMax = signal('');
