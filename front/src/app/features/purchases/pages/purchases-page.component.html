@@ -75,7 +75,7 @@
       <div class="filters-grid">
         <div class="form-group">
           <label>Recherche globale</label>
-          <input type="text" class="form-control" [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event)" placeholder="Produit, fournisseur..." (keyup.enter)="applyFilters()">
+          <input type="text" class="form-control" [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event)" placeholder="Produit, fournisseur, BL, facture..." (keyup.enter)="applyFilters()">
         </div>
 
         <div class="form-group">
@@ -199,11 +199,15 @@
               <button class="btn-icon btn-sm text-danger" (click)="deletePurchase(purchase)" title="Supprimer" *ngIf="authService.hasPermission('delete purchases') && !isPurchaseLocked(purchase)">🗑️</button>
             </td>
             <td class="text-center cell-id">{{ purchase.id }}</td>
-            <td>{{ purchase.date | date:'dd/MM/yyyy' }}</td>
+            <td>
+              {{ purchase.date | date:'dd/MM/yyyy' }}
+              <div class="text-small text-muted" *ngIf="purchase.bl_number">BL: {{ purchase.bl_number }}</div>
+            </td>
             <td class="text-center">
               <span class="badge" [class.badge-success]="purchase.with_invoice" [class.badge-secondary]="!purchase.with_invoice">
                 {{ purchase.with_invoice ? 'Oui' : 'Non' }}
               </span>
+              <div class="text-small text-muted" *ngIf="purchase.with_invoice && purchase.invoice_number">{{ purchase.invoice_number }}</div>
             </td>
             <td class="clickable-cell" (click)="openDetail(purchase)">
               <div class="fw-medium">{{ purchase.supplier?.name || '-' }}</div>

@@ -47,6 +47,8 @@ class PurchaseController extends Controller
         $validated = $request->validate([
             'date' => 'required|date',
             'with_invoice' => 'boolean',
+            'bl_number' => 'nullable|string|max:100',
+            'invoice_number' => 'nullable|string|max:100',
             'discount' => 'nullable|numeric|min:0|max:100',
             'supplier_id' => 'required|exists:suppliers,id',
             'commercial_id' => 'required|exists:users,id',
@@ -83,6 +85,8 @@ class PurchaseController extends Controller
         $validated = $request->validate([
             'date' => 'required|date',
             'with_invoice' => 'boolean',
+            'bl_number' => 'nullable|string|max:100',
+            'invoice_number' => 'nullable|string|max:100',
             'discount' => 'nullable|numeric|min:0|max:100',
             'supplier_id' => 'required|exists:suppliers,id',
             'commercial_id' => 'required|exists:users,id',
@@ -145,7 +149,7 @@ class PurchaseController extends Controller
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
-        $rows = [['Date', 'Fournisseur', 'Commercial', 'Statut', 'Paiement', 'Mode paiement', 'Facture', 'Remise (%)', 'Qté totale', 'Total HT', 'Net']];
+        $rows = [['Date', 'Fournisseur', 'Commercial', 'Statut', 'Paiement', 'Mode paiement', 'Facture', 'N° BL', 'N° Facture', 'Remise (%)', 'Qté totale', 'Total HT', 'Net']];
 
         foreach ($purchases as $purchase) {
             $rows[] = [
@@ -156,6 +160,8 @@ class PurchaseController extends Controller
                 $purchase->payment_status ?? '',
                 $purchase->payment_method ?? '',
                 $purchase->with_invoice ? 'Oui' : 'Non',
+                $purchase->bl_number ?? '',
+                $purchase->invoice_number ?? '',
                 (float) ($purchase->discount ?? 0),
                 (int) ($purchase->total_quantity ?? 0),
                 (float) ($purchase->total_price ?? 0),

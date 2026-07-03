@@ -226,6 +226,63 @@ class PurchaseCrudTest extends TestCase
         ]);
     }
 
+    public function test_store_persists_bl_and_invoice_number(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $response = $this->postJson('/api/purchases', $this->validPayload([
+            'with_invoice' => true,
+            'bl_number' => 'BL-2026-0456',
+            'invoice_number' => 'FAC-2026-0123',
+        ]));
+
+        $response->assertCreated();
+
+        $this->assertDatabaseHas('purchases', [
+            'bl_number' => 'BL-2026-0456',
+            'invoice_number' => 'FAC-2026-0123',
+        ]);
+    }
+
+    public function test_store_allows_null_bl_and_invoice_number(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $response = $this->postJson('/api/purchases', $this->validPayload());
+
+        $response->assertCreated()
+            ->assertJsonPath('bl_number', null)
+            ->assertJsonPath('invoice_number', null);
+    }
+
+    public function test_index_search_finds_purchase_by_bl_number(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $this->createPurchase(['bl_number' => 'BL-UNIQUE-789']);
+        $this->createPurchase(['bl_number' => 'BL-OTHER-111']);
+
+        $response = $this->getJson('/api/purchases?search=BL-UNIQUE-789');
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.bl_number', 'BL-UNIQUE-789');
+    }
+
+    public function test_index_search_finds_purchase_by_invoice_number(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $this->createPurchase(['invoice_number' => 'FAC-UNIQUE-222']);
+        $this->createPurchase(['invoice_number' => 'FAC-OTHER-333']);
+
+        $response = $this->getJson('/api/purchases?search=FAC-UNIQUE-222');
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.invoice_number', 'FAC-UNIQUE-222');
+    }
+
     public function test_store_increments_stock_for_received_purchase(): void
     {
         Sanctum::actingAs($this->user, [], 'web');
@@ -876,6 +933,8 @@ class PurchaseCrudTest extends TestCase
             $table->id();
             $table->date('date');
             $table->boolean('with_invoice')->default(false);
+            $table->string('bl_number', 100)->nullable();
+            $table->string('invoice_number', 100)->nullable();
             $table->decimal('discount', 5, 2)->default(0);
             $table->integer('total_quantity')->default(0);
             $table->decimal('total_price', 10, 2)->default(0);

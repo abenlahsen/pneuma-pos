@@ -30,6 +30,14 @@
               {{ purchase.with_invoice ? 'Oui' : 'Non' }}
             </span>
           </div>
+          <div class="detail-item" *ngIf="purchase.bl_number">
+            <span class="label">N° BL</span>
+            <span class="value">{{ purchase.bl_number }}</span>
+          </div>
+          <div class="detail-item" *ngIf="purchase.with_invoice && purchase.invoice_number">
+            <span class="label">N° Facture</span>
+            <span class="value">{{ purchase.invoice_number }}</span>
+          </div>
         </div>
       </div>
 

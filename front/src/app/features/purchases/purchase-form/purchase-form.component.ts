@@ -58,6 +58,8 @@ export class PurchaseFormComponent implements OnInit {
   formData: PurchasePayload = {
     date: new Date().toISOString().split('T')[0],
     with_invoice: false,
+    bl_number: null,
+    invoice_number: null,
     discount: 0,
     supplier_id: 0,
     commercial_id: null,
@@ -90,6 +92,8 @@ export class PurchaseFormComponent implements OnInit {
         this.formData = {
           date: this.purchase!.date?.substring(0, 10) || '',
           with_invoice: !!this.purchase!.with_invoice,
+          bl_number: this.purchase!.bl_number ?? null,
+          invoice_number: this.purchase!.invoice_number ?? null,
           discount: this.purchase!.discount ?? 0,
           supplier_id: this.purchase!.supplier?.id || 0,
           commercial_id: this.purchase!.commercial?.id || null,
