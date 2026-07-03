@@ -3,11 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductTyre extends Model
 {
     protected $primaryKey = 'product_id';
+
     public $incrementing = false;
 
     protected $fillable = [
@@ -28,8 +28,8 @@ class ProductTyre extends Model
     ];
 
     protected $casts = [
-        'tire_width' => 'integer',
-        'tire_height' => 'integer',
+        'tire_width' => 'float',
+        'tire_height' => 'float',
         'tire_diameter' => 'float',
         'tire_runflat' => 'boolean',
         'tire_reinforced' => 'boolean',

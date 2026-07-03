@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Stock extends Model
 {
@@ -46,19 +45,26 @@ class Stock extends Model
         $result = ['width' => null, 'height' => null, 'diameter' => null, 'brand_prefix' => null, 'text' => []];
 
         foreach ($tokens as $token) {
-            if ($token === '') continue;
+            if ($token === '') {
+                continue;
+            }
 
-            // Standard dimension format: 205/55R16, 225/45R17, 295/80R22.5 (poids lourd), etc.
-            if (preg_match('/^(\d{2,3})\/?(\d{2,3})?[A-Z]*R(\d{2,3}(?:\.\d)?)/i', $token, $m)) {
-                $result['width'] = (int) $m[1];
-                $result['height'] = isset($m[2]) && $m[2] !== '' ? (int) $m[2] : null;
+            // Standard dimension format: 205/55R16, 225/45R17, 295/80R22.5,
+            // 8.5R17.5 (poids lourd, largeur décimale à 1 chiffre), etc.
+            if (preg_match('/^(\d{1,3}\.\d|\d{2,3})\/?(\d{1,3}\.\d|\d{2,3})?[A-Z]*R(\d{2,3}(?:\.\d)?)/i', $token, $m)) {
+                $result['width'] = str_contains($m[1], '.') ? (float) $m[1] : (int) $m[1];
+                $result['height'] = isset($m[2]) && $m[2] !== ''
+                    ? (str_contains($m[2], '.') ? (float) $m[2] : (int) $m[2])
+                    : null;
                 $result['diameter'] = str_contains($m[3], '.') ? (float) $m[3] : (int) $m[3];
+
                 continue;
             }
 
             // Decimal diameter shorthand (poids lourd): 17.5, 22.5
             if (preg_match('/^\d{2,3}\.\d$/', $token)) {
                 $result['diameter'] = (float) $token;
+
                 continue;
             }
 
@@ -75,6 +81,7 @@ class Stock extends Model
                     $result['width'] = (int) substr($digits, 0, 3);
                     $result['height'] = (int) substr($digits, 3, 2);
                 }
+
                 continue;
             }
 
@@ -93,6 +100,7 @@ class Stock extends Model
                 } elseif ($len === 2) {
                     $result['diameter'] = (int) $token;
                 }
+
                 continue;
             }
 

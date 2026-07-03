@@ -87,6 +87,26 @@ class StockParseSearchQueryTest extends TestCase
         $this->assertSame(22.5, $result['diameter']);
     }
 
+    // Heavy-truck decimal width, no height: 8.5R17.5
+    public function test_standard_format_with_decimal_width(): void
+    {
+        $result = Stock::parseSearchQuery('8.5R17.5');
+
+        $this->assertSame(8.5, $result['width']);
+        $this->assertNull($result['height']);
+        $this->assertSame(17.5, $result['diameter']);
+    }
+
+    // Heavy-truck decimal width and height: 8.5/80R17.5
+    public function test_standard_format_with_decimal_width_and_height(): void
+    {
+        $result = Stock::parseSearchQuery('8.5/80R17.5');
+
+        $this->assertSame(8.5, $result['width']);
+        $this->assertSame(80, $result['height']);
+        $this->assertSame(17.5, $result['diameter']);
+    }
+
     // Reference-style with 7+ digits: M2055516
     public function test_reference_style_with_7_digits(): void
     {
