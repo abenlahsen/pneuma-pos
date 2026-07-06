@@ -333,7 +333,7 @@ $text-dim:     #94a3b8;
   background: $surface;
   border-radius: 14px;
   border: 1px solid $border;
-  overflow: hidden;
+  overflow-x: auto;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.04);
 }
 
@@ -351,6 +351,7 @@ $text-dim:     #94a3b8;
     padding: 0.875rem 1.5rem;
     text-align: left;
     border-bottom: 2px solid $border;
+    white-space: nowrap;
 
     &:nth-child(n + 2) { text-align: right; }
   }
@@ -361,6 +362,7 @@ $text-dim:     #94a3b8;
     border-bottom: 1px solid $border;
     vertical-align: middle;
     font-size: 0.855rem;
+    white-space: nowrap;
 
     &:nth-child(n + 2) { text-align: right; }
   }
@@ -542,6 +544,32 @@ $text-dim:     #94a3b8;
     min-width: 0;
   }
 
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .kpi-card {
+    padding: 1.1rem 1.1rem;
+  }
+
+  .kpi-val { font-size: 1.35rem; }
+
+  // Badges are absolutely positioned top-right on desktop; on narrower
+  // mobile cards that clips their text against overflow:hidden, so let
+  // them flow normally below the value instead.
+  .kpi-badge,
+  .kpi-badges {
+    position: static;
+    align-items: flex-start;
+    margin-top: 0.75rem;
+    white-space: normal;
+  }
+
+  .kpi-badges .kpi-badge { position: static; }
+
+  .commercials-section { margin-top: 2rem; }
+
   .quick-links {
     grid-template-columns: 1fr;
     gap: 0.625rem;
@@ -555,4 +583,8 @@ $text-dim:     #94a3b8;
   }
 
   .kpi-filter-control { width: 100%; }
+
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
 }
