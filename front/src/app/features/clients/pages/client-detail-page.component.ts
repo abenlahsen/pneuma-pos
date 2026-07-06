@@ -63,6 +63,10 @@ export class ClientDetailPageComponent implements OnInit {
   readonly viewingPaymentId = signal<number | null>(null);
   readonly deletingPaymentId = signal<number | null>(null);
   readonly saving = signal(false);
+
+  readonly openInvoicesCollapsed = signal(false);
+  readonly entriesCollapsed = signal(false);
+  readonly paymentsCollapsed = signal(false);
   readonly deleting = signal(false);
 
   readonly vehicles = signal<Vehicle[]>([]);
@@ -119,6 +123,10 @@ export class ClientDetailPageComponent implements OnInit {
   trackByRowId(_: number, row: { id?: number | string | null }): number | string {
     return row.id ?? _;
   }
+
+  toggleOpenInvoices(): void { this.openInvoicesCollapsed.update(v => !v); }
+  toggleEntries(): void { this.entriesCollapsed.update(v => !v); }
+  togglePayments(): void { this.paymentsCollapsed.update(v => !v); }
 
   paymentStatusClass(status: string | null | undefined): string {
     const s = (status ?? '').toUpperCase();
@@ -296,6 +304,9 @@ export class ClientDetailPageComponent implements OnInit {
     this.editingVehicle.set(null);
     this.showSaleForm.set(false);
     this.activeTab.set('overview');
+    this.openInvoicesCollapsed.set(false);
+    this.entriesCollapsed.set(false);
+    this.paymentsCollapsed.set(false);
 
     this.vehicleService.getVehiclesForClient(clientId)
       .pipe(takeUntilDestroyed(this.destroyRef))
