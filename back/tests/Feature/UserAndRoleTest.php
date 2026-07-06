@@ -18,7 +18,9 @@ class UserAndRoleTest extends TestCase
     use DatabaseTransactions;
 
     private User $admin;
+
     private Role $adminRole;
+
     private Role $commercialRole;
 
     protected function setUp(): void
@@ -250,6 +252,29 @@ class UserAndRoleTest extends TestCase
         $this->assertTrue($newUser->hasRole('Commercial'));
     }
 
+    public function test_users_store_persists_prime_per_tyre(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+
+        $email = fake()->unique()->safeEmail();
+
+        $response = $this->postJson('/api/users', [
+            'name' => 'New Commercial',
+            'email' => $email,
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'phone' => '0699999999',
+            'commission_rate' => 5,
+            'prime_per_tyre' => 6.5,
+            'role' => 'Commercial',
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('prime_per_tyre', 6.5);
+
+        $this->assertDatabaseHas('users', ['email' => $email, 'prime_per_tyre' => 6.5]);
+    }
+
     public function test_users_store_prevents_non_admin_from_assigning_admin_role(): void
     {
         $manager = User::query()->create([
@@ -312,6 +337,33 @@ class UserAndRoleTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('name', 'Updated Name');
+    }
+
+    public function test_users_update_persists_prime_per_tyre(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+
+        $target = User::query()->create([
+            'name' => 'Original Name',
+            'email' => fake()->unique()->safeEmail(),
+            'password' => 'password',
+            'phone' => '0622222222',
+            'commission_rate' => 0,
+            'prime_per_tyre' => 0,
+            'must_change_password' => false,
+        ]);
+        $target->assignRole($this->commercialRole);
+
+        $response = $this->putJson("/api/users/{$target->id}", [
+            'name' => $target->name,
+            'email' => $target->email,
+            'prime_per_tyre' => 6.5,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('prime_per_tyre', 6.5);
+
+        $this->assertDatabaseHas('users', ['id' => $target->id, 'prime_per_tyre' => 6.5]);
     }
 
     public function test_users_update_prevents_removing_last_admin(): void
