@@ -7,6 +7,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\SupplierPaymentController;
 use Illuminate\Support\Facades\Route;
 
 // Cities (reference list — no specific permission required)
@@ -41,6 +42,11 @@ Route::get('suppliers/{supplier}/statement', [SupplierController::class, 'statem
 Route::post('suppliers', [SupplierController::class, 'store'])->middleware('permission:create suppliers');
 Route::put('suppliers/{supplier}', [SupplierController::class, 'update'])->middleware('permission:edit suppliers');
 Route::delete('suppliers/{supplier}', [SupplierController::class, 'destroy'])->middleware('permission:delete suppliers');
+
+// Supplier payments — settle several purchases with a single payment
+Route::get('suppliers/{supplier}/unpaid-purchases', [SupplierPaymentController::class, 'unpaidPurchases'])->middleware('permission:view purchases');
+Route::post('suppliers/{supplier}/payments', [SupplierPaymentController::class, 'store'])->middleware('permission:manage purchase-payments');
+Route::delete('suppliers/{supplier}/payments/{payment}', [SupplierPaymentController::class, 'destroy'])->middleware('permission:manage purchase-payments');
 
 // Carriers (Transporteurs)
 Route::get('carriers', [CarrierController::class, 'index'])->middleware('permission:view carriers');

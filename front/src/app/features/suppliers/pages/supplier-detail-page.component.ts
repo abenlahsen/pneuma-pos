@@ -5,6 +5,8 @@ import { catchError, of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SupplierService } from '../data-access/supplier.service';
 import { SupplierFormComponent } from '../components/supplier-form/supplier-form.component';
+import { SupplierPaymentComponent } from '../components/supplier-payment/supplier-payment.component';
+import { PurchasePaymentDetailComponent } from '../../purchases/components/purchase-payment-detail/purchase-payment-detail.component';
 import { AuthService } from '../../../core/services/auth.service';
 import {
   Supplier,
@@ -12,13 +14,14 @@ import {
   SupplierProfileResponse,
   SupplierStatementResponse,
   SupplierStatementEntry,
+  SupplierStatementPayment,
   PurchaseHistoryRow,
 } from '../models/supplier.model';
 
 @Component({
   selector: 'app-supplier-detail-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, SupplierFormComponent],
+  imports: [CommonModule, RouterLink, SupplierFormComponent, SupplierPaymentComponent, PurchasePaymentDetailComponent],
   templateUrl: './supplier-detail-page.component.html',
   styleUrl: './supplier-detail-page.component.scss',
 })
@@ -29,7 +32,7 @@ export class SupplierDetailPageComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   readonly authService = inject(AuthService);
 
-  private activeId: number | null = null;
+  activeId: number | null = null;
 
   readonly loading = signal(true);
   readonly profileLoading = signal(false);
@@ -42,8 +45,11 @@ export class SupplierDetailPageComponent implements OnInit {
   readonly statement = signal<SupplierStatementResponse | null>(null);
 
   readonly isEditModalOpen = signal(false);
+  readonly isPaymentModalOpen = signal(false);
   readonly saving = signal(false);
   readonly deleting = signal(false);
+  readonly deletingPaymentId = signal<number | null>(null);
+  readonly viewingPaymentId = signal<number | null>(null);
 
   readonly purchasesHistory = computed<PurchaseHistoryRow[]>(() =>
     this.profile()?.purchases ?? this.statement()?.purchases ?? []
@@ -81,6 +87,42 @@ export class SupplierDetailPageComponent implements OnInit {
 
   openEditModal(): void { this.isEditModalOpen.set(true); }
   closeEditModal(): void { this.isEditModalOpen.set(false); }
+
+  openPaymentModal(): void { this.isPaymentModalOpen.set(true); }
+  closePaymentModal(): void { this.isPaymentModalOpen.set(false); }
+
+  onPaymentSaved(): void {
+    if (this.activeId) this.loadSupplier(this.activeId);
+  }
+
+  openPaymentView(payment: SupplierStatementPayment): void {
+    this.viewingPaymentId.set(payment.id);
+  }
+
+  closePaymentView(): void {
+    this.viewingPaymentId.set(null);
+  }
+
+  deleteStatementPayment(payment: SupplierStatementPayment): void {
+    const id = this.activeId;
+    if (!id) return;
+    const warning = payment.multi
+      ? 'Ce paiement couvre plusieurs achats. Le supprimer annulera le paiement sur TOUS ces achats. Continuer ?'
+      : 'Supprimer ce paiement ?';
+    if (!confirm(warning)) return;
+
+    this.deletingPaymentId.set(payment.id);
+    this.supplierService.deleteSupplierPayment(id, payment.id).subscribe({
+      next: () => {
+        this.deletingPaymentId.set(null);
+        this.loadSupplier(id);
+      },
+      error: () => {
+        this.deletingPaymentId.set(null);
+        alert('Impossible de supprimer ce paiement.');
+      },
+    });
+  }
 
   saveSupplier(payload: SupplierPayload): void {
     const id = this.activeId;

@@ -65,8 +65,23 @@ class Purchase extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
+    /**
+     * Legacy relation — only returns payments created against this purchase alone
+     * (purchase_id set directly). Multi-purchase supplier payments do not set
+     * purchase_id; use `allocations()` for the authoritative paid-amount source.
+     */
     public function payments()
     {
         return $this->hasMany(PurchasePayment::class);
+    }
+
+    public function allocations()
+    {
+        return $this->hasMany(PurchasePaymentAllocation::class);
+    }
+
+    public function paidAmount(): float
+    {
+        return (float) $this->allocations()->sum('amount');
     }
 }

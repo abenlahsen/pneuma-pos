@@ -192,6 +192,24 @@ $_border2:  #d0d9e4;
   &-danger  { background: rgba(239, 68, 68, 0.10);  color: #dc2626; }
 }
 
+.badge-multi {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.4rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #a16207;
+  background: rgba(234, 179, 8, 0.12);
+  border-radius: 6px;
+  vertical-align: middle;
+}
+
+.text-muted {
+  color: $_muted;
+}
+
 // ── Payments list ─────────────────────────────────────────────────────────────
 .payments-list {
   display: flex;
@@ -267,7 +285,15 @@ $_border2:  #d0d9e4;
   }
 }
 
-.btn-delete {
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  justify-content: flex-end;
+}
+
+.btn-delete,
+.btn-view {
   background: none;
   border: none;
   cursor: pointer;
@@ -279,6 +305,8 @@ $_border2:  #d0d9e4;
 
   &:hover { opacity: 1; color: #dc2626; }
 }
+
+.btn-view:hover { color: $_red; }
 
 // ── Add payment form ──────────────────────────────────────────────────────────
 .add-payment-form {

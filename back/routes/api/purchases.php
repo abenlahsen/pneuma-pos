@@ -21,3 +21,6 @@ Route::delete('purchases/{purchase}', [PurchaseController::class, 'destroy'])->m
 Route::get('purchases/{purchase}/payments', [PurchasePaymentController::class, 'index'])->middleware('permission:view purchases');
 Route::post('purchases/{purchase}/payments', [PurchasePaymentController::class, 'store'])->middleware('permission:manage purchase-payments');
 Route::delete('purchases/{purchase}/payments/{payment}', [PurchasePaymentController::class, 'destroy'])->middleware('permission:manage purchase-payments');
+
+// Purchase payment detail (unscoped — shows every purchase a payment covers, single or multi)
+Route::get('purchase-payments/{payment}', [PurchasePaymentController::class, 'show'])->middleware('permission:view purchases');

@@ -23,6 +23,11 @@ class PurchasePaymentController extends Controller
         return response()->json($this->purchasePaymentService->listForPurchase($purchase));
     }
 
+    public function show(PurchasePayment $payment): JsonResponse
+    {
+        return response()->json($this->purchasePaymentService->getPaymentDetail($payment));
+    }
+
     public function store(Request $request, Purchase $purchase): JsonResponse
     {
         $validated = $request->validate([

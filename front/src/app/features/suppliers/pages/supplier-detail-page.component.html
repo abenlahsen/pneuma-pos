@@ -25,6 +25,9 @@
         </div>
 
         <div class="header-actions">
+          @if (authService.hasPermission('manage purchase-payments')) {
+            <button type="button" class="btn btn-primary" (click)="openPaymentModal()">💳 Régler des achats</button>
+          }
           <button type="button" class="btn btn-secondary" (click)="openEditModal()">✏️ Modifier</button>
           @if (authService.hasPermission('delete suppliers')) {
             <button type="button" class="btn btn-danger" (click)="deleteSupplier()" [disabled]="deleting()">
@@ -267,15 +270,38 @@
                       <th>DATE</th>
                       <th>MÉTHODE</th>
                       <th class="col-right">MONTANT</th>
+                      <th></th>
                     </tr>
                   </thead>
                   <tbody>
                     @for (payment of statement()?.payments ?? []; track trackById($index, payment)) {
                       <tr>
-                        <td class="ref-cell">{{ payment.reference || ('Paiement #' + payment.id) }}</td>
+                        <td class="ref-cell">
+                          {{ payment.reference || ('Paiement #' + payment.id) }}
+                          @if (payment.multi) {
+                            <span class="badge badge-warning" title="Ce paiement couvre plusieurs achats">multi</span>
+                          }
+                        </td>
                         <td>{{ payment.date ? (payment.date | date:'dd/MM/yyyy') : '—' }}</td>
                         <td>{{ payment.method || '—' }}</td>
                         <td class="col-right num">{{ (payment.amount ?? 0) | number:'1.2-2' }} DH</td>
+                        <td class="col-right actions-cell">
+                          <button
+                            type="button"
+                            class="btn-icon"
+                            title="Voir le détail du paiement"
+                            (click)="openPaymentView(payment)"
+                          >👁️</button>
+                          @if (authService.hasPermission('manage purchase-payments')) {
+                            <button
+                              type="button"
+                              class="btn-icon"
+                              title="Supprimer ce paiement"
+                              [disabled]="deletingPaymentId() === payment.id"
+                              (click)="deleteStatementPayment(payment)"
+                            >🗑️</button>
+                          }
+                        </td>
                       </tr>
                     }
                   </tbody>
@@ -305,4 +331,20 @@
       </div>
     </div>
   </div>
+}
+
+@if (isPaymentModalOpen() && activeId) {
+  <app-supplier-payment
+    [supplierId]="activeId"
+    [supplierName]="profile()?.supplier?.name ?? ''"
+    (closed)="closePaymentModal()"
+    (saved)="onPaymentSaved()">
+  </app-supplier-payment>
+}
+
+@if (viewingPaymentId()) {
+  <app-purchase-payment-detail
+    [paymentId]="viewingPaymentId()!"
+    (closed)="closePaymentView()">
+  </app-purchase-payment-detail>
 }

@@ -67,6 +67,8 @@ export interface PurchasePayment {
   notes?: string | null;
   account_id: number;
   created_at?: string;
+  /** True when this payment was split across several purchases (settled from the supplier page). */
+  multi?: boolean;
 }
 
 export interface PurchasePaymentSummary {
@@ -75,4 +77,26 @@ export interface PurchasePaymentSummary {
   total_purchase: number;
   remaining: number;
   payment_status: string;
+}
+
+export interface PurchasePaymentDetailPurchaseRow {
+  id: number;
+  date?: string;
+  net_amount: number;
+  status: string;
+  payment_status: string;
+  allocated_amount: number;
+}
+
+export interface PurchasePaymentDetail {
+  id: number;
+  date: string;
+  amount: number;
+  method?: string | null;
+  reference?: string | null;
+  notes?: string | null;
+  created_at?: string;
+  supplier?: { id: number; name: string } | null;
+  account?: { id: number; name: string } | null;
+  purchases: PurchasePaymentDetailPurchaseRow[];
 }

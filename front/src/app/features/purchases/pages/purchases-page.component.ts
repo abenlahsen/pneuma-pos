@@ -1,6 +1,8 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PurchaseService } from '../data-access/purchase.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Purchase, PurchaseSummary } from '../models/purchase.model';
@@ -24,6 +26,8 @@ export class PurchasesPageComponent implements OnInit {
   readonly PAYMENT_STATUS_LABELS = PAYMENT_STATUS_LABELS;
 
   private purchaseService = inject(PurchaseService);
+  private route = inject(ActivatedRoute);
+  private destroyRef = inject(DestroyRef);
   public authService = inject(AuthService);
 
   purchases = signal<Purchase[]>([]);
@@ -69,6 +73,17 @@ export class PurchasesPageComponent implements OnInit {
   ngOnInit(): void {
     this.loadFilters();
     this.loadData();
+
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const id = Number(params.get('id'));
+        if (!Number.isFinite(id) || id <= 0) return;
+
+        this.purchaseService.getPurchase(id).subscribe({
+          next: purchase => this.openDetail(purchase),
+        });
+      });
   }
 
   private buildFilters(): Record<string, string> {

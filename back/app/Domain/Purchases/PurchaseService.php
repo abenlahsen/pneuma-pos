@@ -6,6 +6,8 @@ use App\Enums\PurchasePaymentStatus;
 use App\Enums\PurchaseStatus;
 use App\Models\Product;
 use App\Models\Purchase;
+use App\Models\PurchasePayment;
+use App\Models\PurchasePaymentAllocation;
 use App\Models\Stock;
 use App\Models\Supplier;
 use App\Models\Transaction;
@@ -21,10 +23,13 @@ class PurchaseService
 
     protected ActivityLogService $activityLog;
 
-    public function __construct(StockMovementService $movements, ActivityLogService $activityLog)
+    protected PurchasePaymentService $purchasePayments;
+
+    public function __construct(StockMovementService $movements, ActivityLogService $activityLog, PurchasePaymentService $purchasePayments)
     {
         $this->movements = $movements;
         $this->activityLog = $activityLog;
+        $this->purchasePayments = $purchasePayments;
     }
 
     /**
@@ -176,7 +181,7 @@ class PurchaseService
 
     private function refreshPaymentStatus(Purchase $purchase): void
     {
-        $totalPaid = (float) $purchase->payments()->sum('amount');
+        $totalPaid = $purchase->paidAmount();
         $netAmount = (float) $purchase->net_amount;
         $status = $totalPaid <= 0
                 ? PurchasePaymentStatus::NON_PAYE->value
@@ -194,6 +199,28 @@ class PurchaseService
                 $this->restoreStockForItems($purchase, $userId);
             }
 
+            // Remove this purchase's own allocation(s). If a parent payment no longer
+            // covers any other purchase, delete the payment and its transaction too —
+            // but a multi-purchase supplier payment must survive for the other purchases.
+            $allocations = PurchasePaymentAllocation::where('purchase_id', $purchase->id)->get();
+            foreach ($allocations->groupBy('purchase_payment_id') as $paymentId => $rows) {
+                PurchasePaymentAllocation::whereIn('id', $rows->pluck('id'))->delete();
+
+                if (PurchasePaymentAllocation::where('purchase_payment_id', $paymentId)->exists()) {
+                    continue;
+                }
+
+                $payment = PurchasePayment::find($paymentId);
+                if ($payment) {
+                    if ($payment->transaction_id) {
+                        Transaction::where('id', $payment->transaction_id)->delete();
+                    }
+                    $payment->delete();
+                }
+            }
+
+            // Legacy fallback: payments still linked via purchase_id but with no
+            // allocation row (e.g. rows inserted directly, bypassing the service).
             $transactionIds = $purchase->payments()->whereNotNull('transaction_id')->pluck('transaction_id');
             $purchase->payments()->delete();
 
@@ -255,7 +282,7 @@ class PurchaseService
                 ->where('status', PurchaseStatus::EN_COURS->value)
                 ->whereIn('payment_status', [PurchasePaymentStatus::NON_PAYE->value, PurchasePaymentStatus::PARTIEL->value]);
             $totalSale = (float) (clone $q)->sum('net_amount');
-            $totalPaid = (float) \DB::table('purchase_payments')
+            $totalPaid = (float) \DB::table('purchase_payment_allocations')
                 ->whereIn('purchase_id', (clone $q)->select('id'))
                 ->sum('amount');
 
@@ -267,7 +294,7 @@ class PurchaseService
                 ->whereIn('status', [PurchaseStatus::RECU->value, PurchaseStatus::TERMINE->value])
                 ->whereIn('payment_status', [PurchasePaymentStatus::NON_PAYE->value, PurchasePaymentStatus::PARTIEL->value]);
             $totalSale = (float) (clone $q)->sum('net_amount');
-            $totalPaid = (float) \DB::table('purchase_payments')
+            $totalPaid = (float) \DB::table('purchase_payment_allocations')
                 ->whereIn('purchase_id', (clone $q)->select('id'))
                 ->sum('amount');
 
@@ -298,7 +325,7 @@ class PurchaseService
 
     public function loadRelations(Purchase $purchase)
     {
-        return $purchase->load([
+        $purchase->load([
             'items.linkedProduct.brand',
             'items.linkedProduct.tyre',
             'items.linkedProduct.part',
@@ -307,8 +334,13 @@ class PurchaseService
             'commercial',
             'creator',
             'updater',
-            'payments',
         ]);
+
+        // Built from allocations (not the legacy `payments` relation) so a purchase
+        // covered by a multi-purchase supplier payment still shows its own share.
+        $purchase->setRelation('payments', $this->purchasePayments->buildPaymentRowsForPurchase($purchase));
+
+        return $purchase;
     }
 
     /**

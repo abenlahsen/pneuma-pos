@@ -57,6 +57,8 @@ export interface SupplierStatementPayment {
   method?: string;
   notes?: string;
   created_at?: string;
+  /** True when the parent payment is split across several purchases. */
+  multi?: boolean;
 }
 
 export interface SupplierProfileResponse {
@@ -83,4 +85,27 @@ export interface SupplierStatementResponse {
   purchases: PurchaseHistoryRow[];
   payments: SupplierStatementPayment[];
   entries: SupplierStatementEntry[];
+}
+
+export interface UnpaidPurchaseRow {
+  id: number;
+  date?: string;
+  net_amount: number;
+  paid_amount: number;
+  remaining: number;
+}
+
+export interface SupplierPaymentAllocationInput {
+  purchase_id: number;
+  amount: number;
+}
+
+export interface SupplierPaymentPayload {
+  amount: number;
+  method: string;
+  date: string;
+  account_id: number;
+  reference?: string | null;
+  notes?: string | null;
+  allocations: SupplierPaymentAllocationInput[];
 }

@@ -1,0 +1,293 @@
+// ── Design tokens (matches supplier-detail-page.component.scss) ───────────────
+$primary:      #ff2d37;
+$danger-bg:    rgba(239, 68, 68, 0.10);
+$danger-text:  #dc2626;
+$warning-bg:   rgba(234, 179, 8, 0.12);
+$warning-text: #a16207;
+
+$bg:       #f1f5f9;
+$surface:  #ffffff;
+$surface2: #f8fafc;
+$border:   #e8edf3;
+$border2:  #d0d9e4;
+$text:     #0f172a;
+$muted:    #64748b;
+$dim:      #94a3b8;
+$strong:   #1e293b;
+
+$radius-sm: 8px;
+$radius-md: 12px;
+
+:host { display: block; }
+
+// ── Modal shell ───────────────────────────────────────────────────────────────
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1.5rem;
+  backdrop-filter: blur(2px);
+}
+
+.modal-container {
+  background: $surface;
+  border-radius: $radius-md;
+  width: 100%;
+  max-width: 820px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
+  border: 1px solid $border;
+}
+
+.modal-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid $border;
+  background: $surface2;
+  border-radius: $radius-md $radius-md 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+
+  h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: $text;
+    letter-spacing: -0.01em;
+  }
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid $border;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.625rem;
+  flex-shrink: 0;
+}
+
+.btn-icon {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid $border;
+  background: $surface;
+  border-radius: $radius-sm;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover { background: $surface2; border-color: $border2; }
+}
+
+// ── Buttons ───────────────────────────────────────────────────────────────────
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.575rem 1.1rem;
+  border-radius: $radius-sm;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1.5px solid transparent;
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.btn-primary {
+  background: $primary;
+  color: white;
+  &:hover:not(:disabled) { filter: brightness(0.95); }
+}
+
+.btn-secondary {
+  background: $surface;
+  color: $strong;
+  border-color: $border2;
+  &:hover:not(:disabled) { background: $surface2; border-color: #bcc6d4; }
+}
+
+// ── Form ──────────────────────────────────────────────────────────────────────
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  &--full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $muted;
+  }
+}
+
+.form-control {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid $border2;
+  border-radius: $radius-sm;
+  font-size: 0.875rem;
+  font: inherit;
+  color: $text;
+  background: $surface;
+
+  &:focus {
+    outline: none;
+    border-color: $primary;
+    box-shadow: 0 0 0 3px rgba($primary, 0.10);
+  }
+
+  &--sm {
+    padding: 0.35rem 0.5rem;
+    width: 110px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.allocation-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.btn-fill {
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid $border2;
+  border-radius: $radius-sm;
+  background: $surface;
+  color: $muted;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+
+  &:hover {
+    background: rgba($primary, 0.08);
+    border-color: $primary;
+    color: $primary;
+  }
+}
+
+// ── Section title ─────────────────────────────────────────────────────────────
+.section-title {
+  border-left: 3px solid $primary;
+  padding-left: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: $text;
+  margin: 0 0 0.875rem;
+}
+
+// ── Table ─────────────────────────────────────────────────────────────────────
+.table-wrapper { overflow-x: auto; }
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    background: $surface2;
+    color: $dim;
+    text-transform: uppercase;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 2px solid $border;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 0.55rem 0.75rem;
+    font-size: 0.8125rem;
+    border-bottom: 1px solid $border;
+    color: $strong;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+}
+
+.col-right { text-align: right; }
+.num { font-variant-numeric: tabular-nums; }
+
+.ref-cell {
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: $strong;
+  font-family: ui-monospace, 'Courier New', monospace;
+}
+
+.text-danger { color: $danger-text; font-weight: 700; }
+
+// ── Allocation summary ────────────────────────────────────────────────────────
+.allocation-summary {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: $surface2;
+  border-radius: $radius-sm;
+  border: 1px solid $border;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: $strong;
+
+  &.mismatch {
+    background: $warning-bg;
+    border-color: rgba(234, 179, 8, 0.35);
+    color: $warning-text;
+  }
+}
+
+.mismatch-hint {
+  color: $warning-text;
+  font-weight: 700;
+}
+
+// ── Empty / error states ──────────────────────────────────────────────────────
+.empty-state {
+  padding: 2rem 1.5rem;
+  text-align: center;
+
+  p { color: $dim; font-size: 0.875rem; margin: 0; }
+
+  &.error p { color: $danger-text; }
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 640px) {
+  .form-grid { grid-template-columns: 1fr; }
+}

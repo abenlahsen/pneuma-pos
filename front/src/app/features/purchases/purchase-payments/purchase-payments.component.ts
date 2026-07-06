@@ -6,13 +6,14 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Purchase, PurchasePayment, PurchasePaymentSummary } from '../../../core/models/purchase.model';
 import { Account } from '../../../core/models/account.model';
 import { AccountService } from '../../../core/services/account.service';
+import { PurchasePaymentDetailComponent } from '../components/purchase-payment-detail/purchase-payment-detail.component';
 
 const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Effet', 'Carte bancaire'];
 
 @Component({
   selector: 'app-purchase-payments',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PurchasePaymentDetailComponent],
   templateUrl: './purchase-payments.component.html',
   styleUrl: './purchase-payments.component.scss',
 })
@@ -29,6 +30,7 @@ export class PurchasePaymentsComponent implements OnInit {
   loading = signal(true);
   submitting = signal(false);
   accounts = signal<Account[]>([]);
+  viewingPaymentId = signal<number | null>(null);
 
   readonly paymentMethods = PAYMENT_METHODS;
   showAddForm = false;
@@ -117,6 +119,14 @@ export class PurchasePaymentsComponent implements OnInit {
         this.statusChanged.emit();
       },
     });
+  }
+
+  openView(payment: PurchasePayment): void {
+    this.viewingPaymentId.set(payment.id);
+  }
+
+  closeView(): void {
+    this.viewingPaymentId.set(null);
   }
 
   close(): void {
