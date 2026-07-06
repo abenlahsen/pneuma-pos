@@ -17,7 +17,7 @@
       <div class="filters-grid" style="display: flex; gap: 1rem; align-items: flex-end;">
         <div class="form-group" style="flex: 1;">
           <label>Rechercher un utilisateur</label>
-          <input type="text" class="form-control" [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event)" placeholder="Nom ou email..." (keyup.enter)="applyFilters()">
+          <input type="text" class="form-control" [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event)" placeholder="Nom ou email..." (keyup.enter)="applyFilters()" autocomplete="off">
         </div>
         <div class="filter-actions">
           <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher">🔍</button>
@@ -36,6 +36,7 @@
             <th>Email</th>
             <th>Téléphone</th>
             <th>Commission (%)</th>
+            <th>Prime / pneu (DH)</th>
             <th>Rôle</th>
             <th>Date de création</th>
             <th class="text-center">Actions</th>
@@ -43,12 +44,12 @@
         </thead>
         <tbody>
           <tr *ngIf="loading()">
-            <td colspan="7" class="text-center py-4">
+            <td colspan="8" class="text-center py-4">
               <div class="spinner"></div> Chargement...
             </td>
           </tr>
           <tr *ngIf="!loading() && users().length === 0">
-            <td colspan="7" class="text-center py-4 text-muted">
+            <td colspan="8" class="text-center py-4 text-muted">
               Aucun utilisateur trouvé.
             </td>
           </tr>
@@ -59,6 +60,7 @@
             <td>{{ user.email }}</td>
             <td>{{ user.phone || '—' }}</td>
             <td>{{ user.commission_rate != null ? user.commission_rate + '%' : '—' }}</td>
+            <td>{{ user.prime_per_tyre != null ? (user.prime_per_tyre | number:'1.2-2') + ' DH' : '—' }}</td>
             <td>
               <span class="role-badge" *ngFor="let role of user.roles">{{ role.name }}</span>
               <span class="text-muted" *ngIf="user.roles.length === 0">Aucun rôle</span>
@@ -101,15 +103,15 @@
       </div>
       <div class="form-group">
         <label>Email</label>
-        <input type="email" class="form-control" [ngModel]="formEmail()" (ngModelChange)="formEmail.set($event)" placeholder="email@example.com">
+        <input type="email" class="form-control" [ngModel]="formEmail()" (ngModelChange)="formEmail.set($event)" placeholder="email@example.com" autocomplete="off">
       </div>
       <div class="form-group">
         <label>{{ editingUser() ? 'Nouveau mot de passe (laisser vide pour ne pas changer)' : 'Mot de passe' }}</label>
-        <input type="password" class="form-control" [ngModel]="formPassword()" (ngModelChange)="formPassword.set($event)" placeholder="••••••">
+        <input type="password" class="form-control" [ngModel]="formPassword()" (ngModelChange)="formPassword.set($event)" placeholder="••••••" autocomplete="new-password">
       </div>
       <div class="form-group" *ngIf="formPassword()">
         <label>Confirmation du mot de passe</label>
-        <input type="password" class="form-control" [class.input-error]="formPassword() && formPasswordConfirmation() && !passwordsMatch()" [ngModel]="formPasswordConfirmation()" (ngModelChange)="formPasswordConfirmation.set($event)" placeholder="••••••">
+        <input type="password" class="form-control" [class.input-error]="formPassword() && formPasswordConfirmation() && !passwordsMatch()" [ngModel]="formPasswordConfirmation()" (ngModelChange)="formPasswordConfirmation.set($event)" placeholder="••••••" autocomplete="new-password">
         <small class="text-danger" *ngIf="formPassword() && formPasswordConfirmation() && !passwordsMatch()">Les mots de passe ne correspondent pas</small>
       </div>
       <div class="form-group">
