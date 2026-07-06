@@ -135,6 +135,43 @@ class ClientManagementTest extends TestCase
         $this->assertGreaterThanOrEqual(2, count($response->json('data.entries')));
     }
 
+    public function test_client_statement_orders_entries_by_date_descending(): void
+    {
+        $this->authenticateWithPermissions(['view clients']);
+
+        $client = Client::create([
+            'name' => 'Ordering Client',
+            'category' => 'Particulier',
+            'phone' => '0701111111',
+            'is_active' => true,
+        ]);
+
+        Sale::create([
+            'client_id' => $client->id,
+            'date' => '2026-01-10',
+            'total_sale' => 100,
+            'payment_method' => 'cash',
+            'status' => 'partial',
+        ]);
+
+        Sale::create([
+            'client_id' => $client->id,
+            'date' => '2026-03-15',
+            'total_sale' => 50,
+            'payment_method' => 'cash',
+            'status' => 'partial',
+        ]);
+
+        $response = $this->getJson('/api/clients/'.$client->id.'/statement');
+
+        $response->assertOk();
+        $dates = collect($response->json('data.entries'))->pluck('date')->all();
+
+        $this->assertSame($dates, collect($dates)->sortDesc()->values()->all(), 'Entries must be ordered newest first.');
+        $this->assertSame('2026-03-15', $dates[0]);
+        $this->assertSame('2026-01-10', $dates[count($dates) - 1]);
+    }
+
     public function test_store_client_request_requires_allowed_category_values(): void
     {
         $missingCategoryValidator = Validator::make([

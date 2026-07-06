@@ -176,6 +176,8 @@ class SupplierService
 
         $running = 0.0;
 
+        // Running balance is only meaningful computed oldest-first; the final
+        // list is then reversed so the statement displays newest-first.
         return $entries
             ->sortBy('_sort')
             ->values()
@@ -186,6 +188,8 @@ class SupplierService
 
                 return $entry;
             })
+            ->reverse()
+            ->values()
             ->all();
     }
 }

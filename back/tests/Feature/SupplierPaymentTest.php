@@ -44,7 +44,7 @@ class SupplierPaymentTest extends TestCase
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        foreach (['view purchases', 'manage purchase-payments'] as $perm) {
+        foreach (['view purchases', 'manage purchase-payments', 'view suppliers'] as $perm) {
             Permission::findOrCreate($perm, 'web');
         }
 
@@ -328,6 +328,24 @@ class SupplierPaymentTest extends TestCase
         $this->assertEquals('PAYE', $purchases[$this->purchaseA->id]['payment_status']);
         $this->assertEquals(100.00, $purchases[$this->purchaseB->id]['allocated_amount']);
         $this->assertEquals('PARTIEL', $purchases[$this->purchaseB->id]['payment_status']);
+    }
+
+    // -------------------------------------------------------------------------
+    // GET /api/suppliers/{supplier}/statement
+    // -------------------------------------------------------------------------
+
+    public function test_statement_orders_entries_by_date_descending(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $response = $this->getJson("/api/suppliers/{$this->supplier->id}/statement");
+
+        $response->assertOk();
+        $dates = collect($response->json('entries'))->pluck('date')->all();
+
+        $this->assertSame($dates, collect($dates)->sortDesc()->values()->all(), 'Entries must be ordered newest first.');
+        $this->assertSame($this->purchaseB->date->toDateString(), $dates[0]);
+        $this->assertSame($this->purchaseA->date->toDateString(), $dates[count($dates) - 1]);
     }
 
     // -------------------------------------------------------------------------

@@ -435,6 +435,8 @@ class ClientService
 
         $runningBalance = 0.0;
 
+        // Running balance is only meaningful computed oldest-first; the final
+        // list is then reversed so the statement displays newest-first.
         return $entries
             ->sortBy(fn (array $entry) => $entry['_sort_date'] ?? null)
             ->values()
@@ -445,6 +447,8 @@ class ClientService
 
                 return $entry;
             })
+            ->reverse()
+            ->values()
             ->all();
     }
 
