@@ -160,6 +160,13 @@ h1 {
   &:hover:not(:disabled) { background: $surface2; border-color: #bcc6d4; }
 }
 
+.btn-primary {
+  background: $primary;
+  color: white;
+
+  &:hover:not(:disabled) { filter: brightness(0.95); }
+}
+
 .btn-danger {
   background: $surface;
   color: $danger-text;
@@ -509,6 +516,13 @@ h1 {
   padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
+}
+
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  justify-content: flex-end;
 }
 
 .btn-icon {

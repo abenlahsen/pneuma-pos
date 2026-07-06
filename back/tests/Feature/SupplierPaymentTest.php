@@ -2,13 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Domain\Purchases\PurchasePaymentService;
 use App\Models\Account;
 use App\Models\Purchase;
 use App\Models\PurchasePayment;
 use App\Models\PurchasePaymentAllocation;
 use App\Models\Supplier;
-use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -20,7 +18,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
-class PurchasePaymentTest extends TestCase
+class SupplierPaymentTest extends TestCase
 {
     use DatabaseTransactions;
 
@@ -28,7 +26,11 @@ class PurchasePaymentTest extends TestCase
 
     private Account $account;
 
-    private Purchase $purchase;
+    private Supplier $supplier;
+
+    private Purchase $purchaseA;
+
+    private Purchase $purchaseB;
 
     protected function setUp(): void
     {
@@ -66,18 +68,28 @@ class PurchasePaymentTest extends TestCase
             'is_active' => true,
         ]);
 
-        $supplier = Supplier::query()->create([
-            'name' => 'Fournisseur Test',
+        $this->supplier = Supplier::query()->create([
+            'name' => 'Fournisseur Multi',
             'user_id' => $this->user->id,
         ]);
 
-        $this->purchase = Purchase::query()->create([
+        $this->purchaseA = Purchase::query()->create([
             'date' => '2026-04-01',
-            'supplier_id' => $supplier->id,
+            'supplier_id' => $this->supplier->id,
             'total_quantity' => 4,
-            'total_price' => 1000.00,
-            'discount' => 0,
-            'net_amount' => 1000.00,
+            'total_price' => 600.00,
+            'net_amount' => 600.00,
+            'status' => 'EN COURS',
+            'payment_status' => 'NON PAYE',
+            'created_by' => $this->user->id,
+        ]);
+
+        $this->purchaseB = Purchase::query()->create([
+            'date' => '2026-04-05',
+            'supplier_id' => $this->supplier->id,
+            'total_quantity' => 2,
+            'total_price' => 400.00,
+            'net_amount' => 400.00,
             'status' => 'EN COURS',
             'payment_status' => 'NON PAYE',
             'created_by' => $this->user->id,
@@ -85,324 +97,237 @@ class PurchasePaymentTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
-    // GET /api/purchases/{purchase}/payments
+    // GET /api/suppliers/{supplier}/unpaid-purchases
     // -------------------------------------------------------------------------
 
-    public function test_index_requires_authentication(): void
+    public function test_unpaid_purchases_requires_authentication(): void
     {
-        $response = $this->getJson("/api/purchases/{$this->purchase->id}/payments");
-
-        $response->assertUnauthorized();
+        $this->getJson("/api/suppliers/{$this->supplier->id}/unpaid-purchases")->assertUnauthorized();
     }
 
-    public function test_index_requires_view_purchases_permission(): void
-    {
-        $guest = $this->createUserWithPermissions([]);
-        Sanctum::actingAs($guest, [], 'web');
-
-        $response = $this->getJson("/api/purchases/{$this->purchase->id}/payments");
-
-        $response->assertForbidden();
-    }
-
-    public function test_index_returns_payment_summary(): void
+    public function test_unpaid_purchases_lists_oldest_first_with_remaining_balance(): void
     {
         Sanctum::actingAs($this->user, [], 'web');
 
-        $transaction = Transaction::query()->create([
-            'date' => '2026-04-10',
-            'amount' => 300.00,
-            'type' => 'expense',
-            'category' => 'Achat',
-            'method' => 'Espèces',
-            'description' => 'Test',
-            'person' => '',
-            'user_id' => $this->user->id,
-            'account_id' => $this->account->id,
-        ]);
+        $response = $this->getJson("/api/suppliers/{$this->supplier->id}/unpaid-purchases");
 
-        $payment = PurchasePayment::query()->create([
-            'purchase_id' => $this->purchase->id,
-            'supplier_id' => $this->purchase->supplier_id,
-            'transaction_id' => $transaction->id,
-            'user_id' => $this->user->id,
-            'amount' => 300.00,
-            'date' => '2026-04-10',
-            'method' => 'Espèces',
-        ]);
+        $response->assertOk();
+        $rows = $response->json('purchases');
 
-        PurchasePaymentAllocation::query()->create([
-            'purchase_payment_id' => $payment->id,
-            'purchase_id' => $this->purchase->id,
-            'amount' => 300.00,
-        ]);
-
-        $response = $this->getJson("/api/purchases/{$this->purchase->id}/payments");
-
-        $response->assertOk()
-            ->assertJsonPath('total_paid', 300)
-            ->assertJsonPath('total_purchase', 1000)
-            ->assertJsonPath('remaining', 700)
-            ->assertJsonPath('payment_status', 'NON PAYE')
-            ->assertJsonCount(1, 'payments');
+        $this->assertCount(2, $rows);
+        $this->assertSame($this->purchaseA->id, $rows[0]['id']);
+        $this->assertSame($this->purchaseB->id, $rows[1]['id']);
+        $this->assertEquals(600.00, $rows[0]['remaining']);
+        $this->assertEquals(400.00, $rows[1]['remaining']);
     }
 
-    // -------------------------------------------------------------------------
-    // POST /api/purchases/{purchase}/payments
-    // -------------------------------------------------------------------------
-
-    public function test_store_requires_authentication(): void
+    public function test_unpaid_purchases_excludes_cancelled_purchases(): void
     {
-        $response = $this->postJson("/api/purchases/{$this->purchase->id}/payments", []);
+        Sanctum::actingAs($this->user, [], 'web');
 
-        $response->assertUnauthorized();
+        Purchase::query()->create([
+            'date' => '2026-04-08',
+            'supplier_id' => $this->supplier->id,
+            'total_quantity' => 1,
+            'total_price' => 100.00,
+            'net_amount' => 100.00,
+            'status' => 'ANNULE',
+            'payment_status' => 'NON PAYE',
+            'created_by' => $this->user->id,
+        ]);
+
+        $response = $this->getJson("/api/suppliers/{$this->supplier->id}/unpaid-purchases");
+
+        $this->assertCount(2, $response->json('purchases'));
     }
+
+    // -------------------------------------------------------------------------
+    // POST /api/suppliers/{supplier}/payments
+    // -------------------------------------------------------------------------
 
     public function test_store_requires_manage_purchase_payments_permission(): void
     {
         $guest = $this->createUserWithPermissions(['view purchases']);
         Sanctum::actingAs($guest, [], 'web');
 
-        $response = $this->postJson("/api/purchases/{$this->purchase->id}/payments", $this->validPayload());
-
-        $response->assertForbidden();
+        $this->postJson("/api/suppliers/{$this->supplier->id}/payments", $this->validPayload())
+            ->assertForbidden();
     }
 
-    public function test_store_validates_required_fields(): void
+    public function test_store_creates_one_transaction_and_splits_across_purchases(): void
     {
         Sanctum::actingAs($this->user, [], 'web');
 
-        $response = $this->postJson("/api/purchases/{$this->purchase->id}/payments", []);
-
-        $response->assertUnprocessable()
-            ->assertJsonValidationErrors(['amount', 'method', 'date', 'account_id']);
-    }
-
-    public function test_store_validates_account_must_exist(): void
-    {
-        Sanctum::actingAs($this->user, [], 'web');
-
-        $response = $this->postJson("/api/purchases/{$this->purchase->id}/payments", array_merge(
-            $this->validPayload(),
-            ['account_id' => 99999]
-        ));
-
-        $response->assertUnprocessable()
-            ->assertJsonValidationErrors(['account_id']);
-    }
-
-    public function test_store_validates_amount_must_be_positive(): void
-    {
-        Sanctum::actingAs($this->user, [], 'web');
-
-        $response = $this->postJson("/api/purchases/{$this->purchase->id}/payments", array_merge(
-            $this->validPayload(),
-            ['amount' => 0]
-        ));
-
-        $response->assertUnprocessable()
-            ->assertJsonValidationErrors(['amount']);
-    }
-
-    public function test_store_creates_payment_and_transaction(): void
-    {
-        Sanctum::actingAs($this->user, [], 'web');
-
-        $response = $this->postJson("/api/purchases/{$this->purchase->id}/payments", $this->validPayload());
+        $response = $this->postJson("/api/suppliers/{$this->supplier->id}/payments", $this->validPayload());
 
         $response->assertCreated();
 
-        $this->assertDatabaseHas('purchase_payments', [
-            'purchase_id' => $this->purchase->id,
-            'amount' => 400.00,
-            'method' => 'Espèces',
-        ]);
-
         $paymentId = $response->json('id');
         $payment = PurchasePayment::find($paymentId);
-        $this->assertNotNull($payment->transaction_id, 'Payment must be linked to a transaction');
+
+        $this->assertNotNull($payment);
+        $this->assertNull($payment->purchase_id, 'Multi-purchase payments must not set purchase_id');
+        $this->assertSame($this->supplier->id, $payment->supplier_id);
+        $this->assertEquals(2, PurchasePaymentAllocation::where('purchase_payment_id', $payment->id)->count());
 
         $this->assertDatabaseHas('transactions', [
             'id' => $payment->transaction_id,
             'type' => 'expense',
             'category' => 'Achat',
-            'amount' => 400.00,
-            'account_id' => $this->account->id,
+            'amount' => 700.00,
+        ]);
+
+        $this->assertDatabaseHas('purchase_payment_allocations', [
+            'purchase_payment_id' => $payment->id,
+            'purchase_id' => $this->purchaseA->id,
+            'amount' => 600.00,
+        ]);
+        $this->assertDatabaseHas('purchase_payment_allocations', [
+            'purchase_payment_id' => $payment->id,
+            'purchase_id' => $this->purchaseB->id,
+            'amount' => 100.00,
         ]);
     }
 
-    public function test_store_sets_payment_status_to_partiel_on_partial_payment(): void
+    public function test_store_updates_payment_status_of_each_affected_purchase(): void
     {
         Sanctum::actingAs($this->user, [], 'web');
 
-        $this->postJson("/api/purchases/{$this->purchase->id}/payments", array_merge(
-            $this->validPayload(),
-            ['amount' => 400.00]
-        ));
+        $this->postJson("/api/suppliers/{$this->supplier->id}/payments", $this->validPayload());
 
-        $this->assertDatabaseHas('purchases', [
-            'id' => $this->purchase->id,
-            'payment_status' => 'PARTIEL',
-        ]);
+        $this->assertDatabaseHas('purchases', ['id' => $this->purchaseA->id, 'payment_status' => 'PAYE']);
+        $this->assertDatabaseHas('purchases', ['id' => $this->purchaseB->id, 'payment_status' => 'PARTIEL']);
     }
 
-    public function test_store_sets_payment_status_to_paye_on_full_payment(): void
+    public function test_store_rejects_when_allocations_do_not_match_amount(): void
     {
         Sanctum::actingAs($this->user, [], 'web');
 
-        $this->postJson("/api/purchases/{$this->purchase->id}/payments", array_merge(
-            $this->validPayload(),
-            ['amount' => 1000.00]
-        ));
+        $payload = $this->validPayload();
+        $payload['allocations'][0]['amount'] = 100.00; // sum no longer equals `amount`
 
-        $this->assertDatabaseHas('purchases', [
-            'id' => $this->purchase->id,
-            'payment_status' => 'PAYE',
-        ]);
+        $this->postJson("/api/suppliers/{$this->supplier->id}/payments", $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['amount']);
     }
 
-    public function test_store_sets_payment_status_to_paye_when_cumulative_payments_cover_total(): void
+    public function test_store_rejects_purchase_belonging_to_another_supplier(): void
     {
         Sanctum::actingAs($this->user, [], 'web');
 
-        $this->postJson("/api/purchases/{$this->purchase->id}/payments", array_merge(
-            $this->validPayload(),
-            ['amount' => 600.00]
-        ));
-
-        $this->postJson("/api/purchases/{$this->purchase->id}/payments", array_merge(
-            $this->validPayload(),
-            ['amount' => 400.00]
-        ));
-
-        $this->assertDatabaseHas('purchases', [
-            'id' => $this->purchase->id,
-            'payment_status' => 'PAYE',
-        ]);
-    }
-
-    // -------------------------------------------------------------------------
-    // DELETE /api/purchases/{purchase}/payments/{payment}
-    // -------------------------------------------------------------------------
-
-    public function test_destroy_requires_manage_purchase_payments_permission(): void
-    {
-        $guest = $this->createUserWithPermissions(['view purchases']);
-        Sanctum::actingAs($guest, [], 'web');
-
-        $payment = $this->createPayment();
-
-        $response = $this->deleteJson("/api/purchases/{$this->purchase->id}/payments/{$payment->id}");
-
-        $response->assertForbidden();
-    }
-
-    public function test_destroy_deletes_payment_and_its_transaction(): void
-    {
-        Sanctum::actingAs($this->user, [], 'web');
-
-        $payment = $this->createPayment(500.00);
-        $transactionId = $payment->transaction_id;
-
-        $response = $this->deleteJson("/api/purchases/{$this->purchase->id}/payments/{$payment->id}");
-
-        $response->assertNoContent();
-
-        $this->assertDatabaseMissing('purchase_payments', ['id' => $payment->id]);
-        $this->assertDatabaseMissing('transactions', ['id' => $transactionId]);
-    }
-
-    public function test_destroy_returns_404_for_payment_on_wrong_purchase(): void
-    {
-        Sanctum::actingAs($this->user, [], 'web');
-
-        $otherSupplier = Supplier::query()->create([
-            'name' => 'Autre Fournisseur',
-            'user_id' => $this->user->id,
-        ]);
+        $otherSupplier = Supplier::query()->create(['name' => 'Autre', 'user_id' => $this->user->id]);
         $otherPurchase = Purchase::query()->create([
             'date' => '2026-04-01',
             'supplier_id' => $otherSupplier->id,
-            'total_quantity' => 2,
-            'total_price' => 500.00,
+            'total_quantity' => 1,
+            'total_price' => 100.00,
+            'net_amount' => 100.00,
             'status' => 'EN COURS',
             'payment_status' => 'NON PAYE',
             'created_by' => $this->user->id,
         ]);
 
-        $payment = $this->createPayment(200.00);
+        $payload = [
+            'amount' => 100.00,
+            'method' => 'Espèces',
+            'date' => '2026-04-15',
+            'account_id' => $this->account->id,
+            'allocations' => [
+                ['purchase_id' => $otherPurchase->id, 'amount' => 100.00],
+            ],
+        ];
 
-        $response = $this->deleteJson("/api/purchases/{$otherPurchase->id}/payments/{$payment->id}");
-
-        $response->assertNotFound();
+        $this->postJson("/api/suppliers/{$this->supplier->id}/payments", $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['allocations']);
     }
 
-    public function test_destroy_reverts_payment_status_to_non_paye_after_last_payment_deleted(): void
+    public function test_store_rejects_allocation_exceeding_purchase_balance(): void
     {
         Sanctum::actingAs($this->user, [], 'web');
 
-        $payment = $this->createPayment(1000.00);
+        $payload = [
+            'amount' => 1000.00,
+            'method' => 'Espèces',
+            'date' => '2026-04-15',
+            'account_id' => $this->account->id,
+            'allocations' => [
+                ['purchase_id' => $this->purchaseA->id, 'amount' => 1000.00],
+            ],
+        ];
 
-        $this->assertDatabaseHas('purchases', ['id' => $this->purchase->id, 'payment_status' => 'PAYE']);
-
-        $this->deleteJson("/api/purchases/{$this->purchase->id}/payments/{$payment->id}");
-
-        $this->assertDatabaseHas('purchases', ['id' => $this->purchase->id, 'payment_status' => 'NON PAYE']);
+        $this->postJson("/api/suppliers/{$this->supplier->id}/payments", $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['allocations']);
     }
 
-    public function test_destroy_reverts_payment_status_to_partiel_when_partial_remains(): void
+    // -------------------------------------------------------------------------
+    // DELETE /api/suppliers/{supplier}/payments/{payment}
+    // -------------------------------------------------------------------------
+
+    public function test_destroy_removes_transaction_and_reverts_all_affected_purchases(): void
     {
         Sanctum::actingAs($this->user, [], 'web');
 
-        $first = $this->createPayment(600.00);
-        $second = $this->createPayment(400.00);
+        $response = $this->postJson("/api/suppliers/{$this->supplier->id}/payments", $this->validPayload());
+        $paymentId = $response->json('id');
+        $payment = PurchasePayment::find($paymentId);
+        $transactionId = $payment->transaction_id;
 
-        $this->assertDatabaseHas('purchases', ['id' => $this->purchase->id, 'payment_status' => 'PAYE']);
+        $this->deleteJson("/api/suppliers/{$this->supplier->id}/payments/{$paymentId}")
+            ->assertNoContent();
 
-        $this->deleteJson("/api/purchases/{$this->purchase->id}/payments/{$second->id}");
+        $this->assertDatabaseMissing('purchase_payments', ['id' => $paymentId]);
+        $this->assertDatabaseMissing('transactions', ['id' => $transactionId]);
+        $this->assertDatabaseMissing('purchase_payment_allocations', ['purchase_payment_id' => $paymentId]);
 
-        $this->assertDatabaseHas('purchases', ['id' => $this->purchase->id, 'payment_status' => 'PARTIEL']);
+        $this->assertDatabaseHas('purchases', ['id' => $this->purchaseA->id, 'payment_status' => 'NON PAYE']);
+        $this->assertDatabaseHas('purchases', ['id' => $this->purchaseB->id, 'payment_status' => 'NON PAYE']);
+    }
+
+    public function test_purchase_payments_panel_shows_multi_flag_and_refuses_deletion_there(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $response = $this->postJson("/api/suppliers/{$this->supplier->id}/payments", $this->validPayload());
+        $paymentId = $response->json('id');
+
+        $panel = $this->getJson("/api/purchases/{$this->purchaseA->id}/payments");
+        $panel->assertOk();
+        $rows = $panel->json('payments');
+        $this->assertCount(1, $rows);
+        $this->assertTrue($rows[0]['multi']);
+        $this->assertEquals(600.00, $rows[0]['amount'], 'Row must show only the portion allocated to this purchase');
+
+        $this->deleteJson("/api/purchases/{$this->purchaseA->id}/payments/{$paymentId}")
+            ->assertStatus(422);
     }
 
     // -------------------------------------------------------------------------
     // GET /api/purchase-payments/{payment}
     // -------------------------------------------------------------------------
 
-    public function test_show_requires_authentication(): void
-    {
-        $payment = $this->createPayment(400.00);
-
-        $response = $this->getJson("/api/purchase-payments/{$payment->id}");
-
-        $response->assertUnauthorized();
-    }
-
-    public function test_show_requires_view_purchases_permission(): void
-    {
-        $guest = $this->createUserWithPermissions([]);
-        Sanctum::actingAs($guest, [], 'web');
-
-        $payment = $this->createPayment(400.00);
-
-        $response = $this->getJson("/api/purchase-payments/{$payment->id}");
-
-        $response->assertForbidden();
-    }
-
-    public function test_show_returns_the_single_purchase_it_covers(): void
+    public function test_show_returns_every_purchase_covered_by_a_multi_purchase_payment(): void
     {
         Sanctum::actingAs($this->user, [], 'web');
 
-        $payment = $this->createPayment(400.00);
+        $response = $this->postJson("/api/suppliers/{$this->supplier->id}/payments", $this->validPayload());
+        $paymentId = $response->json('id');
 
-        $response = $this->getJson("/api/purchase-payments/{$payment->id}");
+        $detail = $this->getJson("/api/purchase-payments/{$paymentId}");
 
-        $response->assertOk()
-            ->assertJsonPath('id', $payment->id)
-            ->assertJsonPath('amount', 400)
-            ->assertJsonCount(1, 'purchases')
-            ->assertJsonPath('purchases.0.id', $this->purchase->id)
-            ->assertJsonPath('purchases.0.allocated_amount', 400);
+        $detail->assertOk()
+            ->assertJsonPath('id', $paymentId)
+            ->assertJsonPath('amount', 700)
+            ->assertJsonPath('supplier.id', $this->supplier->id)
+            ->assertJsonCount(2, 'purchases');
+
+        $purchases = collect($detail->json('purchases'))->keyBy('id');
+
+        $this->assertEquals(600.00, $purchases[$this->purchaseA->id]['allocated_amount']);
+        $this->assertEquals('PAYE', $purchases[$this->purchaseA->id]['payment_status']);
+        $this->assertEquals(100.00, $purchases[$this->purchaseB->id]['allocated_amount']);
+        $this->assertEquals('PARTIEL', $purchases[$this->purchaseB->id]['payment_status']);
     }
 
     // -------------------------------------------------------------------------
@@ -412,50 +337,17 @@ class PurchasePaymentTest extends TestCase
     private function validPayload(): array
     {
         return [
-            'amount' => 400.00,
+            'amount' => 700.00,
             'method' => 'Espèces',
             'date' => '2026-04-15',
             'account_id' => $this->account->id,
-            'reference' => 'REF-001',
+            'reference' => 'REF-MULTI',
             'notes' => null,
+            'allocations' => [
+                ['purchase_id' => $this->purchaseA->id, 'amount' => 600.00],
+                ['purchase_id' => $this->purchaseB->id, 'amount' => 100.00],
+            ],
         ];
-    }
-
-    private function createPayment(float $amount = 400.00): PurchasePayment
-    {
-        $transaction = Transaction::query()->create([
-            'date' => '2026-04-15',
-            'amount' => $amount,
-            'type' => 'expense',
-            'category' => 'Achat',
-            'method' => 'Espèces',
-            'description' => "Paiement achat #{$this->purchase->id}",
-            'person' => '',
-            'user_id' => $this->user->id,
-            'account_id' => $this->account->id,
-        ]);
-
-        $payment = PurchasePayment::query()->create([
-            'purchase_id' => $this->purchase->id,
-            'supplier_id' => $this->purchase->supplier_id,
-            'transaction_id' => $transaction->id,
-            'user_id' => $this->user->id,
-            'amount' => $amount,
-            'date' => '2026-04-15',
-            'method' => 'Espèces',
-        ]);
-
-        PurchasePaymentAllocation::query()->create([
-            'purchase_payment_id' => $payment->id,
-            'purchase_id' => $this->purchase->id,
-            'amount' => $amount,
-        ]);
-
-        // Refresh payment status on the purchase
-        app(PurchasePaymentService::class)
-            ->refreshPaymentStatus($this->purchase->fresh());
-
-        return $payment;
     }
 
     private function createUserWithPermissions(array $permissions): User
@@ -477,7 +369,7 @@ class PurchasePaymentTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
-    // Table setup (SQLite in-memory)
+    // Table setup (SQLite in-memory fallback — no-op against migrated MySQL)
     // -------------------------------------------------------------------------
 
     private function ensureTablesExist(): void
@@ -646,6 +538,7 @@ class PurchasePaymentTest extends TestCase
             $table->boolean('with_invoice')->default(false);
             $table->integer('total_quantity')->default(0);
             $table->decimal('total_price', 10, 2)->default(0);
+            $table->decimal('net_amount', 10, 2)->default(0);
             $table->unsignedBigInteger('supplier_id');
             $table->unsignedBigInteger('commercial_id')->nullable();
             $table->string('status')->default('EN COURS');

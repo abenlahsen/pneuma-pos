@@ -738,6 +738,7 @@ class PurchaseCrudTest extends TestCase
         $this->ensurePurchasesTable();
         $this->ensurePurchaseItemsTable();
         $this->ensurePurchasePaymentsTable();
+        $this->ensurePurchasePaymentAllocationsTable();
         $this->ensureAccountsTable();
         $this->ensureTransactionsTable();
     }
@@ -996,7 +997,8 @@ class PurchaseCrudTest extends TestCase
         }
         Schema::create('purchase_payments', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('purchase_id');
+            $table->unsignedBigInteger('purchase_id')->nullable();
+            $table->unsignedBigInteger('supplier_id')->nullable();
             $table->unsignedBigInteger('transaction_id')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->decimal('amount', 10, 2);
@@ -1004,6 +1006,20 @@ class PurchaseCrudTest extends TestCase
             $table->string('method')->nullable();
             $table->string('reference')->nullable();
             $table->string('notes', 1000)->nullable();
+            $table->timestamps();
+        });
+    }
+
+    private function ensurePurchasePaymentAllocationsTable(): void
+    {
+        if (Schema::hasTable('purchase_payment_allocations')) {
+            return;
+        }
+        Schema::create('purchase_payment_allocations', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('purchase_payment_id');
+            $table->unsignedBigInteger('purchase_id');
+            $table->decimal('amount', 10, 2);
             $table->timestamps();
         });
     }

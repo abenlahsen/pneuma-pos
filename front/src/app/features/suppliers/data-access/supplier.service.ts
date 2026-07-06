@@ -7,6 +7,8 @@ import {
   PaginatedResponse,
   SupplierProfileResponse,
   SupplierStatementResponse,
+  UnpaidPurchaseRow,
+  SupplierPaymentPayload,
 } from '../models/supplier.model';
 import { environment } from '../../../../environments/environment';
 
@@ -45,5 +47,17 @@ export class SupplierService {
 
   getSupplierStatement(id: number): Observable<SupplierStatementResponse> {
     return this.http.get<SupplierStatementResponse>(`${this.apiUrl}/${id}/statement`);
+  }
+
+  getUnpaidPurchases(id: number): Observable<{ purchases: UnpaidPurchaseRow[] }> {
+    return this.http.get<{ purchases: UnpaidPurchaseRow[] }>(`${this.apiUrl}/${id}/unpaid-purchases`);
+  }
+
+  createSupplierPayment(id: number, payload: SupplierPaymentPayload): Observable<unknown> {
+    return this.http.post(`${this.apiUrl}/${id}/payments`, payload);
+  }
+
+  deleteSupplierPayment(supplierId: number, paymentId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${supplierId}/payments/${paymentId}`);
   }
 }

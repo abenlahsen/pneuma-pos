@@ -85,17 +85,30 @@
         <tbody>
           <tr *ngFor="let p of payments()">
             <td>{{ p.date | date:'dd/MM/yyyy' }}</td>
-            <td class="amount-cell">{{ p.amount | number:'1.2-2' }} DH</td>
+            <td class="amount-cell">
+              {{ p.amount | number:'1.2-2' }} DH
+              <span *ngIf="p.multi" class="badge-multi" title="Paiement réparti sur plusieurs achats">multi</span>
+            </td>
             <td>{{ p.method || '—' }}</td>
             <td>{{ $any(p).transaction_id ? $any(p).transaction?.account?.name : '—' }}</td>
             <td>{{ $any(p).reference || '—' }}</td>
-            <td>
+            <td class="actions-cell">
               <button
-                *ngIf="authService.hasPermission('manage purchase-payments')"
+                class="btn-view"
+                (click)="openView(p)"
+                title="Voir le détail du paiement"
+              >👁️</button>
+              <button
+                *ngIf="authService.hasPermission('manage purchase-payments') && !p.multi"
                 class="btn-delete"
                 (click)="deletePayment(p)"
                 title="Supprimer"
               >🗑️</button>
+              <span
+                *ngIf="authService.hasPermission('manage purchase-payments') && p.multi"
+                class="text-muted"
+                title="Ce paiement couvre plusieurs achats — gérez-le depuis la fiche du fournisseur"
+              >—</span>
             </td>
           </tr>
         </tbody>
@@ -154,3 +167,9 @@
   </ng-template>
 
 </div>
+
+<app-purchase-payment-detail
+  *ngIf="viewingPaymentId()"
+  [paymentId]="viewingPaymentId()!"
+  (closed)="closeView()">
+</app-purchase-payment-detail>

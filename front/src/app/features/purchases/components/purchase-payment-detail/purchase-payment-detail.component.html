@@ -1,0 +1,83 @@
+<div class="modal-overlay" (click)="close()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Détail du paiement<ng-container *ngIf="detail() as d"> #{{ d.id }}</ng-container></h2>
+      <button class="btn-icon" type="button" (click)="close()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div *ngIf="loading()" class="empty-state"><p>Chargement…</p></div>
+
+      <div *ngIf="!loading() && errorMessage()" class="empty-state error"><p>{{ errorMessage() }}</p></div>
+
+      <ng-container *ngIf="!loading() && detail() as d">
+        <div class="payment-info">
+          <div class="info-item">
+            <span class="label">Date</span>
+            <span class="value">{{ d.date | date:'dd/MM/yyyy' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Montant</span>
+            <span class="value amount">{{ d.amount | number:'1.2-2' }} DH</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Méthode</span>
+            <span class="value">{{ d.method || '—' }}</span>
+          </div>
+          <div class="info-item" *ngIf="d.reference">
+            <span class="label">Référence</span>
+            <span class="value">{{ d.reference }}</span>
+          </div>
+          <div class="info-item" *ngIf="d.supplier">
+            <span class="label">Fournisseur</span>
+            <span class="value">{{ d.supplier!.name }}</span>
+          </div>
+          <div class="info-item" *ngIf="d.account">
+            <span class="label">Compte</span>
+            <span class="value">{{ d.account!.name }}</span>
+          </div>
+          <div class="info-item info-item--full" *ngIf="d.notes">
+            <span class="label">Notes</span>
+            <span class="value">{{ d.notes }}</span>
+          </div>
+        </div>
+
+        <h3 class="section-title">
+          Achats concernés
+          <span *ngIf="d.purchases.length > 1" class="badge badge-warning">multi</span>
+        </h3>
+
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ACHAT</th>
+                <th>DATE</th>
+                <th class="col-right">MONTANT NET</th>
+                <th class="col-right">MONTANT AFFECTÉ</th>
+                <th>PAIEMENT</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of d.purchases">
+                <td class="ref-cell">Achat #{{ p.id }}</td>
+                <td>{{ p.date ? (p.date | date:'dd/MM/yyyy') : '—' }}</td>
+                <td class="col-right num">{{ p.net_amount | number:'1.2-2' }} DH</td>
+                <td class="col-right num">{{ p.allocated_amount | number:'1.2-2' }} DH</td>
+                <td>
+                  <span class="badge" [ngClass]="paymentStatusClass(p.payment_status)">
+                    {{ p.payment_status || '—' }}
+                  </span>
+                </td>
+                <td class="col-right">
+                  <button type="button" class="btn-link" (click)="goToPurchase(p.id)">Voir l'achat →</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>

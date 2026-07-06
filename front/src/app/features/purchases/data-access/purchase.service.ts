@@ -7,6 +7,7 @@ import {
   PurchaseSummary,
   PurchasePayment,
   PurchasePaymentSummary,
+  PurchasePaymentDetail,
 } from '../models/purchase.model';
 import { PurchaseStatus } from '../../../core/constants/status.constants';
 
@@ -91,6 +92,10 @@ export class PurchaseService {
 
   deletePurchasePayment(purchaseId: number, paymentId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${purchaseId}/payments/${paymentId}`);
+  }
+
+  getPaymentDetail(paymentId: number): Observable<PurchasePaymentDetail> {
+    return this.http.get<PurchasePaymentDetail>(`/api/purchase-payments/${paymentId}`);
   }
 
   exportPurchases(filters: Record<string, string> = {}): Observable<Blob> {

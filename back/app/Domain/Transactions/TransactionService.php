@@ -93,11 +93,14 @@ class TransactionService
         }
 
         $purchasePayment = PurchasePayment::where('transaction_id', $transaction->id)
-            ->with('purchase:id,payment_status')
+            ->with('allocations.purchase:id,payment_status')
             ->first();
 
-        if ($purchasePayment?->purchase?->payment_status === PurchasePaymentStatus::PAYE->value) {
-            abort(422, "Cette transaction est liée à l'achat #{$purchasePayment->purchase_id} entièrement payé. Modifiez d'abord le statut de paiement de l'achat.");
+        $completedAllocation = $purchasePayment?->allocations
+            ->first(fn ($allocation) => $allocation->purchase?->payment_status === PurchasePaymentStatus::PAYE->value);
+
+        if ($completedAllocation) {
+            abort(422, "Cette transaction est liée à l'achat #{$completedAllocation->purchase_id} entièrement payé. Modifiez d'abord le statut de paiement de l'achat.");
         }
     }
 
@@ -189,7 +192,7 @@ class TransactionService
         }
 
         if (! empty($filters['search'])) {
-            $query->where('description', 'like', '%' . $filters['search'] . '%');
+            $query->where('description', 'like', '%'.$filters['search'].'%');
         }
 
         if (isset($filters['amount_min']) && $filters['amount_min'] !== '') {
