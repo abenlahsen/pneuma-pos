@@ -29,6 +29,7 @@ class UserService
             'password' => Hash::make($request->password),
             'phone' => $request->phone,
             'commission_rate' => $request->commission_rate,
+            'prime_per_tyre' => $request->prime_per_tyre,
         ]);
 
         if ($request->filled('role')) {
@@ -74,6 +75,7 @@ class UserService
             'email' => $request->email,
             'phone' => $request->phone,
             'commission_rate' => $request->commission_rate,
+            'prime_per_tyre' => $request->prime_per_tyre,
         ];
 
         if ($request->filled('password')) {
