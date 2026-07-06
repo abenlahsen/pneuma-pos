@@ -10,16 +10,18 @@ import { CashFlowService } from '../../../core/services/cash-flow.service';
 import { Transaction, TransactionSummary } from '../../../core/models/transaction.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { PurchasePaymentDetailComponent } from '../../purchases/components/purchase-payment-detail/purchase-payment-detail.component';
+import { SalePaymentDetailComponent } from '../../sales/components/sale-payment-detail/sale-payment-detail.component';
 
 @Component({
   selector: 'app-accounts-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AccountFormComponent, TransferFormComponent, AutoRefreshControlComponent, PurchasePaymentDetailComponent],
+  imports: [CommonModule, FormsModule, AccountFormComponent, TransferFormComponent, AutoRefreshControlComponent, PurchasePaymentDetailComponent, SalePaymentDetailComponent],
   templateUrl: './accounts-page.component.html',
   styleUrls: ['./accounts-page.component.scss']
 })
 export class AccountsPageComponent implements OnInit {
   viewingPaymentId = signal<number | null>(null);
+  viewingSalePaymentId = signal<number | null>(null);
   accounts = signal<Account[]>([]);
   loading = signal(false);
 
@@ -167,6 +169,14 @@ export class AccountsPageComponent implements OnInit {
 
   closePaymentView(): void {
     this.viewingPaymentId.set(null);
+  }
+
+  openSalePaymentView(transaction: Transaction): void {
+    if (transaction.sale_payment_id) this.viewingSalePaymentId.set(transaction.sale_payment_id);
+  }
+
+  closeSalePaymentView(): void {
+    this.viewingSalePaymentId.set(null);
   }
 
   loadAccountTransactions(account: Account) {

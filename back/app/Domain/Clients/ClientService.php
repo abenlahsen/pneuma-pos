@@ -8,6 +8,7 @@ use App\Models\Sale;
 use App\Models\ServiceOrder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -70,7 +71,7 @@ class ClientService
     public function getProfile(Client $client): array
     {
         $client->loadMissing([
-            'sales' => fn ($query) => $query->with(['linkedClient', 'payments'])->latest('date')->latest('id'),
+            'sales' => fn ($query) => $query->with(['linkedClient', 'allocations'])->latest('date')->latest('id'),
             'serviceOrders' => fn ($query) => $query->with(['payments'])->latest('date')->latest('id'),
         ]);
 
@@ -106,7 +107,7 @@ class ClientService
     public function getStatement(Client $client): array
     {
         $client->loadMissing([
-            'sales' => fn ($query) => $query->with(['payments', 'linkedClient'])->latest('date')->latest('id'),
+            'sales' => fn ($query) => $query->with(['allocations.payment', 'linkedClient'])->latest('date')->latest('id'),
             'serviceOrders' => fn ($query) => $query->with(['payments'])->latest('date')->latest('id'),
         ]);
 
@@ -125,9 +126,16 @@ class ClientService
             ->sortByDesc(fn ($row) => $row['sale_date'] ?? $row['created_at'] ?? null)
             ->values();
 
-        $salePayments = $sales
-            ->flatMap(fn (Sale $sale) => $sale->payments ?? collect())
-            ->sortBy(fn ($p) => $this->sortablePaymentDate($p))
+        // One row per allocation, so a payment split across several sales shows
+        // the portion actually credited to each one rather than the full amount.
+        $saleAllocationRows = $sales
+            ->flatMap(function (Sale $sale) {
+                return $sale->allocations->map(fn ($allocation) => [
+                    'sale' => $sale,
+                    'allocation' => $allocation,
+                ]);
+            })
+            ->sortBy(fn ($row) => ($row['allocation']->payment->payment_date ?? $row['allocation']->payment->paid_at ?? $row['allocation']->payment->created_at)?->timestamp ?? 0)
             ->values();
 
         $servicePayments = $serviceOrders
@@ -135,16 +143,24 @@ class ClientService
             ->sortBy(fn ($p) => $p->date?->timestamp ?? $p->created_at?->timestamp ?? 0)
             ->values();
 
-        $salePaymentRows = $salePayments->map(fn ($payment) => [
-            'id' => $payment->id,
-            'sale_id' => $payment->sale_id,
-            'date' => $this->formatDate($payment->payment_date ?? $payment->paid_at ?? $payment->created_at),
-            'amount' => round((float) ($payment->amount ?? $payment->amount_paid ?? 0), 2),
-            'payment_method' => $payment->payment_method ?? $payment->method ?? null,
-            'notes' => $payment->notes,
-            'created_at' => $this->formatDateTime($payment->created_at),
-            'updated_at' => $this->formatDateTime($payment->updated_at),
-        ])->values();
+        $paymentIdCounts = $saleAllocationRows->countBy(fn ($row) => $row['allocation']->payment->id);
+
+        $salePaymentRows = $saleAllocationRows->map(function ($row) use ($paymentIdCounts) {
+            $payment = $row['allocation']->payment;
+
+            return [
+                'id' => $payment->id,
+                'sale_id' => $row['sale']->id,
+                'date' => $this->formatDate($payment->payment_date ?? $payment->paid_at ?? $payment->created_at),
+                'amount' => round((float) $row['allocation']->amount, 2),
+                'payment_method' => $payment->payment_method ?? $payment->method ?? null,
+                'reference' => $payment->reference,
+                'notes' => $payment->notes,
+                'created_at' => $this->formatDateTime($payment->created_at),
+                'updated_at' => $this->formatDateTime($payment->updated_at),
+                'multi' => ($paymentIdCounts[$payment->id] ?? 1) > 1,
+            ];
+        })->values();
 
         $servicePaymentRows = $servicePayments->map(fn ($payment) => [
             'id' => 'sp_'.$payment->id,
@@ -165,12 +181,12 @@ class ClientService
 
         $totalSales = $sales->sum(fn (Sale $s) => (float) ($s->total ?? 0));
         $totalOrders = $serviceOrders->sum(fn (ServiceOrder $o) => (float) ($o->net_amount ?? 0));
-        $totalPaidSales = $sales->sum(fn (Sale $s) => (float) ($s->paid_amount ?? 0));
+        $totalPaidSales = (float) $salePaymentRows->sum('amount');
         $totalPaidOrders = (float) $servicePayments->sum('amount');
 
         $summary = [
             'sales_count' => $sales->count() + $serviceOrders->count(),
-            'payments_count' => $salePayments->count() + $servicePayments->count(),
+            'payments_count' => $salePaymentRows->pluck('id')->unique()->count() + $servicePayments->count(),
             'opening_balance' => round((float) ($client->opening_balance ?? 0), 2),
             'total_sales' => round($totalSales + $totalOrders, 2),
             'total_paid' => round($totalPaidSales + $totalPaidOrders, 2),
@@ -183,7 +199,7 @@ class ClientService
             'summary' => $summary,
             'sales' => $allRows->all(),
             'payments' => $allPaymentRows->all(),
-            'entries' => $this->buildAllEntries($client, $sales, $salePayments, $serviceOrders, $servicePayments),
+            'entries' => $this->buildAllEntries($client, $sales, $salePaymentRows, $serviceOrders, $servicePayments),
         ];
     }
 
@@ -277,7 +293,7 @@ class ClientService
     protected function calculateOutstandingBalanceAll(Client $client, Collection $sales, Collection $serviceOrders): float
     {
         $openingBalance = (float) ($client->opening_balance ?? 0);
-        $salesOutstanding = $sales->sum(fn (Sale $sale) => max((float) ($sale->total ?? 0) - (float) ($sale->paid_amount ?? 0), 0));
+        $salesOutstanding = $sales->sum(fn (Sale $sale) => max((float) ($sale->total ?? 0) - $this->salePaidAmount($sale), 0));
         $ordersOutstanding = $serviceOrders->sum(function (ServiceOrder $order) {
             $paid = $order->payments ? (float) $order->payments->sum('amount') : 0;
 
@@ -287,10 +303,19 @@ class ClientService
         return round($openingBalance + $salesOutstanding + $ordersOutstanding, 2);
     }
 
+    /**
+     * Paid amount for a sale, preferring the already eager-loaded `allocations`
+     * collection to avoid firing one query per sale when mapping a list.
+     */
+    protected function salePaidAmount(Sale $sale): float
+    {
+        return (float) ($sale->relationLoaded('allocations') ? $sale->allocations->sum('amount') : $sale->paid_amount);
+    }
+
     protected function mapSale(Sale $sale): array
     {
         $total = round((float) ($sale->total ?? 0), 2);
-        $paid = round((float) ($sale->paid_amount ?? 0), 2);
+        $paid = round($this->salePaidAmount($sale), 2);
 
         return [
             'id' => $sale->id,
@@ -332,7 +357,10 @@ class ClientService
         ];
     }
 
-    protected function buildAllEntries(Client $client, Collection $sales, Collection $salePayments, Collection $serviceOrders, Collection $servicePayments): array
+    /**
+     * @param  Collection  $salePaymentRows  plain arrays as built by getStatement() — one per allocation
+     */
+    protected function buildAllEntries(Client $client, Collection $sales, Collection $salePaymentRows, Collection $serviceOrders, Collection $servicePayments): array
     {
         $entries = collect();
 
@@ -364,16 +392,16 @@ class ClientService
             ]);
         }
 
-        foreach ($salePayments as $payment) {
+        foreach ($salePaymentRows as $row) {
             $entries->push([
                 'type' => 'payment',
-                'date' => $this->formatDate($payment->payment_date ?? $payment->paid_at ?? $payment->created_at),
-                'description' => 'Paiement vente #'.$payment->sale_id,
-                'sale_id' => $payment->sale_id,
-                'payment_id' => $payment->id,
+                'date' => $row['date'],
+                'description' => 'Paiement vente #'.$row['sale_id'],
+                'sale_id' => $row['sale_id'],
+                'payment_id' => $row['id'],
                 'debit' => 0.0,
-                'credit' => round((float) ($payment->amount ?? $payment->amount_paid ?? 0), 2),
-                '_sort_date' => $payment->payment_date ?? $payment->paid_at ?? $payment->created_at,
+                'credit' => round((float) ($row['amount'] ?? 0), 2),
+                '_sort_date' => $row['date'] ? Carbon::parse($row['date']) : null,
             ]);
         }
 

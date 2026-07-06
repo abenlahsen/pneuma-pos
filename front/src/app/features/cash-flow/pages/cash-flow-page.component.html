@@ -178,6 +178,12 @@
                         title="Voir le détail du paiement"
                       >👁️</button>
                       <button
+                        *ngIf="t.sale_payment_id"
+                        (click)="openSalePaymentView(t)"
+                        class="btn-icon btn-view"
+                        title="Voir le détail du paiement"
+                      >👁️</button>
+                      <button
                         (click)="openEditForm(t)"
                         class="btn-icon btn-edit"
                         title="Modifier"
@@ -262,6 +268,14 @@
                   👁️
                 </button>
                 <button
+                  *ngIf="t.sale_payment_id"
+                  (click)="openSalePaymentView(t)"
+                  class="btn-icon btn-view"
+                  title="Voir le détail du paiement"
+                >
+                  👁️
+                </button>
+                <button
                   (click)="openEditForm(t)"
                   class="btn-icon btn-edit"
                   title="Modifier"
@@ -339,5 +353,12 @@
       [paymentId]="viewingPaymentId()!"
       (closed)="closePaymentView()">
     </app-purchase-payment-detail>
+  }
+
+  @if (viewingSalePaymentId()) {
+    <app-sale-payment-detail
+      [paymentId]="viewingSalePaymentId()!"
+      (closed)="closeSalePaymentView()">
+    </app-sale-payment-detail>
   }
 </div>

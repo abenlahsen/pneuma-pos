@@ -7,13 +7,14 @@ import { Payment, PaymentPayload, PaymentSummary } from '../../../core/models/pa
 import { Sale } from '../../../core/models/sale.model';
 import { Account } from '../../../core/models/account.model';
 import { AccountService } from '../../../core/services/account.service';
+import { SalePaymentDetailComponent } from '../components/sale-payment-detail/sale-payment-detail.component';
 
 const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Effet', 'Carte bancaire'];
 
 @Component({
   selector: 'app-payment-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SalePaymentDetailComponent],
   templateUrl: './payment-panel.component.html',
   styleUrl: './payment-panel.component.scss',
 })
@@ -30,6 +31,7 @@ export class PaymentPanelComponent implements OnInit {
   loading = signal(true);
   submitting = signal(false);
   accounts = signal<Account[]>([]);
+  viewingPaymentId = signal<number | null>(null);
 
   readonly paymentMethods = PAYMENT_METHODS;
   showAddForm = false;
@@ -111,6 +113,14 @@ export class PaymentPanelComponent implements OnInit {
         this.statusChanged.emit();
       },
     });
+  }
+
+  openView(payment: Payment): void {
+    this.viewingPaymentId.set(payment.id);
+  }
+
+  closeView(): void {
+    this.viewingPaymentId.set(null);
   }
 
   close(): void {

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ClientPaymentController;
 use App\Http\Controllers\VehicleController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,4 +22,9 @@ Route::middleware('auth:sanctum')->prefix('clients')->group(function () {
     Route::post('/{client}/vehicles', [VehicleController::class, 'store'])->middleware('permission:edit clients');
     Route::match(['put', 'patch'], '/{client}', [ClientController::class, 'update'])->middleware('permission:edit clients');
     Route::delete('/{client}', [ClientController::class, 'destroy'])->middleware('permission:delete clients');
+
+    // Client payments — settle several sales with a single payment
+    Route::get('/{client}/unpaid-sales', [ClientPaymentController::class, 'unpaidSales'])->middleware('permission:view sales');
+    Route::post('/{client}/payments', [ClientPaymentController::class, 'store'])->middleware('permission:manage sale-payments');
+    Route::delete('/{client}/payments/{payment}', [ClientPaymentController::class, 'destroy'])->middleware('permission:manage sale-payments');
 });

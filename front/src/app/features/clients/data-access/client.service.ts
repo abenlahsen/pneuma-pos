@@ -11,6 +11,8 @@ import {
   ClientProfileResponse,
   ClientSalesHistoryRow,
   ClientStatementResponse,
+  UnpaidSaleRow,
+  ClientPaymentPayload,
 } from '../models/client.model';
 
 @Injectable({
@@ -166,6 +168,18 @@ export class ClientService {
 
   deleteClient(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  getUnpaidSales(id: number): Observable<{ sales: UnpaidSaleRow[] }> {
+    return this.http.get<{ sales: UnpaidSaleRow[] }>(`${this.apiUrl}/${id}/unpaid-sales`);
+  }
+
+  createClientPayment(id: number, payload: ClientPaymentPayload): Observable<unknown> {
+    return this.http.post(`${this.apiUrl}/${id}/payments`, payload);
+  }
+
+  deleteClientPayment(clientId: number, paymentId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${clientId}/payments/${paymentId}`);
   }
 
   private buildParams(filters: ClientFilters): HttpParams {

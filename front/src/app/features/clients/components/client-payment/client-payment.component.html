@@ -1,0 +1,118 @@
+<div class="modal-overlay" (click)="close()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Régler des ventes — {{ clientName || 'Client' }}</h2>
+      <button class="btn-icon" type="button" (click)="close()" [disabled]="submitting()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div *ngIf="loading()" class="empty-state"><p>Chargement des ventes non soldées…</p></div>
+
+      <div *ngIf="!loading() && errorMessage()" class="empty-state error"><p>{{ errorMessage() }}</p></div>
+
+      <ng-container *ngIf="!loading() && !errorMessage()">
+        <div *ngIf="unpaidSales().length === 0" class="empty-state">
+          <p>Aucune vente en attente de paiement pour ce client.</p>
+        </div>
+
+        <ng-container *ngIf="unpaidSales().length > 0">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Montant total (DH) *</label>
+              <input
+                type="number"
+                class="form-control"
+                min="0.01"
+                step="0.01"
+                [(ngModel)]="totalAmount"
+                (ngModelChange)="onTotalAmountChange()"
+              />
+            </div>
+            <div class="form-group">
+              <label>Date *</label>
+              <input type="date" class="form-control" [(ngModel)]="date" />
+            </div>
+            <div class="form-group">
+              <label>Méthode</label>
+              <select class="form-control" [(ngModel)]="method">
+                <option *ngFor="let m of paymentMethods" [value]="m">{{ m }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Compte de paiement *</label>
+              <select class="form-control" [(ngModel)]="accountId">
+                <option [ngValue]="0" disabled>-- Sélectionner un compte --</option>
+                <option *ngFor="let acc of accounts()" [ngValue]="acc.id">{{ acc.name }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Référence</label>
+              <input type="text" class="form-control" [(ngModel)]="reference" placeholder="N° chèque, virement…" />
+            </div>
+            <div class="form-group form-group--full">
+              <label>Notes</label>
+              <input type="text" class="form-control" [(ngModel)]="notes" placeholder="Notes optionnelles" />
+            </div>
+          </div>
+
+          <h3 class="section-title">Répartition sur les ventes (du plus ancien au plus récent)</h3>
+          <div class="table-wrapper">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>VENTE</th>
+                  <th>DATE</th>
+                  <th class="col-right">MONTANT</th>
+                  <th class="col-right">SOLDE DÛ</th>
+                  <th class="col-right">MONTANT AFFECTÉ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let s of unpaidSales()">
+                  <td class="ref-cell">Vente #{{ s.id }}</td>
+                  <td>{{ s.date ? (s.date | date:'dd/MM/yyyy') : '—' }}</td>
+                  <td class="col-right num">{{ s.total_sale | number:'1.2-2' }} DH</td>
+                  <td class="col-right num text-danger">{{ s.remaining | number:'1.2-2' }} DH</td>
+                  <td class="col-right">
+                    <div class="allocation-input">
+                      <input
+                        type="number"
+                        class="form-control form-control--sm"
+                        min="0"
+                        [max]="s.remaining"
+                        step="0.01"
+                        [ngModel]="getAllocation(s.id)"
+                        (ngModelChange)="setAllocation(s.id, $event)"
+                      />
+                      <button
+                        type="button"
+                        class="btn-fill"
+                        title="Régler le montant total de cette vente"
+                        (click)="useFullAmount(s)"
+                      >✓</button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="allocation-summary" [class.mismatch]="allocationMismatch()">
+            <span>Réparti : {{ allocatedTotal() | number:'1.2-2' }} DH</span>
+            <span>Montant du paiement : {{ totalAmount | number:'1.2-2' }} DH</span>
+            <span *ngIf="allocationMismatch()" class="mismatch-hint">
+              ⚠️ La répartition doit être égale au montant du paiement.
+            </span>
+          </div>
+        </ng-container>
+      </ng-container>
+    </div>
+
+    <div class="modal-footer" *ngIf="!loading() && unpaidSales().length > 0">
+      <button class="btn btn-secondary" type="button" (click)="close()" [disabled]="submitting()">Annuler</button>
+      <button class="btn btn-primary" type="button" (click)="submit()" [disabled]="!canSubmit()">
+        {{ submitting() ? 'Enregistrement…' : 'Enregistrer le paiement' }}
+      </button>
+    </div>
+  </div>
+</div>

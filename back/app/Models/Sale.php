@@ -102,12 +102,12 @@ class Sale extends Model
 
     public function linkedCarrier(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Carrier::class, 'carrier_id');
+        return $this->belongsTo(Carrier::class, 'carrier_id');
     }
 
     public function linkedPartner(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Partner::class, 'partner_id');
+        return $this->belongsTo(Partner::class, 'partner_id');
     }
 
     public function items(): HasMany
@@ -120,9 +120,19 @@ class Sale extends Model
         return $this->items();
     }
 
+    /**
+     * Legacy relation — only returns payments created against this sale alone
+     * (sale_id set directly). Multi-sale client payments do not set sale_id;
+     * use `allocations()` for the authoritative paid-amount source.
+     */
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function allocations(): HasMany
+    {
+        return $this->hasMany(SalePaymentAllocation::class);
     }
 
     public function getSaleDateAttribute()
@@ -163,9 +173,7 @@ class Sale extends Model
 
     public function getPaidAmountAttribute(): float
     {
-        return (float) $this->payments->sum(function (Payment $payment) {
-            return $payment->amount ?? $payment->amount_paid ?? 0;
-        });
+        return (float) $this->allocations()->sum('amount');
     }
 
     public function getSubtotalAttribute($value): float

@@ -35,6 +35,11 @@
               🏷️ Nouvelle vente
             </button>
           }
+          @if (authService.hasPermission('manage sale-payments')) {
+            <button type="button" class="btn btn-primary" (click)="openPaymentModal()">
+              💳 Régler des ventes
+            </button>
+          }
           <button type="button" class="btn btn-secondary" (click)="openEditModal()">
             ✏️ Modifier
           </button>
@@ -367,15 +372,40 @@
                       <th>DATE</th>
                       <th>MÉTHODE</th>
                       <th class="col-right">MONTANT</th>
+                      <th></th>
                     </tr>
                   </thead>
                   <tbody>
                     @for (payment of statement()?.payments ?? []; track trackByRowId($index, payment)) {
                       <tr>
-                        <td class="ref-cell">{{ payment.reference || ('Paiement #' + payment.id) }}</td>
-                        <td>{{ (payment.payment_date || payment.created_at) ? ((payment.payment_date || payment.created_at) | date:'dd/MM/yyyy') : '—' }}</td>
-                        <td>{{ payment.method || '—' }}</td>
+                        <td class="ref-cell">
+                          {{ payment.reference || ('Paiement #' + payment.id) }}
+                          @if (payment.multi) {
+                            <span class="badge badge-warning" title="Ce paiement couvre plusieurs ventes">multi</span>
+                          }
+                        </td>
+                        <td>{{ (payment.date || payment.created_at) ? ((payment.date || payment.created_at) | date:'dd/MM/yyyy') : '—' }}</td>
+                        <td>{{ payment.payment_method || '—' }}</td>
                         <td class="col-right num">{{ (payment.amount ?? 0) | number:'1.2-2' }} DH</td>
+                        <td class="col-right actions-cell">
+                          @if (payment.sale_id) {
+                            <button
+                              type="button"
+                              class="btn-icon"
+                              title="Voir le détail du paiement"
+                              (click)="openPaymentView(payment)"
+                            >👁️</button>
+                            @if (authService.hasPermission('manage sale-payments')) {
+                              <button
+                                type="button"
+                                class="btn-icon"
+                                title="Supprimer ce paiement"
+                                [disabled]="deletingPaymentId() === payment.id"
+                                (click)="deleteStatementPayment(payment)"
+                              >🗑️</button>
+                            }
+                          }
+                        </td>
                       </tr>
                     }
                   </tbody>
@@ -422,4 +452,20 @@
       </div>
     </div>
   </div>
+}
+
+@if (isPaymentModalOpen() && activeClientId) {
+  <app-client-payment
+    [clientId]="activeClientId"
+    [clientName]="profile()?.client?.name ?? ''"
+    (closed)="closePaymentModal()"
+    (saved)="onPaymentSaved()">
+  </app-client-payment>
+}
+
+@if (viewingPaymentId()) {
+  <app-sale-payment-detail
+    [paymentId]="viewingPaymentId()!"
+    (closed)="closePaymentView()">
+  </app-sale-payment-detail>
 }

@@ -1,7 +1,8 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../../core/services/auth.service';
 import { SaleDetailComponent } from '../sale-detail/sale-detail.component';
 import { SaleFormComponent } from '../sale-form/sale-form.component';
@@ -70,6 +71,9 @@ export class SalesPageComponent implements OnInit {
   allPartners = signal<Partner[]>([]);
   allCommercials = signal<ManagedUser[]>([]);
 
+  private route = inject(ActivatedRoute);
+  private destroyRef = inject(DestroyRef);
+
   constructor(
     private saleService: SaleService,
     public authService: AuthService,
@@ -83,6 +87,17 @@ export class SalesPageComponent implements OnInit {
     this.loadFilters();
     this.loadData();
     this.loadFormLookups();
+
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const id = Number(params.get('id'));
+        if (!Number.isFinite(id) || id <= 0) return;
+
+        this.saleService.getSale(id).subscribe({
+          next: sale => this.openDetail(sale),
+        });
+      });
   }
 
   private loadFormLookups(): void {

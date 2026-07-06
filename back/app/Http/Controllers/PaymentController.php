@@ -8,6 +8,7 @@ use App\Http\Resources\SalePaymentResource;
 use App\Models\Payment;
 use App\Models\Sale;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
@@ -26,6 +27,11 @@ class PaymentController extends Controller
         return response()->json($this->salePaymentService->listForSale($sale));
     }
 
+    public function show(Payment $payment): JsonResponse
+    {
+        return response()->json($this->salePaymentService->getPaymentDetail($payment));
+    }
+
     /**
      * Store a new payment for a sale.
      * Always creates a Transaction (income) in the chosen account.
@@ -40,7 +46,7 @@ class PaymentController extends Controller
     /**
      * Delete a payment and its linked transaction.
      */
-    public function destroy(Sale $sale, Payment $payment, \Illuminate\Http\Request $request): JsonResponse
+    public function destroy(Sale $sale, Payment $payment, Request $request): JsonResponse
     {
         $this->salePaymentService->deletePayment(
             $sale,
