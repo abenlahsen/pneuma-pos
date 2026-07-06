@@ -51,6 +51,10 @@ export class SupplierDetailPageComponent implements OnInit {
   readonly deletingPaymentId = signal<number | null>(null);
   readonly viewingPaymentId = signal<number | null>(null);
 
+  readonly openPurchasesCollapsed = signal(false);
+  readonly entriesCollapsed = signal(false);
+  readonly paymentsCollapsed = signal(false);
+
   readonly purchasesHistory = computed<PurchaseHistoryRow[]>(() =>
     this.profile()?.purchases ?? this.statement()?.purchases ?? []
   );
@@ -84,6 +88,10 @@ export class SupplierDetailPageComponent implements OnInit {
   trackById(_: number, row: { id?: number | null }): number | string {
     return row.id ?? _;
   }
+
+  toggleOpenPurchases(): void { this.openPurchasesCollapsed.update(v => !v); }
+  toggleEntries(): void { this.entriesCollapsed.update(v => !v); }
+  togglePayments(): void { this.paymentsCollapsed.update(v => !v); }
 
   openEditModal(): void { this.isEditModalOpen.set(true); }
   closeEditModal(): void { this.isEditModalOpen.set(false); }
@@ -180,6 +188,9 @@ export class SupplierDetailPageComponent implements OnInit {
     this.statement.set(null);
     this.activeTab.set('overview');
     this.isEditModalOpen.set(false);
+    this.openPurchasesCollapsed.set(false);
+    this.entriesCollapsed.set(false);
+    this.paymentsCollapsed.set(false);
 
     this.supplierService.getSupplier(id)
       .pipe(takeUntilDestroyed(this.destroyRef))

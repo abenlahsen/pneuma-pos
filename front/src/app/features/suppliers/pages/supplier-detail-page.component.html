@@ -197,116 +197,131 @@
         } @else {
           @if (openPurchases().length) {
             <div class="subsection">
-              <h3 class="subsection-title">Achats en attente de paiement</h3>
-              <div class="table-wrapper">
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th>RÉFÉRENCE</th>
-                      <th>DATE</th>
-                      <th class="col-right">TOTAL</th>
-                      <th class="col-right">SOLDE DÛ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (p of openPurchases(); track trackById($index, p)) {
-                      <tr>
-                        <td class="ref-cell">Achat #{{ p.id }}</td>
-                        <td>{{ p.date ? (p.date | date:'dd/MM/yyyy') : '—' }}</td>
-                        <td class="col-right num">{{ (p.net_amount ?? 0) | number:'1.2-2' }} DH</td>
-                        <td class="col-right num text-danger">{{ (p.outstanding_amount ?? 0) | number:'1.2-2' }} DH</td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
+              <div class="subsection-header" (click)="toggleOpenPurchases()">
+                <h3 class="subsection-title">Achats en attente de paiement</h3>
+                <span class="collapse-icon">{{ openPurchasesCollapsed() ? '▶' : '▼' }}</span>
               </div>
+              @if (!openPurchasesCollapsed()) {
+                <div class="table-wrapper">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>RÉFÉRENCE</th>
+                        <th>DATE</th>
+                        <th class="col-right">TOTAL</th>
+                        <th class="col-right">SOLDE DÛ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (p of openPurchases(); track trackById($index, p)) {
+                        <tr>
+                          <td class="ref-cell">Achat #{{ p.id }}</td>
+                          <td>{{ p.date ? (p.date | date:'dd/MM/yyyy') : '—' }}</td>
+                          <td class="col-right num">{{ (p.net_amount ?? 0) | number:'1.2-2' }} DH</td>
+                          <td class="col-right num text-danger">{{ (p.outstanding_amount ?? 0) | number:'1.2-2' }} DH</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
             </div>
           }
 
           <div class="subsection">
-            <h3 class="subsection-title">Écritures comptables</h3>
-            @if (!statementEntries().length) {
-              <div class="empty-state"><p>Aucune écriture disponible.</p></div>
-            } @else {
-              <div class="table-wrapper">
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th>DATE</th>
-                      <th>TYPE</th>
-                      <th>DESCRIPTION</th>
-                      <th class="col-right">DÉBIT</th>
-                      <th class="col-right">CRÉDIT</th>
-                      <th class="col-right">SOLDE</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (entry of statementEntries(); track $index) {
+            <div class="subsection-header" (click)="toggleEntries()">
+              <h3 class="subsection-title">Écritures comptables</h3>
+              <span class="collapse-icon">{{ entriesCollapsed() ? '▶' : '▼' }}</span>
+            </div>
+            @if (!entriesCollapsed()) {
+              @if (!statementEntries().length) {
+                <div class="empty-state"><p>Aucune écriture disponible.</p></div>
+              } @else {
+                <div class="table-wrapper">
+                  <table class="table">
+                    <thead>
                       <tr>
-                        <td>{{ entry.date ? (entry.date | date:'dd/MM/yyyy') : '—' }}</td>
-                        <td>{{ entry.type || '—' }}</td>
-                        <td>{{ entry.description || '—' }}</td>
-                        <td class="col-right num">{{ (entry.debit ?? 0) | number:'1.2-2' }} DH</td>
-                        <td class="col-right num">{{ (entry.credit ?? 0) | number:'1.2-2' }} DH</td>
-                        <td class="col-right num">{{ (entry.balance ?? 0) | number:'1.2-2' }} DH</td>
+                        <th>DATE</th>
+                        <th>TYPE</th>
+                        <th>DESCRIPTION</th>
+                        <th class="col-right">DÉBIT</th>
+                        <th class="col-right">CRÉDIT</th>
+                        <th class="col-right">SOLDE</th>
                       </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      @for (entry of statementEntries(); track $index) {
+                        <tr>
+                          <td>{{ entry.date ? (entry.date | date:'dd/MM/yyyy') : '—' }}</td>
+                          <td>{{ entry.type || '—' }}</td>
+                          <td>{{ entry.description || '—' }}</td>
+                          <td class="col-right num">{{ (entry.debit ?? 0) | number:'1.2-2' }} DH</td>
+                          <td class="col-right num">{{ (entry.credit ?? 0) | number:'1.2-2' }} DH</td>
+                          <td class="col-right num">{{ (entry.balance ?? 0) | number:'1.2-2' }} DH</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
             }
           </div>
 
           <div class="subsection">
-            <h3 class="subsection-title">Paiements effectués</h3>
-            @if (!(statement()?.payments?.length ?? 0)) {
-              <div class="empty-state"><p>Aucun paiement enregistré.</p></div>
-            } @else {
-              <div class="table-wrapper">
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th>RÉFÉRENCE</th>
-                      <th>DATE</th>
-                      <th>MÉTHODE</th>
-                      <th class="col-right">MONTANT</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (payment of statement()?.payments ?? []; track trackById($index, payment)) {
+            <div class="subsection-header" (click)="togglePayments()">
+              <h3 class="subsection-title">Paiements effectués</h3>
+              <span class="collapse-icon">{{ paymentsCollapsed() ? '▶' : '▼' }}</span>
+            </div>
+            @if (!paymentsCollapsed()) {
+              @if (!(statement()?.payments?.length ?? 0)) {
+                <div class="empty-state"><p>Aucun paiement enregistré.</p></div>
+              } @else {
+                <div class="table-wrapper">
+                  <table class="table">
+                    <thead>
                       <tr>
-                        <td class="ref-cell">
-                          {{ payment.reference || ('Paiement #' + payment.id) }}
-                          @if (payment.multi) {
-                            <span class="badge badge-warning" title="Ce paiement couvre plusieurs achats">multi</span>
-                          }
-                        </td>
-                        <td>{{ payment.date ? (payment.date | date:'dd/MM/yyyy') : '—' }}</td>
-                        <td>{{ payment.method || '—' }}</td>
-                        <td class="col-right num">{{ (payment.amount ?? 0) | number:'1.2-2' }} DH</td>
-                        <td class="col-right actions-cell">
-                          <button
-                            type="button"
-                            class="btn-icon"
-                            title="Voir le détail du paiement"
-                            (click)="openPaymentView(payment)"
-                          >👁️</button>
-                          @if (authService.hasPermission('manage purchase-payments')) {
+                        <th>RÉFÉRENCE</th>
+                        <th>DATE</th>
+                        <th>MÉTHODE</th>
+                        <th class="col-right">MONTANT</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (payment of statement()?.payments ?? []; track trackById($index, payment)) {
+                        <tr>
+                          <td class="ref-cell">
+                            {{ payment.reference || ('Paiement #' + payment.id) }}
+                            @if (payment.multi) {
+                              <span class="badge badge-warning" title="Ce paiement couvre plusieurs achats">multi</span>
+                            }
+                          </td>
+                          <td>{{ payment.date ? (payment.date | date:'dd/MM/yyyy') : '—' }}</td>
+                          <td>{{ payment.method || '—' }}</td>
+                          <td class="col-right num">{{ (payment.amount ?? 0) | number:'1.2-2' }} DH</td>
+                          <td class="col-right actions-cell">
                             <button
                               type="button"
                               class="btn-icon"
-                              title="Supprimer ce paiement"
-                              [disabled]="deletingPaymentId() === payment.id"
-                              (click)="deleteStatementPayment(payment)"
-                            >🗑️</button>
-                          }
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
+                              title="Voir le détail du paiement"
+                              (click)="openPaymentView(payment)"
+                            >👁️</button>
+                            @if (authService.hasPermission('manage purchase-payments')) {
+                              <button
+                                type="button"
+                                class="btn-icon"
+                                title="Supprimer ce paiement"
+                                [disabled]="deletingPaymentId() === payment.id"
+                                (click)="deleteStatementPayment(payment)"
+                              >🗑️</button>
+                            }
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
             }
           </div>
         }

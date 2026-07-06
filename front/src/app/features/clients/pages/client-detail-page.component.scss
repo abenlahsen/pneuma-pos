@@ -624,6 +624,23 @@ h1 {
   &:last-child { border-bottom: none; }
 }
 
+.subsection-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 0.875rem;
+
+  .subsection-title { margin: 0; }
+}
+
+.collapse-icon {
+  font-size: 0.7rem;
+  color: $dim;
+  margin-left: 0.5rem;
+}
+
 .subsection-title {
   font-size: 0.6875rem;
   font-weight: 700;
