@@ -27,10 +27,34 @@ class TransactionService
         $query = $this->buildFilteredQuery($filters);
 
         if (! empty($filters['all'])) {
-            return $query->get();
+            $results = $query->get();
+            $this->attachPurchasePaymentIds($results);
+
+            return $results;
         }
 
-        return $query->paginate((int) ($filters['per_page'] ?? 20));
+        $paginated = $query->paginate((int) ($filters['per_page'] ?? 20));
+        $this->attachPurchasePaymentIds($paginated->getCollection());
+
+        return $paginated;
+    }
+
+    /**
+     * Tag each transaction with the id of the PurchasePayment it settles (if any),
+     * so the frontend can offer a "view payment" link — one bulk query, no N+1.
+     */
+    private function attachPurchasePaymentIds(Collection $transactions): void
+    {
+        $transactionIds = $transactions->pluck('id');
+        if ($transactionIds->isEmpty()) {
+            return;
+        }
+
+        $map = PurchasePayment::whereIn('transaction_id', $transactionIds)->pluck('id', 'transaction_id');
+
+        $transactions->each(function (Transaction $transaction) use ($map) {
+            $transaction->purchase_payment_id = $map[$transaction->id] ?? null;
+        });
     }
 
     /**

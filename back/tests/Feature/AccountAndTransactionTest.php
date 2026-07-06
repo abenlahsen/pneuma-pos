@@ -3,6 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Account;
+use App\Models\Purchase;
+use App\Models\PurchasePayment;
+use App\Models\Supplier;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
@@ -245,8 +248,8 @@ class AccountAndTransactionTest extends TestCase
 
     public function test_accounts_transfer_requires_transfer_permission(): void
     {
-        $source = $this->createAccount(['name' => 'Source ' . fake()->unique()->word()]);
-        $dest = $this->createAccount(['name' => 'Dest ' . fake()->unique()->word()]);
+        $source = $this->createAccount(['name' => 'Source '.fake()->unique()->word()]);
+        $dest = $this->createAccount(['name' => 'Dest '.fake()->unique()->word()]);
         $guest = $this->createUserWithPermissions(['view accounts']);
         Sanctum::actingAs($guest, [], 'web');
 
@@ -277,8 +280,8 @@ class AccountAndTransactionTest extends TestCase
     {
         Sanctum::actingAs($this->user, [], 'web');
 
-        $source = $this->createAccount(['name' => 'Source ' . fake()->unique()->numerify('###')]);
-        $dest = $this->createAccount(['name' => 'Dest ' . fake()->unique()->numerify('###')]);
+        $source = $this->createAccount(['name' => 'Source '.fake()->unique()->numerify('###')]);
+        $dest = $this->createAccount(['name' => 'Dest '.fake()->unique()->numerify('###')]);
 
         $response = $this->postJson('/api/accounts/transfer', [
             'source_account_id' => $source->id,
@@ -367,6 +370,43 @@ class AccountAndTransactionTest extends TestCase
         $response = $this->getJson("/api/transactions?date_from=2026-04-01&date_to=2026-04-30&account_id={$account->id}");
 
         $response->assertOk()->assertJsonCount(1, 'data');
+    }
+
+    public function test_transactions_index_exposes_linked_purchase_payment_id(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $account = $this->createAccount();
+        $plainTransaction = $this->createTransaction(['account_id' => $account->id]);
+
+        $supplier = Supplier::query()->create(['name' => 'Fournisseur Test', 'user_id' => $this->user->id]);
+        $purchase = Purchase::query()->create([
+            'date' => '2026-04-01',
+            'supplier_id' => $supplier->id,
+            'total_quantity' => 1,
+            'total_price' => 100.00,
+            'net_amount' => 100.00,
+            'status' => 'EN COURS',
+            'payment_status' => 'NON PAYE',
+            'created_by' => $this->user->id,
+        ]);
+        $linkedTransaction = $this->createTransaction(['account_id' => $account->id, 'category' => 'Achat']);
+        $payment = PurchasePayment::query()->create([
+            'purchase_id' => $purchase->id,
+            'supplier_id' => $supplier->id,
+            'transaction_id' => $linkedTransaction->id,
+            'amount' => 100.00,
+            'date' => '2026-04-15',
+            'method' => 'Espèces',
+        ]);
+
+        $response = $this->getJson("/api/transactions?account_id={$account->id}");
+
+        $response->assertOk();
+        $rows = collect($response->json('data'))->keyBy('id');
+
+        $this->assertNull($rows[$plainTransaction->id]['purchase_payment_id']);
+        $this->assertSame($payment->id, $rows[$linkedTransaction->id]['purchase_payment_id']);
     }
 
     // POST /api/transactions
@@ -542,7 +582,7 @@ class AccountAndTransactionTest extends TestCase
     private function createAccount(array $attributes = []): Account
     {
         return Account::query()->create(array_merge([
-            'name' => 'Compte ' . fake()->unique()->numerify('###'),
+            'name' => 'Compte '.fake()->unique()->numerify('###'),
             'type' => 'cash',
             'initial_balance' => 0,
             'is_active' => true,
