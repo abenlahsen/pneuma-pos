@@ -172,6 +172,12 @@
                   <tr [class.income-row]="t.type === 'income'" [class.expense-row]="t.type === 'expense'" class="pending-row">
                     <td class="actions-cell">
                       <button
+                        *ngIf="t.purchase_payment_id"
+                        (click)="openPaymentView(t)"
+                        class="btn-icon btn-view"
+                        title="Voir le détail du paiement"
+                      >👁️</button>
+                      <button
                         (click)="openEditForm(t)"
                         class="btn-icon btn-edit"
                         title="Modifier"
@@ -248,6 +254,14 @@
             <tr [class.income-row]="t.type === 'income'" [class.expense-row]="t.type === 'expense'">
               <td class="actions-cell">
                 <button
+                  *ngIf="t.purchase_payment_id"
+                  (click)="openPaymentView(t)"
+                  class="btn-icon btn-view"
+                  title="Voir le détail du paiement"
+                >
+                  👁️
+                </button>
+                <button
                   (click)="openEditForm(t)"
                   class="btn-icon btn-edit"
                   title="Modifier"
@@ -318,5 +332,12 @@
       (submitted)="onFormSubmit($event)"
       (cancelled)="closeForm()"
     />
+  }
+
+  @if (viewingPaymentId()) {
+    <app-purchase-payment-detail
+      [paymentId]="viewingPaymentId()!"
+      (closed)="closePaymentView()">
+    </app-purchase-payment-detail>
   }
 </div>

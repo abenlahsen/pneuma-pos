@@ -14,15 +14,17 @@ import {
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { AccountService } from '../../accounts/data-access/account.service';
 import { Account } from '../../accounts/models/account.model';
+import { PurchasePaymentDetailComponent } from '../../purchases/components/purchase-payment-detail/purchase-payment-detail.component';
 
 @Component({
   selector: 'app-cash-flow-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TransactionFormComponent, AutoRefreshControlComponent],
+  imports: [CommonModule, FormsModule, TransactionFormComponent, AutoRefreshControlComponent, PurchasePaymentDetailComponent],
   templateUrl: './cash-flow-page.component.html',
   styleUrls: ['./cash-flow-page.component.scss'],
 })
 export class CashFlowPageComponent implements OnInit {
+  viewingPaymentId = signal<number | null>(null);
   transactions = signal<Transaction[]>([]);
   summary = signal<TransactionSummary>({ income: 0, expenses: 0, balance: 0, pending_income: 0, pending_expense: 0 });
   filterOptions = signal<TransactionFilters>({ categories: [], persons: [], partners: [], accounts: [] });
@@ -175,6 +177,14 @@ export class CashFlowPageComponent implements OnInit {
   openEditForm(transaction: Transaction): void {
     this.editingTransaction.set(transaction);
     this.showForm.set(true);
+  }
+
+  openPaymentView(transaction: Transaction): void {
+    if (transaction.purchase_payment_id) this.viewingPaymentId.set(transaction.purchase_payment_id);
+  }
+
+  closePaymentView(): void {
+    this.viewingPaymentId.set(null);
   }
 
   closeForm(): void {
