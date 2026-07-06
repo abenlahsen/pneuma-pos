@@ -32,6 +32,7 @@ class TransactionResource extends JsonResource
             'reference' => $this->reference,
             'account' => $this->whenLoaded('account', fn ($a) => ['id' => $a->id, 'name' => $a->name, 'type' => $a->type]),
             'purchase_payment_id' => $this->purchase_payment_id,
+            'sale_payment_id' => $this->sale_payment_id,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

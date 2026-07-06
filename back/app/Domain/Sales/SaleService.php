@@ -4,8 +4,10 @@ namespace App\Domain\Sales;
 
 use App\Enums\SalePaymentStatus;
 use App\Models\Client;
+use App\Models\Payment;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\SalePaymentAllocation;
 use App\Models\Stock;
 use App\Models\Transaction;
 use App\Services\ActivityLogService;
@@ -75,7 +77,7 @@ class SaleService
 
     private function refreshPaymentStatus(Sale $sale): void
     {
-        $totalPaid = (float) $sale->payments()->sum('amount');
+        $totalPaid = $sale->paid_amount;
         $totalSale = (float) $sale->total_sale;
         $status = $totalPaid <= 0
                 ? SalePaymentStatus::NON_PAYE->value
@@ -92,6 +94,28 @@ class SaleService
 
             $this->restoreStockForItems($sale, $userId);
 
+            // Remove this sale's own allocation(s). If a parent payment no longer
+            // covers any other sale, delete the payment and its transaction too —
+            // but a multi-sale client payment must survive for the other sales.
+            $allocations = SalePaymentAllocation::where('sale_id', $sale->id)->get();
+            foreach ($allocations->groupBy('payment_id') as $paymentId => $rows) {
+                SalePaymentAllocation::whereIn('id', $rows->pluck('id'))->delete();
+
+                if (SalePaymentAllocation::where('payment_id', $paymentId)->exists()) {
+                    continue;
+                }
+
+                $payment = Payment::find($paymentId);
+                if ($payment) {
+                    if ($payment->transaction_id) {
+                        Transaction::where('id', $payment->transaction_id)->delete();
+                    }
+                    $payment->delete();
+                }
+            }
+
+            // Legacy fallback: payments still linked via sale_id but with no
+            // allocation row (e.g. rows inserted directly, bypassing the service).
             $transactionIds = $sale->payments()->whereNotNull('transaction_id')->pluck('transaction_id');
             $sale->payments()->delete();
 

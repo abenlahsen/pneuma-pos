@@ -79,13 +79,15 @@ export interface ClientSalesHistoryRow {
 
 export interface ClientPaymentRow {
   id: number;
-  payment_date?: string | null;
+  date?: string | null;
   created_at?: string | null;
   amount?: number | null;
-  method?: string | null;
+  payment_method?: string | null;
   reference?: string | null;
   notes?: string | null;
   sale_id?: number | null;
+  /** True when the parent payment is split across several sales. */
+  multi?: boolean;
 }
 
 export interface ClientStatementSummary {
@@ -129,4 +131,27 @@ export interface ClientStatementResponse {
   sales: ClientSalesHistoryRow[];
   payments: ClientPaymentRow[];
   entries: ClientStatementEntry[];
+}
+
+export interface UnpaidSaleRow {
+  id: number;
+  date?: string;
+  total_sale: number;
+  paid_amount: number;
+  remaining: number;
+}
+
+export interface ClientPaymentAllocationInput {
+  sale_id: number;
+  amount: number;
+}
+
+export interface ClientPaymentPayload {
+  amount: number;
+  method: string;
+  date: string;
+  account_id: number;
+  reference?: string | null;
+  notes?: string | null;
+  allocations: ClientPaymentAllocationInput[];
 }

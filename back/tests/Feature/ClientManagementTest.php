@@ -10,6 +10,7 @@ use App\Models\Partner;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Models\SalePaymentAllocation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Validator;
@@ -53,7 +54,7 @@ class ClientManagementTest extends TestCase
             'status' => 'paid',
         ]);
 
-        Payment::create([
+        $firstPayment = Payment::create([
             'sale_id' => $firstSale->id,
             'amount' => 40,
             'date' => now()->subDays(2)->toDateString(),
@@ -61,8 +62,9 @@ class ClientManagementTest extends TestCase
             'notes' => 'Partial payment',
             'user_id' => $user->id,
         ]);
+        SalePaymentAllocation::create(['payment_id' => $firstPayment->id, 'sale_id' => $firstSale->id, 'amount' => 40]);
 
-        Payment::create([
+        $secondPayment = Payment::create([
             'sale_id' => $secondSale->id,
             'amount' => 80,
             'date' => now()->subDay()->toDateString(),
@@ -70,8 +72,9 @@ class ClientManagementTest extends TestCase
             'notes' => 'Full payment',
             'user_id' => $user->id,
         ]);
+        SalePaymentAllocation::create(['payment_id' => $secondPayment->id, 'sale_id' => $secondSale->id, 'amount' => 80]);
 
-        $response = $this->getJson('/api/clients/' . $client->id . '/profile');
+        $response = $this->getJson('/api/clients/'.$client->id.'/profile');
 
         $response
             ->assertOk()
@@ -105,7 +108,7 @@ class ClientManagementTest extends TestCase
             'status' => 'partial',
         ]);
 
-        Payment::create([
+        $payment = Payment::create([
             'sale_id' => $sale->id,
             'amount' => 20,
             'date' => now()->toDateString(),
@@ -113,8 +116,9 @@ class ClientManagementTest extends TestCase
             'notes' => 'Initial payment',
             'user_id' => $user->id,
         ]);
+        SalePaymentAllocation::create(['payment_id' => $payment->id, 'sale_id' => $sale->id, 'amount' => 20]);
 
-        $response = $this->getJson('/api/clients/' . $client->id . '/statement');
+        $response = $this->getJson('/api/clients/'.$client->id.'/statement');
 
         $response
             ->assertOk()
@@ -135,14 +139,14 @@ class ClientManagementTest extends TestCase
     {
         $missingCategoryValidator = Validator::make([
             'name' => 'Validator Client',
-        ], (new StoreClientRequest())->rules());
+        ], (new StoreClientRequest)->rules());
 
         $this->assertTrue($missingCategoryValidator->passes());
 
         $invalidCategoryValidator = Validator::make([
             'name' => 'Validator Client',
             'category' => 'Invalid',
-        ], (new StoreClientRequest())->rules());
+        ], (new StoreClientRequest)->rules());
 
         $this->assertFalse($invalidCategoryValidator->passes());
         $this->assertArrayHasKey('category', $invalidCategoryValidator->errors()->toArray());
@@ -150,14 +154,14 @@ class ClientManagementTest extends TestCase
         $validCategoryValidator = Validator::make([
             'name' => 'Validator Client',
             'category' => 'Particulier',
-        ], (new StoreClientRequest())->rules());
+        ], (new StoreClientRequest)->rules());
 
         $this->assertTrue($validCategoryValidator->passes(), json_encode($validCategoryValidator->errors()->toArray()));
 
         $enterpriseCategoryValidator = Validator::make([
             'name' => 'Validator Client',
             'category' => 'Entreprise',
-        ], (new StoreClientRequest())->rules());
+        ], (new StoreClientRequest)->rules());
 
         $this->assertTrue($enterpriseCategoryValidator->passes(), json_encode($enterpriseCategoryValidator->errors()->toArray()));
     }
@@ -171,16 +175,14 @@ class ClientManagementTest extends TestCase
             'is_active' => true,
         ]);
 
-        $request = UpdateClientRequest::create('/api/clients/' . $client->id, 'PATCH', [
+        $request = UpdateClientRequest::create('/api/clients/'.$client->id, 'PATCH', [
             'category' => 'Invalid',
         ]);
 
         $request->setRouteResolver(function () use ($client) {
             return new class($client)
             {
-                public function __construct(private Client $client)
-                {
-                }
+                public function __construct(private Client $client) {}
 
                 public function parameter(string $key): mixed
                 {
@@ -229,7 +231,7 @@ class ClientManagementTest extends TestCase
                 'quantity' => 1,
                 'selling_price' => 99.99,
             ]],
-        ], (new StoreSaleRequest())->rules());
+        ], (new StoreSaleRequest)->rules());
 
         $this->assertTrue($validator->passes(), json_encode($validator->errors()->toArray()));
     }

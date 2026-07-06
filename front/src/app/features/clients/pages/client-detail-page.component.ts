@@ -5,12 +5,15 @@ import { catchError, of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ClientService } from '../data-access/client.service';
 import { ClientFormComponent } from '../components/client-form/client-form.component';
+import { ClientPaymentComponent } from '../components/client-payment/client-payment.component';
+import { SalePaymentDetailComponent } from '../../sales/components/sale-payment-detail/sale-payment-detail.component';
 import {
   ClientPayload,
   ClientProfileResponse,
   ClientSalesHistoryRow,
   ClientStatementEntry,
   ClientStatementResponse,
+  ClientPaymentRow,
 } from '../models/client.model';
 import { VehicleService } from '../../vehicles/data-access/vehicle.service';
 import { Vehicle } from '../../vehicles/models/vehicle.model';
@@ -28,7 +31,7 @@ import { SaleFormComponent } from '../../sales/sale-form/sale-form.component';
 @Component({
   selector: 'app-client-detail-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, ClientFormComponent, VehicleFormComponent, SaleFormComponent],
+  imports: [CommonModule, RouterLink, ClientFormComponent, VehicleFormComponent, SaleFormComponent, ClientPaymentComponent, SalePaymentDetailComponent],
   templateUrl: './client-detail-page.component.html',
   styleUrl: './client-detail-page.component.scss',
 })
@@ -43,7 +46,7 @@ export class ClientDetailPageComponent implements OnInit {
   private readonly carrierService = inject(CarrierService);
   private readonly partnerService = inject(PartnerService);
 
-  private activeClientId: number | null = null;
+  activeClientId: number | null = null;
 
   readonly loading = signal(true);
   readonly profileLoading = signal(false);
@@ -56,6 +59,9 @@ export class ClientDetailPageComponent implements OnInit {
   readonly statement = signal<ClientStatementResponse | null>(null);
 
   readonly isEditModalOpen = signal(false);
+  readonly isPaymentModalOpen = signal(false);
+  readonly viewingPaymentId = signal<number | null>(null);
+  readonly deletingPaymentId = signal<number | null>(null);
   readonly saving = signal(false);
   readonly deleting = signal(false);
 
@@ -145,6 +151,47 @@ export class ClientDetailPageComponent implements OnInit {
 
   closeEditModal(): void {
     this.isEditModalOpen.set(false);
+  }
+
+  openPaymentModal(): void {
+    this.isPaymentModalOpen.set(true);
+  }
+
+  closePaymentModal(): void {
+    this.isPaymentModalOpen.set(false);
+  }
+
+  onPaymentSaved(): void {
+    if (this.activeClientId) this.loadClient(this.activeClientId);
+  }
+
+  openPaymentView(payment: ClientPaymentRow): void {
+    if (typeof payment.id === 'number') this.viewingPaymentId.set(payment.id);
+  }
+
+  closePaymentView(): void {
+    this.viewingPaymentId.set(null);
+  }
+
+  deleteStatementPayment(payment: ClientPaymentRow): void {
+    const id = this.activeClientId;
+    if (!id || typeof payment.id !== 'number') return;
+    const warning = payment.multi
+      ? 'Ce paiement couvre plusieurs ventes. Le supprimer annulera le paiement sur TOUTES ces ventes. Continuer ?'
+      : 'Supprimer ce paiement ?';
+    if (!confirm(warning)) return;
+
+    this.deletingPaymentId.set(payment.id);
+    this.clientService.deleteClientPayment(id, payment.id).subscribe({
+      next: () => {
+        this.deletingPaymentId.set(null);
+        this.loadClient(id);
+      },
+      error: () => {
+        this.deletingPaymentId.set(null);
+        alert('Impossible de supprimer ce paiement.');
+      },
+    });
   }
 
   openAddVehicle(): void {

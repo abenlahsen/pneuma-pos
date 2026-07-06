@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Domain\Sales\SalePaymentService;
 use App\Models\Account;
 use App\Models\Payment;
 use App\Models\Sale;
+use App\Models\SalePaymentAllocation;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
@@ -22,7 +24,9 @@ class SalePaymentTest extends TestCase
     use DatabaseTransactions;
 
     private User $user;
+
     private Account $account;
+
     private Sale $sale;
 
     protected function setUp(): void
@@ -55,7 +59,7 @@ class SalePaymentTest extends TestCase
         $this->user->assignRole($admin);
 
         $this->account = Account::query()->create([
-            'name' => 'Caisse Test ' . fake()->unique()->numerify('###'),
+            'name' => 'Caisse Test '.fake()->unique()->numerify('###'),
             'type' => 'cash',
             'initial_balance' => 0,
             'is_active' => true,
@@ -110,13 +114,19 @@ class SalePaymentTest extends TestCase
             'account_id' => $this->account->id,
         ]);
 
-        Payment::query()->create([
+        $payment = Payment::query()->create([
             'sale_id' => $this->sale->id,
             'transaction_id' => $transaction->id,
             'user_id' => $this->user->id,
             'amount' => 400.00,
             'date' => '2026-04-10',
             'method' => 'Espèces',
+        ]);
+
+        SalePaymentAllocation::query()->create([
+            'payment_id' => $payment->id,
+            'sale_id' => $this->sale->id,
+            'amount' => 400.00,
         ]);
 
         $response = $this->getJson("/api/sales/{$this->sale->id}/payments");
@@ -344,6 +354,47 @@ class SalePaymentTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
+    // GET /api/sale-payments/{payment}
+    // -------------------------------------------------------------------------
+
+    public function test_show_requires_authentication(): void
+    {
+        $payment = $this->createPayment(500.00);
+
+        $response = $this->getJson("/api/sale-payments/{$payment->id}");
+
+        $response->assertUnauthorized();
+    }
+
+    public function test_show_requires_view_sales_permission(): void
+    {
+        $guest = $this->createUserWithPermissions([]);
+        Sanctum::actingAs($guest, [], 'web');
+
+        $payment = $this->createPayment(500.00);
+
+        $response = $this->getJson("/api/sale-payments/{$payment->id}");
+
+        $response->assertForbidden();
+    }
+
+    public function test_show_returns_the_single_sale_it_covers(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $payment = $this->createPayment(500.00);
+
+        $response = $this->getJson("/api/sale-payments/{$payment->id}");
+
+        $response->assertOk()
+            ->assertJsonPath('id', $payment->id)
+            ->assertJsonPath('amount', 500)
+            ->assertJsonCount(1, 'sales')
+            ->assertJsonPath('sales.0.id', $this->sale->id)
+            ->assertJsonPath('sales.0.allocated_amount', 500);
+    }
+
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
@@ -382,7 +433,13 @@ class SalePaymentTest extends TestCase
             'method' => 'Chèque',
         ]);
 
-        app(\App\Domain\Sales\SalePaymentService::class)
+        SalePaymentAllocation::query()->create([
+            'payment_id' => $payment->id,
+            'sale_id' => $this->sale->id,
+            'amount' => $amount,
+        ]);
+
+        app(SalePaymentService::class)
             ->refreshPaymentStatus($this->sale->fresh());
 
         return $payment;
@@ -423,6 +480,7 @@ class SalePaymentTest extends TestCase
         $this->ensureSalesTable();
         $this->ensureSaleItemsTable();
         $this->ensurePaymentsTable();
+        $this->ensureSalePaymentAllocationsTable();
     }
 
     private function ensureUsersTable(): void
@@ -656,7 +714,8 @@ class SalePaymentTest extends TestCase
         }
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('sale_id');
+            $table->unsignedBigInteger('sale_id')->nullable();
+            $table->unsignedBigInteger('client_id')->nullable();
             $table->unsignedBigInteger('transaction_id')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->decimal('amount', 12, 2)->default(0);
@@ -664,6 +723,20 @@ class SalePaymentTest extends TestCase
             $table->string('method')->nullable();
             $table->string('reference')->nullable();
             $table->text('notes')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    private function ensureSalePaymentAllocationsTable(): void
+    {
+        if (Schema::hasTable('sale_payment_allocations')) {
+            return;
+        }
+        Schema::create('sale_payment_allocations', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('payment_id');
+            $table->unsignedBigInteger('sale_id');
+            $table->decimal('amount', 10, 2);
             $table->timestamps();
         });
     }

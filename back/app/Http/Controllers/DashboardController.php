@@ -203,7 +203,7 @@ class DashboardController extends Controller
             COALESCE(SUM(tyre_items.tyre_qty), 0) as total_tyres,
             SUM(sales.margin) as total_margin,
             SUM(CASE WHEN sales.payment_status IN ('$saleNonPaye', '$salePartiel')
-                THEN sales.total_sale - COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.sale_id = sales.id), 0)
+                THEN sales.total_sale - COALESCE((SELECT SUM(spa.amount) FROM sale_payment_allocations spa WHERE spa.sale_id = sales.id), 0)
                 ELSE 0 END) as total_unpaid";
 
         // Service-order aggregation per commercial (margin: service lines cost=0, part lines cost from stock)

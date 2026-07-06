@@ -458,6 +458,13 @@ h1 {
   margin-left: auto;
 }
 
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  justify-content: flex-end;
+}
+
 // ── Icon buttons ──────────────────────────────────────────────────────────────
 .btn-icon {
   width: 2rem;

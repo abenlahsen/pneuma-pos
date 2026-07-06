@@ -15,6 +15,8 @@ export interface Transaction {
   account?: { id: number; name: string; type: string };
   /** Set when this transaction settles a purchase payment — id to fetch its detail via PurchaseService.getPaymentDetail(). */
   purchase_payment_id: number | null;
+  /** Set when this transaction settles a sale payment — id to fetch its detail via PaymentService.getPaymentDetail(). */
+  sale_payment_id: number | null;
   created_at: string;
   updated_at: string;
 }

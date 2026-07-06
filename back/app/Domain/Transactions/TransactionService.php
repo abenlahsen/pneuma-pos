@@ -29,12 +29,14 @@ class TransactionService
         if (! empty($filters['all'])) {
             $results = $query->get();
             $this->attachPurchasePaymentIds($results);
+            $this->attachSalePaymentIds($results);
 
             return $results;
         }
 
         $paginated = $query->paginate((int) ($filters['per_page'] ?? 20));
         $this->attachPurchasePaymentIds($paginated->getCollection());
+        $this->attachSalePaymentIds($paginated->getCollection());
 
         return $paginated;
     }
@@ -54,6 +56,24 @@ class TransactionService
 
         $transactions->each(function (Transaction $transaction) use ($map) {
             $transaction->purchase_payment_id = $map[$transaction->id] ?? null;
+        });
+    }
+
+    /**
+     * Tag each transaction with the id of the (sale) Payment it settles (if any),
+     * so the frontend can offer a "view payment" link — one bulk query, no N+1.
+     */
+    private function attachSalePaymentIds(Collection $transactions): void
+    {
+        $transactionIds = $transactions->pluck('id');
+        if ($transactionIds->isEmpty()) {
+            return;
+        }
+
+        $map = Payment::whereIn('transaction_id', $transactionIds)->pluck('id', 'transaction_id');
+
+        $transactions->each(function (Transaction $transaction) use ($map) {
+            $transaction->sale_payment_id = $map[$transaction->id] ?? null;
         });
     }
 
@@ -109,11 +129,14 @@ class TransactionService
     private function guardLinkedToCompleted(Transaction $transaction): void
     {
         $payment = Payment::where('transaction_id', $transaction->id)
-            ->with('sale:id,payment_status')
+            ->with('allocations.sale:id,payment_status')
             ->first();
 
-        if ($payment?->sale?->payment_status === SalePaymentStatus::PAYE->value) {
-            abort(422, "Cette transaction est liée à la vente #{$payment->sale_id} entièrement payée. Modifiez d'abord le statut de paiement de la vente.");
+        $completedSaleAllocation = $payment?->allocations
+            ->first(fn ($allocation) => $allocation->sale?->payment_status === SalePaymentStatus::PAYE->value);
+
+        if ($completedSaleAllocation) {
+            abort(422, "Cette transaction est liée à la vente #{$completedSaleAllocation->sale_id} entièrement payée. Modifiez d'abord le statut de paiement de la vente.");
         }
 
         $purchasePayment = PurchasePayment::where('transaction_id', $transaction->id)

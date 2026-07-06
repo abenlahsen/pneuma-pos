@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { PaymentPayload, PaymentSummary } from '../models/payment.model';
+import { PaymentPayload, PaymentSummary, PaymentDetail } from '../models/payment.model';
 
 @Injectable({
   providedIn: 'root',
@@ -22,5 +22,9 @@ export class PaymentService {
 
   deletePayment(saleId: number, paymentId: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/sales/${saleId}/payments/${paymentId}`);
+  }
+
+  getPaymentDetail(paymentId: number): Observable<PaymentDetail> {
+    return this.http.get<PaymentDetail>(`${this.apiUrl}/sale-payments/${paymentId}`);
   }
 }

@@ -268,7 +268,15 @@ $_border2:  #d0d9e4;
   }
 }
 
-.btn-delete {
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  justify-content: flex-end;
+}
+
+.btn-delete,
+.btn-view {
   background: none;
   border: none;
   cursor: pointer;
@@ -279,6 +287,26 @@ $_border2:  #d0d9e4;
   transition: opacity 0.15s, color 0.15s;
 
   &:hover { opacity: 1; color: #dc2626; }
+}
+
+.btn-view:hover { color: $_red; }
+
+.badge-multi {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.4rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #a16207;
+  background: rgba(234, 179, 8, 0.12);
+  border-radius: 6px;
+  vertical-align: middle;
+}
+
+.text-muted {
+  color: $_muted;
 }
 
 // ── Add payment form ──────────────────────────────────────────────────────────

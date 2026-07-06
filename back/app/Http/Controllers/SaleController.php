@@ -504,7 +504,7 @@ class SaleController extends Controller
                     ->where('status', SaleStatus::EN_COURS->value)
                     ->whereIn('payment_status', [SalePaymentStatus::NON_PAYE->value, SalePaymentStatus::PARTIEL->value]);
                 $totalSale = (float) (clone $q)->sum('total_sale');
-                $totalPaid = (float) DB::table('payments')
+                $totalPaid = (float) DB::table('sale_payment_allocations')
                     ->whereIn('sale_id', (clone $q)->select('id'))
                     ->sum('amount');
 
@@ -515,7 +515,7 @@ class SaleController extends Controller
                     ->whereIn('status', [SaleStatus::LIVRE->value, SaleStatus::MONTE->value])
                     ->whereIn('payment_status', [SalePaymentStatus::NON_PAYE->value, SalePaymentStatus::PARTIEL->value]);
                 $totalSale = (float) (clone $q)->sum('total_sale');
-                $totalPaid = (float) DB::table('payments')
+                $totalPaid = (float) DB::table('sale_payment_allocations')
                     ->whereIn('sale_id', (clone $q)->select('id'))
                     ->sum('amount');
 
