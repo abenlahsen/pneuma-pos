@@ -318,14 +318,27 @@ $VPS_SUDO find "$APP_DIR" -type f -exec chmod 644 {} \;
 $VPS_SUDO chmod -R 775 "$APP_DIR/back/storage" "$APP_DIR/back/bootstrap/cache"
 
 # ── Cron scheduler (drives Schedule::command(...) entries, e.g. kpi:snapshot) ──
-# Uses the absolute php path (not a bare "php") since cron runs jobs with a
-# minimal PATH that may not include the same directories as an interactive shell.
-echo "  → Configuring cron scheduler (Laravel Schedule)..."
+# Installed as a /etc/cron.d drop-in (not via "crontab -l | grep -v | crontab -")
+# because that merge pattern breaks under "set -e": when the target user has no
+# existing crontab, "crontab -l" and the following "grep -v" both exit non-zero
+# on empty input, which aborts the pipeline under pipefail before the new line
+# is ever written — so the scheduler silently never got installed and
+# kpi:snapshot never ran, leaving /kpi-history permanently empty.
+echo "  → Configuring Laravel scheduler cron (/etc/cron.d/pneuma-kpi)..."
 CRON_USER="${WWW_OWNER%%:*}"
 PHP_BIN=\$(command -v php)
-CRON_LINE="* * * * * cd $APP_DIR/back && \$PHP_BIN artisan schedule:run >> /dev/null 2>&1"
-( $VPS_SUDO crontab -u "\$CRON_USER" -l 2>/dev/null | grep -vF "artisan schedule:run"; echo "\$CRON_LINE" ) | $VPS_SUDO crontab -u "\$CRON_USER" -
-echo "  ✓ Cron scheduler configured (runs every minute as \$CRON_USER)"
+$VPS_SUDO tee /etc/cron.d/pneuma-kpi > /dev/null << CRONEOF
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+* * * * * \$CRON_USER cd $APP_DIR/back && \$PHP_BIN artisan schedule:run >> $APP_DIR/back/storage/logs/scheduler.log 2>&1
+CRONEOF
+$VPS_SUDO chmod 0644 /etc/cron.d/pneuma-kpi
+$VPS_SUDO systemctl enable --now cron 2>/dev/null || $VPS_SUDO service cron start || true
+echo "  ✓ Scheduler cron installed (runs every minute as \$CRON_USER)"
+
+# Create an initial KPI snapshot immediately so /kpi-history isn't empty until
+# the next scheduled run (kpi:snapshot captures yesterday's KPIs by default).
+echo "  → Creating an initial KPI snapshot..."
+$VPS_SUDO -u "\$CRON_USER" \$PHP_BIN "$APP_DIR/back/artisan" kpi:snapshot || true
 
 EOF
 

@@ -136,16 +136,17 @@ class DashboardController extends Controller
 
         // Service Auto margin:
         //   service items → cost = 0, margin = line_total
-        //   part items    → margin = line_total - qty × stocks.purchase_price
+        //   part items    → margin = line_total - qty × the item's own frozen purchase_price
+        //                    (captured at creation time — NOT a live join to stocks, which
+        //                    breaks once the stock lot's price is later cleared/changed/consumed)
         $serviceMargin = function (string $start, ?string $end = null): float {
             $q = DB::table('service_items')
                 ->join('service_orders', 'service_items.service_order_id', '=', 'service_orders.id')
-                ->leftJoin('stocks', 'service_items.stock_id', '=', 'stocks.id')
                 ->where('service_orders.status', '!=', ServiceOrderStatus::ANNULE->value)
                 ->selectRaw("SUM(CASE
                     WHEN service_items.item_type = 'service'
                         THEN service_items.line_total
-                    ELSE service_items.line_total - service_items.quantity * COALESCE(stocks.purchase_price, 0)
+                    ELSE service_items.line_total - service_items.quantity * service_items.purchase_price
                 END) as margin");
 
             $end
@@ -206,17 +207,16 @@ class DashboardController extends Controller
                 THEN sales.total_sale - COALESCE((SELECT SUM(spa.amount) FROM sale_payment_allocations spa WHERE spa.sale_id = sales.id), 0)
                 ELSE 0 END) as total_unpaid";
 
-        // Service-order aggregation per commercial (margin: service lines cost=0, part lines cost from stock)
+        // Service-order aggregation per commercial (margin: service lines cost=0, part lines cost from the item's own frozen purchase_price)
         $soCommercialRaw = "COALESCE(users.name, 'Non assigné') as commercial_name,
             COUNT(service_orders.id) as so_count,
             SUM(service_orders.net_amount) as so_ca,
             SUM((
                 SELECT COALESCE(SUM(CASE
                     WHEN si.item_type = 'service' THEN si.line_total
-                    ELSE si.line_total - si.quantity * COALESCE(stk.purchase_price, 0)
+                    ELSE si.line_total - si.quantity * si.purchase_price
                 END), 0)
                 FROM service_items si
-                LEFT JOIN stocks stk ON si.stock_id = stk.id
                 WHERE si.service_order_id = service_orders.id
             )) as so_margin,
             SUM(CASE WHEN service_orders.payment_status IN ('$soNonPaye', '$soPartiel')
