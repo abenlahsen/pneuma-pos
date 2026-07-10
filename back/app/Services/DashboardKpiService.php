@@ -129,12 +129,11 @@ class DashboardKpiService
         $serviceMargin = function (string $start, ?string $end = null): float {
             $q = DB::table('service_items')
                 ->join('service_orders', 'service_items.service_order_id', '=', 'service_orders.id')
-                ->leftJoin('stocks', 'service_items.stock_id', '=', 'stocks.id')
                 ->where('service_orders.status', '!=', ServiceOrderStatus::ANNULE->value)
                 ->selectRaw("SUM(CASE
                     WHEN service_items.item_type = 'service'
                         THEN service_items.line_total
-                    ELSE service_items.line_total - service_items.quantity * COALESCE(stocks.purchase_price, 0)
+                    ELSE service_items.line_total - service_items.quantity * service_items.purchase_price
                 END) as margin");
 
             $end
@@ -199,10 +198,9 @@ class DashboardKpiService
             SUM((
                 SELECT COALESCE(SUM(CASE
                     WHEN si.item_type = 'service' THEN si.line_total
-                    ELSE si.line_total - si.quantity * COALESCE(stk.purchase_price, 0)
+                    ELSE si.line_total - si.quantity * si.purchase_price
                 END), 0)
                 FROM service_items si
-                LEFT JOIN stocks stk ON si.stock_id = stk.id
                 WHERE si.service_order_id = service_orders.id
             )) as so_margin,
             SUM(CASE WHEN service_orders.payment_status IN ('$saleNonPaye', '$salePartiel')
