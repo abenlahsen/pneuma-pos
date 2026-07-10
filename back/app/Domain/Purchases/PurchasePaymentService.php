@@ -278,6 +278,7 @@ class PurchasePaymentService
                 'net_amount' => round((float) ($purchase->net_amount ?? $purchase->total_price ?? 0), 2),
                 'paid_amount' => round($purchase->paidAmount(), 2),
                 'remaining' => round(max(0, (float) ($purchase->net_amount ?? $purchase->total_price ?? 0) - $purchase->paidAmount()), 2),
+                'with_invoice' => (bool) $purchase->with_invoice,
             ])
             ->filter(fn ($row) => $row['remaining'] > 0.01)
             ->values();

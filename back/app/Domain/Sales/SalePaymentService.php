@@ -239,6 +239,7 @@ class SalePaymentService
                 'total_sale' => round((float) ($sale->total_sale ?? 0), 2),
                 'paid_amount' => round($sale->paid_amount, 2),
                 'remaining' => round(max(0, (float) ($sale->total_sale ?? 0) - $sale->paid_amount), 2),
+                'with_invoice' => (bool) $sale->with_invoice,
             ])
             ->filter(fn ($row) => $row['remaining'] > 0.01)
             ->values();

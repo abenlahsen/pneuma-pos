@@ -93,6 +93,7 @@ export interface UnpaidPurchaseRow {
   net_amount: number;
   paid_amount: number;
   remaining: number;
+  with_invoice: boolean;
 }
 
 export interface SupplierPaymentAllocationInput {

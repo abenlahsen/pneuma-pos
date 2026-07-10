@@ -199,6 +199,44 @@ $radius-md: 12px;
   }
 }
 
+// ── Filter bar ────────────────────────────────────────────────────────────────
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+
+  label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $muted;
+  }
+}
+
+.pill-group {
+  display: inline-flex;
+  border: 1px solid $border2;
+  border-radius: $radius-sm;
+  overflow: hidden;
+}
+
+.pill {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  border-right: 1px solid $border2;
+  cursor: pointer;
+  color: $muted;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+
+  &:last-child { border-right: none; }
+  &:hover:not(.active) { background: rgba($primary, 0.05); }
+  &.active { background: $primary; color: #fff; }
+}
+
 // ── Section title ─────────────────────────────────────────────────────────────
 .section-title {
   border-left: 3px solid $primary;

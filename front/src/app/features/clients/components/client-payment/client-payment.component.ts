@@ -29,6 +29,7 @@ export class ClientPaymentComponent implements OnInit {
   unpaidSales = signal<UnpaidSaleRow[]>([]);
   accounts = signal<Account[]>([]);
   allocationAmounts = signal<Record<number, number>>({});
+  filterWithInvoice = signal<'' | '1' | '0'>('');
 
   totalAmount = 0;
   method = 'Espèces';
@@ -42,6 +43,13 @@ export class ClientPaymentComponent implements OnInit {
   );
 
   readonly allocationMismatch = computed(() => Math.abs(this.allocatedTotal() - this.totalAmount) > 0.01);
+
+  readonly visibleSales = computed(() => {
+    const filter = this.filterWithInvoice();
+    if (filter === '') return this.unpaidSales();
+    const wantInvoice = filter === '1';
+    return this.unpaidSales().filter((s) => s.with_invoice === wantInvoice);
+  });
 
   constructor(
     private clientService: ClientService,
@@ -83,12 +91,17 @@ export class ClientPaymentComponent implements OnInit {
     this.totalAmount = Math.round(this.allocatedTotal() * 100) / 100;
   }
 
-  /** Auto-distribute the total amount across unpaid sales, oldest first. */
+  setFilterWithInvoice(value: '' | '1' | '0'): void {
+    this.filterWithInvoice.set(value);
+    this.allocationAmounts.set({});
+  }
+
+  /** Auto-distribute the total amount across the visible unpaid sales, oldest first. */
   onTotalAmountChange(): void {
     let remaining = Math.round((this.totalAmount || 0) * 100) / 100;
     const next: Record<number, number> = {};
 
-    for (const s of this.unpaidSales()) {
+    for (const s of this.visibleSales()) {
       if (remaining <= 0) {
         next[s.id] = 0;
         continue;
