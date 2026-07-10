@@ -103,10 +103,35 @@ echo ""
 if [ "$SKIP_BUILD" -eq 0 ]; then
   echo "[1/5] Checking Node.js and npm..."
 
+  # Prefer an nvm-managed Node over whatever the shell's PATH happens to
+  # resolve first. The Ubuntu 24.04 apt package is Node 18, which is too
+  # old for this Angular/esbuild toolchain (esbuild's postinstall script
+  # fails with "SyntaxError: Unexpected token" under Node 18) — and if
+  # nvm's active version is set to "system", a non-interactive shell like
+  # this one silently picks up that old apt-installed Node instead.
+  export NVM_DIR="$HOME/.nvm"
+  if [ -s "$NVM_DIR/nvm.sh" ]; then
+    # shellcheck disable=SC1091
+    . "$NVM_DIR/nvm.sh"
+    nvm use node >/dev/null 2>&1 || nvm use --lts >/dev/null 2>&1 || true
+    # nvm.sh probes `node` while it sources itself, which caches the old
+    # PATH's binary in bash's command hash table before `nvm use` updates
+    # PATH — without this, `node`/`npm` below can still resolve to the
+    # stale apt-installed binary even though `nvm use` reported success.
+    hash -r
+  fi
+
   if ! command -v node &>/dev/null || ! command -v npm &>/dev/null; then
     echo "  Installing nodejs and npm via apt..."
     sudo apt-get update -qq
     sudo apt-get install -y nodejs npm
+  fi
+
+  NODE_MAJOR="$(node -v | sed -E 's/^v([0-9]+).*/\1/')"
+  if [ "$NODE_MAJOR" -lt 20 ]; then
+    echo "  ⚠ node $(node -v) detected — this is too old for the Angular/esbuild"
+    echo "    toolchain and the build below will likely fail. Install/select a"
+    echo "    newer Node via nvm (e.g. \`nvm install --lts && nvm use --lts\`)."
   fi
 
   echo "  node $(node -v) / npm $(npm -v)"
