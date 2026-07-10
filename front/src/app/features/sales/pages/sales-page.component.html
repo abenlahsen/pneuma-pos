@@ -141,11 +141,12 @@
           <label>Mode paiement</label>
           <select class="form-control" [ngModel]="filterPaymentMethod()" (ngModelChange)="filterPaymentMethod.set($event); applyFilters()">
             <option value="">Tous</option>
-            <option value="Espèces">Espèces</option>
-            <option value="Chèque">Chèque</option>
-            <option value="Virement">Virement</option>
-            <option value="Effet">Effet</option>
-            <option value="Carte bancaire">Carte bancaire</option>
+            <option value="ESPECE">Espèce</option>
+            <option value="VIREMENT">Virement</option>
+            <option value="CHEQUE">Chèque</option>
+            <option value="CARTE">Carte bancaire</option>
+            <option value="TPE">TPE</option>
+            <option value="TRAITE">Traite</option>
           </select>
         </div>
 
