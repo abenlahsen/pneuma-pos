@@ -139,6 +139,7 @@ export interface UnpaidSaleRow {
   total_sale: number;
   paid_amount: number;
   remaining: number;
+  with_invoice: boolean;
 }
 
 export interface ClientPaymentAllocationInput {

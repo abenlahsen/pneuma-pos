@@ -55,55 +55,71 @@
             </div>
           </div>
 
-          <h3 class="section-title">Répartition sur les achats (du plus ancien au plus récent)</h3>
-          <div class="table-wrapper">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>ACHAT</th>
-                  <th>DATE</th>
-                  <th class="col-right">MONTANT</th>
-                  <th class="col-right">SOLDE DÛ</th>
-                  <th class="col-right">MONTANT AFFECTÉ</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let p of unpaidPurchases()">
-                  <td class="ref-cell">Achat #{{ p.id }}</td>
-                  <td>{{ p.date ? (p.date | date:'dd/MM/yyyy') : '—' }}</td>
-                  <td class="col-right num">{{ p.net_amount | number:'1.2-2' }} DH</td>
-                  <td class="col-right num text-danger">{{ p.remaining | number:'1.2-2' }} DH</td>
-                  <td class="col-right">
-                    <div class="allocation-input">
-                      <input
-                        type="number"
-                        class="form-control form-control--sm"
-                        min="0"
-                        [max]="p.remaining"
-                        step="0.01"
-                        [ngModel]="getAllocation(p.id)"
-                        (ngModelChange)="setAllocation(p.id, $event)"
-                      />
-                      <button
-                        type="button"
-                        class="btn-fill"
-                        title="Régler le montant total de cet achat"
-                        (click)="useFullAmount(p)"
-                      >✓</button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="filter-bar">
+            <label>Facture</label>
+            <div class="pill-group">
+              <button type="button" class="pill" [class.active]="filterWithInvoice() === ''" (click)="setFilterWithInvoice('')">Tous</button>
+              <button type="button" class="pill" [class.active]="filterWithInvoice() === '1'" (click)="setFilterWithInvoice('1')">Avec</button>
+              <button type="button" class="pill" [class.active]="filterWithInvoice() === '0'" (click)="setFilterWithInvoice('0')">Sans</button>
+            </div>
           </div>
 
-          <div class="allocation-summary" [class.mismatch]="allocationMismatch()">
-            <span>Réparti : {{ allocatedTotal() | number:'1.2-2' }} DH</span>
-            <span>Montant du paiement : {{ totalAmount | number:'1.2-2' }} DH</span>
-            <span *ngIf="allocationMismatch()" class="mismatch-hint">
-              ⚠️ La répartition doit être égale au montant du paiement.
-            </span>
+          <h3 class="section-title">Répartition sur les achats (du plus ancien au plus récent)</h3>
+
+          <div *ngIf="visiblePurchases().length === 0" class="empty-state">
+            <p>Aucun achat non soldé ne correspond à ce filtre.</p>
           </div>
+
+          <ng-container *ngIf="visiblePurchases().length > 0">
+            <div class="table-wrapper">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>ACHAT</th>
+                    <th>DATE</th>
+                    <th class="col-right">MONTANT</th>
+                    <th class="col-right">SOLDE DÛ</th>
+                    <th class="col-right">MONTANT AFFECTÉ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let p of visiblePurchases()">
+                    <td class="ref-cell">Achat #{{ p.id }}</td>
+                    <td>{{ p.date ? (p.date | date:'dd/MM/yyyy') : '—' }}</td>
+                    <td class="col-right num">{{ p.net_amount | number:'1.2-2' }} DH</td>
+                    <td class="col-right num text-danger">{{ p.remaining | number:'1.2-2' }} DH</td>
+                    <td class="col-right">
+                      <div class="allocation-input">
+                        <input
+                          type="number"
+                          class="form-control form-control--sm"
+                          min="0"
+                          [max]="p.remaining"
+                          step="0.01"
+                          [ngModel]="getAllocation(p.id)"
+                          (ngModelChange)="setAllocation(p.id, $event)"
+                        />
+                        <button
+                          type="button"
+                          class="btn-fill"
+                          title="Régler le montant total de cet achat"
+                          (click)="useFullAmount(p)"
+                        >✓</button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="allocation-summary" [class.mismatch]="allocationMismatch()">
+              <span>Réparti : {{ allocatedTotal() | number:'1.2-2' }} DH</span>
+              <span>Montant du paiement : {{ totalAmount | number:'1.2-2' }} DH</span>
+              <span *ngIf="allocationMismatch()" class="mismatch-hint">
+                ⚠️ La répartition doit être égale au montant du paiement.
+              </span>
+            </div>
+          </ng-container>
         </ng-container>
       </ng-container>
     </div>

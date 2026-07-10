@@ -29,6 +29,7 @@ export class SupplierPaymentComponent implements OnInit {
   unpaidPurchases = signal<UnpaidPurchaseRow[]>([]);
   accounts = signal<Account[]>([]);
   allocationAmounts = signal<Record<number, number>>({});
+  filterWithInvoice = signal<'' | '1' | '0'>('');
 
   totalAmount = 0;
   method = 'Espèces';
@@ -42,6 +43,13 @@ export class SupplierPaymentComponent implements OnInit {
   );
 
   readonly allocationMismatch = computed(() => Math.abs(this.allocatedTotal() - this.totalAmount) > 0.01);
+
+  readonly visiblePurchases = computed(() => {
+    const filter = this.filterWithInvoice();
+    if (filter === '') return this.unpaidPurchases();
+    const wantInvoice = filter === '1';
+    return this.unpaidPurchases().filter((p) => p.with_invoice === wantInvoice);
+  });
 
   constructor(
     private supplierService: SupplierService,
@@ -83,12 +91,17 @@ export class SupplierPaymentComponent implements OnInit {
     this.totalAmount = Math.round(this.allocatedTotal() * 100) / 100;
   }
 
-  /** Auto-distribute the total amount across unpaid purchases, oldest first. */
+  setFilterWithInvoice(value: '' | '1' | '0'): void {
+    this.filterWithInvoice.set(value);
+    this.allocationAmounts.set({});
+  }
+
+  /** Auto-distribute the total amount across the visible unpaid purchases, oldest first. */
   onTotalAmountChange(): void {
     let remaining = Math.round((this.totalAmount || 0) * 100) / 100;
     const next: Record<number, number> = {};
 
-    for (const p of this.unpaidPurchases()) {
+    for (const p of this.visiblePurchases()) {
       if (remaining <= 0) {
         next[p.id] = 0;
         continue;
