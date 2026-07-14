@@ -149,7 +149,7 @@ class PurchaseController extends Controller
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
-        $rows = [['Date', 'Fournisseur', 'Commercial', 'Statut', 'Paiement', 'Mode paiement', 'Facture', 'N° BL', 'N° Facture', 'Remise (%)', 'Qté totale', 'Total HT', 'Net']];
+        $rows = [['Date', 'Fournisseur', 'Commercial', 'Statut', 'Paiement', 'Mode paiement', 'Facture', 'N° BL', 'N° Facture', 'Remise (%)', 'Qté totale', 'Produits', 'Total HT', 'Net']];
 
         foreach ($purchases as $purchase) {
             $rows[] = [
@@ -164,6 +164,7 @@ class PurchaseController extends Controller
                 $purchase->invoice_number ?? '',
                 (float) ($purchase->discount ?? 0),
                 (int) ($purchase->total_quantity ?? 0),
+                $this->formatItemsColumn($purchase->items),
                 (float) ($purchase->total_price ?? 0),
                 (float) ($purchase->net_amount ?? 0),
             ];
@@ -180,5 +181,18 @@ class PurchaseController extends Controller
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Cache-Control' => 'max-age=0',
         ]);
+    }
+
+    /**
+     * Concatenate a purchase's line items into a single "Produit (x qté), ..." string for exports.
+     */
+    private function formatItemsColumn($items): string
+    {
+        return $items->map(function ($item) {
+            $product = $item->linkedProduct;
+            $label = $product?->reference ?: $product?->profile ?: ('Produit #'.$item->product_id);
+
+            return $label.' (x'.(int) $item->quantity.')';
+        })->implode(', ');
     }
 }

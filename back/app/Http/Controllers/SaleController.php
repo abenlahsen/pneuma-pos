@@ -315,6 +315,7 @@ class SaleController extends Controller
                 'Facture',
                 'Méthode paiement',
                 'Qté totale',
+                'Produits',
                 'Total achat',
                 'Total vente',
                 'Marge',
@@ -336,6 +337,7 @@ class SaleController extends Controller
                     $sale->with_invoice ? 'Oui' : 'Non',
                     $sale->payment_method ?? '',
                     (int) ($sale->total_quantity ?? 0),
+                    $this->formatItemsColumn($sale->items),
                     $sale->total_purchase !== null ? round((float) $sale->total_purchase, 2) : null,
                     $sale->total_sale !== null ? round((float) $sale->total_sale, 2) : null,
                     $sale->margin !== null ? round((float) $sale->margin, 2) : null,
@@ -343,16 +345,29 @@ class SaleController extends Controller
             });
 
             $sheet->fromArray($rows, null, 'A1', true);
-            $sheet->getStyle('A1:P1')->getFont()->setBold(true);
+            $sheet->getStyle('A1:Q1')->getFont()->setBold(true);
             $sheet->freezePane('A2');
 
-            foreach (range('A', 'P') as $column) {
+            foreach (range('A', 'Q') as $column) {
                 $sheet->getColumnDimension($column)->setAutoSize(true);
             }
 
             $writer = new Xlsx($spreadsheet);
             $writer->save('php://output');
         }, $fileName, $headers);
+    }
+
+    /**
+     * Concatenate a sale's line items into a single "Produit (x qté), ..." string for exports.
+     */
+    private function formatItemsColumn($items): string
+    {
+        return $items->map(function ($item) {
+            $product = $item->linkedProduct;
+            $label = $product?->reference ?: $product?->profile ?: ('Produit #'.$item->product_id);
+
+            return $label.' (x'.(int) $item->quantity.')';
+        })->implode(', ');
     }
 
     public function filters(): JsonResponse
