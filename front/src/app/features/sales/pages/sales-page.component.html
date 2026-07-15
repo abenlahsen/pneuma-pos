@@ -212,6 +212,7 @@
             <th class="sortable" (click)="toggleSort('date')">Date <span class="sort-icon">{{ sortBy() === 'date' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="text-center">Facture</th>
             <th class="sortable col-client" (click)="toggleSort('client')">Client <span class="sort-icon">{{ sortBy() === 'client' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th>Ville</th>
             <th>Commercial</th>
             <th class="sortable" (click)="toggleSort('total_quantity')">Qte <span class="sort-icon">{{ sortBy() === 'total_quantity' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th>Partenaire</th>
@@ -227,13 +228,13 @@
         </thead>
         <tbody>
           <tr *ngIf="loading()">
-            <td colspan="16" class="text-center py-4">
+            <td colspan="17" class="text-center py-4">
               <div class="spinner"></div> Chargement...
             </td>
           </tr>
 
           <tr *ngIf="!loading() && sales().length === 0">
-            <td colspan="16" class="text-center py-4 text-muted">
+            <td colspan="17" class="text-center py-4 text-muted">
               Aucune vente trouvée.
             </td>
           </tr>
@@ -258,8 +259,9 @@
             <td class="col-client">
               <a *ngIf="sale.client_id" class="fw-medium link-text client-link" [routerLink]="['/clients', sale.client_id]">{{ getClientName(sale) }}</a>
               <div *ngIf="!sale.client_id" class="fw-medium">{{ getClientName(sale) }}</div>
-              <div class="text-small text-muted">{{ getClientPhone(sale) }}{{ getClientPhone(sale) && getClientCity(sale) ? ' — ' : '' }}{{ getClientCity(sale) }}</div>
+              <div class="text-small text-muted">{{ getClientPhone(sale) }}</div>
             </td>
+            <td>{{ getClientCity(sale) || '-' }}</td>
             <td>{{ sale.commercial?.name || '-' }}</td>
             <td>{{ sale.total_quantity }}</td>
             <td>{{ sale.partner?.name || '-' }}</td>
