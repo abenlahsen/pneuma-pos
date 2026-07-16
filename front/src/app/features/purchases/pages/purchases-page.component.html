@@ -216,7 +216,7 @@
             </td>
             <td>{{ purchase.total_quantity }}</td>
             <td class="text-right fw-semibold">
-              {{ purchase.total_price | number:'1.2-2' }}
+              {{ (purchase.net_amount ?? purchase.total_price) | number:'1.2-2' }}
             </td>
             <td>
               <span class="badge"
