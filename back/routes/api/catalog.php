@@ -64,6 +64,7 @@ Route::delete('partners/{partner}', [PartnerController::class, 'destroy'])->midd
 
 // Clients
 Route::get('clients', [ClientController::class, 'index'])->middleware('permission:view clients');
+Route::get('clients/export', [ClientController::class, 'export'])->middleware('permission:view clients');
 Route::get('clients/{client}', [ClientController::class, 'show'])->middleware('permission:view clients');
 Route::post('clients', [ClientController::class, 'store'])->middleware('permission:create clients');
 Route::put('clients/{client}', [ClientController::class, 'update'])->middleware('permission:edit clients');

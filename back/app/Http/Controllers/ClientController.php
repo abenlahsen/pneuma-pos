@@ -11,6 +11,9 @@ use App\Http\Resources\Clients\ClientStatementResource;
 use App\Models\Client;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ClientController extends Controller
 {
@@ -64,6 +67,51 @@ class ClientController extends Controller
         return new ClientStatementResource(
             $this->clientService->getStatement($client)
         );
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $filters = $request->except(['page', 'per_page']);
+        $clients = $this->clientService->buildFilteredQuery($filters)->get();
+
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $rows = [[
+            'Nom', 'Type', 'Téléphone', 'Email', 'Ville', 'Adresse', 'Statut',
+            'Limite de crédit', 'Solde d\'ouverture', 'Délai de paiement (jours)',
+            'Mode de paiement par défaut', 'Créé le',
+        ]];
+
+        foreach ($clients as $client) {
+            $rows[] = [
+                $client->name,
+                $client->category ?? '',
+                $client->phone ?? '',
+                $client->email ?? '',
+                $client->city ?? '',
+                $client->address ?? '',
+                $client->is_active ? 'Actif' : 'Inactif',
+                (float) ($client->credit_limit ?? 0),
+                (float) ($client->opening_balance ?? 0),
+                (int) ($client->payment_terms_days ?? 0),
+                $client->default_payment_method ?? '',
+                $client->created_at?->toDateString() ?? '',
+            ];
+        }
+
+        $sheet->fromArray($rows, null, 'A1', true);
+        $sheet->getStyle('A1:L1')->getFont()->setBold(true);
+
+        $filename = 'clients_'.now()->format('Ymd_His').'.xlsx';
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'max-age=0',
+        ]);
     }
 
     public function duplicates(Request $request): JsonResponse

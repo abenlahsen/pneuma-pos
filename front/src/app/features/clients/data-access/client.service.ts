@@ -170,6 +170,12 @@ export class ClientService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
+  exportClients(filters: ClientFilters = {}): Observable<Blob> {
+    const { page, per_page, ...rest } = filters;
+    const params = this.buildParams(rest);
+    return this.http.get(`${this.apiUrl}/export`, { params, responseType: 'blob' });
+  }
+
   getUnpaidSales(id: number): Observable<{ sales: UnpaidSaleRow[] }> {
     return this.http.get<{ sales: UnpaidSaleRow[] }>(`${this.apiUrl}/${id}/unpaid-sales`);
   }

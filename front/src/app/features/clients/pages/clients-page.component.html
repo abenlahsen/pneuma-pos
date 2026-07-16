@@ -6,9 +6,14 @@
     </div>
     <div class="actions">
       <button class="btn btn-primary" type="button" (click)="openCreateModal()">Nouveau Client</button>
+      <button class="btn btn-secondary" type="button" (click)="exportClients()" [disabled]="isExporting()">
+        {{ isExporting() ? 'Export en cours...' : 'Exporter Excel' }}
+      </button>
       <app-auto-refresh-control pageKey="clients" (refresh)="loadClients()" />
     </div>
   </div>
+
+  <p class="export-error" *ngIf="exportError()">{{ exportError() }}</p>
 
   <div class="card filters-section">
     <div class="card-body" style="padding: 1rem 1.5rem">
