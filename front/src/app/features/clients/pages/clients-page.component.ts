@@ -30,6 +30,8 @@ export class ClientsPageComponent implements OnInit {
   readonly deletingClientId = signal<number | null>(null);
   readonly errorMessage = signal('');
   readonly cities = signal<string[]>([]);
+  readonly isExporting = signal(false);
+  readonly exportError = signal('');
 
   readonly isModalOpen = signal(false);
   readonly selectedClient = signal<Client | null>(null);
@@ -170,6 +172,27 @@ export class ClientsPageComponent implements OnInit {
 
   viewClient(client: Client): void {
     this.router.navigate(['/clients', client.id]);
+  }
+
+  exportClients(): void {
+    this.isExporting.set(true);
+    this.exportError.set('');
+
+    this.clientService.exportClients(this.filters).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `clients-${new Date().toISOString().slice(0, 10)}.xlsx`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.isExporting.set(false);
+      },
+      error: () => {
+        this.exportError.set("L'export des clients a échoué. Veuillez réessayer.");
+        this.isExporting.set(false);
+      },
+    });
   }
 
   goToPage(page: number): void {

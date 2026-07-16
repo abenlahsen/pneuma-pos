@@ -42,6 +42,11 @@ class ClientService
         $client->delete();
     }
 
+    public function buildFilteredQuery(array $filters): Builder
+    {
+        return $this->buildQuery($filters)->with('cityRelation');
+    }
+
     public function findDuplicates(?string $name = null, ?string $phone = null, ?int $exceptId = null): Collection
     {
         $name = $this->cleanString($name);
