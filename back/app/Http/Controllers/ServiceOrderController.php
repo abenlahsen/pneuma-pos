@@ -11,6 +11,7 @@ use App\Models\Client;
 use App\Models\Product;
 use App\Models\ServiceOrder;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -26,33 +27,7 @@ class ServiceOrderController extends Controller
     {
         $query = ServiceOrder::query()->with(['commercial', 'creator', 'items.product', 'clientRecord']);
 
-        if ($request->filled('status')) {
-            $query->where('status', (string) $request->string('status'));
-        }
-
-        if ($request->filled('payment_status')) {
-            $query->where('payment_status', (string) $request->string('payment_status'));
-        }
-
-        if ($request->filled('product_id')) {
-            $query->whereHas('items', fn ($q) => $q->where('product_id', $request->integer('product_id')));
-        }
-
-        if ($request->filled('commercial_id')) {
-            $query->where('commercial_id', $request->integer('commercial_id'));
-        }
-
-        if ($request->filled('client_id')) {
-            $query->where('client_id', $request->integer('client_id'));
-        }
-
-        if ($request->filled('date_from')) {
-            $query->whereDate('date', '>=', (string) $request->string('date_from'));
-        }
-
-        if ($request->filled('date_to')) {
-            $query->whereDate('date', '<=', (string) $request->string('date_to'));
-        }
+        $this->applyFilters($query, $request);
 
         $query->orderByDesc('date')->orderByDesc('id');
 
@@ -112,33 +87,7 @@ class ServiceOrderController extends Controller
     {
         $query = ServiceOrder::query();
 
-        if ($request->filled('status')) {
-            $query->where('status', (string) $request->string('status'));
-        }
-
-        if ($request->filled('payment_status')) {
-            $query->where('payment_status', (string) $request->string('payment_status'));
-        }
-
-        if ($request->filled('product_id')) {
-            $query->whereHas('items', fn ($q) => $q->where('product_id', $request->integer('product_id')));
-        }
-
-        if ($request->filled('commercial_id')) {
-            $query->where('commercial_id', $request->integer('commercial_id'));
-        }
-
-        if ($request->filled('client_id')) {
-            $query->where('client_id', $request->integer('client_id'));
-        }
-
-        if ($request->filled('date_from')) {
-            $query->whereDate('date', '>=', (string) $request->string('date_from'));
-        }
-
-        if ($request->filled('date_to')) {
-            $query->whereDate('date', '<=', (string) $request->string('date_to'));
-        }
+        $this->applyFilters($query, $request);
 
         $totalRevenue = round((float) (clone $query)->sum('net_amount'), 2);
         $totalPurchase = round((float) (clone $query)->sum('total_purchase'), 2);
@@ -197,33 +146,7 @@ class ServiceOrderController extends Controller
             ->with(['clientRecord', 'commercial', 'vehicle'])
             ->withSum('payments', 'amount');
 
-        if ($request->filled('status')) {
-            $query->where('status', (string) $request->string('status'));
-        }
-
-        if ($request->filled('payment_status')) {
-            $query->where('payment_status', (string) $request->string('payment_status'));
-        }
-
-        if ($request->filled('product_id')) {
-            $query->whereHas('items', fn ($q) => $q->where('product_id', $request->integer('product_id')));
-        }
-
-        if ($request->filled('commercial_id')) {
-            $query->where('commercial_id', $request->integer('commercial_id'));
-        }
-
-        if ($request->filled('client_id')) {
-            $query->where('client_id', $request->integer('client_id'));
-        }
-
-        if ($request->filled('date_from')) {
-            $query->whereDate('date', '>=', (string) $request->string('date_from'));
-        }
-
-        if ($request->filled('date_to')) {
-            $query->whereDate('date', '<=', (string) $request->string('date_to'));
-        }
+        $this->applyFilters($query, $request);
 
         $query->orderByDesc('date')->orderByDesc('id');
 
@@ -328,5 +251,70 @@ class ServiceOrderController extends Controller
             'clients' => $clients,
             'accounts' => $accounts,
         ]);
+    }
+
+    private function applyFilters(Builder $query, Request $request): void
+    {
+        if ($request->filled('status')) {
+            $query->where('status', (string) $request->string('status'));
+        }
+
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', (string) $request->string('payment_status'));
+        }
+
+        if ($request->filled('payment_method')) {
+            $method = (string) $request->string('payment_method');
+            $query->whereHas('payments', fn ($q) => $q->where('method', $method));
+        }
+
+        if ($request->filled('product_id')) {
+            $query->whereHas('items', fn ($q) => $q->where('product_id', $request->integer('product_id')));
+        }
+
+        if ($request->filled('commercial_id')) {
+            $query->where('commercial_id', $request->integer('commercial_id'));
+        }
+
+        if ($request->filled('client_id')) {
+            $query->where('client_id', $request->integer('client_id'));
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('date', '>=', (string) $request->string('date_from'));
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('date', '<=', (string) $request->string('date_to'));
+        }
+
+        if ($request->filled('search')) {
+            $search = trim((string) $request->string('search'));
+            $query->where(function ($builder) use ($search) {
+                $builder
+                    ->where('vehicle', 'like', "%{$search}%")
+                    ->orWhere('notes', 'like', "%{$search}%")
+                    ->orWhereHas('clientRecord', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('commercial', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('vehicle', function ($q) use ($search) {
+                        $q->where('brand', 'like', "%{$search}%")
+                            ->orWhere('model_name', 'like', "%{$search}%")
+                            ->orWhere('plate', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('items', function ($q) use ($search) {
+                        $q->where('service_type', 'like', "%{$search}%")
+                            ->orWhere('description', 'like', "%{$search}%")
+                            ->orWhereHas('product', function ($q2) use ($search) {
+                                $q2->where('profile', 'like', "%{$search}%")
+                                    ->orWhere('reference', 'like', "%{$search}%");
+                            });
+                    });
+            });
+        }
     }
 }
