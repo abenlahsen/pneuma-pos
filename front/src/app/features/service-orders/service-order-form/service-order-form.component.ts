@@ -1,7 +1,8 @@
-import { Component, Input, Output, EventEmitter, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs/operators';
+import { Subject, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize, switchMap, takeUntil } from 'rxjs/operators';
 import {
   PartSearchResult,
   ServiceOrder,
@@ -58,7 +59,7 @@ type AnyLineForm = ServiceLineForm | PartLineForm;
   templateUrl: './service-order-form.component.html',
   styleUrls: ['./service-order-form.component.scss'],
 })
-export class ServiceOrderFormComponent implements OnInit {
+export class ServiceOrderFormComponent implements OnInit, OnDestroy {
   readonly SERVICE_ORDER_STATUSES = SERVICE_ORDER_STATUSES;
   readonly SERVICE_ORDER_STATUS_LABELS = SERVICE_ORDER_STATUS_LABELS;
 
@@ -97,6 +98,9 @@ export class ServiceOrderFormComponent implements OnInit {
   clientSearch = signal('');
   showClientSuggestions = signal(false);
   loadingClients = signal(false);
+
+  private readonly clientSearchSubject = new Subject<string>();
+  private readonly destroy$ = new Subject<void>();
 
   // Lines
   lines = signal<AnyLineForm[]>([
@@ -204,7 +208,13 @@ export class ServiceOrderFormComponent implements OnInit {
       }
     }
 
+    this.setupClientSearch();
     this.loadClients();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private loadServiceProducts(): void {
@@ -223,12 +233,12 @@ export class ServiceOrderFormComponent implements OnInit {
 
   private loadClients(): void {
     this.loadingClients.set(true);
-    this.clientService.getClients({ per_page: 500, status: 'active' }).pipe(
+    this.clientService.getClients({ per_page: 20, status: 'active' }).pipe(
       finalize(() => this.loadingClients.set(false))
     ).subscribe({
       next: (list) => {
         this.clients.set(list);
-        this.syncClientSearchResults();
+        this.filteredClients.set(list.slice(0, 8));
 
         if (this.client_id()) {
           const found = list.find(c => c.id === this.client_id());
@@ -247,6 +257,26 @@ export class ServiceOrderFormComponent implements OnInit {
         this.clients.set([]);
         this.filteredClients.set([]);
       },
+    });
+  }
+
+  private setupClientSearch(): void {
+    this.clientSearchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(term => {
+        const trimmed = term.trim();
+        if (!trimmed) {
+          return of(this.clients().slice(0, 8));
+        }
+        this.loadingClients.set(true);
+        return this.clientService.getClients({ search: trimmed, per_page: 20, status: 'active' }).pipe(
+          finalize(() => this.loadingClients.set(false)),
+        );
+      }),
+      takeUntil(this.destroy$),
+    ).subscribe(clients => {
+      this.filteredClients.set(clients.slice(0, 8));
     });
   }
 
@@ -384,23 +414,7 @@ export class ServiceOrderFormComponent implements OnInit {
   onClientSearchInput(value: string): void {
     this.clientSearch.set(value);
     this.showClientSuggestions.set(true);
-    this.syncClientSearchResults();
-  }
-
-  private syncClientSearchResults(): void {
-    const search = this.clientSearch().trim().toLowerCase();
-    if (!search) {
-      this.filteredClients.set(this.clients().slice(0, 8));
-      return;
-    }
-    this.filteredClients.set(
-      this.clients()
-        .filter(c => {
-          const haystack = [c.name, c.phone, c.city].filter(Boolean).join(' ').toLowerCase();
-          return haystack.includes(search);
-        })
-        .slice(0, 8)
-    );
+    this.clientSearchSubject.next(value);
   }
 
   selectClient(c: Client): void {
