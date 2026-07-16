@@ -55,6 +55,12 @@
   <div class="filters-section card">
     <div class="filters-grid">
       <div class="filter-group">
+        <label>Rechercher</label>
+        <input type="text" class="form-control"
+          [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event)"
+          placeholder="Client, véhicule, prestation..." (keyup.enter)="applyFilters()">
+      </div>
+      <div class="filter-group">
         <label>Prestation</label>
         <select class="form-control"
           [ngModel]="filterProductId()" (ngModelChange)="filterProductId.set($event ? +$event : null); applyFilters()">
@@ -78,6 +84,17 @@
           [ngModel]="filterPaymentStatus()" (ngModelChange)="filterPaymentStatus.set($event); applyFilters()">
           <option value="">Tous</option>
           <option *ngFor="let s of PAYMENT_STATUSES" [value]="s">{{ PAYMENT_STATUS_LABELS[s] }}</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Mode de paiement</label>
+        <select class="form-control"
+          [ngModel]="filterPaymentMethod()" (ngModelChange)="filterPaymentMethod.set($event); applyFilters()">
+          <option value="">Tous</option>
+          <option value="Espèces">Espèces</option>
+          <option value="Chèque">Chèque</option>
+          <option value="Virement">Virement</option>
+          <option value="Carte bancaire">Carte bancaire</option>
         </select>
       </div>
       <div class="filter-group">

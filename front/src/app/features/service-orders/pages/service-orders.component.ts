@@ -37,11 +37,12 @@ export class ServiceOrdersComponent implements OnInit {
   total = signal(0);
   perPage = signal(20);
 
-  filterClient = signal('');
+  filterSearch = signal('');
   filterClientId = signal<number | null>(null);
   filterProductId = signal<number | null>(null);
   filterStatus = signal('');
   filterPaymentStatus = signal('');
+  filterPaymentMethod = signal('');
   filterCommercial = signal('');
   filterDateFrom = signal('');
   filterDateTo = signal('');
@@ -102,11 +103,12 @@ export class ServiceOrdersComponent implements OnInit {
   }
 
   resetFilters(): void {
-    this.filterClient.set('');
+    this.filterSearch.set('');
     this.filterClientId.set(null);
     this.filterProductId.set(null);
     this.filterStatus.set('');
     this.filterPaymentStatus.set('');
+    this.filterPaymentMethod.set('');
     this.filterCommercial.set('');
     this.filterDateFrom.set('');
     this.filterDateTo.set('');
@@ -238,10 +240,12 @@ export class ServiceOrdersComponent implements OnInit {
       page: String(this.currentPage()),
       per_page: String(this.perPage()),
     };
+    if (this.filterSearch()) f['search'] = this.filterSearch();
     if (this.filterClientId()) f['client_id'] = String(this.filterClientId());
     if (this.filterProductId()) f['product_id'] = String(this.filterProductId());
     if (this.filterStatus()) f['status'] = this.filterStatus();
     if (this.filterPaymentStatus()) f['payment_status'] = this.filterPaymentStatus();
+    if (this.filterPaymentMethod()) f['payment_method'] = this.filterPaymentMethod();
     if (this.filterCommercial()) f['commercial_id'] = this.filterCommercial();
     if (this.filterDateFrom()) f['date_from'] = this.filterDateFrom();
     if (this.filterDateTo()) f['date_to'] = this.filterDateTo();
