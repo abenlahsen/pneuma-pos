@@ -307,7 +307,7 @@ export class PurchaseFormComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error saving purchase', err);
-        alert('Erreur lors de la sauvegarde');
+        alert(err.error?.message || 'Erreur lors de la sauvegarde');
         this.loading.set(false);
       }
     });
