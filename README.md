@@ -7,13 +7,17 @@ Système de Point de Vente pour magasin de pneus. Interface en français.
 ## Fonctionnalites
 
 - Gestion des ventes et achats de pneus (marque, dimensions, prix, quantites)
-- Gestion du stock avec import Excel (.xlsx/.xls) et recherche par dimensions
-- Suivi des paiements (ventes et achats) avec generation automatique de transactions
-- Gestion de la tresorerie (cash flow)
-- Gestion des fournisseurs, transporteurs et partenaires (montage/equilibrage)
+- Gestion des clients (profil, limite de credit, relevé de compte, véhicules) et fournisseurs/transporteurs/partenaires (montage/equilibrage)
+- Service Auto : ordres de service (prestations + pieces), lies a un client/vehicule, avec paiements dedies
+- Gestion du stock avec import Excel (.xlsx/.xls) et recherche par dimensions (ex. "2055516" ou "205/55R16")
+- Suivi des paiements (ventes, achats, service auto) avec generation automatique de transactions
+- Gestion de la tresorerie (cash flow) : comptes, transferts, transactions a venir vs realisees
+- Exports Excel (ventes, achats, stock, clients) et generation de PDF (bon de vente/achat, fiche d'intervention)
 - Systeme de roles et permissions (ACL) configurable depuis l'interface
-- Dashboard avec statistiques et resume des ventes/achats
-- Systeme de commissions pour les commerciaux
+- Dashboard avec statistiques, historique quotidien des KPIs, et resume des ventes/achats
+- Systeme de primes/commissions pour les commerciaux (prime par pneu vendu)
+- Journal d'activite (audit trail) pour les ventes, achats et ordres de service (Administrateur uniquement)
+- Parametres de la societe (identite, logo, theme) configurables depuis l'interface
 
 ## Stack Docker (developpement)
 
@@ -111,6 +115,8 @@ Le script effectue automatiquement :
 6. Cache Laravel (config, routes, vues)
 7. Configuration Nginx + permissions fichiers
 8. Verification du deploiement
+
+**Deploiement secondaire** : `deploy/deploy2.sh` (config : `deploy/deploy2.env`, a partir de `deploy/deploy2.env.example`) deploie une deuxieme instance (marque "EAS POS") sur un autre VPS. Il builde Angular avec `--configuration=production-eas` (sortie dans `front/dist/eas-pos/browser/`) et ne configure ni Nginx ni PHP-FPM sur la cible — a faire manuellement au premier deploiement. Supporte `--skip-build` pour redeployer un build existant sans le reconstruire.
 
 ### Option B : Deploiement manuel
 
@@ -379,24 +385,32 @@ Les roles et permissions sont entierement configurables depuis l'interface (menu
 
 Toutes les routes protegees necessitent le header `Authorization: Bearer {token}`.
 
-| Ressource       | Endpoints                                                      |
-|-----------------|----------------------------------------------------------------|
-| Auth            | `POST /api/login`, `POST /api/logout`                          |
-| Ventes          | `GET\|POST /api/sales`, `GET\|PUT\|DELETE /api/sales/{id}`        |
-| Paiements vente | `GET\|POST /api/sales/{id}/payments`                            |
-| Achats          | `GET\|POST /api/purchases`, `GET\|PUT\|DELETE /api/purchases/{id}` |
-| Paiements achat | `GET\|POST /api/purchases/{id}/payments`                        |
-| Tresorerie      | `GET\|POST /api/transactions`, `GET\|PUT\|DELETE /api/transactions/{id}` |
-| Stock           | `GET\|POST /api/stocks`, `POST /api/stocks/import`              |
-| Produits        | `GET\|POST /api/products`, `PATCH /api/products/{id}/toggle-active` |
-| Marques         | `GET\|POST /api/brands`, `PATCH /api/brands/{id}/toggle-active` |
-| Fournisseurs    | `GET\|POST /api/suppliers`                                      |
-| Transporteurs   | `GET\|POST /api/carriers`                                       |
-| Partenaires     | `GET\|POST /api/partners`                                       |
-| Utilisateurs    | `GET\|POST /api/users`                                          |
-| Roles           | `GET\|POST /api/roles`, `PUT /api/roles/{id}/permissions`       |
+| Ressource         | Endpoints                                                      |
+|-------------------|----------------------------------------------------------------|
+| Auth              | `POST /api/login`, `POST /api/logout`                          |
+| Ventes            | `GET\|POST /api/sales`, `GET\|PUT\|DELETE /api/sales/{id}`, `GET /api/sales/export` |
+| Paiements vente   | `GET\|POST /api/sales/{id}/payments`                            |
+| Achats            | `GET\|POST /api/purchases`, `GET\|PUT\|DELETE /api/purchases/{id}`, `GET /api/purchases/export` |
+| Paiements achat   | `GET\|POST /api/purchases/{id}/payments`                        |
+| Clients           | `GET\|POST /api/clients`, `GET\|PUT\|DELETE /api/clients/{id}`, `GET /api/clients/export`, `GET /api/clients/{id}/profile`, `GET /api/clients/{id}/statement` |
+| Vehicules         | `GET\|POST /api/clients/{id}/vehicles`, `GET\|PUT\|DELETE /api/vehicles/{id}` |
+| Service Auto      | `GET\|POST /api/service-orders`, `GET\|PUT\|DELETE /api/service-orders/{id}`, `GET\|POST /api/service-orders/{id}/payments` |
+| Tresorerie        | `GET\|POST /api/transactions`, `GET\|PUT\|DELETE /api/transactions/{id}`, `POST /api/accounts/transfer` |
+| Stock             | `GET\|POST /api/stocks`, `POST /api/stocks/import`, `GET /api/stocks/export`, `GET /api/stock-movements` |
+| Produits          | `GET\|POST /api/products`, `PATCH /api/products/{id}/toggle-active` |
+| Marques           | `GET\|POST /api/brands`, `PATCH /api/brands/{id}/toggle-active` |
+| Fournisseurs      | `GET\|POST /api/suppliers`, `GET /api/suppliers/{id}/profile`, `GET /api/suppliers/{id}/statement` |
+| Transporteurs     | `GET\|POST /api/carriers`                                       |
+| Partenaires       | `GET\|POST /api/partners`                                       |
+| Villes            | `GET /api/cities`                                                |
+| Utilisateurs      | `GET\|POST /api/users`                                          |
+| Roles             | `GET\|POST /api/roles`, `PUT /api/roles/{id}/permissions`       |
+| Parametres        | `GET\|PUT /api/settings/company`                                 |
+| Journal d'activite| `GET /api/activity-logs` (Administrateur uniquement)             |
+| Dashboard         | `GET /api/dashboard-kpi`, `GET /api/kpi-history` (Administrateur uniquement) |
+| Primes            | `GET /api/primes-commerciaux`                                    |
 
-Endpoints de resume : `GET /api/sales-summary`, `GET /api/purchases-summary`, `GET /api/transactions-summary`, `GET /api/stocks-summary`
+Endpoints de resume : `GET /api/sales-summary`, `GET /api/purchases-summary`, `GET /api/transactions-summary`, `GET /api/stocks-summary`, `GET /api/service-orders-summary`
 
 ## Commandes utiles
 
@@ -409,12 +423,21 @@ docker compose exec php bash       # Shell dans le conteneur PHP
 
 # --- Backend ---
 docker compose exec php php artisan migrate --seed       # Migrations + seed
-docker compose exec php php artisan migrate:fresh --seed  # Reset complet BDD
+docker compose exec php php artisan migrate:fresh --seed  # Reset complet BDD (jamais sur des donnees de prod)
 docker compose exec php php artisan tinker               # REPL Laravel
-docker compose exec php php artisan test                 # Tests PHPUnit
+docker compose exec php php artisan test                 # Tests PHPUnit (necessite la BDD pneuma_pos_test, voir ci-dessous)
+docker compose exec -e DB_DATABASE=pneuma_pos_test php php artisan migrate  # Migrer la BDD de test
 
 # --- Frontend ---
 docker compose exec angular sh     # Shell dans le conteneur Angular
+docker compose exec angular npm test  # Tests Vitest
+
+# --- E2E (Playwright, depuis e2e/) ---
+cd e2e
+npm install
+npm test                    # Tous les tests (Chromium headless)
+npm run test:headed         # Avec navigateur visible
+npm run report               # Ouvrir le dernier rapport HTML
 ```
 
 ## Structure du projet
@@ -425,18 +448,26 @@ pneuma-pos/
 ├── .env.example                    # Variables Docker
 ├── docker/nginx/default.conf       # Nginx config (dev)
 ├── deploy/
-│   ├── deploy.sh                   # Script de deploiement automatise
+│   ├── deploy.sh                   # Script de deploiement automatise (VPS principal)
 │   ├── deploy.env.example          # Variables de deploiement
+│   ├── deploy2.sh                  # Script de deploiement (VPS secondaire, marque EAS POS)
+│   ├── deploy2.env.example         # Variables de deploiement secondaire
+│   ├── restore.sh                  # Restauration d'un backup BDD/fichiers
 │   └── nginx/                      # Config Nginx production
 ├── back/                           # Laravel 13 (API REST)
 │   ├── Dockerfile
 │   ├── app/
-│   │   ├── Http/Controllers/       # SaleController, PurchaseController, StockController...
-│   │   └── Models/                 # Sale, Purchase, Stock, Transaction, Payment...
+│   │   ├── Domain/                 # Services metier (SaleService, ClientService, StockService...)
+│   │   ├── Http/Controllers/       # Controleurs fins (SaleController, PurchaseController, ClientController...)
+│   │   ├── Http/Resources/         # Serialisation JSON par module
+│   │   ├── Console/Commands/       # Commandes Artisan (kpi:snapshot...)
+│   │   └── Models/                 # Sale, Purchase, Client, Vehicle, ServiceOrder, Stock, Transaction...
 │   ├── database/
 │   │   ├── migrations/
-│   │   └── seeders/                # DatabaseSeeder, RolesAndPermissionsSeeder
-│   └── routes/api.php              # Toutes les routes API
+│   │   └── seeders/                # DatabaseSeeder, RolesAndPermissionsSeeder, CitiesSeeder
+│   └── routes/api/                 # Routes API, un fichier par module (sales.php, clients.php, service_orders.php...)
+├── e2e/                             # Tests end-to-end Playwright
+│   └── tests/
 └── front/                          # Angular 21 (SPA)
     ├── Dockerfile
     └── src/app/
@@ -445,18 +476,27 @@ pneuma-pos/
         │   ├── interceptors/       # auth.interceptor.ts (Bearer token)
         │   ├── models/             # Interfaces TypeScript
         │   └── services/           # HTTP services par ressource
+        ├── shared/                 # Composants transverses (navbar, auto-refresh, document-print)
         └── features/
             ├── auth/               # Login, Register
             ├── dashboard/          # Tableau de bord
+            ├── kpi-history/        # Historique quotidien des KPIs
             ├── sales/              # Ventes
             ├── purchases/          # Achats
+            ├── clients/            # Clients (profil, releve de compte)
+            ├── vehicles/           # Vehicules lies aux clients
+            ├── service-orders/     # Service Auto (ordres de service)
             ├── cash-flow/          # Tresorerie
+            ├── accounts/           # Comptes et transferts
             ├── stock/              # Gestion du stock
             ├── products/           # Produits
             ├── brands/             # Marques
             ├── suppliers/          # Fournisseurs
             ├── carriers/           # Transporteurs
             ├── partners/           # Partenaires
+            ├── primes/             # Primes commerciaux
+            ├── activity-log/       # Journal d'activite
+            ├── settings/           # Parametres de la societe
             ├── users/              # Gestion des utilisateurs
             └── roles/              # Gestion des roles/permissions
 ```
