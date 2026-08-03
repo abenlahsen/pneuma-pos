@@ -141,12 +141,7 @@
           <label>Mode paiement</label>
           <select class="form-control" [ngModel]="filterPaymentMethod()" (ngModelChange)="filterPaymentMethod.set($event); applyFilters()">
             <option value="">Tous</option>
-            <option value="ESPECE">Espèce</option>
-            <option value="VIREMENT">Virement</option>
-            <option value="CHEQUE">Chèque</option>
-            <option value="CARTE">Carte bancaire</option>
-            <option value="TPE">TPE</option>
-            <option value="TRAITE">Traite</option>
+            <option *ngFor="let m of PAYMENT_METHODS" [value]="m">{{ m }}</option>
           </select>
         </div>
 
@@ -216,7 +211,7 @@
             <th>Commercial</th>
             <th class="sortable" (click)="toggleSort('total_quantity')">Qte <span class="sort-icon">{{ sortBy() === 'total_quantity' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th>Partenaire</th>
-            <th>Mode paiement</th>
+            <th>Mode(s) paiement</th>
             <th class="sortable text-right" (click)="toggleSort('total_sale')">Total Vente <span class="sort-icon">{{ sortBy() === 'total_sale' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable text-right" (click)="toggleSort('margin')">Marge <span class="sort-icon">{{ sortBy() === 'margin' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('payment_status')">Paiement <span class="sort-icon">{{ sortBy() === 'payment_status' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
@@ -265,7 +260,12 @@
             <td>{{ sale.commercial?.name || '-' }}</td>
             <td>{{ sale.total_quantity }}</td>
             <td>{{ sale.partner?.name || '-' }}</td>
-            <td>{{ sale.payment_method || '-' }}</td>
+            <td>
+              <span class="method-badges" *ngIf="sale.payment_methods?.length; else noSaleMethod">
+                <span class="badge badge-method" *ngFor="let m of sale.payment_methods" [ngClass]="paymentMethodClass(m)">{{ m }}</span>
+              </span>
+              <ng-template #noSaleMethod>-</ng-template>
+            </td>
             <td class="text-right fw-semibold">
               {{ sale.total_sale | number:'1.2-2' }}
             </td>

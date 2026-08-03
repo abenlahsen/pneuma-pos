@@ -68,7 +68,8 @@ export interface Sale {
   client_summary?: SaleClientAccountSummary | null;
   client: string;
   client_phone: string;
-  payment_method: string;
+  /** Distinct methods of the payments actually recorded against this sale (derived, read-only). */
+  payment_methods?: string[];
   commercial_id?: number | null;
   commercial?: { id: number; name: string } | null;
   creator?: { id: number; name: string } | null;
@@ -80,7 +81,7 @@ export interface Sale {
   updated_at?: string | null;
 }
 
-export interface SalePayload extends Omit<Sale, 'id' | 'created_at' | 'updated_at' | 'items' | 'linked_client' | 'client_summary'> {
+export interface SalePayload extends Omit<Sale, 'id' | 'created_at' | 'updated_at' | 'items' | 'linked_client' | 'client_summary' | 'payment_methods'> {
   items: SaleItem[];
 }
 

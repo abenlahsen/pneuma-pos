@@ -31,7 +31,6 @@ export interface PurchaseHistoryRow {
   total_quantity?: number;
   status?: string;
   payment_status?: string;
-  payment_method?: string;
   paid_amount?: number;
   outstanding_amount?: number;
   created_at?: string;

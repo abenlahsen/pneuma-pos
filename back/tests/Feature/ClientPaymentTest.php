@@ -550,7 +550,6 @@ class ClientPaymentTest extends TestCase
             $table->decimal('total_sale', 12, 2)->default(0);
             $table->decimal('margin', 12, 2)->default(0);
             $table->unsignedBigInteger('client_id')->nullable();
-            $table->string('payment_method')->nullable();
             $table->unsignedBigInteger('commercial_id')->nullable();
             $table->string('status')->nullable();
             $table->string('payment_status')->nullable();

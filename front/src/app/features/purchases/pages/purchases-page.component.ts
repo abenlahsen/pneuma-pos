@@ -7,6 +7,7 @@ import { PurchaseService } from '../data-access/purchase.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Purchase, PurchaseSummary } from '../models/purchase.model';
 import { PURCHASE_STATUSES, PURCHASE_STATUS_LABELS, PAYMENT_STATUSES, PAYMENT_STATUS_LABELS, PurchaseStatus } from '../../../core/constants/status.constants';
+import { PAYMENT_METHODS, paymentMethodClass } from '../../../core/constants/payment-method.constants';
 import { PurchaseFormComponent } from '../purchase-form/purchase-form.component';
 import { PurchaseDetailComponent } from '../purchase-detail/purchase-detail.component';
 import { PurchasePaymentsComponent } from '../purchase-payments/purchase-payments.component';
@@ -24,6 +25,8 @@ export class PurchasesPageComponent implements OnInit {
   readonly PURCHASE_STATUS_LABELS = PURCHASE_STATUS_LABELS;
   readonly PAYMENT_STATUSES = PAYMENT_STATUSES;
   readonly PAYMENT_STATUS_LABELS = PAYMENT_STATUS_LABELS;
+  readonly PAYMENT_METHODS = PAYMENT_METHODS;
+  readonly paymentMethodClass = paymentMethodClass;
 
   private purchaseService = inject(PurchaseService);
   private route = inject(ActivatedRoute);

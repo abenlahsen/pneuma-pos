@@ -4,10 +4,12 @@ namespace Tests\Feature;
 
 use App\Enums\PurchasePaymentStatus;
 use App\Enums\PurchaseStatus;
+use App\Models\Account;
 use App\Models\Brand;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\PurchasePayment;
+use App\Models\PurchasePaymentAllocation;
 use App\Models\Stock;
 use App\Models\StockMovement;
 use App\Models\Supplier;
@@ -671,7 +673,6 @@ class PurchaseCrudTest extends TestCase
             'commercial_id' => $this->user->id,
             'status' => 'EN COURS',
             'payment_status' => 'NON PAYE',
-            'payment_method' => 'ESPECE',
             'items' => [
                 ['product_id' => $this->product->id, 'stock_id' => $this->stock->id, 'quantity' => 4, 'unit_price' => 100],
             ],
@@ -700,6 +701,55 @@ class PurchaseCrudTest extends TestCase
         ]);
 
         return $purchase;
+    }
+
+    /**
+     * Records a payment and allocates it to $purchase, mirroring what
+     * PurchasePaymentService::createPayment() produces. Pass
+     * $linkPaymentToPurchase = false to simulate a multi-purchase supplier
+     * payment (the PurchasePayment's own `purchase_id` FK is left null, as
+     * the real multi-purchase flow does) while still allocating an amount to
+     * $purchase — this is the shape that the legacy `payments()` relation
+     * misses.
+     */
+    private function createPaymentForPurchase(Purchase $purchase, string $method, float $amount = 100, bool $linkPaymentToPurchase = true): PurchasePayment
+    {
+        $account = Account::query()->create([
+            'name' => 'Caisse Test '.fake()->unique()->numerify('###'),
+            'type' => 'cash',
+            'initial_balance' => 0,
+            'is_active' => true,
+        ]);
+
+        $transaction = Transaction::query()->create([
+            'date' => $purchase->date ?? now()->toDateString(),
+            'amount' => $amount,
+            'type' => 'expense',
+            'category' => 'Achat',
+            'method' => $method,
+            'description' => 'Test payment',
+            'person' => $this->supplier->name,
+            'user_id' => $this->user->id,
+            'account_id' => $account->id,
+        ]);
+
+        $payment = PurchasePayment::query()->create([
+            'purchase_id' => $linkPaymentToPurchase ? $purchase->id : null,
+            'supplier_id' => $this->supplier->id,
+            'transaction_id' => $transaction->id,
+            'user_id' => $this->user->id,
+            'amount' => $amount,
+            'date' => $purchase->date ?? now()->toDateString(),
+            'method' => $method,
+        ]);
+
+        PurchasePaymentAllocation::query()->create([
+            'purchase_payment_id' => $payment->id,
+            'purchase_id' => $purchase->id,
+            'amount' => $amount,
+        ]);
+
+        return $payment;
     }
 
     private function createUserWithPermissions(array $permissions): User
@@ -966,7 +1016,6 @@ class PurchaseCrudTest extends TestCase
             $table->unsignedBigInteger('commercial_id')->nullable();
             $table->string('status')->default('EN COURS');
             $table->string('payment_status')->default('NON PAYE');
-            $table->string('payment_method')->nullable();
             $table->date('payment_date')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
@@ -1102,5 +1151,131 @@ class PurchaseCrudTest extends TestCase
             $this->postJson('/api/purchases', $this->validPayload(['payment_status' => $ps]))
                 ->assertCreated();
         }
+    }
+
+    // ── Dynamic payment_methods (derived from allocations) ──────────────────
+
+    public function test_index_exposes_distinct_payment_methods_in_canonical_order(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $purchase = $this->createPurchase();
+        $this->createPaymentForPurchase($purchase, 'Virement');
+        $this->createPaymentForPurchase($purchase, 'Espèces');
+
+        $response = $this->getJson('/api/purchases?per_page=100');
+        $index = collect($response->json('data'))->search(fn ($row) => $row['id'] === $purchase->id);
+        $this->assertNotFalse($index);
+        // Canonical vocabulary order (Espèces, Chèque, Virement, ...), not insertion order.
+        $this->assertSame(['Espèces', 'Virement'], $response->json("data.{$index}.payment_methods"));
+    }
+
+    public function test_index_dedupes_repeated_payment_methods(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $purchase = $this->createPurchase();
+        $this->createPaymentForPurchase($purchase, 'Chèque');
+        $this->createPaymentForPurchase($purchase, 'Chèque');
+
+        $response = $this->getJson('/api/purchases?per_page=100');
+        $index = collect($response->json('data'))->search(fn ($row) => $row['id'] === $purchase->id);
+
+        $this->assertSame(['Chèque'], $response->json("data.{$index}.payment_methods"));
+    }
+
+    public function test_index_returns_empty_payment_methods_when_no_payments(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $purchase = $this->createPurchase();
+
+        $response = $this->getJson('/api/purchases?per_page=100');
+        $index = collect($response->json('data'))->search(fn ($row) => $row['id'] === $purchase->id);
+
+        $this->assertSame([], $response->json("data.{$index}.payment_methods"));
+    }
+
+    public function test_index_filters_by_recorded_payment_method(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $purchaseA = $this->createPurchase();
+        $this->createPaymentForPurchase($purchaseA, 'Chèque');
+
+        $purchaseB = $this->createPurchase();
+        $this->createPaymentForPurchase($purchaseB, 'Espèces');
+
+        $purchaseC = $this->createPurchase();
+
+        $response = $this->getJson('/api/purchases?per_page=100&payment_method=Chèque');
+        $ids = collect($response->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($purchaseA->id));
+        $this->assertFalse($ids->contains($purchaseB->id));
+        $this->assertFalse($ids->contains($purchaseC->id));
+    }
+
+    public function test_index_filter_matches_purchase_with_several_payment_methods(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $purchase = $this->createPurchase();
+        $this->createPaymentForPurchase($purchase, 'Chèque');
+        $this->createPaymentForPurchase($purchase, 'Espèces');
+
+        foreach (['Chèque', 'Espèces'] as $method) {
+            $response = $this->getJson('/api/purchases?per_page=100&payment_method='.urlencode($method));
+            $ids = collect($response->json('data'))->pluck('id');
+            $this->assertTrue($ids->contains($purchase->id), "Expected purchase to match filter '{$method}'");
+        }
+    }
+
+    public function test_export_applies_payment_method_filter(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $purchase = $this->createPurchase();
+        $this->createPaymentForPurchase($purchase, 'Chèque');
+
+        $this->get('/api/purchases/export?payment_method=Chèque')
+            ->assertOk();
+    }
+
+    /**
+     * Regression: payment_methods (and the payment_method filter) must be
+     * derived from allocations(), never from the legacy payments() relation.
+     * A supplier payment covering several purchases leaves `purchase_id` null
+     * on the PurchasePayment row and is only reachable through its
+     * allocations — using whereHas('payments', ...) or $purchase->payments
+     * here would silently miss it.
+     */
+    public function test_multi_purchase_payment_is_reflected_on_every_allocated_purchase(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $purchaseA = $this->createPurchase();
+        $purchaseB = $this->createPurchase();
+
+        // Single PurchasePayment (purchase_id left null, as a real
+        // multi-purchase supplier payment would), allocated across both.
+        $payment = $this->createPaymentForPurchase($purchaseA, 'Virement', 100, linkPaymentToPurchase: false);
+        PurchasePaymentAllocation::query()->create([
+            'purchase_payment_id' => $payment->id,
+            'purchase_id' => $purchaseB->id,
+            'amount' => 100,
+        ]);
+
+        $response = $this->getJson('/api/purchases?per_page=100');
+        $rowsById = collect($response->json('data'))->keyBy('id');
+
+        $this->assertSame(['Virement'], $rowsById[$purchaseA->id]['payment_methods']);
+        $this->assertSame(['Virement'], $rowsById[$purchaseB->id]['payment_methods']);
+
+        $filtered = $this->getJson('/api/purchases?per_page=100&payment_method=Virement');
+        $ids = collect($filtered->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($purchaseA->id));
+        $this->assertTrue($ids->contains($purchaseB->id));
     }
 }

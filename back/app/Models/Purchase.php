@@ -2,12 +2,21 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\AggregatesPaymentMethods;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Purchase extends Model
 {
-    use HasFactory;
+    use AggregatesPaymentMethods, HasFactory;
+
+    /**
+     * `payment_methods` is derived at read time from the recorded payments —
+     * see AggregatesPaymentMethods. Purchases have no API Resource class
+     * (PurchaseController returns raw models), so $appends is how it reaches
+     * the JSON payload.
+     */
+    protected $appends = ['payment_methods'];
 
     protected $fillable = [
         'date',
@@ -22,7 +31,6 @@ class Purchase extends Model
         'commercial_id',
         'status',
         'payment_status',
-        'payment_method',
         'payment_date',
         'created_by',
         'updated_by',

@@ -4,6 +4,7 @@ import { Sale } from '../../../core/models/sale.model';
 import { Product } from '../../../core/models/product.model';
 import { ProductDetailComponent } from '../../products/product-detail/product-detail.component';
 import { DocumentPrintComponent, PrintDocument, PrintLine } from '../../../shared/document-print/document-print.component';
+import { paymentMethodClass } from '../../../core/constants/payment-method.constants';
 
 @Component({
   selector: 'app-sale-detail',
@@ -20,6 +21,7 @@ export class SaleDetailComponent {
 
   viewingProduct = signal<Product | null>(null);
   printDoc = signal<PrintDocument | null>(null);
+  readonly paymentMethodClass = paymentMethodClass;
 
   openPrint(): void {
     const lines: PrintLine[] = (this.sale.items || []).map(item => {
@@ -55,7 +57,7 @@ export class SaleDetailComponent {
       partner: this.sale.partner?.name || null,
       service: this.sale.service || null,
       delivery_date: this.sale.delivery_date || null,
-      payment_method: this.sale.payment_method || null,
+      payment_method: this.sale.payment_methods?.length ? this.sale.payment_methods.join(', ') : null,
     });
   }
 

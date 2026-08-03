@@ -334,6 +334,7 @@ class PurchaseService
             'commercial',
             'creator',
             'updater',
+            'allocations.payment',
         ]);
 
         // Built from allocations (not the legacy `payments` relation) so a purchase
@@ -357,6 +358,7 @@ class PurchaseService
             'items.linkedProduct.service',
             'creator',
             'updater',
+            'allocations.payment',
         ]);
 
         $sortable = ['date', 'total_quantity', 'total_price', 'payment_status', 'status', 'created_at', 'updated_at'];
@@ -391,8 +393,11 @@ class PurchaseService
         if (! empty($filters['payment_status'])) {
             $query->where('payment_status', $filters['payment_status']);
         }
+        // Repointed at the actual recorded payments — never the legacy `payments`
+        // relation, which misses multi-purchase supplier payments.
         if (! empty($filters['payment_method'])) {
-            $query->where('payment_method', $filters['payment_method']);
+            $method = $filters['payment_method'];
+            $query->whereHas('allocations.payment', fn ($q) => $q->where('method', $method));
         }
         if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);

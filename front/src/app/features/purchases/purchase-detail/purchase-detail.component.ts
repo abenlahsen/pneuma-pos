@@ -4,6 +4,7 @@ import { Purchase } from '../../../core/models/purchase.model';
 import { Product } from '../../../core/models/product.model';
 import { ProductDetailComponent } from '../../products/product-detail/product-detail.component';
 import { DocumentPrintComponent, PrintDocument, PrintLine } from '../../../shared/document-print/document-print.component';
+import { paymentMethodClass } from '../../../core/constants/payment-method.constants';
 
 @Component({
   selector: 'app-purchase-detail',
@@ -20,6 +21,7 @@ export class PurchaseDetailComponent {
 
   viewingProduct = signal<Product | null>(null);
   printDoc = signal<PrintDocument | null>(null);
+  readonly paymentMethodClass = paymentMethodClass;
 
   openPrint(): void {
     const lines: PrintLine[] = (this.purchase.items || []).map(item => {

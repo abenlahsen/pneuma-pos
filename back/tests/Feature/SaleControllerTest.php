@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\SalePaymentStatus;
 use App\Enums\SaleStatus;
+use App\Models\Account;
 use App\Models\Brand;
 use App\Models\Carrier;
 use App\Models\Client;
@@ -11,6 +12,7 @@ use App\Models\Partner;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Models\SalePaymentAllocation;
 use App\Models\Stock;
 use App\Models\Transaction;
 use App\Models\User;
@@ -310,7 +312,6 @@ class SaleControllerTest extends TestCase
                 $table->string('service')->nullable();
                 $table->decimal('service_fee', 12, 2)->default(0);
                 $table->unsignedBigInteger('client_id')->nullable();
-                $table->string('payment_method')->nullable();
                 $table->unsignedBigInteger('commercial_id')->nullable();
                 $table->string('status')->nullable();
                 $table->string('payment_status')->nullable();
@@ -498,6 +499,53 @@ class SaleControllerTest extends TestCase
             'name' => $name,
             'user_id' => $this->user->id,
         ]);
+    }
+
+    /**
+     * Records a payment and allocates it to $sale, mirroring what
+     * SalePaymentService::createPayment() produces. Pass $linkPaymentToSale =
+     * false to simulate a multi-sale client payment (the Payment's own
+     * `sale_id` FK is left null, as the real multi-sale flow does) while
+     * still allocating an amount to $sale — this is the shape that the
+     * legacy `payments()` relation misses.
+     */
+    private function createPaymentForSale(Sale $sale, string $method, float $amount = 100, bool $linkPaymentToSale = true): Payment
+    {
+        $account = Account::query()->create([
+            'name' => 'Caisse Test '.fake()->unique()->numerify('###'),
+            'type' => 'cash',
+            'initial_balance' => 0,
+            'is_active' => true,
+        ]);
+
+        $transaction = Transaction::query()->create([
+            'date' => $sale->date ?? now()->toDateString(),
+            'amount' => $amount,
+            'type' => 'income',
+            'category' => 'Produit',
+            'method' => $method,
+            'description' => 'Test payment',
+            'person' => '',
+            'user_id' => $this->user->id,
+            'account_id' => $account->id,
+        ]);
+
+        $payment = Payment::query()->create([
+            'sale_id' => $linkPaymentToSale ? $sale->id : null,
+            'transaction_id' => $transaction->id,
+            'user_id' => $this->user->id,
+            'amount' => $amount,
+            'date' => $sale->date ?? now()->toDateString(),
+            'method' => $method,
+        ]);
+
+        SalePaymentAllocation::query()->create([
+            'payment_id' => $payment->id,
+            'sale_id' => $sale->id,
+            'amount' => $amount,
+        ]);
+
+        return $payment;
     }
 
     public function test_index_requires_authentication()
@@ -789,7 +837,6 @@ class SaleControllerTest extends TestCase
             'client' => 'New Client',
             'commercial_id' => $this->user->id,
             'partner_id' => $partner->id,
-            'payment_method' => 'Espèces',
             'items' => [[
                 'product_id' => $product->id,
                 'stock_id' => $stock->id,
@@ -894,7 +941,6 @@ class SaleControllerTest extends TestCase
         ];
 
         $payload = array_merge($payload, [
-            'payment_method' => 'VIREMENT',
             'delivery_date' => '2026-04-01',
             'comments' => 'Livraison express',
         ]);
@@ -911,7 +957,6 @@ class SaleControllerTest extends TestCase
             'tracking_number' => 'TR-20260315-001',
             'partner_id' => $partner->id,
             'service' => 'Montage inclus',
-            'payment_method' => 'VIREMENT',
             'comments' => 'Livraison express',
         ]);
 
@@ -919,7 +964,6 @@ class SaleControllerTest extends TestCase
             ->assertJsonPath('tracking_number', 'TR-20260315-001')
             ->assertJsonPath('partner_id', $partner->id)
             ->assertJsonPath('service', 'Montage inclus')
-            ->assertJsonPath('payment_method', 'VIREMENT')
             ->assertJsonPath('delivery_date', '2026-04-01')
             ->assertJsonPath('comments', 'Livraison express');
     }
@@ -935,7 +979,6 @@ class SaleControllerTest extends TestCase
             'tracking_number' => 'TR-UPDATE-001',
             'partner_id' => $partner->id,
             'service' => 'Alignement',
-            'payment_method' => 'CHEQUE',
             'delivery_date' => '2026-05-15',
             'comments' => 'Commentaire MAJ',
         ];
@@ -950,7 +993,6 @@ class SaleControllerTest extends TestCase
             'tracking_number' => 'TR-UPDATE-001',
             'partner_id' => $partner->id,
             'service' => 'Alignement',
-            'payment_method' => 'CHEQUE',
             'comments' => 'Commentaire MAJ',
         ]);
 
@@ -958,7 +1000,6 @@ class SaleControllerTest extends TestCase
             ->assertJsonPath('tracking_number', 'TR-UPDATE-001')
             ->assertJsonPath('partner_id', $partner->id)
             ->assertJsonPath('service', 'Alignement')
-            ->assertJsonPath('payment_method', 'CHEQUE')
             ->assertJsonPath('delivery_date', '2026-05-15')
             ->assertJsonPath('comments', 'Commentaire MAJ');
     }
@@ -998,7 +1039,6 @@ class SaleControllerTest extends TestCase
             'date' => '2026-03-15',
             'commercial_id' => $this->user->id,
             'partner_id' => $partner->id,
-            'payment_method' => 'Espèces',
             'client' => 'Client Stock Test',
             'items' => [[
                 'product_id' => $product->id,
@@ -1038,7 +1078,6 @@ class SaleControllerTest extends TestCase
             'date' => '2026-03-15',
             'commercial_id' => $this->user->id,
             'partner_id' => $partner->id,
-            'payment_method' => 'Espèces',
             'client' => 'Multi Item Client',
             'items' => [
                 [
@@ -1076,7 +1115,6 @@ class SaleControllerTest extends TestCase
             'date' => '2026-03-15',
             'commercial_id' => $this->user->id,
             'partner_id' => $partner->id,
-            'payment_method' => 'Espèces',
             'client' => 'No Stock Client',
             'items' => [[
                 'product_id' => $product->id,
@@ -1175,6 +1213,188 @@ class SaleControllerTest extends TestCase
         ]);
 
         $this->assertDatabaseMissing('sales', ['id' => $sale->id]);
+    }
+
+    // ── Cancel/reactivate stock behaviour ────────────────────────────────────
+
+    public function test_update_status_to_annule_restores_stock(): void
+    {
+        [$product, $stock] = $this->createProductWithStock(7);
+
+        $sale = $this->createSale();
+        $sale->items()->create([
+            'product_id' => $product->id,
+            'stock_id' => $stock->id,
+            'quantity' => 3,
+            'purchase_price' => 100,
+            'selling_price' => 150,
+            'total_purchase' => 300,
+            'total_sale' => 450,
+            'margin' => 150,
+        ]);
+
+        // Only a status change — no `items` key, matching what the inline
+        // status dropdown on the sales list sends.
+        $response = $this->putJson("/api/sales/{$sale->id}", ['status' => 'ANNULE'], $this->authHeaders());
+        $response->assertOk();
+
+        $stock->refresh();
+        $this->assertEquals(10, $stock->quantity);
+
+        $this->assertDatabaseHas('stock_movements', [
+            'stock_id' => $stock->id,
+            'type' => 'SALE_IN',
+            'delta' => 3,
+            'reference_id' => $sale->id,
+        ]);
+    }
+
+    public function test_update_status_from_annule_reapplies_stock(): void
+    {
+        [$product, $stock] = $this->createProductWithStock(10);
+
+        $sale = $this->createSale(['status' => 'ANNULE']);
+        $sale->items()->create([
+            'product_id' => $product->id,
+            'stock_id' => $stock->id,
+            'quantity' => 3,
+            'purchase_price' => 100,
+            'selling_price' => 150,
+            'total_purchase' => 300,
+            'total_sale' => 450,
+            'margin' => 150,
+        ]);
+
+        $response = $this->putJson("/api/sales/{$sale->id}", ['status' => 'EN COURS'], $this->authHeaders());
+        $response->assertOk();
+
+        $stock->refresh();
+        $this->assertEquals(7, $stock->quantity);
+
+        $this->assertDatabaseHas('stock_movements', [
+            'stock_id' => $stock->id,
+            'type' => 'SALE_OUT',
+            'delta' => -3,
+            'reference_id' => $sale->id,
+        ]);
+    }
+
+    public function test_update_status_between_active_statuses_does_not_change_stock(): void
+    {
+        [$product, $stock] = $this->createProductWithStock(7);
+
+        $sale = $this->createSale();
+        $sale->items()->create([
+            'product_id' => $product->id,
+            'stock_id' => $stock->id,
+            'quantity' => 3,
+            'purchase_price' => 100,
+            'selling_price' => 150,
+            'total_purchase' => 300,
+            'total_sale' => 450,
+            'margin' => 150,
+        ]);
+
+        $response = $this->putJson("/api/sales/{$sale->id}", ['status' => 'LIVRE'], $this->authHeaders());
+        $response->assertOk();
+
+        $stock->refresh();
+        $this->assertEquals(7, $stock->quantity);
+    }
+
+    /**
+     * Regression: once cancelling a sale restores its stock, deleting an
+     * already-cancelled sale must NOT restore it a second time.
+     */
+    public function test_destroy_does_not_restore_stock_for_annule_sale(): void
+    {
+        [$product, $stock] = $this->createProductWithStock(10);
+
+        $sale = $this->createSale(['status' => 'ANNULE']);
+        $sale->items()->create([
+            'product_id' => $product->id,
+            'stock_id' => $stock->id,
+            'quantity' => 3,
+            'purchase_price' => 100,
+            'selling_price' => 150,
+            'total_purchase' => 300,
+            'total_sale' => 450,
+            'margin' => 150,
+        ]);
+
+        $response = $this->deleteJson("/api/sales/{$sale->id}", [], $this->authHeaders());
+        $response->assertStatus(204);
+
+        $stock->refresh();
+        $this->assertEquals(10, $stock->quantity);
+    }
+
+    public function test_store_does_not_decrement_stock_for_annule_status(): void
+    {
+        [$product, $stock] = $this->createProductWithStock(10);
+        $partner = $this->createPartner();
+
+        $payload = [
+            'date' => '2026-03-15',
+            'commercial_id' => $this->user->id,
+            'partner_id' => $partner->id,
+            'client' => 'Client Annule Test',
+            'status' => 'ANNULE',
+            'items' => [[
+                'product_id' => $product->id,
+                'stock_id' => $stock->id,
+                'quantity' => 3,
+                'purchase_price' => 100,
+                'selling_price' => 150,
+            ]],
+        ];
+
+        $response = $this->postJson('/api/sales', $payload, $this->authHeaders());
+        $response->assertStatus(201);
+
+        $stock->refresh();
+        $this->assertEquals(10, $stock->quantity);
+    }
+
+    /**
+     * Combined case: items are re-submitted at the same time the sale is
+     * cancelled. The old lines' stock must still be restored, but the new
+     * lines must NOT be re-deducted since the sale ends up ANNULE.
+     */
+    public function test_update_items_while_cancelling_does_not_redecrement_stock(): void
+    {
+        [$product, $stock] = $this->createProductWithStock(7);
+
+        $sale = $this->createSale();
+        $sale->items()->create([
+            'product_id' => $product->id,
+            'stock_id' => $stock->id,
+            'quantity' => 3,
+            'purchase_price' => 100,
+            'selling_price' => 150,
+            'total_purchase' => 300,
+            'total_sale' => 450,
+            'margin' => 150,
+        ]);
+
+        $payload = [
+            'status' => 'ANNULE',
+            'items' => [[
+                'product_id' => $product->id,
+                'stock_id' => $stock->id,
+                'quantity' => 2,
+                'purchase_price' => 100,
+                'selling_price' => 150,
+            ]],
+        ];
+
+        $response = $this->putJson("/api/sales/{$sale->id}", $payload, $this->authHeaders());
+        $response->assertOk();
+
+        // Old qty (3) restored -> 7 + 3 = 10; new qty (2) NOT deducted because
+        // the sale ends up ANNULE -> stays 10.
+        $stock->refresh();
+        $this->assertEquals(10, $stock->quantity);
     }
 
     // ── Accès par rôle : Manager & Commercial ────────────────────────────────
@@ -1299,7 +1519,6 @@ class SaleControllerTest extends TestCase
             'date' => '2026-03-15',
             'commercial_id' => $manager->id,
             'partner_id' => $partner->id,
-            'payment_method' => 'Espèces',
             'client' => 'Client Manager Test',
             'items' => [[
                 'product_id' => $product->id,
@@ -1360,7 +1579,6 @@ class SaleControllerTest extends TestCase
             'date' => '2026-03-15',
             'commercial_id' => $commercial->id,
             'partner_id' => $partner->id,
-            'payment_method' => 'Espèces',
             'client' => 'Client Commercial Test',
             'items' => [[
                 'product_id' => $product->id,
@@ -1390,7 +1608,6 @@ class SaleControllerTest extends TestCase
             'client' => 'Validation Client',
             'commercial_id' => $this->user->id,
             'partner_id' => $partner->id,
-            'payment_method' => 'Espèces',
             'status' => SaleStatus::EN_COURS->value,
             'payment_status' => SalePaymentStatus::NON_PAYE->value,
             'items' => [[
@@ -1438,5 +1655,118 @@ class SaleControllerTest extends TestCase
             $this->postJson('/api/sales', $this->validSaleApiPayload(['payment_status' => $ps]), $this->authHeaders())
                 ->assertCreated();
         }
+    }
+
+    // ── Dynamic payment_methods (derived from allocations) ──────────────────
+
+    public function test_index_exposes_distinct_payment_methods_in_canonical_order(): void
+    {
+        $sale = $this->createSale();
+        $this->createPaymentForSale($sale, 'Virement');
+        $this->createPaymentForSale($sale, 'Espèces');
+
+        $response = $this->getJson('/api/sales?per_page=100', $this->authHeaders());
+
+        $response->assertOk();
+        $index = collect($response->json('data'))->search(fn ($row) => $row['id'] === $sale->id);
+        $this->assertNotFalse($index);
+        // Canonical vocabulary order (Espèces, Chèque, Virement, ...), not insertion order.
+        $this->assertSame(['Espèces', 'Virement'], $response->json("data.{$index}.payment_methods"));
+    }
+
+    public function test_index_dedupes_repeated_payment_methods(): void
+    {
+        $sale = $this->createSale();
+        $this->createPaymentForSale($sale, 'Chèque');
+        $this->createPaymentForSale($sale, 'Chèque');
+
+        $response = $this->getJson('/api/sales?per_page=100', $this->authHeaders());
+        $index = collect($response->json('data'))->search(fn ($row) => $row['id'] === $sale->id);
+
+        $this->assertSame(['Chèque'], $response->json("data.{$index}.payment_methods"));
+    }
+
+    public function test_index_returns_empty_payment_methods_when_no_payments(): void
+    {
+        $sale = $this->createSale();
+
+        $response = $this->getJson('/api/sales?per_page=100', $this->authHeaders());
+        $index = collect($response->json('data'))->search(fn ($row) => $row['id'] === $sale->id);
+
+        $this->assertSame([], $response->json("data.{$index}.payment_methods"));
+    }
+
+    public function test_index_filters_by_recorded_payment_method(): void
+    {
+        $saleA = $this->createSale(['client' => 'Client Chèque']);
+        $this->createPaymentForSale($saleA, 'Chèque');
+
+        $saleB = $this->createSale(['client' => 'Client Espèces']);
+        $this->createPaymentForSale($saleB, 'Espèces');
+
+        $saleC = $this->createSale(['client' => 'Client Impayé']);
+
+        $response = $this->getJson('/api/sales?per_page=100&payment_method=Chèque', $this->authHeaders());
+        $ids = collect($response->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($saleA->id));
+        $this->assertFalse($ids->contains($saleB->id));
+        $this->assertFalse($ids->contains($saleC->id));
+    }
+
+    public function test_index_filter_matches_sale_with_several_payment_methods(): void
+    {
+        $sale = $this->createSale();
+        $this->createPaymentForSale($sale, 'Chèque');
+        $this->createPaymentForSale($sale, 'Espèces');
+
+        foreach (['Chèque', 'Espèces'] as $method) {
+            $response = $this->getJson('/api/sales?per_page=100&payment_method='.urlencode($method), $this->authHeaders());
+            $ids = collect($response->json('data'))->pluck('id');
+            $this->assertTrue($ids->contains($sale->id), "Expected sale to match filter '{$method}'");
+        }
+    }
+
+    public function test_export_applies_payment_method_filter(): void
+    {
+        $sale = $this->createSale();
+        $this->createPaymentForSale($sale, 'Chèque');
+
+        $this->get('/api/sales/export?payment_method=Chèque', $this->authHeaders())
+            ->assertOk();
+    }
+
+    /**
+     * Regression: payment_methods (and the payment_method filter) must be
+     * derived from allocations(), never from the legacy payments() relation.
+     * A client payment covering several sales leaves `sale_id` null on the
+     * Payment row and is only reachable through its allocations — using
+     * whereHas('payments', ...) or $sale->payments here would silently miss it.
+     */
+    public function test_multi_sale_payment_is_reflected_on_every_allocated_sale(): void
+    {
+        $saleA = $this->createSale(['client' => 'Client Multi A']);
+        $saleB = $this->createSale(['client' => 'Client Multi B']);
+
+        // Single Payment (sale_id left null, as a real multi-sale client
+        // payment would), allocated across both sales.
+        $payment = $this->createPaymentForSale($saleA, 'Virement', 100, linkPaymentToSale: false);
+        SalePaymentAllocation::query()->create([
+            'payment_id' => $payment->id,
+            'sale_id' => $saleB->id,
+            'amount' => 100,
+        ]);
+
+        $response = $this->getJson('/api/sales?per_page=100', $this->authHeaders());
+        $rowsById = collect($response->json('data'))->keyBy('id');
+
+        $this->assertSame(['Virement'], $rowsById[$saleA->id]['payment_methods']);
+        $this->assertSame(['Virement'], $rowsById[$saleB->id]['payment_methods']);
+
+        $filtered = $this->getJson('/api/sales?per_page=100&payment_method=Virement', $this->authHeaders());
+        $ids = collect($filtered->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($saleA->id));
+        $this->assertTrue($ids->contains($saleB->id));
     }
 }

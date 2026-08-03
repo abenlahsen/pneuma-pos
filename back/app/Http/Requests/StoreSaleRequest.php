@@ -37,7 +37,6 @@ class StoreSaleRequest extends FormRequest
             'service' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', Rule::in(SaleStatus::values())],
             'payment_status' => ['nullable', Rule::in(SalePaymentStatus::values())],
-            'payment_method' => ['required', 'string'],
             'delivery_date' => ['nullable', 'date'],
             'comments' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],

@@ -650,7 +650,6 @@ class PurchasePaymentTest extends TestCase
             $table->unsignedBigInteger('commercial_id')->nullable();
             $table->string('status')->default('EN COURS');
             $table->string('payment_status')->default('NON PAYE');
-            $table->string('payment_method')->nullable();
             $table->date('payment_date')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

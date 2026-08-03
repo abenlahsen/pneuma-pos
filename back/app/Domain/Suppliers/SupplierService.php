@@ -134,7 +134,6 @@ class SupplierService
             'total_quantity' => $purchase->total_quantity ?? 0,
             'status' => $purchase->status,
             'payment_status' => $purchase->payment_status,
-            'payment_method' => $purchase->payment_method,
             'paid_amount' => round($paid, 2),
             'outstanding_amount' => round(max($net - $paid, 0), 2),
             'created_at' => $purchase->created_at?->toISOString(),

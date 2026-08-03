@@ -114,12 +114,7 @@
           <label>Mode paiement</label>
           <select class="form-control" [ngModel]="filterPaymentMethod()" (ngModelChange)="filterPaymentMethod.set($event); applyFilters()">
             <option value="">Tous</option>
-            <option value="ESPECE">Espèces</option>
-            <option value="VIREMENT">Virement</option>
-            <option value="CHEQUE">Chèque</option>
-            <option value="CARTE">Carte bancaire</option>
-            <option value="TPE">TPE</option>
-            <option value="TRAITE">Traite</option>
+            <option *ngFor="let m of PAYMENT_METHODS" [value]="m">{{ m }}</option>
           </select>
         </div>
 
@@ -172,7 +167,7 @@
             <th class="sortable" (click)="toggleSort('total_quantity')">Qté <span class="sort-icon">{{ sortBy() === 'total_quantity' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="text-right">Total Achat</th>
             <th class="sortable" (click)="toggleSort('payment_status')">Paiement <span class="sort-icon">{{ sortBy() === 'payment_status' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
-            <th>Mode paiement</th>
+            <th>Mode(s) paiement</th>
             <th class="sortable" (click)="toggleSort('status')">Statut <span class="sort-icon">{{ sortBy() === 'status' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th>Créé par</th>
             <th class="sortable" (click)="toggleSort('created_at')">Créé le <span class="sort-icon">{{ sortBy() === 'created_at' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
@@ -226,7 +221,12 @@
                 {{ purchase.payment_status }}
               </span>
             </td>
-            <td>{{ purchase.payment_method || '-' }}</td>
+            <td>
+              <span class="method-badges" *ngIf="purchase.payment_methods?.length; else noPurchaseMethod">
+                <span class="badge badge-method" *ngFor="let m of purchase.payment_methods" [ngClass]="paymentMethodClass(m)">{{ m }}</span>
+              </span>
+              <ng-template #noPurchaseMethod>-</ng-template>
+            </td>
             <td class="status-cell">
               <select class="status-select"
                       [class.bg-en-cours]="purchase.status === 'EN COURS'"
