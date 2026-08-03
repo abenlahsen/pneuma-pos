@@ -9,6 +9,7 @@ import { SaleFormComponent } from '../sale-form/sale-form.component';
 import { PaymentPanelComponent } from '../payment-panel/payment-panel.component';
 import { Sale, SaleFilters, SalePayload, SaleSummary } from '../models/sale.model';
 import { SALE_STATUSES, SALE_STATUS_LABELS, SaleStatus } from '../../../core/constants/status.constants';
+import { PAYMENT_METHODS, paymentMethodClass } from '../../../core/constants/payment-method.constants';
 import { SaleService } from '../data-access/sale.service';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { Carrier } from '../../carriers/models/carrier.model';
@@ -28,6 +29,8 @@ import { CityService } from '../../../core/services/city.service';
 export class SalesPageComponent implements OnInit {
   readonly SALE_STATUSES = SALE_STATUSES;
   readonly SALE_STATUS_LABELS = SALE_STATUS_LABELS;
+  readonly PAYMENT_METHODS = PAYMENT_METHODS;
+  readonly paymentMethodClass = paymentMethodClass;
 
   sales = signal<Sale[]>([]);
   summary = signal<SaleSummary>({ tyres_this_month: 0, tyres_today: 0, tyres_period: null, tyres_en_cours: 0, sales_en_cours: 0, unpaid_en_cours: 0, unpaid_livre_monte: 0, ca_avec_facture: 0, ca_sans_facture: 0 });

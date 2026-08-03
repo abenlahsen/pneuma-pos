@@ -22,7 +22,6 @@ class Payment extends Model
         'payment_date',
         'paid_at',
         'method',
-        'payment_method',
         'reference',
         'notes',
     ];

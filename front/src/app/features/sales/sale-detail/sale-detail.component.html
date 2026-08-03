@@ -146,8 +146,11 @@
             <span class="value">{{ sale.commercial?.name || '-' }}</span>
           </div>
           <div class="detail-item">
-            <span class="label">Mode Paiement</span>
-            <span class="value">{{ sale.payment_method || '-' }}</span>
+            <span class="label">Mode(s) Paiement</span>
+            <span class="value method-badges" *ngIf="sale.payment_methods?.length; else noSaleDetailMethod">
+              <span class="badge badge-method" *ngFor="let m of sale.payment_methods" [ngClass]="paymentMethodClass(m)">{{ m }}</span>
+            </span>
+            <ng-template #noSaleDetailMethod><span class="value">-</span></ng-template>
           </div>
           <div class="detail-item">
             <span class="label">Statut</span>

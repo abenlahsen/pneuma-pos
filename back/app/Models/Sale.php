@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\AggregatesPaymentMethods;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Sale extends Model
 {
-    use HasFactory;
+    use AggregatesPaymentMethods, HasFactory;
 
     protected $fillable = [
         'reference',
@@ -40,7 +41,6 @@ class Sale extends Model
         'client_id',
         'vehicle_id',
         'mileage',
-        'payment_method',
         'sales_rep',
         'commercial_id',
         'status',

@@ -31,7 +31,7 @@ class SaleController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Sale::query()
-            ->with(['linkedClient.cityRelation', 'commercial', 'creator', 'linkedCarrier', 'linkedPartner', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
+            ->with(['linkedClient.cityRelation', 'commercial', 'creator', 'linkedCarrier', 'linkedPartner', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments', 'allocations.payment']);
 
         if ($request->filled('commercial_id') && Schema::hasColumn('sales', 'commercial_id')) {
             $query->where('commercial_id', $request->integer('commercial_id'));
@@ -94,8 +94,12 @@ class SaleController extends Controller
             $query->where('payment_status', (string) $request->string('payment_status'));
         }
 
-        if ($request->filled('payment_method') && Schema::hasColumn('sales', 'payment_method')) {
-            $query->where('payment_method', (string) $request->string('payment_method'));
+        // Repointed at the actual recorded payments — never the legacy `payments`
+        // relation, which misses multi-sale client payments. Keep in sync with
+        // the identical block in export().
+        if ($request->filled('payment_method')) {
+            $method = (string) $request->string('payment_method');
+            $query->whereHas('allocations.payment', fn ($q) => $q->where('method', $method));
         }
 
         if ($request->filled('brand') && Schema::hasColumn('sales', 'brand')) {
@@ -149,7 +153,7 @@ class SaleController extends Controller
 
         return response()->json(
             (new SaleResource(
-                $sale->loadMissing(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments'])
+                $sale->loadMissing(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments', 'allocations.payment'])
             ))->resolve(),
             201
         );
@@ -159,7 +163,7 @@ class SaleController extends Controller
     {
         return response()->json(
             (new SaleResource(
-                $sale->loadMissing(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments'])
+                $sale->loadMissing(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments', 'allocations.payment'])
             ))->resolve()
         );
     }
@@ -174,7 +178,7 @@ class SaleController extends Controller
 
         return response()->json(
             (new SaleResource(
-                $sale->loadMissing(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments'])
+                $sale->loadMissing(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments', 'allocations.payment'])
             ))->resolve()
         );
     }
@@ -193,7 +197,7 @@ class SaleController extends Controller
     public function export(Request $request): StreamedResponse
     {
         $query = Sale::query()
-            ->with(['linkedClient', 'commercial', 'linkedCarrier', 'linkedPartner', 'items.linkedProduct.brand', 'items.linkedProduct.tyre']);
+            ->with(['linkedClient', 'commercial', 'linkedCarrier', 'linkedPartner', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'allocations.payment']);
 
         if ($request->filled('commercial_id') && Schema::hasColumn('sales', 'commercial_id')) {
             $query->where('commercial_id', $request->integer('commercial_id'));
@@ -256,8 +260,12 @@ class SaleController extends Controller
             $query->where('payment_status', (string) $request->string('payment_status'));
         }
 
-        if ($request->filled('payment_method') && Schema::hasColumn('sales', 'payment_method')) {
-            $query->where('payment_method', (string) $request->string('payment_method'));
+        // Repointed at the actual recorded payments — never the legacy `payments`
+        // relation, which misses multi-sale client payments. Keep in sync with
+        // the identical block in export().
+        if ($request->filled('payment_method')) {
+            $method = (string) $request->string('payment_method');
+            $query->whereHas('allocations.payment', fn ($q) => $q->where('method', $method));
         }
 
         if ($request->filled('brand') && Schema::hasColumn('sales', 'brand')) {
@@ -313,7 +321,7 @@ class SaleController extends Controller
                 'Statut',
                 'Paiement',
                 'Facture',
-                'Méthode paiement',
+                'Mode(s) paiement',
                 'Qté totale',
                 'Produits',
                 'Total achat',
@@ -335,7 +343,7 @@ class SaleController extends Controller
                     $sale->status ?? '',
                     $sale->payment_status ?? '',
                     $sale->with_invoice ? 'Oui' : 'Non',
-                    $sale->payment_method ?? '',
+                    implode(', ', $sale->payment_methods),
                     (int) ($sale->total_quantity ?? 0),
                     $this->formatItemsColumn($sale->items),
                     $sale->total_purchase !== null ? round((float) $sale->total_purchase, 2) : null,
@@ -358,16 +366,53 @@ class SaleController extends Controller
     }
 
     /**
-     * Concatenate a sale's line items into a single "Produit (x qté), ..." string for exports.
+     * Concatenate a sale's line items into a single "Désignation (x qté), ..." string for exports,
+     * mirroring the product label shown on the printed bon de vente (label — reference · details).
      */
     private function formatItemsColumn($items): string
     {
         return $items->map(function ($item) {
-            $product = $item->linkedProduct;
-            $label = $product?->reference ?: $product?->profile ?: ('Produit #'.$item->product_id);
+            $label = $this->formatProductLabel($item->linkedProduct, 'Produit #'.$item->product_id);
 
             return $label.' (x'.(int) $item->quantity.')';
         })->implode(', ');
+    }
+
+    /**
+     * Build the "Marque Profil — DIMENSION · IC IV Marquage" label used on the printed document,
+     * so exports and print previews show the same product designation.
+     */
+    private function formatProductLabel(?\App\Models\Product $product, string $fallback): string
+    {
+        if (! $product) {
+            return $fallback;
+        }
+
+        if ($product->type !== 'tyre') {
+            return $product->reference ?: $fallback;
+        }
+
+        $labelParts = array_filter([$product->brand?->name, $product->profile]);
+        $label = implode(' ', $labelParts) ?: ($product->reference ?: $fallback);
+
+        $tyre = $product->tyre;
+        $reference = null;
+        if ($tyre?->tire_width && $tyre?->tire_height && $tyre?->tire_diameter) {
+            $reference = $tyre->tire_width.'/'.$tyre->tire_height.'R'.$tyre->tire_diameter;
+        }
+
+        $detailParts = array_filter([$tyre?->tire_load_index, $tyre?->tire_speed_index, $tyre?->tire_marking]);
+        $details = implode(' · ', $detailParts);
+
+        $result = $label;
+        if ($reference) {
+            $result .= ' — '.$reference;
+        }
+        if ($details) {
+            $result .= ' · '.$details;
+        }
+
+        return $result;
     }
 
     public function filters(): JsonResponse

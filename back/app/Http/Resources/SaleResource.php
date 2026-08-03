@@ -49,7 +49,7 @@ class SaleResource extends JsonResource
                 ] : null,
                 $this->partner
             ),
-            'payment_method' => $this->payment_method,
+            'payment_methods' => $this->payment_methods,
             'delivery_date' => $this->formatDateValue($this->delivery_date),
             'comments' => $this->comments,
             'status' => $this->status,

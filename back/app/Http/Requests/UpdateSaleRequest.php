@@ -37,7 +37,6 @@ class UpdateSaleRequest extends FormRequest
             'service' => ['sometimes', 'nullable', 'string', 'max:255'],
             'status' => ['sometimes', 'nullable', Rule::in(SaleStatus::values())],
             'payment_status' => ['sometimes', 'nullable', Rule::in(SalePaymentStatus::values())],
-            'payment_method' => ['sometimes', 'required', 'string'],
             'delivery_date' => ['sometimes', 'nullable', 'date'],
             'comments' => ['sometimes', 'nullable', 'string'],
             'items' => ['sometimes', 'required', 'array', 'min:1'],

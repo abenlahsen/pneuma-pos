@@ -3,6 +3,7 @@
 namespace App\Domain\Sales;
 
 use App\Enums\SalePaymentStatus;
+use App\Enums\SaleStatus;
 use App\Models\Client;
 use App\Models\Payment;
 use App\Models\Sale;
@@ -29,10 +30,11 @@ class SaleService
             $items = $validated['items'] ?? [];
 
             $saleData = $this->prepareSalePayload($validated, $items);
+            $saleData['created_by'] = $userId;
 
             $sale = Sale::create($this->filterColumns('sales', $saleData));
 
-            $this->persistItems($sale, $items, $userId);
+            $this->persistItems($sale, $items, $userId, $this->statusAppliesStock($sale->status));
 
             $fresh = $sale->fresh(['linkedClient.cityRelation', 'commercial', 'linkedCarrier', 'linkedPartner', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
 
@@ -51,6 +53,11 @@ class SaleService
         return DB::transaction(function () use ($sale, $validated, $userId, $beforeSnapshot) {
             $items = $validated['items'] ?? null;
 
+            $oldStatus = $sale->status;
+            $newStatus = array_key_exists('status', $validated) ? $validated['status'] : $oldStatus;
+            $wasApplied = $this->statusAppliesStock($oldStatus);
+            $willApply = $this->statusAppliesStock($newStatus);
+
             $saleData = $items !== null
                 ? $this->prepareSalePayload($validated, $items, $sale)
                 : $this->prepareSalePayloadWithoutRecomputingTotals($validated, $sale);
@@ -58,9 +65,17 @@ class SaleService
             $sale->update($this->filterColumns('sales', $saleData));
 
             if ($items !== null) {
-                $this->restoreStockForItems($sale, $userId);
+                if ($wasApplied) {
+                    $this->restoreStockForItems($sale, $userId);
+                }
                 $sale->items()->delete();
-                $this->persistItems($sale, $items, $userId);
+                $this->persistItems($sale, $items, $userId, $willApply);
+            } elseif ($wasApplied && ! $willApply) {
+                // Sale cancelled without touching items — release the stock it held.
+                $this->restoreStockForItems($sale, $userId);
+            } elseif (! $wasApplied && $willApply) {
+                // Sale reactivated from ANNULE without touching items — re-deduct stock.
+                $this->applyStockForItems($sale, $userId);
             }
 
             $fresh = $sale->fresh(['linkedClient.cityRelation', 'commercial', 'linkedCarrier', 'linkedPartner', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
@@ -92,7 +107,9 @@ class SaleService
 
         DB::transaction(function () use ($sale, $userId, $beforeSnapshot) {
 
-            $this->restoreStockForItems($sale, $userId);
+            if ($this->statusAppliesStock($sale->status)) {
+                $this->restoreStockForItems($sale, $userId);
+            }
 
             // Remove this sale's own allocation(s). If a parent payment no longer
             // covers any other sale, delete the payment and its transaction too —
@@ -199,7 +216,7 @@ class SaleService
         ];
     }
 
-    protected function persistItems(Sale $sale, array $items, ?int $userId = null): void
+    protected function persistItems(Sale $sale, array $items, ?int $userId = null, bool $applyStock = true): void
     {
         foreach ($items as $item) {
             $quantity = (int) ($item['quantity'] ?? 0);
@@ -224,7 +241,7 @@ class SaleService
 
             SaleItem::create($this->filterColumns('sale_items', $payload));
 
-            if (! empty($item['stock_id'])) {
+            if ($applyStock && ! empty($item['stock_id'])) {
                 $stock = Stock::lockForUpdate()->find($item['stock_id']);
                 if ($stock) {
                     $before = (int) $stock->quantity;
@@ -274,6 +291,50 @@ class SaleService
                 $reason
             );
         }
+    }
+
+    /**
+     * Mirror of restoreStockForItems() for the reverse transition: a sale
+     * reactivated from ANNULE (without its items being re-submitted) must
+     * have its stock re-deducted, exactly as it was at the original sale.
+     */
+    private function applyStockForItems(Sale $sale, ?int $userId): void
+    {
+        foreach ($sale->items as $item) {
+            if (! $item->stock_id) {
+                continue;
+            }
+
+            $stock = Stock::lockForUpdate()->find($item->stock_id);
+            if (! $stock) {
+                continue;
+            }
+
+            $before = (int) $stock->quantity;
+            $stock->quantity = $before - (int) $item->quantity;
+            $stock->save();
+
+            $clientName = $sale->client_id ? ($sale->linkedClient?->name ?? null) : null;
+            $reason = "Vente #{$sale->id}".($clientName ? " — {$clientName}" : '');
+            $this->movements->recordSaleOut(
+                $stock->id,
+                $stock->product_id,
+                $before,
+                (int) $stock->quantity,
+                $sale->id,
+                $userId,
+                $reason
+            );
+        }
+    }
+
+    /**
+     * Whether this sale status keeps its lines' stock deducted. Only ANNULE
+     * releases the stock — mirrors PurchaseService::statusAppliesStock().
+     */
+    private function statusAppliesStock(?string $status): bool
+    {
+        return $status !== SaleStatus::ANNULE->value;
     }
 
     protected function resolveUnitPrice(array $item): float

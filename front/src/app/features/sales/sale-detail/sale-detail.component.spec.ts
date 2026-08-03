@@ -136,17 +136,34 @@ describe('SaleDetailComponent', () => {
       expect(comp.printDoc()!.lines[0].discount).toBe(10);
     });
 
-    it('includes carrier and payment_method transport fields', () => {
+    it('includes carrier and tracking_number transport fields', () => {
       comp.sale = {
         id: 1, date: '2026-05-01', items: [], total_sale: 0,
         carrier: { name: 'Transit Express' }, tracking_number: 'TRK-999',
-        partner: null, service: null, delivery_date: null, payment_method: 'Chèque',
+        partner: null, service: null, delivery_date: null, payment_methods: [],
       } as any;
       comp.openPrint();
       const doc = comp.printDoc()!;
       expect(doc.carrier).toBe('Transit Express');
       expect(doc.tracking_number).toBe('TRK-999');
-      expect(doc.payment_method).toBe('Chèque');
+    });
+
+    it('joins payment_methods into the print document payment_method field', () => {
+      comp.sale = {
+        id: 1, date: '2026-05-01', items: [], total_sale: 0,
+        payment_methods: ['Chèque', 'Virement'],
+      } as any;
+      comp.openPrint();
+      expect(comp.printDoc()!.payment_method).toBe('Chèque, Virement');
+    });
+
+    it('leaves the print payment_method null when there are no recorded payments', () => {
+      comp.sale = {
+        id: 1, date: '2026-05-01', items: [], total_sale: 0,
+        payment_methods: [],
+      } as any;
+      comp.openPrint();
+      expect(comp.printDoc()!.payment_method).toBeNull();
     });
   });
 });

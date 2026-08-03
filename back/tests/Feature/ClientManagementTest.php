@@ -41,7 +41,6 @@ class ClientManagementTest extends TestCase
             'city' => 'Casablanca',
             'date' => now()->subDays(2)->toDateString(),
             'total_sale' => 100,
-            'payment_method' => 'cash',
             'status' => 'partial',
         ]);
 
@@ -50,7 +49,6 @@ class ClientManagementTest extends TestCase
             'city' => 'Casablanca',
             'date' => now()->subDay()->toDateString(),
             'total_sale' => 80,
-            'payment_method' => 'cash',
             'status' => 'paid',
         ]);
 
@@ -104,7 +102,6 @@ class ClientManagementTest extends TestCase
             'city' => 'Rabat',
             'date' => now()->subDay()->toDateString(),
             'total_sale' => 120,
-            'payment_method' => 'cash',
             'status' => 'partial',
         ]);
 
@@ -150,7 +147,6 @@ class ClientManagementTest extends TestCase
             'client_id' => $client->id,
             'date' => '2026-01-10',
             'total_sale' => 100,
-            'payment_method' => 'cash',
             'status' => 'partial',
         ]);
 
@@ -158,7 +154,6 @@ class ClientManagementTest extends TestCase
             'client_id' => $client->id,
             'date' => '2026-03-15',
             'total_sale' => 50,
-            'payment_method' => 'cash',
             'status' => 'partial',
         ]);
 
@@ -262,7 +257,6 @@ class ClientManagementTest extends TestCase
             'client_id' => $client->id,
             'commercial_id' => $commercial->id,
             'partner_id' => $partner->id,
-            'payment_method' => 'Espèces',
             'items' => [[
                 'product_id' => $product->id,
                 'quantity' => 1,

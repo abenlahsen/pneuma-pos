@@ -28,7 +28,8 @@ export interface Purchase {
   items?: PurchaseItem[];
   status: PurchaseStatus;
   payment_status: PaymentStatus;
-  payment_method?: string | null;
+  /** Distinct methods of the payments actually recorded against this purchase (derived, read-only). */
+  payment_methods?: string[];
   payments?: PurchasePayment[];
   supplier?: Supplier;
   commercial?: { id: number; name: string } | null;
@@ -46,7 +47,6 @@ export interface PurchasePayload {
   commercial_id?: number | null;
   status: PurchaseStatus;
   payment_status: PaymentStatus;
-  payment_method?: string | null;
   items: PurchaseItem[];
 }
 

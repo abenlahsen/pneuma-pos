@@ -119,9 +119,12 @@
               {{ purchase.payment_status }}
             </span>
           </div>
-          <div class="detail-item" *ngIf="purchase.payment_method">
-            <span class="label">Mode de paiement</span>
-            <span class="value">{{ purchase.payment_method }}</span>
+          <div class="detail-item">
+            <span class="label">Mode(s) de paiement</span>
+            <span class="value method-badges" *ngIf="purchase.payment_methods?.length; else noPurchaseDetailMethod">
+              <span class="badge badge-method" *ngFor="let m of purchase.payment_methods" [ngClass]="paymentMethodClass(m)">{{ m }}</span>
+            </span>
+            <ng-template #noPurchaseDetailMethod><span class="value">-</span></ng-template>
           </div>
         </div>
       </div>

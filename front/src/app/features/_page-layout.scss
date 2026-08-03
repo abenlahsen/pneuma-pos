@@ -502,6 +502,13 @@ $_danger:    #ef4444;
     &-purple    { background: rgba(139, 92, 246, 0.1);  color: #6d28d9; }
   }
 
+  // Payment-method badges (.badge-method / .method-badges) are NOT defined here:
+  // this mixin is included by every list page, and that would inflate every
+  // page's compiled style budget for a column only Sales and Purchases use.
+  // Defined instead in sales-page.component.scss and
+  // purchases-page.component.scss, matching this repo's per-page SCSS
+  // duplication convention (see front/DESIGN_SYSTEM.md).
+
   // ── Status select ─────────────────────────────────────────────────────────
   .status-select {
     padding: 0.2rem 0.7rem;
