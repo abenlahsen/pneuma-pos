@@ -3,9 +3,11 @@ import { Product } from '../../../core/models/product.model';
 
 describe('SaleDetailComponent', () => {
   let comp: SaleDetailComponent;
+  const mockAuthService = { hasPermission: () => true };
+  const mockShipmentChangeService = { getForSale: () => ({ subscribe: () => {} }) };
 
   beforeEach(() => {
-    comp = new SaleDetailComponent();
+    comp = new SaleDetailComponent(mockAuthService as any, mockShipmentChangeService as any);
     comp.sale = { items: [] } as any;
   });
 

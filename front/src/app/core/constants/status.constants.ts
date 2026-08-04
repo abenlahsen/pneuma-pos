@@ -36,3 +36,12 @@ export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
 
 export const CLIENT_CATEGORIES = ['Particulier', 'Entreprise'] as const;
 export type ClientCategory = typeof CLIENT_CATEGORIES[number];
+
+export const SHIPMENT_CHANGE_STATUSES = ['BROUILLON', 'ENVOYEE', 'ACCEPTEE', 'REFUSEE'] as const;
+export type ShipmentChangeStatus = typeof SHIPMENT_CHANGE_STATUSES[number];
+export const SHIPMENT_CHANGE_STATUS_LABELS: Record<ShipmentChangeStatus, string> = {
+  'BROUILLON': 'Brouillon',
+  'ENVOYEE':   'Envoyée',
+  'ACCEPTEE':  'Acceptée',
+  'REFUSEE':   'Refusée',
+};

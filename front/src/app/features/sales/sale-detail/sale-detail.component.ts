@@ -1,19 +1,33 @@
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Sale } from '../../../core/models/sale.model';
 import { Product } from '../../../core/models/product.model';
 import { ProductDetailComponent } from '../../products/product-detail/product-detail.component';
 import { DocumentPrintComponent, PrintDocument, PrintLine } from '../../../shared/document-print/document-print.component';
 import { paymentMethodClass } from '../../../core/constants/payment-method.constants';
+import { AuthService } from '../../../core/services/auth.service';
+import { ShipmentChangeService } from '../../shipment-changes/data-access/shipment-change.service';
+import { ShipmentChangeListComponent } from '../../shipment-changes/components/shipment-change-list/shipment-change-list.component';
+import { ShipmentChangeFormComponent } from '../../shipment-changes/components/shipment-change-form/shipment-change-form.component';
+import { ShipmentChangePrintComponent } from '../../shipment-changes/components/shipment-change-print/shipment-change-print.component';
+import { ShipmentChangeRequest, ShipmentChangeRequestPayload } from '../../shipment-changes/models/shipment-change.model';
+import { ShipmentChangeStatus } from '../../../core/constants/status.constants';
 
 @Component({
   selector: 'app-sale-detail',
   standalone: true,
-  imports: [CommonModule, ProductDetailComponent, DocumentPrintComponent],
+  imports: [
+    CommonModule,
+    ProductDetailComponent,
+    DocumentPrintComponent,
+    ShipmentChangeListComponent,
+    ShipmentChangeFormComponent,
+    ShipmentChangePrintComponent,
+  ],
   templateUrl: './sale-detail.component.html',
   styleUrl: './sale-detail.component.scss'
 })
-export class SaleDetailComponent {
+export class SaleDetailComponent implements OnInit {
   @Input({ required: true }) sale!: Sale;
   @Input() canEdit = false;
   @Output() close = new EventEmitter<void>();
@@ -22,6 +36,79 @@ export class SaleDetailComponent {
   viewingProduct = signal<Product | null>(null);
   printDoc = signal<PrintDocument | null>(null);
   readonly paymentMethodClass = paymentMethodClass;
+
+  shipmentRequests = signal<ShipmentChangeRequest[]>([]);
+  loadingShipmentRequests = signal(false);
+  showShipmentForm = signal(false);
+  editingShipmentRequest = signal<ShipmentChangeRequest | null>(null);
+  shipmentPrintDoc = signal<ShipmentChangeRequest | null>(null);
+
+  constructor(
+    public authService: AuthService,
+    private shipmentChangeService: ShipmentChangeService,
+  ) {}
+
+  ngOnInit(): void {
+    this.loadShipmentRequests();
+  }
+
+  private loadShipmentRequests(): void {
+    this.loadingShipmentRequests.set(true);
+    this.shipmentChangeService.getForSale(this.sale.id).subscribe({
+      next: (res) => {
+        this.shipmentRequests.set(res.data);
+        this.loadingShipmentRequests.set(false);
+      },
+      error: () => this.loadingShipmentRequests.set(false),
+    });
+  }
+
+  openShipmentAddForm(): void {
+    this.editingShipmentRequest.set(null);
+    this.showShipmentForm.set(true);
+  }
+
+  openShipmentEditForm(request: ShipmentChangeRequest): void {
+    this.editingShipmentRequest.set(request);
+    this.showShipmentForm.set(true);
+  }
+
+  closeShipmentForm(): void {
+    this.showShipmentForm.set(false);
+    this.editingShipmentRequest.set(null);
+  }
+
+  onShipmentFormSubmit(payload: ShipmentChangeRequestPayload): void {
+    const editing = this.editingShipmentRequest();
+    const request$ = editing
+      ? this.shipmentChangeService.update(editing.id, payload)
+      : this.shipmentChangeService.create(this.sale.id, payload);
+
+    request$.subscribe({
+      next: () => {
+        this.closeShipmentForm();
+        this.loadShipmentRequests();
+      },
+    });
+  }
+
+  openShipmentPrint(request: ShipmentChangeRequest): void {
+    this.shipmentPrintDoc.set(request);
+  }
+
+  changeShipmentStatus(event: { request: ShipmentChangeRequest; status: ShipmentChangeStatus }): void {
+    this.shipmentChangeService.updateStatus(event.request.id, event.status).subscribe({
+      next: () => this.loadShipmentRequests(),
+    });
+  }
+
+  deleteShipmentRequest(request: ShipmentChangeRequest): void {
+    if (!confirm(`Supprimer la demande de modification DM-${request.id} ?`)) return;
+
+    this.shipmentChangeService.delete(request.id).subscribe({
+      next: () => this.loadShipmentRequests(),
+    });
+  }
 
   openPrint(): void {
     const lines: PrintLine[] = (this.sale.items || []).map(item => {

@@ -1,0 +1,121 @@
+@use '../../../_variables' as *;
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: $text-dark;
+}
+
+.empty-state.small {
+  padding: 1.25rem;
+  text-align: center;
+  color: $text-muted;
+  font-size: 0.875rem;
+  background: $bg-body;
+  border-radius: $radius-sm;
+}
+
+.table-responsive { overflow-x: auto; }
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    padding: 0.6rem 0.875rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: $text-light;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    border-bottom: 2px solid $border-color;
+    background: $bg-body;
+    white-space: nowrap;
+
+    &.text-center { text-align: center; }
+    &.text-right  { text-align: right; }
+  }
+
+  td {
+    padding: 0.6rem 0.875rem;
+    font-size: 0.875rem;
+    color: $text-dark;
+    border-bottom: 1px solid $border-subtle;
+    white-space: nowrap;
+
+    &.text-center { text-align: center; }
+    &.text-right  { text-align: right; }
+  }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  width: fit-content;
+}
+
+.badge-success { background: rgba(34, 197, 94, 0.10);  color: #15803d; }
+.badge-warning { background: rgba(234, 179, 8, 0.12);  color: #a16207; }
+.badge-danger  { background: rgba(239, 68, 68, 0.10);  color: #dc2626; }
+.badge-neutral { background: rgba(100, 116, 139, 0.10); color: #475569; }
+
+.actions-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: $radius-sm;
+
+  &:hover { background: $border-subtle; }
+  &.danger:hover { color: #dc2626; }
+}
+
+.status-select {
+  padding: 0.3rem 0.45rem;
+  border: 1px solid $border-color;
+  border-radius: $radius-sm;
+  font-size: 0.75rem;
+  background: $bg-card;
+  color: $text-dark;
+}
+
+.btn {
+  padding: 0.5rem 0.9rem;
+  border-radius: $radius-sm;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-secondary {
+  background: $bg-body;
+  color: $text-dark;
+  border: 1px solid $border-color;
+
+  &:hover { background: $border-subtle; }
+}
+
+.btn-sm { padding: 0.4rem 0.75rem; }
