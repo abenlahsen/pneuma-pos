@@ -7,6 +7,7 @@ use App\Models\ActivityLog;
 use App\Models\Purchase;
 use App\Models\Sale;
 use App\Models\ServiceOrder;
+use App\Models\ShipmentChangeRequest;
 use App\Models\Transaction;
 use App\Models\User;
 
@@ -69,6 +70,21 @@ class ActivityLogService
             'notes' => $order->notes,
             'client' => $order->clientRecord?->name,
             'commercial' => $order->commercial?->name,
+        ];
+
+        return array_filter($snapshot, fn ($v) => $v !== null && $v !== '');
+    }
+
+    public function buildShipmentChangeSnapshot(ShipmentChangeRequest $request): array
+    {
+        $snapshot = [
+            'date' => $request->date ? (string) $request->date : null,
+            'status' => $request->status,
+            'shipment_number' => $request->shipment_number,
+            'reason' => $request->reason,
+            'sale_id' => $request->sale_id,
+            'carrier' => $request->carrier?->name,
+            'items_count' => $request->relationLoaded('items') ? $request->items->count() : null,
         ];
 
         return array_filter($snapshot, fn ($v) => $v !== null && $v !== '');
@@ -273,6 +289,62 @@ class ActivityLogService
             'entity_type' => ActivityLog::ENTITY_SERVICE_ORDER,
             'entity_id' => $id,
             'entity_label' => "Ordre de service #{$id}",
+            'description' => $desc,
+            'properties' => ['before' => $before, 'after' => null],
+            'user_id' => $userId,
+            'user_name' => $userName,
+        ]);
+    }
+
+    // -------------------------------------------------------------------------
+    // Demandes de modification d'expédition
+    // -------------------------------------------------------------------------
+
+    public function logShipmentChangeCreated(ShipmentChangeRequest $request, array $snapshot, ?int $userId, ?string $userName): void
+    {
+        $carrierName = $snapshot['carrier'] ?? null;
+        $desc = "Demande de modification #{$request->id} créée pour la vente #{$request->sale_id}"
+            .($carrierName ? " — {$carrierName}" : '');
+
+        $this->insert([
+            'action' => ActivityLog::ACTION_CREATE,
+            'entity_type' => ActivityLog::ENTITY_SHIPMENT_CHANGE,
+            'entity_id' => $request->id,
+            'entity_label' => "Demande de modification #{$request->id}",
+            'description' => $desc,
+            'properties' => ['before' => null, 'after' => $snapshot],
+            'user_id' => $userId,
+            'user_name' => $userName,
+        ]);
+    }
+
+    public function logShipmentChangeUpdated(ShipmentChangeRequest $request, array $before, array $after, ?int $userId, ?string $userName): void
+    {
+        $desc = "Demande de modification #{$request->id} modifiée";
+        $desc .= $this->buildUpdateSuffix($before, $after);
+
+        $this->insert([
+            'action' => ActivityLog::ACTION_UPDATE,
+            'entity_type' => ActivityLog::ENTITY_SHIPMENT_CHANGE,
+            'entity_id' => $request->id,
+            'entity_label' => "Demande de modification #{$request->id}",
+            'description' => $desc,
+            'properties' => ['before' => $before, 'after' => $after],
+            'user_id' => $userId,
+            'user_name' => $userName,
+        ]);
+    }
+
+    public function logShipmentChangeDeleted(array $before, ?int $userId, ?string $userName): void
+    {
+        $id = $before['id'];
+        $desc = "Demande de modification #{$id} supprimée";
+
+        $this->insert([
+            'action' => ActivityLog::ACTION_DELETE,
+            'entity_type' => ActivityLog::ENTITY_SHIPMENT_CHANGE,
+            'entity_id' => $id,
+            'entity_label' => "Demande de modification #{$id}",
             'description' => $desc,
             'properties' => ['before' => $before, 'after' => null],
             'user_id' => $userId,

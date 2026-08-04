@@ -5,12 +5,13 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
     public function run(): void
     {
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $permissions = [
             // Sales
@@ -103,6 +104,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'delete service-orders',
             'manage service-payments',
 
+            // Shipment change requests
+            'view shipment-changes',
+            'create shipment-changes',
+            'edit shipment-changes',
+            'delete shipment-changes',
+
             // Settings
             'view settings',
             'edit settings',
@@ -118,7 +125,7 @@ class RolesAndPermissionsSeeder extends Seeder
             Permission::findOrCreate($permission);
         }
 
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         // --- Roles ---
 
@@ -146,6 +153,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'create service-orders',
             'edit service-orders',
             'manage service-payments',
+
+            // Shipment change requests
+            'view shipment-changes',
+            'create shipment-changes',
+            'edit shipment-changes',
+            'delete shipment-changes',
 
             // Sales
             'view sales',
@@ -218,6 +231,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view sales',
             'view purchases',
             'view carriers',
+            'view shipment-changes',
             'view partners',
             'view brands',
             'view stock',

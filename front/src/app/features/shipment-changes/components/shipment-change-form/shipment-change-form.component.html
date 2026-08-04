@@ -1,0 +1,77 @@
+<form (ngSubmit)="onSubmit()" #form="ngForm" class="form-container">
+  <div class="form-section">
+    <h3 class="section-title">Expédition</h3>
+    <div class="form-grid">
+      <div class="form-control">
+        <label>Transporteur</label>
+        <select name="carrier_id" [ngModel]="carrierId()" (ngModelChange)="carrierId.set($event)">
+          <option [ngValue]="null">— Sélectionner —</option>
+          <option *ngFor="let c of carriers()" [ngValue]="c.id">{{ c.name }}</option>
+        </select>
+      </div>
+      <div class="form-control">
+        <label>N° d'expédition</label>
+        <input type="text" name="shipment_number" [ngModel]="shipmentNumber()" (ngModelChange)="shipmentNumber.set($event)" placeholder="Numéro de suivi">
+      </div>
+      <div class="form-control">
+        <label>Date de la demande *</label>
+        <input type="date" name="date" [ngModel]="date()" (ngModelChange)="date.set($event)" required>
+      </div>
+      <div class="form-control full-width">
+        <label>Motif</label>
+        <textarea name="reason" rows="2" [ngModel]="reason()" (ngModelChange)="reason.set($event)" placeholder="Raison de la demande de modification"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="section-title-row">
+      <h3 class="section-title">Modifications demandées</h3>
+      <button type="button" class="btn btn-secondary btn-sm add-item-btn" (click)="addItem()">+ Ajouter une modification</button>
+    </div>
+
+    <div class="items-table" *ngIf="items().length; else noItems">
+      <table>
+        <thead>
+          <tr>
+            <th>Élément</th>
+            <th>Ancienne valeur</th>
+            <th>Nouvelle valeur *</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of items(); let i = index">
+            <td>
+              <select [ngModel]="item.field" [ngModelOptions]="{standalone: true}" (ngModelChange)="onFieldChange(i, $event)">
+                <option *ngFor="let opt of fieldOptions" [ngValue]="opt.value">{{ opt.label }}</option>
+              </select>
+              <input *ngIf="item.field === 'other'" type="text" class="mt-1" placeholder="Libellé personnalisé"
+                     [ngModel]="item.custom_label" [ngModelOptions]="{standalone: true}"
+                     (ngModelChange)="item.custom_label = $event">
+            </td>
+            <td>
+              <input type="text" [ngModel]="item.old_value" [ngModelOptions]="{standalone: true}"
+                     (ngModelChange)="item.old_value = $event" placeholder="Valeur actuelle">
+            </td>
+            <td>
+              <input type="text" [ngModel]="item.new_value" [ngModelOptions]="{standalone: true}"
+                     (ngModelChange)="item.new_value = $event" placeholder="Nouvelle valeur" required>
+            </td>
+            <td>
+              <button type="button" class="btn-icon" (click)="removeItem(i)" title="Supprimer">✕</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #noItems>
+      <div class="empty-state small">Aucune modification ajoutée.</div>
+    </ng-template>
+  </div>
+
+  <div class="form-actions">
+    <button type="button" class="btn btn-secondary" (click)="cancel.emit()">Annuler</button>
+    <button type="submit" class="btn btn-primary" [disabled]="!canSubmit">Enregistrer</button>
+  </div>
+</form>

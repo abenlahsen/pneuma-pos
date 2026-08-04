@@ -9,17 +9,27 @@ class ActivityLog extends Model
 {
     const UPDATED_AT = null;
 
-    const ACTION_CREATE         = 'CREATE';
-    const ACTION_UPDATE         = 'UPDATE';
-    const ACTION_DELETE         = 'DELETE';
-    const ACTION_PAYMENT_ADD    = 'PAYMENT_ADD';
+    const ACTION_CREATE = 'CREATE';
+
+    const ACTION_UPDATE = 'UPDATE';
+
+    const ACTION_DELETE = 'DELETE';
+
+    const ACTION_PAYMENT_ADD = 'PAYMENT_ADD';
+
     const ACTION_PAYMENT_DELETE = 'PAYMENT_DELETE';
 
-    const ENTITY_VENTE         = 'vente';
-    const ENTITY_ACHAT         = 'achat';
+    const ENTITY_VENTE = 'vente';
+
+    const ENTITY_ACHAT = 'achat';
+
     const ENTITY_SERVICE_ORDER = 'service_order';
-    const ENTITY_COMPTE        = 'compte';
-    const ENTITY_TRANSACTION   = 'transaction';
+
+    const ENTITY_COMPTE = 'compte';
+
+    const ENTITY_TRANSACTION = 'transaction';
+
+    const ENTITY_SHIPMENT_CHANGE = 'shipment_change';
 
     protected $fillable = [
         'action',

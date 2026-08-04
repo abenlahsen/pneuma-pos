@@ -4,6 +4,7 @@
       <h2>Détail de la vente</h2>
       <div>
         <button class="btn btn-primary btn-sm mr-2" (click)="openPrint()">🖨️ Imprimer</button>
+        <button class="btn btn-secondary btn-sm mr-2 no-print" *ngIf="authService.hasPermission('create shipment-changes')" (click)="openShipmentAddForm()">📦 Demander une modification</button>
         <button class="btn-close" (click)="close.emit()">✕</button>
       </div>
     </div>
@@ -195,6 +196,21 @@
         </div>
       </div>
 
+      <div class="detail-section no-print">
+        <app-shipment-change-list
+          [requests]="shipmentRequests()"
+          [loading]="loadingShipmentRequests()"
+          [canCreate]="authService.hasPermission('create shipment-changes')"
+          [canEdit]="authService.hasPermission('edit shipment-changes')"
+          [canDelete]="authService.hasPermission('delete shipment-changes')"
+          (add)="openShipmentAddForm()"
+          (print)="openShipmentPrint($event)"
+          (edit)="openShipmentEditForm($event)"
+          (statusChange)="changeShipmentStatus($event)"
+          (delete)="deleteShipmentRequest($event)"
+        />
+      </div>
+
       <div class="detail-section meta">
         <div class="detail-grid">
           <div class="detail-item">
@@ -228,4 +244,25 @@
   *ngIf="printDoc()"
   [document]="printDoc()!"
   (closed)="printDoc.set(null)"
+/>
+
+<div class="modal-overlay" *ngIf="showShipmentForm()" (click)="closeShipmentForm()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ editingShipmentRequest() ? 'Modifier la demande' : 'Nouvelle demande de modification' }}</h2>
+      <button class="btn-close" (click)="closeShipmentForm()">✕</button>
+    </div>
+    <app-shipment-change-form
+      [sale]="sale"
+      [request]="editingShipmentRequest()"
+      (save)="onShipmentFormSubmit($event)"
+      (cancel)="closeShipmentForm()"
+    />
+  </div>
+</div>
+
+<app-shipment-change-print
+  *ngIf="shipmentPrintDoc()"
+  [request]="shipmentPrintDoc()!"
+  (closed)="shipmentPrintDoc.set(null)"
 />

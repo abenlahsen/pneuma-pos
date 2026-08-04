@@ -135,6 +135,11 @@ class Sale extends Model
         return $this->hasMany(SalePaymentAllocation::class);
     }
 
+    public function shipmentChangeRequests(): HasMany
+    {
+        return $this->hasMany(ShipmentChangeRequest::class);
+    }
+
     public function getSaleDateAttribute()
     {
         return $this->attributes['sale_date'] ?? $this->date;
