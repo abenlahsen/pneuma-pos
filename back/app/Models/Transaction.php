@@ -15,6 +15,7 @@ class Transaction extends Model
         'amount',
         'type',
         'category',
+        'subcategory',
         'method',
         'description',
         'person',
@@ -48,7 +49,7 @@ class Transaction extends Model
 
     public function partner(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Partner::class);
+        return $this->belongsTo(Partner::class);
     }
 
     /**

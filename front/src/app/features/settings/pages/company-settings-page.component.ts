@@ -1,8 +1,10 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { SettingsService } from '../data-access/settings.service';
 import { CityService } from '../../../core/services/city.service';
+import { AuthService } from '../../../core/services/auth.service';
 import {
   CompanySettings,
   DEFAULT_COMPANY_THEME_SETTINGS,
@@ -17,7 +19,7 @@ type ContentWidthOption = 'full' | 'boxed' | 'compact';
 @Component({
   selector: 'app-company-settings-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './company-settings-page.component.html',
   styleUrls: ['./company-settings-page.component.scss'],
 })
@@ -97,7 +99,11 @@ export class CompanySettingsPageComponent implements OnInit {
 
   cities: string[] = [];
 
-  constructor(private settingsService: SettingsService, private cityService: CityService) {}
+  constructor(
+    private settingsService: SettingsService,
+    private cityService: CityService,
+    public authService: AuthService,
+  ) {}
 
   ngOnInit(): void {
     this.cityService.getCities().subscribe(cities => this.cities = cities);

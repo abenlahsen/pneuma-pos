@@ -233,11 +233,10 @@
                       [class.bg-recu]="purchase.status === 'RECU'"
                       [class.bg-termine]="purchase.status === 'TERMINE'"
                       [class.bg-annule]="purchase.status === 'ANNULE'"
-                      [class.bg-retour]="purchase.status === 'RETOUR'"
                       [ngModel]="purchase.status"
                       [disabled]="isPurchaseLocked(purchase)"
                       (change)="updatePurchaseStatus(purchase, $event.target)">
-                <option *ngFor="let s of PURCHASE_STATUSES" [value]="s">{{ PURCHASE_STATUS_LABELS[s] }}</option>
+                <option *ngFor="let s of statusOptionsFor(purchase)" [value]="s">{{ PURCHASE_STATUS_LABELS[s] }}</option>
               </select>
             </td>
             <td>{{ purchase.creator?.name || '-' }}</td>

@@ -13,6 +13,7 @@ use App\Models\Sale;
 use App\Models\ServiceOrder;
 use App\Models\Stock;
 use App\Models\Transaction;
+use App\Models\TransactionCategory;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -32,11 +33,11 @@ class DashboardKpiService
         $yearStart = $date->copy()->startOfYear()->toDateString();
         $yearEnd = $snapshot ? $today : $date->copy()->endOfYear()->toDateString();
 
-        // Cancelled sales/purchases (and returned purchases) must not inflate
-        // revenue, margin, or quantity KPIs — matches the exclusion already
-        // applied to Service Auto orders below.
+        // Cancelled sales/purchases must not inflate revenue, margin, or
+        // quantity KPIs — matches the exclusion already applied to Service
+        // Auto orders below.
         $saleAnnule = SaleStatus::ANNULE->value;
-        $purchaseCancelledStatuses = [PurchaseStatus::ANNULE->value, PurchaseStatus::RETOUR->value];
+        $purchaseCancelledStatuses = [PurchaseStatus::ANNULE->value];
 
         $salesToday = Sale::whereDate('date', $today)->where('status', '!=', $saleAnnule);
         $purchasesToday = Purchase::whereDate('date', $today)->whereNotIn('status', $purchaseCancelledStatuses);
@@ -102,7 +103,7 @@ class DashboardKpiService
             ->selectRaw('sale_items.sale_id, SUM(sale_items.quantity) as tyre_qty')
             ->groupBy('sale_items.sale_id');
 
-        $expenseCategories = ['Charge', 'Transport', 'Service'];
+        $expenseCategories = TransactionCategory::topLevel()->ofType('expense')->where('is_system', false)->pluck('name')->all();
 
         $expensesToday = round((float) Transaction::where('type', 'expense')
             ->whereIn('category', $expenseCategories)

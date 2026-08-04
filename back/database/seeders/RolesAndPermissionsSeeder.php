@@ -78,6 +78,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit cash-flow',
             'delete cash-flow',
 
+            // Transaction categories
+            'view transaction-categories',
+            'create transaction-categories',
+            'edit transaction-categories',
+            'delete transaction-categories',
+
             // Accounts
             'view accounts',
             'create accounts',
@@ -214,6 +220,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'create cash-flow',
             'edit cash-flow',
             'delete cash-flow',
+
+            // Transaction categories (view only — taxonomy managed by Admin/Manager)
+            'view transaction-categories',
 
             // Accounts
             'view accounts',

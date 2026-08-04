@@ -8,7 +8,7 @@ import { SaleDetailComponent } from '../sale-detail/sale-detail.component';
 import { SaleFormComponent } from '../sale-form/sale-form.component';
 import { PaymentPanelComponent } from '../payment-panel/payment-panel.component';
 import { Sale, SaleFilters, SalePayload, SaleSummary } from '../models/sale.model';
-import { SALE_STATUSES, SALE_STATUS_LABELS, SaleStatus } from '../../../core/constants/status.constants';
+import { SALE_STATUSES, SALE_STATUS_LABELS, SALE_STATUS_TRANSITIONS, SaleStatus } from '../../../core/constants/status.constants';
 import { PAYMENT_METHODS, paymentMethodClass } from '../../../core/constants/payment-method.constants';
 import { SaleService } from '../data-access/sale.service';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
@@ -339,16 +339,22 @@ export class SalesPageComponent implements OnInit {
     const oldStatus = sale.status;
     sale.status = newStatus;
 
-    this.saleService.updateSale(sale.id, { status: newStatus } as any).subscribe({
+    this.saleService.patchStatus(sale.id, newStatus as SaleStatus).subscribe({
       next: () => {
         this.loadData();
       },
       error: (err: any) => {
-        console.error('Failed to update status', err);
         sale.status = oldStatus;
-        alert('Erreur lors de la mise à jour du statut');
+        const msg = err?.error?.errors?.status?.[0] || err?.error?.message || 'Erreur lors de la mise à jour du statut.';
+        alert(msg);
       }
     });
+  }
+
+  /** Current status kept first (so it stays selected) followed by the statuses it can legally move to. */
+  statusOptionsFor(sale: Sale): SaleStatus[] {
+    const current = sale.status as SaleStatus;
+    return [current, ...(SALE_STATUS_TRANSITIONS[current] || [])];
   }
 
   marginPct(sale: Sale): number {

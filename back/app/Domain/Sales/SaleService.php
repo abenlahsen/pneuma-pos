@@ -2,6 +2,7 @@
 
 namespace App\Domain\Sales;
 
+use App\Domain\Support\StatusTransitionGuard;
 use App\Enums\SalePaymentStatus;
 use App\Enums\SaleStatus;
 use App\Models\Client;
@@ -31,6 +32,9 @@ class SaleService
 
             $saleData = $this->prepareSalePayload($validated, $items);
             $saleData['created_by'] = $userId;
+            // A new sale always starts at the first step of the workflow —
+            // any other status submitted at creation time is ignored.
+            $saleData['status'] = SaleStatus::EN_COURS->value;
 
             $sale = Sale::create($this->filterColumns('sales', $saleData));
 
@@ -45,10 +49,14 @@ class SaleService
         });
     }
 
-    public function update(Sale $sale, array $validated, ?int $userId = null): Sale
+    public function update(Sale $sale, array $validated, ?int $userId = null, bool $isAdmin = false): Sale
     {
         $sale->loadMissing(['linkedClient', 'commercial', 'linkedCarrier', 'linkedPartner']);
         $beforeSnapshot = $this->activityLog->buildSaleSnapshot($sale);
+
+        $oldStatusForGuard = $sale->status;
+        $newStatusForGuard = array_key_exists('status', $validated) ? $validated['status'] : $oldStatusForGuard;
+        StatusTransitionGuard::assert($oldStatusForGuard, $newStatusForGuard, SaleStatus::allowedTransitions(), $isAdmin, 'la vente');
 
         return DB::transaction(function () use ($sale, $validated, $userId, $beforeSnapshot) {
             $items = $validated['items'] ?? null;
@@ -88,6 +96,40 @@ class SaleService
 
             return $fresh;
         });
+    }
+
+    /**
+     * Status-only transition, isolated from the full edit form (no items,
+     * totals, or client fields touched). Mirrors
+     * PurchaseService::patchStatus().
+     */
+    public function patchStatus(Sale $sale, string $status, ?int $userId = null, bool $isAdmin = false): Sale
+    {
+        $sale->loadMissing(['linkedClient', 'commercial', 'linkedCarrier', 'linkedPartner', 'items']);
+        $beforeSnapshot = $this->activityLog->buildSaleSnapshot($sale);
+        $oldStatus = $sale->status;
+
+        StatusTransitionGuard::assert($oldStatus, $status, SaleStatus::allowedTransitions(), $isAdmin, 'la vente');
+
+        DB::transaction(function () use ($sale, $status, $oldStatus, $userId) {
+            $wasApplied = $this->statusAppliesStock($oldStatus);
+            $willApply = $this->statusAppliesStock($status);
+
+            if ($wasApplied && ! $willApply) {
+                $this->restoreStockForItems($sale, $userId);
+            } elseif (! $wasApplied && $willApply) {
+                $this->applyStockForItems($sale, $userId);
+            }
+
+            $sale->update(['status' => $status]);
+        });
+
+        $fresh = $sale->fresh(['linkedClient.cityRelation', 'commercial', 'linkedCarrier', 'linkedPartner', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);
+
+        $afterSnapshot = $this->activityLog->buildSaleSnapshot($fresh);
+        $this->activityLog->logSaleUpdated($fresh, $beforeSnapshot, $afterSnapshot, $userId, ActivityLogService::resolveUserName($userId));
+
+        return $fresh;
     }
 
     private function refreshPaymentStatus(Sale $sale): void

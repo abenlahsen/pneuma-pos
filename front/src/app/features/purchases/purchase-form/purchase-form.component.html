@@ -37,10 +37,10 @@
           <option *ngFor="let comm of commercials()" [ngValue]="comm.id">{{ comm.name }}</option>
         </select>
       </div>
-      <div class="form-group">
+      <div class="form-group" *ngIf="purchase">
         <label>Statut</label>
         <select class="form-control" [(ngModel)]="formData.status" name="status">
-          <option *ngFor="let s of PURCHASE_STATUSES" [value]="s">{{ PURCHASE_STATUS_LABELS[s] }}</option>
+          <option *ngFor="let s of statusOptions" [value]="s">{{ PURCHASE_STATUS_LABELS[s] }}</option>
         </select>
       </div>
       <div class="form-group">

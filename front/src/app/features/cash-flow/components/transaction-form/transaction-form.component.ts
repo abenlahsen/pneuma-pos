@@ -1,8 +1,10 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, signal, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, computed, signal, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Account } from '../../../accounts/models/account.model';
 import { Transaction, TransactionFilters, TransactionPayload } from '../../models/transaction.model';
+import { TransactionCategoryService } from '../../../transaction-categories/data-access/transaction-category.service';
+import { TransactionCategory, TransactionCategoryType } from '../../../transaction-categories/models/transaction-category.model';
 
 @Component({
   selector: 'app-transaction-form',
@@ -21,7 +23,17 @@ export class TransactionFormComponent implements OnInit, OnChanges {
   form!: FormGroup;
   isEdit = signal(false);
 
-  constructor(private fb: FormBuilder) {}
+  categoryTree = signal<TransactionCategory[]>([]);
+  selectedCategoryName = signal('');
+  selectedCategoryChildren = computed(() => {
+    const found = this.categoryTree().find((c) => c.name === this.selectedCategoryName());
+    return found?.children || [];
+  });
+
+  constructor(
+    private fb: FormBuilder,
+    private transactionCategoryService: TransactionCategoryService,
+  ) {}
 
   ngOnInit(): void {
     this.isEdit.set(!!this.transaction);
@@ -35,10 +47,32 @@ export class TransactionFormComponent implements OnInit, OnChanges {
       ],
       type: [this.transaction?.type || 'expense', [Validators.required]],
       category: [this.transaction?.category || '', [Validators.required]],
+      subcategory: [this.transaction?.subcategory || null],
       method: [this.transaction?.method || '', [Validators.required]],
       description: [this.transaction?.description || '', [Validators.required]],
       person: [this.transaction?.person || '', [Validators.required]],
       partner_id: [this.transaction?.partner_id ?? null],
+    });
+
+    this.selectedCategoryName.set(this.form.get('category')?.value || '');
+    this.loadCategoryTree(this.form.get('type')?.value);
+
+    this.form.get('type')?.valueChanges.subscribe((type: TransactionCategoryType) => {
+      this.form.get('category')?.setValue('');
+      this.form.get('subcategory')?.setValue(null);
+      this.selectedCategoryName.set('');
+      this.loadCategoryTree(type);
+    });
+
+    this.form.get('category')?.valueChanges.subscribe((name: string) => {
+      this.selectedCategoryName.set(name || '');
+      this.form.get('subcategory')?.setValue(null);
+    });
+  }
+
+  private loadCategoryTree(type: TransactionCategoryType): void {
+    this.transactionCategoryService.getTree(type, true).subscribe({
+      next: (categories) => this.categoryTree.set(categories),
     });
   }
 

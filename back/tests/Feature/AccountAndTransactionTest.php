@@ -3,8 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\Account;
+use App\Models\Client;
+use App\Models\Payment;
 use App\Models\Purchase;
 use App\Models\PurchasePayment;
+use App\Models\PurchasePaymentAllocation;
+use App\Models\Sale;
+use App\Models\SalePaymentAllocation;
 use App\Models\Supplier;
 use App\Models\Transaction;
 use App\Models\User;
@@ -496,6 +501,52 @@ class AccountAndTransactionTest extends TestCase
         $this->assertDatabaseHas('transactions', ['id' => $tx->id, 'description' => 'Updated']);
     }
 
+    public function test_transactions_update_still_blocked_when_linked_sale_fully_paid(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $account = $this->createAccount();
+        $client = Client::query()->create([
+            'name' => 'Client Update Guard Test',
+            'phone' => '0600000012',
+            'category' => 'Particulier',
+            'created_by' => $this->user->id,
+            'updated_by' => $this->user->id,
+            'is_active' => true,
+        ]);
+        $sale = Sale::query()->create([
+            'date' => '2026-04-01',
+            'client_id' => $client->id,
+            'total_quantity' => 1,
+            'total_purchase' => 50,
+            'total_sale' => 100,
+            'margin' => 50,
+            'status' => 'EN COURS',
+            'payment_status' => 'PAYE',
+            'created_by' => $this->user->id,
+        ]);
+
+        $tx = $this->createTransaction(['account_id' => $account->id, 'category' => 'Produit']);
+        $payment = Payment::query()->create([
+            'sale_id' => $sale->id,
+            'client_id' => $client->id,
+            'transaction_id' => $tx->id,
+            'amount' => 100,
+            'date' => '2026-04-01',
+            'method' => 'Espèces',
+            'user_id' => $this->user->id,
+        ]);
+        SalePaymentAllocation::query()->create(['payment_id' => $payment->id, 'sale_id' => $sale->id, 'amount' => 100]);
+
+        $response = $this->putJson("/api/transactions/{$tx->id}", array_merge(
+            $this->validTransactionPayload($account->id),
+            ['amount' => 999],
+        ));
+
+        $response->assertStatus(422);
+        $this->assertDatabaseHas('transactions', ['id' => $tx->id, 'amount' => 100.00]);
+    }
+
     // DELETE /api/transactions/{id}
 
     public function test_transactions_destroy_requires_delete_cashflow_permission(): void
@@ -518,6 +569,171 @@ class AccountAndTransactionTest extends TestCase
         $this->deleteJson("/api/transactions/{$tx->id}")->assertNoContent();
 
         $this->assertDatabaseMissing('transactions', ['id' => $tx->id]);
+    }
+
+    public function test_transactions_destroy_deletes_linked_sale_payment_even_when_sale_fully_paid(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $account = $this->createAccount();
+        $client = Client::query()->create([
+            'name' => 'Client Tx Test',
+            'phone' => '0600000010',
+            'category' => 'Particulier',
+            'created_by' => $this->user->id,
+            'updated_by' => $this->user->id,
+            'is_active' => true,
+        ]);
+        $sale = Sale::query()->create([
+            'date' => '2026-04-01',
+            'client_id' => $client->id,
+            'total_quantity' => 1,
+            'total_purchase' => 50,
+            'total_sale' => 100,
+            'margin' => 50,
+            'status' => 'EN COURS',
+            'payment_status' => 'NON PAYE',
+            'created_by' => $this->user->id,
+        ]);
+
+        $tx = $this->createTransaction(['account_id' => $account->id, 'category' => 'Produit']);
+        $payment = Payment::query()->create([
+            'sale_id' => $sale->id,
+            'client_id' => $client->id,
+            'transaction_id' => $tx->id,
+            'amount' => 100,
+            'date' => '2026-04-01',
+            'method' => 'Espèces',
+            'user_id' => $this->user->id,
+        ]);
+        SalePaymentAllocation::query()->create([
+            'payment_id' => $payment->id,
+            'sale_id' => $sale->id,
+            'amount' => 100,
+        ]);
+        $sale->update(['payment_status' => 'PAYE']);
+
+        $response = $this->deleteJson("/api/transactions/{$tx->id}");
+
+        $response->assertNoContent();
+        $this->assertDatabaseMissing('transactions', ['id' => $tx->id]);
+        $this->assertDatabaseMissing('payments', ['id' => $payment->id]);
+        $this->assertDatabaseMissing('sale_payment_allocations', ['payment_id' => $payment->id]);
+        $this->assertDatabaseHas('sales', ['id' => $sale->id, 'payment_status' => 'NON PAYE']);
+    }
+
+    public function test_transactions_destroy_deletes_linked_multi_sale_payment_and_refreshes_every_sale(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $account = $this->createAccount();
+        $client = Client::query()->create([
+            'name' => 'Client Multi Tx Test',
+            'phone' => '0600000011',
+            'category' => 'Particulier',
+            'created_by' => $this->user->id,
+            'updated_by' => $this->user->id,
+            'is_active' => true,
+        ]);
+        $paidSale = Sale::query()->create([
+            'date' => '2026-04-01',
+            'client_id' => $client->id,
+            'total_quantity' => 1,
+            'total_purchase' => 50,
+            'total_sale' => 100,
+            'margin' => 50,
+            'status' => 'EN COURS',
+            'payment_status' => 'NON PAYE',
+            'created_by' => $this->user->id,
+        ]);
+        $partialSale = Sale::query()->create([
+            'date' => '2026-04-02',
+            'client_id' => $client->id,
+            'total_quantity' => 1,
+            'total_purchase' => 100,
+            'total_sale' => 200,
+            'margin' => 100,
+            'status' => 'EN COURS',
+            'payment_status' => 'NON PAYE',
+            'created_by' => $this->user->id,
+        ]);
+
+        $tx = $this->createTransaction(['account_id' => $account->id, 'category' => 'Produit', 'amount' => 150]);
+        $payment = Payment::query()->create([
+            'sale_id' => null,
+            'client_id' => $client->id,
+            'transaction_id' => $tx->id,
+            'amount' => 150,
+            'date' => '2026-04-02',
+            'method' => 'Espèces',
+            'user_id' => $this->user->id,
+        ]);
+        SalePaymentAllocation::query()->create(['payment_id' => $payment->id, 'sale_id' => $paidSale->id, 'amount' => 100]);
+        SalePaymentAllocation::query()->create(['payment_id' => $payment->id, 'sale_id' => $partialSale->id, 'amount' => 50]);
+        $paidSale->update(['payment_status' => 'PAYE']);
+        $partialSale->update(['payment_status' => 'PARTIEL']);
+
+        // Before the fix, this used to abort(422) because $paidSale is fully paid.
+        $response = $this->deleteJson("/api/transactions/{$tx->id}");
+
+        $response->assertNoContent();
+        $this->assertDatabaseMissing('transactions', ['id' => $tx->id]);
+        $this->assertDatabaseMissing('payments', ['id' => $payment->id]);
+        $this->assertDatabaseMissing('sale_payment_allocations', ['payment_id' => $payment->id]);
+        $this->assertDatabaseHas('sales', ['id' => $paidSale->id, 'payment_status' => 'NON PAYE']);
+        $this->assertDatabaseHas('sales', ['id' => $partialSale->id, 'payment_status' => 'NON PAYE']);
+    }
+
+    public function test_transactions_destroy_deletes_linked_multi_purchase_payment_and_refreshes_every_purchase(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $account = $this->createAccount();
+        $supplier = Supplier::query()->create(['name' => 'Fournisseur Tx Test', 'user_id' => $this->user->id]);
+        $paidPurchase = Purchase::query()->create([
+            'date' => '2026-04-01',
+            'supplier_id' => $supplier->id,
+            'total_quantity' => 1,
+            'total_price' => 100,
+            'net_amount' => 100,
+            'status' => 'EN COURS',
+            'payment_status' => 'NON PAYE',
+            'created_by' => $this->user->id,
+        ]);
+        $partialPurchase = Purchase::query()->create([
+            'date' => '2026-04-02',
+            'supplier_id' => $supplier->id,
+            'total_quantity' => 1,
+            'total_price' => 200,
+            'net_amount' => 200,
+            'status' => 'EN COURS',
+            'payment_status' => 'NON PAYE',
+            'created_by' => $this->user->id,
+        ]);
+
+        $tx = $this->createTransaction(['account_id' => $account->id, 'category' => 'Achat', 'type' => 'expense', 'amount' => 150]);
+        $payment = PurchasePayment::query()->create([
+            'purchase_id' => null,
+            'supplier_id' => $supplier->id,
+            'transaction_id' => $tx->id,
+            'amount' => 150,
+            'date' => '2026-04-02',
+            'method' => 'Espèces',
+        ]);
+        PurchasePaymentAllocation::query()->create(['purchase_payment_id' => $payment->id, 'purchase_id' => $paidPurchase->id, 'amount' => 100]);
+        PurchasePaymentAllocation::query()->create(['purchase_payment_id' => $payment->id, 'purchase_id' => $partialPurchase->id, 'amount' => 50]);
+        $paidPurchase->update(['payment_status' => 'PAYE']);
+        $partialPurchase->update(['payment_status' => 'PARTIEL']);
+
+        // Before the fix, this used to abort(422) because $paidPurchase is fully paid.
+        $response = $this->deleteJson("/api/transactions/{$tx->id}");
+
+        $response->assertNoContent();
+        $this->assertDatabaseMissing('transactions', ['id' => $tx->id]);
+        $this->assertDatabaseMissing('purchase_payments', ['id' => $payment->id]);
+        $this->assertDatabaseMissing('purchase_payment_allocations', ['purchase_payment_id' => $payment->id]);
+        $this->assertDatabaseHas('purchases', ['id' => $paidPurchase->id, 'payment_status' => 'NON PAYE']);
+        $this->assertDatabaseHas('purchases', ['id' => $partialPurchase->id, 'payment_status' => 'NON PAYE']);
     }
 
     // GET /api/transactions-summary

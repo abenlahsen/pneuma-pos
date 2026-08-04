@@ -59,16 +59,25 @@
           <label for="txn-category">Catégorie *</label>
           <select id="txn-category" formControlName="category">
             <option value="">-- Sélectionner --</option>
-            <option value="Charge">Charge</option>
-            <option value="Transport">Transport</option>
-            <option value="Produit">Produit</option>
-            <option value="Service">Service</option>
-            <option value="Ahmed">Ahmed</option>
+            @for (cat of categoryTree(); track cat.id) {
+              <option [value]="cat.name">{{ cat.name }}</option>
+            }
           </select>
           @if (form.get('category')?.invalid && form.get('category')?.touched) {
             <span class="field-error">Catégorie requise</span>
           }
         </div>
+        @if (selectedCategoryChildren().length > 0) {
+          <div class="form-group">
+            <label for="txn-subcategory">Sous-catégorie</label>
+            <select id="txn-subcategory" formControlName="subcategory">
+              <option [value]="null">-- Aucune --</option>
+              @for (sub of selectedCategoryChildren(); track sub.id) {
+                <option [value]="sub.name">{{ sub.name }}</option>
+              }
+            </select>
+          </div>
+        }
         <div class="form-group">
           <label for="txn-method">Méthode *</label>
           <select id="txn-method" formControlName="method">

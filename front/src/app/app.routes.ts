@@ -153,6 +153,13 @@ export const routes: Routes = [
       import('./features/settings/pages/company-settings-page.component').then((m) => m.CompanySettingsPageComponent),
   },
   {
+    path: 'settings/transaction-categories',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'view transaction-categories' },
+    loadComponent: () =>
+      import('./features/transaction-categories/pages/transaction-categories-page.component').then((m) => m.TransactionCategoriesPageComponent),
+  },
+  {
     path: 'activity-log',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view activity-log' },

@@ -14,6 +14,7 @@ Route::middleware('permission:view sales')->group(function () {
 });
 Route::post('sales', [SaleController::class, 'store'])->middleware('permission:create sales');
 Route::put('sales/{sale}', [SaleController::class, 'update'])->middleware('permission:edit sales');
+Route::patch('sales/{sale}/status', [SaleController::class, 'updateStatus'])->middleware('permission:edit sales');
 Route::delete('sales/{sale}', [SaleController::class, 'destroy'])->middleware('permission:delete sales');
 
 // Sale Payments

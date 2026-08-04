@@ -1,0 +1,104 @@
+<div class="page-container">
+  <div class="header">
+    <div class="title-section">
+      <h1>Catégories de transactions</h1>
+      <p class="subtitle">Gérez les catégories et sous-catégories utilisées dans le module Cash Flow.</p>
+    </div>
+    <a routerLink="/settings" class="btn btn-secondary btn-sm">← Retour aux paramètres</a>
+  </div>
+
+  <div class="alert alert-danger" *ngIf="errorMessage()">{{ errorMessage() }}</div>
+
+  <div class="type-toggle">
+    <button type="button" class="toggle-btn" [class.active]="activeType() === 'income'" (click)="switchType('income')">
+      📈 Revenus
+    </button>
+    <button type="button" class="toggle-btn" [class.active]="activeType() === 'expense'" (click)="switchType('expense')">
+      📉 Dépenses
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="section-header">
+        <h2>{{ activeType() === 'income' ? 'Catégories de revenus' : 'Catégories de dépenses' }}</h2>
+        <button
+          type="button"
+          class="btn btn-primary btn-sm"
+          *ngIf="authService.hasPermission('create transaction-categories') && !addingParent()"
+          (click)="openAddParent()"
+        >+ Nouvelle catégorie</button>
+      </div>
+
+      <div class="add-form" *ngIf="addingParent()">
+        <input type="text" [(ngModel)]="newParentName" placeholder="Nom de la catégorie" (keyup.enter)="submitAddParent()" autofocus>
+        <button type="button" class="btn btn-primary btn-sm" (click)="submitAddParent()">Ajouter</button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="cancelAddParent()">Annuler</button>
+      </div>
+
+      <div *ngIf="loading()" class="text-center py-4"><div class="spinner"></div> Chargement...</div>
+
+      <div class="empty-state" *ngIf="!loading() && categories().length === 0">
+        Aucune catégorie {{ activeType() === 'income' ? 'de revenus' : 'de dépenses' }} pour le moment.
+      </div>
+
+      <div class="categories-list" *ngIf="!loading()">
+        <div class="category-card" *ngFor="let category of categories()">
+          <div class="category-row">
+            <div class="category-name">
+              <ng-container *ngIf="editingId() !== category.id; else editParentTpl">
+                <span>{{ category.name }}</span>
+                <span class="badge badge-system" *ngIf="category.is_system" title="Catégorie système, générée automatiquement par l'application">🔒 système</span>
+              </ng-container>
+              <ng-template #editParentTpl>
+                <input type="text" [(ngModel)]="editingName" (keyup.enter)="submitEdit(category)" (keyup.escape)="cancelEdit()">
+              </ng-template>
+            </div>
+
+            <div class="category-actions" *ngIf="!category.is_system">
+              <ng-container *ngIf="editingId() === category.id; else defaultParentActions">
+                <button type="button" class="btn-icon" title="Enregistrer" (click)="submitEdit(category)">✓</button>
+                <button type="button" class="btn-icon" title="Annuler" (click)="cancelEdit()">✕</button>
+              </ng-container>
+              <ng-template #defaultParentActions>
+                <button type="button" class="btn-icon" title="Ajouter une sous-catégorie" *ngIf="authService.hasPermission('create transaction-categories')" (click)="openAddChild(category.id)">➕</button>
+                <button type="button" class="btn-icon" title="Modifier" *ngIf="authService.hasPermission('edit transaction-categories')" (click)="startEdit(category)">✏️</button>
+                <button type="button" class="btn-icon danger" title="Supprimer" *ngIf="authService.hasPermission('delete transaction-categories')" (click)="deleteCategory(category)">🗑️</button>
+              </ng-template>
+            </div>
+          </div>
+
+          <div class="children-list" *ngIf="category.children?.length || addingChildFor() === category.id">
+            <div class="child-row" *ngFor="let child of category.children">
+              <div class="child-name">
+                <ng-container *ngIf="editingId() !== child.id; else editChildTpl">
+                  <span>{{ child.name }}</span>
+                  <span class="badge badge-system" *ngIf="child.is_system">🔒 système</span>
+                </ng-container>
+                <ng-template #editChildTpl>
+                  <input type="text" [(ngModel)]="editingName" (keyup.enter)="submitEdit(child)" (keyup.escape)="cancelEdit()">
+                </ng-template>
+              </div>
+              <div class="category-actions" *ngIf="!child.is_system">
+                <ng-container *ngIf="editingId() === child.id; else defaultChildActions">
+                  <button type="button" class="btn-icon" title="Enregistrer" (click)="submitEdit(child)">✓</button>
+                  <button type="button" class="btn-icon" title="Annuler" (click)="cancelEdit()">✕</button>
+                </ng-container>
+                <ng-template #defaultChildActions>
+                  <button type="button" class="btn-icon" title="Modifier" *ngIf="authService.hasPermission('edit transaction-categories')" (click)="startEdit(child)">✏️</button>
+                  <button type="button" class="btn-icon danger" title="Supprimer" *ngIf="authService.hasPermission('delete transaction-categories')" (click)="deleteCategory(child, category)">🗑️</button>
+                </ng-template>
+              </div>
+            </div>
+
+            <div class="add-form add-form-child" *ngIf="addingChildFor() === category.id">
+              <input type="text" [(ngModel)]="newChildName" placeholder="Nom de la sous-catégorie" (keyup.enter)="submitAddChild(category)" autofocus>
+              <button type="button" class="btn btn-primary btn-sm" (click)="submitAddChild(category)">Ajouter</button>
+              <button type="button" class="btn btn-secondary btn-sm" (click)="cancelAddChild()">Annuler</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

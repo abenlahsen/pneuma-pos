@@ -35,8 +35,30 @@ class EnumsTest extends TestCase
 
     public function test_purchase_status_values(): void
     {
-        $this->assertSame(['EN COURS', 'RECU', 'TERMINE', 'ANNULE', 'RETOUR'], PurchaseStatus::values());
-        $this->assertCount(5, PurchaseStatus::cases());
+        // RETOUR was retired from the workflow and folded into ANNULE.
+        $this->assertSame(['EN COURS', 'RECU', 'TERMINE', 'ANNULE'], PurchaseStatus::values());
+        $this->assertCount(4, PurchaseStatus::cases());
+    }
+
+    public function test_sale_status_allowed_transitions(): void
+    {
+        $transitions = SaleStatus::allowedTransitions();
+
+        $this->assertSame(['LIVRE', 'MONTE', 'ANNULE'], $transitions['EN COURS']);
+        $this->assertSame(['EN COURS', 'MONTE', 'TERMINEE'], $transitions['LIVRE']);
+        $this->assertSame(['EN COURS', 'LIVRE', 'TERMINEE'], $transitions['MONTE']);
+        $this->assertSame(['LIVRE', 'MONTE'], $transitions['TERMINEE']);
+        $this->assertSame(['EN COURS'], $transitions['ANNULE']);
+    }
+
+    public function test_purchase_status_allowed_transitions(): void
+    {
+        $transitions = PurchaseStatus::allowedTransitions();
+
+        $this->assertSame(['RECU', 'ANNULE'], $transitions['EN COURS']);
+        $this->assertSame(['EN COURS', 'TERMINE'], $transitions['RECU']);
+        $this->assertSame(['RECU'], $transitions['TERMINE']);
+        $this->assertSame(['EN COURS'], $transitions['ANNULE']);
     }
 
     public function test_purchase_payment_status_values(): void

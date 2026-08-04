@@ -2,6 +2,8 @@
 
 namespace App\Domain\Transactions;
 
+use App\Domain\Purchases\PurchasePaymentService;
+use App\Domain\Sales\SalePaymentService;
 use App\Enums\PurchasePaymentStatus;
 use App\Enums\SalePaymentStatus;
 use App\Models\Account;
@@ -17,7 +19,11 @@ use Illuminate\Support\Collection;
 
 class TransactionService
 {
-    public function __construct(private ActivityLogService $activityLog) {}
+    public function __construct(
+        private ActivityLogService $activityLog,
+        private SalePaymentService $salePaymentService,
+        private PurchasePaymentService $purchasePaymentService,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $filters
@@ -114,9 +120,31 @@ class TransactionService
         return $fresh;
     }
 
+    /**
+     * Deleting a transaction that settles a sale/purchase payment also
+     * deletes that payment (and, for a multi-sale/multi-purchase payment,
+     * every allocation it carries) and recomputes payment_status on each
+     * affected sale/purchase — even ones that were already fully paid.
+     * This mirrors what deleting the payment from the client/supplier
+     * profile page already does, so a transaction is never left dangling
+     * from the Cash Flow page just because one of several sales/purchases
+     * it helped settle happens to be complete.
+     */
     public function delete(Transaction $transaction, ?int $userId = null, ?string $userName = null): void
     {
-        $this->guardLinkedToCompleted($transaction);
+        $payment = Payment::where('transaction_id', $transaction->id)->first();
+        if ($payment) {
+            $this->salePaymentService->deletePaymentAndRefresh($payment, $userId, $userName);
+
+            return;
+        }
+
+        $purchasePayment = PurchasePayment::where('transaction_id', $transaction->id)->first();
+        if ($purchasePayment) {
+            $this->purchasePaymentService->deletePaymentAndRefresh($purchasePayment, $userId, $userName);
+
+            return;
+        }
 
         $transaction->load('account');
         $before = array_merge(['id' => $transaction->id], $this->activityLog->buildTransactionSnapshot($transaction));
@@ -161,6 +189,10 @@ class TransactionService
 
         if (! empty($filters['category'])) {
             $query->ofCategory($filters['category']);
+        }
+
+        if (! empty($filters['subcategory'])) {
+            $query->where('subcategory', $filters['subcategory']);
         }
 
         $query->dateBetween($filters['date_from'] ?? null, $filters['date_to'] ?? null);
@@ -222,6 +254,10 @@ class TransactionService
 
         if (! empty($filters['category'])) {
             $query->ofCategory($filters['category']);
+        }
+
+        if (! empty($filters['subcategory'])) {
+            $query->where('subcategory', $filters['subcategory']);
         }
 
         $query->dateBetween($filters['date_from'] ?? null, $filters['date_to'] ?? null);

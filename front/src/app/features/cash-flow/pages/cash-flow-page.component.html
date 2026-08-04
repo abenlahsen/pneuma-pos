@@ -52,7 +52,7 @@
         </div>
         <div class="form-group">
           <label>Type</label>
-          <select class="form-control" [ngModel]="filterType()" (ngModelChange)="filterType.set($event); applyFilters()">
+          <select class="form-control" [ngModel]="filterType()" (ngModelChange)="filterType.set($event); filterCategory.set(''); filterSubcategory.set(''); applyFilters()">
             <option value="">Tous</option>
             <option value="income">Revenus</option>
             <option value="expense">Dépenses</option>
@@ -69,13 +69,24 @@
         </div>
         <div class="form-group">
           <label>Catégorie</label>
-          <select class="form-control" [ngModel]="filterCategory()" (ngModelChange)="filterCategory.set($event); applyFilters()">
+          <select class="form-control" [ngModel]="filterCategory()" (ngModelChange)="filterCategory.set($event); filterSubcategory.set(''); applyFilters()">
             <option value="">Toutes</option>
-            @for (cat of filterOptions().categories; track cat) {
-              <option [value]="cat">{{ cat }}</option>
+            @for (cat of filterCategoryOptions(); track cat.id) {
+              <option [value]="cat.name">{{ cat.name }}</option>
             }
           </select>
         </div>
+        @if (filterSubcategoryOptions().length > 0) {
+          <div class="form-group">
+            <label>Sous-catégorie</label>
+            <select class="form-control" [ngModel]="filterSubcategory()" (ngModelChange)="filterSubcategory.set($event); applyFilters()">
+              <option value="">Toutes</option>
+              @for (sub of filterSubcategoryOptions(); track sub.id) {
+                <option [value]="sub.name">{{ sub.name }}</option>
+              }
+            </select>
+          </div>
+        }
         <div class="form-group">
           <label>Personne</label>
           <select class="form-control" [ngModel]="filterPerson()" (ngModelChange)="filterPerson.set($event); applyFilters()">

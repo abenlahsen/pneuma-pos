@@ -294,9 +294,21 @@ class SalePaymentService
             abort(404);
         }
 
-        $amount = (float) $payment->amount;
+        $this->deletePaymentAndRefresh($payment, $userId, $userName);
+    }
+
+    /**
+     * Fully delete a payment (single or multi-sale): removes the transaction,
+     * the payment, all its allocations (cascade), and recomputes payment_status
+     * on every sale it covered — even ones that were already fully paid. Used
+     * both by the client-profile deletion flow and by the Cash Flow module
+     * when deleting a transaction that happens to be linked to a payment.
+     */
+    public function deletePaymentAndRefresh(Payment $payment, ?int $userId = null, ?string $userName = null): void
+    {
         $method = $payment->method ?? '';
-        $affectedSales = Sale::whereIn('id', $payment->allocations()->pluck('sale_id'))->get();
+        $allocations = $payment->allocations()->get(['sale_id', 'amount']);
+        $affectedSales = Sale::whereIn('id', $allocations->pluck('sale_id'))->get()->keyBy('id');
 
         DB::transaction(function () use ($payment) {
             if ($payment->transaction_id) {
@@ -306,14 +318,19 @@ class SalePaymentService
             $payment->delete();
         });
 
-        foreach ($affectedSales as $sale) {
+        foreach ($allocations as $allocation) {
+            $sale = $affectedSales->get($allocation->sale_id);
+            if (! $sale) {
+                continue;
+            }
+
             $this->refreshPaymentStatus($sale->fresh());
 
             $this->activityLog->logPaymentDeleted(
                 ActivityLog::ENTITY_VENTE,
                 $sale->id,
                 "Vente #{$sale->id}",
-                $amount,
+                (float) $allocation->amount,
                 $method,
                 $userId,
                 $userName,

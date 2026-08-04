@@ -108,6 +108,7 @@ class ActivityLogService
             'type' => $transaction->type,
             'amount' => (float) $transaction->amount,
             'category' => $transaction->category,
+            'subcategory' => $transaction->subcategory,
             'method' => $transaction->method,
             'description' => $transaction->description,
             'person' => $transaction->person,

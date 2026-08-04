@@ -19,6 +19,7 @@ class TransactionResource extends JsonResource
             'account_id' => $this->account_id,
             'type' => $this->type,
             'category' => $this->category,
+            'subcategory' => $this->subcategory,
             'method' => $this->method,
             'partner_id' => $this->partner_id,
             'partner' => $this->whenLoaded('partner', fn ($p) => $p ? [

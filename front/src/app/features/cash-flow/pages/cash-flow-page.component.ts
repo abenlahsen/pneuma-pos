@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { TransactionFormComponent } from '../components/transaction-form/transaction-form.component';
@@ -16,6 +16,8 @@ import { AccountService } from '../../accounts/data-access/account.service';
 import { Account } from '../../accounts/models/account.model';
 import { PurchasePaymentDetailComponent } from '../../purchases/components/purchase-payment-detail/purchase-payment-detail.component';
 import { SalePaymentDetailComponent } from '../../sales/components/sale-payment-detail/sale-payment-detail.component';
+import { TransactionCategoryService } from '../../transaction-categories/data-access/transaction-category.service';
+import { TransactionCategory } from '../../transaction-categories/models/transaction-category.model';
 
 @Component({
   selector: 'app-cash-flow-page',
@@ -38,6 +40,7 @@ export class CashFlowPageComponent implements OnInit {
 
   filterType = signal('');
   filterCategory = signal('');
+  filterSubcategory = signal('');
   filterAccount = signal('');
   filterPerson = signal('');
   filterDateFrom = signal('');
@@ -59,16 +62,41 @@ export class CashFlowPageComponent implements OnInit {
   editingTransaction = signal<Transaction | null>(null);
   accounts = signal<Account[]>([]);
 
+  incomeCategoryTree = signal<TransactionCategory[]>([]);
+  expenseCategoryTree = signal<TransactionCategory[]>([]);
+
+  filterCategoryOptions = computed<TransactionCategory[]>(() => {
+    if (this.filterType() === 'income') return this.incomeCategoryTree();
+    if (this.filterType() === 'expense') return this.expenseCategoryTree();
+    return [...this.incomeCategoryTree(), ...this.expenseCategoryTree()];
+  });
+
+  filterSubcategoryOptions = computed<TransactionCategory[]>(() => {
+    const category = this.filterCategoryOptions().find((c) => c.name === this.filterCategory());
+    return category?.children || [];
+  });
+
   constructor(
     private cashFlowService: CashFlowService,
     private accountService: AccountService,
+    private transactionCategoryService: TransactionCategoryService,
     public authService: AuthService,
   ) {}
 
   ngOnInit(): void {
     this.loadAccounts();
     this.loadFilters();
+    this.loadCategoryTrees();
     this.loadData();
+  }
+
+  loadCategoryTrees(): void {
+    this.transactionCategoryService.getTree('income', true).subscribe({
+      next: (categories) => this.incomeCategoryTree.set(categories),
+    });
+    this.transactionCategoryService.getTree('expense', true).subscribe({
+      next: (categories) => this.expenseCategoryTree.set(categories),
+    });
   }
 
   loadData(): void {
@@ -119,6 +147,7 @@ export class CashFlowPageComponent implements OnInit {
       type: this.filterType(),
       account_id: this.filterAccount(),
       category: this.filterCategory(),
+      subcategory: this.filterSubcategory(),
       person: this.filterPerson(),
       date_from: this.filterDateFrom(),
       date_to: this.filterDateTo(),
@@ -151,6 +180,7 @@ export class CashFlowPageComponent implements OnInit {
     this.filterType.set('');
     this.filterAccount.set('');
     this.filterCategory.set('');
+    this.filterSubcategory.set('');
     this.filterPerson.set('');
     this.filterDateFrom.set('');
     this.filterDateTo.set('');

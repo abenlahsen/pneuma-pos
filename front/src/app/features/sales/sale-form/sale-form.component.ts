@@ -6,7 +6,7 @@ import { Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, finalize, switchMap, takeUntil } from 'rxjs/operators';
 
 import { Sale, SalePayload } from '../../../core/models/sale.model';
-import { SALE_STATUSES, SALE_STATUS_LABELS } from '../../../core/constants/status.constants';
+import { SALE_STATUSES, SALE_STATUS_LABELS, SALE_STATUS_TRANSITIONS, SaleStatus } from '../../../core/constants/status.constants';
 import { Product } from '../../../core/models/product.model';
 import { ProductService } from '../../../core/services/product.service';
 import { ManagedUser } from '../../../core/models/user-manage.model';
@@ -31,6 +31,12 @@ import { QuickClientFormComponent } from '../../../shared/quick-client-form/quic
 export class SaleFormComponent implements OnInit, OnDestroy {
   readonly SALE_STATUSES = SALE_STATUSES;
   readonly SALE_STATUS_LABELS = SALE_STATUS_LABELS;
+
+  /** Current status kept first (so it stays selected) followed by the statuses it can legally move to. Only relevant in edit mode — new sales always start at EN COURS. */
+  get statusOptions(): SaleStatus[] {
+    const current = (this.formData.status as SaleStatus) || 'EN COURS';
+    return [current, ...(SALE_STATUS_TRANSITIONS[current] || [])];
+  }
 
   @Input() sale: Sale | null = null;
   @Input() preselectedClient: Client | null = null;

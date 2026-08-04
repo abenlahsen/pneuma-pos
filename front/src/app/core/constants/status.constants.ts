@@ -8,14 +8,35 @@ export const SALE_STATUS_LABELS: Record<SaleStatus, string> = {
   'ANNULE':   'Annulée',
 };
 
-export const PURCHASE_STATUSES = ['EN COURS', 'RECU', 'TERMINE', 'ANNULE', 'RETOUR'] as const;
+/**
+ * Allowed next statuses from each status — one step forward or one step
+ * back, never a direct jump from EN COURS to TERMINEE. Mirrors
+ * SaleStatus::allowedTransitions() on the backend (source of truth
+ * duplicated consciously, like the rest of this file).
+ */
+export const SALE_STATUS_TRANSITIONS: Record<SaleStatus, SaleStatus[]> = {
+  'EN COURS': ['LIVRE', 'MONTE', 'ANNULE'],
+  'LIVRE':    ['EN COURS', 'MONTE', 'TERMINEE'],
+  'MONTE':    ['EN COURS', 'LIVRE', 'TERMINEE'],
+  'TERMINEE': ['LIVRE', 'MONTE'],
+  'ANNULE':   ['EN COURS'],
+};
+
+export const PURCHASE_STATUSES = ['EN COURS', 'RECU', 'TERMINE', 'ANNULE'] as const;
 export type PurchaseStatus = typeof PURCHASE_STATUSES[number];
 export const PURCHASE_STATUS_LABELS: Record<PurchaseStatus, string> = {
   'EN COURS': 'En cours',
   'RECU':     'Reçu',
   'TERMINE':  'Terminé',
   'ANNULE':   'Annulé',
-  'RETOUR':   'Retour',
+};
+
+/** Mirrors PurchaseStatus::allowedTransitions() on the backend. */
+export const PURCHASE_STATUS_TRANSITIONS: Record<PurchaseStatus, PurchaseStatus[]> = {
+  'EN COURS': ['RECU', 'ANNULE'],
+  'RECU':     ['EN COURS', 'TERMINE'],
+  'TERMINE':  ['RECU'],
+  'ANNULE':   ['EN COURS'],
 };
 
 export const SERVICE_ORDER_STATUSES = ['EN COURS', 'TERMINE', 'ANNULE'] as const;
