@@ -268,7 +268,7 @@ class PurchasePaymentService
     public function unpaidPurchasesForSupplier(Supplier $supplier)
     {
         return $supplier->purchases()
-            ->whereNotIn('status', [PurchaseStatus::ANNULE->value, PurchaseStatus::RETOUR->value])
+            ->where('status', '!=', PurchaseStatus::ANNULE->value)
             ->orderBy('date')
             ->orderBy('id')
             ->get()
@@ -333,9 +333,21 @@ class PurchasePaymentService
             abort(404);
         }
 
-        $amount = (float) $payment->amount;
+        $this->deletePaymentAndRefresh($payment, $userId, $userName);
+    }
+
+    /**
+     * Fully delete a payment (single or multi-purchase): removes the transaction,
+     * the payment, all its allocations (cascade), and recomputes payment_status
+     * on every purchase it covered — even ones that were already fully paid. Used
+     * both by the supplier-profile deletion flow and by the Cash Flow module
+     * when deleting a transaction that happens to be linked to a payment.
+     */
+    public function deletePaymentAndRefresh(PurchasePayment $payment, ?int $userId = null, ?string $userName = null): void
+    {
         $method = $payment->method ?? '';
-        $affectedPurchases = Purchase::whereIn('id', $payment->allocations()->pluck('purchase_id'))->get();
+        $allocations = $payment->allocations()->get(['purchase_id', 'amount']);
+        $affectedPurchases = Purchase::whereIn('id', $allocations->pluck('purchase_id'))->get()->keyBy('id');
 
         DB::transaction(function () use ($payment) {
             if ($payment->transaction_id) {
@@ -345,14 +357,19 @@ class PurchasePaymentService
             $payment->delete();
         });
 
-        foreach ($affectedPurchases as $purchase) {
+        foreach ($allocations as $allocation) {
+            $purchase = $affectedPurchases->get($allocation->purchase_id);
+            if (! $purchase) {
+                continue;
+            }
+
             $this->refreshPaymentStatus($purchase->fresh());
 
             $this->activityLog->logPaymentDeleted(
                 ActivityLog::ENTITY_ACHAT,
                 $purchase->id,
                 "Achat #{$purchase->id}",
-                $amount,
+                (float) $allocation->amount,
                 $method,
                 $userId,
                 $userName,

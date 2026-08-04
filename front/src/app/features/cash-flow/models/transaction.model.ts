@@ -4,6 +4,7 @@ export interface Transaction {
   amount: number;
   type: 'income' | 'expense';
   category: string | null;
+  subcategory: string | null;
   method: string | null;
   description: string;
   person: string | null;
@@ -26,6 +27,7 @@ export interface TransactionPayload {
   amount: number;
   type: 'income' | 'expense';
   category?: string;
+  subcategory?: string | null;
   method?: string;
   description: string;
   person?: string;

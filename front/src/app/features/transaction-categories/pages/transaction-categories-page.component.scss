@@ -1,0 +1,294 @@
+// ── Design tokens ─────────────────────────────────────────────────────────────
+$_red:        #ff2d37;
+$_red-dark:   #cc0a13;
+$_text:       #0f172a;
+$_muted:      #64748b;
+$_dim:        #94a3b8;
+$_bg:         #f1f5f9;
+$_surface:    #ffffff;
+$_surface2:   #f8fafc;
+$_border:     #e8edf3;
+$_border2:    #d0d9e4;
+
+$_shadow-md: 0 1px 3px rgba(15, 23, 42, 0.05), 0 4px 12px rgba(15, 23, 42, 0.08);
+
+$_radius-sm: 8px;
+$_radius-md: 12px;
+$_radius-lg: 14px;
+
+.page-container {
+  max-width: 900px;
+  margin: 1.5rem auto;
+  padding: 0 1.25rem;
+  background: $_bg;
+  min-height: 100%;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.75rem;
+  gap: 1rem;
+
+  .title-section {
+    h1 {
+      margin: 0;
+      color: $_text;
+      font-size: 1.625rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      margin: 0.25rem 0 0;
+      color: $_muted;
+      font-size: 0.875rem;
+    }
+  }
+}
+
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: $_radius-sm;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.alert-danger {
+  background: rgba(239, 68, 68, 0.08);
+  color: #b91c1c;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+// ── Type toggle ──────────────────────────────────────────────────────────────
+.type-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.toggle-btn {
+  flex: 1;
+  padding: 0.65rem;
+  border: 2px solid $_border2;
+  border-radius: 10px;
+  background: $_surface2;
+  color: $_muted;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &.active {
+    border-color: $_red;
+    background: linear-gradient(135deg, rgba($_red, 0.08), rgba($_red-dark, 0.08));
+    color: $_red-dark;
+  }
+}
+
+// ── Card ─────────────────────────────────────────────────────────────────────
+.card {
+  background: $_surface;
+  border-radius: $_radius-lg;
+  border: 1px solid $_border;
+  box-shadow: $_shadow-md;
+}
+
+.card-body {
+  padding: 1.75rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+
+  h2 {
+    margin: 0;
+    color: $_text;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+}
+
+.empty-state {
+  padding: 2rem;
+  text-align: center;
+  color: $_muted;
+  font-size: 0.9rem;
+  background: $_surface2;
+  border-radius: $_radius-sm;
+}
+
+// ── Category list ────────────────────────────────────────────────────────────
+.categories-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.category-card {
+  border: 1px solid $_border;
+  border-radius: $_radius-md;
+  padding: 0.875rem 1rem;
+  background: $_surface2;
+}
+
+.category-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.category-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: $_text;
+  font-size: 0.95rem;
+
+  input {
+    padding: 0.35rem 0.5rem;
+    border: 1px solid $_border2;
+    border-radius: $_radius-sm;
+    font-size: 0.9rem;
+  }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.badge-system {
+  background: rgba(100, 116, 139, 0.12);
+  color: #475569;
+}
+
+.category-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  padding: 0.3rem 0.45rem;
+  border-radius: $_radius-sm;
+
+  &:hover { background: $_border; }
+  &.danger:hover { color: #dc2626; }
+}
+
+.children-list {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed $_border2;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.child-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.child-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: $_text;
+
+  input {
+    padding: 0.3rem 0.5rem;
+    border: 1px solid $_border2;
+    border-radius: $_radius-sm;
+    font-size: 0.85rem;
+  }
+}
+
+// ── Add form (inline) ────────────────────────────────────────────────────────
+.add-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  align-items: center;
+
+  input {
+    flex: 1;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid $_border2;
+    border-radius: $_radius-sm;
+    font-size: 0.875rem;
+  }
+}
+
+.add-form-child {
+  margin-bottom: 0;
+  margin-top: 0.25rem;
+}
+
+// ── Buttons ──────────────────────────────────────────────────────────────────
+.btn {
+  padding: 0.5rem 0.9rem;
+  border-radius: $_radius-sm;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-primary {
+  background: $_red;
+  color: #fff;
+
+  &:hover { background: $_red-dark; }
+}
+
+.btn-secondary {
+  background: $_surface2;
+  color: $_text;
+  border: 1px solid $_border2;
+
+  &:hover { background: $_border; }
+}
+
+.btn-sm { padding: 0.4rem 0.75rem; }
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid $_border2;
+  border-top-color: $_red;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.text-center { text-align: center; }
+.py-4 { padding: 1rem 0; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

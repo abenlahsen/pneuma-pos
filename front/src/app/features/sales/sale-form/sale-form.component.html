@@ -286,10 +286,10 @@
             <option *ngFor="let rep of commercials()" [ngValue]="rep.id">{{ rep.name }}</option>
           </select>
         </div>
-        <div class="form-control">
+        <div class="form-control" *ngIf="sale">
           <label>Status Global</label>
           <select name="status" [(ngModel)]="formData.status">
-            <option *ngFor="let s of SALE_STATUSES" [value]="s">{{ SALE_STATUS_LABELS[s] }}</option>
+            <option *ngFor="let s of statusOptions" [value]="s">{{ SALE_STATUS_LABELS[s] }}</option>
           </select>
         </div>
         <div class="form-control">

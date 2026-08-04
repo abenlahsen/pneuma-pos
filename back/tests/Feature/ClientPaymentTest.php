@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Account;
+use App\Models\ActivityLog;
 use App\Models\Client;
 use App\Models\Payment;
 use App\Models\Sale;
@@ -286,6 +287,14 @@ class ClientPaymentTest extends TestCase
 
         $this->assertDatabaseHas('sales', ['id' => $this->saleA->id, 'payment_status' => 'NON PAYE']);
         $this->assertDatabaseHas('sales', ['id' => $this->saleB->id, 'payment_status' => 'NON PAYE']);
+
+        $logA = ActivityLog::where('entity_type', ActivityLog::ENTITY_VENTE)->where('entity_id', $this->saleA->id)
+            ->where('action', ActivityLog::ACTION_PAYMENT_DELETE)->latest('id')->first();
+        $logB = ActivityLog::where('entity_type', ActivityLog::ENTITY_VENTE)->where('entity_id', $this->saleB->id)
+            ->where('action', ActivityLog::ACTION_PAYMENT_DELETE)->latest('id')->first();
+
+        $this->assertEquals(600.00, $logA->properties['amount'], 'Log for sale A must show only its allocated portion, not the full multi-sale payment');
+        $this->assertEquals(100.00, $logB->properties['amount'], 'Log for sale B must show only its allocated portion, not the full multi-sale payment');
     }
 
     public function test_sale_payments_panel_shows_multi_flag_and_refuses_deletion_there(): void

@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { PaginatedResponse, Sale, SaleFilters, SalePayload, SaleSummary } from '../models/sale.model';
+import { SaleStatus } from '../../../core/constants/status.constants';
 
 @Injectable({
   providedIn: 'root'
@@ -36,6 +37,10 @@ export class SaleService {
 
   updateSale(id: number, payload: SalePayload): Observable<Sale> {
     return this.http.put<Sale>(`${this.apiUrl}/${id}`, payload);
+  }
+
+  patchStatus(id: number, status: SaleStatus): Observable<Sale> {
+    return this.http.patch<Sale>(`${this.apiUrl}/${id}/status`, { status });
   }
 
   deleteSale(id: number): Observable<void> {

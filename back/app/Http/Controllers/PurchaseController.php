@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Domain\Purchases\PurchaseService;
 use App\Enums\PurchasePaymentStatus;
 use App\Enums\PurchaseStatus;
+use App\Models\Product;
 use App\Models\Purchase;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -77,7 +78,9 @@ class PurchaseController extends Controller
 
     public function update(Request $request, Purchase $purchase): JsonResponse
     {
-        if ($purchase->status === PurchaseStatus::TERMINE->value && ! $request->user()->hasRole('Administrator')) {
+        $isAdmin = $request->user()->hasRole('Administrator');
+
+        if ($purchase->status === PurchaseStatus::TERMINE->value && ! $isAdmin) {
             return response()->json(['message' => 'Cet achat est terminé et ne peut plus être modifié.'], 403);
         }
 
@@ -102,18 +105,24 @@ class PurchaseController extends Controller
             return response()->json($error, 422);
         }
 
-        $purchase = $this->purchaseService->update($purchase, $validated, $request->user()->id);
+        $purchase = $this->purchaseService->update($purchase, $validated, $request->user()->id, $isAdmin);
 
         return response()->json($purchase);
     }
 
     public function updateStatus(Request $request, Purchase $purchase): JsonResponse
     {
+        $isAdmin = $request->user()->hasRole('Administrator');
+
+        if ($purchase->status === PurchaseStatus::TERMINE->value && ! $isAdmin) {
+            return response()->json(['message' => 'Cet achat est terminé et ne peut plus être modifié.'], 403);
+        }
+
         $validated = $request->validate([
             'status' => ['required', Rule::in(PurchaseStatus::values())],
         ]);
 
-        $this->purchaseService->patchStatus($purchase, $validated['status'], $request->user()->id);
+        $this->purchaseService->patchStatus($purchase, $validated['status'], $request->user()->id, $isAdmin);
 
         return response()->json(['status' => $validated['status']]);
     }
@@ -198,7 +207,7 @@ class PurchaseController extends Controller
      * Build the "Marque Profil — DIMENSION · IC IV Marquage" label used on the printed document,
      * so exports and print previews show the same product designation.
      */
-    private function formatProductLabel(?\App\Models\Product $product, string $fallback): string
+    private function formatProductLabel(?Product $product, string $fallback): string
     {
         if (! $product) {
             return $fallback;

@@ -6,7 +6,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PurchaseService } from '../data-access/purchase.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Purchase, PurchaseSummary } from '../models/purchase.model';
-import { PURCHASE_STATUSES, PURCHASE_STATUS_LABELS, PAYMENT_STATUSES, PAYMENT_STATUS_LABELS, PurchaseStatus } from '../../../core/constants/status.constants';
+import { PURCHASE_STATUSES, PURCHASE_STATUS_LABELS, PURCHASE_STATUS_TRANSITIONS, PAYMENT_STATUSES, PAYMENT_STATUS_LABELS, PurchaseStatus } from '../../../core/constants/status.constants';
 import { PAYMENT_METHODS, paymentMethodClass } from '../../../core/constants/payment-method.constants';
 import { PurchaseFormComponent } from '../purchase-form/purchase-form.component';
 import { PurchaseDetailComponent } from '../purchase-detail/purchase-detail.component';
@@ -230,14 +230,22 @@ export class PurchasesPageComponent implements OnInit {
     this.purchaseService.patchStatus(purchase.id, newStatus as PurchaseStatus).subscribe({
       next: () => {
       },
-      error: () => {
+      error: (err) => {
         purchase.status = oldStatus;
+        const msg = err?.error?.errors?.status?.[0] || err?.error?.message || 'Erreur lors de la mise à jour du statut.';
+        alert(msg);
       }
     });
   }
 
   isPurchaseLocked(purchase: Purchase): boolean {
     return purchase.status === 'TERMINE' && !this.authService.hasRole('Administrator');
+  }
+
+  /** Current status kept first (so it stays selected) followed by the statuses it can legally move to. */
+  statusOptionsFor(purchase: Purchase): PurchaseStatus[] {
+    const current = purchase.status as PurchaseStatus;
+    return [current, ...(PURCHASE_STATUS_TRANSITIONS[current] || [])];
   }
 
   exportPurchases(): void {

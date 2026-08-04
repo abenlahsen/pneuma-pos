@@ -4,6 +4,9 @@
       <h1>Paramètres</h1>
       <p class="subtitle">Configurez les informations de votre entreprise pour les futurs documents et paramètres applicatifs.</p>
     </div>
+    <a routerLink="/settings/transaction-categories" class="btn btn-secondary" *ngIf="authService.hasPermission('view transaction-categories')">
+      🏷️ Gérer les catégories de transactions
+    </a>
   </div>
 
   <div class="card">

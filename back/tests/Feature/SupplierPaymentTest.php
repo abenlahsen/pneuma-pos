@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Account;
+use App\Models\ActivityLog;
 use App\Models\Purchase;
 use App\Models\PurchasePayment;
 use App\Models\PurchasePaymentAllocation;
@@ -283,6 +284,14 @@ class SupplierPaymentTest extends TestCase
 
         $this->assertDatabaseHas('purchases', ['id' => $this->purchaseA->id, 'payment_status' => 'NON PAYE']);
         $this->assertDatabaseHas('purchases', ['id' => $this->purchaseB->id, 'payment_status' => 'NON PAYE']);
+
+        $logA = ActivityLog::where('entity_type', ActivityLog::ENTITY_ACHAT)->where('entity_id', $this->purchaseA->id)
+            ->where('action', ActivityLog::ACTION_PAYMENT_DELETE)->latest('id')->first();
+        $logB = ActivityLog::where('entity_type', ActivityLog::ENTITY_ACHAT)->where('entity_id', $this->purchaseB->id)
+            ->where('action', ActivityLog::ACTION_PAYMENT_DELETE)->latest('id')->first();
+
+        $this->assertEquals(600.00, $logA->properties['amount'], 'Log for purchase A must show only its allocated portion, not the full multi-purchase payment');
+        $this->assertEquals(100.00, $logB->properties['amount'], 'Log for purchase B must show only its allocated portion, not the full multi-purchase payment');
     }
 
     public function test_purchase_payments_panel_shows_multi_flag_and_refuses_deletion_there(): void

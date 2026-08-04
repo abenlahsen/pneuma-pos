@@ -151,4 +151,25 @@ describe('SaleFormComponent', () => {
       vi.restoreAllMocks();
     });
   });
+
+  describe('statusOptions', () => {
+    it('defaults to EN COURS transitions when formData.status is unset', () => {
+      expect(comp.statusOptions).toEqual(['EN COURS', 'LIVRE', 'MONTE', 'ANNULE']);
+    });
+
+    it('lists LIVRE transitions with LIVRE kept first', () => {
+      comp.formData.status = 'LIVRE';
+      expect(comp.statusOptions).toEqual(['LIVRE', 'EN COURS', 'MONTE', 'TERMINEE']);
+    });
+
+    it('treats ANNULE as a dead end: only EN COURS is offered', () => {
+      comp.formData.status = 'ANNULE';
+      expect(comp.statusOptions).toEqual(['ANNULE', 'EN COURS']);
+    });
+
+    it('restricts TERMINEE to going back to LIVRE or MONTE only', () => {
+      comp.formData.status = 'TERMINEE';
+      expect(comp.statusOptions).toEqual(['TERMINEE', 'LIVRE', 'MONTE']);
+    });
+  });
 });

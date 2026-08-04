@@ -331,16 +331,17 @@ class PurchaseCrudTest extends TestCase
         ]);
     }
 
-    public function test_store_does_not_increment_stock_for_annule_status(): void
+    public function test_store_always_creates_with_en_cours_status_regardless_of_submitted_value(): void
     {
         Sanctum::actingAs($this->user, [], 'web');
 
-        $before = $this->stock->quantity;
+        // Creation is the start of the workflow, not a transition — any status
+        // submitted at creation time is ignored in favour of EN COURS. To reach
+        // ANNULE (or any other status), the caller must PATCH .../status afterwards.
+        $response = $this->postJson('/api/purchases', $this->validPayload(['status' => 'ANNULE']));
 
-        $this->postJson('/api/purchases', $this->validPayload(['status' => 'ANNULE']));
-
-        $this->stock->refresh();
-        $this->assertEquals($before, $this->stock->quantity);
+        $response->assertCreated()->assertJsonPath('status', 'EN COURS');
+        $this->assertDatabaseHas('purchases', ['id' => $response->json('id'), 'status' => 'EN COURS']);
     }
 
     public function test_store_rejects_service_type_products(): void
@@ -411,7 +412,7 @@ class PurchaseCrudTest extends TestCase
     {
         Sanctum::actingAs($this->user, [], 'web');
 
-        $purchase = $this->createPurchase(['status' => 'ANNULE']);
+        $purchase = $this->createPurchase(['status' => 'EN COURS']);
 
         $response = $this->putJson("/api/purchases/{$purchase->id}", $this->validPayload([
             'status' => 'RECU',
@@ -471,7 +472,11 @@ class PurchaseCrudTest extends TestCase
     {
         Sanctum::actingAs($this->user, [], 'web');
 
-        $purchase = $this->createPurchase(['status' => 'RECU']);
+        // ANNULE is only reachable from EN COURS under the new workflow
+        // (RECU -> ANNULE is no longer a valid transition), but EN COURS
+        // already applies stock exactly like RECU did, so the reversal
+        // assertion below is unaffected.
+        $purchase = $this->createPurchase(['status' => 'EN COURS']);
         $before = $this->stock->quantity;
 
         $this->patchJson("/api/purchases/{$purchase->id}/status", ['status' => 'ANNULE'])
@@ -485,14 +490,16 @@ class PurchaseCrudTest extends TestCase
         ]);
     }
 
-    public function test_patch_status_increments_stock_when_moving_from_annule_to_recu(): void
+    public function test_patch_status_increments_stock_when_reactivating_from_annule_to_en_cours(): void
     {
         Sanctum::actingAs($this->user, [], 'web');
 
+        // ANNULE is a dead end: reactivation can only return to EN COURS,
+        // never advance straight to RECU.
         $purchase = $this->createPurchase(['status' => 'ANNULE']);
         $before = $this->stock->quantity;
 
-        $this->patchJson("/api/purchases/{$purchase->id}/status", ['status' => 'RECU'])
+        $this->patchJson("/api/purchases/{$purchase->id}/status", ['status' => 'EN COURS'])
             ->assertOk();
 
         $this->stock->refresh();
@@ -517,18 +524,119 @@ class PurchaseCrudTest extends TestCase
         $this->assertEquals($before, $this->stock->quantity);
     }
 
-    public function test_patch_status_does_not_change_stock_between_neutralized_statuses(): void
+    // -------------------------------------------------------------------------
+    // Machine à états (transitions de statut)
+    // $this->user is an Administrator (bypasses the guard entirely), so these
+    // tests use a non-admin user to actually exercise StatusTransitionGuard.
+    // -------------------------------------------------------------------------
+
+    public function test_status_transition_skipping_a_step_is_rejected(): void
+    {
+        $guest = $this->createUserWithPermissions(['view purchases', 'edit purchases']);
+        Sanctum::actingAs($guest, [], 'web');
+
+        $purchase = $this->createPurchase(['status' => 'EN COURS']);
+
+        $response = $this->patchJson("/api/purchases/{$purchase->id}/status", ['status' => 'TERMINE']);
+
+        $response->assertStatus(422)->assertJsonValidationErrors('status');
+        $this->assertDatabaseHas('purchases', ['id' => $purchase->id, 'status' => 'EN COURS']);
+    }
+
+    public function test_status_transition_one_step_forward_is_accepted(): void
+    {
+        $guest = $this->createUserWithPermissions(['view purchases', 'edit purchases']);
+        Sanctum::actingAs($guest, [], 'web');
+
+        $purchase = $this->createPurchase(['status' => 'EN COURS']);
+
+        $this->patchJson("/api/purchases/{$purchase->id}/status", ['status' => 'RECU'])
+            ->assertOk();
+
+        $this->assertDatabaseHas('purchases', ['id' => $purchase->id, 'status' => 'RECU']);
+    }
+
+    public function test_status_transition_annule_cannot_advance_to_termine(): void
+    {
+        $guest = $this->createUserWithPermissions(['view purchases', 'edit purchases']);
+        Sanctum::actingAs($guest, [], 'web');
+
+        $purchase = $this->createPurchase(['status' => 'ANNULE']);
+
+        $response = $this->patchJson("/api/purchases/{$purchase->id}/status", ['status' => 'TERMINE']);
+
+        $response->assertStatus(422)->assertJsonValidationErrors('status');
+    }
+
+    public function test_status_transition_annule_can_only_return_to_en_cours(): void
+    {
+        $guest = $this->createUserWithPermissions(['view purchases', 'edit purchases']);
+        Sanctum::actingAs($guest, [], 'web');
+
+        $purchase = $this->createPurchase(['status' => 'ANNULE']);
+
+        $this->patchJson("/api/purchases/{$purchase->id}/status", ['status' => 'EN COURS'])
+            ->assertOk();
+
+        $this->assertDatabaseHas('purchases', ['id' => $purchase->id, 'status' => 'EN COURS']);
+    }
+
+    public function test_status_transition_full_update_also_rejects_illegal_jump(): void
+    {
+        $guest = $this->createUserWithPermissions(['view purchases', 'edit purchases']);
+        Sanctum::actingAs($guest, [], 'web');
+
+        $purchase = $this->createPurchase(['status' => 'EN COURS']);
+
+        $response = $this->putJson("/api/purchases/{$purchase->id}", $this->validPayload(['status' => 'TERMINE']));
+
+        $response->assertStatus(422)->assertJsonValidationErrors('status');
+    }
+
+    public function test_administrator_bypasses_the_transition_guard(): void
     {
         Sanctum::actingAs($this->user, [], 'web');
 
-        $purchase = $this->createPurchase(['status' => 'ANNULE']);
-        $before = $this->stock->quantity;
+        $purchase = $this->createPurchase(['status' => 'EN COURS']);
 
-        $this->patchJson("/api/purchases/{$purchase->id}/status", ['status' => 'RETOUR'])
+        $this->patchJson("/api/purchases/{$purchase->id}/status", ['status' => 'TERMINE'])
             ->assertOk();
 
-        $this->stock->refresh();
-        $this->assertEquals($before, $this->stock->quantity);
+        $this->assertDatabaseHas('purchases', ['id' => $purchase->id, 'status' => 'TERMINE']);
+    }
+
+    public function test_status_endpoint_locks_termine_for_non_administrator(): void
+    {
+        $guest = $this->createUserWithPermissions(['view purchases', 'edit purchases']);
+        Sanctum::actingAs($guest, [], 'web');
+
+        $purchase = $this->createPurchase(['status' => 'TERMINE']);
+
+        $this->patchJson("/api/purchases/{$purchase->id}/status", ['status' => 'RECU'])
+            ->assertStatus(403);
+    }
+
+    public function test_migration_converts_existing_retour_purchases_to_annule(): void
+    {
+        // RETOUR predates the status workflow and no longer exists as a valid
+        // enum value — simulate a pre-migration row via a raw update (the
+        // column itself is a plain varchar, so this bypasses PurchaseStatus
+        // validation entirely, exactly as historical data would have been).
+        // Exercises the exact same query the conversion migration runs.
+        $purchase = $this->createPurchase(['status' => 'EN COURS']);
+        DB::table('purchases')->where('id', $purchase->id)->update(['status' => 'RETOUR']);
+
+        DB::table('purchases')->where('status', 'RETOUR')->update(['status' => 'ANNULE']);
+
+        $this->assertDatabaseHas('purchases', ['id' => $purchase->id, 'status' => 'ANNULE']);
+        $this->assertDatabaseMissing('purchases', ['status' => 'RETOUR']);
+    }
+
+    public function test_no_purchase_has_the_retired_retour_status(): void
+    {
+        // Regression guard for the real migration having already run against
+        // the live database (verified manually via `php artisan migrate`).
+        $this->assertDatabaseMissing('purchases', ['status' => 'RETOUR']);
     }
 
     // -------------------------------------------------------------------------

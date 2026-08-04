@@ -293,7 +293,7 @@
                       [ngModel]="sale.status"
                       [disabled]="isSaleLocked(sale)"
                       (change)="updateSaleStatus(sale, $event.target)">
-                <option *ngFor="let s of SALE_STATUSES" [value]="s">{{ SALE_STATUS_LABELS[s] }}</option>
+                <option *ngFor="let s of statusOptionsFor(sale)" [value]="s">{{ SALE_STATUS_LABELS[s] }}</option>
               </select>
             </td>
             <td>{{ sale.creator?.name || '-' }}</td>

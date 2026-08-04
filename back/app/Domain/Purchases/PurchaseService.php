@@ -2,6 +2,7 @@
 
 namespace App\Domain\Purchases;
 
+use App\Domain\Support\StatusTransitionGuard;
 use App\Enums\PurchasePaymentStatus;
 use App\Enums\PurchaseStatus;
 use App\Models\Product;
@@ -87,6 +88,9 @@ class PurchaseService
             $purchase = Purchase::create(array_merge(
                 $this->withoutItems($validated),
                 $totals,
+                // A new purchase always starts at the first step of the workflow —
+                // any other status submitted at creation time is ignored.
+                ['status' => PurchaseStatus::EN_COURS->value],
                 ['created_by' => $userId]
             ));
 
@@ -106,9 +110,13 @@ class PurchaseService
     /**
      * @param  array<string, mixed>  $validated
      */
-    public function update(Purchase $purchase, array $validated, $userId)
+    public function update(Purchase $purchase, array $validated, $userId, bool $isAdmin = false)
     {
         $oldStatus = $purchase->status;
+        $newStatus = $validated['status'] ?? $oldStatus;
+
+        StatusTransitionGuard::assert($oldStatus, $newStatus, PurchaseStatus::allowedTransitions(), $isAdmin, "l'achat");
+
         $itemsData = $validated['items'] ?? [];
         $discount = (float) ($validated['discount'] ?? 0);
         $totals = $this->calculateTotals($itemsData, $discount);
@@ -145,11 +153,13 @@ class PurchaseService
         return $loaded;
     }
 
-    public function patchStatus(Purchase $purchase, string $status, $userId): void
+    public function patchStatus(Purchase $purchase, string $status, $userId, bool $isAdmin = false): void
     {
         $purchase->loadMissing(['supplier', 'commercial', 'items']);
         $before = $this->activityLog->buildPurchaseSnapshot($purchase);
         $oldStatus = $purchase->status;
+
+        StatusTransitionGuard::assert($oldStatus, $status, PurchaseStatus::allowedTransitions(), $isAdmin, "l'achat");
 
         DB::transaction(function () use ($purchase, $status, $oldStatus, $userId) {
             $wasApplied = $this->statusAppliesStock($oldStatus);
@@ -176,7 +186,7 @@ class PurchaseService
 
     private function statusAppliesStock(?string $status): bool
     {
-        return ! in_array($status, [PurchaseStatus::ANNULE->value, PurchaseStatus::RETOUR->value], true);
+        return $status !== PurchaseStatus::ANNULE->value;
     }
 
     private function refreshPaymentStatus(Purchase $purchase): void
@@ -248,8 +258,8 @@ class PurchaseService
         if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         } else {
-            // No explicit status filter: cancelled/returned purchases must not inflate the KPI cards.
-            $query->whereNotIn('status', [PurchaseStatus::ANNULE->value, PurchaseStatus::RETOUR->value]);
+            // No explicit status filter: cancelled purchases must not inflate the KPI cards.
+            $query->where('status', '!=', PurchaseStatus::ANNULE->value);
         }
         if (! empty($filters['supplier_id'])) {
             $query->where('supplier_id', $filters['supplier_id']);

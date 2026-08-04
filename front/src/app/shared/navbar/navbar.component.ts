@@ -58,7 +58,13 @@ export class NavbarComponent {
     { label: '👥 Utilisateurs', route: '/users', permission: 'view users' },
     { label: '🎯 Primes', route: '/primes', permission: 'view primes' },
     { label: '🔐 Rôles', route: '/roles', permission: 'view roles' },
-    { label: '⚙️ Paramètres', route: '/settings', permission: 'view settings' },
+    {
+      label: '⚙️ Paramètres',
+      children: [
+        { label: '🏢 Entreprise', route: '/settings', permission: 'view settings' },
+        { label: '🏷️ Catégories', route: '/settings/transaction-categories', permission: 'view transaction-categories' },
+      ]
+    },
     {
       label: '🕓 Historique',
       children: [

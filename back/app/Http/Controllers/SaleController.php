@@ -11,6 +11,7 @@ use App\Http\Resources\SaleResource;
 use App\Models\Carrier;
 use App\Models\City;
 use App\Models\Partner;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +19,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -170,11 +172,34 @@ class SaleController extends Controller
 
     public function update(UpdateSaleRequest $request, Sale $sale): JsonResponse
     {
-        if ($sale->status === SaleStatus::TERMINEE->value && ! $request->user()->hasRole('Administrator')) {
+        $isAdmin = $request->user()->hasRole('Administrator');
+
+        if ($sale->status === SaleStatus::TERMINEE->value && ! $isAdmin) {
             return response()->json(['message' => 'Cette vente est terminée et ne peut plus être modifiée.'], 403);
         }
 
-        $sale = $this->saleService->update($sale, $request->validated(), $request->user()?->id);
+        $sale = $this->saleService->update($sale, $request->validated(), $request->user()?->id, $isAdmin);
+
+        return response()->json(
+            (new SaleResource(
+                $sale->loadMissing(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments', 'allocations.payment'])
+            ))->resolve()
+        );
+    }
+
+    public function updateStatus(Request $request, Sale $sale): JsonResponse
+    {
+        $isAdmin = $request->user()->hasRole('Administrator');
+
+        if ($sale->status === SaleStatus::TERMINEE->value && ! $isAdmin) {
+            return response()->json(['message' => 'Cette vente est terminée et ne peut plus être modifiée.'], 403);
+        }
+
+        $validated = $request->validate([
+            'status' => ['required', Rule::in(SaleStatus::values())],
+        ]);
+
+        $sale = $this->saleService->patchStatus($sale, $validated['status'], $request->user()?->id, $isAdmin);
 
         return response()->json(
             (new SaleResource(
@@ -382,7 +407,7 @@ class SaleController extends Controller
      * Build the "Marque Profil — DIMENSION · IC IV Marquage" label used on the printed document,
      * so exports and print previews show the same product designation.
      */
-    private function formatProductLabel(?\App\Models\Product $product, string $fallback): string
+    private function formatProductLabel(?Product $product, string $fallback): string
     {
         if (! $product) {
             return $fallback;

@@ -1329,11 +1329,15 @@ class SaleControllerTest extends TestCase
         $this->assertEquals(10, $stock->quantity);
     }
 
-    public function test_store_does_not_decrement_stock_for_annule_status(): void
+    public function test_store_always_creates_with_en_cours_status_regardless_of_submitted_value(): void
     {
         [$product, $stock] = $this->createProductWithStock(10);
         $partner = $this->createPartner();
 
+        // Creation is the start of the workflow, not a transition — any status
+        // submitted at creation time is ignored in favour of EN COURS, so stock
+        // IS decremented (EN COURS applies stock, unlike ANNULE). To reach
+        // ANNULE, the caller must PATCH .../status afterwards.
         $payload = [
             'date' => '2026-03-15',
             'commercial_id' => $this->user->id,
@@ -1350,10 +1354,10 @@ class SaleControllerTest extends TestCase
         ];
 
         $response = $this->postJson('/api/sales', $payload, $this->authHeaders());
-        $response->assertStatus(201);
+        $response->assertStatus(201)->assertJsonPath('status', 'EN COURS');
 
         $stock->refresh();
-        $this->assertEquals(10, $stock->quantity);
+        $this->assertEquals(7, $stock->quantity);
     }
 
     /**
@@ -1395,6 +1399,115 @@ class SaleControllerTest extends TestCase
         // the sale ends up ANNULE -> stays 10.
         $stock->refresh();
         $this->assertEquals(10, $stock->quantity);
+    }
+
+    // ── Machine à états (transitions de statut) ──────────────────────────────
+    // $this->user is an Administrator (bypasses the guard entirely — see
+    // makeManager() below), so these tests use a non-admin role to actually
+    // exercise StatusTransitionGuard.
+
+    public function test_status_transition_skipping_a_step_is_rejected(): void
+    {
+        $manager = $this->makeManager();
+        $sale = $this->createSale(['status' => 'EN COURS']);
+
+        $response = $this->patchJson("/api/sales/{$sale->id}/status", ['status' => 'TERMINEE'], $this->tokenFor($manager));
+
+        $response->assertStatus(422)->assertJsonValidationErrors('status');
+        $this->assertDatabaseHas('sales', ['id' => $sale->id, 'status' => 'EN COURS']);
+    }
+
+    public function test_status_transition_one_step_forward_is_accepted(): void
+    {
+        $manager = $this->makeManager();
+        $sale = $this->createSale(['status' => 'EN COURS']);
+
+        $this->patchJson("/api/sales/{$sale->id}/status", ['status' => 'LIVRE'], $this->tokenFor($manager))
+            ->assertOk()
+            ->assertJsonPath('status', 'LIVRE');
+    }
+
+    public function test_status_transition_livre_to_monte_is_accepted_laterally(): void
+    {
+        $manager = $this->makeManager();
+        $sale = $this->createSale(['status' => 'LIVRE']);
+
+        $this->patchJson("/api/sales/{$sale->id}/status", ['status' => 'MONTE'], $this->tokenFor($manager))
+            ->assertOk()
+            ->assertJsonPath('status', 'MONTE');
+    }
+
+    public function test_status_transition_annule_cannot_advance_to_terminee(): void
+    {
+        $manager = $this->makeManager();
+        $sale = $this->createSale(['status' => 'ANNULE']);
+
+        $response = $this->patchJson("/api/sales/{$sale->id}/status", ['status' => 'TERMINEE'], $this->tokenFor($manager));
+
+        $response->assertStatus(422)->assertJsonValidationErrors('status');
+    }
+
+    public function test_status_transition_annule_can_only_return_to_en_cours(): void
+    {
+        $manager = $this->makeManager();
+        $sale = $this->createSale(['status' => 'ANNULE']);
+
+        $this->patchJson("/api/sales/{$sale->id}/status", ['status' => 'EN COURS'], $this->tokenFor($manager))
+            ->assertOk()
+            ->assertJsonPath('status', 'EN COURS');
+    }
+
+    public function test_status_transition_full_update_also_rejects_illegal_jump(): void
+    {
+        $manager = $this->makeManager();
+        $sale = $this->createSale(['status' => 'EN COURS']);
+
+        // Same guard applies whether the status is changed via the dedicated
+        // PATCH endpoint or via a full PUT (the inline list dropdown historically
+        // sent a status-only PUT body).
+        $response = $this->putJson("/api/sales/{$sale->id}", ['status' => 'TERMINEE'], $this->tokenFor($manager));
+
+        $response->assertStatus(422)->assertJsonValidationErrors('status');
+    }
+
+    public function test_administrator_bypasses_the_transition_guard(): void
+    {
+        $sale = $this->createSale(['status' => 'EN COURS']);
+
+        $this->patchJson("/api/sales/{$sale->id}/status", ['status' => 'TERMINEE'], $this->authHeaders())
+            ->assertOk()
+            ->assertJsonPath('status', 'TERMINEE');
+    }
+
+    public function test_status_endpoint_requires_edit_sales_permission(): void
+    {
+        Permission::findOrCreate('view sales', 'web');
+        $role = Role::findOrCreate('Commercial', 'web');
+        $role->syncPermissions(['view sales']);
+        $guest = User::query()->create([
+            'name' => 'No Edit',
+            'email' => fake()->unique()->safeEmail(),
+            'password' => 'password',
+            'phone' => '0600000012',
+            'commission_rate' => 0,
+            'must_change_password' => false,
+        ]);
+        $guest->assignRole($role);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $sale = $this->createSale(['status' => 'EN COURS']);
+
+        $this->patchJson("/api/sales/{$sale->id}/status", ['status' => 'LIVRE'], $this->tokenFor($guest))
+            ->assertForbidden();
+    }
+
+    public function test_status_endpoint_locks_terminee_for_non_administrator(): void
+    {
+        $manager = $this->makeManager();
+        $sale = $this->createSale(['status' => 'TERMINEE']);
+
+        $this->patchJson("/api/sales/{$sale->id}/status", ['status' => 'LIVRE'], $this->tokenFor($manager))
+            ->assertStatus(403);
     }
 
     // ── Accès par rôle : Manager & Commercial ────────────────────────────────

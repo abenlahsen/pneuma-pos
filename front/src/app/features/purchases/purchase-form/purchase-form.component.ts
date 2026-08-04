@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { Purchase, PurchasePayload } from '../../../core/models/purchase.model';
-import { PURCHASE_STATUSES, PURCHASE_STATUS_LABELS, PAYMENT_STATUSES, PAYMENT_STATUS_LABELS } from '../../../core/constants/status.constants';
+import { PURCHASE_STATUSES, PURCHASE_STATUS_LABELS, PURCHASE_STATUS_TRANSITIONS, PAYMENT_STATUSES, PAYMENT_STATUS_LABELS, PurchaseStatus } from '../../../core/constants/status.constants';
 import { Product } from '../../../core/models/product.model';
 import { ProductDetailComponent } from '../../products/product-detail/product-detail.component';
 import { PurchaseService } from '../../../core/services/purchase.service';
@@ -25,6 +25,12 @@ export class PurchaseFormComponent implements OnInit {
   readonly PURCHASE_STATUS_LABELS = PURCHASE_STATUS_LABELS;
   readonly PAYMENT_STATUSES = PAYMENT_STATUSES;
   readonly PAYMENT_STATUS_LABELS = PAYMENT_STATUS_LABELS;
+
+  /** Current status kept first (so it stays selected) followed by the statuses it can legally move to. Only relevant in edit mode — new purchases always start at EN COURS. */
+  get statusOptions(): PurchaseStatus[] {
+    const current = (this.formData.status as PurchaseStatus) || 'EN COURS';
+    return [current, ...(PURCHASE_STATUS_TRANSITIONS[current] || [])];
+  }
 
   @Input() purchase: Purchase | null = null;
   @Output() save = new EventEmitter<void>();

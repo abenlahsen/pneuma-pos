@@ -173,7 +173,7 @@ export class SupplierDetailPageComponent implements OnInit {
     const s = (status ?? '').toUpperCase();
     if (s === 'RECU' || s === 'TERMINE') return 'badge-success';
     if (s === 'EN COURS') return 'badge-warning';
-    if (s === 'ANNULE' || s === 'RETOUR') return 'badge-danger';
+    if (s === 'ANNULE') return 'badge-danger';
     return 'badge-neutral';
   }
 
