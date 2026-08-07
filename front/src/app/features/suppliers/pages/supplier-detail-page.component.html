@@ -139,6 +139,7 @@
                   <th class="col-right">MONTANT</th>
                   <th class="col-right">PAYÉ</th>
                   <th class="col-right">SOLDE</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -160,6 +161,9 @@
                     <td class="col-right num">{{ (p.paid_amount ?? 0) | number:'1.2-2' }} DH</td>
                     <td class="col-right num" [class.text-danger]="(p.outstanding_amount ?? 0) > 0">
                       {{ (p.outstanding_amount ?? 0) | number:'1.2-2' }} DH
+                    </td>
+                    <td class="col-right actions-cell">
+                      <a class="btn-icon" title="Voir la commande fournisseur" [routerLink]="['/achats']" [queryParams]="{ id: p.id }">🔗</a>
                     </td>
                   </tr>
                 }
