@@ -553,6 +553,7 @@ h1 {
   justify-content: center;
   cursor: pointer;
   font-size: 0.9rem;
+  text-decoration: none;
   transition: background 0.15s, border-color 0.15s;
 
   &:hover { background: $surface2; border-color: $border2; }
