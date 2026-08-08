@@ -35,6 +35,7 @@ Route::patch('products/{product}/toggle-active', [ProductController::class, 'tog
 Route::delete('products/{product}', [ProductController::class, 'destroy'])->middleware('permission:delete products');
 
 // Suppliers
+Route::get('suppliers-summary', [SupplierController::class, 'summary'])->middleware('permission:view suppliers');
 Route::get('suppliers', [SupplierController::class, 'index'])->middleware('permission:view suppliers');
 Route::get('suppliers/{supplier}', [SupplierController::class, 'show'])->middleware('permission:view suppliers');
 Route::get('suppliers/{supplier}/profile', [SupplierController::class, 'profile'])->middleware('permission:view suppliers');

@@ -9,6 +9,7 @@ import {
   SupplierStatementResponse,
   UnpaidPurchaseRow,
   SupplierPaymentPayload,
+  SupplierUnpaidSummary,
 } from '../models/supplier.model';
 import { environment } from '../../../../environments/environment';
 
@@ -51,6 +52,10 @@ export class SupplierService {
 
   getUnpaidPurchases(id: number): Observable<{ purchases: UnpaidPurchaseRow[] }> {
     return this.http.get<{ purchases: UnpaidPurchaseRow[] }>(`${this.apiUrl}/${id}/unpaid-purchases`);
+  }
+
+  getUnpaidSummary(): Observable<SupplierUnpaidSummary> {
+    return this.http.get<SupplierUnpaidSummary>('/api/suppliers-summary');
   }
 
   createSupplierPayment(id: number, payload: SupplierPaymentPayload): Observable<unknown> {

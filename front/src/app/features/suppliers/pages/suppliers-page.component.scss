@@ -1,2 +1,22 @@
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
+
+// ── Impayés fournisseurs (résumé au-dessus des filtres) ────────────────────
+.unpaid-summary-card {
+  margin-bottom: 1.5rem;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.total-row td {
+  font-weight: 700;
+  border-top: 2px solid #e8edf3;
+  border-bottom: none !important;
+}

@@ -6,6 +6,8 @@ use App\Models\Account;
 use App\Models\Brand;
 use App\Models\Product;
 use App\Models\Purchase;
+use App\Models\PurchasePayment;
+use App\Models\PurchasePaymentAllocation;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Supplier;
@@ -345,6 +347,68 @@ class DashboardAndPermissionTest extends TestCase
         $this->assertEquals($before['purchases_today_amount'], $after['purchases_today_amount']);
         $this->assertEquals($before['unpaid_sales'], $after['unpaid_sales']);
         $this->assertEquals($before['unpaid_purchases'], $after['unpaid_purchases']);
+    }
+
+    // =========================================================================
+    // unpaid_purchases / unpaid_by_supplier
+    // =========================================================================
+
+    // Regression test for the old formula, which ignored partial payments
+    // entirely (a PARTIEL purchase counted as fully unpaid) and used
+    // pre-discount total_price. The fixed formula sums
+    // net_amount - allocated per purchase via purchase_payment_allocations.
+    public function test_kpi_unpaid_purchases_accounts_for_partial_payments_via_allocations(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+
+        $supplier = Supplier::query()->create([
+            'name' => 'Fournisseur KPI Partiel',
+            'user_id' => $this->admin->id,
+        ]);
+
+        $purchaseA = Purchase::query()->create([
+            'date' => now()->toDateString(),
+            'supplier_id' => $supplier->id,
+            'total_quantity' => 4,
+            'total_price' => 600.00,
+            'net_amount' => 600.00,
+            'status' => 'EN COURS',
+            'payment_status' => 'NON PAYE',
+            'created_by' => $this->admin->id,
+        ]);
+
+        Purchase::query()->create([
+            'date' => now()->toDateString(),
+            'supplier_id' => $supplier->id,
+            'total_quantity' => 2,
+            'total_price' => 400.00,
+            'net_amount' => 400.00,
+            'status' => 'EN COURS',
+            'payment_status' => 'NON PAYE',
+            'created_by' => $this->admin->id,
+        ]);
+
+        $before = $this->getJson('/api/dashboard-kpi')->json();
+
+        // Multi-purchase supplier payment: purchase_id stays null on the
+        // payment row itself, exactly like the real "Régler des achats" flow
+        // — only reachable via allocations.
+        $payment = PurchasePayment::query()->create([
+            'purchase_id' => null,
+            'supplier_id' => $supplier->id,
+            'amount' => 300.00,
+            'date' => now()->toDateString(),
+            'method' => 'Espèces',
+        ]);
+        PurchasePaymentAllocation::query()->create([
+            'purchase_payment_id' => $payment->id,
+            'purchase_id' => $purchaseA->id,
+            'amount' => 300.00,
+        ]);
+
+        $after = $this->getJson('/api/dashboard-kpi')->json();
+
+        $this->assertEqualsWithDelta($before['unpaid_purchases'] - 300.00, $after['unpaid_purchases'], 0.01);
     }
 
     // =========================================================================

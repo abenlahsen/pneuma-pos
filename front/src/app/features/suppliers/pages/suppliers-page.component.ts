@@ -1,10 +1,10 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { SupplierService } from '../data-access/supplier.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Supplier, SupplierPayload, PaginatedResponse } from '../models/supplier.model';
+import { Supplier, SupplierPayload, PaginatedResponse, SupplierUnpaidRow } from '../models/supplier.model';
 import { SupplierFormComponent } from '../components/supplier-form/supplier-form.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 
@@ -31,6 +31,20 @@ export class SuppliersPageComponent implements OnInit {
   showForm = signal(false);
   editingSupplier = signal<Supplier | null>(null);
 
+  unpaidBySupplier = signal<SupplierUnpaidRow[]>([]);
+  loadingUnpaid = signal(false);
+
+  unpaidTotals = computed(() =>
+    this.unpaidBySupplier().reduce(
+      (acc, row) => ({
+        total_unpaid: acc.total_unpaid + row.total_unpaid,
+        unpaid_with_invoice: acc.unpaid_with_invoice + row.unpaid_with_invoice,
+        unpaid_without_invoice: acc.unpaid_without_invoice + row.unpaid_without_invoice,
+      }),
+      { total_unpaid: 0, unpaid_with_invoice: 0, unpaid_without_invoice: 0 },
+    )
+  );
+
   constructor(
     private supplierService: SupplierService,
     public authService: AuthService,
@@ -41,8 +55,30 @@ export class SuppliersPageComponent implements OnInit {
     this.router.navigate(['/suppliers', supplier.id]);
   }
 
+  viewSupplierById(id: number | null): void {
+    if (id) {
+      this.router.navigate(['/suppliers', id]);
+    }
+  }
+
   ngOnInit(): void {
+    this.refreshAll();
+  }
+
+  refreshAll(): void {
     this.loadData();
+    this.loadUnpaidSummary();
+  }
+
+  loadUnpaidSummary(): void {
+    this.loadingUnpaid.set(true);
+    this.supplierService.getUnpaidSummary().subscribe({
+      next: (summary) => {
+        this.unpaidBySupplier.set(summary.rows);
+        this.loadingUnpaid.set(false);
+      },
+      error: () => this.loadingUnpaid.set(false),
+    });
   }
 
   loadData(): void {

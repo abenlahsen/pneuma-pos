@@ -8,7 +8,57 @@
       <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create suppliers')">
         Nouveau Fournisseur
       </button>
-      <app-auto-refresh-control pageKey="suppliers" (refresh)="loadData()" />
+      <app-auto-refresh-control pageKey="suppliers" (refresh)="refreshAll()" />
+    </div>
+  </div>
+
+  <div class="card table-card unpaid-summary-card">
+    <div class="card-body" style="padding: 1.25rem 1.5rem 0.5rem;">
+      <h2 class="section-title">💰 Impayés fournisseurs — tous les achats</h2>
+    </div>
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Fournisseur</th>
+            <th class="text-right">Total</th>
+            <th class="text-right">Total Sans Facture</th>
+            <th class="text-right">Total Avec Facture</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="loadingUnpaid()">
+            <td colspan="4" class="text-center py-4">
+              <div class="spinner"></div>
+              Chargement...
+            </td>
+          </tr>
+
+          <tr *ngIf="!loadingUnpaid() && unpaidBySupplier().length === 0">
+            <td colspan="4" class="text-center py-4 text-muted">
+              Aucun impayé fournisseur.
+            </td>
+          </tr>
+
+          <tr *ngFor="let sup of unpaidBySupplier()">
+            <td>
+              <button type="button" class="btn-link link-text" (click)="viewSupplierById(sup.supplier_id)">
+                {{ sup.supplier_name }}
+              </button>
+            </td>
+            <td class="text-right fw-semibold">{{ sup.total_unpaid | number:'1.2-2' }} DH</td>
+            <td class="text-right fw-semibold">{{ sup.unpaid_without_invoice | number:'1.2-2' }} DH</td>
+            <td class="text-right fw-semibold">{{ sup.unpaid_with_invoice | number:'1.2-2' }} DH</td>
+          </tr>
+
+          <tr class="total-row" *ngIf="!loadingUnpaid() && unpaidBySupplier().length > 0">
+            <td class="fw-semibold">Total</td>
+            <td class="text-right fw-semibold">{{ unpaidTotals().total_unpaid | number:'1.2-2' }} DH</td>
+            <td class="text-right fw-semibold">{{ unpaidTotals().unpaid_without_invoice | number:'1.2-2' }} DH</td>
+            <td class="text-right fw-semibold">{{ unpaidTotals().unpaid_with_invoice | number:'1.2-2' }} DH</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
