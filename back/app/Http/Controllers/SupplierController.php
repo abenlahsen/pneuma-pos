@@ -101,6 +101,11 @@ class SupplierController extends Controller
         return response()->json(null, 204);
     }
 
+    public function summary(): JsonResponse
+    {
+        return response()->json($this->supplierService->unpaidBySupplier());
+    }
+
     public function profile(Supplier $supplier): JsonResponse
     {
         return response()->json(

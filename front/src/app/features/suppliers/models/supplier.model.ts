@@ -100,6 +100,19 @@ export interface SupplierPaymentAllocationInput {
   amount: number;
 }
 
+export interface SupplierUnpaidRow {
+  supplier_id: number | null;
+  supplier_name: string;
+  total_unpaid: number;
+  unpaid_with_invoice: number;
+  unpaid_without_invoice: number;
+}
+
+export interface SupplierUnpaidSummary {
+  rows: SupplierUnpaidRow[];
+  total: number;
+}
+
 export interface SupplierPaymentPayload {
   amount: number;
   method: string;

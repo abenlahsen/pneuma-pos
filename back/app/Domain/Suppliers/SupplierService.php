@@ -3,8 +3,10 @@
 namespace App\Domain\Suppliers;
 
 use App\Enums\PurchasePaymentStatus;
+use App\Enums\PurchaseStatus;
 use App\Models\Supplier;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class SupplierService
 {
@@ -104,6 +106,62 @@ class SupplierService
             'purchases' => $purchases->map(fn ($p) => $this->mapPurchase($p))->values(),
             'payments' => $paymentRowsMapped,
             'entries' => $this->buildEntries($purchases, $paymentRowsMapped),
+        ];
+    }
+
+    /**
+     * Lifetime outstanding supplier debt, one row per supplier, plus the
+     * grand total (used for the `unpaid_purchases` dashboard KPI so the
+     * dashboard card and the per-supplier table always agree).
+     *
+     * Paid-per-purchase comes from purchase_payment_allocations, never from
+     * purchase_payments: a payment settling several purchases at once
+     * carries purchase_id = NULL and exists only through its allocations.
+     *
+     * Outstanding is clamped per purchase (GREATEST(..., 0)) so an over-paid
+     * purchase cannot offset another purchase's debt for the same supplier —
+     * matching calcOutstanding() above and the purchase list.
+     *
+     * The with/without-invoice split uses complementary CASE branches so
+     * total_unpaid === unpaid_with_invoice + unpaid_without_invoice always
+     * holds, whatever with_invoice contains.
+     *
+     * @return array{rows: array<int, array<string, mixed>>, total: float}
+     */
+    public function unpaidBySupplier(): array
+    {
+        $outstanding = 'GREATEST(purchases.net_amount - COALESCE(alloc.paid, 0), 0)';
+
+        $allocSub = DB::table('purchase_payment_allocations')
+            ->selectRaw('purchase_id, SUM(amount) as paid')
+            ->groupBy('purchase_id');
+
+        $selectRaw = "purchases.supplier_id as supplier_id,
+            COALESCE(suppliers.name, 'Sans fournisseur') as supplier_name,
+            SUM($outstanding) as total_unpaid,
+            SUM(CASE WHEN purchases.with_invoice = 1 THEN $outstanding ELSE 0 END) as unpaid_with_invoice,
+            SUM(CASE WHEN purchases.with_invoice = 1 THEN 0 ELSE $outstanding END) as unpaid_without_invoice";
+
+        $raw = DB::table('purchases')
+            ->leftJoin('suppliers', 'purchases.supplier_id', '=', 'suppliers.id')
+            ->leftJoinSub($allocSub, 'alloc', 'alloc.purchase_id', '=', 'purchases.id')
+            ->whereNotIn('purchases.status', [PurchaseStatus::ANNULE->value])
+            ->selectRaw($selectRaw)
+            ->groupBy('purchases.supplier_id', 'suppliers.name')
+            ->havingRaw('total_unpaid > 0')
+            ->get();
+
+        $rows = collect($raw)->map(fn ($r) => [
+            'supplier_id' => $r->supplier_id !== null ? (int) $r->supplier_id : null,
+            'supplier_name' => $r->supplier_name ?? 'Sans fournisseur',
+            'total_unpaid' => round((float) $r->total_unpaid, 2),
+            'unpaid_with_invoice' => round((float) $r->unpaid_with_invoice, 2),
+            'unpaid_without_invoice' => round((float) $r->unpaid_without_invoice, 2),
+        ])->sortByDesc(fn ($r) => $r['total_unpaid'])->values()->toArray();
+
+        return [
+            'rows' => $rows,
+            'total' => round(array_sum(array_column($rows, 'total_unpaid')), 2),
         ];
     }
 

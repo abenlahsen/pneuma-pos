@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Enums\PurchasePaymentStatus;
+use App\Domain\Suppliers\SupplierService;
 use App\Enums\PurchaseStatus;
 use App\Enums\SalePaymentStatus;
 use App\Enums\SaleStatus;
@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardKpiService
 {
+    public function __construct(private SupplierService $supplierService) {}
+
     /**
      * Calculate all dashboard KPIs for a given reference date.
      *
@@ -92,10 +94,7 @@ class DashboardKpiService
             ->whereBetween('purchases.date', [$start, $end])
             ->sum('purchase_items.quantity');
 
-        $purchasesTotalLifetime = (float) Purchase::whereNotIn('status', $purchaseCancelledStatuses)->sum('total_price');
-        $purchasesPaidLifetime = (float) Purchase::where('payment_status', PurchasePaymentStatus::PAYE->value)
-            ->whereNotIn('status', $purchaseCancelledStatuses)
-            ->sum('total_price');
+        $unpaidSuppliers = $this->supplierService->unpaidBySupplier();
 
         $tyreItemsSub = DB::table('sale_items')
             ->join('products', 'sale_items.product_id', '=', 'products.id')
@@ -103,7 +102,7 @@ class DashboardKpiService
             ->selectRaw('sale_items.sale_id, SUM(sale_items.quantity) as tyre_qty')
             ->groupBy('sale_items.sale_id');
 
-        $expenseCategories = TransactionCategory::topLevel()->ofType('expense')->where('is_system', false)->pluck('name')->all();
+        $expenseCategories = TransactionCategory::expenseKpiNames();
 
         $expensesToday = round((float) Transaction::where('type', 'expense')
             ->whereIn('category', $expenseCategories)
@@ -299,7 +298,7 @@ class DashboardKpiService
 
             // Receivables / payables (lifetime totals)
             'unpaid_sales' => round(Sale::where('payment_status', SalePaymentStatus::NON_PAYE->value)->where('status', '!=', $saleAnnule)->sum('total_sale'), 2),
-            'unpaid_purchases' => round($purchasesTotalLifetime - $purchasesPaidLifetime, 2),
+            'unpaid_purchases' => $unpaidSuppliers['total'],
 
             // Cash balance (always current)
             'cash_balance' => round(

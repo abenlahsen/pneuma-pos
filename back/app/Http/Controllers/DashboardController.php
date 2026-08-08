@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\PurchasePaymentStatus;
+use App\Domain\Suppliers\SupplierService;
 use App\Enums\PurchaseStatus;
 use App\Enums\SalePaymentStatus;
 use App\Enums\SaleStatus;
@@ -24,7 +24,7 @@ class DashboardController extends Controller
     /**
      * Aggregated KPI snapshot for the admin dashboard.
      */
-    public function kpi(Request $request): JsonResponse
+    public function kpi(Request $request, SupplierService $supplierService): JsonResponse
     {
         $selectedDay = $request->query('day');
         $selectedMonth = $request->query('month');
@@ -99,10 +99,7 @@ class DashboardController extends Controller
             ->whereBetween('purchases.date', [$start, $end])
             ->sum('purchase_items.quantity');
 
-        $purchasesTotalLifetime = (float) Purchase::whereNotIn('status', $purchaseCancelledStatuses)->sum('total_price');
-        $purchasesPaidLifetime = (float) Purchase::where('payment_status', PurchasePaymentStatus::PAYE->value)
-            ->whereNotIn('status', $purchaseCancelledStatuses)
-            ->sum('total_price');
+        $unpaidSuppliers = $supplierService->unpaidBySupplier();
 
         $tyreItemsSub = DB::table('sale_items')
             ->join('products', 'sale_items.product_id', '=', 'products.id')
@@ -110,7 +107,7 @@ class DashboardController extends Controller
             ->selectRaw('sale_items.sale_id, SUM(sale_items.quantity) as tyre_qty')
             ->groupBy('sale_items.sale_id');
 
-        $expenseCategories = TransactionCategory::topLevel()->ofType('expense')->where('is_system', false)->pluck('name')->all();
+        $expenseCategories = TransactionCategory::expenseKpiNames();
 
         $expensesToday = round((float) Transaction::where('type', 'expense')
             ->whereIn('category', $expenseCategories)
@@ -318,7 +315,7 @@ class DashboardController extends Controller
 
             // Receivables / payables
             'unpaid_sales' => round(Sale::where('payment_status', SalePaymentStatus::NON_PAYE->value)->where('status', '!=', $saleAnnule)->sum('total_sale'), 2),
-            'unpaid_purchases' => round($purchasesTotalLifetime - $purchasesPaidLifetime, 2),
+            'unpaid_purchases' => $unpaidSuppliers['total'],
 
             // Solde de caisse — cash accounts only (excludes future-dated Chèque/Effet)
             'cash_balance' => round(
