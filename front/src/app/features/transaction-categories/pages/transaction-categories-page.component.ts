@@ -135,6 +135,15 @@ export class TransactionCategoriesPageComponent implements OnInit {
     });
   }
 
+  toggleCountsAsExpense(category: TransactionCategory): void {
+    this.transactionCategoryService
+      .update(category.id, { counts_as_expense: !category.counts_as_expense })
+      .subscribe({
+        next: (updated) => this.categories.update((list) => this.replaceInTree(list, updated)),
+        error: (err) => this.showError(err),
+      });
+  }
+
   private replaceInTree(list: TransactionCategory[], updated: TransactionCategory): TransactionCategory[] {
     return list.map((c) => {
       if (c.id === updated.id) return { ...c, ...updated, children: c.children };

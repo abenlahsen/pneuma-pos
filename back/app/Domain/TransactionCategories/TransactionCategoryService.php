@@ -5,6 +5,7 @@ namespace App\Domain\TransactionCategories;
 use App\Models\Transaction;
 use App\Models\TransactionCategory;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class TransactionCategoryService
@@ -40,7 +41,32 @@ class TransactionCategoryService
             $this->guardParentDepth($validated['parent_id'], $validated['type'] ?? $category->type);
         }
 
-        $category->update($validated);
+        $oldName = $category->name;
+        $isRoot = $category->parent_id === null;
+        $type = $category->type;
+        $parentName = $isRoot ? null : $category->parent?->name;
+
+        DB::transaction(function () use ($category, $validated, $oldName, $isRoot, $type, $parentName) {
+            $category->update($validated);
+
+            // `transactions.category`/`subcategory` store the category name
+            // as a plain string (no FK) — a rename must be propagated or the
+            // existing transactions silently fall out of the KPI and fail
+            // revalidation on their next edit.
+            $newName = $category->name;
+
+            if ($newName !== $oldName) {
+                if ($isRoot) {
+                    Transaction::where('type', $type)->where('category', $oldName)
+                        ->update(['category' => $newName]);
+                } else {
+                    Transaction::where('type', $type)
+                        ->where('category', $parentName)
+                        ->where('subcategory', $oldName)
+                        ->update(['subcategory' => $newName]);
+                }
+            }
+        });
 
         return $category->fresh();
     }

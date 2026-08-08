@@ -787,7 +787,7 @@ class AccountAndTransactionTest extends TestCase
             'type' => 'income',
             'amount' => 350.00,
             'date' => '2026-04-15',
-            'category' => 'Produit',
+            'category' => 'Vente marchandise',
             'method' => 'Espèces',
             'person' => 'Client Test',
             'description' => 'Paiement reçu',

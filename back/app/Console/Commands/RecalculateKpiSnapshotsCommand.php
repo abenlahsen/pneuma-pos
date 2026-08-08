@@ -14,7 +14,24 @@ class RecalculateKpiSnapshotsCommand extends Command
         {--to= : Date de fin YYYY-MM-DD (incluse, défaut : tous)}
         {--dry-run : N’écrit rien, affiche seulement les écarts détectés}';
 
-    protected $description = 'Recalcule les snapshots KPI existants avec la formule de marge Service Auto corrigée';
+    protected $description = 'Recalcule les snapshots KPI existants dont un champ surveillé (marge, dépenses, marge nette) a changé';
+
+    /**
+     * Fields compared to decide whether a stored snapshot is stale. Kept
+     * narrow to the KPIs known to drift when the underlying formula changes
+     * (e.g. Service Auto margin fix, expense-category catalog fix) rather
+     * than the whole payload, so unrelated snapshot noise doesn't trigger a
+     * rewrite.
+     */
+    private const WATCHED_FIELDS = [
+        'margin_today',
+        'expenses_today',
+        'expenses_month',
+        'expenses_year',
+        'net_margin_today',
+        'net_margin_month',
+        'net_margin_year',
+    ];
 
     public function handle(DashboardKpiService $service): int
     {
@@ -43,18 +60,19 @@ class RecalculateKpiSnapshotsCommand extends Command
             $oldData = $snapshot->data ?? [];
             $newData = $service->calculate(Carbon::parse($dateStr), snapshot: true);
 
-            $oldMargin = (float) ($oldData['margin_today'] ?? 0);
-            $newMargin = (float) ($newData['margin_today'] ?? 0);
+            $diffs = [];
+            foreach (self::WATCHED_FIELDS as $field) {
+                $old = (float) ($oldData[$field] ?? 0);
+                $new = (float) ($newData[$field] ?? 0);
 
-            if (abs($oldMargin - $newMargin) >= 0.01) {
+                if (abs($old - $new) >= 0.01) {
+                    $diffs[] = sprintf('%s %.2f → %.2f (Δ %.2f)', $field, $old, $new, $new - $old);
+                }
+            }
+
+            if ($diffs !== []) {
                 $changed++;
-                $this->line(sprintf(
-                    '%s : marge_today %.2f → %.2f (Δ %.2f)',
-                    $dateStr,
-                    $oldMargin,
-                    $newMargin,
-                    $newMargin - $oldMargin
-                ));
+                $this->line(sprintf('%s : %s', $dateStr, implode(', ', $diffs)));
 
                 if (! $dryRun) {
                     $snapshot->data = $newData;

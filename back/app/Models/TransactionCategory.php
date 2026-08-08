@@ -14,12 +14,14 @@ class TransactionCategory extends Model
         'parent_id',
         'is_system',
         'is_active',
+        'counts_as_expense',
         'sort_order',
     ];
 
     protected $casts = [
         'is_system' => 'boolean',
         'is_active' => 'boolean',
+        'counts_as_expense' => 'boolean',
         'sort_order' => 'integer',
     ];
 
@@ -46,5 +48,22 @@ class TransactionCategory extends Model
     public function scopeOfType($query, string $type)
     {
         return $query->where('type', $type);
+    }
+
+    /**
+     * Names of the top-level, non-system expense categories that should
+     * count towards the dashboard "Dépenses" / "Marge Nette" KPI.
+     *
+     * @return array<int, string>
+     */
+    public static function expenseKpiNames(): array
+    {
+        return static::query()
+            ->topLevel()
+            ->ofType('expense')
+            ->where('is_system', false)
+            ->where('counts_as_expense', true)
+            ->pluck('name')
+            ->all();
     }
 }

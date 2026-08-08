@@ -10,6 +10,7 @@ function makeCategory(overrides: Partial<TransactionCategory> = {}): Transaction
     parent_id: null,
     is_system: false,
     is_active: true,
+    counts_as_expense: true,
     sort_order: 0,
     children: [],
     ...overrides,
@@ -128,6 +129,31 @@ describe('TransactionCategoriesPageComponent', () => {
       const children = comp.categories()[0].children!;
       expect(children.find((c) => c.id === 2)!.name).toBe('Siège');
       expect(children.find((c) => c.id === 3)!.name).toBe('Entrepôt');
+    });
+  });
+
+  describe('toggleCountsAsExpense', () => {
+    it('calls update with the flag inverted and replaces the category in place', () => {
+      const category = makeCategory({ id: 1, counts_as_expense: true });
+      comp.categories.set([category]);
+      const updated = makeCategory({ id: 1, counts_as_expense: false });
+      mockService.update.mockReturnValue(of(updated));
+
+      comp.toggleCountsAsExpense(category);
+
+      expect(mockService.update).toHaveBeenCalledWith(1, { counts_as_expense: false });
+      expect(comp.categories()[0].counts_as_expense).toBe(false);
+    });
+
+    it('surfaces an API error without mutating the list', () => {
+      const category = makeCategory({ id: 1, counts_as_expense: true });
+      comp.categories.set([category]);
+      mockService.update.mockReturnValue(throwError(() => ({ error: { message: 'Erreur serveur.' } })));
+
+      comp.toggleCountsAsExpense(category);
+
+      expect(comp.errorMessage()).toBe('Erreur serveur.');
+      expect(comp.categories()[0].counts_as_expense).toBe(true);
     });
   });
 

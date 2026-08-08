@@ -11,6 +11,8 @@ use App\Models\PurchasePaymentAllocation;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Supplier;
+use App\Models\Transaction;
+use App\Models\TransactionCategory;
 use App\Models\User;
 use App\Services\DashboardKpiService;
 use Illuminate\Database\Schema\Blueprint;
@@ -347,6 +349,86 @@ class DashboardAndPermissionTest extends TestCase
         $this->assertEquals($before['purchases_today_amount'], $after['purchases_today_amount']);
         $this->assertEquals($before['unpaid_sales'], $after['unpaid_sales']);
         $this->assertEquals($before['unpaid_purchases'], $after['unpaid_purchases']);
+    }
+
+    // Regression test for the "Dépenses" KPI miscount introduced when the
+    // hardcoded ['Charge','Transport','Service'] list was replaced by a read
+    // of the transaction_categories catalog: a category with
+    // counts_as_expense = false (e.g. 'Produit'/merchandise cost, already
+    // deducted via gross margin) must not be summed into expenses_today, and
+    // net_margin_today must reflect that exclusion.
+    public function test_kpi_expenses_only_counts_categories_flagged_counts_as_expense(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+
+        $today = now()->toDateString();
+
+        $account = Account::query()->create([
+            'name' => 'Compte KPI Dépenses '.fake()->unique()->numerify('###'),
+            'type' => 'cash',
+            'initial_balance' => 0,
+            'is_active' => true,
+        ]);
+
+        $includedCategory = TransactionCategory::query()->create([
+            'name' => 'TestExpenseIncluded',
+            'type' => 'expense',
+            'parent_id' => null,
+            'is_system' => false,
+            'is_active' => true,
+            'counts_as_expense' => true,
+            'sort_order' => 999,
+        ]);
+
+        $excludedCategory = TransactionCategory::query()->create([
+            'name' => 'TestExpenseExcluded',
+            'type' => 'expense',
+            'parent_id' => null,
+            'is_system' => false,
+            'is_active' => true,
+            'counts_as_expense' => false,
+            'sort_order' => 999,
+        ]);
+
+        $before = $this->getJson('/api/dashboard-kpi')->json();
+
+        Transaction::query()->create([
+            'date' => $today,
+            'amount' => 500.00,
+            'type' => 'expense',
+            'category' => $includedCategory->name,
+            'method' => 'Espèces',
+            'description' => 'Test expense included',
+            'person' => '',
+            'user_id' => $this->admin->id,
+            'account_id' => $account->id,
+        ]);
+
+        Transaction::query()->create([
+            'date' => $today,
+            'amount' => 300.00,
+            'type' => 'expense',
+            'category' => $excludedCategory->name,
+            'method' => 'Espèces',
+            'description' => 'Test expense excluded',
+            'person' => '',
+            'user_id' => $this->admin->id,
+            'account_id' => $account->id,
+        ]);
+
+        $after = $this->getJson('/api/dashboard-kpi')->json();
+
+        $this->assertEqualsWithDelta(
+            $before['expenses_today'] + 500.00,
+            $after['expenses_today'],
+            0.01,
+        );
+
+        $this->assertEqualsWithDelta(
+            $before['net_margin_today'] - 500.00,
+            $after['net_margin_today'],
+            0.01,
+        );
     }
 
     // =========================================================================
