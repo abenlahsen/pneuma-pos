@@ -176,7 +176,7 @@ class ClientPaymentTest extends TestCase
         $this->assertDatabaseHas('transactions', [
             'id' => $payment->transaction_id,
             'type' => 'income',
-            'category' => 'Produit',
+            'category' => 'Vente marchandise',
             'amount' => 700.00,
         ]);
 

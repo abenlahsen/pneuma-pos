@@ -13,6 +13,7 @@ use App\Services\ActivityLogService;
 class ServicePaymentService
 {
     public function __construct(private ActivityLogService $activityLog) {}
+
     public function listForOrder(ServiceOrder $order): array
     {
         $payments = $order->payments()->with('transaction.account', 'account')->latest('date')->get();
@@ -39,9 +40,9 @@ class ServicePaymentService
                 'date' => $validated['date'],
                 'amount' => $validated['amount'],
                 'type' => 'income',
-                'category' => 'Produit',
+                'category' => 'Vente marchandise',
                 'method' => $method ?? 'Espèces',
-                'description' => "Paiement service #{$order->id} - " . $this->describeOrderItems($order) . " POUR {$order->client}",
+                'description' => "Paiement service #{$order->id} - ".$this->describeOrderItems($order)." POUR {$order->client}",
                 'person' => '',
                 'partner' => $order->client,
                 'user_id' => $user->id,

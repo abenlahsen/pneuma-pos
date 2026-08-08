@@ -253,6 +253,71 @@ class TransactionCategoryApiTest extends TestCase
         $response->assertOk()->assertJsonPath('name', 'New Name');
     }
 
+    public function test_update_persists_counts_as_expense_flag(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+        $category = $this->createCategory(['name' => 'Charge Divers', 'counts_as_expense' => true]);
+
+        $response = $this->putJson("/api/transaction-categories/{$category->id}", ['counts_as_expense' => false]);
+
+        $response->assertOk()->assertJsonPath('counts_as_expense', false);
+        $this->assertDatabaseHas('transaction_categories', ['id' => $category->id, 'counts_as_expense' => false]);
+    }
+
+    // transactions.category stores the category name as a plain string (no
+    // FK) — renaming a category must cascade to every transaction already
+    // saved under the old name, otherwise they silently fall out of the
+    // dashboard "Dépenses" KPI and fail revalidation on their next edit.
+    public function test_update_rename_cascades_to_existing_transactions(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+        $category = $this->createCategory(['name' => 'Old Name']);
+        $account = Account::query()->create(['name' => 'Caisse Rename Test', 'type' => 'cash', 'initial_balance' => 0, 'is_active' => true]);
+        $transaction = Transaction::query()->create([
+            'date' => '2026-08-04',
+            'amount' => 100,
+            'type' => 'expense',
+            'category' => 'Old Name',
+            'method' => 'Espèces',
+            'description' => 'Test',
+            'person' => '',
+            'user_id' => $this->user->id,
+            'account_id' => $account->id,
+        ]);
+
+        $this->putJson("/api/transaction-categories/{$category->id}", ['name' => 'New Name'])->assertOk();
+
+        $this->assertDatabaseHas('transactions', ['id' => $transaction->id, 'category' => 'New Name']);
+    }
+
+    public function test_update_rename_cascades_to_subcategory_only_under_its_parent(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+        $parent = $this->createCategory(['name' => 'Loyer']);
+        $child = $this->createCategory(['name' => 'Old Sub', 'parent_id' => $parent->id]);
+        $account = Account::query()->create(['name' => 'Caisse Rename Test 2', 'type' => 'cash', 'initial_balance' => 0, 'is_active' => true]);
+        $matching = Transaction::query()->create([
+            'date' => '2026-08-04', 'amount' => 100, 'type' => 'expense',
+            'category' => 'Loyer', 'subcategory' => 'Old Sub',
+            'method' => 'Espèces', 'description' => 'Test', 'person' => '',
+            'user_id' => $this->user->id, 'account_id' => $account->id,
+        ]);
+        // Same subcategory name under a different parent must not be touched.
+        $otherParent = $this->createCategory(['name' => 'Transport']);
+        $this->createCategory(['name' => 'Old Sub', 'parent_id' => $otherParent->id]);
+        $unrelated = Transaction::query()->create([
+            'date' => '2026-08-04', 'amount' => 100, 'type' => 'expense',
+            'category' => 'Transport', 'subcategory' => 'Old Sub',
+            'method' => 'Espèces', 'description' => 'Test', 'person' => '',
+            'user_id' => $this->user->id, 'account_id' => $account->id,
+        ]);
+
+        $this->putJson("/api/transaction-categories/{$child->id}", ['name' => 'New Sub'])->assertOk();
+
+        $this->assertDatabaseHas('transactions', ['id' => $matching->id, 'subcategory' => 'New Sub']);
+        $this->assertDatabaseHas('transactions', ['id' => $unrelated->id, 'subcategory' => 'Old Sub']);
+    }
+
     public function test_update_blocked_on_system_category(): void
     {
         Sanctum::actingAs($this->user, [], 'web');

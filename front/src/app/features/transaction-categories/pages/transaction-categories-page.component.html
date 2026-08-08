@@ -55,16 +55,28 @@
               </ng-template>
             </div>
 
-            <div class="category-actions" *ngIf="!category.is_system">
-              <ng-container *ngIf="editingId() === category.id; else defaultParentActions">
-                <button type="button" class="btn-icon" title="Enregistrer" (click)="submitEdit(category)">✓</button>
-                <button type="button" class="btn-icon" title="Annuler" (click)="cancelEdit()">✕</button>
-              </ng-container>
-              <ng-template #defaultParentActions>
-                <button type="button" class="btn-icon" title="Ajouter une sous-catégorie" *ngIf="authService.hasPermission('create transaction-categories')" (click)="openAddChild(category.id)">➕</button>
-                <button type="button" class="btn-icon" title="Modifier" *ngIf="authService.hasPermission('edit transaction-categories')" (click)="startEdit(category)">✏️</button>
-                <button type="button" class="btn-icon danger" title="Supprimer" *ngIf="authService.hasPermission('delete transaction-categories')" (click)="deleteCategory(category)">🗑️</button>
-              </ng-template>
+            <div class="category-row-right">
+              <label class="expense-kpi-toggle" *ngIf="activeType() === 'expense' && !category.is_system" title="Inclure cette catégorie dans les cartes « Dépenses » et « Marge Nette » du tableau de bord">
+                <input
+                  type="checkbox"
+                  [checked]="category.counts_as_expense"
+                  [disabled]="!authService.hasPermission('edit transaction-categories')"
+                  (change)="toggleCountsAsExpense(category)"
+                >
+                Compter dans les Dépenses (dashboard)
+              </label>
+
+              <div class="category-actions" *ngIf="!category.is_system">
+                <ng-container *ngIf="editingId() === category.id; else defaultParentActions">
+                  <button type="button" class="btn-icon" title="Enregistrer" (click)="submitEdit(category)">✓</button>
+                  <button type="button" class="btn-icon" title="Annuler" (click)="cancelEdit()">✕</button>
+                </ng-container>
+                <ng-template #defaultParentActions>
+                  <button type="button" class="btn-icon" title="Ajouter une sous-catégorie" *ngIf="authService.hasPermission('create transaction-categories')" (click)="openAddChild(category.id)">➕</button>
+                  <button type="button" class="btn-icon" title="Modifier" *ngIf="authService.hasPermission('edit transaction-categories')" (click)="startEdit(category)">✏️</button>
+                  <button type="button" class="btn-icon danger" title="Supprimer" *ngIf="authService.hasPermission('delete transaction-categories')" (click)="deleteCategory(category)">🗑️</button>
+                </ng-template>
+              </div>
             </div>
           </div>
 
