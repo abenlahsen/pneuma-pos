@@ -264,6 +264,17 @@ class TransactionCategoryApiTest extends TestCase
         $this->assertDatabaseHas('transaction_categories', ['id' => $category->id, 'counts_as_expense' => false]);
     }
 
+    public function test_update_persists_counts_as_revenue_flag(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+        $category = $this->createCategory(['name' => 'Occasion Test', 'type' => 'income', 'counts_as_revenue' => false]);
+
+        $response = $this->putJson("/api/transaction-categories/{$category->id}", ['counts_as_revenue' => true]);
+
+        $response->assertOk()->assertJsonPath('counts_as_revenue', true);
+        $this->assertDatabaseHas('transaction_categories', ['id' => $category->id, 'counts_as_revenue' => true]);
+    }
+
     // transactions.category stores the category name as a plain string (no
     // FK) — renaming a category must cascade to every transaction already
     // saved under the old name, otherwise they silently fall out of the

@@ -28,6 +28,7 @@ class StoreTransactionCategoryRequest extends FormRequest
             'parent_id' => ['nullable', 'exists:transaction_categories,id'],
             'sort_order' => ['nullable', 'integer'],
             'counts_as_expense' => ['sometimes', 'boolean'],
+            'counts_as_revenue' => ['sometimes', 'boolean'],
         ];
     }
 }

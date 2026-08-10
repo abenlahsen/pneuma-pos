@@ -56,7 +56,7 @@
             </div>
 
             <div class="category-row-right">
-              <label class="expense-kpi-toggle" *ngIf="activeType() === 'expense' && !category.is_system" title="Inclure cette catégorie dans les cartes « Dépenses » et « Marge Nette » du tableau de bord">
+              <label class="kpi-toggle" *ngIf="activeType() === 'expense' && !category.is_system" title="Inclure cette catégorie dans les cartes « Dépenses » et « Marge Nette » du tableau de bord">
                 <input
                   type="checkbox"
                   [checked]="category.counts_as_expense"
@@ -64,6 +64,16 @@
                   (change)="toggleCountsAsExpense(category)"
                 >
                 Compter dans les Dépenses (dashboard)
+              </label>
+
+              <label class="kpi-toggle" *ngIf="activeType() === 'income' && !category.is_system" title="Inclure cette catégorie dans le CA et la Marge du tableau de bord">
+                <input
+                  type="checkbox"
+                  [checked]="category.counts_as_revenue"
+                  [disabled]="!authService.hasPermission('edit transaction-categories')"
+                  (change)="toggleCountsAsRevenue(category)"
+                >
+                Compter dans le CA et la Marge (dashboard)
               </label>
 
               <div class="category-actions" *ngIf="!category.is_system">

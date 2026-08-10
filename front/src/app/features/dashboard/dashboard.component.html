@@ -56,6 +56,13 @@
             <span class="kpi-val">{{ k.expenses_today | number:'1.2-2' }} <small>DH</small></span>
           </div>
         </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">🪙</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Autres revenus</span>
+            <span class="kpi-val">{{ k.other_revenue_today | number:'1.2-2' }} <small>DH</small></span>
+          </div>
+        </div>
         <div class="kpi-card" [class.negative-card]="k.margin_today < 0">
           <div class="kpi-icon">📈</div>
           <div class="kpi-info">
@@ -123,6 +130,13 @@
             <span class="kpi-sub" *ngIf="k.tyres_month > 0">
               ≈ {{ (k.expenses_month / k.tyres_month) | number:'1.2-2' }} DH / pneu
             </span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">🪙</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Autres revenus</span>
+            <span class="kpi-val">{{ k.other_revenue_month | number:'1.2-2' }} <small>DH</small></span>
           </div>
         </div>
         <div class="kpi-card" [class.negative-card]="k.margin_month < 0">
@@ -289,6 +303,13 @@
             <span class="kpi-sub" *ngIf="k.tyres_year > 0">
               ≈ {{ (k.expenses_year / k.tyres_year) | number:'1.2-2' }} DH / pneu
             </span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">🪙</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Autres revenus</span>
+            <span class="kpi-val">{{ k.other_revenue_year | number:'1.2-2' }} <small>DH</small></span>
           </div>
         </div>
         <div class="kpi-card" [class.negative-card]="k.margin_year < 0">

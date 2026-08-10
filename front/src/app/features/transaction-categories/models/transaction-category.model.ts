@@ -8,6 +8,7 @@ export interface TransactionCategory {
   is_system: boolean;
   is_active: boolean;
   counts_as_expense: boolean;
+  counts_as_revenue: boolean;
   sort_order: number;
   children?: TransactionCategory[];
 }
@@ -18,4 +19,5 @@ export interface TransactionCategoryPayload {
   parent_id?: number | null;
   sort_order?: number;
   counts_as_expense?: boolean;
+  counts_as_revenue?: boolean;
 }

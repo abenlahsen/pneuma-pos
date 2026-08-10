@@ -93,9 +93,11 @@ export class CashFlowPageComponent implements OnInit {
   loadCategoryTrees(): void {
     this.transactionCategoryService.getTree('income', true).subscribe({
       next: (categories) => this.incomeCategoryTree.set(categories),
+      error: () => this.incomeCategoryTree.set([]),
     });
     this.transactionCategoryService.getTree('expense', true).subscribe({
       next: (categories) => this.expenseCategoryTree.set(categories),
+      error: () => this.expenseCategoryTree.set([]),
     });
   }
 

@@ -8,6 +8,9 @@ export interface DashboardKpi {
   expenses_today: number;
   expenses_month: number;
   expenses_year: number;
+  other_revenue_today: number;
+  other_revenue_month: number;
+  other_revenue_year: number;
   sales_month_amount: number;
   purchases_month_amount: number;
   margin_month: number;
