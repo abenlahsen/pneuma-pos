@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Account } from '../../../accounts/models/account.model';
 import { Transaction, TransactionFilters, TransactionPayload } from '../../models/transaction.model';
-import { TransactionCategoryService } from '../../../transaction-categories/data-access/transaction-category.service';
 import { TransactionCategory, TransactionCategoryType } from '../../../transaction-categories/models/transaction-category.model';
 
 @Component({
@@ -17,26 +16,38 @@ export class TransactionFormComponent implements OnInit, OnChanges {
   @Input() transaction: Transaction | null = null;
   @Input() filterOptions: TransactionFilters = { categories: [], persons: [], partners: [], accounts: [] };
   @Input() accounts: Account[] = [];
+  @Input() incomeCategories: TransactionCategory[] = [];
+  @Input() expenseCategories: TransactionCategory[] = [];
   @Output() submitted = new EventEmitter<TransactionPayload>();
   @Output() cancelled = new EventEmitter<void>();
 
   form!: FormGroup;
   isEdit = signal(false);
 
-  categoryTree = signal<TransactionCategory[]>([]);
+  // Both trees are already loaded once by the parent page (CashFlowPageComponent)
+  // and passed in as @Input() — no HTTP call is made here, so the category
+  // dropdown is populated instantly on open and on type toggle.
+  private incomeCategoriesSig = signal<TransactionCategory[]>([]);
+  private expenseCategoriesSig = signal<TransactionCategory[]>([]);
+  selectedType = signal<TransactionCategoryType>('expense');
+
+  categoryTree = computed(() =>
+    this.selectedType() === 'income' ? this.incomeCategoriesSig() : this.expenseCategoriesSig(),
+  );
   selectedCategoryName = signal('');
   selectedCategoryChildren = computed(() => {
     const found = this.categoryTree().find((c) => c.name === this.selectedCategoryName());
     return found?.children || [];
   });
 
-  constructor(
-    private fb: FormBuilder,
-    private transactionCategoryService: TransactionCategoryService,
-  ) {}
+  constructor(private fb: FormBuilder) {}
 
   ngOnInit(): void {
     this.isEdit.set(!!this.transaction);
+    // ngOnChanges already ran with the initial @Input() values (Angular calls it
+    // before ngOnInit whenever bound inputs are present), so incomeCategoriesSig /
+    // expenseCategoriesSig are already populated here.
+    this.selectedType.set(this.transaction?.type || 'expense');
 
     this.form = this.fb.group({
       date: [this.transaction?.date || this.todayDate(), [Validators.required]],
@@ -55,24 +66,17 @@ export class TransactionFormComponent implements OnInit, OnChanges {
     });
 
     this.selectedCategoryName.set(this.form.get('category')?.value || '');
-    this.loadCategoryTree(this.form.get('type')?.value);
 
     this.form.get('type')?.valueChanges.subscribe((type: TransactionCategoryType) => {
       this.form.get('category')?.setValue('');
       this.form.get('subcategory')?.setValue(null);
       this.selectedCategoryName.set('');
-      this.loadCategoryTree(type);
+      this.selectedType.set(type);
     });
 
     this.form.get('category')?.valueChanges.subscribe((name: string) => {
       this.selectedCategoryName.set(name || '');
       this.form.get('subcategory')?.setValue(null);
-    });
-  }
-
-  private loadCategoryTree(type: TransactionCategoryType): void {
-    this.transactionCategoryService.getTree(type, true).subscribe({
-      next: (categories) => this.categoryTree.set(categories),
     });
   }
 
@@ -82,6 +86,13 @@ export class TransactionFormComponent implements OnInit, OnChanges {
       if (!current && this.accounts.length > 0) {
         this.form.get('account_id')?.setValue(this.accounts[0].id);
       }
+    }
+
+    if (changes['incomeCategories']) {
+      this.incomeCategoriesSig.set(this.incomeCategories);
+    }
+    if (changes['expenseCategories']) {
+      this.expenseCategoriesSig.set(this.expenseCategories);
     }
   }
 

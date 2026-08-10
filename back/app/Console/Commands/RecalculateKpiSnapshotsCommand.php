@@ -25,9 +25,15 @@ class RecalculateKpiSnapshotsCommand extends Command
      */
     private const WATCHED_FIELDS = [
         'margin_today',
+        'margin_month',
+        'margin_year',
         'expenses_today',
         'expenses_month',
         'expenses_year',
+        'other_revenue_today',
+        'other_revenue_month',
+        'other_revenue_year',
+        'sales_today_amount',
         'net_margin_today',
         'net_margin_month',
         'net_margin_year',

@@ -225,7 +225,7 @@ class PurchasePaymentTest extends TestCase
         $this->assertDatabaseHas('transactions', [
             'id' => $payment->transaction_id,
             'type' => 'expense',
-            'category' => 'Achat',
+            'category' => 'Achat marchandise',
             'amount' => 400.00,
             'account_id' => $this->account->id,
         ]);

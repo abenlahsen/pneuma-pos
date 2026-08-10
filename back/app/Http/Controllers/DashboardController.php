@@ -124,6 +124,25 @@ class DashboardController extends Controller
             ->whereBetween('date', [$yearStart, $yearEnd])
             ->sum('amount'), 2);
 
+        // Cash-flow revenue with no linked Sale/ServiceOrder (e.g. 'Occasion')
+        // — 100% margin, opted in per category via counts_as_revenue.
+        $revenueCategories = TransactionCategory::revenueKpiNames();
+
+        $otherRevenueToday = round((float) Transaction::where('type', 'income')
+            ->whereIn('category', $revenueCategories)
+            ->whereDate('date', $today)
+            ->sum('amount'), 2);
+
+        $otherRevenueMonth = round((float) Transaction::where('type', 'income')
+            ->whereIn('category', $revenueCategories)
+            ->whereBetween('date', [$monthStart, $monthEnd])
+            ->sum('amount'), 2);
+
+        $otherRevenueYear = round((float) Transaction::where('type', 'income')
+            ->whereIn('category', $revenueCategories)
+            ->whereBetween('date', [$yearStart, $yearEnd])
+            ->sum('amount'), 2);
+
         // Service Auto CA (net_amount after discount, excluding ANNULÉE)
         $caServiceToday = round((float) ServiceOrder::whereDate('date', $today)
             ->where('status', '!=', ServiceOrderStatus::ANNULE->value)->sum('net_amount'), 2);
@@ -272,24 +291,27 @@ class DashboardController extends Controller
 
         return response()->json([
             // Today
-            'sales_today_amount' => $salesTodayAmount + $caServiceToday,
+            'sales_today_amount' => $salesTodayAmount + $caServiceToday + $otherRevenueToday,
             'tyres_today' => $tyreSalesQty($today),
-            'margin_today' => $marginSalesToday + $marginServiceToday,
-            'net_margin_today' => $marginSalesToday + $marginServiceToday - $expensesToday,
+            'margin_today' => $marginSalesToday + $marginServiceToday + $otherRevenueToday,
+            'net_margin_today' => $marginSalesToday + $marginServiceToday + $otherRevenueToday - $expensesToday,
             'purchases_today_amount' => round((clone $purchasesToday)->sum('total_price'), 2),
             'tyres_purchased_today' => $tyrePurchaseQty($today, $today),
             'expenses_today' => $expensesToday,
+            'other_revenue_today' => $otherRevenueToday,
 
             // This month
-            'sales_month_amount' => $salesMonthAmount + $caServiceMonth,
+            'sales_month_amount' => $salesMonthAmount + $caServiceMonth + $otherRevenueMonth,
             'purchases_month_amount' => round((clone $purchasesMonth)->sum('total_price'), 2),
-            'margin_month' => $marginSalesMonth + $marginServiceMonth,
-            'net_margin_month' => $marginSalesMonth + $marginServiceMonth - $expensesMonth,
+            'margin_month' => $marginSalesMonth + $marginServiceMonth + $otherRevenueMonth,
+            'net_margin_month' => $marginSalesMonth + $marginServiceMonth + $otherRevenueMonth - $expensesMonth,
             'expenses_month' => $expensesMonth,
-            'margin_year' => $marginSalesYear + $marginServiceYear,
-            'net_margin_year' => $marginSalesYear + $marginServiceYear - $expensesYear,
+            'other_revenue_month' => $otherRevenueMonth,
+            'margin_year' => $marginSalesYear + $marginServiceYear + $otherRevenueYear,
+            'net_margin_year' => $marginSalesYear + $marginServiceYear + $otherRevenueYear - $expensesYear,
             'expenses_year' => $expensesYear,
-            'total_sale_year' => $salesYearAmount + $caServiceYear,
+            'other_revenue_year' => $otherRevenueYear,
+            'total_sale_year' => $salesYearAmount + $caServiceYear + $otherRevenueYear,
             'total_purchase_year' => round((clone $purchasesYear)->sum('total_price'), 2),
             'tyres_month' => $tyreSalesQty($monthStart, $monthEnd),
             'parts_month' => $partsSoldQty($monthStart, $monthEnd),

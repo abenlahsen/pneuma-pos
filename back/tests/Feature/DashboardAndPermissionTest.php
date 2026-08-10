@@ -431,6 +431,92 @@ class DashboardAndPermissionTest extends TestCase
         );
     }
 
+    public function test_kpi_other_revenue_only_counts_categories_flagged_counts_as_revenue(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+
+        $today = now()->toDateString();
+
+        $account = Account::query()->create([
+            'name' => 'Compte KPI Revenus '.fake()->unique()->numerify('###'),
+            'type' => 'cash',
+            'initial_balance' => 0,
+            'is_active' => true,
+        ]);
+
+        $includedCategory = TransactionCategory::query()->create([
+            'name' => 'TestRevenueIncluded',
+            'type' => 'income',
+            'parent_id' => null,
+            'is_system' => false,
+            'is_active' => true,
+            'counts_as_revenue' => true,
+            'sort_order' => 999,
+        ]);
+
+        $excludedCategory = TransactionCategory::query()->create([
+            'name' => 'TestRevenueExcluded',
+            'type' => 'income',
+            'parent_id' => null,
+            'is_system' => false,
+            'is_active' => true,
+            'counts_as_revenue' => false,
+            'sort_order' => 999,
+        ]);
+
+        $before = $this->getJson('/api/dashboard-kpi')->json();
+
+        Transaction::query()->create([
+            'date' => $today,
+            'amount' => 400.00,
+            'type' => 'income',
+            'category' => $includedCategory->name,
+            'method' => 'Espèces',
+            'description' => 'Test revenue included',
+            'person' => '',
+            'user_id' => $this->admin->id,
+            'account_id' => $account->id,
+        ]);
+
+        Transaction::query()->create([
+            'date' => $today,
+            'amount' => 250.00,
+            'type' => 'income',
+            'category' => $excludedCategory->name,
+            'method' => 'Espèces',
+            'description' => 'Test revenue excluded',
+            'person' => '',
+            'user_id' => $this->admin->id,
+            'account_id' => $account->id,
+        ]);
+
+        $after = $this->getJson('/api/dashboard-kpi')->json();
+
+        $this->assertEqualsWithDelta(
+            $before['other_revenue_today'] + 400.00,
+            $after['other_revenue_today'],
+            0.01,
+        );
+
+        $this->assertEqualsWithDelta(
+            $before['sales_today_amount'] + 400.00,
+            $after['sales_today_amount'],
+            0.01,
+        );
+
+        $this->assertEqualsWithDelta(
+            $before['margin_today'] + 400.00,
+            $after['margin_today'],
+            0.01,
+        );
+
+        $this->assertEqualsWithDelta(
+            $before['net_margin_today'] + 400.00,
+            $after['net_margin_today'],
+            0.01,
+        );
+    }
+
     // =========================================================================
     // unpaid_purchases / unpaid_by_supplier
     // =========================================================================

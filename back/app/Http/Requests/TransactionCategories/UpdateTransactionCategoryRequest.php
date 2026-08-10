@@ -32,6 +32,7 @@ class UpdateTransactionCategoryRequest extends FormRequest
             'parent_id' => ['sometimes', 'nullable', 'exists:transaction_categories,id'],
             'sort_order' => ['nullable', 'integer'],
             'counts_as_expense' => ['sometimes', 'boolean'],
+            'counts_as_revenue' => ['sometimes', 'boolean'],
         ];
     }
 }

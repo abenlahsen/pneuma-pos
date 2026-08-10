@@ -354,6 +354,8 @@
       [transaction]="editingTransaction()"
       [filterOptions]="filterOptions()"
       [accounts]="accounts()"
+      [incomeCategories]="incomeCategoryTree()"
+      [expenseCategories]="expenseCategoryTree()"
       (submitted)="onFormSubmit($event)"
       (cancelled)="closeForm()"
     />
