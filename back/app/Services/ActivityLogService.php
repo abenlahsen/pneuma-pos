@@ -9,6 +9,7 @@ use App\Models\Sale;
 use App\Models\ServiceOrder;
 use App\Models\ShipmentChangeRequest;
 use App\Models\Transaction;
+use App\Models\TransactionCategory;
 use App\Models\User;
 
 class ActivityLogService
@@ -423,6 +424,7 @@ class ActivityLogService
         $this->insert([
             'action' => ActivityLog::ACTION_CREATE,
             'entity_type' => ActivityLog::ENTITY_TRANSACTION,
+            'is_confidential' => $this->isConfidentialCategory($snapshot['category'] ?? null),
             'entity_id' => $transaction->id,
             'entity_label' => "Transaction #{$transaction->id}",
             'description' => $desc,
@@ -440,6 +442,11 @@ class ActivityLogService
         $this->insert([
             'action' => ActivityLog::ACTION_UPDATE,
             'entity_type' => ActivityLog::ENTITY_TRANSACTION,
+            // A transaction moved *out of* a confidential category (or into
+            // one) must stay masked either way, since the diff would still
+            // reveal the payroll-side amount/person on the other end.
+            'is_confidential' => $this->isConfidentialCategory($before['category'] ?? null)
+                || $this->isConfidentialCategory($after['category'] ?? null),
             'entity_id' => $transaction->id,
             'entity_label' => "Transaction #{$transaction->id}",
             'description' => $desc,
@@ -458,6 +465,7 @@ class ActivityLogService
         $this->insert([
             'action' => ActivityLog::ACTION_DELETE,
             'entity_type' => ActivityLog::ENTITY_TRANSACTION,
+            'is_confidential' => $this->isConfidentialCategory($before['category'] ?? null),
             'entity_id' => $id,
             'entity_label' => "Transaction #{$id}",
             'description' => $desc,
@@ -596,6 +604,17 @@ class ActivityLogService
         }
 
         return '';
+    }
+
+    /**
+     * Whether a transaction category snapshot value belongs to a
+     * confidential category tree (e.g. 'Charges RH') — same source of
+     * truth as Transaction::scopeVisible().
+     */
+    private function isConfidentialCategory(?string $category): bool
+    {
+        return $category !== null
+            && in_array($category, TransactionCategory::confidentialNames(), true);
     }
 
     private function insert(array $attributes): void

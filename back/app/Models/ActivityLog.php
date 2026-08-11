@@ -34,6 +34,7 @@ class ActivityLog extends Model
     protected $fillable = [
         'action',
         'entity_type',
+        'is_confidential',
         'entity_id',
         'entity_label',
         'description',
@@ -43,6 +44,7 @@ class ActivityLog extends Model
     ];
 
     protected $casts = [
+        'is_confidential' => 'boolean',
         'properties' => 'array',
         'created_at' => 'datetime',
     ];
