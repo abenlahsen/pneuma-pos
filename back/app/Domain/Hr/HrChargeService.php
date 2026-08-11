@@ -115,7 +115,7 @@ class HrChargeService
                     'person' => $employee?->name ?? 'Employé #'.$line['employee_id'],
                     'employee_id' => $line['employee_id'],
                     'account_id' => $line['account_id'],
-                    'description' => $line['description'] ?? null,
+                    'description' => $line['description'] ?: "{$line['subcategory']} — ".($employee?->name ?? 'Employé #'.$line['employee_id']),
                 ], $user);
 
                 $created->push($transaction);

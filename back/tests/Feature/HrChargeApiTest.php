@@ -187,6 +187,26 @@ class HrChargeApiTest extends TestCase
         ]);
     }
 
+    // `description` is required at the DB level (transactions.description is
+    // NOT NULL) but optional in the batch form — a blank/omitted value must
+    // fall back to a generated description instead of hitting the DB with null.
+    public function test_store_generates_a_description_when_none_is_provided(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+        $account = $this->createAccount();
+
+        $response = $this->postJson('/api/hr-charges', [
+            'lines' => [$this->validLine($account->id, ['subcategory' => 'Salaires', 'description' => null])],
+        ]);
+
+        $response->assertCreated();
+        $this->assertDatabaseHas('transactions', [
+            'category' => 'Charges RH',
+            'subcategory' => 'Salaires',
+            'description' => "Salaires — {$this->employee->name}",
+        ]);
+    }
+
     // -------------------------------------------------------------------------
     // Index / summary — scoped to the confidential category tree only
     // -------------------------------------------------------------------------
