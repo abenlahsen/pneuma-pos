@@ -244,6 +244,7 @@
                   <th class="col-right">TOTAL</th>
                   <th class="col-right">PAYÉ</th>
                   <th class="col-right">SOLDE</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -262,6 +263,15 @@
                     <td class="col-right num">{{ (sale.amount_paid ?? 0) | number:'1.2-2' }} DH</td>
                     <td class="col-right num" [class.text-danger]="(sale.balance_due ?? 0) > 0">
                       {{ (sale.balance_due ?? 0) | number:'1.2-2' }} DH
+                    </td>
+                    <td class="col-right actions-cell">
+                      @if (sale.type === 'service_order') {
+                        <a class="btn-icon" title="Voir l'ordre de service"
+                           [routerLink]="['/service-orders']" [queryParams]="{ id: sale.id }">🔗</a>
+                      } @else {
+                        <a class="btn-icon" title="Voir la vente"
+                           [routerLink]="['/sales']" [queryParams]="{ id: sale.id }">🔗</a>
+                      }
                     </td>
                   </tr>
                 }

@@ -1,6 +1,8 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ServiceOrder, ServiceOrderFilters, ServiceOrderPayload, ServiceOrderSummary } from '../../../core/models/service-order.model';
 import { PaymentStatus, ServiceOrderStatus, SERVICE_ORDER_STATUSES, SERVICE_ORDER_STATUS_LABELS, PAYMENT_STATUSES, PAYMENT_STATUS_LABELS } from '../../../core/constants/status.constants';
 import { ServiceOrderService } from '../data-access/service-order.service';
@@ -58,6 +60,9 @@ export class ServiceOrdersComponent implements OnInit {
   paymentOrder = signal<ServiceOrder | null>(null);
   deletingId = signal<number | null>(null);
 
+  private route = inject(ActivatedRoute);
+  private destroyRef = inject(DestroyRef);
+
   constructor(
     private serviceOrderService: ServiceOrderService,
     public authService: AuthService,
@@ -67,6 +72,17 @@ export class ServiceOrdersComponent implements OnInit {
     this.loadFilters();
     this.loadData();
     this.loadSummary();
+
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const id = Number(params.get('id'));
+        if (!Number.isFinite(id) || id <= 0) return;
+
+        this.serviceOrderService.getServiceOrder(id).subscribe({
+          next: order => this.openDetail(order),
+        });
+      });
   }
 
   loadData(): void {
