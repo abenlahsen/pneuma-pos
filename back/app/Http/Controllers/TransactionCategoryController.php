@@ -20,6 +20,7 @@ class TransactionCategoryController extends Controller
         $categories = $this->transactionCategoryService->list(
             $request->string('type')->toString() ?: null,
             $request->boolean('only_active'),
+            (bool) $request->user()?->can('view hr-charges'),
         );
 
         return response()->json([

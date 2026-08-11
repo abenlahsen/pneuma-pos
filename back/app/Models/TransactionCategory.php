@@ -16,6 +16,7 @@ class TransactionCategory extends Model
         'is_active',
         'counts_as_expense',
         'counts_as_revenue',
+        'is_confidential',
         'sort_order',
     ];
 
@@ -24,6 +25,7 @@ class TransactionCategory extends Model
         'is_active' => 'boolean',
         'counts_as_expense' => 'boolean',
         'counts_as_revenue' => 'boolean',
+        'is_confidential' => 'boolean',
         'sort_order' => 'integer',
     ];
 
@@ -83,6 +85,23 @@ class TransactionCategory extends Model
             ->ofType('income')
             ->where('is_system', false)
             ->where('counts_as_revenue', true)
+            ->pluck('name')
+            ->all();
+    }
+
+    /**
+     * Names of the top-level categories flagged confidential (e.g. 'Charges
+     * RH'). Used as an exclusion list everywhere transactions are read by a
+     * user without the `view hr-charges` permission — see
+     * Transaction::scopeVisible().
+     *
+     * @return array<int, string>
+     */
+    public static function confidentialNames(): array
+    {
+        return static::query()
+            ->topLevel()
+            ->where('is_confidential', true)
             ->pluck('name')
             ->all();
     }

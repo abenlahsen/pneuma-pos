@@ -153,6 +153,15 @@ export class TransactionCategoriesPageComponent implements OnInit {
       });
   }
 
+  toggleIsConfidential(category: TransactionCategory): void {
+    this.transactionCategoryService
+      .update(category.id, { is_confidential: !category.is_confidential })
+      .subscribe({
+        next: (updated) => this.categories.update((list) => this.replaceInTree(list, updated)),
+        error: (err) => this.showError(err),
+      });
+  }
+
   private replaceInTree(list: TransactionCategory[], updated: TransactionCategory): TransactionCategory[] {
     return list.map((c) => {
       if (c.id === updated.id) return { ...c, ...updated, children: c.children };
