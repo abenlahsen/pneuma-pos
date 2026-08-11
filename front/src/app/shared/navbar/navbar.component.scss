@@ -235,17 +235,39 @@
   display: none;
 }
 
+// Collapsed accordion by default — only `.nav-dropdown.expanded` (toggled by
+// clicking `.dropdown-toggle`, or auto-opened for the group containing the
+// active route) reveals its children. This is what keeps the vertical menu
+// from rendering every group's contents at once.
 .navbar--vertical .nav-dropdown .dropdown-menu {
   position: static;
   visibility: visible;
-  opacity: 1;
+  opacity: 0;
   transform: none;
-  pointer-events: auto;
-  transition: none;
-  margin-top: 0.25rem;
+  pointer-events: none;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease, opacity 0.15s ease;
+  margin-top: 0;
   background: rgba(255, 255, 255, 0.04);
   box-shadow: none;
   min-width: 0;
+}
+
+.navbar--vertical .nav-dropdown.expanded .dropdown-menu {
+  opacity: 1;
+  pointer-events: auto;
+  max-height: 400px;
+  margin-top: 0.25rem;
+}
+
+.navbar--vertical .dropdown-toggle .chevron {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.navbar--vertical .nav-dropdown.expanded .dropdown-toggle .chevron {
+  transform: rotate(180deg);
 }
 
 .navbar--vertical .nav-dropdown .dropdown-menu a {
