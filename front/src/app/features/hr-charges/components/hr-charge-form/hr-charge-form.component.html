@@ -1,0 +1,87 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>➕ Nouvelle saisie de charges RH</h2>
+      <button (click)="onCancel()" class="btn-close">✕</button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-body">
+      <div class="lines-table-wrapper">
+        <table class="lines-table" formArrayName="lines">
+          <thead>
+            <tr>
+              <th>Employé *</th>
+              <th>Type de charge *</th>
+              <th>Date *</th>
+              <th>Montant (DH) *</th>
+              <th>Compte *</th>
+              <th>Méthode *</th>
+              <th>Description</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of lines.controls; track line; let i = $index) {
+              <tr [formGroupName]="i">
+                <td>
+                  <select formControlName="employee_id" (change)="onEmployeeChange(i)">
+                    <option [value]="null">-- Employé --</option>
+                    @for (emp of filters.employees; track emp.id) {
+                      <option [value]="emp.id">{{ emp.name }}</option>
+                    }
+                  </select>
+                </td>
+                <td>
+                  <select formControlName="subcategory" (change)="onEmployeeChange(i)">
+                    <option value="">-- Type --</option>
+                    @for (sub of filters.subcategories; track sub.id) {
+                      <option [value]="sub.name">{{ sub.name }}</option>
+                    }
+                  </select>
+                </td>
+                <td><input type="date" formControlName="date" /></td>
+                <td><input type="number" formControlName="amount" step="0.01" min="0" placeholder="0.00" /></td>
+                <td>
+                  <select formControlName="account_id">
+                    <option [value]="null">-- Compte --</option>
+                    @for (acc of filters.accounts; track acc.id) {
+                      <option [value]="acc.id">{{ acc.name }}</option>
+                    }
+                  </select>
+                </td>
+                <td>
+                  <select formControlName="method">
+                    @for (m of methods; track m) {
+                      <option [value]="m">{{ m }}</option>
+                    }
+                  </select>
+                </td>
+                <td><input type="text" formControlName="description" placeholder="Optionnel" /></td>
+                <td>
+                  <button type="button" class="btn-icon danger" title="Retirer la ligne" (click)="removeLine(i)">🗑️</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        @if (lines.length === 0) {
+          <div class="empty-lines">Aucune ligne — cliquez sur « Ajouter une ligne » pour commencer.</div>
+        }
+      </div>
+
+      <button type="button" class="btn-add-line" (click)="addLine()">➕ Ajouter une ligne</button>
+
+      <div class="total-row">
+        Total : <strong>{{ totalAmount() | number: '1.2-2' }} DH</strong>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" (click)="onCancel()" class="btn btn-cancel">Annuler</button>
+        <button type="submit" [disabled]="form.invalid || lines.length === 0" class="btn btn-submit">
+          Enregistrer ({{ lines.length }})
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

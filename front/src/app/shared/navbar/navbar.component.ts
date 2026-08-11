@@ -57,6 +57,7 @@ export class NavbarComponent {
     },
     { label: '👥 Utilisateurs', route: '/users', permission: 'view users' },
     { label: '🎯 Primes', route: '/primes', permission: 'view primes' },
+    { label: '🧾 Charges RH', route: '/charges-rh', permission: 'view hr-charges' },
     { label: '🔐 Rôles', route: '/roles', permission: 'view roles' },
     {
       label: '⚙️ Paramètres',

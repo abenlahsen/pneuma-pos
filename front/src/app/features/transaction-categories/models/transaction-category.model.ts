@@ -9,6 +9,7 @@ export interface TransactionCategory {
   is_active: boolean;
   counts_as_expense: boolean;
   counts_as_revenue: boolean;
+  is_confidential: boolean;
   sort_order: number;
   children?: TransactionCategory[];
 }
@@ -20,4 +21,5 @@ export interface TransactionCategoryPayload {
   sort_order?: number;
   counts_as_expense?: boolean;
   counts_as_revenue?: boolean;
+  is_confidential?: boolean;
 }

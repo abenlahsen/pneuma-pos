@@ -49,6 +49,7 @@
               <ng-container *ngIf="editingId() !== category.id; else editParentTpl">
                 <span>{{ category.name }}</span>
                 <span class="badge badge-system" *ngIf="category.is_system" title="Catégorie système, générée automatiquement par l'application">🔒 système</span>
+                <span class="badge badge-confidential" *ngIf="category.is_confidential" title="Catégorie confidentielle — visible uniquement par les utilisateurs disposant du droit « Charges RH »">🔒 confidentiel</span>
               </ng-container>
               <ng-template #editParentTpl>
                 <input type="text" [(ngModel)]="editingName" (keyup.enter)="submitEdit(category)" (keyup.escape)="cancelEdit()">
@@ -74,6 +75,16 @@
                   (change)="toggleCountsAsRevenue(category)"
                 >
                 Compter dans le CA et la Marge (dashboard)
+              </label>
+
+              <label class="kpi-toggle" *ngIf="!category.is_system" title="Masquer cette catégorie (et ses transactions) aux utilisateurs sans le droit « Charges RH »">
+                <input
+                  type="checkbox"
+                  [checked]="category.is_confidential"
+                  [disabled]="!authService.hasPermission('edit transaction-categories')"
+                  (change)="toggleIsConfidential(category)"
+                >
+                🔒 Confidentiel (RH)
               </label>
 
               <div class="category-actions" *ngIf="!category.is_system">

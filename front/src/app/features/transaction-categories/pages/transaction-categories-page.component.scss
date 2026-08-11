@@ -198,6 +198,11 @@ $_radius-lg: 14px;
   color: #475569;
 }
 
+.badge-confidential {
+  background: rgba($_red, 0.1);
+  color: $_red-dark;
+}
+
 .category-actions {
   display: flex;
   align-items: center;

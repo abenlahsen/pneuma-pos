@@ -32,7 +32,8 @@ class UpdateTransactionRequest extends FormRequest
                 ->where(fn ($query) => $query
                     ->whereNull('parent_id')
                     ->where('type', $type)
-                    ->where('is_active', true))],
+                    ->where('is_active', true)
+                    ->when(! $this->user()?->can('edit hr-charges'), fn ($q) => $q->where('is_confidential', false)))],
             'subcategory' => ['nullable', 'string', function ($attribute, $value, $fail) use ($type) {
                 if (! $value) {
                     return;

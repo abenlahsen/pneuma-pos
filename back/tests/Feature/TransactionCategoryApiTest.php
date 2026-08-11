@@ -133,6 +133,36 @@ class TransactionCategoryApiTest extends TestCase
         $this->assertSame('Bureau', $rows['Loyer']['children'][0]['name']);
     }
 
+    // A confidential category (e.g. 'Charges RH') must not appear in the
+    // picker for a user without `view hr-charges`, even though they have
+    // `view transaction-categories` — otherwise the Cash Flow form would
+    // reveal "Salaires"/"CNSS" as selectable options.
+    public function test_index_excludes_confidential_category_without_hr_charges_permission(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+        $this->createCategory(['name' => 'Charges RH Test', 'type' => 'expense', 'is_confidential' => true]);
+
+        $response = $this->getJson('/api/transaction-categories?type=expense');
+
+        $response->assertOk();
+        $names = collect($response->json('data'))->pluck('name');
+        $this->assertFalse($names->contains('Charges RH Test'));
+    }
+
+    public function test_index_includes_confidential_category_with_hr_charges_permission(): void
+    {
+        Permission::findOrCreate('view hr-charges', 'web');
+        $this->user->givePermissionTo('view hr-charges');
+        Sanctum::actingAs($this->user, [], 'web');
+        $this->createCategory(['name' => 'Charges RH Test 2', 'type' => 'expense', 'is_confidential' => true]);
+
+        $response = $this->getJson('/api/transaction-categories?type=expense');
+
+        $response->assertOk();
+        $names = collect($response->json('data'))->pluck('name');
+        $this->assertTrue($names->contains('Charges RH Test 2'));
+    }
+
     public function test_index_filters_by_type(): void
     {
         Sanctum::actingAs($this->user, [], 'web');
@@ -429,6 +459,51 @@ class TransactionCategoryApiTest extends TestCase
         ]);
 
         $response->assertUnprocessable()->assertJsonValidationErrors('category');
+    }
+
+    // Without `create hr-charges`, a confidential category must be rejected
+    // as if it didn't exist — otherwise a Commercial could file a cash-flow
+    // entry under 'Charges RH' and immediately lose visibility of it.
+    public function test_transaction_store_rejects_confidential_category_without_hr_charges_permission(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+        $account = Account::query()->create(['name' => 'Caisse Test 5', 'type' => 'cash', 'initial_balance' => 0, 'is_active' => true]);
+        $this->createCategory(['name' => 'Charges RH Store Test', 'type' => 'expense', 'is_confidential' => true]);
+
+        $response = $this->postJson('/api/transactions', [
+            'account_id' => $account->id,
+            'type' => 'expense',
+            'amount' => 50,
+            'date' => '2026-08-04',
+            'category' => 'Charges RH Store Test',
+            'method' => 'Espèces',
+            'person' => 'Test',
+            'description' => 'Test',
+        ]);
+
+        $response->assertUnprocessable()->assertJsonValidationErrors('category');
+    }
+
+    public function test_transaction_store_accepts_confidential_category_with_create_hr_charges_permission(): void
+    {
+        Permission::findOrCreate('create hr-charges', 'web');
+        $this->user->givePermissionTo('create hr-charges');
+        Sanctum::actingAs($this->user, [], 'web');
+        $account = Account::query()->create(['name' => 'Caisse Test 6', 'type' => 'cash', 'initial_balance' => 0, 'is_active' => true]);
+        $this->createCategory(['name' => 'Charges RH Store Test 2', 'type' => 'expense', 'is_confidential' => true]);
+
+        $response = $this->postJson('/api/transactions', [
+            'account_id' => $account->id,
+            'type' => 'expense',
+            'amount' => 50,
+            'date' => '2026-08-04',
+            'category' => 'Charges RH Store Test 2',
+            'method' => 'Espèces',
+            'person' => 'Test',
+            'description' => 'Test',
+        ]);
+
+        $response->assertCreated()->assertJsonPath('category', 'Charges RH Store Test 2');
     }
 
     public function test_transaction_store_accepts_valid_category_and_subcategory(): void

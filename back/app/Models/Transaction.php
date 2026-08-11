@@ -20,6 +20,7 @@ class Transaction extends Model
         'description',
         'person',
         'partner_id',
+        'employee_id',
         'user_id',
         'account_id',
         'transfer_id',
@@ -50,6 +51,15 @@ class Transaction extends Model
     public function partner(): BelongsTo
     {
         return $this->belongsTo(Partner::class);
+    }
+
+    /**
+     * The employee this HR-charge transaction was paid to (nullable — only
+     * set on transactions filed under a confidential category).
+     */
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'employee_id');
     }
 
     /**
@@ -103,5 +113,31 @@ class Transaction extends Model
         }
 
         return $query;
+    }
+
+    /**
+     * Excludes transactions filed under a confidential category (e.g.
+     * 'Charges RH') unless the caller is allowed to see them. `category` is
+     * nullable, so this uses whereNull()->orWhereNotIn() rather than a bare
+     * whereNotIn() — NOT IN is NULL-hostile and would otherwise silently drop
+     * every uncategorized transaction for users without HR access.
+     *
+     * @param  bool  $includeConfidential  true only when the caller has `view hr-charges`
+     */
+    public function scopeVisible($query, bool $includeConfidential)
+    {
+        if ($includeConfidential) {
+            return $query;
+        }
+
+        $hidden = TransactionCategory::confidentialNames();
+
+        if ($hidden === []) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($hidden) {
+            $q->whereNull('category')->orWhereNotIn('category', $hidden);
+        });
     }
 }

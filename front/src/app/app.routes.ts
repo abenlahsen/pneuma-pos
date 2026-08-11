@@ -146,6 +146,13 @@ export const routes: Routes = [
       import('./features/primes/pages/primes-page.component').then((m) => m.PrimesPageComponent),
   },
   {
+    path: 'charges-rh',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'view hr-charges' },
+    loadComponent: () =>
+      import('./features/hr-charges/pages/hr-charges-page.component').then((m) => m.HrChargesPageComponent),
+  },
+  {
     path: 'settings',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view settings' },

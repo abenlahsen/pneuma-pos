@@ -12,16 +12,14 @@ use Illuminate\Http\Request;
 
 class TransactionController extends Controller
 {
-    public function __construct(private TransactionService $transactionService)
-    {
-    }
+    public function __construct(private TransactionService $transactionService) {}
 
     /**
      * Display a paginated list of transactions with filters.
      */
     public function index(Request $request): JsonResponse
     {
-        $paginated = $this->transactionService->list($request->all());
+        $paginated = $this->transactionService->list($request->all(), $this->canViewHr($request));
 
         if ($request->boolean('all')) {
             return response()->json(TransactionResource::collection($paginated)->resolve($request));
@@ -57,9 +55,11 @@ class TransactionController extends Controller
     /**
      * Display the specified transaction.
      */
-    public function show(Transaction $transaction): JsonResponse
+    public function show(Request $request, Transaction $transaction): JsonResponse
     {
-        return response()->json((new TransactionResource($transaction->load('account')))->resolve(request()));
+        $this->transactionService->guardConfidential($transaction, $this->canViewHr($request));
+
+        return response()->json((new TransactionResource($transaction->load('account')))->resolve($request));
     }
 
     /**
@@ -67,6 +67,8 @@ class TransactionController extends Controller
      */
     public function update(UpdateTransactionRequest $request, Transaction $transaction): JsonResponse
     {
+        $this->transactionService->guardConfidential($transaction, $this->canViewHr($request));
+
         $transaction = $this->transactionService->update(
             $transaction,
             $request->validated(),
@@ -82,6 +84,8 @@ class TransactionController extends Controller
      */
     public function destroy(Request $request, Transaction $transaction): JsonResponse
     {
+        $this->transactionService->guardConfidential($transaction, $this->canViewHr($request));
+
         $this->transactionService->delete($transaction, $request->user()->id, $request->user()->name);
 
         return response()->json(null, 204);
@@ -92,14 +96,23 @@ class TransactionController extends Controller
      */
     public function summary(Request $request): JsonResponse
     {
-        return response()->json($this->transactionService->summary($request->all()));
+        return response()->json($this->transactionService->summary($request->all(), $this->canViewHr($request)));
     }
 
     /**
      * Get distinct values for filter dropdowns.
      */
-    public function filters(): JsonResponse
+    public function filters(Request $request): JsonResponse
     {
-        return response()->json($this->transactionService->filters());
+        return response()->json($this->transactionService->filters($this->canViewHr($request)));
+    }
+
+    /**
+     * Whether the authenticated user is allowed to see confidential
+     * (HR-charge) transactions.
+     */
+    private function canViewHr(Request $request): bool
+    {
+        return (bool) $request->user()?->can('view hr-charges');
     }
 }

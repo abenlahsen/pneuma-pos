@@ -11,6 +11,7 @@ use App\Models\Partner;
 use App\Models\Payment;
 use App\Models\PurchasePayment;
 use App\Models\Transaction;
+use App\Models\TransactionCategory;
 use App\Models\User;
 use App\Services\ActivityLogService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -28,9 +29,9 @@ class TransactionService
     /**
      * @param  array<string, mixed>  $filters
      */
-    public function list(array $filters = []): LengthAwarePaginator|Collection
+    public function list(array $filters = [], bool $includeConfidential = false): LengthAwarePaginator|Collection
     {
-        $query = $this->buildFilteredQuery($filters);
+        $query = $this->buildFilteredQuery($filters, $includeConfidential);
 
         if (! empty($filters['all'])) {
             $results = $query->get();
@@ -154,6 +155,24 @@ class TransactionService
         $this->activityLog->logTransactionDeleted($before, $userId, $userName);
     }
 
+    /**
+     * Blocks access to a single transaction filed under a confidential
+     * category (e.g. 'Charges RH') for callers without `view hr-charges`.
+     * `show`/`update`/`destroy` are route-model-bound and therefore bypass
+     * buildFilteredQuery()'s exclusion entirely — this is the only guard
+     * standing between a guessed transaction id and a payroll record.
+     */
+    public function guardConfidential(Transaction $transaction, bool $includeConfidential): void
+    {
+        if ($includeConfidential || $transaction->category === null) {
+            return;
+        }
+
+        if (in_array($transaction->category, TransactionCategory::confidentialNames(), true)) {
+            abort(403, "Vous n'avez pas accès à cette transaction.");
+        }
+    }
+
     private function guardLinkedToCompleted(Transaction $transaction): void
     {
         $payment = Payment::where('transaction_id', $transaction->id)
@@ -183,9 +202,9 @@ class TransactionService
      * @param  array<string, mixed>  $filters
      * @return array<string, float>
      */
-    public function summary(array $filters = []): array
+    public function summary(array $filters = [], bool $includeConfidential = false): array
     {
-        $query = Transaction::query();
+        $query = Transaction::query()->visible($includeConfidential);
 
         if (! empty($filters['category'])) {
             $query->ofCategory($filters['category']);
@@ -223,11 +242,13 @@ class TransactionService
     /**
      * @return array<string, mixed>
      */
-    public function filters(): array
+    public function filters(bool $includeConfidential = false): array
     {
         return [
-            'categories' => Transaction::distinct()->whereNotNull('category')->pluck('category')->sort()->values(),
-            'persons' => Transaction::distinct()->whereNotNull('person')->pluck('person')->sort()->values(),
+            'categories' => Transaction::query()->visible($includeConfidential)
+                ->distinct()->whereNotNull('category')->pluck('category')->sort()->values(),
+            'persons' => Transaction::query()->visible($includeConfidential)
+                ->distinct()->whereNotNull('person')->pluck('person')->sort()->values(),
             'partners' => Partner::orderBy('name')->get(['id', 'name']),
             'accounts' => Account::active()->orderBy('name')->get(['id', 'name', 'type']),
         ];
@@ -236,9 +257,9 @@ class TransactionService
     /**
      * @param  array<string, mixed>  $filters
      */
-    private function buildFilteredQuery(array $filters): Builder
+    private function buildFilteredQuery(array $filters, bool $includeConfidential = false): Builder
     {
-        $query = Transaction::with('account', 'partner');
+        $query = Transaction::with('account', 'partner')->visible($includeConfidential);
 
         $sortable = ['date', 'amount', 'type', 'category', 'description', 'person', 'partner', 'created_at'];
         if (! empty($filters['sort_by']) && in_array($filters['sort_by'], $sortable, true)) {

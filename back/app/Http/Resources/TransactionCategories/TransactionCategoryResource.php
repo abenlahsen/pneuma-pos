@@ -18,6 +18,7 @@ class TransactionCategoryResource extends JsonResource
             'is_active' => (bool) $this->is_active,
             'counts_as_expense' => (bool) $this->counts_as_expense,
             'counts_as_revenue' => (bool) $this->counts_as_revenue,
+            'is_confidential' => (bool) $this->is_confidential,
             'sort_order' => $this->sort_order,
             'children' => $this->whenLoaded('children', fn () => TransactionCategoryResource::collection($this->children)->resolve()),
         ];

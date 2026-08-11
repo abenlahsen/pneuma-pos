@@ -313,6 +313,30 @@ class UserAndRoleTest extends TestCase
             ->assertJsonPath('name', 'Admin User');
     }
 
+    // `view users` alone (e.g. Commercial) must never leak payroll data —
+    // salary is only merged into the resource for callers with `view hr-charges`.
+    public function test_users_index_hides_salary_without_hr_charges_permission(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+
+        $response = $this->getJson('/api/users');
+
+        $response->assertOk();
+        $this->assertArrayNotHasKey('salary', $response->json('data.0'));
+    }
+
+    public function test_users_index_exposes_salary_with_hr_charges_permission(): void
+    {
+        Permission::findOrCreate('view hr-charges', 'web');
+        $this->admin->givePermissionTo('view hr-charges');
+        Sanctum::actingAs($this->admin, [], 'web');
+
+        $response = $this->getJson('/api/users');
+
+        $response->assertOk();
+        $this->assertArrayHasKey('salary', $response->json('data.0'));
+    }
+
     // PUT /api/users/{user}
 
     public function test_users_update_modifies_user(): void

@@ -33,6 +33,7 @@ class UpdateTransactionCategoryRequest extends FormRequest
             'sort_order' => ['nullable', 'integer'],
             'counts_as_expense' => ['sometimes', 'boolean'],
             'counts_as_revenue' => ['sometimes', 'boolean'],
+            'is_confidential' => ['sometimes', 'boolean'],
         ];
     }
 }

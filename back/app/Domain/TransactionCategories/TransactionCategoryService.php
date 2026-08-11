@@ -10,7 +10,13 @@ use Illuminate\Validation\ValidationException;
 
 class TransactionCategoryService
 {
-    public function list(?string $type = null, bool $onlyActive = false): Collection
+    /**
+     * @param  bool  $includeConfidential  true only when the caller has `view hr-charges` —
+     *                                     otherwise categories like 'Charges RH' (and their
+     *                                     children) are omitted entirely, so the picker on the
+     *                                     Cash Flow form never reveals "Salaires"/"CNSS".
+     */
+    public function list(?string $type = null, bool $onlyActive = false, bool $includeConfidential = false): Collection
     {
         return TransactionCategory::query()
             ->topLevel()
@@ -21,6 +27,7 @@ class TransactionCategoryService
             }])
             ->when($type, fn ($query) => $query->ofType($type))
             ->when($onlyActive, fn ($query) => $query->active())
+            ->when(! $includeConfidential, fn ($query) => $query->where('is_confidential', false))
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();

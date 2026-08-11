@@ -12,6 +12,7 @@ use App\Models\Sale;
 use App\Models\SalePaymentAllocation;
 use App\Models\Supplier;
 use App\Models\Transaction;
+use App\Models\TransactionCategory;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -44,6 +45,7 @@ class AccountAndTransactionTest extends TestCase
         foreach ([
             'view accounts', 'create accounts', 'edit accounts', 'delete accounts', 'transfer accounts',
             'view cash-flow', 'create cash-flow', 'edit cash-flow', 'delete cash-flow',
+            'view hr-charges',
         ] as $perm) {
             Permission::findOrCreate($perm, 'web');
         }
@@ -767,6 +769,150 @@ class AccountAndTransactionTest extends TestCase
     }
 
     // =========================================================================
+    // Confidentiality (Charges RH)
+    // =========================================================================
+
+    public function test_transactions_index_excludes_confidential_category_without_hr_charges_permission(): void
+    {
+        $guest = $this->createUserWithPermissions(['view cash-flow']);
+        Sanctum::actingAs($guest, [], 'web');
+
+        $account = $this->createAccount();
+        $this->createConfidentialTransaction($account->id, ['description' => 'Salaire secret']);
+        $this->createTransaction(['account_id' => $account->id, 'description' => 'Public tx']);
+
+        $response = $this->getJson("/api/transactions?account_id={$account->id}");
+
+        $response->assertOk()->assertJsonCount(1, 'data');
+        $this->assertSame('Public tx', $response->json('data.0.description'));
+    }
+
+    // `category` is nullable — a naive whereNotIn() exclusion is NULL-hostile
+    // and would silently drop every uncategorized transaction. This guards
+    // against that regression.
+    public function test_transactions_index_keeps_uncategorized_transaction_visible_without_hr_charges_permission(): void
+    {
+        $guest = $this->createUserWithPermissions(['view cash-flow']);
+        Sanctum::actingAs($guest, [], 'web');
+
+        $account = $this->createAccount();
+        $this->createTransaction(['account_id' => $account->id, 'category' => null, 'description' => 'No category']);
+
+        $response = $this->getJson("/api/transactions?account_id={$account->id}");
+
+        $response->assertOk()->assertJsonCount(1, 'data');
+    }
+
+    public function test_transactions_index_includes_confidential_category_with_hr_charges_permission(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $account = $this->createAccount();
+        $this->createConfidentialTransaction($account->id, ['description' => 'Salaire secret']);
+
+        $response = $this->getJson("/api/transactions?account_id={$account->id}");
+
+        $response->assertOk()->assertJsonCount(1, 'data');
+    }
+
+    public function test_transactions_show_forbidden_for_confidential_transaction_without_hr_charges_permission(): void
+    {
+        $guest = $this->createUserWithPermissions(['view cash-flow']);
+
+        $account = $this->createAccount();
+        $tx = $this->createConfidentialTransaction($account->id);
+
+        Sanctum::actingAs($guest, [], 'web');
+
+        $this->getJson("/api/transactions/{$tx->id}")->assertForbidden();
+    }
+
+    public function test_transactions_update_forbidden_for_confidential_transaction_without_hr_charges_permission(): void
+    {
+        $guest = $this->createUserWithPermissions(['view cash-flow', 'edit cash-flow']);
+
+        $account = $this->createAccount();
+        $tx = $this->createConfidentialTransaction($account->id);
+
+        Sanctum::actingAs($guest, [], 'web');
+
+        $this->putJson("/api/transactions/{$tx->id}", ['amount' => 999])->assertForbidden();
+    }
+
+    public function test_transactions_destroy_forbidden_for_confidential_transaction_without_hr_charges_permission(): void
+    {
+        $guest = $this->createUserWithPermissions(['view cash-flow', 'delete cash-flow']);
+
+        $account = $this->createAccount();
+        $tx = $this->createConfidentialTransaction($account->id);
+
+        Sanctum::actingAs($guest, [], 'web');
+
+        $this->deleteJson("/api/transactions/{$tx->id}")->assertForbidden();
+        $this->assertDatabaseHas('transactions', ['id' => $tx->id]);
+    }
+
+    public function test_transactions_summary_excludes_confidential_expenses_without_hr_charges_permission(): void
+    {
+        $guest = $this->createUserWithPermissions(['view cash-flow']);
+
+        $account = $this->createAccount(['initial_balance' => 0, 'type' => 'cash']);
+        $this->createConfidentialTransaction($account->id, ['type' => 'expense', 'amount' => 500, 'date' => now()->toDateString()]);
+        $this->createTransaction(['account_id' => $account->id, 'type' => 'expense', 'amount' => 300, 'method' => 'Espèces', 'date' => now()->toDateString()]);
+
+        Sanctum::actingAs($guest, [], 'web');
+
+        $response = $this->getJson("/api/transactions-summary?account_id={$account->id}");
+
+        $response->assertOk()->assertJsonPath('expenses', 300);
+    }
+
+    public function test_transactions_summary_includes_confidential_expenses_with_hr_charges_permission(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $account = $this->createAccount(['initial_balance' => 0, 'type' => 'cash']);
+        $this->createConfidentialTransaction($account->id, ['type' => 'expense', 'amount' => 500, 'date' => now()->toDateString()]);
+        $this->createTransaction(['account_id' => $account->id, 'type' => 'expense', 'amount' => 300, 'method' => 'Espèces', 'date' => now()->toDateString()]);
+
+        $response = $this->getJson("/api/transactions-summary?account_id={$account->id}");
+
+        $response->assertOk()->assertJsonPath('expenses', 800);
+    }
+
+    public function test_transactions_filters_excludes_confidential_category_and_employee_person_without_hr_charges_permission(): void
+    {
+        $guest = $this->createUserWithPermissions(['view cash-flow']);
+
+        $account = $this->createAccount();
+        $this->createConfidentialTransaction($account->id, ['person' => 'Employé Secret']);
+
+        Sanctum::actingAs($guest, [], 'web');
+
+        $response = $this->getJson('/api/transactions-filters');
+
+        $response->assertOk();
+        $this->assertFalse(collect($response->json('categories'))->contains('Charges RH Guard Test'));
+        $this->assertFalse(collect($response->json('persons'))->contains('Employé Secret'));
+    }
+
+    public function test_transaction_store_rejects_creating_under_confidential_category_without_create_hr_charges_permission(): void
+    {
+        $guest = $this->createUserWithPermissions(['view cash-flow', 'create cash-flow']);
+        Sanctum::actingAs($guest, [], 'web');
+
+        $account = $this->createAccount();
+        $this->createConfidentialCategory();
+
+        $response = $this->postJson('/api/transactions', array_merge(
+            $this->validTransactionPayload($account->id),
+            ['type' => 'expense', 'category' => 'Charges RH Guard Test'],
+        ));
+
+        $response->assertUnprocessable()->assertJsonValidationErrors('category');
+    }
+
+    // =========================================================================
     // Helpers
     // =========================================================================
 
@@ -816,6 +962,26 @@ class AccountAndTransactionTest extends TestCase
             'description' => 'Transaction test',
             'person' => 'Test',
             'user_id' => $this->user->id,
+        ], $attributes));
+    }
+
+    private function createConfidentialCategory(): TransactionCategory
+    {
+        return TransactionCategory::query()->firstOrCreate(
+            ['name' => 'Charges RH Guard Test', 'type' => 'expense', 'parent_id' => null],
+            ['is_system' => false, 'is_active' => true, 'counts_as_expense' => true, 'is_confidential' => true, 'sort_order' => 0],
+        );
+    }
+
+    private function createConfidentialTransaction(int $accountId, array $attributes = []): Transaction
+    {
+        $this->createConfidentialCategory();
+
+        return $this->createTransaction(array_merge([
+            'account_id' => $accountId,
+            'type' => 'expense',
+            'category' => 'Charges RH Guard Test',
+            'person' => 'Employé Secret',
         ], $attributes));
     }
 

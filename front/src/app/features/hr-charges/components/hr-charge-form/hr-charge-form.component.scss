@@ -1,0 +1,213 @@
+@use '../../../_variables' as *;
+
+/* ---------- Modal Overlay ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 960px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.25s ease;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid $border-color;
+
+  h2 {
+    margin: 0;
+    font-size: 1.15rem;
+    color: $text-dark;
+  }
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: $text-light;
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  transition: all 0.15s;
+
+  &:hover {
+    background: $bg-body;
+    color: $text-dark;
+  }
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+/* ---------- Lines table ---------- */
+.lines-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid $border-color;
+  border-radius: 10px;
+}
+
+.lines-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 820px;
+
+  th, td {
+    padding: 0.5rem 0.6rem;
+    text-align: left;
+    border-bottom: 1px solid $border-color;
+    vertical-align: middle;
+  }
+
+  th {
+    background: $bg-body;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: $text-light;
+    white-space: nowrap;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  input, select {
+    width: 100%;
+    padding: 0.4rem 0.5rem;
+    border: 1.5px solid $border-color;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: $text-dark;
+    background: #fff;
+    outline: none;
+    font-family: inherit;
+
+    &:focus {
+      border-color: $primary;
+      box-shadow: 0 0 0 3px rgba($primary, 0.1);
+    }
+  }
+}
+
+.empty-lines {
+  padding: 1.5rem;
+  text-align: center;
+  color: $text-light;
+  font-size: 0.875rem;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: 6px;
+
+  &:hover { background: $bg-body; }
+  &.danger:hover { color: #dc2626; }
+}
+
+.btn-add-line {
+  margin-top: 0.75rem;
+  background: none;
+  border: 1.5px dashed $border-color;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: $primary-dark;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: $primary;
+    background: rgba($primary, 0.05);
+  }
+}
+
+.total-row {
+  margin-top: 1rem;
+  text-align: right;
+  font-size: 0.95rem;
+  color: $text-dark;
+
+  strong { color: $primary-dark; }
+}
+
+/* ---------- Modal Footer ---------- */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid $border-color;
+  margin-top: 1rem;
+}
+
+.btn-cancel {
+  background: $bg-body;
+  color: $text-muted;
+  border: 1px solid $border-color;
+  padding: 0.55rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover { background: $border-color; }
+}
+
+.btn-submit {
+  background: linear-gradient(135deg, $primary, $primary-dark);
+  color: #fff;
+  border: none;
+  padding: 0.55rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 4px 12px rgba($primary, 0.35);
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+@media (max-width: 640px) {
+  .modal-content { max-height: 95vh; }
+}

@@ -12,6 +12,7 @@ function makeCategory(overrides: Partial<TransactionCategory> = {}): Transaction
     is_active: true,
     counts_as_expense: true,
     counts_as_revenue: false,
+    is_confidential: false,
     sort_order: 0,
     children: [],
     ...overrides,
@@ -180,6 +181,31 @@ describe('TransactionCategoriesPageComponent', () => {
 
       expect(comp.errorMessage()).toBe('Erreur serveur.');
       expect(comp.categories()[0].counts_as_revenue).toBe(true);
+    });
+  });
+
+  describe('toggleIsConfidential', () => {
+    it('calls update with the flag inverted and replaces the category in place', () => {
+      const category = makeCategory({ id: 1, is_confidential: false });
+      comp.categories.set([category]);
+      const updated = makeCategory({ id: 1, is_confidential: true });
+      mockService.update.mockReturnValue(of(updated));
+
+      comp.toggleIsConfidential(category);
+
+      expect(mockService.update).toHaveBeenCalledWith(1, { is_confidential: true });
+      expect(comp.categories()[0].is_confidential).toBe(true);
+    });
+
+    it('surfaces an API error without mutating the list', () => {
+      const category = makeCategory({ id: 1, is_confidential: false });
+      comp.categories.set([category]);
+      mockService.update.mockReturnValue(throwError(() => ({ error: { message: 'Erreur serveur.' } })));
+
+      comp.toggleIsConfidential(category);
+
+      expect(comp.errorMessage()).toBe('Erreur serveur.');
+      expect(comp.categories()[0].is_confidential).toBe(false);
     });
   });
 
