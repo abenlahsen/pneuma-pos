@@ -23,6 +23,9 @@ export class QuickClientFormComponent implements OnInit {
 
   cities = signal<string[]>([]);
   saving = signal(false);
+  fieldErrors = signal<Record<string, string[]>>({});
+  generalError = signal<string | null>(null);
+  duplicateMatches = signal<Client[]>([]);
 
   client: ClientPayload = {
     name: '',
@@ -30,7 +33,7 @@ export class QuickClientFormComponent implements OnInit {
     email: '',
     city: '',
     address: '',
-    category: null,
+    category: 'Particulier',
     notes: '',
     is_active: true,
   };
@@ -42,18 +45,56 @@ export class QuickClientFormComponent implements OnInit {
     this.cityService.getCities().subscribe(c => this.cities.set(c));
   }
 
+  onPhoneBlur(): void {
+    this.checkDuplicates();
+  }
+
+  onNameBlur(): void {
+    this.checkDuplicates();
+  }
+
+  private checkDuplicates(): void {
+    const name = this.client.name?.trim();
+    const phone = this.client.phone?.trim();
+
+    if (!name && !phone) {
+      this.duplicateMatches.set([]);
+      return;
+    }
+
+    this.clientService.checkDuplicates(name, phone).subscribe(res => {
+      this.duplicateMatches.set(res.matches ?? []);
+    });
+  }
+
+  useExistingClient(client: Client): void {
+    this.clientCreated.emit(client);
+  }
+
   save(): void {
     if (!this.client.name?.trim()) return;
     this.saving.set(true);
+    this.fieldErrors.set({});
+    this.generalError.set(null);
+
     this.clientService.createClient({ ...this.client, is_active: true }).pipe(
       finalize(() => this.saving.set(false))
     ).subscribe({
       next: (created) => this.clientCreated.emit(created),
       error: (err) => {
         const errors: Record<string, string[]> = err?.error?.errors ?? {};
-        const messages = Object.values(errors).flat();
-        const detail = messages.length ? '\n' + messages.join('\n') : '';
-        alert('Erreur lors de la création rapide du client.' + detail);
+
+        if (Object.keys(errors).length) {
+          this.fieldErrors.set(errors);
+
+          if (errors['phone']?.length) {
+            this.checkDuplicates();
+          }
+        } else {
+          this.generalError.set(
+            err?.error?.message || 'Erreur lors de la création rapide du client.'
+          );
+        }
       },
     });
   }

@@ -80,7 +80,8 @@ class SaleResource extends JsonResource
                 fn () => $this->creator ? [
                     'id' => $this->creator->id,
                     'name' => $this->creator->name,
-                ] : null
+                ] : null,
+                null
             ),
             'total_quantity' => (int) ($this->total_quantity ?? 0),
             'total_purchase' => $this->formatMoneyValue($this->total_purchase),

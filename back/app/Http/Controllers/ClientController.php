@@ -31,7 +31,7 @@ class ClientController extends Controller
 
     public function store(StoreClientRequest $request): ClientResource
     {
-        $client = $this->clientService->create($request->validated());
+        $client = $this->clientService->create($request->validated(), $request->user()?->id);
 
         return new ClientResource($client);
     }
@@ -43,7 +43,7 @@ class ClientController extends Controller
 
     public function update(UpdateClientRequest $request, Client $client): ClientResource
     {
-        $client = $this->clientService->update($client, $request->validated());
+        $client = $this->clientService->update($client, $request->validated(), $request->user()?->id);
 
         return new ClientResource($client);
     }

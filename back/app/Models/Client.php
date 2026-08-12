@@ -29,6 +29,8 @@ class Client extends Model
         'opening_balance',
         'payment_terms_days',
         'default_payment_method',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [

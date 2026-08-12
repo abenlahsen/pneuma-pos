@@ -69,6 +69,7 @@ class SaleService
             $saleData = $items !== null
                 ? $this->prepareSalePayload($validated, $items, $sale)
                 : $this->prepareSalePayloadWithoutRecomputingTotals($validated, $sale);
+            $saleData['updated_by'] = $userId;
 
             $sale->update($this->filterColumns('sales', $saleData));
 
@@ -121,7 +122,7 @@ class SaleService
                 $this->applyStockForItems($sale, $userId);
             }
 
-            $sale->update(['status' => $status]);
+            $sale->update(['status' => $status, 'updated_by' => $userId]);
         });
 
         $fresh = $sale->fresh(['linkedClient.cityRelation', 'commercial', 'linkedCarrier', 'linkedPartner', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments']);

@@ -37,4 +37,11 @@ class UpdateClientRequest extends FormRequest
             'default_payment_method' => ['nullable', 'string', 'max:255'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'phone.unique' => 'Ce numéro de téléphone est déjà utilisé par un autre client.',
+        ];
+    }
 }
