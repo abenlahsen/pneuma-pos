@@ -2,6 +2,7 @@
 
 namespace App\Domain\Clients;
 
+use App\Enums\ClientCategory;
 use App\Models\City;
 use App\Models\Client;
 use App\Models\Sale;
@@ -25,13 +26,22 @@ class ClientService
             ->appends($filters);
     }
 
-    public function create(array $data): Client
+    public function create(array $data, ?int $userId = null): Client
     {
+        if (empty($data['category'])) {
+            $data['category'] = ClientCategory::PARTICULIER->value;
+        }
+
+        $data['created_by'] = $userId;
+        $data['updated_by'] = $userId;
+
         return Client::create($data);
     }
 
-    public function update(Client $client, array $data): Client
+    public function update(Client $client, array $data, ?int $userId = null): Client
     {
+        $data['updated_by'] = $userId;
+
         $client->update($data);
 
         return $client->refresh();

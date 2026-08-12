@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\SalePaymentStatus;
 use App\Enums\SaleStatus;
 use App\Models\Account;
+use App\Models\ActivityLog;
 use App\Models\Brand;
 use App\Models\Carrier;
 use App\Models\Client;
@@ -1002,6 +1003,163 @@ class SaleControllerTest extends TestCase
             ->assertJsonPath('service', 'Alignement')
             ->assertJsonPath('delivery_date', '2026-05-15')
             ->assertJsonPath('comments', 'Commentaire MAJ');
+    }
+
+    // ── Creator / editor attribution tests ──────────────────────────────────
+    // Regression: commit 911d054 (21/04/2026) dropped `created_by` when the
+    // sale logic was extracted into SaleService, and it went unnoticed for
+    // 3.5 months (fixed by 2fb8140, 03/08/2026) because no test asserted the
+    // API actually wrote it — createSale() only seeded it into fixtures.
+
+    public function test_store_sets_created_by_to_authenticated_user(): void
+    {
+        [$product, $stock] = $this->createProductWithStock(5);
+        $partner = $this->createPartner();
+
+        $payload = [
+            'date' => '2026-03-15',
+            'client' => 'Attribution Client',
+            'commercial_id' => $this->user->id,
+            'partner_id' => $partner->id,
+            'items' => [[
+                'product_id' => $product->id,
+                'stock_id' => $stock->id,
+                'quantity' => 1,
+                'purchase_price' => 100,
+                'selling_price' => 150,
+            ]],
+        ];
+
+        $response = $this->postJson('/api/sales', $payload, $this->authHeaders());
+
+        $response->assertStatus(201)
+            ->assertJsonPath('creator.id', $this->user->id)
+            ->assertJsonPath('creator.name', $this->user->name);
+
+        $saleId = $response->json('id');
+        $this->assertDatabaseHas('sales', ['id' => $saleId, 'created_by' => $this->user->id]);
+    }
+
+    public function test_update_sets_updated_by_and_preserves_created_by(): void
+    {
+        $creator = $this->createCommercial('Créateur Original');
+        $sale = $this->createSale(['created_by' => $creator->id]);
+
+        // Updated by a different (authenticated) user than the original creator.
+        $response = $this->putJson("/api/sales/{$sale->id}", ['comments' => 'MAJ attribution'], $this->authHeaders());
+
+        $response->assertOk();
+
+        $this->assertDatabaseHas('sales', [
+            'id' => $sale->id,
+            'created_by' => $creator->id,
+            'updated_by' => $this->user->id,
+        ]);
+    }
+
+    public function test_update_status_sets_updated_by(): void
+    {
+        $creator = $this->createCommercial('Créateur Statut');
+        $sale = $this->createSale(['created_by' => $creator->id]);
+
+        $response = $this->patchJson("/api/sales/{$sale->id}/status", ['status' => 'LIVRE'], $this->authHeaders());
+
+        $response->assertOk();
+
+        $this->assertDatabaseHas('sales', [
+            'id' => $sale->id,
+            'created_by' => $creator->id,
+            'updated_by' => $this->user->id,
+        ]);
+    }
+
+    public function test_show_returns_creator(): void
+    {
+        $sale = $this->createSale();
+
+        $response = $this->getJson("/api/sales/{$sale->id}", $this->authHeaders());
+
+        $response->assertOk()
+            ->assertJsonPath('creator.id', $this->user->id)
+            ->assertJsonPath('creator.name', $this->user->name);
+    }
+
+    // ── Backfill creator command tests ──────────────────────────────────────
+    // `sales:backfill-creator` rescues `created_by` for historical sales
+    // orphaned by the 911d054→2fb8140 regression, using the activity log's
+    // CREATE event where one exists.
+
+    public function test_backfill_creator_command_fills_created_by_from_activity_log(): void
+    {
+        $creator = $this->createCommercial('Rattrapage Auteur');
+        $sale = $this->createSale(['created_by' => null]);
+
+        ActivityLog::query()->create([
+            'action' => ActivityLog::ACTION_CREATE,
+            'entity_type' => ActivityLog::ENTITY_VENTE,
+            'entity_id' => $sale->id,
+            'entity_label' => 'Vente test',
+            'description' => 'Vente créée',
+            'properties' => [],
+            'user_id' => $creator->id,
+            'user_name' => $creator->name,
+        ]);
+
+        $this->artisan('sales:backfill-creator')->assertExitCode(0);
+
+        $this->assertDatabaseHas('sales', ['id' => $sale->id, 'created_by' => $creator->id]);
+    }
+
+    public function test_backfill_creator_command_leaves_sales_without_log_untouched(): void
+    {
+        $sale = $this->createSale(['created_by' => null]);
+
+        $this->artisan('sales:backfill-creator')->assertExitCode(0);
+
+        $this->assertDatabaseHas('sales', ['id' => $sale->id, 'created_by' => null]);
+    }
+
+    public function test_backfill_creator_command_is_idempotent(): void
+    {
+        $creator = $this->createCommercial('Rattrapage Idempotent');
+        $sale = $this->createSale(['created_by' => null]);
+
+        ActivityLog::query()->create([
+            'action' => ActivityLog::ACTION_CREATE,
+            'entity_type' => ActivityLog::ENTITY_VENTE,
+            'entity_id' => $sale->id,
+            'entity_label' => 'Vente test',
+            'description' => 'Vente créée',
+            'properties' => [],
+            'user_id' => $creator->id,
+            'user_name' => $creator->name,
+        ]);
+
+        $this->artisan('sales:backfill-creator')->assertExitCode(0);
+        $this->artisan('sales:backfill-creator')->assertExitCode(0);
+
+        $this->assertDatabaseHas('sales', ['id' => $sale->id, 'created_by' => $creator->id]);
+    }
+
+    public function test_backfill_creator_command_dry_run_does_not_write(): void
+    {
+        $creator = $this->createCommercial('Rattrapage DryRun');
+        $sale = $this->createSale(['created_by' => null]);
+
+        ActivityLog::query()->create([
+            'action' => ActivityLog::ACTION_CREATE,
+            'entity_type' => ActivityLog::ENTITY_VENTE,
+            'entity_id' => $sale->id,
+            'entity_label' => 'Vente test',
+            'description' => 'Vente créée',
+            'properties' => [],
+            'user_id' => $creator->id,
+            'user_name' => $creator->name,
+        ]);
+
+        $this->artisan('sales:backfill-creator', ['--dry-run' => true])->assertExitCode(0);
+
+        $this->assertDatabaseHas('sales', ['id' => $sale->id, 'created_by' => null]);
     }
 
     // ── Stock movement tests ─────────────────────────────────────────────────

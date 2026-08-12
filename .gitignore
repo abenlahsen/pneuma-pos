@@ -6,6 +6,7 @@
 *.tmp*
 dist/
 tmp/
+dump/
 deploy/deploy.env
 deploy/deploy2.env
 env.production

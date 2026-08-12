@@ -347,6 +347,26 @@ class ClientCrudTest extends TestCase
         ]);
     }
 
+    public function test_store_with_explicit_null_category_succeeds(): void
+    {
+        // Regression: the quick-create modal (used from the sale/service-order forms)
+        // sends `category: null` explicitly when the "Type" select is left untouched.
+        // ConvertEmptyStringsToNull also turns an empty string into null. The `category`
+        // column is NOT NULL DEFAULT 'Particulier' in production, and MySQL's default is
+        // only applied when the column is omitted from the INSERT — not when NULL is passed
+        // explicitly — so this used to raise a 500 (SQLSTATE 23000) instead of falling back.
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $response = $this->postJson('/api/clients', [
+            'name' => 'Client Catégorie Nulle',
+            'phone' => '0699999999',
+            'category' => null,
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.category', 'Particulier');
+    }
+
     public function test_store_accepts_particulier_with_correct_spelling(): void
     {
         // Regression: Rule::in had 'Paticulier' (typo). After frontend fix the correct
@@ -387,6 +407,25 @@ class ClientCrudTest extends TestCase
             'phone' => '0612345678', // same as $this->client
         ])->assertUnprocessable()
             ->assertJsonValidationErrors(['phone']);
+    }
+
+    public function test_store_duplicate_phone_returns_french_message(): void
+    {
+        // Regression: production runs APP_LOCALE=fr with no back/lang/fr/validation.php,
+        // so the response body contained the raw translation key "validation.unique"
+        // instead of a readable message.
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $response = $this->postJson('/api/clients', [
+            'name' => 'Duplicate Phone',
+            'category' => 'Particulier',
+            'phone' => '0612345678', // same as $this->client
+        ]);
+
+        $response->assertUnprocessable();
+        $message = $response->json('errors.phone.0');
+        $this->assertNotSame('validation.unique', $message);
+        $this->assertStringContainsString('téléphone', $message);
     }
 
     public function test_store_creates_client(): void

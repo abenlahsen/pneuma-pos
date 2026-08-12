@@ -155,7 +155,7 @@ class SaleController extends Controller
 
         return response()->json(
             (new SaleResource(
-                $sale->loadMissing(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments', 'allocations.payment'])
+                $sale->loadMissing(['linkedClient.cityRelation', 'commercial', 'creator', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments', 'allocations.payment'])
             ))->resolve(),
             201
         );
@@ -165,7 +165,7 @@ class SaleController extends Controller
     {
         return response()->json(
             (new SaleResource(
-                $sale->loadMissing(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments', 'allocations.payment'])
+                $sale->loadMissing(['linkedClient.cityRelation', 'commercial', 'creator', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments', 'allocations.payment'])
             ))->resolve()
         );
     }
@@ -182,7 +182,7 @@ class SaleController extends Controller
 
         return response()->json(
             (new SaleResource(
-                $sale->loadMissing(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments', 'allocations.payment'])
+                $sale->loadMissing(['linkedClient.cityRelation', 'commercial', 'creator', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments', 'allocations.payment'])
             ))->resolve()
         );
     }
@@ -203,7 +203,7 @@ class SaleController extends Controller
 
         return response()->json(
             (new SaleResource(
-                $sale->loadMissing(['linkedClient.cityRelation', 'commercial', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments', 'allocations.payment'])
+                $sale->loadMissing(['linkedClient.cityRelation', 'commercial', 'creator', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments', 'allocations.payment'])
             ))->resolve()
         );
     }
@@ -222,7 +222,7 @@ class SaleController extends Controller
     public function export(Request $request): StreamedResponse
     {
         $query = Sale::query()
-            ->with(['linkedClient', 'commercial', 'linkedCarrier', 'linkedPartner', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'allocations.payment']);
+            ->with(['linkedClient', 'commercial', 'creator', 'linkedCarrier', 'linkedPartner', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'allocations.payment']);
 
         if ($request->filled('commercial_id') && Schema::hasColumn('sales', 'commercial_id')) {
             $query->where('commercial_id', $request->integer('commercial_id'));
@@ -352,6 +352,7 @@ class SaleController extends Controller
                 'Total achat',
                 'Total vente',
                 'Marge',
+                'Créé par',
             ]];
 
             $query->get()->each(function (Sale $sale) use (&$rows) {
@@ -374,14 +375,15 @@ class SaleController extends Controller
                     $sale->total_purchase !== null ? round((float) $sale->total_purchase, 2) : null,
                     $sale->total_sale !== null ? round((float) $sale->total_sale, 2) : null,
                     $sale->margin !== null ? round((float) $sale->margin, 2) : null,
+                    $sale->creator?->name ?? '',
                 ];
             });
 
             $sheet->fromArray($rows, null, 'A1', true);
-            $sheet->getStyle('A1:Q1')->getFont()->setBold(true);
+            $sheet->getStyle('A1:R1')->getFont()->setBold(true);
             $sheet->freezePane('A2');
 
-            foreach (range('A', 'Q') as $column) {
+            foreach (range('A', 'R') as $column) {
                 $sheet->getColumnDimension($column)->setAutoSize(true);
             }
 

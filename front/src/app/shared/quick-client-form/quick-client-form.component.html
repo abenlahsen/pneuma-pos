@@ -10,18 +10,20 @@
   <div class="qcf-grid">
     <div class="qcf-field">
       <label>Nom <span class="required">*</span></label>
-      <input type="text" class="qcf-input" name="qcfName" [(ngModel)]="client.name" placeholder="Nom du client" />
+      <input type="text" class="qcf-input" name="qcfName" [(ngModel)]="client.name" (blur)="onNameBlur()" placeholder="Nom du client" />
+      <span class="qcf-error" *ngIf="fieldErrors()['name']?.length">{{ fieldErrors()['name'][0] }}</span>
     </div>
     <div class="qcf-field">
       <label>Téléphone</label>
-      <input type="text" class="qcf-input" name="qcfPhone" [(ngModel)]="client.phone" placeholder="06 XX XX XX XX" />
+      <input type="text" class="qcf-input" name="qcfPhone" [(ngModel)]="client.phone" (blur)="onPhoneBlur()" placeholder="06 XX XX XX XX" />
+      <span class="qcf-error" *ngIf="fieldErrors()['phone']?.length">{{ fieldErrors()['phone'][0] }}</span>
     </div>
     <div class="qcf-field">
       <label>Type</label>
       <select class="qcf-input" name="qcfCategory" [(ngModel)]="client.category">
-        <option value="">— Sélectionner —</option>
         <option *ngFor="let opt of categoryOptions" [value]="opt">{{ opt }}</option>
       </select>
+      <span class="qcf-error" *ngIf="fieldErrors()['category']?.length">{{ fieldErrors()['category'][0] }}</span>
     </div>
     <div class="qcf-field">
       <label>Ville</label>
@@ -29,16 +31,32 @@
         <option value="">— Sélectionner —</option>
         <option *ngFor="let c of cities()" [value]="c">{{ c }}</option>
       </select>
+      <span class="qcf-error" *ngIf="fieldErrors()['city']?.length">{{ fieldErrors()['city'][0] }}</span>
     </div>
     <div class="qcf-field qcf-field--full">
       <label>Adresse</label>
       <input type="text" class="qcf-input" name="qcfAddress" [(ngModel)]="client.address" />
+      <span class="qcf-error" *ngIf="fieldErrors()['address']?.length">{{ fieldErrors()['address'][0] }}</span>
     </div>
     <div class="qcf-field qcf-field--full">
       <label>Email</label>
       <input type="text" class="qcf-input" name="qcfEmail" [(ngModel)]="client.email" placeholder="exemple@domaine.com" />
+      <span class="qcf-error" *ngIf="fieldErrors()['email']?.length">{{ fieldErrors()['email'][0] }}</span>
     </div>
   </div>
+
+  <div class="qcf-warning-banner" *ngIf="duplicateMatches().length">
+    <strong>Client(s) existant(s) trouvé(s)</strong>
+    <p>Utilisez un profil existant plutôt que d'en créer un nouveau.</p>
+    <ul>
+      <li *ngFor="let match of duplicateMatches()">
+        <span>{{ match.name }} — {{ match.phone || 'Sans téléphone' }}<ng-container *ngIf="match.city"> ({{ match.city }})</ng-container></span>
+        <button type="button" class="qcf-match-btn" (click)="useExistingClient(match)">Utiliser ce client</button>
+      </li>
+    </ul>
+  </div>
+
+  <p class="qcf-general-error" *ngIf="generalError()">{{ generalError() }}</p>
 
   <div class="qcf-actions">
     <button type="button" class="qcf-btn-primary" [disabled]="saving() || !client.name.trim()" (click)="save()">
