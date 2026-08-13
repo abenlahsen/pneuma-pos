@@ -8,7 +8,7 @@ function makeCharge(overrides: Partial<HrCharge> = {}): HrCharge {
     date: '2026-07-15',
     employee_id: 1,
     employee_name: 'A. Bennani',
-    subcategory: 'Salaires',
+    subcategory: 'Salaire',
     amount: 6500,
     method: 'Virement',
     description: null,
@@ -26,6 +26,7 @@ describe('HrChargesPageComponent', () => {
     summary: ReturnType<typeof vi.fn>;
     filters: ReturnType<typeof vi.fn>;
     createBatch: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
     delete: ReturnType<typeof vi.fn>;
   };
   const mockAuthService = { hasPermission: () => true };
@@ -36,6 +37,7 @@ describe('HrChargesPageComponent', () => {
       summary: vi.fn().mockReturnValue(of({ total: 0, by_subcategory: {}, employee_count: 0 })),
       filters: vi.fn().mockReturnValue(of(emptyFilters)),
       createBatch: vi.fn(),
+      update: vi.fn(),
       delete: vi.fn(),
     };
     comp = new HrChargesPageComponent(mockService as any, mockAuthService as any);
@@ -52,7 +54,7 @@ describe('HrChargesPageComponent', () => {
 
     it('populates charges and summary from the responses', () => {
       const charge = makeCharge();
-      const summary: HrChargeSummary = { total: 6500, by_subcategory: { Salaires: 6500 }, employee_count: 1 };
+      const summary: HrChargeSummary = { total: 6500, by_subcategory: { Salaire: 6500 }, employee_count: 1 };
       mockService.list.mockReturnValue(of({ data: [charge], total: 1 }));
       mockService.summary.mockReturnValue(of(summary));
 
@@ -60,7 +62,7 @@ describe('HrChargesPageComponent', () => {
 
       expect(comp.charges()).toEqual([charge]);
       expect(comp.summary()).toEqual(summary);
-      expect(comp.subcategoryTotals()).toEqual([{ name: 'Salaires', amount: 6500 }]);
+      expect(comp.subcategoryTotals()).toEqual([{ name: 'Salaire', amount: 6500 }]);
     });
   });
 
@@ -110,30 +112,98 @@ describe('HrChargesPageComponent', () => {
   describe('filters', () => {
     it('applyFilters passes the selected employee and subcategory to the service', () => {
       comp.filterEmployeeId.set(5);
-      comp.filterSubcategory.set('CNSS (part patronale)');
+      comp.filterSubcategory.set('CNSS');
 
       comp.applyFilters();
 
-      expect(mockService.list).toHaveBeenCalledWith(comp.selectedYear(), comp.selectedMonth(), 5, 'CNSS (part patronale)');
+      expect(mockService.list).toHaveBeenCalledWith(comp.selectedYear(), comp.selectedMonth(), 5, 'CNSS');
     });
   });
 
-  describe('submitBatch', () => {
-    it('closes the form and reloads on success', () => {
+  describe('openEdit / duplicateCharge', () => {
+    it('openEdit opens the form pre-filled in edit mode without calling the API', () => {
+      const charge = makeCharge();
+
+      comp.openEdit(charge);
+
+      expect(comp.showForm()).toBe(true);
+      expect(comp.formCharge()).toEqual(charge);
+      expect(comp.formEditMode()).toBe(true);
+      expect(mockService.update).not.toHaveBeenCalled();
+    });
+
+    it('duplicateCharge opens the form pre-filled outside edit mode without calling the API', () => {
+      const charge = makeCharge();
+
+      comp.duplicateCharge(charge);
+
+      expect(comp.showForm()).toBe(true);
+      expect(comp.formCharge()).toEqual(charge);
+      expect(comp.formEditMode()).toBe(false);
+      expect(mockService.createBatch).not.toHaveBeenCalled();
+    });
+
+    it('closeForm resets the pre-filled charge and edit mode', () => {
+      comp.openEdit(makeCharge());
+
+      comp.closeForm();
+
+      expect(comp.showForm()).toBe(false);
+      expect(comp.formCharge()).toBeNull();
+      expect(comp.formEditMode()).toBe(false);
+    });
+  });
+
+  describe('submitForm', () => {
+    it('creates a batch and reloads on success when not editing', () => {
       mockService.createBatch.mockReturnValue(of([makeCharge()]));
       comp.showForm.set(true);
 
-      comp.submitBatch({ lines: [] });
+      comp.submitForm({ lines: [] });
 
+      expect(mockService.createBatch).toHaveBeenCalledWith({ lines: [] });
+      expect(mockService.update).not.toHaveBeenCalled();
       expect(comp.showForm()).toBe(false);
       expect(mockService.list).toHaveBeenCalled();
+    });
+
+    it('calls update with the single line when in edit mode', () => {
+      const charge = makeCharge({ id: 42 });
+      mockService.update.mockReturnValue(of(charge));
+      comp.openEdit(charge);
+
+      comp.submitForm({
+        lines: [
+          {
+            employee_id: 1,
+            date: '2026-07-20',
+            subcategory: 'CNSS',
+            amount: 1200,
+            account_id: 2,
+            method: 'Virement',
+            description: '',
+          },
+        ],
+      });
+
+      expect(mockService.update).toHaveBeenCalledWith(42, {
+        employee_id: 1,
+        date: '2026-07-20',
+        subcategory: 'CNSS',
+        amount: 1200,
+        account_id: 2,
+        method: 'Virement',
+        description: '',
+      });
+      expect(mockService.createBatch).not.toHaveBeenCalled();
+      expect(comp.showForm()).toBe(false);
     });
 
     it('surfaces an API error without closing the form', () => {
       mockService.createBatch.mockReturnValue(throwError(() => ({ error: { message: 'Erreur serveur.' } })));
       comp.showForm.set(true);
 
-      comp.submitBatch({ lines: [] });
+      comp.submitForm({ lines: [] });
 
       expect(comp.errorMessage()).toBe('Erreur serveur.');
       expect(comp.showForm()).toBe(true);

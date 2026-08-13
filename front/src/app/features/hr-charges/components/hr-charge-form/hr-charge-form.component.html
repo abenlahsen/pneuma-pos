@@ -1,7 +1,7 @@
 <div class="modal-overlay" (click)="onCancel()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>➕ Nouvelle saisie de charges RH</h2>
+      <h2>{{ editMode ? '✏️ Modifier la charge RH' : (charge ? '⧉ Dupliquer la charge RH' : '➕ Nouvelle saisie de charges RH') }}</h2>
       <button (click)="onCancel()" class="btn-close">✕</button>
     </div>
 
@@ -58,7 +58,7 @@
                 </td>
                 <td><input type="text" formControlName="description" placeholder="Optionnel" /></td>
                 <td>
-                  <button type="button" class="btn-icon danger" title="Retirer la ligne" (click)="removeLine(i)">🗑️</button>
+                  <button *ngIf="!editMode" type="button" class="btn-icon danger" title="Retirer la ligne" (click)="removeLine(i)">🗑️</button>
                 </td>
               </tr>
             }
@@ -70,7 +70,7 @@
         }
       </div>
 
-      <button type="button" class="btn-add-line" (click)="addLine()">➕ Ajouter une ligne</button>
+      <button *ngIf="!editMode" type="button" class="btn-add-line" (click)="addLine()">➕ Ajouter une ligne</button>
 
       <div class="total-row">
         Total : <strong>{{ totalAmount() | number: '1.2-2' }} DH</strong>
@@ -79,7 +79,7 @@
       <div class="modal-footer">
         <button type="button" (click)="onCancel()" class="btn btn-cancel">Annuler</button>
         <button type="submit" [disabled]="form.invalid || lines.length === 0" class="btn btn-submit">
-          Enregistrer ({{ lines.length }})
+          {{ editMode ? 'Enregistrer' : 'Enregistrer (' + lines.length + ')' }}
         </button>
       </div>
     </form>

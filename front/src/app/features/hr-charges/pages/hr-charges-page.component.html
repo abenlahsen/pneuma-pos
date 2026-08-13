@@ -83,7 +83,21 @@
             <td class="text-right amount">{{ formatAmount(charge.amount) }} DH</td>
             <td>{{ charge.account?.name }}</td>
             <td class="description">{{ charge.description }}</td>
-            <td>
+            <td class="actions-cell">
+              <button
+                type="button"
+                class="btn-icon primary"
+                title="Modifier"
+                *ngIf="authService.hasPermission('edit hr-charges')"
+                (click)="openEdit(charge)"
+              >✏️</button>
+              <button
+                type="button"
+                class="btn-icon primary"
+                title="Dupliquer"
+                *ngIf="authService.hasPermission('create hr-charges')"
+                (click)="duplicateCharge(charge)"
+              >⧉</button>
               <button
                 type="button"
                 class="btn-icon danger"
@@ -109,7 +123,9 @@
     *ngIf="showForm()"
     [filters]="filters()"
     [defaultDate]="defaultDate()"
-    (submitted)="submitBatch($event)"
+    [charge]="formCharge()"
+    [editMode]="formEditMode()"
+    (submitted)="submitForm($event)"
     (cancelled)="closeForm()"
   ></app-hr-charge-form>
 </div>

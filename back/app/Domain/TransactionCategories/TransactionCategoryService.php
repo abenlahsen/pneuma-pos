@@ -14,7 +14,7 @@ class TransactionCategoryService
      * @param  bool  $includeConfidential  true only when the caller has `view hr-charges` —
      *                                     otherwise categories like 'Charges RH' (and their
      *                                     children) are omitted entirely, so the picker on the
-     *                                     Cash Flow form never reveals "Salaires"/"CNSS".
+     *                                     Cash Flow form never reveals "Salaire"/"CNSS".
      */
     public function list(?string $type = null, bool $onlyActive = false, bool $includeConfidential = false): Collection
     {

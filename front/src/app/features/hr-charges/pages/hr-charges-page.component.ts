@@ -3,7 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HrChargeService } from '../data-access/hr-charge.service';
 import { HrChargeFormComponent } from '../components/hr-charge-form/hr-charge-form.component';
-import { HrCharge, HrChargeBatchPayload, HrChargeFilters, HrChargeSummary } from '../models/hr-charge.model';
+import {
+  HrCharge,
+  HrChargeBatchPayload,
+  HrChargeFilters,
+  HrChargeLinePayload,
+  HrChargeSummary,
+  HrChargeUpdatePayload,
+} from '../models/hr-charge.model';
 import { AuthService } from '../../../core/services/auth.service';
 
 const MONTH_NAMES = [
@@ -26,7 +33,11 @@ export class HrChargesPageComponent implements OnInit {
   errorMessage = signal('');
 
   showForm = signal(false);
-  editingId = signal<number | null>(null);
+  // Non-null when the form should open pre-filled from an existing charge —
+  // used for both "Modifier" (formEditMode=true) and "Dupliquer"
+  // (formEditMode=false, so the form treats it as a fresh line).
+  formCharge = signal<HrCharge | null>(null);
+  formEditMode = signal(false);
 
   filterEmployeeId = signal<number | null>(null);
   filterSubcategory = signal('');
@@ -109,21 +120,58 @@ export class HrChargesPageComponent implements OnInit {
   }
 
   openForm(): void {
+    this.formCharge.set(null);
+    this.formEditMode.set(false);
+    this.showForm.set(true);
+  }
+
+  openEdit(charge: HrCharge): void {
+    this.formCharge.set(charge);
+    this.formEditMode.set(true);
+    this.showForm.set(true);
+  }
+
+  duplicateCharge(charge: HrCharge): void {
+    this.formCharge.set(charge);
+    this.formEditMode.set(false);
     this.showForm.set(true);
   }
 
   closeForm(): void {
     this.showForm.set(false);
+    this.formCharge.set(null);
+    this.formEditMode.set(false);
   }
 
-  submitBatch(payload: HrChargeBatchPayload): void {
-    this.hrChargeService.createBatch(payload).subscribe({
-      next: () => {
-        this.closeForm();
-        this.loadData();
-      },
-      error: (err) => this.showError(err),
-    });
+  submitForm(payload: HrChargeBatchPayload): void {
+    const onSuccess = () => {
+      this.closeForm();
+      this.loadData();
+    };
+    const onError = (err: any) => this.showError(err);
+
+    // Kept as two separate subscribe() calls rather than a shared
+    // `request` variable — Observable<HrCharge> and Observable<HrCharge[]>
+    // don't unify into a subscribable union that TypeScript can resolve.
+    if (this.formEditMode()) {
+      this.hrChargeService
+        .update(this.formCharge()!.id, this.toUpdatePayload(payload.lines[0]))
+        .subscribe({ next: onSuccess, error: onError });
+    } else {
+      this.hrChargeService.createBatch(payload).subscribe({ next: onSuccess, error: onError });
+    }
+  }
+
+  private toUpdatePayload(line: HrChargeLinePayload): HrChargeUpdatePayload {
+    return {
+      employee_id: line.employee_id ?? undefined,
+      date: line.date,
+      subcategory: line.subcategory,
+      amount: line.amount ?? undefined,
+      account_id: line.account_id ?? undefined,
+      method: line.method,
+      description: line.description,
+    };
   }
 
   deleteCharge(charge: HrCharge): void {

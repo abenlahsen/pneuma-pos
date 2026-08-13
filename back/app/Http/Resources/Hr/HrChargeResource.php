@@ -11,7 +11,7 @@ class HrChargeResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'date' => $this->date ? (string) $this->date : null,
+            'date' => $this->date?->format('Y-m-d'),
             'employee_id' => $this->employee_id,
             'employee_name' => $this->employee?->name ?? $this->person,
             'subcategory' => $this->subcategory,

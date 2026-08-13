@@ -112,14 +112,15 @@ class ActivityLogApiTest extends TestCase
         Sanctum::actingAs($this->admin, [], 'web');
         $account = $this->createAccount();
 
-        // Relies on the real "Charges RH" / "Salaires" categories seeded by
-        // 2026_08_11_000002_seed_charges_rh_categories.php — same pattern as
-        // HrChargeApiTest::validLine().
+        // Relies on the real "Charges RH" / "Salaire" categories seeded by
+        // 2026_08_11_000002_seed_charges_rh_categories.php (consolidated by
+        // 2026_08_13_000001_consolidate_charges_rh_subcategories.php) — same
+        // pattern as HrChargeApiTest::validLine().
         $this->postJson('/api/hr-charges', [
             'lines' => [[
                 'employee_id' => $this->admin->id,
                 'date' => '2026-07-15',
-                'subcategory' => 'Salaires',
+                'subcategory' => 'Salaire',
                 'amount' => 4750,
                 'account_id' => $account->id,
                 'method' => 'Virement',
