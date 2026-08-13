@@ -199,7 +199,10 @@ tfoot .total-row td { border-bottom: none; }
 
   &:hover { background: $bg-body; }
   &.danger:hover { color: #dc2626; }
+  &.primary:hover { color: $primary-dark; }
 }
+
+.actions-cell { white-space: nowrap; }
 
 // ── States ────────────────────────────────────────────────────────────────────
 .loading-state {

@@ -136,7 +136,7 @@ class TransactionCategoryApiTest extends TestCase
     // A confidential category (e.g. 'Charges RH') must not appear in the
     // picker for a user without `view hr-charges`, even though they have
     // `view transaction-categories` — otherwise the Cash Flow form would
-    // reveal "Salaires"/"CNSS" as selectable options.
+    // reveal "Salaire"/"CNSS" as selectable options.
     public function test_index_excludes_confidential_category_without_hr_charges_permission(): void
     {
         Sanctum::actingAs($this->user, [], 'web');

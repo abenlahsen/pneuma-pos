@@ -115,7 +115,7 @@ class HrChargeService
                     'person' => $employee?->name ?? 'Employé #'.$line['employee_id'],
                     'employee_id' => $line['employee_id'],
                     'account_id' => $line['account_id'],
-                    'description' => $line['description'] ?: "{$line['subcategory']} — ".($employee?->name ?? 'Employé #'.$line['employee_id']),
+                    'description' => $line['description'] ?: $this->defaultDescription($line['subcategory'], $employee, $line['employee_id']),
                 ], $user);
 
                 $created->push($transaction);
@@ -131,8 +131,22 @@ class HrChargeService
 
         // Keep the denormalized `person` field in sync so the Cash Flow table
         // (which displays `person`, not `employee_id`) never shows a stale name.
+        $employee = null;
         if (array_key_exists('employee_id', $validated)) {
-            $validated['person'] = User::find($validated['employee_id'])?->name ?? $validated['person'] ?? $transaction->person;
+            $employee = User::find($validated['employee_id']);
+            $validated['person'] = $employee?->name ?? $validated['person'] ?? $transaction->person;
+        }
+
+        // Mirrors the store() path (see 0f04239): `transactions.description`
+        // is NOT NULL, but the form field is optional — clearing it here
+        // must not attempt to write null.
+        if (array_key_exists('description', $validated) && ! $validated['description']) {
+            $employee ??= $transaction->employee_id ? User::find($transaction->employee_id) : null;
+            $validated['description'] = $this->defaultDescription(
+                $validated['subcategory'] ?? $transaction->subcategory,
+                $employee,
+                $validated['employee_id'] ?? $transaction->employee_id,
+            );
         }
 
         return $this->transactionService->update($transaction, $validated, $userId, $userName);
@@ -157,6 +171,11 @@ class HrChargeService
             'subcategories' => $parent ? $parent->children()->get(['id', 'name']) : collect(),
             'accounts' => Account::active()->orderBy('name')->get(['id', 'name', 'type']),
         ];
+    }
+
+    private function defaultDescription(string $subcategory, ?User $employee, ?int $employeeId): string
+    {
+        return "{$subcategory} — ".($employee?->name ?? ($employeeId ? "Employé #{$employeeId}" : 'Employé'));
     }
 
     /**

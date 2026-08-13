@@ -95,7 +95,7 @@ class HrChargeApiTest extends TestCase
         return array_merge([
             'employee_id' => $this->employee->id,
             'date' => '2026-07-15',
-            'subcategory' => 'Salaires',
+            'subcategory' => 'Salaire',
             'amount' => 6500,
             'account_id' => $accountId,
             'method' => 'Virement',
@@ -164,8 +164,8 @@ class HrChargeApiTest extends TestCase
 
         $response = $this->postJson('/api/hr-charges', [
             'lines' => [
-                $this->validLine($account->id, ['subcategory' => 'Salaires', 'amount' => 6500]),
-                $this->validLine($account->id, ['subcategory' => 'CNSS (part patronale)', 'amount' => 572]),
+                $this->validLine($account->id, ['subcategory' => 'Salaire', 'amount' => 6500]),
+                $this->validLine($account->id, ['subcategory' => 'CNSS', 'amount' => 572]),
             ],
         ]);
 
@@ -174,7 +174,7 @@ class HrChargeApiTest extends TestCase
         $this->assertDatabaseHas('transactions', [
             'type' => 'expense',
             'category' => 'Charges RH',
-            'subcategory' => 'Salaires',
+            'subcategory' => 'Salaire',
             'amount' => 6500,
             'employee_id' => $this->employee->id,
             'account_id' => $account->id,
@@ -182,7 +182,7 @@ class HrChargeApiTest extends TestCase
         $this->assertDatabaseHas('transactions', [
             'type' => 'expense',
             'category' => 'Charges RH',
-            'subcategory' => 'CNSS (part patronale)',
+            'subcategory' => 'CNSS',
             'amount' => 572,
         ]);
     }
@@ -196,14 +196,64 @@ class HrChargeApiTest extends TestCase
         $account = $this->createAccount();
 
         $response = $this->postJson('/api/hr-charges', [
-            'lines' => [$this->validLine($account->id, ['subcategory' => 'Salaires', 'description' => null])],
+            'lines' => [$this->validLine($account->id, ['subcategory' => 'Salaire', 'description' => null])],
         ]);
 
         $response->assertCreated();
         $this->assertDatabaseHas('transactions', [
             'category' => 'Charges RH',
-            'subcategory' => 'Salaires',
-            'description' => "Salaires — {$this->employee->name}",
+            'subcategory' => 'Salaire',
+            'description' => "Salaire — {$this->employee->name}",
+        ]);
+    }
+
+    // The description-defaulting fix from 0f04239 originally only covered
+    // store() — update() must mirror it, since the edit form allows the
+    // description to be cleared just like the create form does.
+    public function test_update_regenerates_description_when_cleared(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+        $account = $this->createAccount();
+
+        $store = $this->postJson('/api/hr-charges', ['lines' => [$this->validLine($account->id)]]);
+        $id = $store->json('0.id');
+
+        $response = $this->putJson("/api/hr-charges/{$id}", ['description' => '']);
+
+        $response->assertOk();
+        $this->assertDatabaseHas('transactions', [
+            'id' => $id,
+            'description' => "Salaire — {$this->employee->name}",
+        ]);
+    }
+
+    public function test_update_changing_subcategory_and_employee_resyncs_person(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+        $account = $this->createAccount();
+        $otherEmployee = User::query()->create([
+            'name' => 'K. Idrissi',
+            'email' => fake()->unique()->safeEmail(),
+            'password' => 'password',
+            'phone' => '0600000003',
+            'commission_rate' => 0,
+            'must_change_password' => false,
+        ]);
+
+        $store = $this->postJson('/api/hr-charges', ['lines' => [$this->validLine($account->id)]]);
+        $id = $store->json('0.id');
+
+        $response = $this->putJson("/api/hr-charges/{$id}", [
+            'subcategory' => 'CNSS',
+            'employee_id' => $otherEmployee->id,
+        ]);
+
+        $response->assertOk()->assertJsonPath('subcategory', 'CNSS');
+        $this->assertDatabaseHas('transactions', [
+            'id' => $id,
+            'subcategory' => 'CNSS',
+            'employee_id' => $otherEmployee->id,
+            'person' => $otherEmployee->name,
         ]);
     }
 
@@ -257,8 +307,8 @@ class HrChargeApiTest extends TestCase
 
         $this->postJson('/api/hr-charges', [
             'lines' => [
-                $this->validLine($account->id, ['subcategory' => 'Salaires', 'amount' => 6500]),
-                $this->validLine($account->id, ['subcategory' => 'CNSS (part patronale)', 'amount' => 572]),
+                $this->validLine($account->id, ['subcategory' => 'Salaire', 'amount' => 6500]),
+                $this->validLine($account->id, ['subcategory' => 'CNSS', 'amount' => 572]),
             ],
         ])->assertCreated();
 
@@ -267,7 +317,7 @@ class HrChargeApiTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('total', 7072)
             ->assertJsonPath('employee_count', 1)
-            ->assertJsonPath('by_subcategory.Salaires', 6500);
+            ->assertJsonPath('by_subcategory.Salaire', 6500);
     }
 
     public function test_filters_returns_employees_subcategories_and_accounts(): void
@@ -277,7 +327,7 @@ class HrChargeApiTest extends TestCase
         $response = $this->getJson('/api/hr-charges-filters');
 
         $response->assertOk()->assertJsonStructure(['employees', 'subcategories', 'accounts']);
-        $this->assertTrue(collect($response->json('subcategories'))->pluck('name')->contains('Salaires'));
+        $this->assertTrue(collect($response->json('subcategories'))->pluck('name')->contains('Salaire'));
     }
 
     // -------------------------------------------------------------------------
