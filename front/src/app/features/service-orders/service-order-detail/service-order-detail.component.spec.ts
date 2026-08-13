@@ -115,7 +115,7 @@ describe('ServiceOrderDetailComponent', () => {
     });
 
     it('returns badge-warning for any unknown status', () => {
-      expect(comp.statusClass('INCONNU')).toBe('badge-warning');
+      expect(comp.statusClass('INCONNU' as any)).toBe('badge-warning');
     });
   });
 
@@ -137,7 +137,7 @@ describe('ServiceOrderDetailComponent', () => {
     });
 
     it('returns badge-danger for unknown status', () => {
-      expect(comp.paymentClass('AUTRE')).toBe('badge-danger');
+      expect(comp.paymentClass('AUTRE' as any)).toBe('badge-danger');
     });
   });
 

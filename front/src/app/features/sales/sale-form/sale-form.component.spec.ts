@@ -6,6 +6,7 @@ import { SaleFormComponent } from './sale-form.component';
 import { ProductService } from '../../../core/services/product.service';
 import { StockService } from '../../../core/services/stock.service';
 import { ClientService } from '../../clients/data-access/client.service';
+import { CityService } from '../../../core/services/city.service';
 
 const productServiceStub = { getProducts: () => of({ data: [] }) };
 const stockServiceStub = { getStocks: () => of({ data: [] }) };
@@ -14,6 +15,7 @@ const clientServiceStub = {
   getClientProfile: () => of(null),
   createClient: () => of({}),
 };
+const cityServiceStub = { getCities: () => of([]) };
 
 describe('SaleFormComponent', () => {
   let comp: SaleFormComponent;
@@ -26,6 +28,7 @@ describe('SaleFormComponent', () => {
         { provide: ProductService, useValue: productServiceStub },
         { provide: StockService, useValue: stockServiceStub },
         { provide: ClientService, useValue: clientServiceStub },
+        { provide: CityService, useValue: cityServiceStub },
       ],
     }).compileComponents();
 
