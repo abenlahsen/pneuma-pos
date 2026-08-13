@@ -43,15 +43,15 @@ describe('ServiceOrderFormComponent', () => {
   describe('totalAmount', () => {
     it('sums labor_cost × quantity for service lines', () => {
       comp.lines.set([
-        { item_type: 'service', service_type: 'Vidange', description: '', quantity: 1, parts_cost: 0, labor_cost: 80 },
-        { item_type: 'service', service_type: 'Freins', description: '', quantity: 1, parts_cost: 0, labor_cost: 150 },
+        { item_type: 'service', service_type: 'Vidange', description: '', quantity: 1, parts_cost: 0, labor_cost: 80, purchase_price: 0 },
+        { item_type: 'service', service_type: 'Freins', description: '', quantity: 1, parts_cost: 0, labor_cost: 150, purchase_price: 0 },
       ]);
       expect(comp.totalAmount()).toBe(230);
     });
 
     it('handles string coercions from inputs', () => {
       comp.lines.set([
-        { item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: '100' as any },
+        { item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: '100' as any, purchase_price: 0 },
       ]);
       expect(comp.totalAmount()).toBe(100);
     });
@@ -63,14 +63,14 @@ describe('ServiceOrderFormComponent', () => {
 
     it('multiplies labor_cost by quantity', () => {
       comp.lines.set([
-        { item_type: 'service', service_type: 'X', description: '', quantity: 3, parts_cost: 0, labor_cost: 50 },
+        { item_type: 'service', service_type: 'X', description: '', quantity: 3, parts_cost: 0, labor_cost: 50, purchase_price: 0 },
       ]);
       expect(comp.totalAmount()).toBe(150);
     });
 
     it('sums unit_price × quantity for part lines', () => {
       comp.lines.set([
-        { item_type: 'part', product_id: 1, product_name: 'Filtre', product_reference: '', unit: 'pièce', quantity: 2, unit_price: 75, total_quantity: 10, searchQuery: '', searchResults: [], searching: false },
+        { item_type: 'part', product_id: 1, stock_id: null, product_name: 'Filtre', product_reference: '', unit: 'pièce', quantity: 2, unit_price: 75, purchase_price: 0, total_quantity: 10, searchQuery: '', searchResults: [], searching: false },
       ]);
       expect(comp.totalAmount()).toBe(150);
     });
@@ -82,25 +82,25 @@ describe('ServiceOrderFormComponent', () => {
 
   describe('netAmount', () => {
     it('applies percentage discount to totalAmount', () => {
-      comp.lines.set([{ item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 300 }]);
+      comp.lines.set([{ item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 300, purchase_price: 0 }]);
       comp.discount.set(10);
       expect(comp.netAmount()).toBe(270);
     });
 
     it('clamps to 0 when discount is 100%', () => {
-      comp.lines.set([{ item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 100 }]);
+      comp.lines.set([{ item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 100, purchase_price: 0 }]);
       comp.discount.set(100);
       expect(comp.netAmount()).toBe(0);
     });
 
     it('equals totalAmount when discount is 0', () => {
-      comp.lines.set([{ item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 200 }]);
+      comp.lines.set([{ item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 200, purchase_price: 0 }]);
       comp.discount.set(0);
       expect(comp.netAmount()).toBe(200);
     });
 
     it('handles 50% discount correctly', () => {
-      comp.lines.set([{ item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 200 }]);
+      comp.lines.set([{ item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 200, purchase_price: 0 }]);
       comp.discount.set(50);
       expect(comp.netAmount()).toBe(100);
     });
@@ -120,7 +120,7 @@ describe('ServiceOrderFormComponent', () => {
 
     it('preserves existing lines when adding', () => {
       comp.lines.set([
-        { item_type: 'service', service_type: 'A', description: '', quantity: 1, parts_cost: 0, labor_cost: 50 },
+        { item_type: 'service', service_type: 'A', description: '', quantity: 1, parts_cost: 0, labor_cost: 50, purchase_price: 0 },
       ]);
       comp.addServiceLine();
       expect(comp.lines()).toHaveLength(2);
@@ -139,8 +139,8 @@ describe('ServiceOrderFormComponent', () => {
   describe('removeLine', () => {
     it('removes the line at the given index', () => {
       comp.lines.set([
-        { item_type: 'service', service_type: 'A', description: '', quantity: 1, parts_cost: 0, labor_cost: 50 },
-        { item_type: 'service', service_type: 'B', description: '', quantity: 1, parts_cost: 0, labor_cost: 80 },
+        { item_type: 'service', service_type: 'A', description: '', quantity: 1, parts_cost: 0, labor_cost: 50, purchase_price: 0 },
+        { item_type: 'service', service_type: 'B', description: '', quantity: 1, parts_cost: 0, labor_cost: 80, purchase_price: 0 },
       ]);
       comp.removeLine(0);
       expect(comp.lines()).toHaveLength(1);
@@ -149,7 +149,7 @@ describe('ServiceOrderFormComponent', () => {
 
     it('does NOT remove when only one line remains', () => {
       comp.lines.set([
-        { item_type: 'service', service_type: 'A', description: '', quantity: 1, parts_cost: 0, labor_cost: 50 },
+        { item_type: 'service', service_type: 'A', description: '', quantity: 1, parts_cost: 0, labor_cost: 50, purchase_price: 0 },
       ]);
       comp.removeLine(0);
       expect(comp.lines()).toHaveLength(1);
@@ -159,8 +159,8 @@ describe('ServiceOrderFormComponent', () => {
   describe('updateLine', () => {
     it('patches the field at the given index without affecting other lines', () => {
       comp.lines.set([
-        { item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 50 },
-        { item_type: 'service', service_type: 'Y', description: '', quantity: 1, parts_cost: 0, labor_cost: 80 },
+        { item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 50, purchase_price: 0 },
+        { item_type: 'service', service_type: 'Y', description: '', quantity: 1, parts_cost: 0, labor_cost: 80, purchase_price: 0 },
       ]);
       comp.updateLine(0, { labor_cost: 200 } as any);
       expect((comp.lines()[0] as any).labor_cost).toBe(200);
@@ -197,19 +197,19 @@ describe('ServiceOrderFormComponent', () => {
 
   describe('hasValidLines', () => {
     it('returns true when a service line has a non-empty service_type', () => {
-      comp.lines.set([{ item_type: 'service', service_type: 'Vidange', description: '', quantity: 1, parts_cost: 0, labor_cost: 0 }]);
+      comp.lines.set([{ item_type: 'service', service_type: 'Vidange', description: '', quantity: 1, parts_cost: 0, labor_cost: 0, purchase_price: 0 }]);
       expect(comp.hasValidLines()).toBe(true);
     });
 
     it('returns false when service line has empty service_type', () => {
-      comp.lines.set([{ item_type: 'service', service_type: '', description: '', quantity: 1, parts_cost: 0, labor_cost: 0 }]);
+      comp.lines.set([{ item_type: 'service', service_type: '', description: '', quantity: 1, parts_cost: 0, labor_cost: 0, purchase_price: 0 }]);
       expect(comp.hasValidLines()).toBe(false);
     });
 
     it('returns true when a part line has a product_id', () => {
       comp.lines.set([{
-        item_type: 'part', product_id: 5, product_name: 'Filtre', product_reference: '',
-        unit: 'pièce', quantity: 1, unit_price: 0, total_quantity: 10,
+        item_type: 'part', product_id: 5, stock_id: null, product_name: 'Filtre', product_reference: '',
+        unit: 'pièce', quantity: 1, unit_price: 0, purchase_price: 0, total_quantity: 10,
         searchQuery: '', searchResults: [], searching: false,
       }]);
       expect(comp.hasValidLines()).toBe(true);
@@ -317,7 +317,7 @@ describe('ServiceOrderFormComponent', () => {
       comp.commercial_id.set(3);
       comp.client_id.set(null);
       comp.lines.set([
-        { item_type: 'service', service_type: 'Vidange', description: 'Huile 5W30', quantity: 1, parts_cost: 0, labor_cost: 120 },
+        { item_type: 'service', service_type: 'Vidange', description: 'Huile 5W30', quantity: 1, parts_cost: 0, labor_cost: 120, purchase_price: 0 },
       ]);
 
       const emitted: any[] = [];
@@ -341,7 +341,7 @@ describe('ServiceOrderFormComponent', () => {
 
     it('converts empty notes to null', () => {
       comp.notes.set('');
-      comp.lines.set([{ item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 50 }]);
+      comp.lines.set([{ item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 50, purchase_price: 0 }]);
       const emitted: any[] = [];
       comp.save.subscribe((p) => emitted.push(p));
       comp.onSubmit();
@@ -349,7 +349,7 @@ describe('ServiceOrderFormComponent', () => {
     });
 
     it('converts empty item description to null for service lines', () => {
-      comp.lines.set([{ item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 50 }]);
+      comp.lines.set([{ item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 50, purchase_price: 0 }]);
       const emitted: any[] = [];
       comp.save.subscribe((p) => emitted.push(p));
       comp.onSubmit();
@@ -358,8 +358,8 @@ describe('ServiceOrderFormComponent', () => {
 
     it('emits multiple items when multiple lines are set', () => {
       comp.lines.set([
-        { item_type: 'service', service_type: 'A', description: '', quantity: 1, parts_cost: 0, labor_cost: 80 },
-        { item_type: 'service', service_type: 'B', description: 'Details', quantity: 1, parts_cost: 0, labor_cost: 150 },
+        { item_type: 'service', service_type: 'A', description: '', quantity: 1, parts_cost: 0, labor_cost: 80, purchase_price: 0 },
+        { item_type: 'service', service_type: 'B', description: 'Details', quantity: 1, parts_cost: 0, labor_cost: 150, purchase_price: 0 },
       ]);
       const emitted: any[] = [];
       comp.save.subscribe((p) => emitted.push(p));
@@ -401,33 +401,63 @@ describe('ServiceOrderFormComponent', () => {
   // Client filtering
   // -------------------------------------------------------------------------
 
+  // Since 0ec71c5 ("Fix Service Auto client search missing older clients"),
+  // client filtering is a debounced (300ms) server-side search rather than a
+  // synchronous client-side filter — the stub must actually honor the
+  // `search` param, ngOnInit() must run to wire up setupClientSearch(), and
+  // the test must genuinely wait out the debounce. Real timers are used
+  // (rather than vi.useFakeTimers()) because toggling fake/real timers
+  // across tests left RxJS's scheduler in an inconsistent state and caused
+  // order-dependent flakiness; ngOnDestroy() is called in afterEach so each
+  // test's subscription is torn down instead of leaking into the next one.
   describe('client filtering', () => {
+    const allClients = [
+      { id: 1, name: 'Garage Alpha', phone: '0600000001', city: 'Paris' },
+      { id: 2, name: 'Atelier Beta', phone: '0600000002', city: 'Lyon' },
+      { id: 3, name: 'Mécanique Gamma', phone: '0600000003', city: 'Marseille' },
+    ];
+    const waitForDebounce = () => new Promise((resolve) => setTimeout(resolve, 350));
+
     beforeEach(() => {
-      comp.clients.set([
-        { id: 1, name: 'Garage Alpha', phone: '0600000001', city: 'Paris' } as any,
-        { id: 2, name: 'Atelier Beta', phone: '0600000002', city: 'Lyon' } as any,
-        { id: 3, name: 'Mécanique Gamma', phone: '0600000003', city: 'Marseille' } as any,
-      ]);
+      clientServiceStub.getClients = ((params?: { search?: string }) => {
+        const term = (params?.search || '').toLowerCase();
+        if (!term) return of(allClients.slice(0, 8) as any);
+        return of(
+          allClients.filter(
+            (c) => c.name.toLowerCase().includes(term) || c.city.toLowerCase().includes(term),
+          ) as any,
+        );
+      }) as typeof clientServiceStub.getClients;
+      comp.ngOnInit();
     });
 
-    it('shows up to 8 clients when search is empty', () => {
+    afterEach(() => {
+      comp.ngOnDestroy();
+      clientServiceStub.getClients = () => of([]);
+    });
+
+    it('shows up to 8 clients when search is empty', async () => {
       comp.onClientSearchInput('');
+      await waitForDebounce();
       expect(comp.filteredClients().length).toBeLessThanOrEqual(8);
     });
 
-    it('filters clients by name', () => {
+    it('filters clients by name', async () => {
       comp.onClientSearchInput('alpha');
+      await waitForDebounce();
       expect(comp.filteredClients()).toHaveLength(1);
       expect(comp.filteredClients()[0].name).toBe('Garage Alpha');
     });
 
-    it('filters clients by city', () => {
+    it('filters clients by city', async () => {
       comp.onClientSearchInput('lyon');
+      await waitForDebounce();
       expect(comp.filteredClients()[0].name).toBe('Atelier Beta');
     });
 
-    it('returns empty array when no match', () => {
+    it('returns empty array when no match', async () => {
       comp.onClientSearchInput('zzzznosuchclient');
+      await waitForDebounce();
       expect(comp.filteredClients()).toHaveLength(0);
     });
   });
