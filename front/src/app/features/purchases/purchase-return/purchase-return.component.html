@@ -1,0 +1,123 @@
+<div class="modal-overlay" (click)="close()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Retour fournisseur — Achat #{{ purchase.id }}</h2>
+      <button class="btn-icon" (click)="close()">✕</button>
+    </div>
+
+    <div class="modal-body" *ngIf="!loading(); else loadingTpl">
+      <div class="error-banner" *ngIf="errorMessage()">⚠️ {{ errorMessage() }}</div>
+
+      <div class="empty-state" *ngIf="lines().length === 0">
+        <p>Tous les articles de cet achat ont déjà été retournés.</p>
+      </div>
+
+      <ng-container *ngIf="lines().length > 0">
+        <div class="section-header">
+          <h3 class="section-title">Articles à retourner</h3>
+          <button class="btn btn-secondary btn-sm" (click)="returnAllRemaining()">Tout retourner</button>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Produit</th>
+                <th class="col-right">Qté achetée</th>
+                <th class="col-right">Déjà retournée</th>
+                <th class="col-right">Qté à retourner</th>
+                <th class="col-right">PU</th>
+                <th class="col-right">Total ligne</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let line of lines()">
+                <td>{{ line.label }}</td>
+                <td class="col-right num">{{ line.item.quantity }}</td>
+                <td class="col-right num">{{ line.alreadyReturned }}</td>
+                <td class="col-right">
+                  <span class="allocation-input">
+                    <input
+                      type="number"
+                      class="form-control form-control--sm"
+                      [ngModel]="line.quantity"
+                      (ngModelChange)="setQuantity(line, $event)"
+                      [max]="line.remaining"
+                      min="0"
+                    />
+                    <span class="text-muted">/ {{ line.remaining }}</span>
+                  </span>
+                </td>
+                <td class="col-right num">{{ line.item.unit_price | number:'1.2-2' }} DH</td>
+                <td class="col-right num">{{ (line.quantity * line.item.unit_price) | number:'1.2-2' }} DH</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="allocation-summary">
+          <span>Total du retour</span>
+          <strong>{{ totalQuantity() }} article(s) — {{ totalAmount() | number:'1.2-2' }} DH</strong>
+        </div>
+
+        <h3 class="section-title mt-4">Détails</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Date du retour *</label>
+            <input type="date" class="form-control" [ngModel]="date()" (ngModelChange)="date.set($event)" />
+          </div>
+          <div class="form-group form-group--full">
+            <label>Motif</label>
+            <input type="text" class="form-control" placeholder="Client désisté, défaut fournisseur…" [ngModel]="reason()" (ngModelChange)="reason.set($event)" />
+          </div>
+        </div>
+
+        <ng-container *ngIf="canSubmitRefund()">
+          <h3 class="section-title">Remboursement</h3>
+          <label class="checkbox-line">
+            <input type="checkbox" [ngModel]="refundEnabled()" (ngModelChange)="toggleRefund($event)" />
+            Le fournisseur rembourse maintenant ({{ availableToRefund() | number:'1.2-2' }} DH disponible)
+          </label>
+
+          <div class="form-grid mt-3" *ngIf="refundEnabled()">
+            <div class="form-group">
+              <label>Montant remboursé (DH) *</label>
+              <input type="number" class="form-control" min="0.01" [max]="availableToRefund()" step="0.01"
+                [ngModel]="refundAmount()" (ngModelChange)="refundAmount.set($event)" />
+            </div>
+            <div class="form-group">
+              <label>Compte crédité *</label>
+              <select class="form-control" [ngModel]="refundAccountId()" (ngModelChange)="refundAccountId.set($event)">
+                <option [ngValue]="0" disabled>-- Sélectionner un compte --</option>
+                <option *ngFor="let acc of accounts()" [ngValue]="acc.id">{{ acc.name }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Date du remboursement *</label>
+              <input type="date" class="form-control" [ngModel]="refundDate()" (ngModelChange)="refundDate.set($event)" />
+            </div>
+            <div class="form-group">
+              <label>Méthode</label>
+              <select class="form-control" [ngModel]="refundMethod()" (ngModelChange)="refundMethod.set($event)">
+                <option *ngFor="let m of paymentMethods" [value]="m">{{ m }}</option>
+              </select>
+            </div>
+          </div>
+        </ng-container>
+      </ng-container>
+    </div>
+
+    <ng-template #loadingTpl>
+      <div class="modal-body empty-state"><p>Chargement…</p></div>
+    </ng-template>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="close()">Annuler</button>
+      <button
+        class="btn btn-primary"
+        (click)="submit()"
+        [disabled]="submitting() || loading() || totalQuantity() === 0"
+      >{{ submitting() ? 'Enregistrement…' : 'Enregistrer le retour' }}</button>
+    </div>
+  </div>
+</div>

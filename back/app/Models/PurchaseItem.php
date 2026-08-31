@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PurchaseItem extends Model
 {
@@ -43,5 +42,29 @@ class PurchaseItem extends Model
     public function stock()
     {
         return $this->belongsTo(Stock::class);
+    }
+
+    public function returns()
+    {
+        return $this->hasMany(PurchaseReturnItem::class);
+    }
+
+    /**
+     * Quantity of this line already sent back to the supplier across every
+     * recorded PurchaseReturn.
+     */
+    public function returnedQuantity(): int
+    {
+        return (int) $this->returns()->sum('quantity');
+    }
+
+    /**
+     * Quantity of this line still held — the ceiling for a new return and
+     * the amount PurchaseService restores/reapplies on status changes, so a
+     * partially-returned line is never double-counted.
+     */
+    public function remainingQuantity(): int
+    {
+        return max(0, (int) $this->quantity - $this->returnedQuantity());
     }
 }

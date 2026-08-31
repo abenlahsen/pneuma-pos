@@ -29,11 +29,15 @@ export interface ActivityLogProperties {
   amount?: number;
   method?: string;
   reference?: string | null;
+  /** RETURN_ADD / RETURN_DELETE only. */
+  quantity?: number;
+  refund_amount?: number;
+  lines?: { label: string; quantity: number }[];
 }
 
 export interface ActivityLog {
   id: number;
-  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'PAYMENT_ADD' | 'PAYMENT_DELETE';
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'PAYMENT_ADD' | 'PAYMENT_DELETE' | 'RETURN_ADD' | 'RETURN_DELETE';
   entity_type: 'vente' | 'achat' | 'service_order';
   entity_id: number;
   entity_label: string;

@@ -11,12 +11,13 @@ import { PAYMENT_METHODS, paymentMethodClass } from '../../../core/constants/pay
 import { PurchaseFormComponent } from '../purchase-form/purchase-form.component';
 import { PurchaseDetailComponent } from '../purchase-detail/purchase-detail.component';
 import { PurchasePaymentsComponent } from '../purchase-payments/purchase-payments.component';
+import { PurchaseReturnComponent } from '../purchase-return/purchase-return.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 
 @Component({
   selector: 'app-purchases-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, PurchaseFormComponent, PurchaseDetailComponent, PurchasePaymentsComponent, AutoRefreshControlComponent],
+  imports: [CommonModule, FormsModule, PurchaseFormComponent, PurchaseDetailComponent, PurchasePaymentsComponent, PurchaseReturnComponent, AutoRefreshControlComponent],
   templateUrl: './purchases-page.component.html',
   styleUrls: ['./purchases-page.component.scss']
 })
@@ -64,6 +65,7 @@ export class PurchasesPageComponent implements OnInit {
   selectedPurchase = signal<Purchase | null>(null);
   detailPurchase = signal<Purchase | null>(null);
   paymentPurchase = signal<Purchase | null>(null);
+  returnPurchase = signal<Purchase | null>(null);
 
   readonly pages = computed(() => {
     const pages: number[] = [];
@@ -192,6 +194,40 @@ export class PurchasesPageComponent implements OnInit {
     if (!purchase) return;
     this.closeDetail();
     this.openForm(purchase);
+  }
+
+  returnFromDetail(): void {
+    const purchase = this.detailPurchase();
+    if (!purchase) return;
+    this.closeDetail();
+    this.openReturn(purchase);
+  }
+
+  openReturn(purchase: Purchase): void {
+    this.returnPurchase.set(purchase);
+  }
+
+  closeReturn(): void {
+    this.returnPurchase.set(null);
+  }
+
+  onReturnSaved(): void {
+    this.closeReturn();
+    this.loadData();
+  }
+
+  /** A return was deleted from inside the detail modal — refresh both the list and the still-open modal's now-stale purchase. */
+  onDetailReturnsChanged(): void {
+    this.loadData();
+    const current = this.detailPurchase();
+    if (!current) return;
+    this.purchaseService.getPurchase(current.id).subscribe({
+      next: (purchase) => this.detailPurchase.set(purchase),
+    });
+  }
+
+  canReturnPurchase(purchase: Purchase): boolean {
+    return this.authService.hasPermission('cancel purchases') && purchase.status !== 'ANNULE';
   }
 
   openForm(purchase: Purchase | null = null): void {

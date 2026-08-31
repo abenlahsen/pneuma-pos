@@ -27,6 +27,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit purchases',
             'delete purchases',
             'manage purchase-payments',
+            // Cancelling a received/finished purchase via a supplier return —
+            // separate from 'edit purchases' since it also writes a cash
+            // refund; Administrator + Manager only (kept off Commercial).
+            'cancel purchases',
 
             // Clients
             'view clients',

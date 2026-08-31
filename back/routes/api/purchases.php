@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\PurchasePaymentController;
+use App\Http\Controllers\PurchaseReturnController;
 use Illuminate\Support\Facades\Route;
 
 // Purchases (Achats)
@@ -24,3 +25,8 @@ Route::delete('purchases/{purchase}/payments/{payment}', [PurchasePaymentControl
 
 // Purchase payment detail (unscoped — shows every purchase a payment covers, single or multi)
 Route::get('purchase-payments/{payment}', [PurchasePaymentController::class, 'show'])->middleware('permission:view purchases');
+
+// Purchase Returns (retours fournisseur)
+Route::get('purchases/{purchase}/returns', [PurchaseReturnController::class, 'index'])->middleware('permission:view purchases');
+Route::post('purchases/{purchase}/returns', [PurchaseReturnController::class, 'store'])->middleware('permission:cancel purchases');
+Route::delete('purchase-returns/{purchaseReturn}', [PurchaseReturnController::class, 'destroy'])->middleware('permission:cancel purchases');

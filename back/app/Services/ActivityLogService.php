@@ -237,6 +237,63 @@ class ActivityLogService
         ]);
     }
 
+    /**
+     * @param  array<int, array<string, mixed>>  $lines  one entry per returned line: {label, quantity}
+     */
+    public function logPurchaseReturnAdded(
+        Purchase $purchase,
+        int $quantity,
+        float $amount,
+        float $refundAmount,
+        array $lines,
+        ?int $userId,
+        ?string $userName
+    ): void {
+        $amountFmt = number_format($amount, 2, '.', ' ');
+        $desc = "Retour fournisseur sur l'Achat #{$purchase->id} — {$quantity} article(s), {$amountFmt} MAD";
+        if ($refundAmount > 0) {
+            $refundFmt = number_format($refundAmount, 2, '.', ' ');
+            $desc .= " (dont {$refundFmt} MAD remboursés)";
+        }
+
+        $this->insert([
+            'action' => ActivityLog::ACTION_RETURN_ADD,
+            'entity_type' => ActivityLog::ENTITY_ACHAT,
+            'entity_id' => $purchase->id,
+            'entity_label' => "Achat #{$purchase->id}",
+            'description' => $desc,
+            'properties' => [
+                'quantity' => $quantity,
+                'amount' => $amount,
+                'refund_amount' => $refundAmount,
+                'lines' => $lines,
+            ],
+            'user_id' => $userId,
+            'user_name' => $userName,
+        ]);
+    }
+
+    public function logPurchaseReturnDeleted(Purchase $purchase, int $quantity, float $amount, float $refundAmount, ?int $userId, ?string $userName): void
+    {
+        $amountFmt = number_format($amount, 2, '.', ' ');
+        $desc = "Retour fournisseur supprimé sur l'Achat #{$purchase->id} — {$quantity} article(s), {$amountFmt} MAD";
+
+        $this->insert([
+            'action' => ActivityLog::ACTION_RETURN_DELETE,
+            'entity_type' => ActivityLog::ENTITY_ACHAT,
+            'entity_id' => $purchase->id,
+            'entity_label' => "Achat #{$purchase->id}",
+            'description' => $desc,
+            'properties' => [
+                'quantity' => $quantity,
+                'amount' => $amount,
+                'refund_amount' => $refundAmount,
+            ],
+            'user_id' => $userId,
+            'user_name' => $userName,
+        ]);
+    }
+
     // -------------------------------------------------------------------------
     // Service Auto
     // -------------------------------------------------------------------------

@@ -182,6 +182,30 @@
               </div>
             }
           </div>
+        } @else if (isReturnAction(log)) {
+          <!-- Retour fournisseur -->
+          <div class="payment-detail">
+            <div class="payment-row">
+              <span class="payment-label">Quantité retournée</span>
+              <span class="payment-value">{{ log.properties?.quantity }}</span>
+            </div>
+            <div class="payment-row">
+              <span class="payment-label">Montant</span>
+              <span class="payment-value">{{ log.properties?.amount | number:'1.2-2' }} MAD</span>
+            </div>
+            @if ((log.properties?.refund_amount ?? 0) > 0) {
+              <div class="payment-row">
+                <span class="payment-label">Remboursé</span>
+                <span class="payment-value">{{ log.properties?.refund_amount | number:'1.2-2' }} MAD</span>
+              </div>
+            }
+            @for (line of log.properties?.lines; track line.label) {
+              <div class="payment-row">
+                <span class="payment-label">{{ line.label }}</span>
+                <span class="payment-value">x{{ line.quantity }}</span>
+              </div>
+            }
+          </div>
         } @else {
           <!-- Titre du tableau -->
           <p class="snapshot-title">{{ detailTitle(log) }}</p>

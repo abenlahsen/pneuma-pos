@@ -26,6 +26,9 @@ export interface Purchase {
   total_price?: number;
   discount?: number;
   net_amount?: number;
+  /** Running totals maintained by supplier returns (see PurchaseReturn) — gross value, undiscounted. */
+  returned_quantity?: number;
+  returned_amount?: number;
   items?: PurchaseItem[];
   status: PurchaseStatus;
   payment_status: PaymentStatus;
@@ -105,4 +108,49 @@ export interface PurchasePaymentDetail {
   supplier?: { id: number; name: string } | null;
   account?: { id: number; name: string } | null;
   purchases: PurchasePaymentDetailPurchaseRow[];
+}
+
+// -----------------------------------------------------------------------------
+// Purchase Returns (retours fournisseur)
+// -----------------------------------------------------------------------------
+
+export interface PurchaseReturnItem {
+  id: number;
+  purchase_return_id: number;
+  purchase_item_id: number;
+  product_id: number | null;
+  stock_id: number | null;
+  quantity: number;
+  unit_price: number;
+  total_price?: number;
+  linkedProduct?: Product;
+}
+
+export interface PurchaseReturn {
+  id: number;
+  purchase_id: number;
+  date: string;
+  reason?: string | null;
+  total_quantity: number;
+  total_amount: number;
+  refund_amount: number;
+  refund_transaction_id?: number | null;
+  items?: PurchaseReturnItem[];
+  refundTransaction?: { id: number; account?: { id: number; name: string } | null } | null;
+  creator?: { id: number; name: string } | null;
+  created_at?: string;
+}
+
+export interface PurchaseReturnRefundPayload {
+  amount: number;
+  account_id: number;
+  date: string;
+  method: string;
+}
+
+export interface PurchaseReturnPayload {
+  date: string;
+  reason?: string | null;
+  items: { purchase_item_id: number; quantity: number }[];
+  refund?: PurchaseReturnRefundPayload | null;
 }

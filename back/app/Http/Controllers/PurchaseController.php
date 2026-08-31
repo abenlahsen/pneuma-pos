@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Domain\Purchases\PurchaseService;
 use App\Enums\PurchasePaymentStatus;
 use App\Enums\PurchaseStatus;
-use App\Models\Product;
 use App\Models\Purchase;
+use App\Support\Helpers\ProductLabel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -156,7 +156,7 @@ class PurchaseController extends Controller
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
-        $rows = [['Date', 'Fournisseur', 'Commercial', 'Statut', 'Paiement', 'Mode(s) paiement', 'Facture', 'N° BL', 'N° Facture', 'Remise (%)', 'Qté totale', 'Produits', 'Total HT', 'Net']];
+        $rows = [['Date', 'Fournisseur', 'Commercial', 'Statut', 'Paiement', 'Mode(s) paiement', 'Facture', 'N° BL', 'N° Facture', 'Remise (%)', 'Qté totale', 'Produits', 'Total HT', 'Net', 'Qté retournée', 'Montant retourné']];
 
         foreach ($purchases as $purchase) {
             $rows[] = [
@@ -174,6 +174,8 @@ class PurchaseController extends Controller
                 $this->formatItemsColumn($purchase->items),
                 (float) ($purchase->total_price ?? 0),
                 (float) ($purchase->net_amount ?? 0),
+                (int) ($purchase->returned_quantity ?? 0),
+                (float) ($purchase->returned_amount ?? 0),
             ];
         }
 
@@ -197,46 +199,9 @@ class PurchaseController extends Controller
     private function formatItemsColumn($items): string
     {
         return $items->map(function ($item) {
-            $label = $this->formatProductLabel($item->linkedProduct, 'Produit #'.$item->product_id);
+            $label = ProductLabel::format($item->linkedProduct, 'Produit #'.$item->product_id);
 
             return $label.' (x'.(int) $item->quantity.')';
         })->implode(', ');
-    }
-
-    /**
-     * Build the "Marque Profil — DIMENSION · IC IV Marquage" label used on the printed document,
-     * so exports and print previews show the same product designation.
-     */
-    private function formatProductLabel(?Product $product, string $fallback): string
-    {
-        if (! $product) {
-            return $fallback;
-        }
-
-        if ($product->type !== 'tyre') {
-            return $product->reference ?: $fallback;
-        }
-
-        $labelParts = array_filter([$product->brand?->name, $product->profile]);
-        $label = implode(' ', $labelParts) ?: ($product->reference ?: $fallback);
-
-        $tyre = $product->tyre;
-        $reference = null;
-        if ($tyre?->tire_width && $tyre?->tire_height && $tyre?->tire_diameter) {
-            $reference = $tyre->tire_width.'/'.$tyre->tire_height.'R'.$tyre->tire_diameter;
-        }
-
-        $detailParts = array_filter([$tyre?->tire_load_index, $tyre?->tire_speed_index, $tyre?->tire_marking]);
-        $details = implode(' · ', $detailParts);
-
-        $result = $label;
-        if ($reference) {
-            $result .= ' — '.$reference;
-        }
-        if ($details) {
-            $result .= ' · '.$details;
-        }
-
-        return $result;
     }
 }

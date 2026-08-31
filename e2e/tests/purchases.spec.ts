@@ -96,4 +96,14 @@ test.describe('Achats', () => {
     await expect(page.locator('.print-modal-overlay')).toBeVisible();
     await expect(page.getByRole('button', { name: /Télécharger PDF/ })).toBeVisible();
   });
+
+  test('le bouton Retour fournisseur ouvre la modale de retour et liste les lignes', async ({ page }) => {
+    const returnBtn = page.locator('button[title="Retour fournisseur"]').first();
+    test.skip(await returnBtn.count() === 0, 'Aucun achat éligible au retour dans le tableau');
+
+    await returnBtn.click();
+    await expect(page.locator('.modal-overlay')).toBeVisible();
+    await expect(page.locator('h2', { hasText: 'Retour fournisseur' })).toBeVisible();
+    await expect(page.locator('.table-wrapper table, .empty-state').first()).toBeVisible();
+  });
 });
