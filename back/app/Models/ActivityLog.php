@@ -19,6 +19,10 @@ class ActivityLog extends Model
 
     const ACTION_PAYMENT_DELETE = 'PAYMENT_DELETE';
 
+    const ACTION_RETURN_ADD = 'RETURN_ADD';
+
+    const ACTION_RETURN_DELETE = 'RETURN_DELETE';
+
     const ENTITY_VENTE = 'vente';
 
     const ENTITY_ACHAT = 'achat';

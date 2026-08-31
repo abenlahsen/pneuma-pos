@@ -24,14 +24,14 @@ class PurchasePaymentService
         $rows = $this->buildPaymentRowsForPurchase($purchase);
 
         $totalPaid = (float) $rows->sum('amount');
-        $totalPurchase = (float) ($purchase->net_amount ?? $purchase->total_price ?? 0);
-        $remaining = max(0, $totalPurchase - $totalPaid);
+        $totalPurchase = $purchase->effectiveNetAmount();
+        $remaining = max(0, round($totalPurchase - $purchase->netPaidAmount(), 2));
 
         return [
             'payments' => $rows,
             'total_paid' => round($totalPaid, 2),
             'total_purchase' => round($totalPurchase, 2),
-            'remaining' => round($remaining, 2),
+            'remaining' => $remaining,
             'payment_status' => $purchase->payment_status,
         ];
     }
@@ -202,7 +202,7 @@ class PurchasePaymentService
                 ]);
             }
 
-            $remaining = round((float) ($purchase->net_amount ?? $purchase->total_price ?? 0) - $purchase->paidAmount(), 2);
+            $remaining = round($purchase->effectiveNetAmount() - $purchase->netPaidAmount(), 2);
             if (round((float) $row['amount'], 2) - $remaining > 0.01) {
                 throw ValidationException::withMessages([
                     'allocations' => ["Le montant affecté à l'achat #{$purchase->id} dépasse son solde restant ({$remaining} DH)."],
@@ -275,9 +275,9 @@ class PurchasePaymentService
             ->map(fn (Purchase $purchase) => [
                 'id' => $purchase->id,
                 'date' => $purchase->date?->toDateString(),
-                'net_amount' => round((float) ($purchase->net_amount ?? $purchase->total_price ?? 0), 2),
-                'paid_amount' => round($purchase->paidAmount(), 2),
-                'remaining' => round(max(0, (float) ($purchase->net_amount ?? $purchase->total_price ?? 0) - $purchase->paidAmount()), 2),
+                'net_amount' => round($purchase->effectiveNetAmount(), 2),
+                'paid_amount' => round($purchase->netPaidAmount(), 2),
+                'remaining' => round(max(0, $purchase->effectiveNetAmount() - $purchase->netPaidAmount()), 2),
                 'with_invoice' => (bool) $purchase->with_invoice,
             ])
             ->filter(fn ($row) => $row['remaining'] > 0.01)
@@ -377,10 +377,17 @@ class PurchasePaymentService
         }
     }
 
+    /**
+     * Recomputes payment_status from the amounts actually in play: cash paid
+     * minus cash refunded on returns, against the purchase's cost minus the
+     * value of goods already sent back (Purchase::effectiveNetAmount()).
+     * Returning everything that was paid for brings a purchase back to
+     * NON PAYE even if it was PAYE before — the debt to the supplier is gone.
+     */
     public function refreshPaymentStatus(Purchase $purchase): Purchase
     {
-        $paid = $purchase->paidAmount();
-        $total = (float) ($purchase->net_amount ?? $purchase->total_price ?? 0);
+        $paid = $purchase->netPaidAmount();
+        $total = $purchase->effectiveNetAmount();
 
         if ($paid <= 0) {
             $purchase->payment_status = PurchasePaymentStatus::NON_PAYE->value;

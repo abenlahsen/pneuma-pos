@@ -17,6 +17,7 @@ use App\Services\ActivityLogService;
 use App\Services\StockMovementService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class PurchaseService
 {
@@ -117,6 +118,15 @@ class PurchaseService
 
         StatusTransitionGuard::assert($oldStatus, $newStatus, PurchaseStatus::allowedTransitions(), $isAdmin, "l'achat");
 
+        // update() deletes and recreates every item — which would cascade-delete
+        // any PurchaseReturnItem referencing them. A purchase with returns must
+        // be corrected by deleting the return(s) first.
+        if ($purchase->returns()->exists()) {
+            throw ValidationException::withMessages([
+                'items' => ["Cet achat comporte des retours enregistrés et ne peut plus être modifié. Supprimez d'abord les retours."],
+            ]);
+        }
+
         $itemsData = $validated['items'] ?? [];
         $discount = (float) ($validated['discount'] ?? 0);
         $totals = $this->calculateTotals($itemsData, $discount);
@@ -189,14 +199,14 @@ class PurchaseService
         return $status !== PurchaseStatus::ANNULE->value;
     }
 
+    /**
+     * Delegates to PurchasePaymentService::refreshPaymentStatus() — the only
+     * place this recalculation lives, so it also accounts for supplier
+     * returns (Purchase::effectiveNetAmount() / refundedAmount()).
+     */
     private function refreshPaymentStatus(Purchase $purchase): void
     {
-        $totalPaid = $purchase->paidAmount();
-        $netAmount = (float) $purchase->net_amount;
-        $status = $totalPaid <= 0
-                ? PurchasePaymentStatus::NON_PAYE->value
-                : ($totalPaid >= $netAmount ? PurchasePaymentStatus::PAYE->value : PurchasePaymentStatus::PARTIEL->value);
-        $purchase->update(['payment_status' => $status]);
+        $this->purchasePayments->refreshPaymentStatus($purchase);
     }
 
     public function delete(Purchase $purchase, $userId)
@@ -236,6 +246,15 @@ class PurchaseService
 
             if ($transactionIds->isNotEmpty()) {
                 Transaction::whereIn('id', $transactionIds)->delete();
+            }
+
+            // purchase_returns rows cascade-delete with the purchase, but their
+            // refund Transaction does not — the FK points the other way
+            // (nullOnDelete on transactions -> purchase_returns). Delete it
+            // explicitly so a refund never survives its purchase.
+            $refundTransactionIds = $purchase->returns()->whereNotNull('refund_transaction_id')->pluck('refund_transaction_id');
+            if ($refundTransactionIds->isNotEmpty()) {
+                Transaction::whereIn('id', $refundTransactionIds)->delete();
             }
 
             $purchase->delete();
@@ -283,28 +302,36 @@ class PurchaseService
             $query->where('net_amount', '<=', (float) $filters['amount_max']);
         }
 
-        $totalAchats = (clone $query)->sum('net_amount') ?? 0;
-        $totalPaye = (clone $query)->where('payment_status', PurchasePaymentStatus::PAYE->value)->sum('net_amount') ?? 0;
+        // Effective cost = net_amount minus whatever was sent back to the
+        // supplier — a fully-returned purchase must not inflate these totals
+        // just because it hasn't been marked ANNULE yet (partial returns).
+        // returned_amount is stored gross like total_price, so it is scaled
+        // by the same purchase-level discount % before being subtracted —
+        // mirrors Purchase::effectiveNetAmount().
+        $effectiveSum = fn ($q) => (float) (clone $q)->sum(DB::raw('net_amount - returned_amount * (1 - discount / 100)'));
+
+        $totalAchats = $effectiveSum($query);
+        $totalPaye = $effectiveSum((clone $query)->where('payment_status', PurchasePaymentStatus::PAYE->value));
         $resteAPayer = $totalAchats - $totalPaye;
 
-        $unpaidEnCours = (function () use ($query): float {
+        $unpaidEnCours = (function () use ($query, $effectiveSum): float {
             $q = (clone $query)
                 ->where('status', PurchaseStatus::EN_COURS->value)
                 ->whereIn('payment_status', [PurchasePaymentStatus::NON_PAYE->value, PurchasePaymentStatus::PARTIEL->value]);
-            $totalSale = (float) (clone $q)->sum('net_amount');
-            $totalPaid = (float) \DB::table('purchase_payment_allocations')
+            $totalSale = $effectiveSum($q);
+            $totalPaid = (float) DB::table('purchase_payment_allocations')
                 ->whereIn('purchase_id', (clone $q)->select('id'))
                 ->sum('amount');
 
             return round($totalSale - $totalPaid, 2);
         })();
 
-        $unpaidRecuTermine = (function () use ($query): float {
+        $unpaidRecuTermine = (function () use ($query, $effectiveSum): float {
             $q = (clone $query)
                 ->whereIn('status', [PurchaseStatus::RECU->value, PurchaseStatus::TERMINE->value])
                 ->whereIn('payment_status', [PurchasePaymentStatus::NON_PAYE->value, PurchasePaymentStatus::PARTIEL->value]);
-            $totalSale = (float) (clone $q)->sum('net_amount');
-            $totalPaid = (float) \DB::table('purchase_payment_allocations')
+            $totalSale = $effectiveSum($q);
+            $totalPaid = (float) DB::table('purchase_payment_allocations')
                 ->whereIn('purchase_id', (clone $q)->select('id'))
                 ->sum('amount');
 
@@ -317,8 +344,8 @@ class PurchaseService
             'reste_a_payer' => round((float) $resteAPayer, 2),
             'unpaid_en_cours' => $unpaidEnCours,
             'unpaid_recu_termine' => $unpaidRecuTermine,
-            'ca_avec_facture' => round((float) (clone $query)->where('with_invoice', true)->sum('net_amount'), 2),
-            'ca_sans_facture' => round((float) (clone $query)->where('with_invoice', false)->sum('net_amount'), 2),
+            'ca_avec_facture' => round($effectiveSum((clone $query)->where('with_invoice', true)), 2),
+            'ca_sans_facture' => round($effectiveSum((clone $query)->where('with_invoice', false)), 2),
         ];
     }
 
@@ -524,13 +551,20 @@ class PurchaseService
                 continue;
             }
 
+            // Only the quantity still held by this line — anything already
+            // sent back via a PurchaseReturn was already released then.
+            $quantity = $item->remainingQuantity();
+            if ($quantity <= 0) {
+                continue;
+            }
+
             $stock = Stock::lockForUpdate()->find($item->stock_id);
             if (! $stock) {
                 continue;
             }
 
             $before = (int) $stock->quantity;
-            $stock->quantity = $before - (int) $item->quantity;
+            $stock->quantity = $before - $quantity;
             $stock->save();
 
             $supplierName = $purchase->supplier?->name ?? null;
@@ -554,13 +588,20 @@ class PurchaseService
                 continue;
             }
 
+            // Only reapply the quantity still held — a line already partially
+            // returned must not be re-deducted for what was sent back.
+            $quantity = $item->remainingQuantity();
+            if ($quantity <= 0) {
+                continue;
+            }
+
             $stock = Stock::lockForUpdate()->find($item->stock_id);
             if (! $stock) {
                 continue;
             }
 
             $before = (int) $stock->quantity;
-            $stock->quantity = $before + (int) $item->quantity;
+            $stock->quantity = $before + $quantity;
             $stock->save();
 
             $supplierName = $purchase->supplier?->name ?? null;

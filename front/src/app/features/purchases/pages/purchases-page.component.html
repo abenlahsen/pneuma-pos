@@ -192,6 +192,7 @@
               <button class="btn-icon btn-sm" (click)="openDetail(purchase)" title="Visualiser">👁️</button>
               <button class="btn-icon btn-sm" (click)="openPayments(purchase)" title="Paiements">💳</button>
               <button class="btn-icon btn-sm text-primary" (click)="openForm(purchase)" title="Modifier" *ngIf="authService.hasPermission('edit purchases') && !isPurchaseLocked(purchase)">✏️</button>
+              <button class="btn-icon btn-sm" (click)="openReturn(purchase)" title="Retour fournisseur" *ngIf="canReturnPurchase(purchase)">🔄</button>
               <button class="btn-icon btn-sm text-danger" (click)="deletePurchase(purchase)" title="Supprimer" *ngIf="authService.hasPermission('delete purchases') && !isPurchaseLocked(purchase)">🗑️</button>
             </td>
             <td class="text-center cell-id">{{ purchase.id }}</td>
@@ -285,7 +286,16 @@
   </div>
 </div>
 
-<app-purchase-detail *ngIf="detailPurchase()" [purchase]="detailPurchase()!" [canEdit]="authService.hasPermission('edit purchases') && !isPurchaseLocked(detailPurchase()!)" (close)="closeDetail()" (edit)="editFromDetail()"></app-purchase-detail>
+<app-purchase-detail
+  *ngIf="detailPurchase()"
+  [purchase]="detailPurchase()!"
+  [canEdit]="authService.hasPermission('edit purchases') && !isPurchaseLocked(detailPurchase()!)"
+  [canReturn]="canReturnPurchase(detailPurchase()!)"
+  (close)="closeDetail()"
+  (edit)="editFromDetail()"
+  (openReturn)="returnFromDetail()"
+  (returnsChanged)="onDetailReturnsChanged()">
+</app-purchase-detail>
 
 <app-purchase-payments
   *ngIf="paymentPurchase()"
@@ -293,3 +303,10 @@
   (closed)="closePayments()"
   (statusChanged)="loadData()">
 </app-purchase-payments>
+
+<app-purchase-return
+  *ngIf="returnPurchase()"
+  [purchase]="returnPurchase()!"
+  (closed)="closeReturn()"
+  (saved)="onReturnSaved()">
+</app-purchase-return>

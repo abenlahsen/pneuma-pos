@@ -33,7 +33,7 @@ class SupplierService
     public function getProfile(Supplier $supplier): array
     {
         $supplier->loadMissing([
-            'purchases' => fn ($q) => $q->with('allocations')->latest('date')->latest('id'),
+            'purchases' => fn ($q) => $q->with(['allocations', 'returns'])->latest('date')->latest('id'),
         ]);
 
         $purchases = $supplier->purchases->values();
@@ -42,7 +42,7 @@ class SupplierService
         return [
             'supplier' => $supplier,
             'purchases_count' => $purchases->count(),
-            'total_purchased' => round((float) $purchases->sum('net_amount'), 2),
+            'total_purchased' => round($purchases->sum(fn ($p) => $p->effectiveNetAmount()), 2),
             'last_purchase_date' => optional($latestPurchase)->date?->toDateString(),
             'outstanding_balance' => $this->calcOutstanding($purchases),
             'purchases' => $purchases->map(fn ($p) => $this->mapPurchase($p))->values(),
@@ -52,7 +52,7 @@ class SupplierService
     public function getStatement(Supplier $supplier): array
     {
         $supplier->loadMissing([
-            'purchases' => fn ($q) => $q->with('allocations.payment')->latest('date')->latest('id'),
+            'purchases' => fn ($q) => $q->with(['allocations.payment', 'returns'])->latest('date')->latest('id'),
         ]);
 
         $purchases = $supplier->purchases->values();
@@ -88,7 +88,7 @@ class SupplierService
             ];
         })->values();
 
-        $totalPurchased = round((float) $purchases->sum('net_amount'), 2);
+        $totalPurchased = round($purchases->sum(fn ($p) => $p->effectiveNetAmount()), 2);
         $totalPaid = round((float) $paymentRowsMapped->sum('amount'), 2);
 
         $summary = [
@@ -130,10 +130,20 @@ class SupplierService
      */
     public function unpaidBySupplier(): array
     {
-        $outstanding = 'GREATEST(purchases.net_amount - COALESCE(alloc.paid, 0), 0)';
+        // Effective debt = net_amount, minus returned goods (scaled by the
+        // purchase's own discount %, same as Purchase::effectiveNetAmount()),
+        // minus net cash actually paid (paid minus any cash refunded back to
+        // us on those returns) — mirrors calcOutstanding()/netPaidAmount().
+        $effectiveNet = 'purchases.net_amount - purchases.returned_amount * (1 - purchases.discount / 100)';
+        $netPaid = 'COALESCE(alloc.paid, 0) - COALESCE(ret.refunded, 0)';
+        $outstanding = "GREATEST(($effectiveNet) - ($netPaid), 0)";
 
         $allocSub = DB::table('purchase_payment_allocations')
             ->selectRaw('purchase_id, SUM(amount) as paid')
+            ->groupBy('purchase_id');
+
+        $returnSub = DB::table('purchase_returns')
+            ->selectRaw('purchase_id, SUM(refund_amount) as refunded')
             ->groupBy('purchase_id');
 
         $selectRaw = "purchases.supplier_id as supplier_id,
@@ -145,6 +155,7 @@ class SupplierService
         $raw = DB::table('purchases')
             ->leftJoin('suppliers', 'purchases.supplier_id', '=', 'suppliers.id')
             ->leftJoinSub($allocSub, 'alloc', 'alloc.purchase_id', '=', 'purchases.id')
+            ->leftJoinSub($returnSub, 'ret', 'ret.purchase_id', '=', 'purchases.id')
             ->whereNotIn('purchases.status', [PurchaseStatus::ANNULE->value])
             ->selectRaw($selectRaw)
             ->groupBy('purchases.supplier_id', 'suppliers.name')
@@ -171,16 +182,16 @@ class SupplierService
             if (($purchase->payment_status ?? '') === PurchasePaymentStatus::PAYE->value) {
                 return 0.0;
             }
-            $paid = $purchase->allocations->sum('amount');
+            $paid = $purchase->allocations->sum('amount') - $purchase->returns->sum('refund_amount');
 
-            return max((float) ($purchase->net_amount ?? 0) - (float) $paid, 0);
+            return max($purchase->effectiveNetAmount() - (float) $paid, 0);
         }), 2);
     }
 
     protected function mapPurchase($purchase): array
     {
-        $paid = (float) $purchase->allocations->sum('amount');
-        $net = (float) ($purchase->net_amount ?? 0);
+        $paid = (float) $purchase->allocations->sum('amount') - (float) $purchase->returns->sum('refund_amount');
+        $net = $purchase->effectiveNetAmount();
 
         return [
             'id' => $purchase->id,
@@ -189,6 +200,8 @@ class SupplierService
             'total_price' => round((float) ($purchase->total_price ?? 0), 2),
             'discount' => round((float) ($purchase->discount ?? 0), 2),
             'net_amount' => round($net, 2),
+            'returned_quantity' => (int) ($purchase->returned_quantity ?? 0),
+            'returned_amount' => round($purchase->returnedNetAmount(), 2),
             'total_quantity' => $purchase->total_quantity ?? 0,
             'status' => $purchase->status,
             'payment_status' => $purchase->payment_status,
@@ -212,7 +225,7 @@ class SupplierService
                 'description' => 'Achat #'.$purchase->id,
                 'purchase_id' => $purchase->id,
                 'payment_id' => null,
-                'debit' => round((float) ($purchase->net_amount ?? 0), 2),
+                'debit' => round($purchase->effectiveNetAmount(), 2),
                 'credit' => 0.0,
                 '_sort' => ($purchase->date ?? $purchase->created_at)?->timestamp ?? 0,
             ]);
@@ -229,6 +242,31 @@ class SupplierService
                 'credit' => round((float) ($row['amount'] ?? 0), 2),
                 '_sort' => $row['date'] ? strtotime($row['date']) : 0,
             ]);
+        }
+
+        // A cash refund on a return reverses part of an earlier payment — the
+        // return itself already lowered the 'purchase' debit line above
+        // (effectiveNetAmount), so the refund must re-add its amount here or
+        // the running balance would double-count it as if we still owed less
+        // than we actually do. Kept as its own 'refund' entry rather than
+        // folded into 'purchase' so the statement shows the cash movement.
+        foreach ($purchases as $purchase) {
+            foreach ($purchase->returns as $return) {
+                if ((float) $return->refund_amount <= 0) {
+                    continue;
+                }
+
+                $entries->push([
+                    'type' => 'refund',
+                    'date' => $return->date?->toDateString(),
+                    'description' => 'Remboursement retour #'.$return->id.' — Achat #'.$purchase->id,
+                    'purchase_id' => $purchase->id,
+                    'payment_id' => null,
+                    'debit' => round((float) $return->refund_amount, 2),
+                    'credit' => 0.0,
+                    '_sort' => ($return->date ?? $return->created_at)?->timestamp ?? 0,
+                ]);
+            }
         }
 
         $running = 0.0;

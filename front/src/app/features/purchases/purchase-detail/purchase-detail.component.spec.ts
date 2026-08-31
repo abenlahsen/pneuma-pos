@@ -1,3 +1,4 @@
+import { of } from 'rxjs';
 import { PurchaseDetailComponent } from './purchase-detail.component';
 import { Product } from '../../../core/models/product.model';
 
@@ -5,7 +6,9 @@ describe('PurchaseDetailComponent', () => {
   let comp: PurchaseDetailComponent;
 
   beforeEach(() => {
-    comp = new PurchaseDetailComponent();
+    const mockReturnsService = { getReturns: vi.fn(() => of([])), deleteReturn: vi.fn() };
+    const mockAuthService = { hasPermission: () => true };
+    comp = new PurchaseDetailComponent(mockReturnsService as any, mockAuthService as any);
     comp.purchase = { items: [] } as any;
   });
 

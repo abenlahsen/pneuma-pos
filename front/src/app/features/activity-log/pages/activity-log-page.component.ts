@@ -148,11 +148,15 @@ export class ActivityLogPageComponent implements OnInit {
     return log.action === 'PAYMENT_ADD' || log.action === 'PAYMENT_DELETE';
   }
 
+  isReturnAction(log: ActivityLog): boolean {
+    return log.action === 'RETURN_ADD' || log.action === 'RETURN_DELETE';
+  }
+
   getFieldRows(log: ActivityLog): FieldRow[] {
     const props = log.properties;
     if (!props) return [];
 
-    if (this.isPaymentAction(log)) return [];
+    if (this.isPaymentAction(log) || this.isReturnAction(log)) return [];
 
     const before = (props.before ?? {}) as ActivityLogSnapshot;
     const after = (props.after ?? {}) as ActivityLogSnapshot;
@@ -200,6 +204,8 @@ export class ActivityLogPageComponent implements OnInit {
       DELETE: 'Suppression',
       PAYMENT_ADD: 'Paiement ajouté',
       PAYMENT_DELETE: 'Paiement supprimé',
+      RETURN_ADD: 'Retour enregistré',
+      RETURN_DELETE: 'Retour supprimé',
     };
     return map[action] ?? action;
   }
@@ -222,6 +228,8 @@ export class ActivityLogPageComponent implements OnInit {
       DELETE: 'badge-danger',
       PAYMENT_ADD: 'badge-purple',
       PAYMENT_DELETE: 'badge-warning',
+      RETURN_ADD: 'badge-warning',
+      RETURN_DELETE: 'badge-secondary',
     };
     return map[action] ?? '';
   }
