@@ -110,4 +110,53 @@ describe('PurchaseDetailComponent', () => {
       expect(comp.printDoc()!.lines[0].label).toBe('Produit #7');
     });
   });
+
+  describe('prev / next navigation', () => {
+    function keydown(key: string, target?: EventTarget): KeyboardEvent {
+      const event = new KeyboardEvent('keydown', { key, cancelable: true });
+      if (target) Object.defineProperty(event, 'target', { value: target });
+      return event;
+    }
+
+    it('ngOnChanges with a new purchase resets local state and reloads the returns for the new id', () => {
+      const getReturns = vi.fn(() => of([]));
+      comp = new PurchaseDetailComponent({ getReturns, deleteReturn: vi.fn() } as any, { hasPermission: () => true } as any);
+      comp.purchase = { id: 12, items: [] } as any;
+      comp.printDoc.set({} as any);
+
+      comp.ngOnChanges({ purchase: { previousValue: { id: 11 }, currentValue: comp.purchase, firstChange: false, isFirstChange: () => false } });
+
+      expect(getReturns).toHaveBeenCalledWith(12);
+      expect(comp.printDoc()).toBeNull();
+    });
+
+    it('ngOnChanges ignores the first change (ngOnInit handles the initial load)', () => {
+      const getReturns = vi.fn(() => of([]));
+      comp = new PurchaseDetailComponent({ getReturns, deleteReturn: vi.fn() } as any, { hasPermission: () => true } as any);
+      comp.purchase = { id: 12, items: [] } as any;
+
+      comp.ngOnChanges({ purchase: { previousValue: undefined, currentValue: comp.purchase, firstChange: true, isFirstChange: () => true } });
+
+      expect(getReturns).not.toHaveBeenCalled();
+    });
+
+    it('arrow keys emit prev/next only when navigation is possible, never while typing or printing', () => {
+      const prev = vi.fn(); const next = vi.fn();
+      comp.prev.subscribe(prev); comp.next.subscribe(next);
+
+      comp.onKeydown(keydown('ArrowLeft'));
+      expect(prev).not.toHaveBeenCalled();
+
+      comp.hasPrev = true; comp.hasNext = true;
+      comp.onKeydown(keydown('ArrowLeft'));
+      comp.onKeydown(keydown('ArrowRight'));
+      expect(prev).toHaveBeenCalledTimes(1);
+      expect(next).toHaveBeenCalledTimes(1);
+
+      comp.onKeydown(keydown('ArrowRight', document.createElement('textarea')));
+      comp.printDoc.set({} as any);
+      comp.onKeydown(keydown('ArrowRight'));
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+  });
 });

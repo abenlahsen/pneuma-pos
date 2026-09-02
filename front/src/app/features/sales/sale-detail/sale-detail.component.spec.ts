@@ -168,4 +168,63 @@ describe('SaleDetailComponent', () => {
       expect(comp.printDoc()!.payment_method).toBeNull();
     });
   });
+
+  describe('prev / next navigation', () => {
+    function keydown(key: string, target?: EventTarget): KeyboardEvent {
+      const event = new KeyboardEvent('keydown', { key, cancelable: true });
+      if (target) Object.defineProperty(event, 'target', { value: target });
+      return event;
+    }
+
+    it('ngOnChanges with a new sale resets local state and reloads shipment requests for the new id', () => {
+      const getForSale = vi.fn(() => ({ subscribe: () => {} }));
+      comp = new SaleDetailComponent(mockAuthService as any, { getForSale } as any);
+      comp.sale = { id: 7, items: [] } as any;
+      comp.printDoc.set({} as any);
+      comp.showShipmentForm.set(true);
+
+      comp.ngOnChanges({ sale: { previousValue: { id: 7 }, currentValue: comp.sale, firstChange: false, isFirstChange: () => false } });
+
+      expect(getForSale).toHaveBeenCalledWith(7);
+      expect(comp.printDoc()).toBeNull();
+      expect(comp.showShipmentForm()).toBe(false);
+    });
+
+    it('ngOnChanges ignores the first change (ngOnInit handles the initial load)', () => {
+      const getForSale = vi.fn(() => ({ subscribe: () => {} }));
+      comp = new SaleDetailComponent(mockAuthService as any, { getForSale } as any);
+      comp.sale = { id: 7, items: [] } as any;
+
+      comp.ngOnChanges({ sale: { previousValue: undefined, currentValue: comp.sale, firstChange: true, isFirstChange: () => true } });
+
+      expect(getForSale).not.toHaveBeenCalled();
+    });
+
+    it('arrow keys emit prev/next only when navigation is possible', () => {
+      const prev = vi.fn(); const next = vi.fn();
+      comp.prev.subscribe(prev); comp.next.subscribe(next);
+
+      comp.onKeydown(keydown('ArrowRight'));
+      expect(next).not.toHaveBeenCalled();
+
+      comp.hasNext = true; comp.hasPrev = true;
+      comp.onKeydown(keydown('ArrowRight'));
+      comp.onKeydown(keydown('ArrowLeft'));
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(prev).toHaveBeenCalledTimes(1);
+    });
+
+    it('arrow keys are ignored while typing in a field or when a nested panel is open', () => {
+      const next = vi.fn();
+      comp.next.subscribe(next);
+      comp.hasNext = true;
+
+      comp.onKeydown(keydown('ArrowRight', document.createElement('input')));
+      expect(next).not.toHaveBeenCalled();
+
+      comp.showShipmentForm.set(true);
+      comp.onKeydown(keydown('ArrowRight'));
+      expect(next).not.toHaveBeenCalled();
+    });
+  });
 });

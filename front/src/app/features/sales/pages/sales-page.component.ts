@@ -18,6 +18,7 @@ import { Partner } from '../../partners/models/partner.model';
 import { PartnerService } from '../../partners/data-access/partner.service';
 import { ManagedUser } from '../../../core/models/user-manage.model';
 import { CityService } from '../../../core/services/city.service';
+import { DetailNavigator } from '../../../core/utils/detail-navigator';
 
 @Component({
   selector: 'app-sales-page',
@@ -69,6 +70,18 @@ export class SalesPageComponent implements OnInit {
   editingSale = signal<Sale | null>(null);
   detailSale = signal<Sale | null>(null);
   paymentSale = signal<Sale | null>(null);
+
+  /** Précédent / Suivant inside the detail modal — follows the table order across pages. */
+  readonly detailNav = new DetailNavigator<Sale>({
+    items: this.sales,
+    current: this.detailSale,
+    page: this.currentPage,
+    lastPage: this.lastPage,
+    perPage: this.perPage,
+    total: this.total,
+    loading: this.loading,
+    goToPage: (page) => this.goToPage(page),
+  });
 
   allCarriers = signal<Carrier[]>([]);
   allPartners = signal<Partner[]>([]);
@@ -123,8 +136,12 @@ export class SalesPageComponent implements OnInit {
         this.lastPage.set(response.last_page);
         this.total.set(response.total);
         this.loading.set(false);
+        this.detailNav.onListLoaded();
       },
-      error: () => this.loading.set(false),
+      error: () => {
+        this.loading.set(false);
+        this.detailNav.reset();
+      },
     });
 
     this.saleService.getSummary(filters).subscribe({
@@ -228,6 +245,7 @@ export class SalesPageComponent implements OnInit {
 
   closeDetail(): void {
     this.detailSale.set(null);
+    this.detailNav.reset();
   }
 
   editFromDetail(): void {

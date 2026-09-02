@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output, signal } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, SimpleChanges, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Sale } from '../../../core/models/sale.model';
 import { Product } from '../../../core/models/product.model';
@@ -12,6 +12,7 @@ import { ShipmentChangeFormComponent } from '../../shipment-changes/components/s
 import { ShipmentChangePrintComponent } from '../../shipment-changes/components/shipment-change-print/shipment-change-print.component';
 import { ShipmentChangeRequest, ShipmentChangeRequestPayload } from '../../shipment-changes/models/shipment-change.model';
 import { ShipmentChangeStatus } from '../../../core/constants/status.constants';
+import { isTypingTarget } from '../../../core/utils/detail-navigator';
 
 @Component({
   selector: 'app-sale-detail',
@@ -27,11 +28,18 @@ import { ShipmentChangeStatus } from '../../../core/constants/status.constants';
   templateUrl: './sale-detail.component.html',
   styleUrl: './sale-detail.component.scss'
 })
-export class SaleDetailComponent implements OnInit {
+export class SaleDetailComponent implements OnInit, OnChanges {
   @Input({ required: true }) sale!: Sale;
   @Input() canEdit = false;
+  /** Précédent / Suivant navigation, driven by the parent list page. */
+  @Input() hasPrev = false;
+  @Input() hasNext = false;
+  /** e.g. "12 / 340" — global position in the filtered list. */
+  @Input() position: string | null = null;
   @Output() close = new EventEmitter<void>();
   @Output() edit = new EventEmitter<void>();
+  @Output() prev = new EventEmitter<void>();
+  @Output() next = new EventEmitter<void>();
 
   viewingProduct = signal<Product | null>(null);
   printDoc = signal<PrintDocument | null>(null);
@@ -50,6 +58,42 @@ export class SaleDetailComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadShipmentRequests();
+  }
+
+  /**
+   * The parent swaps the `sale` input in place when the user steps to the
+   * previous/next record (the component instance is kept by `*ngIf`), so the
+   * per-record state must be reset and the shipment requests reloaded here —
+   * `ngOnInit` only runs once.
+   */
+  ngOnChanges(changes: SimpleChanges): void {
+    const change = changes['sale'];
+    if (!change || change.firstChange) return;
+    this.viewingProduct.set(null);
+    this.printDoc.set(null);
+    this.shipmentRequests.set([]);
+    this.closeShipmentForm();
+    this.shipmentPrintDoc.set(null);
+    this.loadShipmentRequests();
+  }
+
+  /** ← / → step through the list, unless the user is typing or a nested panel is open. */
+  @HostListener('document:keydown', ['$event'])
+  onKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    if (isTypingTarget(event.target) || this.hasNestedPanelOpen()) return;
+
+    if (event.key === 'ArrowLeft' && this.hasPrev) {
+      event.preventDefault();
+      this.prev.emit();
+    } else if (event.key === 'ArrowRight' && this.hasNext) {
+      event.preventDefault();
+      this.next.emit();
+    }
+  }
+
+  private hasNestedPanelOpen(): boolean {
+    return !!this.viewingProduct() || !!this.printDoc() || this.showShipmentForm() || !!this.shipmentPrintDoc();
   }
 
   private loadShipmentRequests(): void {
