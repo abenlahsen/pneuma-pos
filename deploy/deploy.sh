@@ -59,7 +59,10 @@ done
 VPS_PORT="${VPS_PORT:-22}"
 VPS_SUDO="${VPS_SUDO:-}"
 
-DIST_DIR="$PROJECT_ROOT/front/dist/pneuma-pos/browser"
+# Dedicated output folder (not the angular.json default dist/pneuma-pos, which
+# local `ng build` runs — including Docker ones that leave root-owned files —
+# also write to). Same approach as deploy2.sh with dist/eas-pos.
+DIST_DIR="$PROJECT_ROOT/front/dist/pneu-ma-pos/browser"
 BACKUP_DIR="$APP_DIR/backups"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 # Host-key checking: default to accept-new (TOFU on first deploy). To harden
@@ -122,9 +125,11 @@ echo "[2/7] Building Angular frontend locally..."
 
 cd "$PROJECT_ROOT/front"
 echo "  → Cleaning previous build..."
-rm -rf "$DIST_DIR" 2>/dev/null || sudo rm -rf "$DIST_DIR"
+rm -rf "$(dirname "$DIST_DIR")" 2>/dev/null || sudo rm -rf "$(dirname "$DIST_DIR")"
 npm ci
-npx ng build --configuration=production
+# Pass --output-path so this build goes to dist/pneu-ma-pos instead of the
+# angular.json default (dist/pneuma-pos).
+npx ng build --configuration=production --output-path="$(dirname "$DIST_DIR")"
 
 if [ ! -d "$DIST_DIR" ]; then
   echo "ERROR: Build output not found at $DIST_DIR"
