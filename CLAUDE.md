@@ -222,7 +222,7 @@ Filters available (order in UI): Rechercher (description LIKE), Type, Compte, Ca
 
 Two deploy scripts, both run from WSL Ubuntu-24.04:
 
-- **`deploy/deploy.sh`** — primary VPS. Builds Angular with `--configuration=production`, backs up DB + source, transfers via rsync, runs `composer install`, migrations, `RolesAndPermissionsSeeder`, caches Laravel config/routes/views, configures Nginx, and restarts PHP-FPM. Config: `deploy/deploy.env`.
+- **`deploy/deploy.sh`** — primary VPS. Builds Angular with `--configuration=production` into `front/dist/pneu-ma-pos/browser` (dedicated `--output-path`, so a stray local/Docker `ng build` in the default `dist/pneuma-pos` can never block the deploy), backs up DB + source, transfers via rsync, runs `composer install`, migrations, `RolesAndPermissionsSeeder`, caches Laravel config/routes/views, configures Nginx, and restarts PHP-FPM. Config: `deploy/deploy.env`.
 - **`deploy/deploy2.sh`** — secondary VPS (no web server or PHP-FPM config). Builds Angular with `--configuration=production-eas` (different app title), output to `dist/eas-pos/browser/`. Config: `deploy/deploy2.env`. Supports `--skip-build` to re-deploy an existing build.
 
 **DB backup**: Both scripts use `mariadb-dump` (falls back to `mysqldump`) with credentials passed via `--user`/`--password`/`--host` flags. The `--defaults-extra-file` approach was removed because it fails on MariaDB 11.4 with passwords containing `@` or similar characters.
