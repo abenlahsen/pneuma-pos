@@ -80,6 +80,7 @@ export class NavbarComponent {
         { label: '🔐 Rôles', route: '/roles', permission: 'view roles' },
         { label: '📋 Activité', route: '/activity-log', permission: 'view activity-log' },
         { label: '📈 KPI', route: '/kpi-history', permission: 'view activity-log' },
+        { label: '📊 Reporting', route: '/reporting', permission: 'view reporting' },
       ]
     },
     {
