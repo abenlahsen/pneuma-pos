@@ -200,10 +200,17 @@
     </div>
 
     <div class="modal-footer">
-      <button class="btn btn-primary mr-2" (click)="openPrint()">Imprimer</button>
-      <button *ngIf="canEdit" class="btn btn-secondary mr-2" (click)="edit.emit()">✏️ Modifier</button>
-      <button *ngIf="canReturn" class="btn btn-secondary mr-2" (click)="openReturn.emit()">🔄 Retour fournisseur</button>
-      <button class="btn btn-secondary" (click)="close.emit()">Fermer</button>
+      <div class="modal-nav">
+        <button type="button" class="btn btn-secondary btn-sm" [disabled]="!hasPrev" (click)="prev.emit()" title="Précédent (←)">‹ Précédent</button>
+        <span class="modal-nav-pos" *ngIf="position">{{ position }}</span>
+        <button type="button" class="btn btn-secondary btn-sm" [disabled]="!hasNext" (click)="next.emit()" title="Suivant (→)">Suivant ›</button>
+      </div>
+      <div class="modal-footer-actions">
+        <button class="btn btn-primary" (click)="openPrint()">Imprimer</button>
+        <button *ngIf="canEdit" class="btn btn-secondary" (click)="edit.emit()">✏️ Modifier</button>
+        <button *ngIf="canReturn" class="btn btn-secondary" (click)="openReturn.emit()">🔄 Retour fournisseur</button>
+        <button class="btn btn-secondary" (click)="close.emit()">Fermer</button>
+      </div>
     </div>
   </div>
 </div>

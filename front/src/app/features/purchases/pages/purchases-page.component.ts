@@ -13,6 +13,7 @@ import { PurchaseDetailComponent } from '../purchase-detail/purchase-detail.comp
 import { PurchasePaymentsComponent } from '../purchase-payments/purchase-payments.component';
 import { PurchaseReturnComponent } from '../purchase-return/purchase-return.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
+import { DetailNavigator } from '../../../core/utils/detail-navigator';
 
 @Component({
   selector: 'app-purchases-page',
@@ -66,6 +67,18 @@ export class PurchasesPageComponent implements OnInit {
   detailPurchase = signal<Purchase | null>(null);
   paymentPurchase = signal<Purchase | null>(null);
   returnPurchase = signal<Purchase | null>(null);
+
+  /** Précédent / Suivant inside the detail modal — follows the table order across pages. */
+  readonly detailNav = new DetailNavigator<Purchase>({
+    items: this.purchases,
+    current: this.detailPurchase,
+    page: this.currentPage,
+    lastPage: this.lastPage,
+    perPage: this.perPage,
+    total: this.total,
+    loading: this.loading,
+    goToPage: (page) => this.goToPage(page),
+  });
 
   readonly pages = computed(() => {
     const pages: number[] = [];
@@ -122,10 +135,12 @@ export class PurchasesPageComponent implements OnInit {
         this.lastPage.set(response.last_page);
         this.total.set(response.total);
         this.loading.set(false);
+        this.detailNav.onListLoaded();
       },
       error: (err) => {
         console.error('Error loading purchases', err);
         this.loading.set(false);
+        this.detailNav.reset();
       }
     });
 
@@ -187,6 +202,7 @@ export class PurchasesPageComponent implements OnInit {
 
   closeDetail(): void {
     this.detailPurchase.set(null);
+    this.detailNav.reset();
   }
 
   editFromDetail(): void {

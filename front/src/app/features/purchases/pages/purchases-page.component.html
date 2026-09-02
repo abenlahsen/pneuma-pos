@@ -291,10 +291,15 @@
   [purchase]="detailPurchase()!"
   [canEdit]="authService.hasPermission('edit purchases') && !isPurchaseLocked(detailPurchase()!)"
   [canReturn]="canReturnPurchase(detailPurchase()!)"
+  [hasPrev]="detailNav.hasPrev()"
+  [hasNext]="detailNav.hasNext()"
+  [position]="detailNav.position()"
   (close)="closeDetail()"
   (edit)="editFromDetail()"
   (openReturn)="returnFromDetail()"
-  (returnsChanged)="onDetailReturnsChanged()">
+  (returnsChanged)="onDetailReturnsChanged()"
+  (prev)="detailNav.prev()"
+  (next)="detailNav.next()">
 </app-purchase-detail>
 
 <app-purchase-payments

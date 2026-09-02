@@ -349,6 +349,16 @@
   </div>
 </div>
 
-<app-sale-detail *ngIf="detailSale()" [sale]="detailSale()!" [canEdit]="authService.hasPermission('edit sales') && !isSaleLocked(detailSale()!)" (close)="closeDetail()" (edit)="editFromDetail()"></app-sale-detail>
+<app-sale-detail
+  *ngIf="detailSale()"
+  [sale]="detailSale()!"
+  [canEdit]="authService.hasPermission('edit sales') && !isSaleLocked(detailSale()!)"
+  [hasPrev]="detailNav.hasPrev()"
+  [hasNext]="detailNav.hasNext()"
+  [position]="detailNav.position()"
+  (close)="closeDetail()"
+  (edit)="editFromDetail()"
+  (prev)="detailNav.prev()"
+  (next)="detailNav.next()"></app-sale-detail>
 
 <app-payment-panel *ngIf="paymentSale()" [sale]="paymentSale()!" (closed)="closePayments()" (statusChanged)="loadData()"></app-payment-panel>

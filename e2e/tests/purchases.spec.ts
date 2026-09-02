@@ -47,6 +47,38 @@ test.describe('Achats', () => {
     await expect(page.locator('h2', { hasText: 'Détail de l\'achat' })).toBeVisible();
   });
 
+  test('les boutons Précédent / Suivant naviguent entre les enregistrements dans le détail', async ({ page }) => {
+    const viewButtons = page.locator('button[title="Visualiser"]');
+    // The table is loaded asynchronously — wait for the first row before counting.
+    await viewButtons.first().waitFor({ state: 'visible', timeout: 15_000 }).catch(() => {});
+    const count = await viewButtons.count();
+    test.skip(count < 2, 'Au moins deux lignes sont nécessaires');
+
+    await viewButtons.first().click();
+    const modal = page.locator('.modal-overlay').first();
+    await expect(modal).toBeVisible();
+
+    const prevBtn = modal.locator('.modal-nav button', { hasText: 'Précédent' });
+    const nextBtn = modal.locator('.modal-nav button', { hasText: 'Suivant' });
+    const position = modal.locator('.modal-nav-pos');
+
+    await expect(position).toHaveText(/^1 \/ \d+$/);
+    await expect(prevBtn).toBeDisabled();
+    await expect(nextBtn).toBeEnabled();
+
+    await nextBtn.click();
+    await expect(modal).toBeVisible();
+    await expect(position).toHaveText(/^2 \/ \d+$/);
+    await expect(prevBtn).toBeEnabled();
+
+    await page.keyboard.press('ArrowLeft');
+    await expect(position).toHaveText(/^1 \/ \d+$/);
+    await expect(prevBtn).toBeDisabled();
+
+    await modal.locator('.modal-footer-actions button', { hasText: 'Fermer' }).click();
+    await expect(modal).not.toBeVisible();
+  });
+
   test('le bouton Modifier dans le détail ouvre le formulaire de modification', async ({ page }) => {
     const firstBtn = page.locator('button[title="Visualiser"]').first();
     test.skip(await firstBtn.count() === 0, 'Aucune ligne dans le tableau');

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output, signal } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, SimpleChanges, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Purchase } from '../../../core/models/purchase.model';
 import { Product } from '../../../core/models/product.model';
@@ -10,6 +10,7 @@ import { AuthService } from '../../../core/services/auth.service';
 // the core/services copy this component otherwise has no need for is not extended with them.
 import { PurchaseService as PurchaseReturnsService } from '../data-access/purchase.service';
 import { PurchaseReturn } from '../models/purchase.model';
+import { isTypingTarget } from '../../../core/utils/detail-navigator';
 
 @Component({
   selector: 'app-purchase-detail',
@@ -18,10 +19,17 @@ import { PurchaseReturn } from '../models/purchase.model';
   templateUrl: './purchase-detail.component.html',
   styleUrls: ['../../sales/sale-detail/sale-detail.component.scss', './purchase-detail.component.scss']
 })
-export class PurchaseDetailComponent implements OnInit {
+export class PurchaseDetailComponent implements OnInit, OnChanges {
   @Input({ required: true }) purchase!: Purchase;
   @Input() canEdit = false;
   @Input() canReturn = false;
+  /** Précédent / Suivant navigation, driven by the parent list page. */
+  @Input() hasPrev = false;
+  @Input() hasNext = false;
+  /** e.g. "12 / 340" — global position in the filtered list. */
+  @Input() position: string | null = null;
+  @Output() prev = new EventEmitter<void>();
+  @Output() next = new EventEmitter<void>();
   @Output() close = new EventEmitter<void>();
   @Output() edit = new EventEmitter<void>();
   @Output() openReturn = new EventEmitter<void>();
@@ -45,6 +53,40 @@ export class PurchaseDetailComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadReturns();
+  }
+
+  /**
+   * The parent swaps the `purchase` input in place when the user steps to the
+   * previous/next record (the component instance is kept by `*ngIf`), so the
+   * per-record state must be reset and the returns reloaded here — `ngOnInit`
+   * only runs once.
+   */
+  ngOnChanges(changes: SimpleChanges): void {
+    const change = changes['purchase'];
+    if (!change || change.firstChange) return;
+    this.viewingProduct.set(null);
+    this.printDoc.set(null);
+    this.returns.set([]);
+    this.loadReturns();
+  }
+
+  /** ← / → step through the list, unless the user is typing or a nested panel is open. */
+  @HostListener('document:keydown', ['$event'])
+  onKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    if (isTypingTarget(event.target) || this.hasNestedPanelOpen()) return;
+
+    if (event.key === 'ArrowLeft' && this.hasPrev) {
+      event.preventDefault();
+      this.prev.emit();
+    } else if (event.key === 'ArrowRight' && this.hasNext) {
+      event.preventDefault();
+      this.next.emit();
+    }
+  }
+
+  private hasNestedPanelOpen(): boolean {
+    return !!this.viewingProduct() || !!this.printDoc();
   }
 
   loadReturns(): void {
