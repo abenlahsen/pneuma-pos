@@ -1,0 +1,219 @@
+<div class="page-container">
+  <div class="header">
+    <div class="title-section">
+      <h1>Reporting Mensuel</h1>
+      <p class="subtitle">Bilan global du mois : ventes, achats, marge, trésorerie, charges et masse salariale.</p>
+    </div>
+  </div>
+
+  <!-- Month navigation -->
+  <div class="month-nav">
+    <button class="nav-btn" (click)="prevMonth()" aria-label="Mois précédent">&#8592;</button>
+    <span class="month-label">{{ monthLabel() }}</span>
+    <button class="nav-btn" (click)="nextMonth()" [disabled]="isCurrentMonth()" aria-label="Mois suivant">&#8594;</button>
+    <span class="compare-hint" *ngIf="report()">Variations calculées par rapport à {{ previousLabel() }}</span>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading()" class="loading-state">
+    <div class="spinner"></div>
+    Chargement...
+  </div>
+
+  <div *ngIf="!loading() && error()" class="error-banner">
+    ⚠️ {{ error() }}
+    <button class="btn btn-secondary btn-sm" (click)="loadData()">Réessayer</button>
+  </div>
+
+  <ng-container *ngIf="!loading() && !error() && cur() as c">
+
+    <!-- KPI sections -->
+    <ng-container *ngFor="let section of sections(); trackBy: trackSection">
+      <div class="kpi-group-header">
+        <h2 class="kpi-group-title">{{ section.title }}</h2>
+      </div>
+
+      <div class="kpi-grid">
+        <div
+          *ngFor="let card of section.cards; trackBy: trackCard"
+          class="kpi-card"
+          [class.highlight-red]="card.variant === 'red'"
+          [class.highlight-blue]="card.variant === 'blue'"
+          [class.warning-card]="card.variant === 'warning'"
+          [class.negative-card]="card.kind === 'money' && card.value < 0"
+        >
+          <div class="kpi-icon">{{ card.icon }}</div>
+          <div class="kpi-info">
+            <span class="kpi-label">{{ card.label }}</span>
+            <span class="kpi-val">
+              {{ formatValue(card) }}
+              <small *ngIf="card.kind === 'money'">DH</small>
+              <small *ngIf="card.kind === 'percent'">%</small>
+            </span>
+            <span class="kpi-sub" *ngIf="card.sub">{{ card.sub }}</span>
+          </div>
+          <span class="kpi-delta" [ngClass]="deltaClass(card.value, card.prev, card.tone)" [title]="'Mois précédent : ' + (card.kind === 'money' ? formatMoney(card.prev) + ' DH' : formatInt(card.prev))">
+            {{ deltaLabel(card.value, card.prev) }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Section-specific tables -->
+      <ng-container [ngSwitch]="section.key">
+
+        <div *ngSwitchCase="'payments'" class="card table-card">
+          <div class="card-header"><h3>Répartition par méthode de paiement</h3></div>
+          <div class="card-body">
+            <div *ngIf="methodRows().length === 0" class="empty-state">Aucun paiement enregistré ce mois-ci.</div>
+            <table *ngIf="methodRows().length > 0" class="table">
+              <thead>
+                <tr>
+                  <th>Méthode</th>
+                  <th class="text-right">Encaissements ventes</th>
+                  <th class="text-right">Paiements fournisseurs</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of methodRows()">
+                  <td>{{ row.method }}</td>
+                  <td class="text-right num-cell">{{ row.collections | number:'1.2-2' }} DH</td>
+                  <td class="text-right num-cell">{{ row.supplierPayments | number:'1.2-2' }} DH</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class="total-row">
+                  <td><strong>Total</strong></td>
+                  <td class="text-right num-cell"><strong>{{ c.collections.total | number:'1.2-2' }} DH</strong></td>
+                  <td class="text-right num-cell"><strong>{{ c.supplier_payments.total | number:'1.2-2' }} DH</strong></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <div *ngSwitchCase="'margin'" class="card table-card">
+          <div class="card-header"><h3>Charges par catégorie</h3></div>
+          <div class="card-body">
+            <div *ngIf="expenseRows().length === 0" class="empty-state">Aucune charge enregistrée ce mois-ci.</div>
+            <table *ngIf="expenseRows().length > 0" class="table">
+              <thead>
+                <tr>
+                  <th>Catégorie</th>
+                  <th class="text-right">Montant</th>
+                  <th class="text-right">Part</th>
+                  <th class="text-right">{{ previousLabel() }}</th>
+                  <th class="text-right">Variation</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of expenseRows(); trackBy: trackRow">
+                  <td>{{ row.label }}</td>
+                  <td class="text-right num-cell">{{ row.value | number:'1.2-2' }} DH</td>
+                  <td class="text-right num-cell">{{ row.share | number:'1.1-1' }} %</td>
+                  <td class="text-right num-cell muted">{{ row.prev | number:'1.2-2' }} DH</td>
+                  <td class="text-right"><span class="kpi-delta inline" [ngClass]="deltaClass(row.value, row.prev, 'up-bad')">{{ deltaLabel(row.value, row.prev) }}</span></td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class="total-row">
+                  <td><strong>Total</strong></td>
+                  <td class="text-right num-cell"><strong>{{ c.expenses.total | number:'1.2-2' }} DH</strong></td>
+                  <td class="text-right num-cell">100 %</td>
+                  <td class="text-right num-cell muted">{{ prev()?.expenses?.total | number:'1.2-2' }} DH</td>
+                  <td class="text-right"><span class="kpi-delta inline" [ngClass]="deltaClass(c.expenses.total, prev()?.expenses?.total ?? 0, 'up-bad')">{{ deltaLabel(c.expenses.total, prev()?.expenses?.total ?? 0) }}</span></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <div *ngSwitchCase="'payroll'" class="card table-card">
+          <div class="card-header"><h3>Détail de la masse salariale</h3></div>
+          <div class="card-body">
+            <div *ngIf="payrollRows().length === 0" class="empty-state">Aucune charge RH enregistrée ce mois-ci.</div>
+            <table *ngIf="payrollRows().length > 0" class="table">
+              <thead>
+                <tr>
+                  <th>Sous-catégorie</th>
+                  <th class="text-right">Montant</th>
+                  <th class="text-right">Part</th>
+                  <th class="text-right">{{ previousLabel() }}</th>
+                  <th class="text-right">Variation</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of payrollRows(); trackBy: trackRow">
+                  <td>{{ row.label }}</td>
+                  <td class="text-right num-cell">{{ row.value | number:'1.2-2' }} DH</td>
+                  <td class="text-right num-cell">{{ row.share | number:'1.1-1' }} %</td>
+                  <td class="text-right num-cell muted">{{ row.prev | number:'1.2-2' }} DH</td>
+                  <td class="text-right"><span class="kpi-delta inline" [ngClass]="deltaClass(row.value, row.prev, 'up-bad')">{{ deltaLabel(row.value, row.prev) }}</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <ng-container *ngSwitchCase="'sales'">
+          <div class="two-col">
+            <div class="card table-card">
+              <div class="card-header"><h3>Performance par commercial</h3></div>
+              <div class="card-body">
+                <div *ngIf="c.commercials.length === 0" class="empty-state">Aucune vente enregistrée ce mois-ci.</div>
+                <table *ngIf="c.commercials.length > 0" class="table">
+                  <thead>
+                    <tr>
+                      <th>Commercial</th>
+                      <th class="text-right">Ventes</th>
+                      <th class="text-right">CA</th>
+                      <th class="text-right">Pneus</th>
+                      <th class="text-right">Marge</th>
+                      <th class="text-right">Taux</th>
+                      <th class="text-right">Impayés</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let row of c.commercials">
+                      <td class="commercial-name">{{ row.commercial_name }}</td>
+                      <td class="text-right num-cell">{{ row.sales_count }}</td>
+                      <td class="text-right num-cell">{{ row.total_sales | number:'1.2-2' }} DH</td>
+                      <td class="text-right num-cell">{{ row.total_tyres }}</td>
+                      <td class="text-right num-cell" [class.negative]="row.total_margin < 0">{{ row.total_margin | number:'1.2-2' }} DH</td>
+                      <td class="text-right num-cell">{{ row.margin_rate | number:'1.1-1' }} %</td>
+                      <td class="text-right num-cell" [class.warning]="row.total_unpaid > 0">{{ row.total_unpaid | number:'1.2-2' }} DH</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card table-card">
+              <div class="card-header"><h3>Top marques (pneus)</h3></div>
+              <div class="card-body">
+                <div *ngIf="c.top_brands.length === 0" class="empty-state">Aucun pneu vendu ce mois-ci.</div>
+                <table *ngIf="c.top_brands.length > 0" class="table">
+                  <thead>
+                    <tr>
+                      <th>Marque</th>
+                      <th class="text-right">Pneus</th>
+                      <th class="text-right">CA</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let row of c.top_brands">
+                      <td>{{ row.brand }}</td>
+                      <td class="text-right num-cell">{{ row.tyres_qty }}</td>
+                      <td class="text-right num-cell">{{ row.total_sales | number:'1.2-2' }} DH</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+      </ng-container>
+    </ng-container>
+
+  </ng-container>
+</div>

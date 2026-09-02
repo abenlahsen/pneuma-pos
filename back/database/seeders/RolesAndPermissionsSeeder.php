@@ -135,6 +135,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'create hr-charges',
             'edit hr-charges',
             'delete hr-charges',
+
+            // Reporting (Administrator only)
+            'view reporting',
         ];
 
         foreach ($permissions as $permission) {
@@ -164,6 +167,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'create hr-charges',
             'edit hr-charges',
             'delete hr-charges',
+            'view reporting',
         ]));
 
         $commercial = Role::findOrCreate('Commercial');

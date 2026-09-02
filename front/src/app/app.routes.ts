@@ -181,6 +181,13 @@ export const routes: Routes = [
       import('./features/kpi-history/pages/kpi-history-page.component').then((m) => m.KpiHistoryPageComponent),
   },
   {
+    path: 'reporting',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'view reporting' },
+    loadComponent: () =>
+      import('./features/reporting/pages/reporting-page.component').then((m) => m.ReportingPageComponent),
+  },
+  {
     path: '**',
     redirectTo: 'dashboard',
   },

@@ -1,0 +1,277 @@
+@use '../../_page-layout' as layout;
+@include layout.page-layout();
+
+// Local tokens — mirror the dashboard palette so the KPI cards match.
+$_red:          #ff2d37;
+$_blue:         #3b82f6;
+$_green:        #10b981;
+$_amber:        #f59e0b;
+$_danger:       #dc2626;
+$_text:         #0f172a;
+$_muted:        #64748b;
+$_dim:          #94a3b8;
+$_surface:      #ffffff;
+$_surface-2:    #f8fafc;
+$_border:       #e8edf3;
+$_border-hover: #d0d9e4;
+
+// ── Month navigation ─────────────────────────────────────────────────────────
+.month-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+
+  .nav-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid $_border;
+    border-radius: 6px;
+    background: $_surface;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.15s;
+
+    &:hover:not(:disabled) { background: $_surface-2; }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+  }
+
+  .month-label {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: $_text;
+    min-width: 160px;
+    text-align: center;
+  }
+
+  .compare-hint {
+    font-size: 0.8rem;
+    color: $_muted;
+  }
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1.25rem;
+  border-radius: 10px;
+  background: #fff5f5;
+  border: 1px solid #fecaca;
+  color: #c53030;
+  font-size: 0.9rem;
+  margin-bottom: 1.25rem;
+}
+
+// ── Section header ───────────────────────────────────────────────────────────
+.kpi-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 2.25rem 0 1.25rem;
+
+  &:first-of-type { margin-top: 0.5rem; }
+}
+
+.kpi-group-title {
+  margin: 0;
+  flex: 1;
+  font-size: 0.72rem;
+  color: $_dim;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  padding-bottom: 0.6rem;
+  border-bottom: 2px solid $_border;
+}
+
+// ── KPI grid & cards (dashboard vocabulary) ──────────────────────────────────
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.kpi-card {
+  background: $_surface;
+  border: 1px solid $_border;
+  border-radius: 14px;
+  padding: 1.4rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.22s, transform 0.22s, box-shadow 0.22s;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.04);
+
+  &:hover {
+    border-color: $_border-hover;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1), 0 2px 6px rgba(15, 23, 42, 0.06);
+  }
+
+  .kpi-icon {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    background: $_surface-2;
+    border: 1px solid $_border;
+    border-radius: 11px;
+  }
+
+  .kpi-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .kpi-label {
+    font-size: 0.68rem;
+    color: $_dim;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+  }
+
+  .kpi-val {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: $_text;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+
+    small {
+      font-size: 0.85rem;
+      color: $_dim;
+      font-weight: 500;
+      margin-left: 0.1em;
+      letter-spacing: 0;
+    }
+  }
+
+  .kpi-sub {
+    display: block;
+    margin-top: 0.4rem;
+    font-size: 0.76rem;
+    color: $_muted;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &.highlight-red {
+    border-top: 3px solid $_red;
+    background: linear-gradient(160deg, #fff5f5 0%, $_surface 50%);
+    .kpi-icon { background: #fff0f0; border-color: #fecaca; }
+  }
+
+  &.highlight-blue {
+    border-top: 3px solid $_blue;
+    background: linear-gradient(160deg, #eff6ff 0%, $_surface 50%);
+    .kpi-icon { background: #dbeafe; border-color: #bfdbfe; }
+  }
+
+  &.warning-card .kpi-icon {
+    background: #fffbeb;
+    border-color: #fde68a;
+  }
+
+  &.negative-card .kpi-val { color: $_danger; }
+}
+
+// ── M-1 delta badge ──────────────────────────────────────────────────────────
+.kpi-delta {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid $_border;
+  background: $_surface-2;
+  color: $_muted;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+
+  &.good    { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+  &.bad     { background: #fff1f2; color: #be123c; border-color: #fecdd3; }
+  &.neutral { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+  &.none    { color: $_dim; }
+
+  &.inline {
+    position: static;
+    display: inline-block;
+  }
+}
+
+// ── Tables ───────────────────────────────────────────────────────────────────
+.table-card {
+  margin-bottom: 1.25rem;
+
+  .card-header {
+    padding: 0.9rem 1.25rem;
+    border-bottom: 1px solid $_border;
+
+    h3 {
+      margin: 0;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: $_text;
+    }
+  }
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.num-cell {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+
+  &.muted { color: $_muted; }
+  &.negative { color: $_danger; font-weight: 600; }
+  &.warning { color: #b45309; font-weight: 600; }
+}
+
+.commercial-name { font-weight: 600; }
+
+.total-row td {
+  background: $_surface-2;
+  border-top: 2px solid $_border;
+}
+
+.text-right { text-align: right; }
+
+// ── Responsive ───────────────────────────────────────────────────────────────
+@media (max-width: 1024px) {
+  .two-col { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .kpi-card { padding: 1.1rem 1.15rem; }
+  .kpi-card .kpi-val { font-size: 1.3rem; }
+  .kpi-delta { top: 0.9rem; right: 0.9rem; }
+  .table-card .card-body { overflow-x: auto; }
+}
+
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+}
