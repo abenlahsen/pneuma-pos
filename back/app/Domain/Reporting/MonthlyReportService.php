@@ -443,23 +443,32 @@ class MonthlyReportService
 
     private function topBrandsBlock(string $start, string $end, int $limit = 5): array
     {
-        return DB::table('sale_items')
+        // No SQL LIMIT on purpose: each brand's share is computed against every
+        // tyre sold in the period, not only against the brands that make the top list.
+        $rows = DB::table('sale_items')
             ->join('products', 'sale_items.product_id', '=', 'products.id')
             ->join('brands', 'products.brand_id', '=', 'brands.id')
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->where('products.type', 'tyre')
             ->where('sales.status', '!=', SaleStatus::ANNULE->value)
             ->whereBetween('sales.date', [$start, $end])
-            ->selectRaw('brands.name as brand, SUM(sale_items.quantity) as tyres_qty, SUM(sale_items.total_sale) as total_sales')
+            ->selectRaw('brands.name as brand, SUM(sale_items.quantity) as tyres_qty, SUM(sale_items.total_sale) as total_sales, SUM(sale_items.margin) as margin')
             ->groupBy('brands.id', 'brands.name')
             ->orderByDesc('tyres_qty')
-            ->limit($limit)
-            ->get()
+            ->get();
+
+        $totalQty = (int) $rows->sum('tyres_qty');
+
+        return $rows
+            ->take($limit)
             ->map(fn ($row) => [
                 'brand' => $row->brand,
                 'tyres_qty' => (int) $row->tyres_qty,
+                'share_pct' => $totalQty > 0 ? round((int) $row->tyres_qty / $totalQty * 100, 1) : 0,
                 'total_sales' => round((float) $row->total_sales, 2),
+                'margin' => round((float) $row->margin, 2),
             ])
+            ->values()
             ->all();
     }
 }

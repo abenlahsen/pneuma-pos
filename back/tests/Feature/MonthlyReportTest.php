@@ -198,6 +198,9 @@ class MonthlyReportTest extends TestCase
         $this->assertSame(2, $cur['commercials'][0]['total_tyres']);
         $this->assertSame('ReportBrand', $cur['top_brands'][0]['brand']);
         $this->assertSame(2, $cur['top_brands'][0]['tyres_qty']);
+        $this->assertSame(100.0, (float) $cur['top_brands'][0]['share_pct']);
+        $this->assertSame(800.0, (float) $cur['top_brands'][0]['total_sales']);
+        $this->assertSame(400.0, (float) $cur['top_brands'][0]['margin']);
 
         // February 2015 is empty
         $this->assertSame(0.0, (float) $response->json('previous.sales.total'));

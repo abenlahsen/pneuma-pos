@@ -221,6 +221,9 @@ $_border-hover: #d0d9e4;
 .table-card {
   margin-bottom: 1.25rem;
 
+  // Nowrap numeric cells scroll inside the card instead of clipping the last column.
+  .card-body { overflow-x: auto; }
+
   .card-header {
     padding: 0.9rem 1.25rem;
     border-bottom: 1px solid $_border;
@@ -236,7 +239,9 @@ $_border-hover: #d0d9e4;
 
 .two-col {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  // Right column hugs its content (compact Top marques table, nowrap cells);
+  // the wide commercials table takes whatever is left and may scroll inside its card.
+  grid-template-columns: minmax(0, 1fr) minmax(20rem, auto);
   gap: 1.25rem;
   align-items: start;
 }
@@ -269,7 +274,6 @@ $_border-hover: #d0d9e4;
   .kpi-card { padding: 1.1rem 1.15rem; }
   .kpi-card .kpi-val { font-size: 1.3rem; }
   .kpi-delta { top: 0.9rem; right: 0.9rem; }
-  .table-card .card-body { overflow-x: auto; }
 }
 
 @media (max-width: 480px) {

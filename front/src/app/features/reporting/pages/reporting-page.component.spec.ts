@@ -14,7 +14,7 @@ function makePeriod(overrides: Partial<ReportPeriodData> = {}): ReportPeriodData
     payroll: { total: 6500, by_subcategory: { Salaire: 6500 }, employee_count: 1 },
     cash_flow: { income_settled: 0, expense_settled: 6800, net: -6800, pending_income: 0, pending_expense: 0 },
     commercials: [{ commercial_name: 'Admin', sales_count: 2, total_sales: 1300, total_tyres: 2, total_margin: 600, margin_rate: 46.2, total_unpaid: 500 }],
-    top_brands: [{ brand: 'ReportBrand', tyres_qty: 2, total_sales: 800 }],
+    top_brands: [{ brand: 'ReportBrand', tyres_qty: 2, share_pct: 100, total_sales: 800, margin: 400 }],
     clients: { new_count: 3 },
     ...overrides,
   };

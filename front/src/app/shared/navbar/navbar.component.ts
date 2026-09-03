@@ -71,6 +71,7 @@ export class NavbarComponent {
         { label: '🏦 Comptes', route: '/accounts', permission: 'view accounts' },
         { label: '🎯 Primes', route: '/primes', permission: 'view primes' },
         { label: '🧾 Charges RH', route: '/charges-rh', permission: 'view hr-charges' },
+        { label: '📊 Reporting', route: '/reporting', permission: 'view reporting' },
       ]
     },
     {
@@ -80,7 +81,6 @@ export class NavbarComponent {
         { label: '🔐 Rôles', route: '/roles', permission: 'view roles' },
         { label: '📋 Activité', route: '/activity-log', permission: 'view activity-log' },
         { label: '📈 KPI', route: '/kpi-history', permission: 'view activity-log' },
-        { label: '📊 Reporting', route: '/reporting', permission: 'view reporting' },
       ]
     },
     {

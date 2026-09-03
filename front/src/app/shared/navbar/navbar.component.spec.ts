@@ -85,7 +85,7 @@ describe('NavbarComponent', () => {
 
   describe('visibleNavItems', () => {
     it('hides a group entirely when none of its children pass permission checks', () => {
-      mockAuthService.hasPermission.mockImplementation((perm: string) => perm !== 'view accounts' && perm !== 'view primes' && perm !== 'view hr-charges');
+      mockAuthService.hasPermission.mockImplementation((perm: string) => perm !== 'view accounts' && perm !== 'view primes' && perm !== 'view hr-charges' && perm !== 'view reporting');
       comp = createComponent();
 
       const labels = comp.visibleNavItems().map((i) => i.label);
