@@ -99,7 +99,9 @@ export interface ReportCommercial {
 export interface ReportBrand {
   brand: string;
   tyres_qty: number;
+  share_pct: number;
   total_sales: number;
+  margin: number;
 }
 
 export interface ReportPeriodData {

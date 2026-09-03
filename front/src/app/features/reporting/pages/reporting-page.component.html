@@ -196,14 +196,18 @@
                     <tr>
                       <th>Marque</th>
                       <th class="text-right">Pneus</th>
+                      <th class="text-right">Part</th>
                       <th class="text-right">CA</th>
+                      <th class="text-right">Marge</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr *ngFor="let row of c.top_brands">
                       <td>{{ row.brand }}</td>
                       <td class="text-right num-cell">{{ row.tyres_qty }}</td>
+                      <td class="text-right num-cell">{{ row.share_pct | number:'1.1-1' }} %</td>
                       <td class="text-right num-cell">{{ row.total_sales | number:'1.2-2' }} DH</td>
+                      <td class="text-right num-cell" [class.negative]="row.margin < 0">{{ row.margin | number:'1.2-2' }} DH</td>
                     </tr>
                   </tbody>
                 </table>
