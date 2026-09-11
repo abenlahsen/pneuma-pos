@@ -1,10 +1,18 @@
 <div class="modal-overlay print-overlay">
   <div class="modal-content print-area" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Détail de la vente</h2>
-      <div>
-        <button class="btn btn-primary btn-sm mr-2" (click)="openPrint()">🖨️ Imprimer</button>
-        <button class="btn btn-secondary btn-sm mr-2 no-print" *ngIf="authService.hasPermission('create shipment-changes')" (click)="openShipmentAddForm()">📦 Demander une modification</button>
+      <div class="modal-title">
+        <h2>Détail de la vente</h2>
+        <div class="modal-nav no-print">
+          <button type="button" [disabled]="!hasPrev" (click)="prev.emit()" title="Précédent (←)" aria-label="Précédent">‹</button>
+          <span class="modal-nav-id">N° {{ sale.id }}</span>
+          <span class="modal-nav-pos" *ngIf="position">{{ position }}</span>
+          <button type="button" [disabled]="!hasNext" (click)="next.emit()" title="Suivant (→)" aria-label="Suivant">›</button>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary btn-sm" (click)="openPrint()">🖨️ Imprimer</button>
+        <button class="btn btn-secondary btn-sm no-print" *ngIf="authService.hasPermission('create shipment-changes')" (click)="openShipmentAddForm()">📦 Demander une modification</button>
         <button class="btn-close" (click)="close.emit()">✕</button>
       </div>
     </div>
@@ -226,11 +234,6 @@
     </div>
 
     <div class="modal-footer">
-      <div class="modal-nav">
-        <button type="button" class="btn btn-secondary btn-sm" [disabled]="!hasPrev" (click)="prev.emit()" title="Précédent (←)">‹ Précédent</button>
-        <span class="modal-nav-pos" *ngIf="position">{{ position }}</span>
-        <button type="button" class="btn btn-secondary btn-sm" [disabled]="!hasNext" (click)="next.emit()" title="Suivant (→)">Suivant ›</button>
-      </div>
       <div class="modal-footer-actions">
         <button class="btn btn-primary" (click)="openPrint()">Imprimer</button>
         <button *ngIf="canEdit" class="btn btn-secondary" (click)="edit.emit()">✏️ Modifier</button>
