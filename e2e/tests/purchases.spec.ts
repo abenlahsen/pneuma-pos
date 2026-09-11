@@ -47,7 +47,7 @@ test.describe('Achats', () => {
     await expect(page.locator('h2', { hasText: 'Détail de l\'achat' })).toBeVisible();
   });
 
-  test('les boutons Précédent / Suivant naviguent entre les enregistrements dans le détail', async ({ page }) => {
+  test('les flèches Précédent / Suivant naviguent entre les enregistrements dans le détail', async ({ page }) => {
     const viewButtons = page.locator('button[title="Visualiser"]');
     // The table is loaded asynchronously — wait for the first row before counting.
     await viewButtons.first().waitFor({ state: 'visible', timeout: 15_000 }).catch(() => {});
@@ -58,17 +58,21 @@ test.describe('Achats', () => {
     const modal = page.locator('.modal-overlay').first();
     await expect(modal).toBeVisible();
 
-    const prevBtn = modal.locator('.modal-nav button', { hasText: 'Précédent' });
-    const nextBtn = modal.locator('.modal-nav button', { hasText: 'Suivant' });
+    const prevBtn = modal.locator('.modal-nav button[aria-label="Précédent"]');
+    const nextBtn = modal.locator('.modal-nav button[aria-label="Suivant"]');
     const position = modal.locator('.modal-nav-pos');
 
     await expect(position).toHaveText(/^1 \/ \d+$/);
+    const recordNumber = modal.locator('.modal-nav-id');
+    await expect(recordNumber).toHaveText(/^N° \d+$/);
+    const firstNumber = await recordNumber.textContent();
     await expect(prevBtn).toBeDisabled();
     await expect(nextBtn).toBeEnabled();
 
     await nextBtn.click();
     await expect(modal).toBeVisible();
     await expect(position).toHaveText(/^2 \/ \d+$/);
+    expect(await recordNumber.textContent()).not.toBe(firstNumber);
     await expect(prevBtn).toBeEnabled();
 
     await page.keyboard.press('ArrowLeft');
