@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { KpiHistoryService } from '../data-access/kpi-history.service';
 import { KpiSnapshot, DashboardKpi, CommercialKpi } from '../models/kpi-history.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-kpi-history-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AutoRefreshControlComponent],
+  imports: [IconComponent, CommonModule, FormsModule, AutoRefreshControlComponent],
   templateUrl: './kpi-history-page.component.html',
   styleUrl: './kpi-history-page.component.scss',
 })

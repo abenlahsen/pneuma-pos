@@ -4,11 +4,12 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Account } from '../../../accounts/models/account.model';
 import { Transaction, TransactionFilters, TransactionPayload } from '../../models/transaction.model';
 import { TransactionCategory, TransactionCategoryType } from '../../../transaction-categories/models/transaction-category.model';
+import { IconComponent } from '../../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-transaction-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [IconComponent, CommonModule, ReactiveFormsModule],
   templateUrl: './transaction-form.component.html',
   styleUrl: './transaction-form.component.scss',
 })

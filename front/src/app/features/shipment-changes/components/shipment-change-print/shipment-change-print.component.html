@@ -10,7 +10,7 @@
                 [disabled]="generatingPdf() || loadingSettings()">
           {{ generatingPdf() ? 'Génération...' : '⬇ Télécharger PDF' }}
         </button>
-        <button class="btn btn-ghost" (click)="closed.emit()">✕ Fermer</button>
+        <button class="btn btn-ghost" (click)="closed.emit()"><app-icon name="close" /> Fermer</button>
       </div>
     </div>
 

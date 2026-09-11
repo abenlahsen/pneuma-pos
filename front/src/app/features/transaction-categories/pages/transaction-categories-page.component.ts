@@ -5,11 +5,12 @@ import { RouterLink } from '@angular/router';
 import { TransactionCategoryService } from '../data-access/transaction-category.service';
 import { TransactionCategory, TransactionCategoryType } from '../models/transaction-category.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-transaction-categories-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [IconComponent, CommonModule, FormsModule, RouterLink],
   templateUrl: './transaction-categories-page.component.html',
   styleUrl: './transaction-categories-page.component.scss',
 })

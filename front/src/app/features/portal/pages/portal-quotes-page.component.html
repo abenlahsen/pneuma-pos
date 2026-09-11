@@ -1,0 +1,34 @@
+<div class="portal-topbar">
+  <h1>Devis</h1>
+  <div class="portal-topbar__right">
+    <span class="portal-topbar__account">Transport Chaouia · Compte 1042</span>
+    <button type="button" class="portal-btn-primary">Demander un devis</button>
+  </div>
+</div>
+
+<table class="portal-table">
+  <thead>
+    <tr>
+      <th>Devis</th>
+      <th>Date</th>
+      <th>Objet</th>
+      <th class="num">Montant estimé</th>
+      <th>Statut</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (quote of quotes; track quote.reference) {
+      <tr>
+        <td class="strong">{{ quote.reference }}</td>
+        <td class="num">{{ quote.date }}</td>
+        <td>{{ quote.subject }}</td>
+        <td class="num">{{ quote.amount }}</td>
+        <td>
+          <span class="portal-badge" [class.portal-badge--due]="quote.status !== 'Accepté'">
+            {{ quote.status }}
+          </span>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>

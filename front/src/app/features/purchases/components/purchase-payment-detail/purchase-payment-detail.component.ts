@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { PurchaseService } from '../../../../core/services/purchase.service';
 import { PurchasePaymentDetail } from '../../../../core/models/purchase.model';
+import { IconComponent } from '../../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-purchase-payment-detail',
   standalone: true,
-  imports: [CommonModule],
+  imports: [IconComponent, CommonModule],
   templateUrl: './purchase-payment-detail.component.html',
   styleUrl: './purchase-payment-detail.component.scss',
 })

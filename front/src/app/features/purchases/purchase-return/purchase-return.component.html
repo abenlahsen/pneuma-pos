@@ -2,11 +2,11 @@
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>Retour fournisseur — Achat #{{ purchase.id }}</h2>
-      <button class="btn-icon" (click)="close()">✕</button>
+      <button aria-label="Fermer" class="btn-icon" (click)="close()"><app-icon name="close" /></button>
     </div>
 
     <div class="modal-body" *ngIf="!loading(); else loadingTpl">
-      <div class="error-banner" *ngIf="errorMessage()">⚠️ {{ errorMessage() }}</div>
+      <div class="error-banner" *ngIf="errorMessage()"><app-icon name="warning" /> {{ errorMessage() }}</div>
 
       <div class="empty-state" *ngIf="lines().length === 0">
         <p>Tous les articles de cet achat ont déjà été retournés.</p>

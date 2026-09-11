@@ -2,11 +2,12 @@ import { Component, EventEmitter, Input, OnInit, Output, signal } from '@angular
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Account, AccountPayload } from '../../../core/models/account.model';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-account-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [IconComponent, CommonModule, ReactiveFormsModule],
   templateUrl: './account-form.component.html',
   styleUrls: ['./account-form.component.scss']
 })

@@ -2,13 +2,14 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HrCharge, HrChargeBatchPayload, HrChargeFilters } from '../../models/hr-charge.model';
+import { IconComponent } from '../../../../shared/icon/icon.component';
 
 const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Effet', 'Carte bancaire'];
 
 @Component({
   selector: 'app-hr-charge-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [IconComponent, CommonModule, ReactiveFormsModule],
   templateUrl: './hr-charge-form.component.html',
   styleUrl: './hr-charge-form.component.scss',
 })

@@ -1,0 +1,69 @@
+@if (open()) {
+  <div class="cp-scrim" (click)="close()" aria-hidden="true"></div>
+
+  <div class="cp-dialog" role="dialog" aria-modal="true" aria-label="Recherche">
+    <div class="cp-search">
+      <app-icon name="search" [size]="18" />
+      <input
+        #paletteInput
+        type="text"
+        class="cp-input"
+        placeholder="Rechercher une destination, une vente, un produit…"
+        [value]="query()"
+        (input)="onQueryInput($any($event.target).value)"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <span class="cp-badge">ÉCHAP</span>
+    </div>
+
+    <div class="cp-results" role="listbox">
+      @if (loading()) {
+        <div class="cp-status">Recherche…</div>
+      } @else if (results().length === 0) {
+        <div class="cp-status">Aucun résultat</div>
+      }
+
+      @for (item of results(); track $index) {
+        <button
+          type="button"
+          class="cp-item"
+          [class.cp-item--active]="$index === activeIndex()"
+          (mouseenter)="activeIndex.set($index)"
+          (click)="select(item)"
+          role="option"
+          [attr.aria-selected]="$index === activeIndex()"
+        >
+          @switch (item.kind) {
+            @case ('destination') {
+              <app-icon [name]="item.icon" [size]="16" />
+              <span class="cp-item-label">{{ item.label }}</span>
+              <span class="cp-item-tag">Destination</span>
+            }
+            @case ('sale') {
+              <app-icon name="sales" [size]="16" />
+              <span class="cp-item-label">
+                {{ item.reference || ('Vente #' + item.id) }} — {{ item.client }}
+              </span>
+              <span class="cp-item-tag">Vente</span>
+            }
+            @case ('product') {
+              <app-icon name="stock" [size]="16" />
+              <span class="cp-item-label">
+                {{ item.profile || item.reference || ('Produit #' + item.id) }}
+                @if (item.brandName) { — {{ item.brandName }} }
+              </span>
+              <span class="cp-item-tag">Produit</span>
+            }
+          }
+        </button>
+      }
+    </div>
+
+    <div class="cp-footer">
+      <span><kbd>↑</kbd><kbd>↓</kbd> Parcourir</span>
+      <span><kbd>Entrée</kbd> Ouvrir</span>
+      <span><kbd>Échap</kbd> Fermer</span>
+    </div>
+  </div>
+}

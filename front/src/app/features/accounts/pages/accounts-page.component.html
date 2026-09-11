@@ -36,8 +36,8 @@
             <span class="type">{{ getTypeLabel(acc.type) }}</span>
           </div>
           <div class="actions" *ngIf="authService.hasPermission('edit accounts')">
-            <button class="btn-icon" (click)="openEditForm(acc, $event)">✏️</button>
-            <button class="btn-icon text-danger" *ngIf="authService.hasPermission('delete accounts')" (click)="deleteAccount(acc, $event)">🗑️</button>
+            <button aria-label="Modifier" class="btn-icon" (click)="openEditForm(acc, $event)"><app-icon name="edit" /></button>
+            <button aria-label="Supprimer" class="btn-icon text-danger" *ngIf="authService.hasPermission('delete accounts')" (click)="deleteAccount(acc, $event)"><app-icon name="delete" /></button>
           </div>
         </div>
         <div class="card-body">
@@ -63,7 +63,7 @@
         </div>
       </div>
       <div class="card summary-card income">
-        <div class="card-icon">📈</div>
+        <div class="card-icon"><app-icon name="kpi" /></div>
         <div class="card-content">
           <p class="card-label">Total Entrées</p>
           <h3 class="card-value">{{ accountSummary().income | number:'1.2-2' }} DH</h3>
@@ -77,7 +77,7 @@
         </div>
       </div>
       <div class="card summary-card expected" *ngIf="acc.expected_balance !== acc.current_balance">
-        <div class="card-icon">⏳</div>
+        <div class="card-icon"><app-icon name="pending" /></div>
         <div class="card-content">
           <p class="card-label">Solde Prévisionnel</p>
           <h3 class="card-value">{{ acc.expected_balance | number:'1.2-2' }} DH</h3>
@@ -88,7 +88,7 @@
 
     <div class="card table-card mt-4" *ngIf="pendingTransactions().length > 0">
       <div class="card-header border-bottom p-3">
-        <h3 class="m-0">⏳ Paiements à venir</h3>
+        <h3 class="m-0"><app-icon name="pending" /> Paiements à venir</h3>
       </div>
       <div class="table-responsive">
         <table class="table">
@@ -111,13 +111,13 @@
                   (click)="openPaymentView(t)"
                   class="btn-icon"
                   title="Voir le détail du paiement"
-                >👁️</button>
+                ><app-icon name="view" /></button>
                 <button
                   *ngIf="t.sale_payment_id"
                   (click)="openSalePaymentView(t)"
                   class="btn-icon"
                   title="Voir le détail du paiement"
-                >👁️</button>
+                ><app-icon name="view" /></button>
               </td>
               <td class="date-cell">{{ t.date | date:'dd/MM/yyyy' }} <span class="badge badge-pending">À venir</span></td>
               <td class="amount-cell">
@@ -167,13 +167,13 @@
                   (click)="openPaymentView(t)"
                   class="btn-icon"
                   title="Voir le détail du paiement"
-                >👁️</button>
+                ><app-icon name="view" /></button>
                 <button
                   *ngIf="t.sale_payment_id"
                   (click)="openSalePaymentView(t)"
                   class="btn-icon"
                   title="Voir le détail du paiement"
-                >👁️</button>
+                ><app-icon name="view" /></button>
               </td>
               <td class="date-cell">{{ t.date | date:'dd/MM/yyyy' }}</td>
               <td class="amount-cell">

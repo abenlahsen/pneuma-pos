@@ -57,8 +57,8 @@
         </div>
 
         <div class="filter-actions">
-          <button class="btn btn-filter" type="button" (click)="applyFilters()" title="Rechercher">🔍</button>
-          <button class="btn btn-reset" type="button" (click)="clearFilters()" title="Réinitialiser">✕</button>
+          <button class="btn btn-filter" type="button" (click)="applyFilters()" title="Rechercher"><app-icon name="search" /></button>
+          <button class="btn btn-reset" type="button" (click)="clearFilters()" title="Réinitialiser"><app-icon name="close" /></button>
         </div>
       </div>
     </div>
@@ -96,9 +96,7 @@
 
           <tr *ngFor="let client of clients(); trackBy: trackByClientId">
             <td class="text-center">
-              <button class="btn-icon btn-sm text-primary" type="button" (click)="openEditModal(client)" title="Modifier">
-                ✏️
-              </button>
+              <button class="btn-icon btn-sm text-primary" type="button" (click)="openEditModal(client)" title="Modifier"><app-icon name="edit" /></button>
               <button
                 class="btn-icon btn-sm text-danger"
                 type="button"
@@ -106,7 +104,7 @@
                 title="Supprimer"
                 [disabled]="deletingClientId() === client.id"
               >
-                <span *ngIf="deletingClientId() !== client.id">🗑️</span>
+                <span *ngIf="deletingClientId() !== client.id"><app-icon name="delete" /></span>
                 <span *ngIf="deletingClientId() === client.id" class="inline-spinner"></span>
               </button>
             </td>

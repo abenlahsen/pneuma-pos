@@ -2,11 +2,12 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Account, TransferPayload } from '../../../core/models/account.model';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-transfer-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [IconComponent, CommonModule, ReactiveFormsModule],
   templateUrl: './transfer-form.component.html',
   styleUrls: ['./transfer-form.component.scss']
 })

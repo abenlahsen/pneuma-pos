@@ -32,7 +32,7 @@ test.describe('Paramètres Entreprise', () => {
   test('affiche les contrôles de thème', async ({ page }) => {
     await expect(page.locator('#primary_color')).toBeVisible();
     await expect(page.locator('label:has-text("Mode")')).toBeVisible();
-    await expect(page.locator('label:has-text("Disposition du menu")')).toBeVisible();
+    await expect(page.locator('label:has-text("Style de la barre supérieure")')).toBeVisible();
   });
 
   test('modifier le nom de l\'entreprise et enregistrer', async ({ page }) => {

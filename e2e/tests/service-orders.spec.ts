@@ -41,7 +41,7 @@ test.describe('Service Auto', () => {
     await page.getByRole('button', { name: /Nouvelle intervention/ }).click();
     await expect(page.locator('.modal-overlay, .form-overlay').first()).toBeVisible();
 
-    await page.locator('.modal-overlay').getByRole('button', { name: /Annuler|Fermer|✕/ }).first().click();
+    await page.locator('.modal-overlay').getByRole('button', { name: /Annuler|Fermer/ }).first().click();
     await expect(page.locator('.modal-overlay')).not.toBeVisible();
   });
 

@@ -2,7 +2,7 @@
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>{{ editMode ? '✏️ Modifier la charge RH' : (charge ? '⧉ Dupliquer la charge RH' : '➕ Nouvelle saisie de charges RH') }}</h2>
-      <button (click)="onCancel()" class="btn-close">✕</button>
+      <button (click)="onCancel()" class="btn-close" aria-label="Fermer"><app-icon name="close" /></button>
     </div>
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-body">
@@ -58,7 +58,7 @@
                 </td>
                 <td><input type="text" formControlName="description" placeholder="Optionnel" /></td>
                 <td>
-                  <button *ngIf="!editMode" type="button" class="btn-icon danger" title="Retirer la ligne" (click)="removeLine(i)">🗑️</button>
+                  <button *ngIf="!editMode" type="button" class="btn-icon danger" title="Retirer la ligne" (click)="removeLine(i)"><app-icon name="delete" /></button>
                 </td>
               </tr>
             }

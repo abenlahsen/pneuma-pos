@@ -14,11 +14,12 @@ import { PurchasePaymentsComponent } from '../purchase-payments/purchase-payment
 import { PurchaseReturnComponent } from '../purchase-return/purchase-return.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { DetailNavigator } from '../../../core/utils/detail-navigator';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-purchases-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, PurchaseFormComponent, PurchaseDetailComponent, PurchasePaymentsComponent, PurchaseReturnComponent, AutoRefreshControlComponent],
+  imports: [IconComponent, CommonModule, FormsModule, PurchaseFormComponent, PurchaseDetailComponent, PurchasePaymentsComponent, PurchaseReturnComponent, AutoRefreshControlComponent],
   templateUrl: './purchases-page.component.html',
   styleUrls: ['./purchases-page.component.scss']
 })

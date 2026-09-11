@@ -8,6 +8,7 @@ import { SupplierFormComponent } from '../components/supplier-form/supplier-form
 import { SupplierPaymentComponent } from '../components/supplier-payment/supplier-payment.component';
 import { PurchasePaymentDetailComponent } from '../../purchases/components/purchase-payment-detail/purchase-payment-detail.component';
 import { AuthService } from '../../../core/services/auth.service';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import {
   Supplier,
   SupplierPayload,
@@ -21,7 +22,7 @@ import {
 @Component({
   selector: 'app-supplier-detail-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, SupplierFormComponent, SupplierPaymentComponent, PurchasePaymentDetailComponent],
+  imports: [IconComponent, CommonModule, RouterLink, SupplierFormComponent, SupplierPaymentComponent, PurchasePaymentDetailComponent],
   templateUrl: './supplier-detail-page.component.html',
   styleUrl: './supplier-detail-page.component.scss',
 })

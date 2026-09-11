@@ -1,18 +1,18 @@
-$primary: #ff2d37;
-$primary-dark: #cc0a13;
-$income-color: #48bb78;
-$expense-color: #f56565;
-$warning-color: #ed8936;
-$warning-dark: #c05621;
-$text-dark: #2d3748;
-$text-muted: #718096;
-$text-light: #a0aec0;
-$bg-body: #f7fafc;
-$bg-card: #ffffff;
-$border-color: #e2e8f0;
-$border-subtle: #edf2f7;
-$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-$radius: 12px;
-$radius-sm: 8px;
-$radius-lg: 16px;
+// DÉPRÉCIÉ — nouveaux styles : utiliser var(--…) de _tokens.scss.
+// Valeurs maintenues en littéral parce que rgba()/darken() de Sass
+// ne fonctionnent pas sur une propriété CSS.
+$primary:       #ec3013;
+$primary-dark:  #dd2b0f;
+$income-color:  #1b6b3a;   // était #48bb78 — 2,4:1, sous le seuil
+$expense-color: #ae1800;   // était #f56565 — 3,1:1
+$warning-color: #8a4b06;   // était #ed8936
+$text-dark:     #201e1d;
+$text-muted:    #605d5d;
+$text-light:    #7d7979;   // était #a0aec0 — 2,3:1
+$bg-body:       #f3f2f2;
+$bg-card:       #ffffff;
+$border-color:  #bab6b6;
+$border-subtle: #d7d3d3;
+$radius:        0;
+$radius-sm:     0;
+$radius-lg:     0;

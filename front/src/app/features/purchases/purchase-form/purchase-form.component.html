@@ -80,8 +80,8 @@
                 <td>{{ item.unit_price | number:'1.2-2' }}</td>
                 <td>{{ (item.unit_price * item.quantity) | number:'1.2-2' }}</td>
                 <td>
-                  <button type="button" class="btn-icon text-primary mr-1" title="Modifier" (click)="editItem(i)">✏️</button>
-                  <button type="button" class="btn-icon text-danger" title="Supprimer" (click)="removeItem(i)">🗑️</button>
+                  <button type="button" class="btn-icon text-primary mr-1" title="Modifier" (click)="editItem(i)"><app-icon name="edit" /></button>
+                  <button type="button" class="btn-icon text-danger" title="Supprimer" (click)="removeItem(i)"><app-icon name="delete" /></button>
                 </td>
               </tr>
             </tbody>
@@ -149,7 +149,7 @@
               <button type="button" class="btn btn-primary w-100" style="height: 38px; padding: 0.375rem 0.5rem; margin-bottom: 2px;" [disabled]="!currentItem.product_id || !currentItem.stock_id" (click)="addItem()">{{ editingItemIndex !== null ? '✓' : '+' }}</button>
             </div>
             <div class="col-md-1 mb-2" *ngIf="editingItemIndex !== null">
-              <button type="button" class="btn btn-secondary w-100" style="height: 38px; padding: 0.375rem 0.5rem; margin-bottom: 2px;" (click)="cancelItemEdit()">✕</button>
+              <button aria-label="Annuler" type="button" class="btn btn-secondary w-100" style="height: 38px; padding: 0.375rem 0.5rem; margin-bottom: 2px;" (click)="cancelItemEdit()"><app-icon name="close" /></button>
             </div>
           </div>
         </div>

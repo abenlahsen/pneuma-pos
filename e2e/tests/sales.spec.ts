@@ -57,7 +57,7 @@ test.describe('Ventes', () => {
     await page.getByRole('button', { name: 'Nouvelle Vente' }).click();
     await expect(page.locator('.modal-overlay')).toBeVisible();
 
-    await page.locator('.modal-overlay').getByRole('button', { name: /Annuler|Fermer|✕/ }).first().click();
+    await page.locator('.modal-overlay').getByRole('button', { name: /Annuler|Fermer/ }).first().click();
     await expect(page.locator('.modal-overlay')).not.toBeVisible();
   });
 

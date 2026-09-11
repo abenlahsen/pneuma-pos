@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ShipmentChangeRequest } from '../../models/shipment-change.model';
 import { ShipmentChangeStatus, SHIPMENT_CHANGE_STATUSES, SHIPMENT_CHANGE_STATUS_LABELS } from '../../../../core/constants/status.constants';
+import { IconComponent } from '../../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-shipment-change-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [IconComponent, CommonModule, FormsModule],
   templateUrl: './shipment-change-list.component.html',
   styleUrl: './shipment-change-list.component.scss',
 })

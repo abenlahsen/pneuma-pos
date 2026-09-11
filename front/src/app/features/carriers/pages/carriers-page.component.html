@@ -27,8 +27,8 @@
           />
         </div>
         <div class="filter-actions">
-          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher">🔍</button>
-          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser">✕</button>
+          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher"><app-icon name="search" /></button>
+          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser"><app-icon name="close" /></button>
         </div>
       </div>
     </div>
@@ -74,9 +74,7 @@
                 title="Modifier"
                 *ngIf="authService.hasPermission('edit carriers')"
                 [disabled]="deletingCarrierId() === c.id"
-              >
-                ✏️
-              </button>
+              ><app-icon name="edit" /></button>
               <button
                 class="btn-icon btn-sm text-danger"
                 (click)="deleteCarrier(c)"
@@ -84,7 +82,7 @@
                 *ngIf="authService.hasPermission('delete carriers')"
                 [disabled]="deletingCarrierId() === c.id"
               >
-                <span *ngIf="deletingCarrierId() !== c.id">🗑️</span>
+                <span *ngIf="deletingCarrierId() !== c.id"><app-icon name="delete" /></span>
                 <span *ngIf="deletingCarrierId() === c.id" class="inline-spinner"></span>
               </button>
             </td>

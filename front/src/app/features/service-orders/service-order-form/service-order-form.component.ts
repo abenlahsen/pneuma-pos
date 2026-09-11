@@ -16,6 +16,7 @@ import { ProductService } from '../../products/data-access/product.service';
 import { Vehicle } from '../../../features/vehicles/models/vehicle.model';
 import { VehicleSelectorComponent } from '../../../shared/vehicle-selector/vehicle-selector.component';
 import { QuickClientFormComponent } from '../../../shared/quick-client-form/quick-client-form.component';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 interface ServiceProductOption {
   id: number;
@@ -55,7 +56,7 @@ type AnyLineForm = ServiceLineForm | PartLineForm;
 @Component({
   selector: 'app-service-order-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, VehicleSelectorComponent, QuickClientFormComponent],
+  imports: [IconComponent, CommonModule, FormsModule, VehicleSelectorComponent, QuickClientFormComponent],
   templateUrl: './service-order-form.component.html',
   styleUrls: ['./service-order-form.component.scss'],
 })

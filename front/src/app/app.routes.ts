@@ -187,6 +187,33 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/reporting/pages/reporting-page.component').then((m) => m.ReportingPageComponent),
   },
+  // Étape 5 — coquille de démonstration de l'espace client B2B. Pas de
+  // permission dédiée : il n'existe pas encore de compte client distinct
+  // (voir CLAUDE.md / DESIGN_SYSTEM.md), donc un simple authGuard suffit ici.
+  {
+    path: 'portail',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/portal/pages/portal-orders-page.component').then((m) => m.PortalOrdersPageComponent),
+  },
+  {
+    path: 'portail/devis',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/portal/pages/portal-quotes-page.component').then((m) => m.PortalQuotesPageComponent),
+  },
+  {
+    path: 'portail/factures',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/portal/pages/portal-invoices-page.component').then((m) => m.PortalInvoicesPageComponent),
+  },
+  {
+    path: 'portail/compte',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/portal/pages/portal-account-page.component').then((m) => m.PortalAccountPageComponent),
+  },
   {
     path: '**',
     redirectTo: 'dashboard',

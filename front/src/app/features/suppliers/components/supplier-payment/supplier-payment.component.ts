@@ -5,13 +5,14 @@ import { SupplierService } from '../../data-access/supplier.service';
 import { UnpaidPurchaseRow, SupplierPaymentPayload } from '../../models/supplier.model';
 import { Account } from '../../../../core/models/account.model';
 import { AccountService } from '../../../../core/services/account.service';
+import { IconComponent } from '../../../../shared/icon/icon.component';
 
 const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Effet', 'Carte bancaire'];
 
 @Component({
   selector: 'app-supplier-payment',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [IconComponent, CommonModule, FormsModule],
   templateUrl: './supplier-payment.component.html',
   styleUrl: './supplier-payment.component.scss',
 })

@@ -7,11 +7,12 @@ import { Partner, PartnerPayload, PaginatedResponse } from '../models/partner.mo
 import { PartnerFormComponent } from '../components/partner-form/partner-form.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { CityService } from '../../../core/services/city.service';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-partners-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, PartnerFormComponent, AutoRefreshControlComponent],
+  imports: [IconComponent, CommonModule, FormsModule, PartnerFormComponent, AutoRefreshControlComponent],
   templateUrl: './partners-page.component.html',
   styleUrls: ['./partners-page.component.scss'],
 })

@@ -36,28 +36,59 @@ Angular 21 SPA, standalone components, signals-based state. UI is 100% in French
 - Always use `font-variant-numeric: tabular-nums` on financial figures
 - Dates: `dd/MM/yyyy` (French format) — Angular pipe: `| date:'dd/MM/yyyy'`
 
-### Emoji as Icons
-No icon library is used. Emoji are the icon system throughout — keep this consistent.
+### Icons — Lucide via `<app-icon>`
+No emoji in the UI. Icons are inline Lucide SVGs (https://lucide.dev), stroke-only on
+`currentColor`, rendered through `front/src/app/shared/icon/icon.component.ts`:
 
-| Emoji | Usage |
-|---|---|
-| 🏷️ | Ventes |
-| 📦 | Achats / Stock |
-| 💰 | Cash Flow / Revenue |
-| 🏢 | Fournisseurs |
-| 👥 | Utilisateurs |
-| 🛞 | Pneus / Produits |
-| 📋 | Inventaire |
-| 🏭 | Marques |
-| 🔐 | Rôles |
-| 💳 | Paiements |
-| 👁️ | Voir (detail) |
-| ✏️ | Modifier |
-| 🗑️ | Supprimer |
-| 🔍 | Rechercher |
-| 📈 | Marge / Tendance |
-| ⏳ | Impayés / En attente |
-| ⚠️ | Avertissement |
+```html
+<app-icon name="sales" />
+<app-icon name="stock" [size]="16" />
+```
+
+`PATHS` in `icon.component.ts` holds every available key — add a new one there (copy the
+`<svg>` body from lucide.dev, `viewBox 0 0 24 24`, `stroke-width 2`) rather than reaching
+for an emoji. Legacy `name` ↔ former emoji, for reference:
+
+| `name` | Former emoji | Usage |
+|---|---|---|
+| `home` | 🏠 | Accueil |
+| `sales` | 🏷️ | Ventes |
+| `service` | 🔧 | Service Auto |
+| `purchases` | 📦 | Achats |
+| `cash` | 💰 | Cash Flow |
+| `stock` | 🛞 | Pneus / Produits |
+| `inventory` | 📋 | Inventaire / Relevé |
+| `brands` | 🏭 | Marques / Catégories |
+| `parties` | 🤝 | Tiers (groupe) |
+| `client` | 🧑‍💼 | Clients |
+| `supplier` | 🏢 | Fournisseurs |
+| `carrier` | 🚚 | Transporteurs |
+| `partner` | 🤝 | Partenaires |
+| `finance` | 🏦 | Finance / Comptes |
+| `bonus` | 🎯 | Primes |
+| `payroll` | 🧾 | Charges RH |
+| `reporting` | 📊 | Reporting |
+| `kpi` | 📈 | KPI / Tendance haussière |
+| `users` | 👥 | Utilisateurs |
+| `roles` | 🔐 | Rôles |
+| `activity` | 📋 | Journal d'activité |
+| `settings` | ⚙️ | Paramètres |
+| `search` | 🔍 | Rechercher |
+| `view` | 👁️ | Voir (detail) |
+| `edit` | ✏️ | Modifier |
+| `delete` | 🗑️ | Supprimer |
+| `warning` | ⚠️ | Avertissement |
+| `pending` | ⏳ | Impayés / En attente |
+| `invoice` | 💳 | Facture / Paiements |
+| `quote` | — | Devis |
+| `logout` | — | Déconnexion |
+| `close` | ✕ | Fermer une modale, réinitialiser, retirer une ligne |
+| `chevron` | ▾ | Repli / dépli |
+
+Not every emoji removed from the codebase had a matching Lucide key added yet — a few
+decorative or low-frequency ones (📉, 🔩, 📝, 💸, 🏁, 💵, 👤, 💼, and the check/cross glyphs
+✓ ✗ ➕ ❌ ✅) are still emoji as of this pass. Add a `PATHS` entry and swap them in when they
+come up again, rather than leaving mixed emoji/icon UI in a page you're already touching.
 
 ---
 

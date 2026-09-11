@@ -4,7 +4,6 @@ import {
   CompanySettings,
   ContentWidth,
   DEFAULT_COMPANY_THEME_SETTINGS,
-  MenuLayout,
   NavbarVariant,
   ThemeMode,
 } from '../../features/settings/models/company-settings.model';
@@ -23,7 +22,6 @@ export class ThemeService {
     const primaryColor = settings?.primary_color ?? DEFAULT_COMPANY_THEME_SETTINGS.primary_color;
     const accentColor = settings?.accent_color ?? DEFAULT_COMPANY_THEME_SETTINGS.accent_color;
     const surfaceColor = settings?.surface_color ?? DEFAULT_COMPANY_THEME_SETTINGS.surface_color;
-    const menuLayout = settings?.menu_layout ?? DEFAULT_COMPANY_THEME_SETTINGS.menu_layout;
     const navbarVariant = settings?.navbar_variant ?? DEFAULT_COMPANY_THEME_SETTINGS.navbar_variant;
     const contentWidth = settings?.content_width ?? DEFAULT_COMPANY_THEME_SETTINGS.content_width;
 
@@ -33,7 +31,7 @@ export class ThemeService {
     root.style.setProperty('--app-accent', accentColor);
     root.style.setProperty('--app-surface', surfaceColor);
     root.setAttribute('data-theme-mode', themeMode);
-    this.applyLayoutAttributes(root, menuLayout, navbarVariant, contentWidth);
+    this.applyLayoutAttributes(root, navbarVariant, contentWidth);
 
     this.bindSystemTheme(themeMode);
     this.applyResolvedMode();
@@ -41,11 +39,9 @@ export class ThemeService {
 
   private applyLayoutAttributes(
     root: HTMLElement,
-    menuLayout: MenuLayout,
     navbarVariant: NavbarVariant,
     contentWidth: ContentWidth,
   ): void {
-    root.setAttribute('data-menu-layout', menuLayout);
     root.setAttribute('data-navbar-variant', navbarVariant);
     root.setAttribute('data-content-width', contentWidth);
   }

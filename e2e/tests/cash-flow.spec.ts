@@ -167,7 +167,7 @@ test.describe.serial('Cash Flow', () => {
   test('réinitialiser les filtres efface la recherche', async ({ page }) => {
     const searchInput = page.locator('label:has-text("Rechercher")').locator('..').locator('input');
     await searchInput.fill('quelque chose qui ne correspond pas');
-    await page.getByRole('button', { name: '✕' }).last().click();
+    await page.getByRole('button', { name: 'Réinitialiser' }).last().click();
     await page.waitForLoadState('networkidle');
     // Après reset, le champ doit être vide
     await expect(searchInput).toHaveValue('');

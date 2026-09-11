@@ -1,0 +1,206 @@
+/* Classes communes aux 4 pages de l'espace client B2B (étape 5, coquille de
+   démonstration). Repris via `@use '../_portal-shared' as *;` — même
+   principe que `features/_page-layout.scss` pour les pages internes.
+   Tokens de _tokens.scss uniquement, aucune valeur en dur hors de celles
+   listées par le README (section "3. Espace client B2B"). */
+
+.portal-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  height: var(--topbar-h);
+  padding: 0 var(--sp-2);
+  border-bottom: 2px solid var(--text);
+  margin-bottom: var(--sp-6);
+  flex-wrap: wrap;
+
+  h1 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: var(--fw-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+  }
+}
+
+.portal-topbar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.portal-topbar__account {
+  font-size: var(--fs-cell);
+  color: var(--neutral-700);
+}
+
+.portal-btn-primary {
+  padding: 8px var(--sp-4);
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--font);
+  font-size: var(--fs-cell);
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--accent-600);
+  }
+}
+
+.portal-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 2px solid var(--text);
+  border-bottom: 2px solid var(--text);
+  margin-bottom: var(--sp-6);
+}
+
+.portal-stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-4) var(--sp-2);
+  border-left: 1px solid var(--neutral-300);
+
+  &:first-child {
+    border-left: 0;
+  }
+}
+
+.portal-stat__label {
+  font-size: 11px;
+  font-weight: var(--fw-label);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--neutral-700);
+}
+
+.portal-stat__value {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+
+  &--sm {
+    font-size: 22px;
+  }
+}
+
+.portal-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    padding: 11px 14px;
+    border-bottom: 2px solid var(--divider);
+    font-size: 11px;
+    font-weight: var(--fw-label);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--text) 60%, transparent);
+    text-align: left;
+
+    &.num {
+      text-align: right;
+    }
+  }
+
+  td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--divider);
+    font-size: var(--fs-cell);
+
+    &.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    &.strong {
+      font-weight: 600;
+    }
+  }
+
+  tbody tr:hover td {
+    background: color-mix(in srgb, var(--text) 4%, transparent);
+  }
+}
+
+.portal-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border: 2px solid var(--neutral-300);
+  border-radius: var(--radius);
+  font-size: 11px;
+  font-weight: var(--fw-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--neutral-800);
+
+  &--due {
+    border-color: var(--accent-700);
+    color: var(--accent-700);
+  }
+}
+
+.portal-doc-link {
+  color: var(--accent-700);
+  text-decoration: underline;
+  text-decoration-color: var(--accent-300);
+  font-size: var(--fs-cell);
+}
+
+.portal-card {
+  border: 2px solid var(--text);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: var(--sp-6);
+  max-width: 520px;
+}
+
+.portal-field {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--neutral-300);
+  font-size: var(--fs-cell);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  dt {
+    color: var(--text-muted);
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+    text-align: right;
+  }
+}
+
+@media (max-width: 768px) {
+  .portal-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-stat {
+    border-left: 0;
+    border-top: 1px solid var(--neutral-300);
+
+    &:first-child {
+      border-top: 0;
+    }
+  }
+
+  .portal-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}

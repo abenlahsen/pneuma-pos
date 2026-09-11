@@ -10,11 +10,12 @@ import { ServiceOrderFormComponent } from '../service-order-form/service-order-f
 import { ServiceOrderDetailComponent } from '../service-order-detail/service-order-detail.component';
 import { ServicePaymentPanelComponent } from '../service-payment-panel/service-payment-panel.component';
 import { AuthService } from '../../../core/services/auth.service';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-service-orders',
   standalone: true,
-  imports: [
+  imports: [IconComponent, 
     CommonModule,
     FormsModule,
     ServiceOrderFormComponent,

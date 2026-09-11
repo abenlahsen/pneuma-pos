@@ -18,11 +18,12 @@ import { PurchasePaymentDetailComponent } from '../../purchases/components/purch
 import { SalePaymentDetailComponent } from '../../sales/components/sale-payment-detail/sale-payment-detail.component';
 import { TransactionCategoryService } from '../../transaction-categories/data-access/transaction-category.service';
 import { TransactionCategory } from '../../transaction-categories/models/transaction-category.model';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-cash-flow-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TransactionFormComponent, AutoRefreshControlComponent, PurchasePaymentDetailComponent, SalePaymentDetailComponent],
+  imports: [IconComponent, CommonModule, FormsModule, TransactionFormComponent, AutoRefreshControlComponent, PurchasePaymentDetailComponent, SalePaymentDetailComponent],
   templateUrl: './cash-flow-page.component.html',
   styleUrls: ['./cash-flow-page.component.scss'],
 })

@@ -1,0 +1,151 @@
+/* Overlay indépendant du rail — mêmes tokens (_tokens.scss), rien en dur. */
+
+:host {
+  display: contents;
+}
+
+.cp-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(45, 43, 43, 0.4);
+  z-index: 940;
+}
+
+.cp-dialog {
+  position: fixed;
+  top: 12vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(640px, 92vw);
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 2px solid var(--text);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 950;
+  overflow: hidden;
+}
+
+.cp-search {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: var(--topbar-h);
+  flex-shrink: 0;
+  padding: 0 var(--sp-4);
+  border-bottom: 2px solid var(--text);
+  color: var(--text-muted);
+}
+
+.cp-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-family: var(--font);
+  font-size: var(--fs-body);
+  color: var(--text);
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+}
+
+.cp-badge {
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border: 1px solid var(--neutral-400);
+  border-radius: var(--radius);
+  font-size: 11px;
+  font-weight: var(--fw-label);
+  letter-spacing: var(--ls-label);
+  color: var(--text-muted);
+}
+
+.cp-results {
+  overflow-y: auto;
+  padding: var(--sp-2) 0;
+}
+
+.cp-status {
+  padding: var(--sp-4);
+  text-align: center;
+  font-size: var(--fs-cell);
+  color: var(--text-muted);
+}
+
+.cp-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: 9px var(--sp-4);
+  border: 0;
+  border-left: 3px solid transparent;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--fs-cell);
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--neutral-100);
+    border-left-color: var(--neutral-400);
+  }
+
+  &--active {
+    background: var(--accent-100);
+    border-left-color: var(--accent);
+  }
+}
+
+.cp-item-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cp-item-tag {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: var(--fw-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.cp-footer {
+  display: flex;
+  gap: var(--sp-4);
+  flex-shrink: 0;
+  padding: var(--sp-2) var(--sp-4);
+  border-top: 1px solid var(--divider);
+  background: var(--surface-sunk);
+  font-size: 11px;
+  color: var(--text-muted);
+
+  kbd {
+    display: inline-block;
+    padding: 1px 5px;
+    margin-right: 2px;
+    border: 1px solid var(--neutral-300);
+    border-radius: 4px;
+    background: var(--neutral-100);
+    font-family: inherit;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .cp-dialog {
+    top: 8vh;
+    width: 94vw;
+    max-height: 76vh;
+  }
+}

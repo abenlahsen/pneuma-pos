@@ -19,11 +19,12 @@ import { PartnerService } from '../../partners/data-access/partner.service';
 import { ManagedUser } from '../../../core/models/user-manage.model';
 import { CityService } from '../../../core/services/city.service';
 import { DetailNavigator } from '../../../core/utils/detail-navigator';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-sales-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, SaleFormComponent, SaleDetailComponent, PaymentPanelComponent, AutoRefreshControlComponent],
+  imports: [IconComponent, CommonModule, FormsModule, RouterLink, SaleFormComponent, SaleDetailComponent, PaymentPanelComponent, AutoRefreshControlComponent],
   templateUrl: './sales-page.component.html',
   styleUrl: './sales-page.component.scss',
 })

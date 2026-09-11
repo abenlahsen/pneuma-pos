@@ -2,7 +2,7 @@
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>Régler des achats — {{ supplierName || 'Fournisseur' }}</h2>
-      <button class="btn-icon" type="button" (click)="close()" [disabled]="submitting()">✕</button>
+      <button aria-label="Fermer" class="btn-icon" type="button" (click)="close()" [disabled]="submitting()"><app-icon name="close" /></button>
     </div>
 
     <div class="modal-body">
@@ -116,7 +116,7 @@
               <span>Réparti : {{ allocatedTotal() | number:'1.2-2' }} DH</span>
               <span>Montant du paiement : {{ totalAmount | number:'1.2-2' }} DH</span>
               <span *ngIf="allocationMismatch()" class="mismatch-hint">
-                ⚠️ La répartition doit être égale au montant du paiement.
+                <app-icon name="warning" /> La répartition doit être égale au montant du paiement.
               </span>
             </div>
           </ng-container>

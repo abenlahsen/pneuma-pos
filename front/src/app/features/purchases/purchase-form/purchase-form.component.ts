@@ -12,11 +12,12 @@ import { SupplierService } from '../../suppliers/data-access/supplier.service';
 import { Supplier } from '../../suppliers/models/supplier.model';
 import { Stock } from '../../../core/models/stock.model';
 import { StockService } from '../../../core/services/stock.service';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-purchase-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductDetailComponent],
+  imports: [IconComponent, CommonModule, FormsModule, ProductDetailComponent],
   templateUrl: './purchase-form.component.html',
   styleUrls: ['./purchase-form.component.scss']
 })

@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { ServiceOrder } from '../../../core/models/service-order.model';
 import { PaymentStatus, ServiceOrderStatus } from '../../../core/constants/status.constants';
 import { DocumentPrintComponent, PrintDocument, PrintLine } from '../../../shared/document-print/document-print.component';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-service-order-detail',
   standalone: true,
-  imports: [CommonModule, DocumentPrintComponent],
+  imports: [IconComponent, CommonModule, DocumentPrintComponent],
   templateUrl: './service-order-detail.component.html',
   styleUrl: './service-order-detail.component.scss',
 })

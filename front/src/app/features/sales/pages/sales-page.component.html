@@ -27,7 +27,7 @@
       </div>
 
       <div class="card summary-card info">
-        <div class="card-icon">🛞</div>
+        <div class="card-icon"><app-icon name="stock" /></div>
         <div class="card-content">
           <p class="card-label">Pneus vendus ce mois</p>
           <h3 class="card-value">{{ summary().tyres_this_month }}</h3>
@@ -44,7 +44,7 @@
     </div>
 
     <div class="card summary-card info">
-      <div class="card-icon">⏳</div>
+      <div class="card-icon"><app-icon name="pending" /></div>
       <div class="card-content">
         <p class="card-label">Pneus en cours</p>
         <h3 class="card-value">{{ summary().tyres_en_cours }}</h3>
@@ -52,7 +52,7 @@
     </div>
 
     <div class="card summary-card info">
-      <div class="card-icon">📋</div>
+      <div class="card-icon"><app-icon name="inventory" /></div>
       <div class="card-content">
         <p class="card-label">Ventes en cours</p>
         <h3 class="card-value">{{ summary().sales_en_cours }}</h3>
@@ -60,7 +60,7 @@
     </div>
 
     <div class="card summary-card expense">
-      <div class="card-icon">⏳</div>
+      <div class="card-icon"><app-icon name="pending" /></div>
       <div class="card-content">
         <p class="card-label">Impayé en cours</p>
         <h3 class="card-value">{{ summary().unpaid_en_cours | number:'1.2-2' }} DH</h3>
@@ -68,7 +68,7 @@
     </div>
 
     <div class="card summary-card expense">
-      <div class="card-icon">🚚</div>
+      <div class="card-icon"><app-icon name="carrier" /></div>
       <div class="card-content">
         <p class="card-label">Impayé livré/monté</p>
         <h3 class="card-value">{{ summary().unpaid_livre_monte | number:'1.2-2' }} DH</h3>
@@ -76,7 +76,7 @@
     </div>
 
     <div class="card summary-card income">
-      <div class="card-icon">🧾</div>
+      <div class="card-icon"><app-icon name="invoice" /></div>
       <div class="card-content">
         <p class="card-label">CA avec facture</p>
         <h3 class="card-value">{{ summary().ca_avec_facture | number:'1.2-2' }} DH</h3>
@@ -190,8 +190,8 @@
           <input type="number" class="form-control" min="0" step="0.01" [ngModel]="filterAmountMax()" (ngModelChange)="filterAmountMax.set($event)" (change)="applyFilters()" placeholder="∞">
         </div>
         <div class="filter-actions">
-          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher">🔍</button>
-          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser">✕</button>
+          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher"><app-icon name="search" /></button>
+          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser"><app-icon name="close" /></button>
         </div>
       </div>
     </div>
@@ -236,11 +236,11 @@
 
           <tr *ngFor="let sale of sales()">
             <td class="text-center actions-cell">
-              <button class="btn-icon btn-sm" (click)="openDetail(sale)" title="Voir" [disabled]="deletingSaleId() === sale.id">👁️</button>
-              <button class="btn-icon btn-sm" (click)="openPayments(sale)" title="Paiements" [disabled]="deletingSaleId() === sale.id">💳</button>
-              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(sale)" title="Modifier" *ngIf="authService.hasPermission('edit sales') && !isSaleLocked(sale)" [disabled]="deletingSaleId() === sale.id">✏️</button>
+              <button class="btn-icon btn-sm" (click)="openDetail(sale)" title="Voir" [disabled]="deletingSaleId() === sale.id"><app-icon name="view" /></button>
+              <button class="btn-icon btn-sm" (click)="openPayments(sale)" title="Paiements" [disabled]="deletingSaleId() === sale.id"><app-icon name="invoice" /></button>
+              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(sale)" title="Modifier" *ngIf="authService.hasPermission('edit sales') && !isSaleLocked(sale)" [disabled]="deletingSaleId() === sale.id"><app-icon name="edit" /></button>
               <button class="btn-icon btn-sm text-danger" (click)="deleteSale(sale)" title="Supprimer" *ngIf="authService.hasPermission('delete sales') && !isSaleLocked(sale)" [disabled]="deletingSaleId() === sale.id">
-                <span *ngIf="deletingSaleId() !== sale.id">🗑️</span>
+                <span *ngIf="deletingSaleId() !== sale.id"><app-icon name="delete" /></span>
                 <span *ngIf="deletingSaleId() === sale.id" class="inline-spinner"></span>
               </button>
             </td>
@@ -334,7 +334,7 @@
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>{{ editingSale() ? 'Modifier la vente' : 'Nouvelle vente' }}</h2>
-      <button class="btn-icon" (click)="closeForm()">✕</button>
+      <button aria-label="Fermer" class="btn-icon" (click)="closeForm()"><app-icon name="close" /></button>
     </div>
     <div class="modal-body">
       <app-sale-form

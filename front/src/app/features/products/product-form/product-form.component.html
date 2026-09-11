@@ -225,7 +225,7 @@
   <!-- ── Inventory Section (only when editing a non-service product) ── -->
   <div class="form-section inventory-section" *ngIf="isEditing && !isService">
     <div class="inventory-header">
-      <h3>📦 Inventaire <span class="stock-total" *ngIf="totalStock > 0">({{ totalStock }} en stock)</span></h3>
+      <h3><app-icon name="purchases" /> Inventaire <span class="stock-total" *ngIf="totalStock > 0">({{ totalStock }} en stock)</span></h3>
       <button type="button" class="btn btn-sm btn-add-stock" (click)="openAddStock()" *ngIf="!showStockRow() && authService.hasPermission('create stock')">
         + Ajouter
       </button>
@@ -261,8 +261,8 @@
               </td>
               <td class="text-right">{{ item.purchase_price ? (item.purchase_price | number:'1.2-2') : '-' }}</td>
               <td class="text-center actions-cell">
-                <button type="button" class="btn-icon-sm" (click)="editStock(item)" title="Modifier" *ngIf="authService.hasPermission('edit stock')">✏️</button>
-                <button type="button" class="btn-icon-sm text-danger" (click)="deleteStock(item)" title="Supprimer" *ngIf="authService.hasPermission('delete stock')">🗑️</button>
+                <button type="button" class="btn-icon-sm" (click)="editStock(item)" title="Modifier" *ngIf="authService.hasPermission('edit stock')"><app-icon name="edit" /></button>
+                <button type="button" class="btn-icon-sm text-danger" (click)="deleteStock(item)" title="Supprimer" *ngIf="authService.hasPermission('delete stock')"><app-icon name="delete" /></button>
               </td>
             </tr>
             <!-- Inline edit row -->

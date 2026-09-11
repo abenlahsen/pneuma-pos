@@ -13,11 +13,12 @@ import { ShipmentChangePrintComponent } from '../../shipment-changes/components/
 import { ShipmentChangeRequest, ShipmentChangeRequestPayload } from '../../shipment-changes/models/shipment-change.model';
 import { ShipmentChangeStatus } from '../../../core/constants/status.constants';
 import { isTypingTarget } from '../../../core/utils/detail-navigator';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-sale-detail',
   standalone: true,
-  imports: [
+  imports: [IconComponent, 
     CommonModule,
     ProductDetailComponent,
     DocumentPrintComponent,

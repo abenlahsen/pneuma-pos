@@ -172,8 +172,8 @@
             <td>{{ (item.discount || 0) | number:'1.0-2' }}%</td>
             <td>{{ lineTotal(item) | number:'1.2-2' }}</td>
             <td>
-              <button type="button" class="btn-icon text-primary mr-1" title="Modifier" (click)="editItem(i)">✏️</button>
-              <button type="button" class="btn-icon text-danger" title="Supprimer" (click)="removeItem(i)">🗑️</button>
+              <button type="button" class="btn-icon text-primary mr-1" title="Modifier" (click)="editItem(i)"><app-icon name="edit" /></button>
+              <button type="button" class="btn-icon text-danger" title="Supprimer" (click)="removeItem(i)"><app-icon name="delete" /></button>
             </td>
           </tr>
         </tbody>

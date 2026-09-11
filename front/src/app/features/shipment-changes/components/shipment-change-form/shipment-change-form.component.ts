@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Sale } from '../../../../core/models/sale.model';
 import { Carrier } from '../../../carriers/models/carrier.model';
 import { CarrierService } from '../../../carriers/data-access/carrier.service';
+import { IconComponent } from '../../../../shared/icon/icon.component';
 import {
   ShipmentChangeField,
   ShipmentChangeItem,
@@ -15,7 +16,7 @@ import {
 @Component({
   selector: 'app-shipment-change-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [IconComponent, CommonModule, FormsModule],
   templateUrl: './shipment-change-form.component.html',
   styleUrl: './shipment-change-form.component.scss',
 })

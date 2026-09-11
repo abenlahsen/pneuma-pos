@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { SettingsService } from '../data-access/settings.service';
 import { CityService } from '../../../core/services/city.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import {
   CompanySettings,
   DEFAULT_COMPANY_THEME_SETTINGS,
@@ -12,14 +13,13 @@ import {
   UpdateCompanySettingsPayload,
 } from '../models/company-settings.model';
 
-type MenuLayoutOption = 'horizontal' | 'vertical';
 type NavbarVariantOption = 'default' | 'compact' | 'flat';
 type ContentWidthOption = 'full' | 'boxed' | 'compact';
 
 @Component({
   selector: 'app-company-settings-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [IconComponent, CommonModule, FormsModule, RouterLink],
   templateUrl: './company-settings-page.component.html',
   styleUrls: ['./company-settings-page.component.scss'],
 })
@@ -28,11 +28,6 @@ export class CompanySettingsPageComponent implements OnInit {
     { value: 'system', label: 'Système' },
     { value: 'light', label: 'Clair' },
     { value: 'dark', label: 'Sombre' },
-  ];
-
-  readonly menuLayoutOptions: Array<{ value: MenuLayoutOption; label: string }> = [
-    { value: 'vertical', label: 'Vertical' },
-    { value: 'horizontal', label: 'Horizontal' },
   ];
 
   readonly navbarVariantOptions: Array<{ value: NavbarVariantOption; label: string }> = [
@@ -68,7 +63,6 @@ export class CompanySettingsPageComponent implements OnInit {
     primary_color: DEFAULT_COMPANY_THEME_SETTINGS.primary_color,
     accent_color: DEFAULT_COMPANY_THEME_SETTINGS.accent_color,
     surface_color: DEFAULT_COMPANY_THEME_SETTINGS.surface_color,
-    menu_layout: (DEFAULT_COMPANY_THEME_SETTINGS as UpdateCompanySettingsPayload & { menu_layout?: MenuLayoutOption }).menu_layout ?? 'vertical',
     navbar_variant: (DEFAULT_COMPANY_THEME_SETTINGS as UpdateCompanySettingsPayload & { navbar_variant?: NavbarVariantOption }).navbar_variant ?? 'default',
     content_width: (DEFAULT_COMPANY_THEME_SETTINGS as UpdateCompanySettingsPayload & { content_width?: ContentWidthOption }).content_width ?? 'full',
     prime_threshold: 0,
@@ -84,7 +78,6 @@ export class CompanySettingsPageComponent implements OnInit {
   selectedFaviconFile = signal<File | null>(null);
 
   previewThemeMode = computed(() => this.form().theme_mode);
-  previewMenuLayout = computed(() => ((this.form() as UpdateCompanySettingsPayload & { menu_layout?: MenuLayoutOption }).menu_layout ?? 'vertical'));
   previewNavbarVariant = computed(() => ((this.form() as UpdateCompanySettingsPayload & { navbar_variant?: NavbarVariantOption }).navbar_variant ?? 'default'));
   previewContentWidth = computed(() => ((this.form() as UpdateCompanySettingsPayload & { content_width?: ContentWidthOption }).content_width ?? 'full'));
   previewStyles = computed(() => ({
@@ -163,7 +156,6 @@ export class CompanySettingsPageComponent implements OnInit {
       primary_color: DEFAULT_COMPANY_THEME_SETTINGS.primary_color,
       accent_color: DEFAULT_COMPANY_THEME_SETTINGS.accent_color,
       surface_color: DEFAULT_COMPANY_THEME_SETTINGS.surface_color,
-      menu_layout: (DEFAULT_COMPANY_THEME_SETTINGS as UpdateCompanySettingsPayload & { menu_layout?: MenuLayoutOption }).menu_layout ?? 'vertical',
       navbar_variant: (DEFAULT_COMPANY_THEME_SETTINGS as UpdateCompanySettingsPayload & { navbar_variant?: NavbarVariantOption }).navbar_variant ?? 'default',
       content_width: (DEFAULT_COMPANY_THEME_SETTINGS as UpdateCompanySettingsPayload & { content_width?: ContentWidthOption }).content_width ?? 'full',
     }));
@@ -215,7 +207,6 @@ export class CompanySettingsPageComponent implements OnInit {
 
   private mapSettingsToPayload(settings: CompanySettings): UpdateCompanySettingsPayload {
     const layoutSettings = settings as CompanySettings & {
-      menu_layout?: MenuLayoutOption;
       navbar_variant?: NavbarVariantOption;
       content_width?: ContentWidthOption;
     };
@@ -241,7 +232,6 @@ export class CompanySettingsPageComponent implements OnInit {
       primary_color: settings.primary_color ?? DEFAULT_COMPANY_THEME_SETTINGS.primary_color,
       accent_color: settings.accent_color ?? DEFAULT_COMPANY_THEME_SETTINGS.accent_color,
       surface_color: settings.surface_color ?? DEFAULT_COMPANY_THEME_SETTINGS.surface_color,
-      menu_layout: layoutSettings.menu_layout ?? 'vertical',
       navbar_variant: layoutSettings.navbar_variant ?? 'default',
       content_width: layoutSettings.content_width ?? 'full',
       prime_threshold: settings.prime_threshold ?? 0,

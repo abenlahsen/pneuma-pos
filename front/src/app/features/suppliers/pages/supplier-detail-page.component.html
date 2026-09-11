@@ -26,12 +26,12 @@
 
         <div class="header-actions">
           @if (authService.hasPermission('manage purchase-payments')) {
-            <button type="button" class="btn btn-primary" (click)="openPaymentModal()">💳 Régler des achats</button>
+            <button type="button" class="btn btn-primary" (click)="openPaymentModal()"><app-icon name="invoice" /> Régler des achats</button>
           }
-          <button type="button" class="btn btn-secondary" (click)="openEditModal()">✏️ Modifier</button>
+          <button type="button" class="btn btn-secondary" (click)="openEditModal()"><app-icon name="edit" /> Modifier</button>
           @if (authService.hasPermission('delete suppliers')) {
             <button type="button" class="btn btn-danger" (click)="deleteSupplier()" [disabled]="deleting()">
-              🗑️ Supprimer
+              <app-icon name="delete" /> Supprimer
             </button>
           }
         </div>
@@ -49,7 +49,7 @@
     <!-- ── KPIs ── -->
     <section class="kpi-grid">
       <article class="kpi-card">
-        <span class="kpi-icon">📦</span>
+        <span class="kpi-icon"><app-icon name="purchases" /></span>
         <div class="kpi-body">
           <p class="kpi-label">ACHATS</p>
           <p class="kpi-val">{{ profile()?.purchases_count ?? 0 }}</p>
@@ -57,7 +57,7 @@
       </article>
 
       <article class="kpi-card">
-        <span class="kpi-icon">💰</span>
+        <span class="kpi-icon"><app-icon name="cash" /></span>
         <div class="kpi-body">
           <p class="kpi-label">TOTAL ACHETÉ</p>
           <p class="kpi-val">{{ (profile()?.total_purchased ?? 0) | number:'1.2-2' }} <small>DH</small></p>
@@ -65,7 +65,7 @@
       </article>
 
       <article class="kpi-card" [class.kpi-card--danger]="(profile()?.outstanding_balance ?? 0) > 0">
-        <span class="kpi-icon">⏳</span>
+        <span class="kpi-icon"><app-icon name="pending" /></span>
         <div class="kpi-body">
           <p class="kpi-label">SOLDE DÛ</p>
           <p class="kpi-val">{{ (profile()?.outstanding_balance ?? 0) | number:'1.2-2' }} <small>DH</small></p>
@@ -112,12 +112,12 @@
         <button type="button" class="tab-btn"
                 [class.active]="activeTab() === 'overview'"
                 (click)="setTab('overview')">
-          📦 Historique des achats
+          <app-icon name="purchases" /> Historique des achats
         </button>
         <button type="button" class="tab-btn"
                 [class.active]="activeTab() === 'statement'"
                 (click)="setTab('statement')">
-          📋 Relevé de compte
+          <app-icon name="inventory" /> Relevé de compte
         </button>
       </div>
 
@@ -309,7 +309,7 @@
                               class="btn-icon"
                               title="Voir le détail du paiement"
                               (click)="openPaymentView(payment)"
-                            >👁️</button>
+                            ><app-icon name="view" /></button>
                             @if (authService.hasPermission('manage purchase-payments')) {
                               <button
                                 type="button"
@@ -317,7 +317,7 @@
                                 title="Supprimer ce paiement"
                                 [disabled]="deletingPaymentId() === payment.id"
                                 (click)="deleteStatementPayment(payment)"
-                              >🗑️</button>
+                              ><app-icon name="delete" /></button>
                             }
                           </td>
                         </tr>
@@ -339,7 +339,7 @@
     <div class="modal-container" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2>Modifier fournisseur</h2>
-        <button class="btn-icon" type="button" (click)="closeEditModal()" [disabled]="saving()">✕</button>
+        <button aria-label="Fermer" class="btn-icon" type="button" (click)="closeEditModal()" [disabled]="saving()"><app-icon name="close" /></button>
       </div>
       <div class="modal-body">
         <app-supplier-form

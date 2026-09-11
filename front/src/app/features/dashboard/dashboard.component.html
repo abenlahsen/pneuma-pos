@@ -34,7 +34,7 @@
       </div>
       <div class="kpi-grid">
         <div class="kpi-card highlight-red">
-          <div class="kpi-icon">💰</div>
+          <div class="kpi-icon"><app-icon name="cash" /></div>
           <div class="kpi-info">
             <span class="kpi-label">CA Aujourd'hui</span>
             <span class="kpi-val">{{ k.sales_today_amount | number:'1.2-2' }} <small>DH</small></span>
@@ -64,7 +64,7 @@
           </div>
         </div>
         <div class="kpi-card" [class.negative-card]="k.margin_today < 0">
-          <div class="kpi-icon">📈</div>
+          <div class="kpi-icon"><app-icon name="kpi" /></div>
           <div class="kpi-info">
             <span class="kpi-label">Marge Brute</span>
             <span class="kpi-val">{{ k.margin_today | number:'1.2-2' }} <small>DH</small></span>
@@ -81,7 +81,7 @@
 
       <!-- Ce mois -->
       <div class="kpi-group-header">
-        <h4 class="kpi-group-title">📊 Ce mois</h4>
+        <h4 class="kpi-group-title"><app-icon name="reporting" /> Ce mois</h4>
         <label class="kpi-filter" for="dashboard-month-filter">
           <span class="kpi-filter-label">Mois</span>
           <input
@@ -95,7 +95,7 @@
       </div>
       <div class="kpi-grid">
         <div class="kpi-card highlight-blue">
-          <div class="kpi-icon">💰</div>
+          <div class="kpi-icon"><app-icon name="cash" /></div>
           <div class="kpi-info">
             <span class="kpi-label">CA Mois</span>
             <span class="kpi-val">{{ k.sales_month_amount | number:'1.2-2' }} <small>DH</small></span>
@@ -140,7 +140,7 @@
           </div>
         </div>
         <div class="kpi-card" [class.negative-card]="k.margin_month < 0">
-          <div class="kpi-icon">📈</div>
+          <div class="kpi-icon"><app-icon name="kpi" /></div>
           <div class="kpi-info">
             <span class="kpi-label">Marge Brute</span>
             <span class="kpi-val">{{ k.margin_month | number:'1.2-2' }} <small>DH</small></span>
@@ -163,7 +163,7 @@
 
       <!-- Performances Ventes par mois -->
       <div class="commercials-section">
-        <h3 class="section-title">🏷️ Ventes — Performances — {{ selectedMonth() }}</h3>
+        <h3 class="section-title"><app-icon name="sales" /> Ventes — Performances — {{ selectedMonth() }}</h3>
         <div class="modern-table-container">
           <table class="modern-table">
             <thead>
@@ -210,7 +210,7 @@
 
       <!-- Performances Service Auto par mois -->
       <div class="commercials-section">
-        <h3 class="section-title section-title--service">🔧 Service Auto — Performances — {{ selectedMonth() }}</h3>
+        <h3 class="section-title section-title--service"><app-icon name="service" /> Service Auto — Performances — {{ selectedMonth() }}</h3>
         <div class="modern-table-container">
           <table class="modern-table">
             <thead>
@@ -253,7 +253,7 @@
 
       <!-- Cette année -->
       <div class="kpi-group-header">
-        <h4 class="kpi-group-title">📈 Cette année</h4>
+        <h4 class="kpi-group-title"><app-icon name="kpi" /> Cette année</h4>
         <label class="kpi-filter" for="dashboard-year-filter">
           <span class="kpi-filter-label">Année</span>
           <select
@@ -268,7 +268,7 @@
       </div>
       <div class="kpi-grid">
         <div class="kpi-card">
-          <div class="kpi-icon">💰</div>
+          <div class="kpi-icon"><app-icon name="cash" /></div>
           <div class="kpi-info">
             <span class="kpi-label">CA Année</span>
             <span class="kpi-val">{{ k.total_sale_year | number:'1.2-2' }} <small>DH</small></span>
@@ -313,7 +313,7 @@
           </div>
         </div>
         <div class="kpi-card" [class.negative-card]="k.margin_year < 0">
-          <div class="kpi-icon">📈</div>
+          <div class="kpi-icon"><app-icon name="kpi" /></div>
           <div class="kpi-info">
             <span class="kpi-label">Marge Brute</span>
             <span class="kpi-val">{{ k.margin_year | number:'1.2-2' }} <small>DH</small></span>
@@ -336,7 +336,7 @@
 
       <!-- Performances Ventes par année -->
       <div class="commercials-section">
-        <h3 class="section-title">🏷️ Ventes — Performances — {{ selectedYear() }}</h3>
+        <h3 class="section-title"><app-icon name="sales" /> Ventes — Performances — {{ selectedYear() }}</h3>
         <div class="modern-table-container">
           <table class="modern-table">
             <thead>
@@ -383,7 +383,7 @@
 
       <!-- Performances Service Auto par année -->
       <div class="commercials-section">
-        <h3 class="section-title section-title--service">🔧 Service Auto — Performances — {{ selectedYear() }}</h3>
+        <h3 class="section-title section-title--service"><app-icon name="service" /> Service Auto — Performances — {{ selectedYear() }}</h3>
         <div class="modern-table-container">
           <table class="modern-table">
             <thead>
@@ -425,10 +425,10 @@
       </div>
 
       <!-- Général -->
-      <h4 class="kpi-group-title">🏦 Général</h4>
+      <h4 class="kpi-group-title"><app-icon name="finance" /> Général</h4>
       <div class="kpi-grid">
         <div class="kpi-card">
-          <div class="kpi-icon">📦</div>
+          <div class="kpi-icon"><app-icon name="purchases" /></div>
           <div class="kpi-info">
             <span class="kpi-label">Valeur du Stock</span>
             <span class="kpi-val">{{ k.stock_value | number:'1.2-2' }} <small>DH</small></span>
@@ -443,14 +443,14 @@
           </div>
         </div>
         <div class="kpi-card warning-card">
-          <div class="kpi-icon">⏳</div>
+          <div class="kpi-icon"><app-icon name="pending" /></div>
           <div class="kpi-info">
             <span class="kpi-label">Impayés Clients</span>
             <span class="kpi-val">{{ k.unpaid_sales | number:'1.2-2' }} <small>DH</small></span>
           </div>
         </div>
         <div class="kpi-card warning-card">
-          <div class="kpi-icon">⚠️</div>
+          <div class="kpi-icon"><app-icon name="warning" /></div>
           <div class="kpi-info">
             <span class="kpi-label">Reste à payer (Frs)</span>
             <span class="kpi-val">{{ k.unpaid_purchases | number:'1.2-2' }} <small>DH</small></span>
@@ -462,7 +462,7 @@
 
     <div class="quick-links">
       <a routerLink="/sales" class="quick-link-card" id="link-sales" *ngIf="authService.hasPermission('view sales')">
-        <span class="ql-icon">🏷️</span>
+        <span class="ql-icon"><app-icon name="sales" /></span>
         <div class="ql-text">
           <span class="ql-title">Ventes</span>
           <span class="ql-desc">Gérer les ventes et marges</span>
@@ -471,7 +471,7 @@
       </a>
 
       <a routerLink="/suppliers" class="quick-link-card" id="link-suppliers" *ngIf="authService.hasPermission('view suppliers')">
-        <span class="ql-icon">🏢</span>
+        <span class="ql-icon"><app-icon name="supplier" /></span>
         <div class="ql-text">
           <span class="ql-title">Fournisseurs</span>
           <span class="ql-desc">Gérer les fournisseurs</span>
@@ -480,7 +480,7 @@
       </a>
 
       <a routerLink="/users" class="quick-link-card" id="link-users" *ngIf="authService.hasPermission('view users')">
-        <span class="ql-icon">👥</span>
+        <span class="ql-icon"><app-icon name="users" /></span>
         <div class="ql-text">
           <span class="ql-title">Utilisateurs</span>
           <span class="ql-desc">Gérer les utilisateurs</span>
@@ -489,7 +489,7 @@
       </a>
 
       <a routerLink="/achats" class="quick-link-card" id="link-purchases" *ngIf="authService.hasPermission('view purchases')">
-        <span class="ql-icon">📦</span>
+        <span class="ql-icon"><app-icon name="purchases" /></span>
         <div class="ql-text">
           <span class="ql-title">Achats</span>
           <span class="ql-desc">Gérer les achats</span>
@@ -498,7 +498,7 @@
       </a>
 
       <a routerLink="/cash-flow" class="quick-link-card" id="link-cash-flow" *ngIf="authService.hasPermission('view cash-flow')">
-        <span class="ql-icon">💰</span>
+        <span class="ql-icon"><app-icon name="cash" /></span>
         <div class="ql-text">
           <span class="ql-title">Cash Flow</span>
           <span class="ql-desc">Revenus, dépenses et solde</span>
@@ -507,7 +507,7 @@
       </a>
 
       <a routerLink="/products" class="quick-link-card" id="link-products" *ngIf="authService.hasPermission('view products')">
-        <span class="ql-icon">🛞</span>
+        <span class="ql-icon"><app-icon name="stock" /></span>
         <div class="ql-text">
           <span class="ql-title">Produits</span>
           <span class="ql-desc">Catalogue des pneus</span>
@@ -516,7 +516,7 @@
       </a>
 
       <a routerLink="/stock" class="quick-link-card" id="link-stock" *ngIf="authService.hasPermission('view stock')">
-        <span class="ql-icon">📋</span>
+        <span class="ql-icon"><app-icon name="inventory" /></span>
         <div class="ql-text">
           <span class="ql-title">Inventaire</span>
           <span class="ql-desc">Stock des pneus</span>
@@ -525,7 +525,7 @@
       </a>
 
       <a routerLink="/brands" class="quick-link-card" id="link-brands" *ngIf="authService.hasPermission('view brands')">
-        <span class="ql-icon">🏭</span>
+        <span class="ql-icon"><app-icon name="brands" /></span>
         <div class="ql-text">
           <span class="ql-title">Marques</span>
           <span class="ql-desc">Gérer les marques de pneus</span>
@@ -534,7 +534,7 @@
       </a>
 
       <a routerLink="/roles" class="quick-link-card" id="link-roles" *ngIf="authService.hasPermission('view roles')">
-        <span class="ql-icon">🔐</span>
+        <span class="ql-icon"><app-icon name="roles" /></span>
         <div class="ql-text">
           <span class="ql-title">Rôles</span>
           <span class="ql-desc">Gérer les rôles et permissions</span>

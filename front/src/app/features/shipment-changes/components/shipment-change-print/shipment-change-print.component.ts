@@ -6,11 +6,12 @@ import { CommonModule } from '@angular/common';
 import { PrintService } from '../../../../core/services/print.service';
 import { CompanySettings } from '../../../settings/models/company-settings.model';
 import { ShipmentChangeItem, ShipmentChangeRequest, SHIPMENT_CHANGE_FIELD_LABELS } from '../../models/shipment-change.model';
+import { IconComponent } from '../../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-shipment-change-print',
   standalone: true,
-  imports: [CommonModule],
+  imports: [IconComponent, CommonModule],
   templateUrl: './shipment-change-print.component.html',
   styleUrl: './shipment-change-print.component.scss',
 })

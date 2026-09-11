@@ -14,7 +14,7 @@
 
   <div class="summary-cards">
     <div class="card summary-card income">
-      <div class="card-icon">📈</div>
+      <div class="card-icon"><app-icon name="kpi" /></div>
       <div class="card-content">
         <p class="card-label">Revenus</p>
         <h3 class="card-value">{{ summary().income | number:'1.2-2' }} DH</h3>
@@ -126,8 +126,8 @@
             (change)="applyFilters()" placeholder="∞" />
         </div>
         <div class="filter-actions">
-          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher">🔍</button>
-          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser">✕</button>
+          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher"><app-icon name="search" /></button>
+          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser"><app-icon name="close" /></button>
         </div>
       </div>
     </div>
@@ -137,7 +137,7 @@
     <div class="card pending-section">
       <div class="pending-header" (click)="pendingCollapsed.set(!pendingCollapsed())">
         <div class="pending-title">
-          <span class="pending-icon">⏳</span>
+          <span class="pending-icon"><app-icon name="pending" /></span>
           <span>Transactions à venir</span>
           @if (loadingPending()) {
             <span class="inline-spinner pending-spinner"></span>
@@ -187,20 +187,20 @@
                         (click)="openPaymentView(t)"
                         class="btn-icon btn-view"
                         title="Voir le détail du paiement"
-                      >👁️</button>
+                      ><app-icon name="view" /></button>
                       <button
                         *ngIf="t.sale_payment_id"
                         (click)="openSalePaymentView(t)"
                         class="btn-icon btn-view"
                         title="Voir le détail du paiement"
-                      >👁️</button>
+                      ><app-icon name="view" /></button>
                       <button
                         (click)="openEditForm(t)"
                         class="btn-icon btn-edit"
                         title="Modifier"
                         *ngIf="authService.hasPermission('edit cash-flow')"
                         [disabled]="deletingTransactionId() === t.id"
-                      >✏️</button>
+                      ><app-icon name="edit" /></button>
                       <button
                         (click)="deleteTransaction(t)"
                         class="btn-icon btn-delete"
@@ -208,7 +208,7 @@
                         *ngIf="authService.hasPermission('delete cash-flow')"
                         [disabled]="deletingTransactionId() === t.id"
                       >
-                        <span *ngIf="deletingTransactionId() !== t.id">🗑️</span>
+                        <span *ngIf="deletingTransactionId() !== t.id"><app-icon name="delete" /></span>
                         <span *ngIf="deletingTransactionId() === t.id" class="inline-spinner"></span>
                       </button>
                     </td>
@@ -275,26 +275,20 @@
                   (click)="openPaymentView(t)"
                   class="btn-icon btn-view"
                   title="Voir le détail du paiement"
-                >
-                  👁️
-                </button>
+                ><app-icon name="view" /></button>
                 <button
                   *ngIf="t.sale_payment_id"
                   (click)="openSalePaymentView(t)"
                   class="btn-icon btn-view"
                   title="Voir le détail du paiement"
-                >
-                  👁️
-                </button>
+                ><app-icon name="view" /></button>
                 <button
                   (click)="openEditForm(t)"
                   class="btn-icon btn-edit"
                   title="Modifier"
                   *ngIf="authService.hasPermission('edit cash-flow')"
                   [disabled]="deletingTransactionId() === t.id"
-                >
-                  ✏️
-                </button>
+                ><app-icon name="edit" /></button>
                 <button
                   (click)="deleteTransaction(t)"
                   class="btn-icon btn-delete"
@@ -302,7 +296,7 @@
                   *ngIf="authService.hasPermission('delete cash-flow')"
                   [disabled]="deletingTransactionId() === t.id"
                 >
-                  <span *ngIf="deletingTransactionId() !== t.id">🗑️</span>
+                  <span *ngIf="deletingTransactionId() !== t.id"><app-icon name="delete" /></span>
                   <span *ngIf="deletingTransactionId() === t.id" class="inline-spinner"></span>
                 </button>
               </td>

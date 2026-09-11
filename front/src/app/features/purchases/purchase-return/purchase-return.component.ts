@@ -7,6 +7,7 @@ import { AccountService } from '../../../core/services/account.service';
 import { Account } from '../../../core/models/account.model';
 import { Purchase, PurchaseItem, PurchaseReturn } from '../models/purchase.model';
 import { PAYMENT_METHODS } from '../../../core/constants/payment-method.constants';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 interface ReturnLine {
   item: PurchaseItem;
@@ -19,7 +20,7 @@ interface ReturnLine {
 @Component({
   selector: 'app-purchase-return',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [IconComponent, CommonModule, FormsModule],
   templateUrl: './purchase-return.component.html',
   styleUrl: './purchase-return.component.scss',
 })

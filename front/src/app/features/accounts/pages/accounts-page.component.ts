@@ -11,11 +11,12 @@ import { Transaction, TransactionSummary } from '../../../core/models/transactio
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { PurchasePaymentDetailComponent } from '../../purchases/components/purchase-payment-detail/purchase-payment-detail.component';
 import { SalePaymentDetailComponent } from '../../sales/components/sale-payment-detail/sale-payment-detail.component';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-accounts-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AccountFormComponent, TransferFormComponent, AutoRefreshControlComponent, PurchasePaymentDetailComponent, SalePaymentDetailComponent],
+  imports: [IconComponent, CommonModule, FormsModule, AccountFormComponent, TransferFormComponent, AutoRefreshControlComponent, PurchasePaymentDetailComponent, SalePaymentDetailComponent],
   templateUrl: './accounts-page.component.html',
   styleUrls: ['./accounts-page.component.scss']
 })

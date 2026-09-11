@@ -7,13 +7,14 @@ import { Purchase, PurchasePayment, PurchasePaymentSummary } from '../../../core
 import { Account } from '../../../core/models/account.model';
 import { AccountService } from '../../../core/services/account.service';
 import { PurchasePaymentDetailComponent } from '../components/purchase-payment-detail/purchase-payment-detail.component';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Effet', 'Carte bancaire'];
 
 @Component({
   selector: 'app-purchase-payments',
   standalone: true,
-  imports: [CommonModule, FormsModule, PurchasePaymentDetailComponent],
+  imports: [IconComponent, CommonModule, FormsModule, PurchasePaymentDetailComponent],
   templateUrl: './purchase-payments.component.html',
   styleUrl: './purchase-payments.component.scss',
 })

@@ -6,11 +6,12 @@ import { StockMovement, StockMovementType } from '../../../core/models/stock-mov
 import { StockService } from '../../../core/services/stock.service';
 import { StockMovementService } from '../../../core/services/stock-movement.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule],
+  imports: [IconComponent, CommonModule],
   templateUrl: './product-detail.component.html',
   styleUrl: './product-detail.component.scss',
 })

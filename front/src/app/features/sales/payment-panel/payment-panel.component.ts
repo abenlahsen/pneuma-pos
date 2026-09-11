@@ -8,13 +8,14 @@ import { Sale } from '../../../core/models/sale.model';
 import { Account } from '../../../core/models/account.model';
 import { AccountService } from '../../../core/services/account.service';
 import { SalePaymentDetailComponent } from '../components/sale-payment-detail/sale-payment-detail.component';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Effet', 'Carte bancaire'];
 
 @Component({
   selector: 'app-payment-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, SalePaymentDetailComponent],
+  imports: [IconComponent, CommonModule, FormsModule, SalePaymentDetailComponent],
   templateUrl: './payment-panel.component.html',
   styleUrl: './payment-panel.component.scss',
 })

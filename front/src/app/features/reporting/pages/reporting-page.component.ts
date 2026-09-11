@@ -2,6 +2,7 @@ import { Component, Inject, LOCALE_ID, OnInit, computed, signal } from '@angular
 import { CommonModule, formatNumber } from '@angular/common';
 import { ReportingService } from '../data-access/reporting.service';
 import { MonthlyReport, ReportPeriodData } from '../models/reporting.model';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 const MONTH_NAMES = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -50,7 +51,7 @@ export interface MethodRow {
 @Component({
   selector: 'app-reporting-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [IconComponent, CommonModule],
   templateUrl: './reporting-page.component.html',
   styleUrls: ['./reporting-page.component.scss'],
 })

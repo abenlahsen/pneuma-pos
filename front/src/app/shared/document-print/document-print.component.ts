@@ -5,6 +5,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { PrintService } from '../../core/services/print.service';
 import { CompanySettings } from '../../features/settings/models/company-settings.model';
+import { IconComponent } from '../icon/icon.component';
 
 export type DocumentType = 'sale' | 'purchase' | 'service_order';
 
@@ -48,7 +49,7 @@ export interface PrintDocument {
 @Component({
   selector: 'app-document-print',
   standalone: true,
-  imports: [CommonModule],
+  imports: [IconComponent, CommonModule],
   templateUrl: './document-print.component.html',
   styleUrl: './document-print.component.scss',
 })

@@ -27,11 +27,12 @@ import { Carrier } from '../../carriers/models/carrier.model';
 import { Partner } from '../../partners/models/partner.model';
 import { ManagedUser } from '../../../core/models/user-manage.model';
 import { SaleFormComponent } from '../../sales/sale-form/sale-form.component';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-client-detail-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, ClientFormComponent, VehicleFormComponent, SaleFormComponent, ClientPaymentComponent, SalePaymentDetailComponent],
+  imports: [IconComponent, CommonModule, RouterLink, ClientFormComponent, VehicleFormComponent, SaleFormComponent, ClientPaymentComponent, SalePaymentDetailComponent],
   templateUrl: './client-detail-page.component.html',
   styleUrl: './client-detail-page.component.scss',
 })

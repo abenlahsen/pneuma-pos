@@ -3,13 +3,13 @@
 
   <div class="panel-header">
     <div class="panel-title">
-      <span class="panel-icon">💳</span>
+      <span class="panel-icon"><app-icon name="invoice" /></span>
       <div>
         <h3>Paiements</h3>
         <p class="panel-subtitle">{{ purchase.supplier?.name || 'Fournisseur' }} — Achat #{{ purchase.id }}</p>
       </div>
     </div>
-    <button class="btn-close" (click)="close()">✕</button>
+    <button class="btn-close" aria-label="Fermer" (click)="close()"><app-icon name="close" /></button>
   </div>
 
   <div class="panel-body" *ngIf="!loading(); else loadingTpl">
@@ -31,7 +31,7 @@
         </div>
       } @else {
         <div class="summary-row overpaid-warning">
-          <span>⚠️ Trop-perçu</span>
+          <span><app-icon name="warning" /> Trop-perçu</span>
           <strong>{{ (-remaining()) | number:'1.2-2' }} DH</strong>
         </div>
       }
@@ -97,13 +97,13 @@
                 class="btn-view"
                 (click)="openView(p)"
                 title="Voir le détail du paiement"
-              >👁️</button>
+              ><app-icon name="view" /></button>
               <button
                 *ngIf="authService.hasPermission('manage purchase-payments') && !p.multi"
                 class="btn-delete"
                 (click)="deletePayment(p)"
                 title="Supprimer"
-              >🗑️</button>
+              ><app-icon name="delete" /></button>
               <span
                 *ngIf="authService.hasPermission('manage purchase-payments') && p.multi"
                 class="text-muted"

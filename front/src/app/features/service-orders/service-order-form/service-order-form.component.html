@@ -1,7 +1,7 @@
 <div class="form-container">
   <div class="form-header">
     <h2>{{ isEditing ? 'Modifier l\'intervention' : 'Nouvelle intervention' }}</h2>
-    <button class="btn-icon" (click)="onCancel()">✕</button>
+    <button aria-label="Fermer" class="btn-icon" (click)="onCancel()"><app-icon name="close" /></button>
   </div>
 
   <form (ngSubmit)="onSubmit()" #orderForm="ngForm">
@@ -129,7 +129,7 @@
         </h3>
         <div class="add-buttons">
           <button type="button" class="btn-add btn-add-service" (click)="addServiceLine()">
-            🔧 Prestation
+            <app-icon name="service" /> Prestation
           </button>
           <button type="button" class="btn-add btn-add-part" (click)="addPartLine()">
             🔩 Pièce
@@ -153,7 +153,7 @@
           <!-- Ligne PRESTATION — une seule ligne -->
           <ng-container *ngIf="line.item_type === 'service'">
             <div class="line-inline">
-              <span class="line-badge badge-service">🔧 #{{ i + 1 }}</span>
+              <span class="line-badge badge-service"><app-icon name="service" /> #{{ i + 1 }}</span>
               <div class="line-field-type autocomplete-wrapper">
                 <input
                   type="text"
@@ -189,7 +189,7 @@
                 min="0" step="0.01" placeholder="PV DH" aria-label="Main d'œuvre" />
               <div class="line-total-value">{{ serviceLineTotal(asService(line)) | number:'1.2-2' }} DH</div>
               <button type="button" class="btn-remove-line" (click)="removeLine(i)"
-                [disabled]="lines().length === 1" title="Supprimer">✕</button>
+                [disabled]="lines().length === 1" title="Supprimer"><app-icon name="close" /></button>
             </div>
           </ng-container>
 
@@ -205,7 +205,7 @@
                     (ngModelChange)="searchPartsFor(i, $event)"
                     placeholder="Rechercher pièce…"
                     autocomplete="off" />
-                  <span class="search-spinner" *ngIf="asPart(line).searching">⏳</span>
+                  <span class="search-spinner" *ngIf="asPart(line).searching"><app-icon name="pending" /></span>
                   <div class="parts-dropdown" *ngIf="asPart(line).searchResults.length > 0">
                     <div class="part-result-item" *ngFor="let part of asPart(line).searchResults" (mousedown)="selectPart(i, part)">
                       <div class="part-result-main">
@@ -222,7 +222,7 @@
                   <div class="selected-part-tag">
                     ✓ {{ asPart(line).product_name }}
                     <span class="part-tag-ref" *ngIf="asPart(line).product_reference">({{ asPart(line).product_reference }})</span>
-                    <button type="button" class="btn-clear-part" (click)="clearPartSelection(i)">✕</button>
+                    <button aria-label="Retirer la sélection" type="button" class="btn-clear-part" (click)="clearPartSelection(i)"><app-icon name="close" /></button>
                   </div>
                   <span class="stock-badge"
                     [class.stock-badge--ok]="asPart(line).total_quantity > 0 && asPart(line).quantity <= asPart(line).total_quantity"
@@ -246,7 +246,7 @@
                 min="0" step="0.01" placeholder="PV DH" aria-label="Prix unitaire" />
               <div class="line-total-value">{{ partLineTotal(asPart(line)) | number:'1.2-2' }} DH</div>
               <button type="button" class="btn-remove-line" (click)="removeLine(i)"
-                [disabled]="lines().length === 1" title="Supprimer">✕</button>
+                [disabled]="lines().length === 1" title="Supprimer"><app-icon name="close" /></button>
             </div>
           </ng-container>
 

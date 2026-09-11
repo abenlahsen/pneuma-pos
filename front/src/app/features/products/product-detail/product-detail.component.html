@@ -6,7 +6,7 @@
         <span class="badge" [class.badge-tyre]="isTyre" [class.badge-part]="isPart" [class.badge-service]="isService">{{ typeLabel() }}</span>
         <h2>{{ product.profile || product.reference || ('Produit #' + product.id) }}</h2>
       </div>
-      <button class="btn-icon" (click)="close.emit()" title="Fermer">✕</button>
+      <button class="btn-icon" (click)="close.emit()" title="Fermer"><app-icon name="close" /></button>
     </div>
 
     <div class="modal-body">
@@ -155,7 +155,7 @@
       <!-- Stock inventory -->
       <div class="detail-section" *ngIf="!isService">
         <h3 class="section-title">
-          📦 Inventaire
+          <app-icon name="inventory" /> Inventaire
           <span class="stock-total-badge" *ngIf="!stockLoading()">{{ totalStock }} en stock</span>
         </h3>
 
@@ -260,7 +260,7 @@
 
     <div class="modal-footer">
       <button class="btn btn-secondary" (click)="close.emit()">Fermer</button>
-      <button class="btn btn-primary" (click)="edit.emit(product)" *ngIf="authService.hasPermission('edit products')">✏️ Modifier</button>
+      <button class="btn btn-primary" (click)="edit.emit(product)" *ngIf="authService.hasPermission('edit products')"><app-icon name="edit" /> Modifier</button>
     </div>
 
   </div>

@@ -20,11 +20,12 @@ import { CityService } from '../../../core/services/city.service';
 import { Vehicle } from '../../vehicles/models/vehicle.model';
 import { VehicleSelectorComponent } from '../../../shared/vehicle-selector/vehicle-selector.component';
 import { QuickClientFormComponent } from '../../../shared/quick-client-form/quick-client-form.component';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-sale-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductDetailComponent, VehicleSelectorComponent, QuickClientFormComponent],
+  imports: [IconComponent, CommonModule, FormsModule, ProductDetailComponent, VehicleSelectorComponent, QuickClientFormComponent],
   templateUrl: './sale-form.component.html',
   styleUrl: './sale-form.component.scss'
 })

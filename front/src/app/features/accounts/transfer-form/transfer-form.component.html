@@ -2,7 +2,7 @@
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>🔄 Nouveau Transfert</h2>
-      <button (click)="onCancel()" class="btn-close">✕</button>
+      <button (click)="onCancel()" class="btn-close" aria-label="Fermer"><app-icon name="close" /></button>
     </div>
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-body">

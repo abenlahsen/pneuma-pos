@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ServiceOrder, ServicePayment, ServicePaymentPayload } from '../../../core/models/service-order.model';
 import { ServiceOrderService } from '../data-access/service-order.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Carte bancaire'];
 
@@ -16,7 +17,7 @@ interface AccountOption {
 @Component({
   selector: 'app-service-payment-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [IconComponent, CommonModule, FormsModule],
   templateUrl: './service-payment-panel.component.html',
   styleUrls: ['./service-payment-panel.component.scss'],
 })

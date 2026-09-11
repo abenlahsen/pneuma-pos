@@ -7,11 +7,12 @@ import { StockService } from '../../../core/services/stock.service';
 import { StockMovementService } from '../../../core/services/stock-movement.service';
 import { StockMovement, StockMovementType } from '../../../core/models/stock-movement.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-product-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [IconComponent, CommonModule, FormsModule],
   templateUrl: './product-form.component.html',
   styleUrls: ['../../sales/sale-form/sale-form.component.scss', './product-form.component.scss']
 })

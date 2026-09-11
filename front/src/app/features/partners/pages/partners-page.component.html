@@ -34,8 +34,8 @@
           </select>
         </div>
         <div class="filter-actions">
-          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher">🔍</button>
-          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser">✕</button>
+          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher"><app-icon name="search" /></button>
+          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser"><app-icon name="close" /></button>
         </div>
       </div>
     </div>
@@ -89,9 +89,7 @@
                 title="Modifier"
                 *ngIf="authService.hasPermission('edit partners')"
                 [disabled]="deletingPartnerId() === p.id"
-              >
-                ✏️
-              </button>
+              ><app-icon name="edit" /></button>
               <button
                 class="btn-icon btn-sm text-danger"
                 (click)="deletePartner(p)"
@@ -99,7 +97,7 @@
                 *ngIf="authService.hasPermission('delete partners')"
                 [disabled]="deletingPartnerId() === p.id"
               >
-                <span *ngIf="deletingPartnerId() !== p.id">🗑️</span>
+                <span *ngIf="deletingPartnerId() !== p.id"><app-icon name="delete" /></span>
                 <span *ngIf="deletingPartnerId() === p.id" class="inline-spinner"></span>
               </button>
             </td>

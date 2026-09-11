@@ -1,13 +1,20 @@
-@if (authService.isAuthenticated()) {
-  <div class="app-shell" [class.app-shell--vertical]="menuLayout() === 'vertical'">
-    <app-navbar></app-navbar>
+<!-- Remplace src/app/app.html.
+     Plus de menuLayout : le rail est la seule disposition.
+     RailComponent rend à la fois le rail (grid-column 1) et le panneau
+     (position fixed) — d'où le :host { display: contents }. -->
 
-    <main class="main-content" [class.main-content--vertical]="menuLayout() === 'vertical'">
+@if (authService.isAuthenticated()) {
+  <div class="app-shell">
+    <app-rail />
+
+    <main class="main-content">
       <div class="main-content__inner">
         <router-outlet />
       </div>
     </main>
   </div>
+
+  <app-command-palette />
 } @else {
   <router-outlet />
 }

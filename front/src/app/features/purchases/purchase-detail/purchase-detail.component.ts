@@ -11,11 +11,12 @@ import { AuthService } from '../../../core/services/auth.service';
 import { PurchaseService as PurchaseReturnsService } from '../data-access/purchase.service';
 import { PurchaseReturn } from '../models/purchase.model';
 import { isTypingTarget } from '../../../core/utils/detail-navigator';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-purchase-detail',
   standalone: true,
-  imports: [CommonModule, ProductDetailComponent, DocumentPrintComponent],
+  imports: [IconComponent, CommonModule, ProductDetailComponent, DocumentPrintComponent],
   templateUrl: './purchase-detail.component.html',
   styleUrls: ['../../sales/sale-detail/sale-detail.component.scss', './purchase-detail.component.scss']
 })

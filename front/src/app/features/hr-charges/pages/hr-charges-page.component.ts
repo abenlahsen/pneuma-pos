@@ -12,6 +12,7 @@ import {
   HrChargeUpdatePayload,
 } from '../models/hr-charge.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 const MONTH_NAMES = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -21,7 +22,7 @@ const MONTH_NAMES = [
 @Component({
   selector: 'app-hr-charges-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, HrChargeFormComponent],
+  imports: [IconComponent, CommonModule, FormsModule, HrChargeFormComponent],
   templateUrl: './hr-charges-page.component.html',
   styleUrl: './hr-charges-page.component.scss',
 })

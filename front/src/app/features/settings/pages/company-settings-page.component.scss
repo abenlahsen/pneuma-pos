@@ -377,25 +377,10 @@ $_radius-lg: 14px;
   font-weight: 600;
 }
 
-.theme-preview__menu-top {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--preview-border);
-  background: color-mix(in srgb, var(--preview-surface) 94%, var(--preview-accent));
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
 .theme-preview__content {
   display: grid;
   grid-template-columns: 140px 1fr;
   min-height: 260px;
-}
-
-.theme-preview--horizontal {
-  .theme-preview__content {
-    grid-template-columns: 1fr;
-  }
 }
 
 .theme-preview__sidebar {
@@ -676,7 +661,6 @@ $_radius-lg: 14px;
     border-bottom: 1px solid var(--preview-border);
   }
 
-  .theme-preview__menu-top,
   .theme-preview__legend {
     flex-direction: column;
   }

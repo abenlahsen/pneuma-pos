@@ -7,11 +7,12 @@ import { FormsModule } from '@angular/forms';
 import { VehicleService } from '../../features/vehicles/data-access/vehicle.service';
 import { Vehicle } from '../../features/vehicles/models/vehicle.model';
 import { VehicleFormComponent } from '../vehicle-form/vehicle-form.component';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-vehicle-selector',
   standalone: true,
-  imports: [CommonModule, FormsModule, VehicleFormComponent],
+  imports: [IconComponent, CommonModule, FormsModule, VehicleFormComponent],
   templateUrl: './vehicle-selector.component.html',
   styleUrl: './vehicle-selector.component.scss',
 })

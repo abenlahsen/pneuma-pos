@@ -5,7 +5,7 @@
       <p class="subtitle">Configurez les informations de votre entreprise pour les futurs documents et paramètres applicatifs.</p>
     </div>
     <a routerLink="/settings/transaction-categories" class="btn btn-secondary" *ngIf="authService.hasPermission('view transaction-categories')">
-      🏷️ Gérer les catégories de transactions
+      <app-icon name="brands" /> Gérer les catégories de transactions
     </a>
   </div>
 
@@ -286,21 +286,6 @@
 
                 <div class="layout-grid">
                   <div class="form-group">
-                    <label for="menu_layout">Disposition du menu</label>
-                    <select
-                      id="menu_layout"
-                      class="form-control"
-                      [ngModel]="form().menu_layout"
-                      (ngModelChange)="updateField('menu_layout', $event)"
-                      name="menu_layout"
-                    >
-                      <option *ngFor="let option of menuLayoutOptions" [ngValue]="option.value">
-                        {{ option.label }}
-                      </option>
-                    </select>
-                  </div>
-
-                  <div class="form-group">
                     <label for="navbar_variant">Style de la barre supérieure</label>
                     <select
                       id="navbar_variant"
@@ -400,7 +385,6 @@
               <div
                 class="theme-preview"
                 [class.theme-preview--dark]="previewThemeMode() === 'dark'"
-                [class.theme-preview--horizontal]="previewMenuLayout() === 'horizontal'"
                 [class.theme-preview--navbar-compact]="previewNavbarVariant() === 'compact'"
                 [class.theme-preview--navbar-flat]="previewNavbarVariant() === 'flat'"
                 [class.theme-preview--width-boxed]="previewContentWidth() === 'boxed'"
@@ -419,15 +403,8 @@
                     <div class="theme-preview__badge">{{ previewThemeMode() === 'system' ? 'Auto' : (previewThemeMode() === 'dark' ? 'Sombre' : 'Clair') }}</div>
                   </div>
 
-                  <div class="theme-preview__menu-top" *ngIf="previewMenuLayout() === 'horizontal'">
-                    <span class="theme-preview__nav-item theme-preview__nav-item--active">Tableau de bord</span>
-                    <span class="theme-preview__nav-item">Produits</span>
-                    <span class="theme-preview__nav-item">Ventes</span>
-                    <span class="theme-preview__nav-item">Paramètres</span>
-                  </div>
-
                   <div class="theme-preview__content">
-                    <aside class="theme-preview__sidebar" *ngIf="previewMenuLayout() === 'vertical'">
+                    <aside class="theme-preview__sidebar">
                       <span class="theme-preview__nav-item theme-preview__nav-item--active">Tableau de bord</span>
                       <span class="theme-preview__nav-item">Produits</span>
                       <span class="theme-preview__nav-item">Ventes</span>
@@ -464,7 +441,6 @@
                 </div>
 
                 <div class="theme-preview__legend">
-                  <span><strong>Menu :</strong> {{ previewMenuLayout() === 'horizontal' ? 'Horizontal' : 'Vertical' }}</span>
                   <span><strong>Barre supérieure :</strong> {{ previewNavbarVariant() === 'compact' ? 'Compacte' : (previewNavbarVariant() === 'flat' ? 'Plate' : 'Standard') }}</span>
                   <span><strong>Contenu :</strong> {{ previewContentWidth() === 'boxed' ? 'Encadré' : (previewContentWidth() === 'compact' ? 'Compact' : 'Pleine largeur') }}</span>
                 </div>

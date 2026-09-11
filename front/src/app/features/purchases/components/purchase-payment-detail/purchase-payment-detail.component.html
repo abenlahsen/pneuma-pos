@@ -2,7 +2,7 @@
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>Détail du paiement<ng-container *ngIf="detail() as d"> #{{ d.id }}</ng-container></h2>
-      <button class="btn-icon" type="button" (click)="close()">✕</button>
+      <button aria-label="Fermer" class="btn-icon" type="button" (click)="close()"><app-icon name="close" /></button>
     </div>
 
     <div class="modal-body">

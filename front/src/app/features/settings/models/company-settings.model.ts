@@ -1,5 +1,4 @@
 export type ThemeMode = 'light' | 'dark' | 'system';
-export type MenuLayout = 'horizontal' | 'vertical';
 export type NavbarVariant = 'default' | 'compact' | 'flat';
 export type ContentWidth = 'full' | 'boxed' | 'compact';
 
@@ -26,7 +25,6 @@ export interface CompanySettings {
   primary_color: string;
   accent_color: string;
   surface_color: string;
-  menu_layout: MenuLayout;
   navbar_variant: NavbarVariant;
   content_width: ContentWidth;
   prime_threshold: number;
@@ -55,7 +53,6 @@ export interface UpdateCompanySettingsPayload {
   primary_color: string;
   accent_color: string;
   surface_color: string;
-  menu_layout: MenuLayout;
   navbar_variant: NavbarVariant;
   content_width: ContentWidth;
   prime_threshold?: number;
@@ -63,13 +60,12 @@ export interface UpdateCompanySettingsPayload {
 
 export const DEFAULT_COMPANY_THEME_SETTINGS: Pick<
   CompanySettings,
-  'theme_mode' | 'primary_color' | 'accent_color' | 'surface_color' | 'menu_layout' | 'navbar_variant' | 'content_width'
+  'theme_mode' | 'primary_color' | 'accent_color' | 'surface_color' | 'navbar_variant' | 'content_width'
 > = {
   theme_mode: 'system',
   primary_color: '#ff2d37',
   accent_color: '#1e293b',
   surface_color: '#ffffff',
-  menu_layout: 'vertical',
   navbar_variant: 'default',
   content_width: 'full',
 };

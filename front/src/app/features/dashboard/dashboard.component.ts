@@ -6,11 +6,12 @@ import { DashboardService } from '../../core/services/dashboard.service';
 import { User } from '../../core/models/auth.model';
 import { DashboardKpi } from '../../core/models/dashboard-kpi.model';
 import { AutoRefreshControlComponent } from '../../shared/auto-refresh-control/auto-refresh-control.component';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, AutoRefreshControlComponent],
+  imports: [IconComponent, CommonModule, RouterLink, AutoRefreshControlComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })

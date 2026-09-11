@@ -14,7 +14,7 @@
 
   <div class="card table-card unpaid-summary-card">
     <div class="card-body" style="padding: 1.25rem 1.5rem 0.5rem;">
-      <h2 class="section-title">💰 Impayés fournisseurs — tous les achats</h2>
+      <h2 class="section-title"><app-icon name="cash" /> Impayés fournisseurs — tous les achats</h2>
     </div>
     <div class="table-responsive">
       <table class="table">
@@ -77,8 +77,8 @@
           />
         </div>
         <div class="filter-actions">
-          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher">🔍</button>
-          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser">✕</button>
+          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher"><app-icon name="search" /></button>
+          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser"><app-icon name="close" /></button>
         </div>
       </div>
     </div>
@@ -129,25 +129,19 @@
                 class="btn-icon btn-sm"
                 (click)="viewSupplier(supplier)"
                 title="Voir la fiche"
-              >
-                👁️
-              </button>
+              ><app-icon name="view" /></button>
               <button
                 class="btn-icon btn-sm text-primary"
                 (click)="openEditForm(supplier)"
                 title="Modifier"
                 *ngIf="authService.hasPermission('edit suppliers')"
-              >
-                ✏️
-              </button>
+              ><app-icon name="edit" /></button>
               <button
                 class="btn-icon btn-sm text-danger"
                 (click)="deleteSupplier(supplier)"
                 title="Supprimer"
                 *ngIf="authService.hasPermission('delete suppliers')"
-              >
-                🗑️
-              </button>
+              ><app-icon name="delete" /></button>
             </td>
             <td>
               <button type="button" class="btn-link supplier-link" (click)="viewSupplier(supplier)">
