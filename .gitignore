@@ -10,3 +10,5 @@ dump/
 deploy/deploy.env
 deploy/deploy2.env
 env.production
+.semgrep/
+graphify-out/
