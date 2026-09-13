@@ -1,7 +1,7 @@
 <div class="modal-overlay" (click)="onCancel()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>{{ editMode ? '✏️ Modifier la charge RH' : (charge ? '⧉ Dupliquer la charge RH' : '➕ Nouvelle saisie de charges RH') }}</h2>
+      <h2>{{ editMode ? 'Modifier la charge RH' : (charge ? 'Dupliquer la charge RH' : 'Nouvelle saisie de charges RH') }}</h2>
       <button (click)="onCancel()" class="btn-close" aria-label="Fermer"><app-icon name="close" /></button>
     </div>
 
@@ -70,7 +70,7 @@
         }
       </div>
 
-      <button *ngIf="!editMode" type="button" class="btn-add-line" (click)="addLine()">➕ Ajouter une ligne</button>
+      <button *ngIf="!editMode" type="button" class="btn-add-line" (click)="addLine()">Ajouter une ligne</button>
 
       <div class="total-row">
         Total : <strong>{{ totalAmount() | number: '1.2-2' }} DH</strong>

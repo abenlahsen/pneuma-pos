@@ -195,7 +195,7 @@
       <!-- Stock movements history -->
       <div class="detail-section" *ngIf="!isService && authService.hasPermission('view stock-movements')">
         <h3 class="section-title collapsible" (click)="toggleMovements()">
-          📜 Historique des mouvements
+          Historique des mouvements
           <span class="mv-count" *ngIf="movements().length > 0">({{ movements().length }})</span>
           <span class="collapse-icon">{{ showMovements() ? '▾' : '▸' }}</span>
         </h3>

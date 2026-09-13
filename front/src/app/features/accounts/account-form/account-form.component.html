@@ -1,7 +1,7 @@
 <div class="modal-overlay" (click)="onCancel()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>{{ isEdit() ? '✏️ Modifier' : '➕ Nouveau' }} Compte</h2>
+      <h2>{{ isEdit() ? 'Modifier' : 'Nouveau' }} Compte</h2>
       <button (click)="onCancel()" class="btn-close" aria-label="Fermer"><app-icon name="close" /></button>
     </div>
 
@@ -14,9 +14,9 @@
         <div class="form-group">
           <label for="acc-type">Type *</label>
           <select id="acc-type" formControlName="type">
-            <option value="cash">💵 Caisse</option>
+            <option value="cash">Caisse</option>
             <option value="bank"><app-icon name="finance" /> Banque</option>
-            <option value="person">👤 Personne</option>
+            <option value="person">Personne</option>
           </select>
         </div>
       </div>

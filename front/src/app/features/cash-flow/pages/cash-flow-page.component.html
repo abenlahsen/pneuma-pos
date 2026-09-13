@@ -21,14 +21,14 @@
       </div>
     </div>
     <div class="card summary-card expense">
-      <div class="card-icon">📉</div>
+      <div class="card-icon"><app-icon name="reporting" /></div>
       <div class="card-content">
         <p class="card-label">Dépenses</p>
         <h3 class="card-value">{{ summary().expenses | number:'1.2-2' }} DH</h3>
       </div>
     </div>
     <div class="card summary-card balance" [class.negative]="summary().balance < 0">
-      <div class="card-icon">💎</div>
+      <div class="card-icon"><app-icon name="finance" /></div>
       <div class="card-content">
         <p class="card-label">Solde</p>
         <h3 class="card-value">{{ summary().balance | number:'1.2-2' }} DH</h3>

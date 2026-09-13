@@ -1,7 +1,7 @@
 <div class="modal-overlay" (click)="onCancel()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>{{ isEdit() ? '✏️ Modifier' : '➕ Nouvelle' }} Transaction</h2>
+      <h2>{{ isEdit() ? 'Modifier' : 'Nouvelle' }} Transaction</h2>
       <button (click)="onCancel()" class="btn-close" aria-label="Fermer"><app-icon name="close" /></button>
     </div>
 
@@ -21,7 +21,7 @@
           [class.active]="form.get('type')?.value === 'expense'"
           (click)="form.get('type')?.setValue('expense')"
         >
-          📉 Dépense
+          Dépense
         </button>
       </div>
 

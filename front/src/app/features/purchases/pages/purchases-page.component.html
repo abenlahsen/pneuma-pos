@@ -23,7 +23,7 @@
       </div>
     </div>
     <div class="card summary-card balance">
-      <div class="card-icon">✅</div>
+      <div class="card-icon"><app-icon name="check" /></div>
       <div class="card-content">
         <p class="card-label">Total Réglé</p>
         <h3 class="card-value">{{ summary()!.total_paye | number:'1.2-2' }} DH</h3>
@@ -38,7 +38,7 @@
     </div>
 
     <div class="card summary-card expense">
-      <div class="card-icon">🔄</div>
+      <div class="card-icon"><app-icon name="refresh" /></div>
       <div class="card-content">
         <p class="card-label">Impayé en cours</p>
         <h3 class="card-value">{{ summary()!.unpaid_en_cours | number:'1.2-2' }} DH</h3>
@@ -46,7 +46,7 @@
     </div>
 
     <div class="card summary-card expense">
-      <div class="card-icon">📥</div>
+      <div class="card-icon"></div>
       <div class="card-content">
         <p class="card-label">Impayé reçu/terminé</p>
         <h3 class="card-value">{{ summary()!.unpaid_recu_termine | number:'1.2-2' }} DH</h3>
@@ -62,7 +62,7 @@
     </div>
 
     <div class="card summary-card balance">
-      <div class="card-icon">🪙</div>
+      <div class="card-icon"><app-icon name="cash" /></div>
       <div class="card-content">
         <p class="card-label">CA sans facture</p>
         <h3 class="card-value">{{ summary()!.ca_sans_facture | number:'1.2-2' }} DH</h3>
@@ -203,7 +203,7 @@
               <button class="btn-icon btn-sm" (click)="openDetail(purchase)" title="Visualiser"><app-icon name="view" /></button>
               <button class="btn-icon btn-sm" (click)="openPayments(purchase)" title="Paiements"><app-icon name="invoice" /></button>
               <button class="btn-icon btn-sm text-primary" (click)="openForm(purchase)" title="Modifier" *ngIf="authService.hasPermission('edit purchases') && !isPurchaseLocked(purchase)"><app-icon name="edit" /></button>
-              <button class="btn-icon btn-sm" (click)="openReturn(purchase)" title="Retour fournisseur" *ngIf="canReturnPurchase(purchase)">🔄</button>
+              <button class="btn-icon btn-sm" (click)="openReturn(purchase)" title="Retour fournisseur" *ngIf="canReturnPurchase(purchase)"><app-icon name="refresh" /></button>
               <button class="btn-icon btn-sm text-danger" (click)="deletePurchase(purchase)" title="Supprimer" *ngIf="authService.hasPermission('delete purchases') && !isPurchaseLocked(purchase)"><app-icon name="delete" /></button>
             </td>
             <td class="text-center cell-id">{{ purchase.id }}</td>

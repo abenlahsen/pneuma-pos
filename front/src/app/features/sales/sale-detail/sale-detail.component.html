@@ -11,7 +11,7 @@
         </div>
       </div>
       <div class="modal-actions">
-        <button class="btn btn-primary btn-sm" (click)="openPrint()">🖨️ Imprimer</button>
+        <button class="btn btn-primary btn-sm" (click)="openPrint()">Imprimer</button>
         <button class="btn btn-secondary btn-sm no-print" *ngIf="authService.hasPermission('create shipment-changes')" (click)="openShipmentAddForm()"><app-icon name="purchases" /> Demander une modification</button>
         <button class="btn-close" aria-label="Fermer" (click)="close.emit()"><app-icon name="close" /></button>
       </div>

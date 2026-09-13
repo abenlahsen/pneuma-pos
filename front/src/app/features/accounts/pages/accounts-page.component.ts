@@ -77,16 +77,17 @@ export class AccountsPageComponent implements OnInit {
     });
   }
 
+  /** Cle d'icone Lucide (voir PATHS d'icon.component.ts), plus d'emoji. */
   getIcon(type: string): string {
     switch (type) {
       case 'cash':
-        return '💵';
+        return 'cash';
       case 'bank':
-        return '🏦';
+        return 'finance';
       case 'person':
-        return '👤';
+        return 'client';
       default:
-        return '💼';
+        return 'parties';
     }
   }
 

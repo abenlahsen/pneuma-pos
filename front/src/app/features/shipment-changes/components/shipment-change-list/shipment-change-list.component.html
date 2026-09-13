@@ -34,7 +34,7 @@
             <span class="badge" [ngClass]="statusClass(r.status)">{{ statusLabels[r.status] }}</span>
           </td>
           <td class="text-right actions-cell">
-            <button type="button" class="btn-icon" title="Imprimer" (click)="print.emit(r)">🖨️</button>
+            <button type="button" class="btn-icon" title="Imprimer" (click)="print.emit(r)"><app-icon name="print" /></button>
             <button type="button" class="btn-icon" title="Modifier" *ngIf="canEdit && !isClosed(r)" (click)="edit.emit(r)"><app-icon name="edit" /></button>
             <select
               class="status-select"

@@ -14,7 +14,7 @@
       <app-icon name="kpi" /> Revenus
     </button>
     <button type="button" class="toggle-btn" [class.active]="activeType() === 'expense'" (click)="switchType('expense')">
-      📉 Dépenses
+      Dépenses
     </button>
   </div>
 
@@ -48,8 +48,8 @@
             <div class="category-name">
               <ng-container *ngIf="editingId() !== category.id; else editParentTpl">
                 <span>{{ category.name }}</span>
-                <span class="badge badge-system" *ngIf="category.is_system" title="Catégorie système, générée automatiquement par l'application">🔒 système</span>
-                <span class="badge badge-confidential" *ngIf="category.is_confidential" title="Catégorie confidentielle — visible uniquement par les utilisateurs disposant du droit « Charges RH »">🔒 confidentiel</span>
+                <span class="badge badge-system" *ngIf="category.is_system" title="Catégorie système, générée automatiquement par l'application">système</span>
+                <span class="badge badge-confidential" *ngIf="category.is_confidential" title="Catégorie confidentielle — visible uniquement par les utilisateurs disposant du droit « Charges RH »">confidentiel</span>
               </ng-container>
               <ng-template #editParentTpl>
                 <input type="text" [(ngModel)]="editingName" (keyup.enter)="submitEdit(category)" (keyup.escape)="cancelEdit()">
@@ -84,16 +84,16 @@
                   [disabled]="!authService.hasPermission('edit transaction-categories')"
                   (change)="toggleIsConfidential(category)"
                 >
-                🔒 Confidentiel (RH)
+                Confidentiel (RH)
               </label>
 
               <div class="category-actions" *ngIf="!category.is_system">
                 <ng-container *ngIf="editingId() === category.id; else defaultParentActions">
-                  <button type="button" class="btn-icon" title="Enregistrer" (click)="submitEdit(category)">✓</button>
+                  <button type="button" class="btn-icon" title="Enregistrer" (click)="submitEdit(category)"></button>
                   <button type="button" class="btn-icon" title="Annuler" (click)="cancelEdit()"><app-icon name="close" /></button>
                 </ng-container>
                 <ng-template #defaultParentActions>
-                  <button type="button" class="btn-icon" title="Ajouter une sous-catégorie" *ngIf="authService.hasPermission('create transaction-categories')" (click)="openAddChild(category.id)">➕</button>
+                  <button type="button" class="btn-icon" title="Ajouter une sous-catégorie" *ngIf="authService.hasPermission('create transaction-categories')" (click)="openAddChild(category.id)"><app-icon name="plus" /></button>
                   <button type="button" class="btn-icon" title="Modifier" *ngIf="authService.hasPermission('edit transaction-categories')" (click)="startEdit(category)"><app-icon name="edit" /></button>
                   <button type="button" class="btn-icon danger" title="Supprimer" *ngIf="authService.hasPermission('delete transaction-categories')" (click)="deleteCategory(category)"><app-icon name="delete" /></button>
                 </ng-template>
@@ -106,7 +106,7 @@
               <div class="child-name">
                 <ng-container *ngIf="editingId() !== child.id; else editChildTpl">
                   <span>{{ child.name }}</span>
-                  <span class="badge badge-system" *ngIf="child.is_system">🔒 système</span>
+                  <span class="badge badge-system" *ngIf="child.is_system">système</span>
                 </ng-container>
                 <ng-template #editChildTpl>
                   <input type="text" [(ngModel)]="editingName" (keyup.enter)="submitEdit(child)" (keyup.escape)="cancelEdit()">
@@ -114,7 +114,7 @@
               </div>
               <div class="category-actions" *ngIf="!child.is_system">
                 <ng-container *ngIf="editingId() === child.id; else defaultChildActions">
-                  <button type="button" class="btn-icon" title="Enregistrer" (click)="submitEdit(child)">✓</button>
+                  <button type="button" class="btn-icon" title="Enregistrer" (click)="submitEdit(child)"></button>
                   <button type="button" class="btn-icon" title="Annuler" (click)="cancelEdit()"><app-icon name="close" /></button>
                 </ng-container>
                 <ng-template #defaultChildActions>

@@ -19,7 +19,7 @@
   <div class="summary-cards">
     <ng-container *ngIf="!hasDateFilter()">
       <div class="card summary-card info">
-        <div class="card-icon">📅</div>
+        <div class="card-icon"><app-icon name="calendar" /></div>
         <div class="card-content">
           <p class="card-label">Pneus vendus aujourd'hui</p>
           <h3 class="card-value">{{ summary().tyres_today }}</h3>
@@ -36,7 +36,7 @@
     </ng-container>
 
     <div class="card summary-card info" *ngIf="hasDateFilter()">
-      <div class="card-icon">🗓️</div>
+      <div class="card-icon"><app-icon name="calendar" /></div>
       <div class="card-content">
         <p class="card-label">Pneus vendus (période filtrée)</p>
         <h3 class="card-value">{{ summary().tyres_period }}</h3>
@@ -84,7 +84,7 @@
     </div>
 
     <div class="card summary-card balance">
-      <div class="card-icon">🪙</div>
+      <div class="card-icon"><app-icon name="cash" /></div>
       <div class="card-content">
         <p class="card-label">CA sans facture</p>
         <h3 class="card-value">{{ summary().ca_sans_facture | number:'1.2-2' }} DH</h3>

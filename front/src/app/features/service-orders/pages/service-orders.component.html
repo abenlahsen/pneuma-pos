@@ -36,7 +36,7 @@
       </div>
     </div>
     <div class="card summary-card balance">
-      <div class="card-icon">✅</div>
+      <div class="card-icon"><app-icon name="check" /></div>
       <div class="card-content">
         <p class="card-label">Payé</p>
         <h3 class="card-value">{{ summary().total_paid | number:'1.2-2' }} DH</h3>
@@ -188,7 +188,7 @@
           <td>
             <div class="client-name">
               {{ order.client_record?.name || '—' }}
-              <span *ngIf="order.client_record" class="client-linked" title="Fiche client liée">🔗</span>
+              <span *ngIf="order.client_record" class="client-linked" title="Fiche client liée"><app-icon name="link" /></span>
             </div>
             <div *ngIf="order.client_record?.phone" class="client-phone">{{ order.client_record!.phone }}</div>
           </td>
@@ -205,7 +205,7 @@
               <span
                 *ngFor="let item of getPartItems(order).slice(0, 2)"
                 class="badge badge-part-type"
-              >🔩 {{ item.product_name || 'Pièce' }}</span>
+              >{{ item.product_name || 'Pièce' }}</span>
               <span
                 *ngIf="orderProductLabels(order).length > 4"
                 class="badge badge-more"

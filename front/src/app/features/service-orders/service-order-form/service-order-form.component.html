@@ -132,7 +132,7 @@
             <app-icon name="service" /> Prestation
           </button>
           <button type="button" class="btn-add btn-add-part" (click)="addPartLine()">
-            🔩 Pièce
+            Pièce
           </button>
         </div>
       </div>
@@ -196,7 +196,7 @@
           <!-- Ligne PIÈCE — une seule ligne -->
           <ng-container *ngIf="line.item_type === 'part'">
             <div class="line-inline">
-              <span class="line-badge badge-part">🔩 #{{ i + 1 }}</span>
+              <span class="line-badge badge-part">#{{ i + 1 }}</span>
               <div class="line-field-search autocomplete-wrapper">
                 <ng-container *ngIf="!asPart(line).product_id">
                   <input type="text" class="form-control"
@@ -220,7 +220,7 @@
                 </ng-container>
                 <ng-container *ngIf="asPart(line).product_id">
                   <div class="selected-part-tag">
-                    ✓ {{ asPart(line).product_name }}
+                    {{ asPart(line).product_name }}
                     <span class="part-tag-ref" *ngIf="asPart(line).product_reference">({{ asPart(line).product_reference }})</span>
                     <button aria-label="Retirer la sélection" type="button" class="btn-clear-part" (click)="clearPartSelection(i)"><app-icon name="close" /></button>
                   </div>
@@ -322,7 +322,7 @@
 
     <div class="form-actions">
       <div class="stock-block-msg" *ngIf="hasStockError()">
-        ⛔ {{ stockErrorMessage() }}
+        {{ stockErrorMessage() }}
       </div>
       <div class="footer-totals" *ngIf="totalAmount() > 0">
         <span class="footer-total-label">Total Achat : <strong>{{ totalPurchase() | number:'1.2-2' }} DH</strong></span>

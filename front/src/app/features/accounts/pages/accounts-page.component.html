@@ -11,7 +11,7 @@
     <div class="actions">
       <ng-container *ngIf="!selectedAccount()">
         <button class="btn btn-secondary" (click)="openTransferForm()" *ngIf="authService.hasPermission('transfer accounts')">
-          🔄 Nouveau Transfert
+          Nouveau Transfert
         </button>
         <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create accounts')">
           + Nouveau Compte
@@ -30,7 +30,7 @@
            (click)="viewAccount(acc)"
            [class.inactive]="!acc.is_active">
         <div class="card-header">
-          <span class="icon">{{ getIcon(acc.type) }}</span>
+          <span class="icon"><app-icon [name]="getIcon(acc.type)" /></span>
           <div class="info">
             <h3>{{ acc.name }}</h3>
             <span class="type">{{ getTypeLabel(acc.type) }}</span>
@@ -56,7 +56,7 @@
   <ng-container *ngIf="selectedAccount() as acc">
     <div class="summary-cards">
       <div class="card summary-card balance" [class.negative]="acc.current_balance < 0">
-        <div class="card-icon">💎</div>
+        <div class="card-icon"><app-icon name="finance" /></div>
         <div class="card-content">
           <p class="card-label">Solde Actuel</p>
           <h3 class="card-value">{{ acc.current_balance | number:'1.2-2' }} DH</h3>
@@ -70,7 +70,7 @@
         </div>
       </div>
       <div class="card summary-card expense">
-        <div class="card-icon">📉</div>
+        <div class="card-icon"><app-icon name="reporting" /></div>
         <div class="card-content">
           <p class="card-label">Total Sorties</p>
           <h3 class="card-value">{{ accountSummary().expenses | number:'1.2-2' }} DH</h3>

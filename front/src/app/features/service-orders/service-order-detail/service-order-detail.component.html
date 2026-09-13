@@ -3,7 +3,7 @@
     <div class="modal-header">
       <h2>Détail de l'intervention</h2>
       <div>
-        <button class="btn btn-primary btn-sm mr-2" (click)="openPrint()">🖨️ Imprimer</button>
+        <button class="btn btn-primary btn-sm mr-2" (click)="openPrint()">Imprimer</button>
         <button class="btn-close" aria-label="Fermer" (click)="close.emit()"><app-icon name="close" /></button>
       </div>
     </div>
@@ -56,7 +56,7 @@
               <tr *ngFor="let item of serviceOrder.items">
                 <td>
                   <span *ngIf="item.item_type !== 'part'" class="badge badge-type"><app-icon name="service" /> Prestation</span>
-                  <span *ngIf="item.item_type === 'part'" class="badge badge-part-inline">🔩 Pièce</span>
+                  <span *ngIf="item.item_type === 'part'" class="badge badge-part-inline">Pièce</span>
                 </td>
                 <td class="description-cell">
                   <ng-container *ngIf="item.item_type !== 'part'">

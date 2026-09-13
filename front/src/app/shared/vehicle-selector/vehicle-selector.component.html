@@ -40,8 +40,7 @@
     </div>
 
     <div class="vs-selected-info" *ngIf="selectedVehicle() && !showCreateForm()">
-      <span class="vs-tag">
-        🚗 <strong>{{ selectedVehicle()!.plate }}</strong>
+      <span class="vs-tag"><strong>{{ selectedVehicle()!.plate }}</strong>
         — {{ selectedVehicle()!.brand }} {{ selectedVehicle()!.model_name }}
         ({{ selectedVehicle()!.circulation_month < 10 ? '0' : '' }}{{ selectedVehicle()!.circulation_month }}/{{ selectedVehicle()!.circulation_year }})
       </span>

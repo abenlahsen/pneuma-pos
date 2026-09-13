@@ -11,7 +11,7 @@
         </div>
       </div>
       <div class="modal-actions">
-        <button class="btn btn-primary btn-sm" (click)="openPrint()">🖨️ Imprimer</button>
+        <button class="btn btn-primary btn-sm" (click)="openPrint()">Imprimer</button>
         <button class="btn-close" aria-label="Fermer" (click)="close.emit()"><app-icon name="close" /></button>
       </div>
     </div>
@@ -211,7 +211,7 @@
       <div class="modal-footer-actions">
         <button class="btn btn-primary" (click)="openPrint()">Imprimer</button>
         <button *ngIf="canEdit" class="btn btn-secondary" (click)="edit.emit()"><app-icon name="edit" /> Modifier</button>
-        <button *ngIf="canReturn" class="btn btn-secondary" (click)="openReturn.emit()">🔄 Retour fournisseur</button>
+        <button *ngIf="canReturn" class="btn btn-secondary" (click)="openReturn.emit()">Retour fournisseur</button>
         <button class="btn btn-secondary" (click)="close.emit()">Fermer</button>
       </div>
     </div>

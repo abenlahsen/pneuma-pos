@@ -13,10 +13,10 @@
           <h1>{{ profile()!.client!.name }}</h1>
           <div class="client-meta">
             @if (profile()?.client?.phone) {
-              <span class="meta-item">📞 {{ profile()!.client!.phone }}</span>
+              <span class="meta-item">{{ profile()!.client!.phone }}</span>
             }
             @if (profile()?.client?.city) {
-              <span class="meta-item">📍 {{ profile()!.client!.city }}</span>
+              <span class="meta-item">{{ profile()!.client!.city }}</span>
             }
             @if (profile()?.client?.category) {
               <span class="tag">{{ profile()!.client!.category }}</span>
@@ -87,7 +87,7 @@
       </article>
 
       <article class="kpi-card">
-        <span class="kpi-icon">📅</span>
+        <span class="kpi-icon"><app-icon name="calendar" /></span>
         <div class="kpi-body">
           <p class="kpi-label">DERNIÈRE OPÉRATION</p>
           <p class="kpi-val kpi-val--date">
@@ -267,10 +267,10 @@
                     <td class="col-right actions-cell">
                       @if (sale.type === 'service_order') {
                         <a class="btn-icon" title="Voir l'ordre de service"
-                           [routerLink]="['/service-orders']" [queryParams]="{ id: sale.id }">🔗</a>
+                           [routerLink]="['/service-orders']" [queryParams]="{ id: sale.id }"><app-icon name="link" /></a>
                       } @else {
                         <a class="btn-icon" title="Voir la vente"
-                           [routerLink]="['/sales']" [queryParams]="{ id: sale.id }">🔗</a>
+                           [routerLink]="['/sales']" [queryParams]="{ id: sale.id }"><app-icon name="link" /></a>
                       }
                     </td>
                   </tr>

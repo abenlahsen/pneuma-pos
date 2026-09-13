@@ -13,13 +13,13 @@
           <h1>{{ profile()!.supplier!.name }}</h1>
           <div class="supplier-meta">
             @if (profile()?.supplier?.contact_person) {
-              <span class="meta-item">👤 {{ profile()!.supplier!.contact_person }}</span>
+              <span class="meta-item">{{ profile()!.supplier!.contact_person }}</span>
             }
             @if (profile()?.supplier?.phone) {
-              <span class="meta-item">📞 {{ profile()!.supplier!.phone }}</span>
+              <span class="meta-item">{{ profile()!.supplier!.phone }}</span>
             }
             @if (profile()?.supplier?.email) {
-              <span class="meta-item">✉️ {{ profile()!.supplier!.email }}</span>
+              <span class="meta-item">{{ profile()!.supplier!.email }}</span>
             }
           </div>
         </div>
@@ -73,7 +73,7 @@
       </article>
 
       <article class="kpi-card">
-        <span class="kpi-icon">📅</span>
+        <span class="kpi-icon"><app-icon name="calendar" /></span>
         <div class="kpi-body">
           <p class="kpi-label">DERNIER ACHAT</p>
           <p class="kpi-val kpi-val--date">
@@ -163,7 +163,7 @@
                       {{ (p.outstanding_amount ?? 0) | number:'1.2-2' }} DH
                     </td>
                     <td class="col-right actions-cell">
-                      <a class="btn-icon" title="Voir la commande fournisseur" [routerLink]="['/achats']" [queryParams]="{ id: p.id }">🔗</a>
+                      <a class="btn-icon" title="Voir la commande fournisseur" [routerLink]="['/achats']" [queryParams]="{ id: p.id }"><app-icon name="link" /></a>
                     </td>
                   </tr>
                 }

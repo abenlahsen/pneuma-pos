@@ -146,7 +146,7 @@
               </div>
             </div>
             <div class="col-md-1 mb-2">
-              <button type="button" class="btn btn-primary w-100" style="height: 38px; padding: 0.375rem 0.5rem; margin-bottom: 2px;" [disabled]="!currentItem.product_id || !currentItem.stock_id" (click)="addItem()">{{ editingItemIndex !== null ? '✓' : '+' }}</button>
+              <button type="button" class="btn btn-primary w-100" style="height: 38px; padding: 0.375rem 0.5rem; margin-bottom: 2px;" [disabled]="!currentItem.product_id || !currentItem.stock_id" (click)="addItem()" [title]="editingItemIndex !== null ? 'Mettre à jour la ligne' : 'Ajouter la ligne'"><app-icon [name]="editingItemIndex !== null ? 'check' : 'plus'" /></button>
             </div>
             <div class="col-md-1 mb-2" *ngIf="editingItemIndex !== null">
               <button aria-label="Annuler" type="button" class="btn btn-secondary w-100" style="height: 38px; padding: 0.375rem 0.5rem; margin-bottom: 2px;" (click)="cancelItemEdit()"><app-icon name="close" /></button>
