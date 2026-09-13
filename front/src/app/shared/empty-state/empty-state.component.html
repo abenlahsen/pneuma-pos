@@ -1,0 +1,20 @@
+<div class="empty-state">
+  <app-icon [name]="icon()" [size]="34" class="empty-icon" />
+
+  <span class="empty-title">{{ title() }}</span>
+
+  @if (message()) {
+    <span class="empty-message">{{ message() }}</span>
+  }
+
+  @if (secondaryLabel() || primaryLabel()) {
+    <div class="empty-actions">
+      @if (secondaryLabel()) {
+        <button type="button" class="btn btn-secondary" (click)="secondaryAction.emit()">{{ secondaryLabel() }}</button>
+      }
+      @if (primaryLabel()) {
+        <button type="button" class="btn btn-primary" (click)="primaryAction.emit()">{{ primaryLabel() }}</button>
+      }
+    </div>
+  }
+</div>

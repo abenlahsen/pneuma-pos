@@ -8,11 +8,15 @@ import { Supplier, SupplierPayload, PaginatedResponse, SupplierUnpaidRow } from 
 import { SupplierFormComponent } from '../components/supplier-form/supplier-form.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { IconComponent } from '../../../shared/icon/icon.component';
+import { describeActiveFilters } from '../../../core/utils/active-filters';
+import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
+import { TableSkeletonComponent } from '../../../shared/table-skeleton/table-skeleton.component';
+import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-banner/error-banner.component';
 
 @Component({
   selector: 'app-suppliers-page',
   standalone: true,
-  imports: [IconComponent, CommonModule, FormsModule, SupplierFormComponent, AutoRefreshControlComponent],
+  imports: [IconComponent, CommonModule, FormsModule, SupplierFormComponent, AutoRefreshControlComponent, EmptyStateComponent, TableSkeletonComponent, ErrorBannerComponent],
   templateUrl: './suppliers-page.component.html',
   styleUrls: ['./suppliers-page.component.scss'],
 })
@@ -29,6 +33,8 @@ export class SuppliersPageComponent implements OnInit {
   sortDirection = signal<'asc' | 'desc'>('asc');
 
   loading = signal(false);
+  /** Détail technique de la dernière erreur de chargement, '' si tout va bien (`3d`). */
+  loadError = signal('');
   showForm = signal(false);
   editingSupplier = signal<Supplier | null>(null);
 
@@ -83,6 +89,7 @@ export class SuppliersPageComponent implements OnInit {
   }
 
   loadData(): void {
+    this.loadError.set('');
     this.loading.set(true);
     const page = Number(this.currentPage() ?? 1) || 1;
     const perPage = Number(this.perPage() ?? 100) || 100;
@@ -104,7 +111,10 @@ export class SuppliersPageComponent implements OnInit {
         this.total.set(Number(paginated.total ?? 0) || 0);
         this.loading.set(false);
       },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        this.loading.set(false);
+        this.loadError.set(formatErrorDetail('GET', err?.url ?? '/api/suppliers', err?.status ?? 0));
+      },
     });
   }
 
@@ -123,6 +133,19 @@ export class SuppliersPageComponent implements OnInit {
     this.currentPage.set(1);
     this.loadData();
   }
+
+  /** Les filtres réellement actifs, en clair — sert à expliquer un tableau vide (`3b`). */
+  readonly activeFilterSummary = computed(() =>
+    describeActiveFilters([{ label: 'Recherche', value: this.filterSearch() }]),
+  );
+
+  readonly hasActiveFilters = computed(() => this.activeFilterSummary() !== '');
+
+  readonly emptyStateMessage = computed(() =>
+    this.hasActiveFilters()
+      ? `${this.activeFilterSummary()} Retirez les filtres pour voir davantage de fournisseurs.`
+      : "Aucun fournisseur n'a encore été enregistré. Créez le premier pour démarrer.",
+  );
 
   resetFilters(): void {
     this.filterSearch.set('');

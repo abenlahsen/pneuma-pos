@@ -1,10 +1,14 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivityLogService } from '../data-access/activity-log.service';
 import { ActivityLog, ActivityLogFilters, ActivityLogParams, ActivityLogSnapshot } from '../models/activity-log.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { IconComponent } from '../../../shared/icon/icon.component';
+import { describeActiveFilters } from '../../../core/utils/active-filters';
+import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
+import { TableSkeletonComponent } from '../../../shared/table-skeleton/table-skeleton.component';
+import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-banner/error-banner.component';
 
 const FIELD_LABELS: Record<string, string> = {
   date: 'Date',
@@ -53,7 +57,7 @@ export interface FieldRow {
 @Component({
   selector: 'app-activity-log-page',
   standalone: true,
-  imports: [IconComponent, CommonModule, FormsModule, AutoRefreshControlComponent],
+  imports: [IconComponent, CommonModule, FormsModule, AutoRefreshControlComponent, EmptyStateComponent, TableSkeletonComponent, ErrorBannerComponent],
   templateUrl: './activity-log-page.component.html',
   styleUrls: ['./activity-log-page.component.scss'],
 })
@@ -62,6 +66,8 @@ export class ActivityLogPageComponent implements OnInit {
   filters = signal<ActivityLogFilters>({ entityTypes: [], actions: [], users: [] });
 
   loading = signal(false);
+  /** Détail technique de la dernière erreur de chargement, '' si tout va bien (`3d`). */
+  loadError = signal('');
 
   currentPage = signal(1);
   lastPage = signal(1);
@@ -84,7 +90,28 @@ export class ActivityLogPageComponent implements OnInit {
     this.loadData();
   }
 
+  /** Les filtres réellement actifs, en clair — sert à expliquer un tableau vide (`3b`). */
+  readonly activeFilterSummary = computed(() =>
+    describeActiveFilters([
+      { label: 'Recherche', value: this.filterSearch() },
+      { label: 'Type', value: this.filterEntityType() },
+      { label: 'Action', value: this.filterAction() },
+      { label: 'Utilisateur', value: this.filters().users.find((u) => String(u.id) === String(this.filterUserId()))?.name ?? '' },
+      { label: 'Du', value: this.filterDateFrom() },
+      { label: 'Au', value: this.filterDateTo() },
+    ]),
+  );
+
+  readonly hasActiveFilters = computed(() => this.activeFilterSummary() !== '');
+
+  readonly emptyStateMessage = computed(() =>
+    this.hasActiveFilters()
+      ? `${this.activeFilterSummary()} Élargissez la période ou retirez les filtres.`
+      : "Aucune action n'a encore été journalisée.",
+  );
+
   loadData(): void {
+    this.loadError.set('');
     this.loading.set(true);
     const params: ActivityLogParams = {
       page: this.currentPage(),
@@ -105,7 +132,10 @@ export class ActivityLogPageComponent implements OnInit {
         this.total.set(res.total);
         this.loading.set(false);
       },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        this.loading.set(false);
+        this.loadError.set(formatErrorDetail('GET', err?.url ?? '/api/activity-logs', err?.status ?? 0));
+      },
     });
   }
 

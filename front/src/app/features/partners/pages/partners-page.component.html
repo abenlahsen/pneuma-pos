@@ -41,6 +41,13 @@
     </div>
   </div>
 
+  <!-- Erreur de chargement : bandeau au-dessus, le tableau reste en place (3d) -->
+  <app-error-banner
+    *ngIf="loadError()"
+    title="Impossible de charger les partenaires"
+    [detail]="loadError()"
+    (retry)="loadData()" />
+
   <div class="card table-card">
     <div class="table-responsive">
       <table class="table">
@@ -73,16 +80,20 @@
             </th>
           </tr>
         </thead>
+        <!-- Chargement : squelette à la géométrie du tableau, pas de spinner (3c) -->
+        <tbody app-table-skeleton [columns]="7" *ngIf="loading()"></tbody>
+
         <tbody>
-          <tr *ngIf="loading()">
-            <td colspan="7" class="text-center">
-              <div class="spinner"></div>
-              Chargement...
-            </td>
-          </tr>
-          <tr *ngIf="!loading() && partners().length === 0">
-            <td colspan="7" class="text-center text-muted">
-              Aucun partenaire trouvé.
+          <tr *ngIf="!loading() && partners().length === 0 && !loadError()">
+            <td colspan="7">
+              <app-empty-state
+                icon="partner"
+                title="Aucun partenaire"
+                [message]="emptyStateMessage()"
+                [secondaryLabel]="hasActiveFilters() ? 'Retirer les filtres' : ''"
+                [primaryLabel]="authService.hasPermission('create partners') ? 'Nouveau partenaire' : ''"
+                (primaryAction)="openAddForm()"
+                (secondaryAction)="resetFilters()" />
             </td>
           </tr>
           <tr *ngFor="let p of partners()">

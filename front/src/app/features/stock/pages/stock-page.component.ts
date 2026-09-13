@@ -7,11 +7,15 @@ import { StockService } from '../data-access/stock.service';
 import { Stock, StockFilters, StockMovement, StockSummary } from '../models/stock.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { IconComponent } from '../../../shared/icon/icon.component';
+import { describeActiveFilters } from '../../../core/utils/active-filters';
+import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
+import { TableSkeletonComponent } from '../../../shared/table-skeleton/table-skeleton.component';
+import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-banner/error-banner.component';
 
 @Component({
   selector: 'app-stock-page',
   standalone: true,
-  imports: [IconComponent, CommonModule, FormsModule, AutoRefreshControlComponent],
+  imports: [IconComponent, CommonModule, FormsModule, AutoRefreshControlComponent, EmptyStateComponent, TableSkeletonComponent, ErrorBannerComponent],
   templateUrl: './stock-page.component.html',
   styleUrl: './stock-page.component.scss',
 })
@@ -49,6 +53,8 @@ export class StockPageComponent implements OnInit {
   sortDirection = signal<'asc' | 'desc'>('desc');
 
   loading = signal(false);
+  /** Détail technique de la dernière erreur de chargement, '' si tout va bien (`3d`). */
+  loadError = signal('');
   loadingSummary = signal(false);
   isExporting = false;
   exportError = '';
@@ -99,7 +105,28 @@ export class StockPageComponent implements OnInit {
     this.loadData();
   }
 
+  /** Les filtres réellement actifs, en clair — sert à expliquer un tableau vide (`3b`). */
+  readonly activeFilterSummary = computed(() =>
+    describeActiveFilters([
+      { label: 'Recherche', value: this.searchQuery() },
+      { label: 'Marque', value: this.filterBrand() },
+      { label: 'Dépôt', value: this.filterDepot() },
+      { label: 'Pays', value: this.filterCountry() },
+      { label: 'En stock', value: this.filterInStock() ? 'Oui' : '' },
+      { label: 'RunFlat', value: this.filterRunFlat() ? 'Oui' : '' },
+    ]),
+  );
+
+  readonly hasActiveFilters = computed(() => this.activeFilterSummary() !== '');
+
+  readonly emptyStateMessage = computed(() =>
+    this.hasActiveFilters()
+      ? `${this.activeFilterSummary()} Retirez les filtres pour voir davantage d'articles.`
+      : "Aucun article n'est encore entré en stock. Importez un fichier ou créez un produit.",
+  );
+
   loadData(): void {
+    this.loadError.set('');
     this.loading.set(true);
     this.loadingSummary.set(true);
     const filters = this.buildFilters();
@@ -112,9 +139,10 @@ export class StockPageComponent implements OnInit {
         this.total.set(Number(response.total ?? 0) || 0);
         this.loading.set(false);
       },
-      error: () => {
+      error: (err) => {
         this.stocks.set([]);
         this.loading.set(false);
+        this.loadError.set(formatErrorDetail('GET', err?.url ?? '/api/stocks', err?.status ?? 0));
       },
     });
 

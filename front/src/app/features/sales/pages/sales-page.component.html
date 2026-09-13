@@ -197,6 +197,13 @@
     </div>
   </div>
 
+  <!-- Erreur de chargement : bandeau au-dessus, le tableau reste en place (3d) -->
+  <app-error-banner
+    *ngIf="loadError()"
+    title="Impossible de charger les ventes"
+    [detail]="loadError()"
+    (retry)="loadData()" />
+
   <div class="card table-card">
     <div class="table-responsive">
       <table class="table">
@@ -221,16 +228,20 @@
             <th class="sortable" (click)="toggleSort('updated_at')">Modifié le <span class="sort-icon">{{ sortBy() === 'updated_at' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
           </tr>
         </thead>
-        <tbody>
-          <tr *ngIf="loading()">
-            <td colspan="17" class="text-center py-4">
-              <div class="spinner"></div> Chargement...
-            </td>
-          </tr>
+        <!-- Chargement : squelette à la géométrie du tableau, pas de spinner (3c) -->
+        <tbody app-table-skeleton [columns]="17" *ngIf="loading()"></tbody>
 
-          <tr *ngIf="!loading() && sales().length === 0">
-            <td colspan="17" class="text-center py-4 text-muted">
-              Aucune vente trouvée.
+        <tbody>
+          <tr *ngIf="!loading() && sales().length === 0 && !loadError()">
+            <td colspan="17">
+              <app-empty-state
+                icon="sales"
+                title="Aucune vente sur cette sélection"
+                [message]="emptyStateMessage()"
+                [secondaryLabel]="hasActiveFilters() ? 'Retirer les filtres' : ''"
+                [primaryLabel]="authService.hasPermission('create sales') ? 'Nouvelle vente' : ''"
+                (secondaryAction)="resetFilters()"
+                (primaryAction)="openAddForm()" />
             </td>
           </tr>
 

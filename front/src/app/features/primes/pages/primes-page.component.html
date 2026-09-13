@@ -14,12 +14,14 @@
   </div>
 
   <!-- Loading -->
-  <div *ngIf="loading()" class="loading-state">
-    <div class="spinner"></div>
-    Chargement...
-  </div>
+  <!-- Erreur de chargement : bandeau au-dessus, le tableau reste en place (3d) -->
+  <app-error-banner
+    *ngIf="loadError()"
+    title="Impossible de charger les primes"
+    [detail]="loadError()"
+    (retry)="loadData()" />
 
-  <ng-container *ngIf="!loading() && response() as res">
+  <ng-container *ngIf="response() as res">
 
     <!-- Threshold banner -->
     <div class="threshold-banner" [class.eligible]="res.prime_eligible" [class.not-eligible]="!res.prime_eligible">
@@ -60,11 +62,13 @@
     <!-- Table -->
     <div class="card">
       <div class="card-body">
-        <div *ngIf="res.data.length === 0" class="empty-state">
-          Aucune vente enregistrée pour ce mois.
-        </div>
+        <app-empty-state
+          *ngIf="!loading() && res.data.length === 0 && !loadError()"
+          icon="bonus"
+          title="Aucune vente ce mois-ci"
+          [message]="emptyStateMessage()" />
 
-        <table *ngIf="res.data.length > 0" class="table">
+        <table *ngIf="loading() || res.data.length > 0" class="table">
           <thead>
             <tr>
               <th>Commercial</th>
@@ -75,6 +79,9 @@
               <th class="text-right">Prime totale</th>
             </tr>
           </thead>
+          <!-- Chargement : squelette à la géométrie du tableau, pas de spinner (3c) -->
+          <tbody app-table-skeleton [columns]="6" *ngIf="loading()"></tbody>
+
           <tbody>
             <tr *ngFor="let row of res.data" [class.row-disabled]="!res.prime_eligible">
               <td class="commercial-name">{{ row.commercial_name }}</td>

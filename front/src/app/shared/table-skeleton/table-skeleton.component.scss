@@ -1,0 +1,14 @@
+/* Squelette `3c` — pas d'animation : le squelette tient la place,
+   il n'attire pas l'œil. Valeurs issues de _tokens.scss. */
+
+.sk-row td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--divider);
+}
+
+.sk {
+  display: block;
+  height: 13px;
+  border-radius: var(--radius);
+  background: var(--neutral-200);
+}

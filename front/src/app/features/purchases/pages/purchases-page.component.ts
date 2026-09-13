@@ -15,11 +15,15 @@ import { PurchaseReturnComponent } from '../purchase-return/purchase-return.comp
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { DetailNavigator } from '../../../core/utils/detail-navigator';
 import { IconComponent } from '../../../shared/icon/icon.component';
+import { describeActiveFilters } from '../../../core/utils/active-filters';
+import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
+import { TableSkeletonComponent } from '../../../shared/table-skeleton/table-skeleton.component';
+import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-banner/error-banner.component';
 
 @Component({
   selector: 'app-purchases-page',
   standalone: true,
-  imports: [IconComponent, CommonModule, FormsModule, PurchaseFormComponent, PurchaseDetailComponent, PurchasePaymentsComponent, PurchaseReturnComponent, AutoRefreshControlComponent],
+  imports: [IconComponent, CommonModule, FormsModule, PurchaseFormComponent, PurchaseDetailComponent, PurchasePaymentsComponent, PurchaseReturnComponent, AutoRefreshControlComponent, EmptyStateComponent, TableSkeletonComponent, ErrorBannerComponent],
   templateUrl: './purchases-page.component.html',
   styleUrls: ['./purchases-page.component.scss']
 })
@@ -40,6 +44,8 @@ export class PurchasesPageComponent implements OnInit {
   summary = signal<PurchaseSummary | null>(null);
   filterOptions = signal<{ suppliers: { id: number; name: string }[]; commercials: { id: number; name: string }[] }>({ suppliers: [], commercials: [] });
   loading = signal<boolean>(false);
+  /** Détail technique de la dernière erreur de chargement, '' si tout va bien (`3d`). */
+  loadError = signal('');
 
   currentPage = signal<number>(1);
   lastPage = signal<number>(1);
@@ -141,6 +147,7 @@ export class PurchasesPageComponent implements OnInit {
       error: (err) => {
         console.error('Error loading purchases', err);
         this.loading.set(false);
+        this.loadError.set(formatErrorDetail('GET', err?.url ?? '/api/purchases', err?.status ?? 0));
         this.detailNav.reset();
       }
     });
@@ -246,6 +253,31 @@ export class PurchasesPageComponent implements OnInit {
   canReturnPurchase(purchase: Purchase): boolean {
     return this.authService.hasPermission('cancel purchases') && purchase.status !== 'ANNULE';
   }
+
+  /** Les filtres réellement actifs, en clair — sert à expliquer un tableau vide (`3b`). */
+  readonly activeFilterSummary = computed(() =>
+    describeActiveFilters([
+      { label: 'Recherche', value: this.filterSearch() },
+      { label: 'Statut', value: this.filterStatus() },
+      { label: 'Paiement', value: this.filterPaymentStatus() },
+      { label: 'Mode de paiement', value: this.filterPaymentMethod() },
+      { label: 'Fournisseur', value: this.filterOptions().suppliers.find((s) => String(s.id) === this.filterSupplier())?.name ?? '' },
+      { label: 'Commercial', value: this.filterOptions().commercials.find((c) => String(c.id) === this.filterCommercial())?.name ?? '' },
+      { label: 'Du', value: this.filterDateFrom() },
+      { label: 'Au', value: this.filterDateTo() },
+      { label: 'Facture', value: this.filterWithInvoice() === '1' ? 'Oui' : this.filterWithInvoice() === '0' ? 'Non' : '' },
+      { label: 'Montant min', value: this.filterAmountMin() },
+      { label: 'Montant max', value: this.filterAmountMax() },
+    ]),
+  );
+
+  readonly hasActiveFilters = computed(() => this.activeFilterSummary() !== '');
+
+  readonly emptyStateMessage = computed(() =>
+    this.hasActiveFilters()
+      ? `${this.activeFilterSummary()} Élargissez la période ou retirez les filtres pour voir davantage d'achats.`
+      : "Aucun achat n'a encore été enregistré. Créez le premier pour démarrer.",
+  );
 
   openForm(purchase: Purchase | null = null): void {
     this.selectedPurchase.set(purchase);

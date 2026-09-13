@@ -1,0 +1,7 @@
+@for (row of grid(); track $index) {
+  <tr class="sk-row" aria-hidden="true">
+    @for (width of row; track $index) {
+      <td><span class="sk" [style.width]="width"></span></td>
+    }
+  </tr>
+}

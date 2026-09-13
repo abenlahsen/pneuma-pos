@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PartnerService } from '../data-access/partner.service';
@@ -9,10 +9,15 @@ import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-contro
 import { CityService } from '../../../core/services/city.service';
 import { IconComponent } from '../../../shared/icon/icon.component';
 
+import { describeActiveFilters } from '../../../core/utils/active-filters';
+import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
+import { TableSkeletonComponent } from '../../../shared/table-skeleton/table-skeleton.component';
+import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-banner/error-banner.component';
+
 @Component({
   selector: 'app-partners-page',
   standalone: true,
-  imports: [IconComponent, CommonModule, FormsModule, PartnerFormComponent, AutoRefreshControlComponent],
+  imports: [IconComponent, CommonModule, FormsModule, PartnerFormComponent, AutoRefreshControlComponent, EmptyStateComponent, TableSkeletonComponent, ErrorBannerComponent],
   templateUrl: './partners-page.component.html',
   styleUrls: ['./partners-page.component.scss'],
 })
@@ -28,6 +33,8 @@ export class PartnersPageComponent implements OnInit {
   sortBy = signal('');
   sortDirection = signal<'asc' | 'desc'>('asc');
   loading = signal(false);
+  /** Détail technique de la dernière erreur de chargement, '' si tout va bien (`3d`). */
+  loadError = signal('');
   deletingPartnerId = signal<number | null>(null);
   showForm = signal(false);
   editingPartner = signal<Partner | null>(null);
@@ -39,7 +46,24 @@ export class PartnersPageComponent implements OnInit {
     this.loadData();
   }
 
+  /** Les filtres réellement actifs, en clair — sert à expliquer un tableau vide (`3b`). */
+  readonly activeFilterSummary = computed(() =>
+    describeActiveFilters([
+      { label: 'Recherche', value: this.filterSearch() },
+      { label: 'Ville', value: this.filterCity() },
+    ]),
+  );
+
+  readonly hasActiveFilters = computed(() => this.activeFilterSummary() !== '');
+
+  readonly emptyStateMessage = computed(() =>
+    this.hasActiveFilters()
+      ? `${this.activeFilterSummary()} Retirez les filtres pour voir davantage de partenaires.`
+      : "Aucun élément n'a encore été enregistré ici.",
+  );
+
   loadData(): void {
+    this.loadError.set('');
     this.loading.set(true);
     const page = Number(this.currentPage() ?? 1) || 1;
     const perPage = Number(this.perPage() ?? 100) || 100;
@@ -136,7 +160,8 @@ export class PartnersPageComponent implements OnInit {
         this.deletingPartnerId.set(null);
         this.loadData();
       },
-      error: () => {
+      error: (err) => {
+        this.loadError.set(formatErrorDetail('GET', err?.url ?? '/api/partners', err?.status ?? 0));
         this.deletingPartnerId.set(null);
       },
     });

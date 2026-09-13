@@ -51,19 +51,25 @@
   </div>
 
   <!-- Loading -->
-  <div *ngIf="loading()" class="loading-state">
-    <div class="spinner"></div>
-    Chargement...
-  </div>
+  <!-- Erreur de chargement : bandeau au-dessus, le tableau reste en place (3d) -->
+  <app-error-banner
+    *ngIf="loadError()"
+    title="Impossible de charger les charges RH"
+    [detail]="loadError()"
+    (retry)="loadData()" />
 
   <!-- Table -->
-  <div class="card" *ngIf="!loading()">
+  <div class="card">
     <div class="card-body">
-      <div *ngIf="charges().length === 0" class="empty-state">
-        Aucune charge RH enregistrée pour ce mois.
-      </div>
+      <app-empty-state
+        *ngIf="!loading() && charges().length === 0 && !loadError()"
+        icon="payroll"
+        title="Aucune charge RH ce mois-ci"
+        [message]="emptyStateMessage()"
+        [primaryLabel]="'Ajouter une charge'"
+        (primaryAction)="openForm()" />
 
-      <table *ngIf="charges().length > 0" class="table">
+      <table *ngIf="loading() || charges().length > 0" class="table">
         <thead>
           <tr>
             <th>Date</th>
@@ -75,6 +81,9 @@
             <th></th>
           </tr>
         </thead>
+        <!-- Chargement : squelette à la géométrie du tableau, pas de spinner (3c) -->
+        <tbody app-table-skeleton [columns]="7" *ngIf="loading()"></tbody>
+
         <tbody>
           <tr *ngFor="let charge of charges()">
             <td>{{ charge.date | date: 'dd/MM/yyyy' }}</td>

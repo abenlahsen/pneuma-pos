@@ -117,6 +117,13 @@
     </div>
   </div>
 
+  <!-- Erreur de chargement : bandeau au-dessus, le tableau reste en place (3d) -->
+  <app-error-banner
+    *ngIf="loadError()"
+    title="Impossible de charger le stock"
+    [detail]="loadError()"
+    (retry)="loadData()" />
+
   <div class="card table-card">
     <div class="table-responsive">
       <table class="table">
@@ -150,17 +157,18 @@
             <th class="text-right">Valeur</th>
           </tr>
         </thead>
-        <tbody>
-          <tr *ngIf="loading()">
-            <td [attr.colspan]="authService.hasPermission('edit stock') ? 17 : 16" class="text-center py-4">
-              <div class="spinner"></div>
-              Chargement...
-            </td>
-          </tr>
+        <!-- Chargement : squelette à la géométrie du tableau, pas de spinner (3c) -->
+        <tbody app-table-skeleton [columns]="authService.hasPermission('edit stock') ? 17 : 16" *ngIf="loading()"></tbody>
 
-          <tr *ngIf="!loading() && stocks().length === 0">
-            <td [attr.colspan]="authService.hasPermission('edit stock') ? 17 : 16" class="text-center py-4 text-muted">
-              Aucun article en stock trouvé.
+        <tbody>
+          <tr *ngIf="!loading() && stocks().length === 0 && !loadError()">
+            <td [attr.colspan]="authService.hasPermission('edit stock') ? 17 : 16">
+              <app-empty-state
+                icon="inventory"
+                title="Aucun article en stock"
+                [message]="emptyStateMessage()"
+                [secondaryLabel]="hasActiveFilters() ? 'Retirer les filtres' : ''"
+                (secondaryAction)="resetFilters()" />
             </td>
           </tr>
 

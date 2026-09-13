@@ -13,6 +13,10 @@ import {
 } from '../models/hr-charge.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { IconComponent } from '../../../shared/icon/icon.component';
+import { describeActiveFilters } from '../../../core/utils/active-filters';
+import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
+import { TableSkeletonComponent } from '../../../shared/table-skeleton/table-skeleton.component';
+import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-banner/error-banner.component';
 
 const MONTH_NAMES = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -22,7 +26,7 @@ const MONTH_NAMES = [
 @Component({
   selector: 'app-hr-charges-page',
   standalone: true,
-  imports: [IconComponent, CommonModule, FormsModule, HrChargeFormComponent],
+  imports: [IconComponent, CommonModule, FormsModule, HrChargeFormComponent, EmptyStateComponent, TableSkeletonComponent, ErrorBannerComponent],
   templateUrl: './hr-charges-page.component.html',
   styleUrl: './hr-charges-page.component.scss',
 })
@@ -31,6 +35,8 @@ export class HrChargesPageComponent implements OnInit {
   summary = signal<HrChargeSummary | null>(null);
   filters = signal<HrChargeFilters>({ employees: [], subcategories: [], accounts: [] });
   loading = signal(false);
+  /** Détail technique de la dernière erreur de chargement, '' si tout va bien (`3d`). */
+  loadError = signal('');
   errorMessage = signal('');
 
   showForm = signal(false);
@@ -75,7 +81,23 @@ export class HrChargesPageComponent implements OnInit {
     this.loadData();
   }
 
+  /** Les filtres réellement actifs, en clair — sert à expliquer un tableau vide (`3b`). */
+  readonly activeFilterSummary = computed(() =>
+    describeActiveFilters([
+      { label: 'Mois', value: this.monthLabel() },
+      { label: 'Employé', value: this.filterEmployeeId() ? String(this.filterEmployeeId()) : '' },
+      { label: 'Type de charge', value: this.filterSubcategory() },
+    ]),
+  );
+
+  readonly hasActiveFilters = computed(() => !!this.filterEmployeeId() || !!this.filterSubcategory());
+
+  readonly emptyStateMessage = computed(() =>
+    `${this.activeFilterSummary()} Changez de mois ou retirez les filtres pour voir d'autres charges.`,
+  );
+
   loadData(): void {
+    this.loadError.set('');
     this.loading.set(true);
     const year = this.selectedYear();
     const month = this.selectedMonth();
@@ -87,7 +109,10 @@ export class HrChargesPageComponent implements OnInit {
         this.charges.set(res.data);
         this.loading.set(false);
       },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        this.loading.set(false);
+        this.loadError.set(formatErrorDetail('GET', err?.url ?? '/api/hr-charges', err?.status ?? 0));
+      },
     });
 
     this.hrChargeService.summary(year, month, employeeId, subcategory).subscribe({

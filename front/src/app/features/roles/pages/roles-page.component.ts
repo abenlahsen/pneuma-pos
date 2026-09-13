@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RoleService } from '../data-access/role.service';
@@ -7,10 +7,15 @@ import { Permission, Role } from '../models/role.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { IconComponent } from '../../../shared/icon/icon.component';
 
+import { describeActiveFilters } from '../../../core/utils/active-filters';
+import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
+import { TableSkeletonComponent } from '../../../shared/table-skeleton/table-skeleton.component';
+import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-banner/error-banner.component';
+
 @Component({
   selector: 'app-roles-page',
   standalone: true,
-  imports: [IconComponent, CommonModule, FormsModule, AutoRefreshControlComponent],
+  imports: [IconComponent, CommonModule, FormsModule, AutoRefreshControlComponent, EmptyStateComponent, TableSkeletonComponent, ErrorBannerComponent],
   templateUrl: './roles-page.component.html',
   styleUrls: ['./roles-page.component.scss'],
 })
@@ -18,6 +23,8 @@ export class RolesPageComponent implements OnInit {
   roles = signal<Role[]>([]);
   permissions = signal<Permission[]>([]);
   loading = signal(false);
+  /** Détail technique de la dernière erreur de chargement, '' si tout va bien (`3d`). */
+  loadError = signal('');
 
   showForm = signal(false);
   editingRole = signal<Role | null>(null);
@@ -38,14 +45,24 @@ export class RolesPageComponent implements OnInit {
     this.loadData();
   }
 
+  readonly activeFilterSummary = computed(() => '');
+
+  readonly hasActiveFilters = computed(() => this.activeFilterSummary() !== '');
+
+  readonly emptyStateMessage = computed(() => "Aucun élément n'a encore été enregistré ici.");
+
   loadData(): void {
+    this.loadError.set('');
     this.loading.set(true);
     this.roleService.getRoles({ all: true }).subscribe({
       next: (roles) => {
         this.roles.set(roles as Role[]);
         this.loading.set(false);
       },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        this.loading.set(false);
+        this.loadError.set(formatErrorDetail('GET', err?.url ?? '/api/roles', err?.status ?? 0));
+      },
     });
 
     this.roleService.getPermissions({ all: true }).subscribe({

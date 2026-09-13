@@ -154,6 +154,13 @@
     </div>
   </div>
 
+  <!-- Erreur de chargement : bandeau au-dessus, le tableau reste en place (3d) -->
+  <app-error-banner
+    *ngIf="loadError()"
+    title="Impossible de charger les achats"
+    [detail]="loadError()"
+    (retry)="loadData()" />
+
   <div class="card table-card">
     <div class="table-responsive">
       <table class="table">
@@ -174,16 +181,20 @@
             <th class="sortable" (click)="toggleSort('updated_at')">Modifié le <span class="sort-icon">{{ sortBy() === 'updated_at' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
           </tr>
         </thead>
-        <tbody>
-          <tr *ngIf="loading()">
-            <td colspan="13" class="text-center py-4">
-              <div class="spinner"></div> Chargement...
-            </td>
-          </tr>
+        <!-- Chargement : squelette à la géométrie du tableau, pas de spinner (3c) -->
+        <tbody app-table-skeleton [columns]="13" *ngIf="loading()"></tbody>
 
-          <tr *ngIf="!loading() && purchases().length === 0">
-            <td colspan="13" class="text-center py-4 text-muted">
-              Aucun achat trouvé.
+        <tbody>
+          <tr *ngIf="!loading() && purchases().length === 0 && !loadError()">
+            <td colspan="13">
+              <app-empty-state
+                icon="purchases"
+                title="Aucun achat sur cette sélection"
+                [message]="emptyStateMessage()"
+                [secondaryLabel]="hasActiveFilters() ? 'Retirer les filtres' : ''"
+                [primaryLabel]="authService.hasPermission('create purchases') ? 'Nouvel achat' : ''"
+                (secondaryAction)="resetFilters()"
+                (primaryAction)="openForm()" />
             </td>
           </tr>
 

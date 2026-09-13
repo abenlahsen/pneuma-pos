@@ -84,6 +84,13 @@
     </div>
   </div>
 
+  <!-- Erreur de chargement : bandeau au-dessus, le tableau reste en place (3d) -->
+  <app-error-banner
+    *ngIf="loadError()"
+    title="Impossible de charger les fournisseurs"
+    [detail]="loadError()"
+    (retry)="loadData()" />
+
   <div class="card table-card">
     <div class="table-responsive">
       <table class="table">
@@ -109,17 +116,20 @@
             <th>Adresse</th>
           </tr>
         </thead>
-        <tbody>
-          <tr *ngIf="loading()">
-            <td colspan="6" class="text-center py-4">
-              <div class="spinner"></div>
-              Chargement...
-            </td>
-          </tr>
+        <!-- Chargement : squelette à la géométrie du tableau, pas de spinner (3c) -->
+        <tbody app-table-skeleton [columns]="6" *ngIf="loading()"></tbody>
 
-          <tr *ngIf="!loading() && suppliers().length === 0">
-            <td colspan="6" class="text-center py-4 text-muted">
-              Aucun fournisseur trouvé.
+        <tbody>
+          <tr *ngIf="!loading() && suppliers().length === 0 && !loadError()">
+            <td colspan="6">
+              <app-empty-state
+                icon="supplier"
+                title="Aucun fournisseur"
+                [message]="emptyStateMessage()"
+                [secondaryLabel]="hasActiveFilters() ? 'Retirer les filtres' : ''"
+                [primaryLabel]="authService.hasPermission('create suppliers') ? 'Nouveau fournisseur' : ''"
+                (secondaryAction)="resetFilters()"
+                (primaryAction)="openAddForm()" />
             </td>
           </tr>
 

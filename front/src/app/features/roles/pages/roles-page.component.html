@@ -15,6 +15,13 @@
     </div>
   </div>
 
+  <!-- Erreur de chargement : bandeau au-dessus, le tableau reste en place (3d) -->
+  <app-error-banner
+    *ngIf="loadError()"
+    title="Impossible de charger les rôles"
+    [detail]="loadError()"
+    (retry)="loadData()" />
+
   <div class="card table-card">
     <div class="table-responsive">
       <table class="table">
@@ -25,15 +32,18 @@
             <th class="text-center">Actions</th>
           </tr>
         </thead>
+        <!-- Chargement : squelette à la géométrie du tableau, pas de spinner (3c) -->
+        <tbody app-table-skeleton [columns]="3" *ngIf="loading()"></tbody>
+
         <tbody>
-          <tr *ngIf="loading()">
-            <td colspan="3" class="text-center py-4">
-              <div class="spinner"></div> Chargement...
-            </td>
-          </tr>
-          <tr *ngIf="!loading() && roles().length === 0">
-            <td colspan="3" class="text-center py-4 text-muted">
-              Aucun rôle trouvé.
+          <tr *ngIf="!loading() && roles().length === 0 && !loadError()">
+            <td colspan="3">
+              <app-empty-state
+                icon="roles"
+                title="Aucun rôle"
+                [message]="emptyStateMessage()"
+                [primaryLabel]="authService.hasPermission('create roles') ? 'Nouveau rôle' : ''"
+                (primaryAction)="openAddForm()" />
             </td>
           </tr>
           <tr *ngFor="let role of roles()">

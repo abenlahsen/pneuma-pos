@@ -19,12 +19,16 @@ import { PartnerService } from '../../partners/data-access/partner.service';
 import { ManagedUser } from '../../../core/models/user-manage.model';
 import { CityService } from '../../../core/services/city.service';
 import { DetailNavigator } from '../../../core/utils/detail-navigator';
+import { describeActiveFilters } from '../../../core/utils/active-filters';
 import { IconComponent } from '../../../shared/icon/icon.component';
+import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
+import { TableSkeletonComponent } from '../../../shared/table-skeleton/table-skeleton.component';
+import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-banner/error-banner.component';
 
 @Component({
   selector: 'app-sales-page',
   standalone: true,
-  imports: [IconComponent, CommonModule, FormsModule, RouterLink, SaleFormComponent, SaleDetailComponent, PaymentPanelComponent, AutoRefreshControlComponent],
+  imports: [IconComponent, CommonModule, FormsModule, RouterLink, SaleFormComponent, SaleDetailComponent, PaymentPanelComponent, AutoRefreshControlComponent, EmptyStateComponent, TableSkeletonComponent, ErrorBannerComponent],
   templateUrl: './sales-page.component.html',
   styleUrl: './sales-page.component.scss',
 })
@@ -64,6 +68,8 @@ export class SalesPageComponent implements OnInit {
   sortDirection = signal<'asc' | 'desc'>('asc');
 
   loading = signal(false);
+  /** Détail technique de la dernière erreur de chargement, '' si tout va bien (`3d`). */
+  loadError = signal('');
   isExporting = signal(false);
   exportError = signal('');
   deletingSaleId = signal<number | null>(null);
@@ -128,6 +134,7 @@ export class SalesPageComponent implements OnInit {
 
   loadData(): void {
     this.loading.set(true);
+    this.loadError.set('');
     const filters = this.buildFilters();
 
     this.saleService.getSales(filters).subscribe({
@@ -139,8 +146,11 @@ export class SalesPageComponent implements OnInit {
         this.loading.set(false);
         this.detailNav.onListLoaded();
       },
-      error: () => {
+      error: (err) => {
         this.loading.set(false);
+        // Le tableau reste en place, vide : on ne remplace pas l'écran par
+        // une page d'erreur, et le code technique est copiable (`3d`).
+        this.loadError.set(formatErrorDetail('GET', err?.url ?? '/api/sales', err?.status ?? 0));
         this.detailNav.reset();
       },
     });
@@ -186,6 +196,41 @@ export class SalesPageComponent implements OnInit {
   applyFilters(): void {
     this.currentPage.set(1);
     this.loadData();
+  }
+
+  /** Les filtres réellement actifs, en clair — sert à expliquer un tableau vide (`3b`). */
+  readonly activeFilterSummary = computed(() =>
+    describeActiveFilters([
+      { label: 'Recherche', value: this.filterSearch() },
+      { label: 'Marque', value: this.filterBrand() },
+      { label: 'Client', value: this.filterClient() },
+      { label: 'Ville', value: this.filterCity() },
+      { label: 'Statut', value: this.filterStatus() },
+      { label: 'Paiement', value: this.filterPaymentStatus() },
+      { label: 'Mode de paiement', value: this.filterPaymentMethod() },
+      { label: 'Transporteur', value: this.labelOf(this.allCarriers(), this.filterCarrier()) },
+      { label: 'Partenaire', value: this.labelOf(this.allPartners(), this.filterPartner()) },
+      { label: 'Commercial', value: this.labelOf(this.allCommercials(), this.filterCommercial()) },
+      { label: 'Du', value: this.filterDateFrom() },
+      { label: 'Au', value: this.filterDateTo() },
+      { label: 'Facture', value: this.filterWithInvoice() === '1' ? 'Oui' : this.filterWithInvoice() === '0' ? 'Non' : '' },
+      { label: 'Montant min', value: this.filterAmountMin() },
+      { label: 'Montant max', value: this.filterAmountMax() },
+    ]),
+  );
+
+  readonly hasActiveFilters = computed(() => this.activeFilterSummary() !== '');
+
+  readonly emptyStateMessage = computed(() =>
+    this.hasActiveFilters()
+      ? `${this.activeFilterSummary()} Élargissez la période ou retirez les filtres pour voir davantage de ventes.`
+      : "Aucune vente n'a encore été enregistrée. Créez la première pour démarrer.",
+  );
+
+  /** Un id de filtre ne dit rien à l'utilisateur : on affiche le nom. */
+  private labelOf(list: { id: number; name?: string }[], id: string): string {
+    if (!id) return '';
+    return list.find((entry) => String(entry.id) === id)?.name ?? '';
   }
 
   toggleSort(column: string): void {

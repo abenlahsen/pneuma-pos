@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BrandService } from '../data-access/brand.service';
@@ -7,10 +7,15 @@ import { Brand, BrandPayload } from '../models/brand.model';
 import { BrandFormComponent } from '../components/brand-form/brand-form.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 
+import { describeActiveFilters } from '../../../core/utils/active-filters';
+import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
+import { TableSkeletonComponent } from '../../../shared/table-skeleton/table-skeleton.component';
+import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-banner/error-banner.component';
+
 @Component({
   selector: 'app-brands-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, BrandFormComponent, AutoRefreshControlComponent],
+  imports: [CommonModule, FormsModule, BrandFormComponent, AutoRefreshControlComponent, EmptyStateComponent, TableSkeletonComponent, ErrorBannerComponent],
   templateUrl: './brands-page.component.html',
   styleUrls: ['./brands-page.component.scss'],
 })
@@ -27,6 +32,8 @@ export class BrandsPageComponent implements OnInit {
   sortDirection = signal<'asc' | 'desc'>('asc');
 
   loading = signal(false);
+  /** Détail technique de la dernière erreur de chargement, '' si tout va bien (`3d`). */
+  loadError = signal('');
   deletingBrandId = signal<number | null>(null);
   showForm = signal(false);
   editingBrand = signal<Brand | null>(null);
@@ -40,7 +47,23 @@ export class BrandsPageComponent implements OnInit {
     this.loadData();
   }
 
+  /** Les filtres réellement actifs, en clair — sert à expliquer un tableau vide (`3b`). */
+  readonly activeFilterSummary = computed(() =>
+    describeActiveFilters([
+      { label: 'Recherche', value: this.filterSearch() },
+    ]),
+  );
+
+  readonly hasActiveFilters = computed(() => this.activeFilterSummary() !== '');
+
+  readonly emptyStateMessage = computed(() =>
+    this.hasActiveFilters()
+      ? `${this.activeFilterSummary()} Retirez les filtres pour voir davantage de marques.`
+      : "Aucun élément n'a encore été enregistré ici.",
+  );
+
   loadData(): void {
+    this.loadError.set('');
     this.loading.set(true);
     const page = Number(this.currentPage() ?? 1) || 1;
     const perPage = Number(this.perPage() ?? 20) || 20;
@@ -151,7 +174,8 @@ export class BrandsPageComponent implements OnInit {
         this.deletingBrandId.set(null);
         this.loadData();
       },
-      error: () => {
+      error: (err) => {
+        this.loadError.set(formatErrorDetail('GET', err?.url ?? '/api/brands', err?.status ?? 0));
         this.deletingBrandId.set(null);
       },
     });

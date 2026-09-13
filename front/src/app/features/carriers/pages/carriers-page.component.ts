@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CarrierService } from '../data-access/carrier.service';
@@ -8,10 +8,15 @@ import { CarrierFormComponent } from '../components/carrier-form/carrier-form.co
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { IconComponent } from '../../../shared/icon/icon.component';
 
+import { describeActiveFilters } from '../../../core/utils/active-filters';
+import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
+import { TableSkeletonComponent } from '../../../shared/table-skeleton/table-skeleton.component';
+import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-banner/error-banner.component';
+
 @Component({
   selector: 'app-carriers-page',
   standalone: true,
-  imports: [IconComponent, CommonModule, FormsModule, CarrierFormComponent, AutoRefreshControlComponent],
+  imports: [IconComponent, CommonModule, FormsModule, CarrierFormComponent, AutoRefreshControlComponent, EmptyStateComponent, TableSkeletonComponent, ErrorBannerComponent],
   templateUrl: './carriers-page.component.html',
   styleUrls: ['./carriers-page.component.scss'],
 })
@@ -25,6 +30,8 @@ export class CarriersPageComponent implements OnInit {
   sortBy = signal('');
   sortDirection = signal<'asc' | 'desc'>('asc');
   loading = signal(false);
+  /** Détail technique de la dernière erreur de chargement, '' si tout va bien (`3d`). */
+  loadError = signal('');
   deletingCarrierId = signal<number | null>(null);
   showForm = signal(false);
   editingCarrier = signal<Carrier | null>(null);
@@ -35,7 +42,23 @@ export class CarriersPageComponent implements OnInit {
     this.loadData();
   }
 
+  /** Les filtres réellement actifs, en clair — sert à expliquer un tableau vide (`3b`). */
+  readonly activeFilterSummary = computed(() =>
+    describeActiveFilters([
+      { label: 'Recherche', value: this.filterSearch() },
+    ]),
+  );
+
+  readonly hasActiveFilters = computed(() => this.activeFilterSummary() !== '');
+
+  readonly emptyStateMessage = computed(() =>
+    this.hasActiveFilters()
+      ? `${this.activeFilterSummary()} Retirez les filtres pour voir davantage de transporteurs.`
+      : "Aucun élément n'a encore été enregistré ici.",
+  );
+
   loadData(): void {
+    this.loadError.set('');
     this.loading.set(true);
     const page = Number(this.currentPage() ?? 1) || 1;
     const perPage = Number(this.perPage() ?? 100) || 100;
@@ -130,7 +153,8 @@ export class CarriersPageComponent implements OnInit {
         this.deletingCarrierId.set(null);
         this.loadData();
       },
-      error: () => {
+      error: (err) => {
+        this.loadError.set(formatErrorDetail('GET', err?.url ?? '/api/carriers', err?.status ?? 0));
         this.deletingCarrierId.set(null);
       },
     });

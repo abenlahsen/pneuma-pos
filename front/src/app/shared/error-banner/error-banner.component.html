@@ -1,0 +1,21 @@
+<div class="error-banner" role="alert">
+  <app-icon name="warning" [size]="18" class="error-icon" />
+
+  <div class="error-body">
+    <span class="error-title">{{ title() }}</span>
+    <span class="error-message">{{ message() }}</span>
+
+    @if (detail()) {
+      <span class="error-detail">{{ detail() }}</span>
+    }
+
+    <div class="error-actions">
+      <button type="button" class="btn btn-primary btn-retry" (click)="retry.emit()">Réessayer</button>
+      @if (detail()) {
+        <button type="button" class="btn btn-ghost btn-copy" (click)="copyDetail()">
+          {{ copied() ? 'Copié' : 'Copier le détail' }}
+        </button>
+      }
+    </div>
+  </div>
+</div>

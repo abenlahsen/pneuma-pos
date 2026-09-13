@@ -1,0 +1,62 @@
+/* État vide `3b` — valeurs issues de _tokens.scss, aucune couleur en dur. */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: var(--sp-6);
+  text-align: center;
+}
+
+.empty-icon {
+  color: var(--neutral-400);
+}
+
+.empty-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.empty-message {
+  max-width: 320px;
+  font-size: var(--fs-cell);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.empty-actions {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn {
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  border: 2px solid transparent;
+  font-family: var(--font);
+  font-size: var(--fs-cell);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.btn-secondary {
+  background: var(--surface);
+  border-color: var(--neutral-400);
+  color: var(--text);
+
+  &:hover { border-color: var(--text); }
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+
+  &:hover { background: var(--accent-600); border-color: var(--accent-600); }
+}

@@ -73,8 +73,18 @@
 
   <!-- Tableau -->
   <div class="table-card">
+    <app-error-banner
+      *ngIf="loadError()"
+      title="Impossible de charger le journal"
+      [detail]="loadError()"
+      (retry)="loadData()" />
+
     @if (loading()) {
-      <div class="loading-overlay">Chargement…</div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <tbody app-table-skeleton [columns]="6"></tbody>
+        </table>
+      </div>
     } @else {
       <div class="table-scroll">
         <table class="data-table">
@@ -114,7 +124,14 @@
               </tr>
             } @empty {
               <tr>
-                <td colspan="6" class="empty-state">Aucune entrée trouvée</td>
+                <td colspan="6">
+                  <app-empty-state
+                    icon="activity"
+                    title="Aucune entrée dans le journal"
+                    [message]="emptyStateMessage()"
+                    [secondaryLabel]="hasActiveFilters() ? 'Retirer les filtres' : ''"
+                    (secondaryAction)="resetFilters()" />
+                </td>
               </tr>
             }
           </tbody>

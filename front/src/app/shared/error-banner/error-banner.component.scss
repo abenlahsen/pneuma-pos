@@ -1,0 +1,85 @@
+/* Bandeau d'erreur `3d` — accent-700/800 : l'accent pur ne passe pas
+   le seuil de contraste en petit corps. Valeurs issues de _tokens.scss. */
+
+/* Le bandeau se place lui-même : les pages n'ont plus de règle à dupliquer. */
+:host {
+  display: block;
+  margin-bottom: var(--sp-4);
+}
+
+.error-banner {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border: 2px solid var(--accent-700);
+  border-radius: var(--radius-lg);
+  background: var(--accent-100);
+}
+
+.error-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--accent-700);
+}
+
+.error-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.error-title {
+  font-size: var(--fs-cell);
+  font-weight: 700;
+  color: var(--accent-800);
+}
+
+.error-message {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--accent-800);
+}
+
+.error-detail {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: var(--accent-700);
+  user-select: all;
+  overflow-wrap: anywhere;
+}
+
+.error-actions {
+  display: flex;
+  gap: var(--sp-2);
+  margin-top: var(--sp-1);
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 7px 13px;
+  border-radius: var(--radius);
+  border: 2px solid transparent;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.btn-primary {
+  background: var(--accent-700);
+  border-color: var(--accent-700);
+  color: #fff;
+
+  &:hover { background: var(--accent-800); border-color: var(--accent-800); }
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: var(--accent-300);
+  color: var(--accent-800);
+
+  &:hover { border-color: var(--accent-700); }
+}

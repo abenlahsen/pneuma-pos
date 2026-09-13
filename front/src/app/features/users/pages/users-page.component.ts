@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
@@ -9,10 +9,15 @@ import { RoleService } from '../../roles/data-access/role.service';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { IconComponent } from '../../../shared/icon/icon.component';
 
+import { describeActiveFilters } from '../../../core/utils/active-filters';
+import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
+import { TableSkeletonComponent } from '../../../shared/table-skeleton/table-skeleton.component';
+import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-banner/error-banner.component';
+
 @Component({
   selector: 'app-users-page',
   standalone: true,
-  imports: [IconComponent, CommonModule, FormsModule, AutoRefreshControlComponent],
+  imports: [IconComponent, CommonModule, FormsModule, AutoRefreshControlComponent, EmptyStateComponent, TableSkeletonComponent, ErrorBannerComponent],
   templateUrl: './users-page.component.html',
   styleUrls: ['./users-page.component.scss'],
 })
@@ -20,6 +25,8 @@ export class UsersPageComponent implements OnInit {
   users = signal<ManagedUser[]>([]);
   roles = signal<Role[]>([]);
   loading = signal(false);
+  /** Détail technique de la dernière erreur de chargement, '' si tout va bien (`3d`). */
+  loadError = signal('');
 
   currentPage = signal(1);
   lastPage = signal(1);
@@ -49,7 +56,23 @@ export class UsersPageComponent implements OnInit {
     this.loadRoles();
   }
 
+  /** Les filtres réellement actifs, en clair — sert à expliquer un tableau vide (`3b`). */
+  readonly activeFilterSummary = computed(() =>
+    describeActiveFilters([
+      { label: 'Recherche', value: this.filterSearch() },
+    ]),
+  );
+
+  readonly hasActiveFilters = computed(() => this.activeFilterSummary() !== '');
+
+  readonly emptyStateMessage = computed(() =>
+    this.hasActiveFilters()
+      ? `${this.activeFilterSummary()} Retirez les filtres pour voir davantage d'utilisateurs.`
+      : "Aucun élément n'a encore été enregistré ici.",
+  );
+
   loadData(): void {
+    this.loadError.set('');
     this.loading.set(true);
     const filters: Record<string, string> = {
       page: this.currentPage().toString(),
@@ -69,7 +92,10 @@ export class UsersPageComponent implements OnInit {
         this.total.set(paginated.total);
         this.loading.set(false);
       },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        this.loading.set(false);
+        this.loadError.set(formatErrorDetail('GET', err?.url ?? '/api/users', err?.status ?? 0));
+      },
     });
   }
 
