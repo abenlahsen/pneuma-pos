@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Sales\PrestationCatalog;
 use App\Domain\Sales\SaleService;
 use App\Enums\SalePaymentStatus;
 use App\Enums\SaleStatus;
@@ -27,8 +28,14 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class SaleController extends Controller
 {
     public function __construct(
-        protected SaleService $saleService
+        protected SaleService $saleService,
+        protected PrestationCatalog $prestationCatalog
     ) {}
+
+    public function prestations(): JsonResponse
+    {
+        return response()->json($this->prestationCatalog->resolve());
+    }
 
     public function index(Request $request): JsonResponse
     {

@@ -27,7 +27,8 @@ export class PartnerFormComponent implements OnInit {
     mobile: '',
     address: '',
     montage_price: undefined,
-    alignment_price: undefined
+    alignment_price: undefined,
+    alignment_price_suv: undefined
   };
 
   ngOnInit() {

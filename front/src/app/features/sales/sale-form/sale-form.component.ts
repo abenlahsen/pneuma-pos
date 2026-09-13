@@ -6,6 +6,8 @@ import { Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, finalize, switchMap, takeUntil } from 'rxjs/operators';
 
 import { Sale, SalePayload } from '../../../core/models/sale.model';
+import { SalePrestationCatalog, PrestationEntry } from '../models/sale.model';
+import { SalePrestationService } from '../data-access/sale-prestation.service';
 import { SALE_STATUSES, SALE_STATUS_LABELS, SALE_STATUS_TRANSITIONS, SaleStatus } from '../../../core/constants/status.constants';
 import { Product } from '../../../core/models/product.model';
 import { ProductService } from '../../../core/services/product.service';
@@ -54,6 +56,7 @@ export class SaleFormComponent implements OnInit, OnDestroy {
   private readonly stockService = inject(StockService);
   private readonly clientService = inject(ClientService);
   private readonly cityService = inject(CityService);
+  private readonly prestationService = inject(SalePrestationService);
 
   products = signal<Product[]>([]);
   productSearch = signal('');
@@ -125,6 +128,20 @@ export class SaleFormComponent implements OnInit, OnDestroy {
   logisticsCollapsed = signal(true);
   vehicle_id = signal<number | null>(null);
   saleVehicleMileage = signal<number | null>(null);
+
+  // ── Prestations (Montage + Équilibrage / Parallélisme) ──────────────────
+  prestationCatalog = signal<SalePrestationCatalog | null>(null);
+
+  montageOn = signal(false);
+  montageOffert = signal(false);
+  montagePrice = signal(0);
+  private montagePriceTouched = signal(false);
+
+  paralOn = signal(false);
+  paralType = signal<'vt' | 'suv'>('vt');
+  paralOffert = signal(false);
+  paralPrice = signal(0);
+  private paralPriceTouched = signal(false);
 
   readonly selectedClientName = computed(() =>
     this.selectedClient()?.name?.trim() || this.formData.client?.trim() || ''
@@ -199,6 +216,7 @@ export class SaleFormComponent implements OnInit, OnDestroy {
     }
 
     this.updateDuplicateWarnings();
+    this.loadPrestationCatalog();
   }
 
   ngOnDestroy(): void {
@@ -216,7 +234,12 @@ export class SaleFormComponent implements OnInit, OnDestroy {
 
     this.productService.getProducts(filters).subscribe({
       next: (res) => {
-        this.products.set(res.data);
+        // Prestations (montage, parallélisme...) are added through the
+        // dedicated "Prestations" panel, not the generic product picker —
+        // otherwise a manually added line would conflict with the one the
+        // panel manages for the same product.
+        const prestationIds = this.prestationProductIds();
+        this.products.set(res.data.filter(p => !prestationIds.includes(p.id)));
         this.loadingProducts.set(false);
       },
       error: () => this.loadingProducts.set(false),
@@ -337,7 +360,9 @@ export class SaleFormComponent implements OnInit, OnDestroy {
       this.formData.items!.push({ ...this.currentItem });
     }
 
-    this.calculateTotals();
+    // A tyre line's quantity may have just changed — keep the montage
+    // line (sized to tyreQuantity()) in sync.
+    this.syncPrestationLines();
     this.resetCurrentItem();
   }
 
@@ -375,6 +400,15 @@ export class SaleFormComponent implements OnInit, OnDestroy {
   }
 
   removeItem(index: number): void {
+    const item: any = this.formData.items![index];
+
+    // A prestation line is owned by the "Prestations" panel — removing it
+    // here just unchecks its box, which re-derives the items list.
+    if (this.isPrestationLine(item)) {
+      this.uncheckPrestationForProduct(item.product_id);
+      return;
+    }
+
     if (this.editingItemIndex === index) {
       this.resetCurrentItem();
     } else if (this.editingItemIndex !== null && this.editingItemIndex > index) {
@@ -382,7 +416,7 @@ export class SaleFormComponent implements OnInit, OnDestroy {
     }
 
     this.formData.items!.splice(index, 1);
-    this.calculateTotals();
+    this.syncPrestationLines();
   }
 
   formatStockLabel(s: Stock): string {
@@ -445,7 +479,13 @@ export class SaleFormComponent implements OnInit, OnDestroy {
     for (const item of this.formData.items || []) {
       totalPurchase += Number(item.purchase_price || 0) * Number(item.quantity || 1);
       totalSale += this.lineTotal(item);
-      totalQuantity += Number(item.quantity || 0);
+      // A prestation (montage, parallélisme...) rides on a tyre line's
+      // quantity but isn't itself an "article" — exclude it so "Total
+      // Articles" reflects units sold, not lines billed. Mirrors
+      // SaleService::calculateTotals() on the backend.
+      if (this.getProduct(item)?.type !== 'service') {
+        totalQuantity += Number(item.quantity || 0);
+      }
       item.total = this.lineTotal(item);
       item.total_sale = this.lineTotal(item);
       item.unit_price = Number(item.selling_price ?? item.unit_price ?? 0);
@@ -457,6 +497,228 @@ export class SaleFormComponent implements OnInit, OnDestroy {
     this.formData.subtotal = totalSale;
     this.formData.total = totalSale - Number(this.formData.discount || 0) + Number(this.formData.tax || 0);
     this.formData.margin = totalSale - totalPurchase;
+  }
+
+  // ── Prestations (Montage + Équilibrage / Parallélisme) ──────────────────
+
+  private loadPrestationCatalog(): void {
+    this.prestationService.getCatalog().subscribe({
+      next: catalog => {
+        this.prestationCatalog.set(catalog);
+        this.hydratePrestationsFromItems();
+        this.syncPrestationLines();
+      },
+      // A 403/network failure must not leave the panel ambiguously stuck:
+      // an explicit all-null catalog makes every isXAvailable() check false,
+      // same as "not configured", instead of retrying forever.
+      error: () => this.prestationCatalog.set({ montage: null, alignment_vt: null, alignment_suv: null }),
+    });
+  }
+
+  /** Number of tyre units on the sale — the montage line is sized to this. */
+  tyreQuantity(): number {
+    return (this.formData.items || [])
+      .filter(item => this.getProduct(item)?.type === 'tyre')
+      .reduce((sum, item: any) => sum + Number(item.quantity || 0), 0);
+  }
+
+  private prestationProductIds(): number[] {
+    const cat = this.prestationCatalog();
+    if (!cat) return [];
+    return [cat.montage?.product_id, cat.alignment_vt?.product_id, cat.alignment_suv?.product_id]
+      .filter((id): id is number => id != null);
+  }
+
+  isPrestationLine(item: any): boolean {
+    return this.prestationProductIds().includes(item?.product_id);
+  }
+
+  private currentParalEntry(): PrestationEntry | null {
+    const cat = this.prestationCatalog();
+    if (!cat) return null;
+    return this.paralType() === 'suv' ? cat.alignment_suv : cat.alignment_vt;
+  }
+
+  /** Whether the montage catalog product has been seeded — gates the checkbox. */
+  isMontageAvailable(): boolean {
+    return !!this.prestationCatalog()?.montage;
+  }
+
+  /** Whether at least one parallélisme variant (VT or SUV) has been seeded. */
+  isParalAvailable(): boolean {
+    const cat = this.prestationCatalog();
+    return !!(cat?.alignment_vt || cat?.alignment_suv);
+  }
+
+  isParalTypeAvailable(type: 'vt' | 'suv'): boolean {
+    const cat = this.prestationCatalog();
+    return !!(type === 'suv' ? cat?.alignment_suv : cat?.alignment_vt);
+  }
+
+  onPartnerChange(partnerId: number | null): void {
+    this.formData.partner_id = partnerId;
+    this.applyPartnerPricing();
+  }
+
+  onMontageToggle(checked: boolean): void {
+    // Refuse to turn on a prestation whose catalog product isn't seeded —
+    // otherwise the inline calculator shows a price for a line that
+    // syncPrestationLines() would silently never add.
+    if (checked && !this.isMontageAvailable()) return;
+    this.montageOn.set(checked);
+    this.applyPartnerPricing();
+  }
+
+  onMontagePriceChange(value: number): void {
+    this.montagePriceTouched.set(true);
+    this.montagePrice.set(Number(value) || 0);
+    this.syncPrestationLines();
+  }
+
+  onMontageOffertToggle(checked: boolean): void {
+    this.montageOffert.set(checked);
+    this.syncPrestationLines();
+  }
+
+  onParalToggle(checked: boolean): void {
+    if (checked) {
+      if (!this.isParalAvailable()) return;
+      // The current type might not be the one that's actually seeded —
+      // switch to whichever is, rather than turning on with nothing to add.
+      if (!this.isParalTypeAvailable(this.paralType())) {
+        this.paralType.set(this.isParalTypeAvailable('vt') ? 'vt' : 'suv');
+      }
+    }
+    this.paralOn.set(checked);
+    this.applyPartnerPricing();
+  }
+
+  onParalTypeChange(type: 'vt' | 'suv'): void {
+    if (!this.isParalTypeAvailable(type)) return;
+    this.paralType.set(type);
+    this.applyPartnerPricing();
+  }
+
+  onParalPriceChange(value: number): void {
+    this.paralPriceTouched.set(true);
+    this.paralPrice.set(Number(value) || 0);
+    this.syncPrestationLines();
+  }
+
+  onParalOffertToggle(checked: boolean): void {
+    this.paralOffert.set(checked);
+    this.syncPrestationLines();
+  }
+
+  /**
+   * Pre-fills montage/parallélisme prices from the selected partner's rates
+   * (partners.montage_price / alignment_price / alignment_price_suv), unless
+   * the seller has already typed a price in by hand for this sale.
+   */
+  private applyPartnerPricing(): void {
+    const partner = this.partners().find(p => p.id === this.formData.partner_id);
+
+    if (partner) {
+      if (!this.montagePriceTouched() && partner.montage_price != null) {
+        this.montagePrice.set(Number(partner.montage_price));
+      }
+
+      if (!this.paralPriceTouched()) {
+        const price = this.paralType() === 'suv' ? partner.alignment_price_suv : partner.alignment_price;
+        if (price != null) {
+          this.paralPrice.set(Number(price));
+        }
+      }
+    }
+
+    this.syncPrestationLines();
+  }
+
+  private buildPrestationLine(entry: PrestationEntry, quantity: number, price: number, offert: boolean): any {
+    return {
+      product_id: entry.product_id,
+      stock_id: null,
+      quantity,
+      purchase_price: 0,
+      selling_price: price,
+      discount: offert ? 100 : 0,
+      linkedProduct: { id: entry.product_id, type: 'service', reference: entry.label, profile: '' },
+      stock: null,
+    };
+  }
+
+  /** Uncheck whichever prestation owns this product (used by removeItem()). */
+  private uncheckPrestationForProduct(productId: number): void {
+    const cat = this.prestationCatalog();
+    if (!cat) return;
+
+    if (productId === cat.montage?.product_id) {
+      this.montageOn.set(false);
+    } else if (productId === cat.alignment_vt?.product_id || productId === cat.alignment_suv?.product_id) {
+      this.paralOn.set(false);
+    }
+
+    this.syncPrestationLines();
+  }
+
+  /**
+   * Rebuilds the sale's prestation lines from the current checkbox/price
+   * state: strips any existing montage/parallélisme lines, then re-adds
+   * the active ones. Called after every prestation toggle, price/type/
+   * offert change, and whenever a normal line is added/removed/edited
+   * (the tyre quantity the montage line is sized to may have changed).
+   */
+  private syncPrestationLines(): void {
+    const cat = this.prestationCatalog();
+    const prestationIds = this.prestationProductIds();
+
+    this.formData.items = (this.formData.items || []).filter((item: any) => !prestationIds.includes(item.product_id));
+
+    if (cat?.montage && this.montageOn()) {
+      const qty = this.tyreQuantity();
+      if (qty > 0) {
+        this.formData.items!.push(this.buildPrestationLine(cat.montage, qty, this.montagePrice(), this.montageOffert()));
+      }
+    }
+
+    if (this.paralOn()) {
+      const entry = this.currentParalEntry();
+      if (entry) {
+        this.formData.items!.push(this.buildPrestationLine(entry, 1, this.paralPrice(), this.paralOffert()));
+      }
+    }
+
+    this.calculateTotals();
+  }
+
+  /** On edit: reflect an existing sale's prestation lines back into the panel's checkboxes/prices. */
+  private hydratePrestationsFromItems(): void {
+    const cat = this.prestationCatalog();
+    if (!cat) return;
+
+    const items = this.formData.items || [];
+
+    if (cat.montage) {
+      const line: any = items.find((i: any) => i.product_id === cat.montage!.product_id);
+      if (line) {
+        this.montageOn.set(true);
+        this.montagePrice.set(Number(line.selling_price ?? line.unit_price ?? 0));
+        this.montagePriceTouched.set(true);
+        this.montageOffert.set(Number(line.discount ?? 0) >= 100);
+      }
+    }
+
+    const vtLine: any = cat.alignment_vt ? items.find((i: any) => i.product_id === cat.alignment_vt!.product_id) : null;
+    const suvLine: any = cat.alignment_suv ? items.find((i: any) => i.product_id === cat.alignment_suv!.product_id) : null;
+    const paralLine = vtLine || suvLine;
+
+    if (paralLine) {
+      this.paralOn.set(true);
+      this.paralType.set(suvLine ? 'suv' : 'vt');
+      this.paralPrice.set(Number(paralLine.selling_price ?? paralLine.unit_price ?? 0));
+      this.paralPriceTouched.set(true);
+      this.paralOffert.set(Number(paralLine.discount ?? 0) >= 100);
+    }
   }
 
   onClientSearchInput(value: string): void {

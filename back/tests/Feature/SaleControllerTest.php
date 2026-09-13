@@ -1164,6 +1164,25 @@ class SaleControllerTest extends TestCase
 
     // ── Stock movement tests ─────────────────────────────────────────────────
 
+    private function createServiceProduct(float $sellingPrice = 30): Product
+    {
+        $product = Product::query()->create([
+            'reference' => 'SVC-TEST-'.fake()->unique()->numerify('####'),
+            'type' => 'service',
+            'is_active' => true,
+        ]);
+
+        DB::table('product_services')->insert([
+            'product_id' => $product->id,
+            'category' => 'tires',
+            'selling_price' => $sellingPrice,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return $product;
+    }
+
     private function createProductWithStock(int $quantity = 10): array
     {
         $brand = Brand::query()->create(['name' => 'BrandStock-'.fake()->unique()->word(), 'is_active' => true]);
@@ -1223,6 +1242,92 @@ class SaleControllerTest extends TestCase
             'quantity_after' => 7,
             'delta' => -3,
             'reference_id' => $saleId,
+        ]);
+    }
+
+    public function test_store_excludes_service_lines_from_total_quantity()
+    {
+        [$product, $stock] = $this->createProductWithStock(10);
+        $serviceProduct = $this->createServiceProduct(30);
+        $partner = $this->createPartner();
+
+        $payload = [
+            'date' => '2026-03-15',
+            'commercial_id' => $this->user->id,
+            'partner_id' => $partner->id,
+            'client' => 'Client Service Test',
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'stock_id' => $stock->id,
+                    'quantity' => 4,
+                    'purchase_price' => 100,
+                    'selling_price' => 150,
+                ],
+                [
+                    'product_id' => $serviceProduct->id,
+                    'stock_id' => null,
+                    'quantity' => 4,
+                    'purchase_price' => 0,
+                    'selling_price' => 30,
+                ],
+            ],
+        ];
+
+        $response = $this->postJson('/api/sales', $payload, $this->authHeaders());
+        $response->assertStatus(201);
+
+        // Only the tyre line's 4 units should count — the service line rides
+        // along on the same quantity but is not itself an "article".
+        $this->assertDatabaseHas('sales', [
+            'id' => $response->json('id'),
+            'total_quantity' => 4,
+        ]);
+
+        $this->assertDatabaseHas('sale_items', [
+            'sale_id' => $response->json('id'),
+            'product_id' => $serviceProduct->id,
+            'stock_id' => null,
+            'quantity' => 4,
+        ]);
+    }
+
+    public function test_store_applies_line_discount_to_total_sale_and_margin()
+    {
+        $serviceProduct = $this->createServiceProduct(30);
+        $partner = $this->createPartner();
+
+        // A prestation marked "Offert" (100% discount): billed at 0, not at
+        // the full 4 x 30 = 120 the un-discounted price/quantity would give.
+        $payload = [
+            'date' => '2026-03-15',
+            'commercial_id' => $this->user->id,
+            'partner_id' => $partner->id,
+            'client' => 'Client Remise Test',
+            'items' => [[
+                'product_id' => $serviceProduct->id,
+                'stock_id' => null,
+                'quantity' => 4,
+                'purchase_price' => 0,
+                'selling_price' => 30,
+                'discount' => 100,
+            ]],
+        ];
+
+        $response = $this->postJson('/api/sales', $payload, $this->authHeaders());
+        $response->assertStatus(201);
+
+        $this->assertDatabaseHas('sales', [
+            'id' => $response->json('id'),
+            'total_sale' => 0,
+            'margin' => 0,
+        ]);
+
+        $this->assertDatabaseHas('sale_items', [
+            'sale_id' => $response->json('id'),
+            'product_id' => $serviceProduct->id,
+            'discount' => 100,
+            'total_sale' => 0,
         ]);
     }
 

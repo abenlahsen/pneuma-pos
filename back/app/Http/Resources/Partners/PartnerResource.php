@@ -21,6 +21,7 @@ class PartnerResource extends JsonResource
             'address' => $this->resource->address,
             'montage_price' => $this->resource->montage_price,
             'alignment_price' => $this->resource->alignment_price,
+            'alignment_price_suv' => $this->resource->alignment_price_suv,
             'user_id' => $this->resource->user_id,
             'created_at' => $this->resource->created_at,
             'updated_at' => $this->resource->updated_at,

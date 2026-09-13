@@ -316,6 +316,26 @@ class PartnerApiTest extends TestCase
         ]);
     }
 
+    public function test_create_partner_stores_alignment_price_suv()
+    {
+        $this->authenticateWithPermissions(['create partners']);
+
+        $payload = $this->partnerPayload();
+        $payload['alignment_price_suv'] = 175.00;
+        $this->ensureCity($payload['city']);
+
+        $response = $this->postJson($this->baseUrl, $payload);
+
+        $response
+            ->assertCreated()
+            ->assertJsonPath('alignment_price_suv', number_format(175.00, 2, '.', ''));
+
+        $this->assertDatabaseHas('partners', [
+            'name' => $payload['name'],
+            'alignment_price_suv' => 175.00,
+        ]);
+    }
+
     public function test_show_requires_view_permission()
     {
         $partner = $this->createPartner();

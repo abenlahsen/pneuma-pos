@@ -61,7 +61,7 @@ export interface Sale {
   carrier?: { id: number; name: string } | null;
   tracking_number: string;
   partner_id: number | null;
-  partner?: { id: number; name: string; city?: string; montage_price?: number; alignment_price?: number } | null;
+  partner?: { id: number; name: string; city?: string; montage_price?: number; alignment_price?: number; alignment_price_suv?: number } | null;
   service: string;
   client_id?: number | null;
   linked_client?: Client | null;
@@ -116,4 +116,17 @@ export interface PaginatedResponse<T> {
   last_page_url: string;
   per_page: number;
   total: number;
+}
+
+export interface PrestationEntry {
+  product_id: number;
+  label: string;
+  default_price: number;
+}
+
+/** GET /api/sale-prestations — a key resolves to null until its catalog product is seeded. */
+export interface SalePrestationCatalog {
+  montage: PrestationEntry | null;
+  alignment_vt: PrestationEntry | null;
+  alignment_suv: PrestationEntry | null;
 }

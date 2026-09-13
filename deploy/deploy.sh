@@ -316,6 +316,9 @@ php artisan db:seed --class=RolesAndPermissionsSeeder --force
 echo "  → Seeding cities..."
 php artisan db:seed --class=CitiesSeeder --force
 
+echo "  → Seeding tyre-sale prestations..."
+php artisan db:seed --class=PrestationsSeeder --force
+
 # ── Laravel cache ─────────────────────────────────────────────
 echo "  → Caching config / routes / views..."
 php artisan config:cache

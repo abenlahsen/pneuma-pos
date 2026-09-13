@@ -7,6 +7,7 @@ export interface Partner {
   address?: string;
   montage_price?: number;
   alignment_price?: number;
+  alignment_price_suv?: number;
   created_at?: string;
   updated_at?: string;
 }

@@ -64,20 +64,24 @@
               <span class="sort-icon">{{ sortBy() === 'montage_price' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span>
             </th>
             <th class="sortable text-right" (click)="toggleSort('alignment_price')">
-              Parallélisme (DH)
+              Parallélisme VT (DH)
               <span class="sort-icon">{{ sortBy() === 'alignment_price' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+            </th>
+            <th class="sortable text-right" (click)="toggleSort('alignment_price_suv')">
+              Parallélisme SUV/4x4 (DH)
+              <span class="sort-icon">{{ sortBy() === 'alignment_price_suv' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span>
             </th>
           </tr>
         </thead>
         <tbody>
           <tr *ngIf="loading()">
-            <td colspan="6" class="text-center">
+            <td colspan="7" class="text-center">
               <div class="spinner"></div>
               Chargement...
             </td>
           </tr>
           <tr *ngIf="!loading() && partners().length === 0">
-            <td colspan="6" class="text-center text-muted">
+            <td colspan="7" class="text-center text-muted">
               Aucun partenaire trouvé.
             </td>
           </tr>
@@ -106,6 +110,7 @@
             <td>{{ p.phone || '-' }}</td>
             <td class="text-right">{{ p.montage_price != null ? (p.montage_price | number:'1.2-2') : '-' }}</td>
             <td class="text-right">{{ p.alignment_price != null ? (p.alignment_price | number:'1.2-2') : '-' }}</td>
+            <td class="text-right">{{ p.alignment_price_suv != null ? (p.alignment_price_suv | number:'1.2-2') : '-' }}</td>
           </tr>
         </tbody>
       </table>

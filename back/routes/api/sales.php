@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('permission:view sales')->group(function () {
     Route::get('/sales-summary', [SaleController::class, 'summary']);
     Route::get('/sales-filters', [SaleController::class, 'filters']);
+    Route::get('/sale-prestations', [SaleController::class, 'prestations']);
     Route::get('sales/export', [SaleController::class, 'export']);
     Route::get('sales', [SaleController::class, 'index']);
     Route::get('sales/{sale}', [SaleController::class, 'show']);

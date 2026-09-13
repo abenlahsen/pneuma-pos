@@ -72,7 +72,7 @@ export interface Sale {
   carrier?: { id: number; name: string } | null;
   tracking_number: string;
   partner_id: number | null;
-  partner?: { id: number; name: string; city?: string; montage_price?: number; alignment_price?: number } | null;
+  partner?: { id: number; name: string; city?: string; montage_price?: number; alignment_price?: number; alignment_price_suv?: number } | null;
   service: string;
   client_id?: number | null;
   vehicle_id?: number | null;

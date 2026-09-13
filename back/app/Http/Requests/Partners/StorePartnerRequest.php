@@ -24,6 +24,7 @@ class StorePartnerRequest extends FormRequest
             'address' => 'nullable|string|max:500',
             'montage_price' => 'nullable|numeric|min:0',
             'alignment_price' => 'nullable|numeric|min:0',
+            'alignment_price_suv' => 'nullable|numeric|min:0',
         ];
     }
 }

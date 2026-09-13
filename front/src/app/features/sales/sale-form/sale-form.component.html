@@ -160,7 +160,7 @@
           <tr *ngFor="let item of formData.items; let i = index" [class.table-active]="editingItemIndex === i">
             <td>
               {{ getProduct(item) ? formatProductLabel(getProduct(item)) : 'Produit #' + item.product_id }}
-              <button class="product-link" type="button" (click)="openProductView(item)" *ngIf="getProduct(item)" title="Voir le produit">↗</button>
+              <button class="product-link" type="button" (click)="openProductView(item)" *ngIf="getProduct(item) && !isPrestationLine(item)" title="Voir le produit">↗</button>
             </td>
             <td>
               <ng-container *ngIf="item.stock_id; else serviceLine">{{ item.stock ? formatStockLabel(item.stock) : 'Stock #' + item.stock_id }}</ng-container>
@@ -172,7 +172,7 @@
             <td>{{ (item.discount || 0) | number:'1.0-2' }}%</td>
             <td>{{ lineTotal(item) | number:'1.2-2' }}</td>
             <td>
-              <button type="button" class="btn-icon text-primary mr-1" title="Modifier" (click)="editItem(i)"><app-icon name="edit" /></button>
+              <button type="button" class="btn-icon text-primary mr-1" title="Modifier" (click)="editItem(i)" *ngIf="!isPrestationLine(item)"><app-icon name="edit" /></button>
               <button type="button" class="btn-icon text-danger" title="Supprimer" (click)="removeItem(i)"><app-icon name="delete" /></button>
             </td>
           </tr>
@@ -228,6 +228,83 @@
   </div>
 
   <div class="form-section">
+    <h3 class="section-title">Prestations</h3>
+
+    <div class="prestation-row">
+      <label class="prestation-toggle" [class.disabled]="tyreQuantity() === 0 || !isMontageAvailable()">
+        <input type="checkbox" name="montage_on"
+               [ngModel]="montageOn()"
+               (ngModelChange)="onMontageToggle($event)"
+               [disabled]="tyreQuantity() === 0 || !isMontageAvailable()">
+        <span>Montage + Équilibrage</span>
+      </label>
+
+      <ng-container *ngIf="montageOn()">
+        <div class="prestation-details">
+          <span class="prestation-calc">{{ tyreQuantity() }} pneu{{ tyreQuantity() > 1 ? 's' : '' }} ×</span>
+          <input type="number" name="montage_price" class="prestation-price"
+                 [ngModel]="montagePrice()"
+                 (ngModelChange)="onMontagePriceChange($event)"
+                 step="0.01" min="0" [disabled]="montageOffert()">
+          <span class="prestation-calc">DH =</span>
+          <strong class="prestation-total">{{ (montageOffert() ? 0 : montagePrice() * tyreQuantity()) | number:'1.2-2' }} DH</strong>
+
+          <label class="prestation-offert">
+            <input type="checkbox" name="montage_offert"
+                   [ngModel]="montageOffert()"
+                   (ngModelChange)="onMontageOffertToggle($event)">
+            Offert
+          </label>
+        </div>
+      </ng-container>
+
+      <span class="text-small text-muted" *ngIf="tyreQuantity() === 0">Ajoutez d'abord un pneu.</span>
+      <span class="text-small text-muted" *ngIf="tyreQuantity() > 0 && prestationCatalog() && !isMontageAvailable()">Prestation non configurée — voir Produits.</span>
+    </div>
+
+    <div class="prestation-row">
+      <label class="prestation-toggle" [class.disabled]="!isParalAvailable()">
+        <input type="checkbox" name="paral_on"
+               [ngModel]="paralOn()"
+               (ngModelChange)="onParalToggle($event)"
+               [disabled]="!isParalAvailable()">
+        <span>Parallélisme</span>
+      </label>
+
+      <ng-container *ngIf="paralOn()">
+        <div class="prestation-details">
+          <label class="prestation-radio">
+            <input type="radio" name="paral_type" value="vt" [disabled]="!isParalTypeAvailable('vt')"
+                   [ngModel]="paralType()" (ngModelChange)="onParalTypeChange($event)">
+            Tourisme
+          </label>
+          <label class="prestation-radio">
+            <input type="radio" name="paral_type" value="suv" [disabled]="!isParalTypeAvailable('suv')"
+                   [ngModel]="paralType()" (ngModelChange)="onParalTypeChange($event)">
+            SUV / 4x4
+          </label>
+
+          <input type="number" name="paral_price" class="prestation-price"
+                 [ngModel]="paralPrice()"
+                 (ngModelChange)="onParalPriceChange($event)"
+                 step="0.01" min="0" [disabled]="paralOffert()">
+          <span class="prestation-calc">DH =</span>
+          <strong class="prestation-total">{{ (paralOffert() ? 0 : paralPrice()) | number:'1.2-2' }} DH</strong>
+
+          <label class="prestation-offert">
+            <input type="checkbox" name="paral_offert"
+                   [ngModel]="paralOffert()"
+                   (ngModelChange)="onParalOffertToggle($event)">
+            Offert
+          </label>
+        </div>
+      </ng-container>
+
+      <span class="text-small text-muted" *ngIf="prestationCatalog() && !isParalAvailable()">Prestation non configurée — voir Produits.</span>
+    </div>
+  </div>
+
+  <div class="form-section">
     <h3 class="section-title">Totaux</h3>
     <div class="totals-preview">
       <div class="total-item">
@@ -270,7 +347,7 @@
         </div>
         <div class="form-control">
           <label>Partenaire *</label>
-          <select name="partner_id" [(ngModel)]="formData.partner_id" required>
+          <select name="partner_id" [ngModel]="formData.partner_id" (ngModelChange)="onPartnerChange($event)" required>
             <option [ngValue]="null">-- Sélectionner --</option>
             <option *ngFor="let p of partners()" [ngValue]="p.id">{{ p.name }} {{ p.city ? '(' + p.city + ')' : '' }}</option>
           </select>

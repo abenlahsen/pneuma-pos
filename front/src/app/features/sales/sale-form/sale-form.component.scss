@@ -391,6 +391,98 @@ $_radius-md: 12px;
   }
 }
 
+// ── Prestations (Montage + Équilibrage / Parallélisme) ────────────────────────
+.prestation-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  padding: 0.75rem 0;
+
+  & + .prestation-row { border-top: 1px solid $_border; }
+}
+
+.prestation-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: $_text;
+  cursor: pointer;
+  min-width: 200px;
+
+  &.disabled { color: $_dim; cursor: not-allowed; }
+
+  input[type='checkbox'] {
+    width: 1.1rem;
+    height: 1.1rem;
+    accent-color: $_red;
+    cursor: pointer;
+
+    &:disabled { cursor: not-allowed; }
+  }
+}
+
+.prestation-details {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.prestation-calc {
+  font-size: 0.85rem;
+  color: $_muted;
+}
+
+.prestation-price {
+  width: 5.5rem;
+  padding: 0.4rem 0.6rem;
+  border: 1.5px solid $_border2;
+  border-radius: $_radius-sm;
+  font-size: 0.875rem;
+  color: $_text;
+  background: $_surface;
+
+  &:disabled { background: $_bg; color: $_dim; }
+
+  &:focus {
+    outline: none;
+    border-color: $_red;
+    box-shadow: 0 0 0 3px rgba(255, 45, 55, 0.1);
+  }
+}
+
+.prestation-total {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: $_text;
+  font-variant-numeric: tabular-nums;
+}
+
+.prestation-offert {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  color: $_label;
+  cursor: pointer;
+
+  input[type='checkbox'] { accent-color: $_red; cursor: pointer; }
+}
+
+.prestation-radio {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: $_label;
+  cursor: pointer;
+
+  input[type='radio'] { accent-color: $_red; cursor: pointer; }
+}
+
 .vehicle-section { margin-bottom: 1rem; }
 
 .add-item-btn { height: 42px; }

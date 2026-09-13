@@ -20,12 +20,14 @@ class Partner extends Model
         'address',
         'montage_price',
         'alignment_price',
+        'alignment_price_suv',
         'user_id',
     ];
 
     protected $casts = [
         'montage_price' => 'decimal:2',
         'alignment_price' => 'decimal:2',
+        'alignment_price_suv' => 'decimal:2',
     ];
 
     public function cityRelation(): BelongsTo

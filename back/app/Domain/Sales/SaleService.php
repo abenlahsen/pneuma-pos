@@ -7,6 +7,7 @@ use App\Enums\SalePaymentStatus;
 use App\Enums\SaleStatus;
 use App\Models\Client;
 use App\Models\Payment;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\SalePaymentAllocation;
@@ -239,6 +240,7 @@ class SaleService
         $totalQuantity = 0;
         $totalSale = 0.0;
         $totalPurchase = 0.0;
+        $serviceProductIds = $this->resolveServiceProductIds($items);
 
         foreach ($items as $item) {
             $quantity = (int) ($item['quantity'] ?? 0);
@@ -246,7 +248,12 @@ class SaleService
             $lineTotal = $this->resolveLineTotal($item, $quantity, $unitPrice);
             $purchasePrice = round((float) ($item['purchase_price'] ?? 0), 2);
 
-            $totalQuantity += $quantity;
+            // A prestation (montage, parallélisme...) rides on a tyre line's
+            // quantity but isn't itself an "article" — exclude it so
+            // "Total Articles" reflects units sold, not lines billed.
+            if (! in_array($item['product_id'] ?? null, $serviceProductIds, true)) {
+                $totalQuantity += $quantity;
+            }
             $totalSale += $lineTotal;
             $totalPurchase += $purchasePrice * $quantity;
         }
@@ -380,6 +387,25 @@ class SaleService
         return $status !== SaleStatus::ANNULE->value;
     }
 
+    /**
+     * @param  array<int, array<string, mixed>>  $items
+     * @return array<int, int>
+     */
+    private function resolveServiceProductIds(array $items): array
+    {
+        $productIds = array_filter(array_column($items, 'product_id'));
+
+        if ($productIds === []) {
+            return [];
+        }
+
+        return Product::query()
+            ->whereIn('id', $productIds)
+            ->where('type', 'service')
+            ->pluck('id')
+            ->all();
+    }
+
     protected function resolveUnitPrice(array $item): float
     {
         foreach (['selling_price', 'unit_price', 'sale_price', 'price'] as $column) {
@@ -403,15 +429,18 @@ class SaleService
         return 0.0;
     }
 
+    /**
+     * Authoritative line total: quantity × unit price, less the line's own
+     * discount (0-100%). Any pre-computed total/subtotal the client might
+     * send is never trusted — StoreSaleRequest/UpdateSaleRequest don't even
+     * validate such a field, so relying on it would silently ignore
+     * `discount` (e.g. a 100%-off prestation billed at full price).
+     */
     protected function resolveLineTotal(array $item, int $quantity, float $unitPrice): float
     {
-        foreach (['total_price', 'subtotal', 'total'] as $column) {
-            if (array_key_exists($column, $item) && $item[$column] !== null) {
-                return round((float) $item[$column], 2);
-            }
-        }
+        $discount = max(0.0, min(100.0, (float) ($item['discount'] ?? 0)));
 
-        return round($quantity * $unitPrice, 2);
+        return round($quantity * $unitPrice * (1 - $discount / 100), 2);
     }
 
     protected function resolveClientId(array $validated, ?Sale $existingSale = null): ?int
