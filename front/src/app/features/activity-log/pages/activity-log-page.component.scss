@@ -1,12 +1,7 @@
-@use '../../_page-layout' as layout;
-@include layout.page-layout();
+// Cette page porte ses propres classes (.data-table, .entity-badge, …) et
+// n'utilise aucune de celles du mixin « liste » : l'inclure n'ajoutait que
+// du CSS mort — 12 ko, au-dela du budget de 20 ko par composant.
 
-$_red:     #ff2d37;
-$_text:    #0f172a;
-$_muted:   #64748b;
-$_surface: #ffffff;
-$_border:  #e8edf3;
-$_bg:      #f7fafc;
 
 // ── Page header ───────────────────────────────────────────────────────────────
 .page-header {
@@ -27,14 +22,14 @@ $_bg:      #f7fafc;
   .filter-select {
     height: 2.1rem;
     padding: 0 0.65rem;
-    border: 1px solid $_border;
-    border-radius: 6px;
+    border: 1px solid var(--divider);
+    border-radius: var(--radius);
     font-size: 0.875rem;
-    background: $_surface;
-    color: $_text;
+    background: var(--surface);
+    color: var(--text);
     outline: none;
 
-    &:focus { border-color: $_red; box-shadow: 0 0 0 2px rgba(255, 45, 55, 0.12); }
+    &:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-100); }
   }
 
   .filter-search { min-width: 200px; }
@@ -45,7 +40,7 @@ $_bg:      #f7fafc;
 .btn-reset {
   height: 2.1rem;
   padding: 0 0.9rem;
-  border-radius: 6px;
+  border-radius: var(--radius);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -54,23 +49,23 @@ $_bg:      #f7fafc;
 }
 
 .btn-apply {
-  background: $_red;
+  background: var(--accent);
   color: #fff;
-  &:hover { background: #cc0a13; }
+  &:hover { background: var(--accent-700); }
 }
 
 .btn-reset {
-  background: $_bg;
-  color: $_muted;
-  border: 1px solid $_border;
-  &:hover { background: #edf2f7; }
+  background: var(--bg);
+  color: var(--text-muted);
+  border: 1px solid var(--divider);
+  &:hover { background: var(--neutral-200); }
 }
 
 // ── Table ─────────────────────────────────────────────────────────────────────
 .table-card {
-  background: $_surface;
-  border: 1px solid $_border;
-  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius);
   overflow: hidden;
   position: relative;
 }
@@ -78,7 +73,7 @@ $_bg:      #f7fafc;
 .loading-overlay {
   padding: 3rem;
   text-align: center;
-  color: $_muted;
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 
@@ -92,8 +87,8 @@ $_bg:      #f7fafc;
   font-size: 0.875rem;
 
   thead tr {
-    background: $_bg;
-    border-bottom: 2px solid $_border;
+    background: var(--bg);
+    border-bottom: 2px solid var(--divider);
   }
 
   th {
@@ -102,24 +97,24 @@ $_bg:      #f7fafc;
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.05em;
-    color: $_muted;
+    color: var(--text-muted);
     white-space: nowrap;
   }
 
   td {
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid $_border;
-    color: $_text;
+    border-bottom: 1px solid var(--divider);
+    color: var(--text);
     vertical-align: middle;
   }
 
   tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover { background: rgba(0, 0, 0, 0.016); }
+  tbody tr:hover { background: var(--surface-sunk); }
 }
 
 .cell-date {
   white-space: nowrap;
-  color: $_muted;
+  color: var(--text-muted);
   font-size: 0.8rem;
 }
 
@@ -134,17 +129,17 @@ $_bg:      #f7fafc;
 
 .btn-detail {
   background: none;
-  border: 1px solid $_border;
-  border-radius: 6px;
+  border: 1px solid var(--divider);
+  border-radius: var(--radius);
   padding: 0.2rem 0.5rem;
   font-size: 0.85rem;
   cursor: pointer;
-  color: $_muted;
+  color: var(--text-muted);
   transition: background 0.12s, color 0.12s;
 
   &:hover {
-    background: $_bg;
-    color: $_text;
+    background: var(--bg);
+    color: var(--text);
   }
 }
 
@@ -153,7 +148,7 @@ $_bg:      #f7fafc;
 .action-badge {
   display: inline-block;
   padding: 0.2rem 0.55rem;
-  border-radius: 4px;
+  border-radius: var(--radius);
   font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
@@ -162,26 +157,26 @@ $_bg:      #f7fafc;
 .entity-badge {
   letter-spacing: 0.02em;
 
-  &.entity-vente       { background: rgba(255, 45, 55, 0.08);  color: #c0020b; }
-  &.entity-achat       { background: rgba(59, 130, 246, 0.1);  color: #1d4ed8; }
-  &.entity-service     { background: rgba(168, 85, 247, 0.1);  color: #7c3aed; }
-  &.entity-compte      { background: rgba(16, 185, 129, 0.10); color: #065f46; }
-  &.entity-transaction { background: rgba(245, 158, 11, 0.12); color: #92400e; }
+  &.entity-vente       { background: var(--accent-100);  color: var(--bad-text); }
+  &.entity-achat       { background: var(--neutral-200);  color: var(--neutral-800); }
+  &.entity-service     { background: var(--neutral-200);  color: var(--neutral-800); }
+  &.entity-compte      { background: var(--ok-bg); color: var(--ok-text); }
+  &.entity-transaction { background: var(--warn-bg); color: var(--warn-text); }
 }
 
 .action-badge {
-  &.badge-success { background: rgba(72, 187, 120, 0.12); color: #276749; }
-  &.badge-blue    { background: rgba(59, 130, 246, 0.1);  color: #1d4ed8; }
-  &.badge-danger  { background: rgba(245, 101, 101, 0.12); color: #c53030; }
-  &.badge-purple  { background: rgba(168, 85, 247, 0.1);  color: #6d28d9; }
-  &.badge-warning { background: rgba(237, 137, 54, 0.12); color: #c05621; }
+  &.badge-success { background: var(--ok-bg); color: var(--ok-text); }
+  &.badge-blue    { background: var(--neutral-200);  color: var(--neutral-800); }
+  &.badge-danger  { background: var(--bad-bg); color: var(--bad-text); }
+  &.badge-purple  { background: var(--neutral-200);  color: var(--neutral-800); }
+  &.badge-warning { background: var(--warn-bg); color: var(--warn-text); }
 }
 
 // ── Empty state ───────────────────────────────────────────────────────────────
 .empty-state {
   text-align: center;
   padding: 3rem 1rem;
-  color: $_muted;
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 
@@ -191,7 +186,7 @@ $_bg:      #f7fafc;
   align-items: center;
   gap: 0.375rem;
   padding: 0.875rem 1rem;
-  border-top: 1px solid $_border;
+  border-top: 1px solid var(--divider);
   flex-wrap: wrap;
 }
 
@@ -199,31 +194,31 @@ $_bg:      #f7fafc;
   min-width: 2rem;
   height: 2rem;
   padding: 0 0.5rem;
-  border: 1px solid $_border;
-  border-radius: 6px;
-  background: $_surface;
-  color: $_text;
+  border: 1px solid var(--divider);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.12s, border-color 0.12s;
 
-  &:hover:not([disabled]):not(.active) { background: $_bg; }
-  &.active { background: $_red; border-color: $_red; color: #fff; }
+  &:hover:not([disabled]):not(.active) { background: var(--bg); }
+  &.active { background: var(--accent); border-color: var(--accent); color: #fff; }
   &[disabled] { opacity: 0.4; cursor: not-allowed; }
 }
 
 .page-info {
   margin-left: auto;
   font-size: 0.8rem;
-  color: $_muted;
+  color: var(--text-muted);
 }
 
 // ── Detail modal ──────────────────────────────────────────────────────────────
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(45, 43, 43, 0.55);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -232,8 +227,8 @@ $_bg:      #f7fafc;
 }
 
 .detail-modal {
-  background: $_surface;
-  border-radius: 12px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   width: 100%;
   max-width: 680px;
@@ -248,7 +243,7 @@ $_bg:      #f7fafc;
   align-items: center;
   gap: 0.75rem;
   padding: 1rem 1.25rem;
-  border-bottom: 1px solid $_border;
+  border-bottom: 1px solid var(--divider);
   flex-shrink: 0;
 
   .detail-modal-title {
@@ -265,14 +260,14 @@ $_bg:      #f7fafc;
   background: none;
   border: none;
   font-size: 1rem;
-  color: $_muted;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0.25rem 0.4rem;
-  border-radius: 4px;
+  border-radius: var(--radius);
   line-height: 1;
   flex-shrink: 0;
 
-  &:hover { background: $_bg; color: $_text; }
+  &:hover { background: var(--bg); color: var(--text); }
 }
 
 .detail-modal-meta {
@@ -281,17 +276,17 @@ $_bg:      #f7fafc;
   gap: 0.4rem;
   flex-wrap: wrap;
   padding: 0.6rem 1.25rem;
-  background: $_bg;
-  border-bottom: 1px solid $_border;
+  background: var(--bg);
+  border-bottom: 1px solid var(--divider);
   font-size: 0.8rem;
-  color: $_muted;
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
-.meta-sep { color: $_border; }
+.meta-sep { color: var(--divider); }
 
 .detail-description {
-  color: $_text;
+  color: var(--text);
   font-style: italic;
 }
 
@@ -304,7 +299,7 @@ $_bg:      #f7fafc;
 .snapshot-title {
   font-size: 0.8rem;
   font-weight: 600;
-  color: $_muted;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0 0 0.75rem;
@@ -321,38 +316,38 @@ $_bg:      #f7fafc;
     font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 0.05em;
-    color: $_muted;
-    background: $_bg;
-    border-bottom: 2px solid $_border;
+    color: var(--text-muted);
+    background: var(--bg);
+    border-bottom: 2px solid var(--divider);
   }
 
   td {
     padding: 0.55rem 0.75rem;
-    border-bottom: 1px solid $_border;
+    border-bottom: 1px solid var(--divider);
     vertical-align: middle;
   }
 
   tbody tr:last-child td { border-bottom: none; }
 
   .col-field {
-    color: $_muted;
+    color: var(--text-muted);
     font-size: 0.8rem;
     width: 35%;
     font-weight: 500;
   }
 
   .col-value {
-    color: $_text;
+    color: var(--text);
     word-break: break-word;
   }
 
-  .val-before { color: #c53030; }
-  .val-after  { color: #276749; }
+  .val-before { color: var(--bad-text); }
+  .val-after  { color: var(--ok-text); }
 
   .row-changed {
-    background: rgba(251, 191, 36, 0.08);
+    background: var(--warn-bg);
 
-    .col-field { font-weight: 700; color: $_text; }
+    .col-field { font-weight: 700; color: var(--text); }
   }
 }
 
@@ -368,19 +363,19 @@ $_bg:      #f7fafc;
   gap: 1rem;
   align-items: baseline;
   padding: 0.6rem 0.75rem;
-  background: $_bg;
-  border-radius: 6px;
+  background: var(--bg);
+  border-radius: var(--radius);
 }
 
 .payment-label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: $_muted;
+  color: var(--text-muted);
   min-width: 100px;
 }
 
 .payment-value {
   font-size: 0.9rem;
-  color: $_text;
+  color: var(--text);
   font-weight: 500;
 }
