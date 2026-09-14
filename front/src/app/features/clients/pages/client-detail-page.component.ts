@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnDestroy, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -36,7 +37,7 @@ import { IconComponent } from '../../../shared/icon/icon.component';
   templateUrl: './client-detail-page.component.html',
   styleUrl: './client-detail-page.component.scss',
 })
-export class ClientDetailPageComponent implements OnInit {
+export class ClientDetailPageComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly clientService = inject(ClientService);
@@ -115,6 +116,24 @@ export class ClientDetailPageComponent implements OnInit {
   readonly openInvoices = computed<ClientSalesHistoryRow[]>(() => {
     return (this.statement()?.sales ?? []).filter((sale) => (sale.balance_due ?? 0) > 0);
   });
+
+  private readonly pageHeader = inject(PageHeaderService);
+
+  /**
+   * La fiche garde son en-tete d'objet — vignette, titre, badges : c'est le
+   * motif. Seul le fil d'Ariane remonte dans la barre (P1), et il n'est connu
+   * qu'une fois le profil charge, d'ou l'effet.
+   */
+  private readonly headerEffect = effect(() => {
+    const name = this.profile()?.client?.name;
+    this.pageHeader.set('Clients');
+    // Le titre porte deja la section : le fil ne repete que l'objet.
+    this.pageHeader.setBreadcrumb(name ? [name] : []);
+  });
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
 
   ngOnInit(): void {
     this.route.paramMap

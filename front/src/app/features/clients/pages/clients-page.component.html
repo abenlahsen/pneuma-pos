@@ -1,17 +1,4 @@
 <div class="page-container">
-  <div class="header">
-    <div class="title-section">
-      <h1>Clients</h1>
-      <p class="subtitle">Gérez vos clients, leurs coordonnées et leur solde d'ouverture.</p>
-    </div>
-    <div class="actions">
-      <button class="btn btn-primary" type="button" (click)="openCreateModal()">Nouveau Client</button>
-      <button class="btn btn-secondary" type="button" (click)="exportClients()" [disabled]="isExporting()">
-        {{ isExporting() ? 'Export en cours...' : 'Exporter Excel' }}
-      </button>
-      <app-auto-refresh-control pageKey="clients" (refresh)="loadClients()" />
-    </div>
-  </div>
 
   <p class="export-error" *ngIf="exportError()">{{ exportError() }}</p>
 

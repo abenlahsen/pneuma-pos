@@ -1,4 +1,5 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CarrierService } from '../data-access/carrier.service';
@@ -20,7 +21,8 @@ import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-b
   templateUrl: './carriers-page.component.html',
   styleUrls: ['./carriers-page.component.scss'],
 })
-export class CarriersPageComponent implements OnInit {
+export class CarriersPageComponent implements OnInit, OnDestroy {
+  private readonly pageHeader = inject(PageHeaderService);
   carriers = signal<Carrier[]>([]);
   currentPage = signal(1);
   lastPage = signal(1);
@@ -38,7 +40,21 @@ export class CarriersPageComponent implements OnInit {
 
   constructor(private service: CarrierService, public authService: AuthService) {}
 
+  /** Titre, actions et rechargement vont dans la barre de la coquille (P1). */
+  private publishHeader(): void {
+    this.pageHeader.set('Transporteurs');
+    this.pageHeader.setActions([
+      { label: 'Nouveau transporteur', run: () => this.openAddForm(), variant: 'primary', hidden: () => !this.authService.hasPermission('create carriers') },
+    ]);
+    this.pageHeader.setRefresh('carriers', () => this.loadData());
+  }
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
+
   ngOnInit(): void {
+    this.publishHeader();
     this.loadData();
   }
 

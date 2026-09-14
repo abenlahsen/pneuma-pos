@@ -1,10 +1,11 @@
-import { Component, OnInit, effect, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { RailComponent } from './shared/rail/rail.component';
 import { CommandPaletteComponent } from './shared/command-palette/command-palette.component';
+import { AutoRefreshControlComponent } from './shared/auto-refresh-control/auto-refresh-control.component';
 import { AuthService } from './core/services/auth.service';
 import { environment } from '../environments/environment';
 import { SettingsService } from './features/settings/data-access/settings.service';
@@ -13,7 +14,7 @@ import { PageHeaderService } from './core/services/page-header.service';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, RouterLink, RailComponent, CommandPaletteComponent],
+  imports: [CommonModule, RouterOutlet, RailComponent, CommandPaletteComponent, AutoRefreshControlComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -27,6 +28,17 @@ export class App implements OnInit {
    * enregistrer la locale `fr` changerait aussi le format de tous les nombres
    * de l'application (espace comme separateur, virgule decimale).
    */
+  /**
+   * L'action primaire se pose tout a droite, apres les secondaires : c'est la
+   * derniere chose que l'oeil rencontre en balayant la barre. Tri stable, donc
+   * l'ordre declare par la page est conserve a l'interieur de chaque groupe.
+   */
+  readonly orderedActions = computed(() =>
+    [...this.pageHeader.actions()].sort(
+      (a, b) => (a.variant === 'primary' ? 1 : 0) - (b.variant === 'primary' ? 1 : 0),
+    ),
+  );
+
   readonly today = new Date().toLocaleDateString('fr-FR', {
     weekday: 'long',
     day: '2-digit',
@@ -34,11 +46,17 @@ export class App implements OnInit {
   });
 
   /**
-   * Coquille a hauteur fixe : barre superieure et contenu qui defile seul.
-   * Decidee par la route (`data.shell`), pas par la page — sinon la barre
-   * apparaitrait apres le premier rendu et ferait sauter la mise en page.
+   * Le portail client a sa propre barre : la coquille n'en pose pas une
+   * seconde par-dessus.
    */
-  readonly isFixedShell = signal(false);
+  readonly isPortal = signal(false);
+
+  /**
+   * `flush` : le contenu gere lui-meme sa hauteur et son defilement, la
+   * coquille ne lui met pas de marge. Reserve a l'accueil, qui est une grille
+   * a deux colonnes defilant separement.
+   */
+  readonly isFlushShell = signal(false);
 
   constructor(
     public authService: AuthService,
@@ -63,7 +81,10 @@ export class App implements OnInit {
 
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe(() => this.isFixedShell.set(this.deepestRoute().snapshot.data['shell'] === 'fixed'));
+      .subscribe(() => {
+        this.isFlushShell.set(this.deepestRoute().snapshot.data['shell'] === 'flush');
+        this.isPortal.set(this.router.url.startsWith('/portail'));
+      });
   }
 
   /** La donnee `shell` est portee par la route effectivement affichee. */

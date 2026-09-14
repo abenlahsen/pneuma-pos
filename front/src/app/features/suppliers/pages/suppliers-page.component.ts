@@ -1,4 +1,5 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -20,7 +21,8 @@ import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-b
   templateUrl: './suppliers-page.component.html',
   styleUrls: ['./suppliers-page.component.scss'],
 })
-export class SuppliersPageComponent implements OnInit {
+export class SuppliersPageComponent implements OnInit, OnDestroy {
+  private readonly pageHeader = inject(PageHeaderService);
   suppliers = signal<Supplier[]>([]);
 
   currentPage = signal(1);
@@ -68,7 +70,21 @@ export class SuppliersPageComponent implements OnInit {
     }
   }
 
+  /** Titre, actions et rechargement vont dans la barre de la coquille (P1). */
+  private publishHeader(): void {
+    this.pageHeader.set('Fournisseurs');
+    this.pageHeader.setActions([
+      { label: 'Nouveau fournisseur', run: () => this.openAddForm(), variant: 'primary', hidden: () => !this.authService.hasPermission('create suppliers') },
+    ]);
+    this.pageHeader.setRefresh('suppliers', () => this.refreshAll());
+  }
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
+
   ngOnInit(): void {
+    this.publishHeader();
     this.refreshAll();
   }
 

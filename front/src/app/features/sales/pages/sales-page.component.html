@@ -1,20 +1,4 @@
 <div class="page-container">
-  <div class="header">
-    <div class="title-section">
-      <h1>Ventes</h1>
-      <p class="subtitle">Gérez vos ventes et marges</p>
-    </div>
-    <div class="actions">
-      <button class="btn btn-secondary" type="button" (click)="exportSales()" [disabled]="isExporting()">
-        {{ isExporting() ? 'Export en cours...' : 'Exporter Excel' }}
-      </button>
-      <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create sales')">
-        Nouvelle Vente
-      </button>
-      <app-auto-refresh-control pageKey="sales" (refresh)="loadData()" />
-    </div>
-    <p class="export-error" *ngIf="exportError()">{{ exportError() }}</p>
-  </div>
 
   <div class="summary-cards">
     <ng-container *ngIf="!hasDateFilter()">

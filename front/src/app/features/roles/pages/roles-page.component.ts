@@ -1,4 +1,5 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RoleService } from '../data-access/role.service';
@@ -19,7 +20,8 @@ import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-b
   templateUrl: './roles-page.component.html',
   styleUrls: ['./roles-page.component.scss'],
 })
-export class RolesPageComponent implements OnInit {
+export class RolesPageComponent implements OnInit, OnDestroy {
+  private readonly pageHeader = inject(PageHeaderService);
   roles = signal<Role[]>([]);
   permissions = signal<Permission[]>([]);
   loading = signal(false);
@@ -41,7 +43,22 @@ export class RolesPageComponent implements OnInit {
     public authService: AuthService,
   ) {}
 
+  /** Titre, actions et rechargement vont dans la barre de la coquille (P1). */
+  private publishHeader(): void {
+    this.pageHeader.set('Rôles');
+    this.pageHeader.setActions([
+      { label: 'Nouveau rôle', run: () => this.openAddForm(), variant: 'primary', hidden: () => !this.authService.hasPermission('create roles') },
+      { label: 'Nouvelle permission', run: () => this.openPermissionForm(), variant: 'secondary', hidden: () => !this.authService.hasPermission('create roles') },
+    ]);
+    this.pageHeader.setRefresh('roles', () => this.loadData());
+  }
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
+
   ngOnInit(): void {
+    this.publishHeader();
     this.loadData();
   }
 

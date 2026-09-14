@@ -1,4 +1,5 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HrChargeService } from '../data-access/hr-charge.service';
@@ -30,7 +31,8 @@ const MONTH_NAMES = [
   templateUrl: './hr-charges-page.component.html',
   styleUrl: './hr-charges-page.component.scss',
 })
-export class HrChargesPageComponent implements OnInit {
+export class HrChargesPageComponent implements OnInit, OnDestroy {
+  private readonly pageHeader = inject(PageHeaderService);
   charges = signal<HrCharge[]>([]);
   summary = signal<HrChargeSummary | null>(null);
   filters = signal<HrChargeFilters>({ employees: [], subcategories: [], accounts: [] });
@@ -76,7 +78,20 @@ export class HrChargesPageComponent implements OnInit {
     public authService: AuthService,
   ) {}
 
+  /** Titre, actions et rechargement vont dans la barre de la coquille (P1). */
+  private publishHeader(): void {
+    this.pageHeader.set('Charges RH');
+    this.pageHeader.setActions([
+      { label: 'Nouvelle saisie', run: () => this.openForm(), variant: 'primary', hidden: () => !this.authService.hasPermission('create hr-charges') },
+    ]);
+  }
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
+
   ngOnInit(): void {
+    this.publishHeader();
     this.hrChargeService.filters().subscribe({ next: (f) => this.filters.set(f) });
     this.loadData();
   }

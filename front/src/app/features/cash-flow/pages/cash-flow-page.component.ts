@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { TransactionFormComponent } from '../components/transaction-form/transaction-form.component';
@@ -28,7 +29,8 @@ import { buildBalanceCurve } from './balance-curve';
   templateUrl: './cash-flow-page.component.html',
   styleUrls: ['./cash-flow-page.component.scss'],
 })
-export class CashFlowPageComponent implements OnInit {
+export class CashFlowPageComponent implements OnInit, OnDestroy {
+  private readonly pageHeader = inject(PageHeaderService);
   viewingPaymentId = signal<number | null>(null);
   viewingSalePaymentId = signal<number | null>(null);
   transactions = signal<Transaction[]>([]);
@@ -102,7 +104,21 @@ export class CashFlowPageComponent implements OnInit {
     public authService: AuthService,
   ) {}
 
+  /** Titre, actions et rechargement vont dans la barre de la coquille (P1). */
+  private publishHeader(): void {
+    this.pageHeader.set('Cash Flow');
+    this.pageHeader.setActions([
+      { label: 'Nouvelle transaction', run: () => this.openAddForm(), variant: 'primary', hidden: () => !this.authService.hasPermission('create cash-flow') },
+    ]);
+    this.pageHeader.setRefresh('cash-flow', () => this.loadData());
+  }
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
+
   ngOnInit(): void {
+    this.publishHeader();
     this.loadAccounts();
     this.loadFilters();
     this.loadCategoryTrees();

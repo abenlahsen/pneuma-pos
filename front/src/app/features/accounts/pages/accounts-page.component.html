@@ -1,25 +1,4 @@
 <div class="page-container">
-  <div class="header">
-    <div class="title-section">
-      <button class="btn-back" *ngIf="selectedAccount()" (click)="backToOverview()">
-        ← Retour
-      </button>
-      <h1>{{ selectedAccount() ? selectedAccount()?.name : 'Comptes' }}</h1>
-      <p class="subtitle" *ngIf="!selectedAccount()">Gérez vos flux de trésorerie multi-comptes</p>
-      <p class="subtitle" *ngIf="selectedAccount()">{{ getTypeLabel(selectedAccount()!.type) }} • {{ selectedAccount()!.is_active ? 'Actif' : 'Inactif' }}</p>
-    </div>
-    <div class="actions">
-      <ng-container *ngIf="!selectedAccount()">
-        <button class="btn btn-secondary" (click)="openTransferForm()" *ngIf="authService.hasPermission('transfer accounts')">
-          Nouveau Transfert
-        </button>
-        <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create accounts')">
-          + Nouveau Compte
-        </button>
-        <app-auto-refresh-control pageKey="accounts" (refresh)="loadAccounts()" />
-      </ng-container>
-    </div>
-  </div>
 
   <ng-container *ngIf="!selectedAccount()">
     <div class="loading-state" *ngIf="loading()">Chargement des comptes...</div>

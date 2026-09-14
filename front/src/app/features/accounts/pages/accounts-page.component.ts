@@ -1,4 +1,5 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AccountService } from '../data-access/account.service';
@@ -20,7 +21,8 @@ import { IconComponent } from '../../../shared/icon/icon.component';
   templateUrl: './accounts-page.component.html',
   styleUrls: ['./accounts-page.component.scss']
 })
-export class AccountsPageComponent implements OnInit {
+export class AccountsPageComponent implements OnInit, OnDestroy {
+  private readonly pageHeader = inject(PageHeaderService);
   viewingPaymentId = signal<number | null>(null);
   viewingSalePaymentId = signal<number | null>(null);
   accounts = signal<Account[]>([]);
@@ -55,7 +57,35 @@ export class AccountsPageComponent implements OnInit {
     public authService: AuthService
   ) {}
 
+  /**
+   * Le titre suit la selection : la page sert d'apercu et de detail. Un effet
+   * plutot qu'un appel dans ngOnInit, sinon la barre resterait sur « Comptes »
+   * apres avoir ouvert un compte.
+   */
+  private readonly headerEffect = effect(() => {
+      const account = this.selectedAccount();
+      this.pageHeader.set(account ? account.name : 'Comptes');
+      this.pageHeader.setBreadcrumb(account ? ['Comptes', account.name] : []);
+      this.pageHeader.setActions(account
+        ? [{ label: 'Retour aux comptes', run: () => this.backToOverview(), variant: 'secondary' }]
+        : [
+            { label: 'Nouveau compte', run: () => this.openAddForm(), variant: 'primary',
+              hidden: () => !this.authService.hasPermission('create accounts') },
+            { label: 'Nouveau transfert', run: () => this.openTransferForm(), variant: 'secondary',
+              hidden: () => !this.authService.hasPermission('transfer accounts') },
+          ]);
+  });
+
+  private publishHeader(): void {
+    this.pageHeader.setRefresh('accounts', () => this.loadAccounts());
+  }
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
+
   ngOnInit() {
+    this.publishHeader();
     this.loadAccounts();
   }
 

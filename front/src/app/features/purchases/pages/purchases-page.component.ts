@@ -1,4 +1,5 @@
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, ParamMap } from '@angular/router';
@@ -27,7 +28,8 @@ import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-b
   templateUrl: './purchases-page.component.html',
   styleUrls: ['./purchases-page.component.scss']
 })
-export class PurchasesPageComponent implements OnInit {
+export class PurchasesPageComponent implements OnInit, OnDestroy {
+  private readonly pageHeader = inject(PageHeaderService);
   readonly PURCHASE_STATUSES = PURCHASE_STATUSES;
   readonly PURCHASE_STATUS_LABELS = PURCHASE_STATUS_LABELS;
   readonly PAYMENT_STATUSES = PAYMENT_STATUSES;
@@ -101,7 +103,22 @@ export class PurchasesPageComponent implements OnInit {
     return pages;
   });
 
+  /** Titre, actions et rechargement vont dans la barre de la coquille (P1). */
+  private publishHeader(): void {
+    this.pageHeader.set('Achats');
+    this.pageHeader.setActions([
+      { label: 'Nouvel achat', run: () => this.openForm(), variant: 'primary', hidden: () => !this.authService.hasPermission('create purchases') },
+      { label: 'Exporter Excel', run: () => this.exportPurchases(), variant: 'secondary', disabled: () => this.isExporting() },
+    ]);
+    this.pageHeader.setRefresh('purchases', () => this.loadData());
+  }
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
+
   ngOnInit(): void {
+    this.publishHeader();
     this.loadFilters();
     this.loadData();
 

@@ -1,4 +1,5 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BrandService } from '../data-access/brand.service';
@@ -19,7 +20,8 @@ import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-b
   templateUrl: './brands-page.component.html',
   styleUrls: ['./brands-page.component.scss'],
 })
-export class BrandsPageComponent implements OnInit {
+export class BrandsPageComponent implements OnInit, OnDestroy {
+  private readonly pageHeader = inject(PageHeaderService);
   brands = signal<Brand[]>([]);
 
   currentPage = signal(1);
@@ -43,7 +45,21 @@ export class BrandsPageComponent implements OnInit {
     public authService: AuthService,
   ) {}
 
+  /** Titre, actions et rechargement vont dans la barre de la coquille (P1). */
+  private publishHeader(): void {
+    this.pageHeader.set('Marques');
+    this.pageHeader.setActions([
+      { label: 'Nouvelle marque', run: () => this.openAddForm(), variant: 'primary', hidden: () => !this.authService.hasPermission('create brands') },
+    ]);
+    this.pageHeader.setRefresh('brands', () => this.loadData());
+  }
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
+
   ngOnInit(): void {
+    this.publishHeader();
     this.loadData();
   }
 

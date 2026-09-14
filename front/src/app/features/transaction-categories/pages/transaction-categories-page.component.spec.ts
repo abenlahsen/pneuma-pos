@@ -1,3 +1,7 @@
+// Ces composants deposent leur titre dans la barre de la coquille via
+// `inject(PageHeaderService)` : leur construction doit desormais avoir lieu
+// dans un contexte d'injection.
+import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { TransactionCategoriesPageComponent } from './transaction-categories-page.component';
 import { TransactionCategory } from '../models/transaction-category.model';
@@ -36,7 +40,7 @@ describe('TransactionCategoriesPageComponent', () => {
       update: vi.fn(),
       delete: vi.fn(),
     };
-    comp = new TransactionCategoriesPageComponent(mockService as any, mockAuthService as any);
+    comp = TestBed.runInInjectionContext(() => new TransactionCategoriesPageComponent(mockService as any, mockAuthService as any));
   });
 
   describe('switchType', () => {

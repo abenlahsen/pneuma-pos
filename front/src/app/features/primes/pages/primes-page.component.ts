@@ -1,4 +1,5 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 import { CommonModule } from '@angular/common';
 import { PrimeService } from '../data-access/prime.service';
 import { PrimesResponse } from '../models/prime.model';
@@ -20,7 +21,8 @@ const MONTH_NAMES = [
   templateUrl: './primes-page.component.html',
   styleUrls: ['./primes-page.component.scss'],
 })
-export class PrimesPageComponent implements OnInit {
+export class PrimesPageComponent implements OnInit, OnDestroy {
+  private readonly pageHeader = inject(PageHeaderService);
   response = signal<PrimesResponse | null>(null);
   loading = signal(false);
   /** Détail technique de la dernière erreur de chargement, '' si tout va bien (`3d`). */
@@ -41,7 +43,17 @@ export class PrimesPageComponent implements OnInit {
 
   constructor(private primeService: PrimeService) {}
 
+  /** Titre, actions et rechargement vont dans la barre de la coquille (P1). */
+  private publishHeader(): void {
+    this.pageHeader.set('Primes commerciaux');
+  }
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
+
   ngOnInit(): void {
+    this.publishHeader();
     this.loadData();
   }
 

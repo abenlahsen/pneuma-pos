@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
@@ -19,7 +20,8 @@ import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-b
   templateUrl: './stock-page.component.html',
   styleUrl: './stock-page.component.scss',
 })
-export class StockPageComponent implements OnInit {
+export class StockPageComponent implements OnInit, OnDestroy {
+  private readonly pageHeader = inject(PageHeaderService);
   private readonly stockService = inject(StockService);
   readonly authService = inject(AuthService);
 
@@ -100,7 +102,21 @@ export class StockPageComponent implements OnInit {
     }).format(this.summary().total_purchase_value || 0),
   );
 
+  /** Titre, actions et rechargement vont dans la barre de la coquille (P1). */
+  private publishHeader(): void {
+    this.pageHeader.set('Stock');
+    this.pageHeader.setActions([
+      { label: 'Exporter le stock disponible', run: () => this.exportAvailableStock(), variant: 'primary', disabled: () => this.isExporting },
+    ]);
+    this.pageHeader.setRefresh('stock', () => this.loadData());
+  }
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
+
   ngOnInit(): void {
+    this.publishHeader();
     this.loadFilters();
     this.loadData();
   }

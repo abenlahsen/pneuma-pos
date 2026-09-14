@@ -1,16 +1,4 @@
 <div class="page-container">
-  <div class="header">
-    <div class="title-section">
-      <h1>Transporteurs</h1>
-      <p class="subtitle">Gérez vos sociétés de transport</p>
-    </div>
-    <div class="actions">
-      <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create carriers')">
-        Nouveau Transporteur
-      </button>
-      <app-auto-refresh-control pageKey="carriers" (refresh)="loadData()" />
-    </div>
-  </div>
 
   <div class="card filters-section">
     <div class="card-body" style="padding: 1rem 1.5rem">

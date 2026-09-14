@@ -1,17 +1,4 @@
 <div class="page-container">
-  <div class="header">
-    <div class="title-section">
-      <h1>Stock</h1>
-      <p class="subtitle">Consultez en temps réel les articles disponibles dans vos dépôts et exportez-les en Excel.</p>
-    </div>
-
-    <div class="actions">
-      <button class="btn btn-primary" type="button" (click)="exportAvailableStock()" [disabled]="isExporting">
-        {{ isExporting ? 'Export en cours...' : 'Exporter le stock disponible' }}
-      </button>
-      <app-auto-refresh-control pageKey="stock" (refresh)="loadData()" />
-    </div>
-  </div>
 
   <p class="export-error" *ngIf="exportError">{{ exportError }}</p>
 

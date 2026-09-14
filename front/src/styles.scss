@@ -113,11 +113,27 @@ button {
   /* Le chrome de navigation et les commandes ne s'impriment pas. */
   app-rail,
   app-command-palette,
+  .topbar,
   .no-print,
   .nav-btn,
   .filters-section,
   .pagination-wrapper {
     display: none !important;
+  }
+
+  /* La coquille est a hauteur d'ecran avec defilement interne : a l'impression
+     elle couperait tout a une page. On la deroule. */
+  .app-shell {
+    display: block;
+    height: auto;
+    overflow: visible;
+  }
+
+  .main-content,
+  .main-content__inner {
+    height: auto;
+    overflow: visible;
+    padding: 0;
   }
 
   .page-container { margin: 0; padding: 0; }

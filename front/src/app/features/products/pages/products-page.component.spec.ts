@@ -1,3 +1,7 @@
+// Ces composants deposent leur titre dans la barre de la coquille via
+// `inject(PageHeaderService)` : leur construction doit desormais avoir lieu
+// dans un contexte d'injection.
+import { TestBed } from '@angular/core/testing';
 import { Observable, of, EMPTY } from 'rxjs';
 import { ProductsPageComponent } from './products-page.component';
 import { Product } from '../models/product.model';
@@ -24,21 +28,21 @@ describe('ProductsPageComponent', () => {
   describe('ngOnInit', () => {
     it('sets searchQuery when ?search= param is present', () => {
       const svc = makeProductService();
-      const comp = new ProductsPageComponent(svc as any, mockAuthService as any, makeRoute({ search: 'michelin' }) as any);
+      const comp = TestBed.runInInjectionContext(() => new ProductsPageComponent(svc as any, mockAuthService as any, makeRoute({ search: 'michelin' }) as any));
       comp.ngOnInit();
       expect(comp.searchQuery()).toBe('michelin');
     });
 
     it('leaves searchQuery empty when ?search= param is absent', () => {
       const svc = makeProductService();
-      const comp = new ProductsPageComponent(svc as any, mockAuthService as any, makeRoute({}) as any);
+      const comp = TestBed.runInInjectionContext(() => new ProductsPageComponent(svc as any, mockAuthService as any, makeRoute({}) as any));
       comp.ngOnInit();
       expect(comp.searchQuery()).toBe('');
     });
 
     it('calls getProduct(42) and opens view modal when ?id=42 with no ?edit=1', () => {
       const svc = makeProductService(of(fakeProduct));
-      const comp = new ProductsPageComponent(svc as any, mockAuthService as any, makeRoute({ id: '42' }) as any);
+      const comp = TestBed.runInInjectionContext(() => new ProductsPageComponent(svc as any, mockAuthService as any, makeRoute({ id: '42' }) as any));
       comp.ngOnInit();
       expect(svc.getProduct).toHaveBeenCalledWith(42);
       expect(comp.viewingProduct()).toEqual(fakeProduct);
@@ -47,7 +51,7 @@ describe('ProductsPageComponent', () => {
 
     it('calls getProduct(42) and opens edit form when ?id=42&edit=1', () => {
       const svc = makeProductService(of(fakeProduct));
-      const comp = new ProductsPageComponent(svc as any, mockAuthService as any, makeRoute({ id: '42', edit: '1' }) as any);
+      const comp = TestBed.runInInjectionContext(() => new ProductsPageComponent(svc as any, mockAuthService as any, makeRoute({ id: '42', edit: '1' }) as any));
       comp.ngOnInit();
       expect(svc.getProduct).toHaveBeenCalledWith(42);
       expect(comp.editingProduct()).toEqual(fakeProduct);
@@ -56,7 +60,7 @@ describe('ProductsPageComponent', () => {
 
     it('does NOT call getProduct when ?id= param is absent', () => {
       const svc = makeProductService();
-      const comp = new ProductsPageComponent(svc as any, mockAuthService as any, makeRoute({ search: 'foo' }) as any);
+      const comp = TestBed.runInInjectionContext(() => new ProductsPageComponent(svc as any, mockAuthService as any, makeRoute({ search: 'foo' }) as any));
       comp.ngOnInit();
       expect(svc.getProduct).not.toHaveBeenCalled();
     });

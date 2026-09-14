@@ -1,16 +1,4 @@
 <div class="page-container">
-  <div class="header">
-    <div class="title-section">
-      <h1>Produits</h1>
-      <p class="subtitle">Catalogue des pneus</p>
-    </div>
-    <div class="actions">
-      <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create products')">
-        Nouveau Produit
-      </button>
-      <app-auto-refresh-control pageKey="products" (refresh)="loadData()" />
-    </div>
-  </div>
 
   <div class="search-hero">
     <div class="search-box">

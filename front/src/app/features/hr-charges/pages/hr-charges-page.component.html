@@ -1,16 +1,4 @@
 <div class="page-container">
-  <div class="header">
-    <div class="title-section">
-      <h1>Charges RH</h1>
-      <p class="subtitle">Salaires, primes, CNSS et autres charges de personnel — visible uniquement par les utilisateurs autorisés.</p>
-    </div>
-    <button
-      type="button"
-      class="btn btn-primary"
-      *ngIf="authService.hasPermission('create hr-charges')"
-      (click)="openForm()"
-    >+ Nouvelle saisie</button>
-  </div>
 
   <div class="alert alert-danger" *ngIf="errorMessage()">{{ errorMessage() }}</div>
 

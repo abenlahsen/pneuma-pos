@@ -1,3 +1,7 @@
+// Ces composants deposent leur titre dans la barre de la coquille via
+// `inject(PageHeaderService)` : leur construction doit desormais avoir lieu
+// dans un contexte d'injection.
+import { TestBed } from '@angular/core/testing';
 import { buildComparisonBars } from './comparison-bars';
 import { of, throwError } from 'rxjs';
 import { ReportingPageComponent } from './reporting-page.component';
@@ -40,7 +44,7 @@ describe('ReportingPageComponent', () => {
 
   beforeEach(() => {
     mockService = { getMonthly: vi.fn().mockReturnValue(of(makeReport())) };
-    comp = new ReportingPageComponent(mockService as any);
+    comp = TestBed.runInInjectionContext(() => new ReportingPageComponent(mockService as any));
   });
 
   describe('loading', () => {

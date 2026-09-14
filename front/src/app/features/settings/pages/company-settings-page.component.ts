@@ -1,7 +1,8 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { SettingsService } from '../data-access/settings.service';
 import { CityService } from '../../../core/services/city.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -23,7 +24,9 @@ type ContentWidthOption = 'full' | 'boxed' | 'compact';
   templateUrl: './company-settings-page.component.html',
   styleUrls: ['./company-settings-page.component.scss'],
 })
-export class CompanySettingsPageComponent implements OnInit {
+export class CompanySettingsPageComponent implements OnInit, OnDestroy {
+  private readonly pageHeader = inject(PageHeaderService);
+  private readonly router = inject(Router);
   readonly themeModeOptions: Array<{ value: ThemeMode; label: string }> = [
     { value: 'system', label: 'Système' },
     { value: 'light', label: 'Clair' },
@@ -104,7 +107,21 @@ export class CompanySettingsPageComponent implements OnInit {
     public authService: AuthService,
   ) {}
 
+  /** Titre, actions et rechargement vont dans la barre de la coquille (P1). */
+  private publishHeader(): void {
+    this.pageHeader.setActions([
+      { label: 'Catégories de transactions', run: () => this.router.navigate(['/settings/transaction-categories']), variant: 'secondary',
+        hidden: () => !this.authService.hasPermission('view transaction-categories') },
+    ]);
+    this.pageHeader.set('Paramètres');
+  }
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
+
   ngOnInit(): void {
+    this.publishHeader();
     this.cityService.getCities().subscribe(cities => this.cities = cities);
     this.loadSettings();
   }

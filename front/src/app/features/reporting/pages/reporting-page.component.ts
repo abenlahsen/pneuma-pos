@@ -1,4 +1,5 @@
-import { Component, Inject, LOCALE_ID, OnInit, computed, signal } from '@angular/core';
+import { Component, Inject, LOCALE_ID, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 import { CommonModule, formatNumber } from '@angular/common';
 import { ReportingService } from '../data-access/reporting.service';
 import { MonthlyReport, ReportPeriodData } from '../models/reporting.model';
@@ -56,7 +57,8 @@ export interface MethodRow {
   templateUrl: './reporting-page.component.html',
   styleUrls: ['./reporting-page.component.scss'],
 })
-export class ReportingPageComponent implements OnInit {
+export class ReportingPageComponent implements OnInit, OnDestroy {
+  private readonly pageHeader = inject(PageHeaderService);
   report = signal<MonthlyReport | null>(null);
   loading = signal(false);
   error = signal<string | null>(null);
@@ -237,7 +239,20 @@ export class ReportingPageComponent implements OnInit {
     @Inject(LOCALE_ID) private locale: string = 'en-US',
   ) {}
 
+  /** Titre, actions et rechargement vont dans la barre de la coquille (P1). */
+  private publishHeader(): void {
+    this.pageHeader.set('Reporting');
+    this.pageHeader.setActions([
+      { label: 'Exporter PDF', run: () => this.exportPdf(), variant: 'secondary' },
+    ]);
+  }
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
+
   ngOnInit(): void {
+    this.publishHeader();
     this.loadData();
   }
 

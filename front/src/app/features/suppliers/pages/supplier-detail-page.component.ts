@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnDestroy, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -26,7 +27,7 @@ import {
   templateUrl: './supplier-detail-page.component.html',
   styleUrl: './supplier-detail-page.component.scss',
 })
-export class SupplierDetailPageComponent implements OnInit {
+export class SupplierDetailPageComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly supplierService = inject(SupplierService);
@@ -67,6 +68,24 @@ export class SupplierDetailPageComponent implements OnInit {
   readonly openPurchases = computed<PurchaseHistoryRow[]>(() =>
     (this.statement()?.purchases ?? []).filter(p => (p.outstanding_amount ?? 0) > 0)
   );
+
+  private readonly pageHeader = inject(PageHeaderService);
+
+  /**
+   * La fiche garde son en-tete d'objet — vignette, titre, badges : c'est le
+   * motif. Seul le fil d'Ariane remonte dans la barre (P1), et il n'est connu
+   * qu'une fois le profil charge, d'ou l'effet.
+   */
+  private readonly headerEffect = effect(() => {
+    const name = this.profile()?.supplier?.name;
+    this.pageHeader.set('Fournisseurs');
+    // Le titre porte deja la section : le fil ne repete que l'objet.
+    this.pageHeader.setBreadcrumb(name ? [name] : []);
+  });
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
 
   ngOnInit(): void {
     this.route.paramMap

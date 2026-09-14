@@ -1,4 +1,5 @@
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
@@ -32,7 +33,8 @@ import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-b
   templateUrl: './sales-page.component.html',
   styleUrl: './sales-page.component.scss',
 })
-export class SalesPageComponent implements OnInit {
+export class SalesPageComponent implements OnInit, OnDestroy {
+  private readonly pageHeader = inject(PageHeaderService);
   readonly SALE_STATUSES = SALE_STATUSES;
   readonly SALE_STATUS_LABELS = SALE_STATUS_LABELS;
   readonly PAYMENT_METHODS = PAYMENT_METHODS;
@@ -109,7 +111,22 @@ export class SalesPageComponent implements OnInit {
     private cityService: CityService,
   ) {}
 
+  /** Titre, actions et rechargement vont dans la barre de la coquille (P1). */
+  private publishHeader(): void {
+    this.pageHeader.set('Ventes');
+    this.pageHeader.setActions([
+      { label: 'Nouvelle vente', run: () => this.openAddForm(), variant: 'primary', hidden: () => !this.authService.hasPermission('create sales') },
+      { label: 'Exporter Excel', run: () => this.exportSales(), variant: 'secondary', disabled: () => this.isExporting() },
+    ]);
+    this.pageHeader.setRefresh('sales', () => this.loadData());
+  }
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
+
   ngOnInit(): void {
+    this.publishHeader();
     this.cityService.getCities().subscribe(cities => this.cities.set(cities));
     this.loadFilters();
     this.loadData();

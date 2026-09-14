@@ -1,19 +1,4 @@
 <div class="page-container">
-  <div class="header">
-    <div class="title-section">
-      <h1>Gestion des Rôles</h1>
-      <p class="subtitle">Gérez les rôles et leurs permissions d'accès</p>
-    </div>
-    <div class="actions">
-      <button class="btn btn-secondary" (click)="openPermissionForm()" *ngIf="authService.hasPermission('create roles')">
-        Nouvelle Permission
-      </button>
-      <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create roles')">
-        Nouveau Rôle
-      </button>
-      <app-auto-refresh-control pageKey="roles" (refresh)="loadData()" />
-    </div>
-  </div>
 
   <!-- Erreur de chargement : bandeau au-dessus, le tableau reste en place (3d) -->
   <app-error-banner

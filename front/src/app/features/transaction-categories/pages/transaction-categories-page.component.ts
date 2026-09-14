@@ -1,7 +1,8 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TransactionCategoryService } from '../data-access/transaction-category.service';
 import { TransactionCategory, TransactionCategoryType } from '../models/transaction-category.model';
 import { AuthService } from '../../../core/services/auth.service';
@@ -14,7 +15,9 @@ import { IconComponent } from '../../../shared/icon/icon.component';
   templateUrl: './transaction-categories-page.component.html',
   styleUrl: './transaction-categories-page.component.scss',
 })
-export class TransactionCategoriesPageComponent implements OnInit {
+export class TransactionCategoriesPageComponent implements OnInit, OnDestroy {
+  private readonly pageHeader = inject(PageHeaderService);
+  private readonly router = inject(Router);
   activeType = signal<TransactionCategoryType>('expense');
   categories = signal<TransactionCategory[]>([]);
   loading = signal(false);
@@ -34,7 +37,20 @@ export class TransactionCategoriesPageComponent implements OnInit {
     public authService: AuthService,
   ) {}
 
+  /** Titre, actions et rechargement vont dans la barre de la coquille (P1). */
+  private publishHeader(): void {
+    this.pageHeader.setActions([
+      { label: 'Retour aux paramètres', run: () => this.router.navigate(['/settings']), variant: 'secondary' },
+    ]);
+    this.pageHeader.set('Catégories de transactions');
+  }
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
+
   ngOnInit(): void {
+    this.publishHeader();
     this.loadCategories();
   }
 

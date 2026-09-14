@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ClientFormComponent } from '../components/client-form/client-form.component';
@@ -16,7 +17,8 @@ import { IconComponent } from '../../../shared/icon/icon.component';
   templateUrl: './clients-page.component.html',
   styleUrl: './clients-page.component.scss',
 })
-export class ClientsPageComponent implements OnInit {
+export class ClientsPageComponent implements OnInit, OnDestroy {
+  private readonly pageHeader = inject(PageHeaderService);
   private readonly clientService = inject(ClientService);
   private readonly router = inject(Router);
   private readonly cityService = inject(CityService);
@@ -54,7 +56,22 @@ export class ClientsPageComponent implements OnInit {
     this.clients().filter((client) => client.is_active === false).length,
   );
 
+  /** Titre, actions et rechargement vont dans la barre de la coquille (P1). */
+  private publishHeader(): void {
+    this.pageHeader.set('Clients');
+    this.pageHeader.setActions([
+      { label: 'Nouveau client', run: () => this.openCreateModal(), variant: 'primary' },
+      { label: 'Exporter Excel', run: () => this.exportClients(), variant: 'secondary', disabled: () => this.isExporting() },
+    ]);
+    this.pageHeader.setRefresh('clients', () => this.loadClients());
+  }
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
+
   ngOnInit(): void {
+    this.publishHeader();
     this.cityService.getCities().subscribe(cities => this.cities.set(cities));
     this.loadClients();
   }

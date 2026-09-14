@@ -1,4 +1,5 @@
-import { Component, OnInit, signal, computed, inject, DestroyRef } from '@angular/core';
+import { Component, DestroyRef, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -25,7 +26,8 @@ import { IconComponent } from '../../../shared/icon/icon.component';
   templateUrl: './service-orders.component.html',
   styleUrls: ['./service-orders.component.scss'],
 })
-export class ServiceOrdersComponent implements OnInit {
+export class ServiceOrdersComponent implements OnInit, OnDestroy {
+  private readonly pageHeader = inject(PageHeaderService);
   readonly SERVICE_ORDER_STATUSES = SERVICE_ORDER_STATUSES;
   readonly SERVICE_ORDER_STATUS_LABELS = SERVICE_ORDER_STATUS_LABELS;
   readonly PAYMENT_STATUSES = PAYMENT_STATUSES;
@@ -69,7 +71,21 @@ export class ServiceOrdersComponent implements OnInit {
     public authService: AuthService,
   ) {}
 
+  /** Titre, actions et rechargement vont dans la barre de la coquille (P1). */
+  private publishHeader(): void {
+    this.pageHeader.set('Service Auto');
+    this.pageHeader.setActions([
+      { label: 'Nouvelle intervention', run: () => this.openAddForm(), variant: 'primary', hidden: () => !this.authService.hasPermission('create service-orders') },
+      { label: 'Exporter Excel', run: () => this.exportOrders(), variant: 'secondary', disabled: () => this.isExporting() },
+    ]);
+  }
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
+
   ngOnInit(): void {
+    this.publishHeader();
     this.loadFilters();
     this.loadData();
     this.loadSummary();

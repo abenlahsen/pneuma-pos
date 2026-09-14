@@ -1,4 +1,5 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
@@ -21,7 +22,8 @@ import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-b
   templateUrl: './users-page.component.html',
   styleUrls: ['./users-page.component.scss'],
 })
-export class UsersPageComponent implements OnInit {
+export class UsersPageComponent implements OnInit, OnDestroy {
+  private readonly pageHeader = inject(PageHeaderService);
   users = signal<ManagedUser[]>([]);
   roles = signal<Role[]>([]);
   loading = signal(false);
@@ -51,7 +53,21 @@ export class UsersPageComponent implements OnInit {
     public authService: AuthService,
   ) {}
 
+  /** Titre, actions et rechargement vont dans la barre de la coquille (P1). */
+  private publishHeader(): void {
+    this.pageHeader.set('Utilisateurs');
+    this.pageHeader.setActions([
+      { label: 'Nouvel utilisateur', run: () => this.openAddForm(), variant: 'primary', hidden: () => !this.authService.hasPermission('create users') },
+    ]);
+    this.pageHeader.setRefresh('users', () => this.loadData());
+  }
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
+
   ngOnInit(): void {
+    this.publishHeader();
     this.loadData();
     this.loadRoles();
   }

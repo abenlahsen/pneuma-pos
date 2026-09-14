@@ -4,15 +4,25 @@
      (position fixed) — d'où le :host { display: contents }. -->
 
 @if (authService.isAuthenticated()) {
-  <div class="app-shell" [class.app-shell--fixed]="isFixedShell()">
+  <div class="app-shell" [class.app-shell--flush]="isFlushShell()">
     <app-rail />
 
     <!-- Barre supérieure : une seule ligne, à la hauteur du bandeau de marque
-         du rail. Elle n'existe que sur les écrans qui la demandent — les
-         autres rendent encore leur propre en-tête. -->
-    @if (isFixedShell()) {
+         du rail. Elle porte le titre de section, le fil d'Ariane des fiches et
+         les actions primaires de la page — c'est ce qui remplace les vingt-six
+         gros titres qui la doublonnaient. Le portail client a la sienne. -->
+    @if (!isPortal()) {
       <header class="topbar">
         <span class="topbar__title">{{ pageHeader.title() }}</span>
+
+        @if (pageHeader.breadcrumb().length) {
+          <span class="topbar__crumbs">
+            @for (part of pageHeader.breadcrumb(); track $index; let last = $last) {
+              <span [class.topbar__crumb--last]="last">{{ part }}</span>
+              @if (!last) { <span class="topbar__sep">/</span> }
+            }
+          </span>
+        }
 
         @if (pageHeader.subtitle()) {
           <span class="topbar__sub">
@@ -22,8 +32,20 @@
 
         <span class="topbar__date num">{{ today | titlecase }}</span>
 
-        @if (authService.hasPermission('create sales')) {
-          <a class="btn btn-primary" [routerLink]="['/sales']" [queryParams]="{ new: 1 }">Nouvelle vente</a>
+        @if (pageHeader.refresh(); as r) {
+          <app-auto-refresh-control [pageKey]="r.key" (refresh)="r.run()" />
+        }
+
+        @for (action of orderedActions(); track action.label) {
+          @if (!action.hidden || !action.hidden()) {
+            <button
+              type="button"
+              class="btn"
+              [class.btn-primary]="action.variant !== 'secondary'"
+              [class.btn-secondary]="action.variant === 'secondary'"
+              [disabled]="!!action.disabled && action.disabled()"
+              (click)="action.run()">{{ action.label }}</button>
+          }
         }
       </header>
     }

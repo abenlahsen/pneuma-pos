@@ -1,4 +1,5 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -16,7 +17,8 @@ import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-contro
   templateUrl: './products-page.component.html',
   styleUrls: ['./products-page.component.scss'],
 })
-export class ProductsPageComponent implements OnInit {
+export class ProductsPageComponent implements OnInit, OnDestroy {
+  private readonly pageHeader = inject(PageHeaderService);
   products = signal<Product[]>([]);
   filterOptions = signal<ProductFilters>({
     brands: [],
@@ -53,7 +55,21 @@ export class ProductsPageComponent implements OnInit {
     private route: ActivatedRoute,
   ) {}
 
+  /** Titre, actions et rechargement vont dans la barre de la coquille (P1). */
+  private publishHeader(): void {
+    this.pageHeader.set('Produits');
+    this.pageHeader.setActions([
+      { label: 'Nouveau produit', run: () => this.openAddForm(), variant: 'primary', hidden: () => !this.authService.hasPermission('create products') },
+    ]);
+    this.pageHeader.setRefresh('products', () => this.loadData());
+  }
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
+
   ngOnInit(): void {
+    this.publishHeader();
     this.loadFilters();
     const search = this.route.snapshot.queryParamMap.get('search');
     if (search) {

@@ -1,16 +1,4 @@
 <div class="page-container">
-  <div class="header">
-    <div class="title-section">
-      <h1>Cash Flow</h1>
-      <p class="subtitle">Gérez vos revenus et dépenses</p>
-    </div>
-    <div class="actions">
-      <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create cash-flow')">
-        + Nouvelle Transaction
-      </button>
-      <app-auto-refresh-control pageKey="cash-flow" (refresh)="loadData()" />
-    </div>
-  </div>
 
   <div class="summary-cards">
     <div class="card summary-card income">

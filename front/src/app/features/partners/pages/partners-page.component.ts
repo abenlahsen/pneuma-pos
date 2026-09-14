@@ -1,4 +1,5 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PartnerService } from '../data-access/partner.service';
@@ -21,7 +22,8 @@ import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-b
   templateUrl: './partners-page.component.html',
   styleUrls: ['./partners-page.component.scss'],
 })
-export class PartnersPageComponent implements OnInit {
+export class PartnersPageComponent implements OnInit, OnDestroy {
+  private readonly pageHeader = inject(PageHeaderService);
   partners = signal<Partner[]>([]);
   currentPage = signal(1);
   lastPage = signal(1);
@@ -41,7 +43,21 @@ export class PartnersPageComponent implements OnInit {
 
   constructor(private service: PartnerService, public authService: AuthService, private cityService: CityService) {}
 
+  /** Titre, actions et rechargement vont dans la barre de la coquille (P1). */
+  private publishHeader(): void {
+    this.pageHeader.set('Partenaires');
+    this.pageHeader.setActions([
+      { label: 'Nouveau partenaire', run: () => this.openAddForm(), variant: 'primary', hidden: () => !this.authService.hasPermission('create partners') },
+    ]);
+    this.pageHeader.setRefresh('partners', () => this.loadData());
+  }
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
+
   ngOnInit(): void {
+    this.publishHeader();
     this.cityService.getCities().subscribe(cities => this.cities.set(cities));
     this.loadData();
   }

@@ -1,3 +1,7 @@
+// Ces composants deposent leur titre dans la barre de la coquille via
+// `inject(PageHeaderService)` : leur construction doit desormais avoir lieu
+// dans un contexte d'injection.
+import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { HrChargesPageComponent } from './hr-charges-page.component';
 import { HrCharge, HrChargeFilters, HrChargeSummary } from '../models/hr-charge.model';
@@ -40,7 +44,7 @@ describe('HrChargesPageComponent', () => {
       update: vi.fn(),
       delete: vi.fn(),
     };
-    comp = new HrChargesPageComponent(mockService as any, mockAuthService as any);
+    comp = TestBed.runInInjectionContext(() => new HrChargesPageComponent(mockService as any, mockAuthService as any));
   });
 
   describe('ngOnInit', () => {
