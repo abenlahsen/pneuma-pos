@@ -32,6 +32,7 @@ class UpdateProductRequest extends FormRequest
                         return $query->whereNotNull('reference');
                     }),
             ],
+            'alert_threshold' => 'nullable|integer|min:0',
             'type' => 'required|in:tyre,part,service',
             'brand_id' => 'nullable|exists:brands,id',
             'description' => 'nullable|string',

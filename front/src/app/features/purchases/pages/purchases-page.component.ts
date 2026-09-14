@@ -1,11 +1,11 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, ParamMap } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PurchaseService } from '../data-access/purchase.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Purchase, PurchaseSummary } from '../models/purchase.model';
+import { Purchase, PurchaseItem, PurchaseSummary } from '../models/purchase.model';
 import { PURCHASE_STATUSES, PURCHASE_STATUS_LABELS, PURCHASE_STATUS_TRANSITIONS, PAYMENT_STATUSES, PAYMENT_STATUS_LABELS, PurchaseStatus } from '../../../core/constants/status.constants';
 import { PAYMENT_METHODS, paymentMethodClass } from '../../../core/constants/payment-method.constants';
 import { PurchaseFormComponent } from '../purchase-form/purchase-form.component';
@@ -71,6 +71,8 @@ export class PurchasesPageComponent implements OnInit {
 
   isFormOpen = signal<boolean>(false);
   selectedPurchase = signal<Purchase | null>(null);
+  /** Amorce du brouillon quand le formulaire vient de l'accueil. */
+  formPreset = signal<{ supplier_id: number | null; reference: string | null; items: PurchaseItem[] } | null>(null);
   detailPurchase = signal<Purchase | null>(null);
   paymentPurchase = signal<Purchase | null>(null);
   returnPurchase = signal<Purchase | null>(null);
@@ -85,6 +87,10 @@ export class PurchasesPageComponent implements OnInit {
     total: this.total,
     loading: this.loading,
     goToPage: (page) => this.goToPage(page),
+    // Sans tri explicite, le serveur renvoie du plus récent au plus ancien
+    // (date DESC, id DESC) : « Suivant » doit alors remonter vers le numéro
+    // supérieur, pas descendre la table.
+    descending: computed(() => this.sortBy() === '' || this.sortDirection() === 'desc'),
   });
 
   readonly pages = computed(() => {
@@ -102,6 +108,13 @@ export class PurchasesPageComponent implements OnInit {
     this.route.queryParamMap
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(params => {
+        // `new=1` : brouillon pre-rempli, venu de la file « Produits sous
+        // seuil » de l'accueil. Rien n'est enregistre tant qu'on ne valide pas.
+        if (params.get('new') === '1') {
+          this.openPrefilledForm(params);
+          return;
+        }
+
         const id = Number(params.get('id'));
         if (!Number.isFinite(id) || id <= 0) return;
 
@@ -281,6 +294,27 @@ export class PurchasesPageComponent implements OnInit {
 
   openForm(purchase: Purchase | null = null): void {
     this.selectedPurchase.set(purchase);
+    this.formPreset.set(null);
+    this.isFormOpen.set(true);
+  }
+
+  /** Brouillon amorcé par l'accueil : une ligne déjà remplie, rien d'enregistré. */
+  private openPrefilledForm(params: ParamMap): void {
+    const productId = Number(params.get('product_id'));
+    const stockId = Number(params.get('stock_id'));
+    if (!Number.isFinite(productId) || productId <= 0) return;
+
+    this.selectedPurchase.set(null);
+    this.formPreset.set({
+      supplier_id: Number(params.get('supplier_id')) || null,
+      reference: params.get('reference'),
+      items: [{
+        product_id: productId,
+        stock_id: Number.isFinite(stockId) ? stockId : 0,
+        quantity: Math.max(1, Number(params.get('quantity')) || 1),
+        unit_price: Number(params.get('unit_price')) || 0,
+      }],
+    });
     this.isFormOpen.set(true);
   }
 

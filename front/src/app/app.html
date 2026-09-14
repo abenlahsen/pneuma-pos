@@ -4,8 +4,29 @@
      (position fixed) — d'où le :host { display: contents }. -->
 
 @if (authService.isAuthenticated()) {
-  <div class="app-shell">
+  <div class="app-shell" [class.app-shell--fixed]="isFixedShell()">
     <app-rail />
+
+    <!-- Barre supérieure : une seule ligne, à la hauteur du bandeau de marque
+         du rail. Elle n'existe que sur les écrans qui la demandent — les
+         autres rendent encore leur propre en-tête. -->
+    @if (isFixedShell()) {
+      <header class="topbar">
+        <span class="topbar__title">{{ pageHeader.title() }}</span>
+
+        @if (pageHeader.subtitle()) {
+          <span class="topbar__sub">
+            {{ pageHeader.subtitle() }}<strong>{{ pageHeader.subtitleStrong() }}</strong>
+          </span>
+        }
+
+        <span class="topbar__date num">{{ today | titlecase }}</span>
+
+        @if (authService.hasPermission('create sales')) {
+          <a class="btn btn-primary" [routerLink]="['/sales']" [queryParams]="{ new: 1 }">Nouvelle vente</a>
+        }
+      </header>
+    }
 
     <main class="main-content">
       <div class="main-content__inner">

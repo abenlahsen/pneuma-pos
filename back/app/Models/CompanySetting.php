@@ -34,6 +34,7 @@ class CompanySetting extends Model
         'navbar_variant',
         'content_width',
         'prime_threshold',
+        'default_alert_threshold',
     ];
 
     protected $appends = [

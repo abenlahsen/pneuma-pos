@@ -23,6 +23,10 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     canActivate: [authGuard],
+    // `shell: 'fixed'` : barre superieure + zone de contenu a hauteur fixe qui
+    // defile d'elle-meme. Reserve a l'accueil pour l'instant — les autres
+    // ecrans rendent encore leur propre en-tete (taches 5 et 12).
+    data: { shell: 'fixed' },
     loadComponent: () =>
       import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
   },

@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import { Purchase, PurchasePayload } from '../../../core/models/purchase.model';
+import { Purchase, PurchaseItem, PurchasePayload } from '../../../core/models/purchase.model';
 import { PURCHASE_STATUSES, PURCHASE_STATUS_LABELS, PURCHASE_STATUS_TRANSITIONS, PAYMENT_STATUSES, PAYMENT_STATUS_LABELS, PurchaseStatus } from '../../../core/constants/status.constants';
 import { Product } from '../../../core/models/product.model';
 import { ProductDetailComponent } from '../../products/product-detail/product-detail.component';
@@ -13,6 +13,7 @@ import { Supplier } from '../../suppliers/models/supplier.model';
 import { Stock } from '../../../core/models/stock.model';
 import { StockService } from '../../../core/services/stock.service';
 import { IconComponent } from '../../../shared/icon/icon.component';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-purchase-form',
@@ -34,6 +35,19 @@ export class PurchaseFormComponent implements OnInit {
   }
 
   @Input() purchase: Purchase | null = null;
+
+  /**
+   * Brouillon amorce par l'exterieur — aujourd'hui la file « Produits sous
+   * seuil » de l'accueil. Distinct de `purchase`, qui signifie « mode edition »
+   * et ferait partir la sauvegarde sur un PUT vers un achat inexistant.
+   */
+  @Input() preset: {
+    supplier_id?: number | null;
+    /** Référence de l'article, pour le retrouver et le nommer dans la ligne. */
+    reference?: string | null;
+    items?: PurchaseItem[];
+  } | null = null;
+
   @Output() save = new EventEmitter<void>();
   @Output() cancel = new EventEmitter<void>();
 
@@ -41,6 +55,7 @@ export class PurchaseFormComponent implements OnInit {
   private productService = inject(ProductService);
   private supplierService = inject(SupplierService);
   private stockService = inject(StockService);
+  private authService = inject(AuthService);
 
   loading = signal<boolean>(false);
   suppliers = signal<Supplier[]>([]);
@@ -83,6 +98,7 @@ export class PurchaseFormComponent implements OnInit {
     if (!this.purchase) {
       this.loadSuppliers();
       this.loadCommercials();
+      this.applyPreset();
       return;
     }
 
@@ -110,6 +126,56 @@ export class PurchaseFormComponent implements OnInit {
         this.loadingForm.set(false);
       },
       error: () => this.loadingForm.set(false),
+    });
+  }
+
+  /**
+   * Amorce le brouillon : fournisseur habituel et ligne deja remplie. Le
+   * commercial est pose sur l'utilisateur courant, faute de quoi l'API refuse
+   * l'enregistrement — `commercial_id` y est requis.
+   *
+   * Rien n'est enregistre : un achat cree decremente aussitot le stock, donc
+   * le « brouillon » reste un formulaire tant que l'utilisateur n'a pas validé.
+   */
+  private applyPreset(): void {
+    if (!this.preset) return;
+
+    if (this.preset.supplier_id) {
+      this.formData.supplier_id = this.preset.supplier_id;
+    }
+
+    if (this.preset.items?.length) {
+      this.formData.items = [...this.preset.items];
+      this.nameFirstPresetItem();
+    }
+
+    this.formData.commercial_id ??= this.authService.user()?.id ?? null;
+  }
+
+  /**
+   * Retrouve l'article et son lot pour que la ligne porte un nom au lieu de
+   * « Produit #3 ». On passe par la recherche existante — l'API n'expose pas
+   * de lecture unitaire d'un produit.
+   */
+  private nameFirstPresetItem(): void {
+    const item = this.formData.items[0];
+    const reference = this.preset?.reference;
+    if (!item || !reference) return;
+
+    this.productService.getProducts({ search: reference, per_page: '5' }).subscribe({
+      next: (res) => {
+        const product = res.data.find((p) => p.id === item.product_id);
+        if (product) (item as any).linkedProduct = product;
+      },
+    });
+
+    if (!item.stock_id) return;
+
+    this.stockService.getStocks({ product_id: String(item.product_id), per_page: '50' }).subscribe({
+      next: (res) => {
+        const stock = res.data.find((s) => s.id === item.stock_id);
+        if (stock) (item as any).stock = stock;
+      },
     });
   }
 

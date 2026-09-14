@@ -2,6 +2,8 @@
 
 namespace App\Domain\Dashboard;
 
+use App\Models\CompanySetting;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\ServiceOrder;
 use App\Models\User;
@@ -40,11 +42,98 @@ class WorkQueueService
             $queues['to_invoice'] = $this->ordersToInvoice($user);
         }
 
+        // `view stock` au singulier : c'est le nom de la permission du depot.
+        if ($user->can('view stock')) {
+            $queues['low_stock'] = $this->lowStock();
+        }
+
         if ($user->can('view sales')) {
             $queues['figures'] = $this->figures($user);
         }
 
         return $queues;
+    }
+
+    /**
+     * Produits sous seuil. La seule file sans proprietaire : un article qui
+     * manque ne manque a personne en particulier, c'est une information
+     * d'agence et le premier qui la voit commande. D'ou la portee `shared`,
+     * qui n'est pas « tout voir » mais « rien a filtrer ».
+     *
+     * Deux niveaux de seuil : celui de l'article, sinon le defaut d'agence.
+     * Quand aucun des deux n'est pose, l'article n'est pas surveille — mieux
+     * vaut une file vide qu'une file qui remonte tout le catalogue.
+     *
+     * @return array<string, mixed>
+     */
+    private function lowStock(): array
+    {
+        $default = (int) CompanySetting::query()->value('default_alert_threshold');
+
+        $query = Product::query()
+            ->with('tyre')
+            ->whereIn('type', ['tyre', 'part'])
+            ->withSum('stocks as stock_quantity', 'quantity')
+            ->havingRaw('COALESCE(products.alert_threshold, ?) > 0', [$default])
+            ->havingRaw('COALESCE(stock_quantity, 0) <= COALESCE(products.alert_threshold, ?)', [$default]);
+
+        $total = (clone $query)->get()->count();
+
+        $rows = $query
+            ->orderByRaw('COALESCE(stock_quantity, 0) ASC')
+            ->limit(self::LIMIT)
+            ->get()
+            ->map(function (Product $product) use ($default) {
+                // De quoi pre-remplir l'achat sans second aller-retour.
+                $lot = $product->stocks()->orderByDesc('quantity')->first();
+                $last = $this->lastPurchaseOf($product->id);
+
+                return [
+                    'product_id' => $product->id,
+                    'reference' => $product->reference,
+                    'dimension' => $this->dimensionOf($product),
+                    'stock' => (int) ($product->stock_quantity ?? 0),
+                    'threshold' => (int) ($product->alert_threshold ?? $default),
+                    'stock_id' => $lot?->id,
+                    'unit_price' => round((float) ($last->unit_price ?? $lot?->purchase_price ?? 0), 2),
+                    'supplier_id' => $last->supplier_id ?? null,
+                ];
+            })
+            ->values();
+
+        return [
+            'scope' => 'shared',
+            'count' => $total,
+            // Une file de stock compte des articles, elle n'a pas de montant.
+            'total' => null,
+            'rows' => $rows,
+        ];
+    }
+
+    /**
+     * Dernier achat non annule de l'article : il donne le fournisseur habituel
+     * et le dernier prix paye. Aucune relation produit→fournisseur n'existe,
+     * c'est le seul chemin.
+     */
+    private function lastPurchaseOf(int $productId): ?object
+    {
+        return DB::table('purchase_items')
+            ->join('purchases', 'purchases.id', '=', 'purchase_items.purchase_id')
+            ->where('purchase_items.product_id', $productId)
+            ->whereNot('purchases.status', 'ANNULE')
+            ->orderByDesc('purchases.date')
+            ->orderByDesc('purchases.id')
+            ->select('purchase_items.unit_price', 'purchases.supplier_id')
+            ->first();
+    }
+
+    private function dimensionOf(Product $product): ?string
+    {
+        $tyre = $product->tyre;
+
+        return $tyre?->tire_width
+            ? $tyre->tire_width.'/'.$tyre->tire_height.'R'.$tyre->tire_diameter
+            : null;
     }
 
     /**
@@ -64,7 +153,7 @@ class WorkQueueService
             ->when(! $all, fn (Builder $q) => $q->where('commercial_id', $user->id));
 
         $today = (clone $base())->whereDate('date', today())
-            ->selectRaw('COUNT(*) AS sales, COALESCE(SUM(total_sale), 0) AS revenue')
+            ->selectRaw('COUNT(*) AS sales, COALESCE(SUM(total_sale), 0) AS revenue, COALESCE(SUM(margin), 0) AS margin')
             ->first();
 
         $month = (clone $base())->whereBetween('date', [today()->startOfMonth(), today()->endOfMonth()])
@@ -76,6 +165,8 @@ class WorkQueueService
             'today' => [
                 'sales' => (int) $today->sales,
                 'revenue' => round((float) $today->revenue, 2),
+                'margin' => round((float) $today->margin, 2),
+                'open_orders' => $this->openOrders($user, $all),
             ],
             'month' => [
                 'revenue' => round((float) $month->revenue, 2),
@@ -83,12 +174,30 @@ class WorkQueueService
                 // Le commercial se situe sans voir personne ; le gerant a deja
                 // le nominatif, la moyenne ne lui apprendrait rien.
                 'agency_average' => $all ? null : $this->agencyAverage(),
+                // L'objectif est personnel : un gerant n'en a pas, la barre ne
+                // le concerne pas.
+                'target' => $all ? null : $this->targetOf($user),
             ],
             // Le classement nominatif n'existe que pour le gerant : un
             // commercial ne classe pas ses collegues.
             'ranking' => $all ? $this->ranking() : [],
             'trend' => $all ? $this->trend() : [],
         ];
+    }
+
+    /** Ordres de service encore ouverts, sous la meme portee que le reste. */
+    private function openOrders(User $user, bool $all): int
+    {
+        return ServiceOrder::query()
+            ->where('status', 'EN COURS')
+            ->when(! $all, fn (Builder $q) => $q->where('commercial_id', $user->id))
+            ->count();
+    }
+
+    /** Objectif mensuel de CA, quand il a ete fixe. */
+    private function targetOf(User $user): ?float
+    {
+        return $user->monthly_target === null ? null : round((float) $user->monthly_target, 2);
     }
 
     /**
@@ -145,26 +254,37 @@ class WorkQueueService
     }
 
     /**
-     * Tendance : chiffre d'affaires quotidien sur 30 jours. Les jours sans
-     * vente sont absents — la courbe les traite comme des creux, pas comme
-     * des trous.
+     * Tendance : chiffre d'affaires quotidien sur 30 jours, toujours 30 valeurs.
+     *
+     * Les jours sans vente sont completes a zero. C'est le point de la lecture
+     * en barres : un jour creux doit se voir. Une courbe lissee reliait le
+     * dernier jour vendu au suivant et effacait le trou.
      *
      * @return array<int, array<string, mixed>>
      */
     private function trend(): array
     {
-        return DB::table('sales')
+        $start = today()->subDays(29);
+
+        $byDay = DB::table('sales')
             ->whereNot('status', 'ANNULE')
-            ->where('date', '>=', today()->subDays(29))
+            ->where('date', '>=', $start)
             ->groupBy('date')
-            ->orderBy('date')
             ->selectRaw('date, COALESCE(SUM(total_sale), 0) AS revenue')
-            ->get()
-            ->map(fn ($row) => [
-                'date' => (string) $row->date,
-                'revenue' => round((float) $row->revenue, 2),
-            ])
-            ->all();
+            ->pluck('revenue', 'date');
+
+        $days = [];
+
+        for ($day = $start->copy(); $day->lte(today()); $day->addDay()) {
+            $key = $day->toDateString();
+
+            $days[] = [
+                'date' => $key,
+                'revenue' => round((float) ($byDay[$key] ?? 0), 2),
+            ];
+        }
+
+        return $days;
     }
 
     /**
@@ -184,6 +304,9 @@ class WorkQueueService
         $this->scope($query, $user, $all);
 
         $total = (clone $query)->count();
+        // Le montant suit la meme portee que les lignes : un total d'agence
+        // affiche a un commercial trahirait ce que les lignes lui cachent.
+        $amount = (clone $query)->sum('total_sale');
 
         $rows = $query
             ->orderBy('date')
@@ -203,6 +326,7 @@ class WorkQueueService
         return [
             'scope' => $all ? 'all' : 'own',
             'count' => $total,
+            'total' => round((float) $amount, 2),
             'rows' => $rows,
         ];
     }
@@ -225,6 +349,7 @@ class WorkQueueService
         $this->scope($query, $user, $all);
 
         $total = (clone $query)->count();
+        $amount = (clone $query)->sum('net_amount');
 
         $rows = $query
             ->orderBy('date')
@@ -243,6 +368,7 @@ class WorkQueueService
         return [
             'scope' => $all ? 'all' : 'own',
             'count' => $total,
+            'total' => round((float) $amount, 2),
             'rows' => $rows,
         ];
     }

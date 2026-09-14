@@ -28,6 +28,7 @@ class StoreProductRequest extends FormRequest
                 'max:255',
                 Rule::unique('products', 'reference')->where(fn ($query) => $query->whereNotNull('reference')),
             ],
+            'alert_threshold' => 'nullable|integer|min:0',
             'type' => 'required|in:tyre,part,service',
             'brand_id' => 'nullable|exists:brands,id',
             'description' => 'nullable|string',

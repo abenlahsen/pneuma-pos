@@ -1,45 +1,36 @@
 /* ─── Accueil : liste de travail (5a/5b) ───────────────────────────────────
    Aucune valeur en dur : tout vient de src/app/_tokens.scss. */
 
-.page-container {
-  max-width: 100%;
-  margin: 1.5rem auto;
-  padding: 0 1.25rem;
+:host { display: block; height: 100%; min-height: 0; }
+
+/* Deux colonnes : le travail à gauche, les chiffres à droite. 300 px pour un
+   commercial, 340 px pour un gérant — il y gagne la tendance et le classement. */
+.home {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  overflow: hidden;
+
+  &--agency { grid-template-columns: minmax(0, 1fr) 340px; }
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: var(--sp-4);
-  margin-bottom: var(--sp-6);
-  flex-wrap: wrap;
-
-  h1 {
-    margin: 0;
-    font-size: var(--fs-h1);
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    line-height: 1.15;
-    color: var(--text);
-  }
-
-  .subtitle {
-    margin: var(--sp-1) 0 0;
-    font-size: var(--fs-cell);
-    color: var(--text-muted);
-  }
-}
-
+/* La colonne des files défile seule. */
 .queues {
+  padding: var(--sp-5);
   display: flex;
   flex-direction: column;
-  gap: var(--sp-6);
+  gap: 14px;
+  overflow: auto;
+  min-width: 0;
 }
 
-/* Une file = un cadre. Celle des impayés porte l'accent : c'est la seule
-   qui coûte de l'argent tant qu'on ne s'en occupe pas. */
+/* Une file = un cadre. Celle des impayés porte l'accent : c'est la seule qui
+   coûte de l'argent tant qu'on ne s'en occupe pas. */
 .queue {
+  /* `flex: none` est indispensable : une carte en `overflow: hidden` perd son
+     minimum automatique et se fait comprimer en rognant ses lignes. */
+  flex: none;
   border: 2px solid var(--text);
   border-radius: var(--radius-lg);
   background: var(--surface);
@@ -51,85 +42,84 @@
     .queue-head {
       background: var(--accent-100);
       border-bottom-color: var(--accent-700);
+      color: var(--accent-800);
     }
 
-    .queue-title h2,
-    .queue-count { color: var(--accent-700); }
+    .queue-count { border-color: var(--accent-700); color: var(--accent-700); }
+    .queue-scope { border-color: var(--accent-300); color: var(--accent-800); }
   }
 }
 
 .queue-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-4);
-  padding: 12px 16px;
-  background: var(--surface-sunk);
+  gap: 10px;
+  padding: 13px 16px 11px;
   border-bottom: 2px solid var(--text);
-}
-
-.queue-title {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  min-width: 0;
+  background: var(--surface-sunk);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
 
   h2 {
     margin: 0;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text);
+    font-size: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
   }
 }
 
+/* Le compte ET le montant : on arbitre entre les files sans les ouvrir. */
 .queue-count {
-  font-size: var(--fs-h3);
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  color: var(--text);
-}
-
-/* Le badge de portée : l'utilisateur doit savoir ce qu'il regarde. */
-.queue-scope {
   flex-shrink: 0;
   padding: 4px 8px;
   border: 2px solid var(--neutral-300);
   border-radius: var(--radius);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--neutral-800);
+  font-variant-numeric: tabular-nums;
 }
 
-.queue-rows {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.queue-scope {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 3px 7px;
+  border: 1px solid var(--neutral-400);
+  border-radius: var(--radius);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--neutral-700);
 }
 
-.queue-row {
+/* ─── Une ligne de travail ──────────────────────────────────────────────── */
+.task {
   display: flex;
   align-items: center;
-  gap: var(--sp-4);
+  gap: 14px;
   padding: 12px 16px;
-  border-bottom: 1px solid var(--divider);
+  border-bottom: 1px solid var(--neutral-300);
 
-  &:last-child { border-bottom: none; }
+  &:last-of-type { border-bottom: none; }
   &:hover { background: var(--neutral-100); }
 }
 
-.row-main {
+.t-main {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   min-width: 0;
   flex: 1;
 }
 
-.row-title {
+.t-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.t-title {
   font-size: var(--fs-cell);
   font-weight: 600;
   color: var(--text);
@@ -138,26 +128,60 @@
   white-space: nowrap;
 }
 
-.row-meta {
+/* L'attribution : c'est elle qui rend la relance déléguable. */
+.t-own {
+  flex-shrink: 0;
+  padding: 3px 7px;
+  border-radius: var(--radius);
+  background: var(--neutral-200);
+  color: var(--neutral-800);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.t-sub {
   font-size: 12px;
   color: var(--text-muted);
 }
 
-.row-overdue {
-  margin-left: var(--sp-2);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--accent-700);
-}
-
-.row-amount {
+.t-amt {
   flex-shrink: 0;
-  font-size: var(--fs-cell);
+  font-size: 15px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--text);
 }
+
+.t-late {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border: 2px solid var(--accent-700);
+  border-radius: var(--radius);
+  color: var(--accent-700);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Le stock manquant se lit comme un chiffre, pas comme un montant. */
+.t-stock {
+  flex-shrink: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-1);
+}
+
+.t-stock-n {
+  font-size: 17px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-700);
+}
+
+.t-stock-l { font-size: 12px; color: var(--text-muted); }
 
 .queue-more {
   margin: 0;
@@ -168,6 +192,7 @@
 }
 
 .btn {
+  flex-shrink: 0;
   padding: 7px 13px;
   border: 2px solid transparent;
   border-radius: var(--radius);
@@ -178,111 +203,157 @@
   white-space: nowrap;
   transition: background 0.12s, border-color 0.12s;
 
-  &.btn-sm { padding: 5px 11px; font-size: 12px; }
-
   &.btn-primary {
     background: var(--accent);
     border-color: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
 
     &:hover { background: var(--accent-600); border-color: var(--accent-600); }
   }
-}
 
-@media (max-width: 768px) {
-  .queue-row {
-    flex-wrap: wrap;
-    row-gap: var(--sp-2);
+  &.btn-secondary {
+    background: var(--surface);
+    border-color: var(--neutral-400);
+    color: var(--text);
+
+    &:hover { background: var(--neutral-100); border-color: var(--text); }
   }
-
-  .row-main { flex-basis: 100%; }
 }
 
-/* ─── Deux colonnes (5a/5b) ────────────────────────────────────────────────
-   Les files a gauche, les chiffres a droite. 300 px pour un commercial,
-   340 px pour un gerant — il y gagne la tendance et le classement. */
-
-.home-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
-  gap: var(--sp-6);
-  align-items: start;
-
-  &--agency { grid-template-columns: minmax(0, 1fr) 340px; }
-}
-
-.home-figures {
-  position: sticky;
-  top: var(--sp-4);
+/* ─── Colonne des chiffres ──────────────────────────────────────────────── */
+.side {
+  border-left: 2px solid var(--text);
+  background: var(--surface);
   display: flex;
   flex-direction: column;
-  gap: var(--sp-4);
+  overflow: hidden;
   min-width: 0;
 }
 
-.figure-card {
+.side-head {
+  flex-shrink: 0;
   display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-  padding: 16px;
-  border: 2px solid var(--text);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  color: var(--text);
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  border-bottom: 2px solid var(--text);
 }
 
-.figure-label {
+.side-label {
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-weight: var(--fw-label);
+  letter-spacing: var(--ls-label);
   text-transform: uppercase;
   color: var(--text-muted);
 }
 
-.figure-value {
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
+/* Une liste, pas des cadrans : quatre chiffres se lisent en colonne. */
+.side-list {
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-1) var(--sp-4) var(--sp-4);
+  overflow: auto;
 }
 
-.figure-unit {
+.side-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-3);
+  padding: 13px 0;
+  border-bottom: 1px solid var(--neutral-300);
+
+  &:last-child { border-bottom: none; }
+}
+
+.side-k { font-size: 13px; color: var(--neutral-800); }
+
+.side-v {
   font-size: 15px;
-  font-weight: 600;
-  color: var(--text-muted);
+  font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
 }
 
-.figure-note {
-  font-size: 12px;
-  color: var(--text-muted);
+.side-block {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: 14px var(--sp-4);
+  border-bottom: 2px solid var(--text);
+
+  &--grow {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    border-bottom: none;
+  }
 }
 
-/* Etre sous la moyenne se lit sans lire le chiffre. */
-.figure-compare {
-  span { font-weight: 700; color: var(--accent-700); }
-  span.above { color: var(--ok-text); }
+.side-note { font-size: 11px; color: var(--text-muted); line-height: 1.45; }
+
+/* ─── Tendance : trente barres ──────────────────────────────────────────── */
+.trend {
+  position: relative;
+  height: 64px;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
 }
 
-.trend-svg {
-  display: block;
-  width: 100%;
-  height: 60px;
-  margin-top: var(--sp-1);
+.trend-bar {
+  flex: 1;
+  min-width: 0;
+  /* Un jour sans vente garde un trait au ras du sol : à 0 % il serait
+     invisible, et un creux redeviendrait un trou — exactement ce qu'on
+     reprochait à la courbe. */
+  min-height: 2px;
+  background: var(--neutral-400);
+  border-radius: 2px 2px 0 0;
+
+  /* Aujourd'hui porte l'accent : c'est le jour qu'on regarde. */
+  &--today { background: var(--accent); }
 }
 
-/* ─── Classement du mois ───────────────────────────────────────────────── */
-.rank-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 2px var(--sp-2);
+/* Le trait de moyenne, à sa hauteur réelle. */
+.trend-avg {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--neutral-600);
+  z-index: 2;
+}
+
+/* ─── Classement du mois ────────────────────────────────────────────────── */
+.rank {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
   padding: var(--sp-2) 0;
-  border-top: 1px solid var(--divider);
+}
 
-  &:first-of-type { border-top: none; }
+.rank-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+/* Le rang : on lit une place avant de lire un chiffre. */
+.rank-n {
+  width: 14px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--neutral-700);
 }
 
 .rank-name {
+  flex: 1;
+  min-width: 0;
   font-size: 13px;
   font-weight: 600;
   overflow: hidden;
@@ -291,14 +362,21 @@
 }
 
 .rank-value {
+  flex-shrink: 0;
   font-size: 13px;
   font-weight: 700;
-  text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
+.rank-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 24px;
+}
+
 .rank-bar {
-  grid-column: 1 / -1;
+  flex: 1;
   display: flex;
   height: 8px;
   background: var(--neutral-200);
@@ -308,22 +386,69 @@
 
 .rank-fill { background: var(--text); }
 
-/* L'impaye ferme la barre : un CA eleve avec un impaye eleve n'est pas
-   une performance, et ca doit se voir sans lire le chiffre. */
-.rank-unpaid {
-  background: var(--accent-700);
-  margin-left: -1px;
-}
+/* L'impayé ferme la barre : un CA élevé avec un impayé élevé n'est pas une
+   performance, et ça doit se voir sans lire le chiffre. */
+.rank-unpaid { background: var(--accent-700); }
 
 .rank-note {
-  grid-column: 1 / -1;
+  flex-shrink: 0;
   font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
   color: var(--accent-700);
 }
 
-@media (max-width: 1024px) {
-  .home-layout,
-  .home-layout--agency { grid-template-columns: minmax(0, 1fr); }
+/* ─── Mon mois ──────────────────────────────────────────────────────────── */
+.side-foot {
+  flex-shrink: 0;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  border-top: 2px solid var(--neutral-300);
+}
 
-  .home-figures { position: static; }
+.side-big {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.side-unit { font-size: 15px; font-weight: 600; color: var(--text-muted); }
+
+.target {
+  height: 8px;
+  border-radius: var(--radius);
+  background: var(--neutral-300);
+  overflow: hidden;
+}
+
+.target-fill { display: block; height: 100%; background: var(--accent); }
+
+/* Être sous la moyenne se lit sans lire le chiffre. */
+.compare {
+  font-weight: 700;
+  color: var(--accent-700);
+
+  &.above { color: var(--ok-text); }
+}
+
+@media (max-width: 1024px) {
+  .home,
+  .home--agency {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+    overflow: visible;
+  }
+
+  .queues { overflow: visible; }
+
+  .side {
+    border-left: none;
+    border-top: 2px solid var(--text);
+  }
 }

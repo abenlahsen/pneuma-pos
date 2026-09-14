@@ -15,14 +15,11 @@ class UserController extends Controller
      */
     private $userService;
 
-    /**
-     * @param UserService $userService
-     */
     public function __construct(UserService $userService)
     {
         $this->userService = $userService;
     }
-    
+
     public function index(Request $request): JsonResponse
     {
         $query = User::with('roles');
@@ -31,7 +28,7 @@ class UserController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -67,6 +64,7 @@ class UserController extends Controller
             'phone' => 'nullable|string|max:255',
             'commission_rate' => 'nullable|numeric|min:0|max:100',
             'prime_per_tyre' => 'nullable|numeric|min:0',
+            'monthly_target' => 'nullable|numeric|min:0',
             'role' => 'nullable|string|exists:roles,name',
         ]);
 
@@ -88,11 +86,12 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
+            'email' => 'required|email|unique:users,email,'.$user->id,
             'password' => 'nullable|string|min:8|confirmed',
             'phone' => 'nullable|string|max:255',
             'commission_rate' => 'nullable|numeric|min:0|max:100',
             'prime_per_tyre' => 'nullable|numeric|min:0',
+            'monthly_target' => 'nullable|numeric|min:0',
             'role' => 'nullable|string|exists:roles,name',
         ]);
 

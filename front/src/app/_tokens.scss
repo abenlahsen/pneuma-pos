@@ -19,6 +19,8 @@
   /* Accent. Pour garder le rouge PNEU.Ma actuel, remplacer par #ff2d37
      et décaler la rampe d'un pas (voir README, § « Choisir l'accent »). */
   --accent:        #ec3013;
+  /* Texte posé sur l'accent : reste blanc dans les deux thèmes. */
+  --on-accent:     #ffffff;
 
   /* — rampe accent : 100–300 fonds teintés, 500 base, 700+ texte — */
   --accent-100: #fff2ef;
@@ -67,6 +69,7 @@
   --sp-2: 8px;
   --sp-3: 12px;
   --sp-4: 16px;
+  --sp-5: 20px;
   --sp-6: 24px;
   --sp-8: 32px;
 

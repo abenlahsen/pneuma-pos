@@ -65,7 +65,7 @@
 
     &-primary {
       background: var(--accent);
-      color: #fff;
+      color: var(--on-accent);
       box-shadow: 0 1px 3px var(--accent-200);
       &:hover { filter: brightness(0.93); box-shadow: var(--shadow-sm); }
     }
@@ -137,7 +137,7 @@
 
   .btn-filter {
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     padding: 0.45rem 0.9rem;
     border-radius: var(--radius);
     border: none;
@@ -276,7 +276,7 @@
 
       .search-btn {
         background: var(--accent);
-        color: #fff;
+        color: var(--on-accent);
         border: none;
         border-radius: var(--radius);
         padding: 0.4rem 1rem;
@@ -665,7 +665,7 @@
     transition: all 0.15s;
 
     &:hover:not(:disabled) { background: var(--surface-sunk); border-color: var(--neutral-400); }
-    &.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 700; box-shadow: var(--shadow-sm); }
+    &.active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 700; box-shadow: var(--shadow-sm); }
     &:disabled { opacity: 0.4; cursor: not-allowed; }
   }
 

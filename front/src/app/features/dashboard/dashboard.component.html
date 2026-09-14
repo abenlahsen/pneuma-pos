@@ -1,42 +1,25 @@
-<div class="page-container">
+<!-- Accueil (`5a`/`5b`). Aucune en-tete de page : la barre superieure de la
+     coquille porte le salut et le compte, et la page commence par la premiere
+     file. Deux colonnes — le travail a gauche, les chiffres a droite. -->
+<div class="home" [class.home--agency]="isAgencyScope()">
 
-  <div class="header">
-    <div class="title-section">
-      <h1>Bonjour{{ user()?.name ? ', ' + user()!.name : '' }}</h1>
-      <p class="subtitle">
-        @if (pendingTotal() > 0) {
-          {{ pendingTotal() }} ligne{{ pendingTotal() > 1 ? 's' : '' }} en attente de votre part.
-        } @else {
-          Rien ne vous attend. Bonne journée.
-        }
-      </p>
-    </div>
-    <div class="actions">
-      <app-auto-refresh-control pageKey="dashboard" (refresh)="loadQueues()" />
-    </div>
-  </div>
-
-  <app-error-banner
-    *ngIf="loadError()"
-    title="Impossible de charger vos files de travail"
-    [detail]="loadError()"
-    (retry)="loadQueues()" />
-
-  <!-- Deux colonnes (5a/5b) : les files a gauche, les chiffres a droite.
-       300 px pour un commercial, 340 px pour un gerant — il y gagne la
-       tendance et le classement nominatif. -->
-  <div class="home-layout" [class.home-layout--agency]="isAgencyScope()">
   <div class="queues">
 
-    <!-- ── Impayés à relancer ─────────────────────────────────────────── -->
+    <app-error-banner
+      *ngIf="loadError()"
+      title="Impossible de charger vos files de travail"
+      [detail]="loadError()"
+      (retry)="loadQueues()" />
+
+    <!-- ── Impayés ─────────────────────────────────────────────────────── -->
     <section class="queue queue--alert" *ngIf="queues().unpaid as unpaid">
       <header class="queue-head">
-        <div class="queue-title">
-          <app-icon name="pending" [size]="18" />
-          <h2>Impayés à relancer</h2>
-          <span class="queue-count">{{ unpaid.count }}</span>
-        </div>
-        <span class="queue-scope">{{ scopeLabel(unpaid.scope) }}</span>
+        <h2>{{ queueTitle('unpaid', unpaid.scope) }}</h2>
+        <!-- Le compte ET le montant : on arbitre entre les files sans les ouvrir. -->
+        <span class="queue-count">
+          {{ unpaid.count }}<span *ngIf="unpaid.total"> · {{ unpaid.total | number:'1.0-0' }} DH</span>
+        </span>
+        <span class="queue-scope">{{ scopeLabel('unpaid', unpaid.scope) }}</span>
       </header>
 
       <app-empty-state
@@ -45,35 +28,34 @@
         title="Aucun impayé"
         message="Rien à relancer sur votre périmètre." />
 
-      <ul class="queue-rows" *ngIf="unpaid.rows.length">
-        <li class="queue-row" *ngFor="let row of unpaid.rows">
-          <div class="row-main">
-            <span class="row-title">{{ row.client || 'Client non lié' }}</span>
-            <span class="row-meta">
-              Vente n° {{ row.id }} · {{ row.date | date:'dd/MM/yyyy' }}
-              <ng-container *ngIf="row.commercial && unpaid.scope === 'all'"> · {{ row.commercial }}</ng-container>
-              <span class="row-overdue" *ngIf="isOverdue(row.date)">en retard</span>
-            </span>
-          </div>
-          <span class="row-amount">{{ row.amount | number:'1.2-2' }} DH</span>
-          <button type="button" class="btn btn-primary btn-sm" (click)="openSale(row.id)">Encaisser</button>
-        </li>
-      </ul>
+      <div class="task" *ngFor="let row of unpaid.rows">
+        <span class="t-main">
+          <span class="t-head">
+            <span class="t-title">{{ row.client || 'Client non lié' }}</span>
+            <span class="t-own" *ngIf="row.commercial && unpaid.scope === 'all'">{{ row.commercial }}</span>
+          </span>
+          <span class="t-sub">Vente n° {{ row.id }} · {{ row.date | date:'dd/MM/yyyy' }}</span>
+        </span>
+        <span class="t-amt">{{ row.amount | number:'1.2-2' }} DH</span>
+        <span class="t-late" *ngIf="isOverdue(row.date)">en retard</span>
+        <button type="button" class="btn btn-secondary" (click)="openSale(row.id)">
+          {{ actionLabel('unpaid', unpaid.scope) }}
+        </button>
+      </div>
 
       <p class="queue-more" *ngIf="unpaid.count > unpaid.rows.length">
         et {{ unpaid.count - unpaid.rows.length }} autre{{ unpaid.count - unpaid.rows.length > 1 ? 's' : '' }}
       </p>
     </section>
 
-    <!-- ── Ordres terminés à facturer ─────────────────────────────────── -->
+    <!-- ── Ordres à facturer ───────────────────────────────────────────── -->
     <section class="queue" *ngIf="queues().to_invoice as toInvoice">
       <header class="queue-head">
-        <div class="queue-title">
-          <app-icon name="service" [size]="18" />
-          <h2>Ordres terminés à facturer</h2>
-          <span class="queue-count">{{ toInvoice.count }}</span>
-        </div>
-        <span class="queue-scope">{{ scopeLabel(toInvoice.scope) }}</span>
+        <h2>{{ queueTitle('to_invoice', toInvoice.scope) }}</h2>
+        <span class="queue-count">
+          {{ toInvoice.count }}<span *ngIf="toInvoice.total"> · {{ toInvoice.total | number:'1.0-0' }} DH</span>
+        </span>
+        <span class="queue-scope">{{ scopeLabel('to_invoice', toInvoice.scope) }}</span>
       </header>
 
       <app-empty-state
@@ -82,23 +64,59 @@
         title="Aucun ordre en attente"
         message="Tout ce qui est terminé a été facturé." />
 
-      <ul class="queue-rows" *ngIf="toInvoice.rows.length">
-        <li class="queue-row" *ngFor="let row of toInvoice.rows">
-          <div class="row-main">
-            <span class="row-title">{{ row.vehicle || 'Véhicule non renseigné' }}</span>
-            <span class="row-meta">
-              Ordre n° {{ row.id }} · {{ row.date | date:'dd/MM/yyyy' }}
-              <ng-container *ngIf="row.commercial && toInvoice.scope === 'all'"> · {{ row.commercial }}</ng-container>
-              <span class="row-overdue" *ngIf="isOverdue(row.date, 7)">en retard</span>
-            </span>
-          </div>
-          <span class="row-amount">{{ row.amount | number:'1.2-2' }} DH</span>
-          <button type="button" class="btn btn-primary btn-sm" (click)="openServiceOrder(row.id)">Facturer</button>
-        </li>
-      </ul>
+      <div class="task" *ngFor="let row of toInvoice.rows">
+        <span class="t-main">
+          <span class="t-head">
+            <span class="t-title">Ordre n° {{ row.id }} · {{ row.vehicle || 'Véhicule non renseigné' }}</span>
+            <span class="t-own" *ngIf="row.commercial && toInvoice.scope === 'all'">{{ row.commercial }}</span>
+          </span>
+          <span class="t-sub">Terminé le {{ row.date | date:'dd/MM/yyyy' }}</span>
+        </span>
+        <span class="t-amt">{{ row.amount | number:'1.2-2' }} DH</span>
+        <span class="t-late" *ngIf="isOverdue(row.date, 7)">en retard</span>
+        <button type="button" class="btn btn-primary" (click)="openServiceOrder(row.id)">
+          {{ actionLabel('to_invoice', toInvoice.scope) }}
+        </button>
+      </div>
 
       <p class="queue-more" *ngIf="toInvoice.count > toInvoice.rows.length">
         et {{ toInvoice.count - toInvoice.rows.length }} autre{{ toInvoice.count - toInvoice.rows.length > 1 ? 's' : '' }}
+      </p>
+    </section>
+
+    <!-- ── Produits sous seuil : la seule file sans propriétaire ───────── -->
+    <section class="queue" *ngIf="queues().low_stock as lowStock">
+      <header class="queue-head">
+        <h2>{{ queueTitle('low_stock', lowStock.scope) }}</h2>
+        <!-- Une file de stock compte des articles : pas de montant. -->
+        <span class="queue-count">{{ lowStock.count }}</span>
+        <span class="queue-scope">{{ scopeLabel('low_stock', lowStock.scope) }}</span>
+      </header>
+
+      <app-empty-state
+        *ngIf="!loading() && lowStock.rows.length === 0"
+        icon="check"
+        title="Aucun article sous seuil"
+        message="Tout ce qui est surveillé est au-dessus de son seuil." />
+
+      <div class="task" *ngFor="let row of lowStock.rows">
+        <span class="t-main">
+          <span class="t-title">{{ row.reference || 'Article n° ' + row.product_id }}</span>
+          <span class="t-sub">
+            <ng-container *ngIf="row.dimension">{{ row.dimension }} · </ng-container>seuil {{ row.threshold }}
+          </span>
+        </span>
+        <span class="t-stock">
+          <span class="t-stock-n">{{ row.stock }}</span>
+          <span class="t-stock-l">en stock</span>
+        </span>
+        <button type="button" class="btn btn-secondary" (click)="order(row)">
+          {{ actionLabel('low_stock', lowStock.scope) }}
+        </button>
+      </div>
+
+      <p class="queue-more" *ngIf="lowStock.count > lowStock.rows.length">
+        et {{ lowStock.count - lowStock.rows.length }} autre{{ lowStock.count - lowStock.rows.length > 1 ? 's' : '' }}
       </p>
     </section>
 
@@ -109,58 +127,94 @@
       message="Votre compte n'a accès à aucune des files de l'accueil. Voyez avec un administrateur si ce n'est pas attendu." />
   </div>
 
-  <!-- Colonne des chiffres -->
-  <aside class="home-figures" *ngIf="figures() as f">
-    <section class="figure-card">
-      <span class="figure-label">
+  <!-- ── Colonne des chiffres ──────────────────────────────────────────── -->
+  <aside class="side" *ngIf="figures() as f">
+
+    <div class="side-head">
+      <span class="side-label">
         {{ isAgencyScope() ? 'Agence · aujourd’hui' : 'Mes chiffres · aujourd’hui' }}
       </span>
-      <span class="figure-value">{{ f.today.revenue | number:'1.2-2' }}<span class="figure-unit"> DH</span></span>
-      <span class="figure-note">
-        {{ f.today.sales }} vente{{ f.today.sales > 1 ? 's' : '' }} depuis ce matin
+      <app-auto-refresh-control pageKey="dashboard" (refresh)="loadQueues()" />
+    </div>
+
+    <!-- Une liste, pas des cadrans : quatre chiffres se lisent en colonne. -->
+    <div class="side-list">
+      <span class="side-row">
+        <span class="side-k">Chiffre d’affaires</span>
+        <span class="side-v">{{ f.today.revenue | number:'1.0-0' }} DH</span>
       </span>
-    </section>
-
-    <section class="figure-card">
-      <span class="figure-label">{{ isAgencyScope() ? 'CA du mois' : 'Mon mois' }}</span>
-      <span class="figure-value">{{ f.month.revenue | number:'1.2-2' }}<span class="figure-unit"> DH</span></span>
-      <span class="figure-note">Marge {{ f.month.margin | number:'1.2-2' }} DH</span>
-
-      <!-- Se situer sans voir personne : la moyenne par commercial, jamais un
-           nom. Absente quand elle laisserait deduire le chiffre d'un collegue. -->
-      <span class="figure-note figure-compare" *ngIf="f.month.agency_average as avg">
-        Moyenne agence {{ avg | number:'1.0-0' }} DH ·
-        <span [class.above]="f.month.revenue >= avg">
-          {{ f.month.revenue >= avg ? 'au-dessus' : 'en dessous' }}
-        </span>
+      <span class="side-row">
+        <span class="side-k">Ventes</span>
+        <span class="side-v">{{ f.today.sales }}</span>
       </span>
-    </section>
+      <span class="side-row">
+        <span class="side-k">Marge nette</span>
+        <span class="side-v">{{ f.today.margin | number:'1.0-0' }} DH</span>
+      </span>
+      <span class="side-row">
+        <span class="side-k">Ordres ouverts</span>
+        <span class="side-v">{{ f.today.open_orders }}</span>
+      </span>
+    </div>
 
-    <!-- Tendance : reservee a la portee agence. -->
-    <section class="figure-card" *ngIf="isAgencyScope() && f.trend.length > 1">
-      <span class="figure-label">30 derniers jours</span>
-      <svg class="trend-svg" viewBox="0 0 300 60" preserveAspectRatio="none" role="img"
-           aria-label="Chiffre d’affaires quotidien sur trente jours">
-        <polyline [attr.points]="trendPolyline()" fill="none" stroke="currentColor" stroke-width="2"
-                  vector-effect="non-scaling-stroke" />
-      </svg>
-    </section>
-
-    <!-- Classement nominatif : un commercial ne classe pas ses collegues. -->
-    <section class="figure-card" *ngIf="isAgencyScope() && f.ranking.length">
-      <span class="figure-label">Classement du mois</span>
-      <div class="rank-row" *ngFor="let row of f.ranking">
-        <span class="rank-name">{{ row.name }}</span>
-        <div class="rank-bar">
-          <span class="rank-fill" [style.width.%]="rankingPct(row.revenue)"></span>
-          <!-- L'impaye en fin de barre : un CA eleve avec un impaye eleve
-               n'est pas une performance. -->
-          <span class="rank-unpaid" *ngIf="row.unpaid > 0" [style.width.%]="rankingPct(row.unpaid)"></span>
-        </div>
-        <span class="rank-value">{{ row.revenue | number:'1.0-0' }} DH</span>
-        <span class="rank-note" *ngIf="row.unpaid > 0">dont {{ row.unpaid | number:'1.0-0' }} impayé</span>
+    <!-- Tendance : trente barres. Une courbe lissée cache les jours creux. -->
+    <div class="side-block" *ngIf="isAgencyScope() && trendBars().length > 1">
+      <span class="side-label">30 derniers jours</span>
+      <div class="trend" role="img" aria-label="Chiffre d’affaires quotidien sur trente jours">
+        <span class="trend-avg" [style.bottom.%]="trendAveragePct()"></span>
+        <span class="trend-bar" *ngFor="let bar of trendBars()"
+              [class.trend-bar--today]="bar.isToday"
+              [style.height.%]="bar.height"></span>
       </div>
-    </section>
+      <span class="side-note">Moyenne {{ trendAverage() | number:'1.0-0' }} DH / jour</span>
+    </div>
+
+    <!-- Classement nominatif : un commercial ne classe pas ses collègues. -->
+    <div class="side-block side-block--grow" *ngIf="isAgencyScope() && f.ranking.length">
+      <span class="side-label">Classement du mois</span>
+      <div class="rank" *ngFor="let row of f.ranking; let i = index">
+        <span class="rank-head">
+          <span class="rank-n">{{ i + 1 }}</span>
+          <span class="rank-name">{{ row.name }}</span>
+          <span class="rank-value">{{ row.revenue | number:'1.0-0' }} DH</span>
+        </span>
+        <span class="rank-line">
+          <span class="rank-bar">
+            <span class="rank-fill" [style.width.%]="rankingPct(row.revenue)"></span>
+            <!-- L'impayé ferme la barre : un CA élevé avec un impayé élevé
+                 n'est pas une performance. -->
+            <span class="rank-unpaid" *ngIf="row.unpaid > 0" [style.width.%]="rankingPct(row.unpaid)"></span>
+          </span>
+          <span class="rank-note" *ngIf="row.unpaid > 0">{{ row.unpaid | number:'1.0-0' }} impayé</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- ── Mon mois : où j'en suis ─────────────────────────────────────── -->
+    <div class="side-foot" *ngIf="!isAgencyScope()">
+      <span class="side-label">Mon mois</span>
+      <span class="side-big">{{ f.month.revenue | number:'1.0-0' }}<span class="side-unit"> DH</span></span>
+
+      <div class="target" *ngIf="targetPct() as pct">
+        <span class="target-fill" [style.width.%]="pct"></span>
+      </div>
+
+      <span class="side-note">
+        <ng-container *ngIf="targetPct() as pct">{{ pct | number:'1.0-0' }} % de l’objectif mensuel. </ng-container>
+        <!-- Se situer sans voir personne : la moyenne, jamais un nom. -->
+        <ng-container *ngIf="f.month.agency_average as avg">
+          Moyenne agence {{ avg | number:'1.0-0' }} DH ·
+          <span class="compare" [class.above]="f.month.revenue >= avg">
+            {{ f.month.revenue >= avg ? 'au-dessus' : 'en dessous' }}
+          </span>
+        </ng-container>
+      </span>
+    </div>
+
+    <div class="side-foot" *ngIf="isAgencyScope()">
+      <span class="side-label">CA du mois</span>
+      <span class="side-big">{{ f.month.revenue | number:'1.0-0' }}<span class="side-unit"> DH</span></span>
+      <span class="side-note">Marge {{ f.month.margin | number:'1.0-0' }} DH</span>
+    </div>
   </aside>
-  </div><!-- /home-layout -->
 </div>

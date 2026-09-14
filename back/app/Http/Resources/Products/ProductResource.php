@@ -18,6 +18,7 @@ class ProductResource extends JsonResource
             'id' => $this->id,
             'profile' => $this->profile,
             'reference' => $this->reference,
+            'alert_threshold' => $this->alert_threshold,
             'type' => $this->type,
             'brand_id' => $this->brand_id,
             'description' => $this->description,

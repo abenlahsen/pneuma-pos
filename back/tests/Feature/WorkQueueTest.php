@@ -3,8 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\Client;
+use App\Models\CompanySetting;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\ServiceOrder;
+use App\Models\Stock;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Laravel\Sanctum\Sanctum;
@@ -31,7 +34,7 @@ class WorkQueueTest extends TestCase
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         foreach ([
-            'view sales', 'view service-orders',
+            'view sales', 'view service-orders', 'view stock',
             'view unpaid.all', 'view service-orders.all',
         ] as $permission) {
             Permission::findOrCreate($permission, 'web');
@@ -240,5 +243,136 @@ class WorkQueueTest extends TestCase
         $response->assertOk();
         $this->assertArrayHasKey('unpaid', $response->json());
         $this->assertArrayNotHasKey('to_invoice', $response->json());
+    }
+
+    // ── Montant par file : on arbitre entre les files sans les ouvrir ───────
+
+    /**
+     * Le montant suit la meme portee que les lignes. Un total d'agence affiche
+     * a un commercial trahirait exactement ce que les lignes lui cachent.
+     */
+    public function test_the_queue_total_follows_the_same_scope_as_the_rows(): void
+    {
+        $colleague = User::query()->create([
+            'name' => 'Collegue',
+            'email' => fake()->unique()->safeEmail(),
+            'password' => 'password',
+            'phone' => '0600000009',
+            'commission_rate' => 0,
+            'must_change_password' => false,
+        ]);
+
+        $commercial = $this->makeUser(['view sales']);
+        $this->makeUnpaidSale($commercial, $this->makeClient('Client D'), 1500);
+        $this->makeUnpaidSale($commercial, $this->makeClient('Client E'), 2500);
+        $this->makeUnpaidSale($colleague, $this->makeClient('Client F'), 9000);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $response->assertOk()->assertJsonPath('unpaid.count', 2);
+        $this->assertEqualsWithDelta(4000, $response->json('unpaid.total'), 0.01);
+    }
+
+    // ── Produits sous seuil : la seule file sans proprietaire ───────────────
+
+    private function makeProductWithStock(int $quantity, ?int $threshold = null): Product
+    {
+        $product = Product::query()->create([
+            'reference' => 'REF-'.fake()->unique()->numerify('#####'),
+            'type' => 'tyre',
+            'alert_threshold' => $threshold,
+            'is_active' => true,
+        ]);
+
+        Stock::query()->create([
+            'product_id' => $product->id,
+            'quantity' => $quantity,
+            'purchase_price' => 500,
+        ]);
+
+        return $product;
+    }
+
+    public function test_the_low_stock_queue_is_shared_and_never_filtered_by_owner(): void
+    {
+        $this->makeUser(['view sales', 'view stock']);
+        CompanySetting::query()->create(['company_name' => 'Test', 'default_alert_threshold' => 4]);
+
+        $low = $this->makeProductWithStock(2);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $response->assertOk()->assertJsonPath('low_stock.scope', 'shared');
+        $this->assertContains($low->id, collect($response->json('low_stock.rows'))->pluck('product_id')->all());
+        // Une file de stock n'a pas de montant : c'est un compte d'articles.
+        $this->assertNull($response->json('low_stock.total'));
+    }
+
+    public function test_an_article_above_its_threshold_stays_out_of_the_queue(): void
+    {
+        $this->makeUser(['view sales', 'view stock']);
+        CompanySetting::query()->create(['company_name' => 'Test', 'default_alert_threshold' => 4]);
+
+        $plenty = $this->makeProductWithStock(20);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $this->assertNotContains($plenty->id, collect($response->json('low_stock.rows'))->pluck('product_id')->all());
+    }
+
+    /** Le seuil de l'article l'emporte sur le defaut d'agence. */
+    public function test_the_article_threshold_overrides_the_agency_default(): void
+    {
+        $this->makeUser(['view sales', 'view stock']);
+        CompanySetting::query()->create(['company_name' => 'Test', 'default_alert_threshold' => 2]);
+
+        // 6 en stock : au-dessus du defaut d'agence, mais sous son propre seuil.
+        $rare = $this->makeProductWithStock(6, 10);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $this->assertContains($rare->id, collect($response->json('low_stock.rows'))->pluck('product_id')->all());
+    }
+
+    /** Sans aucun seuil configure, la file reste vide plutot que de tout remonter. */
+    public function test_nothing_is_monitored_when_no_threshold_is_configured(): void
+    {
+        $this->makeUser(['view sales', 'view stock']);
+        CompanySetting::query()->create(['company_name' => 'Test', 'default_alert_threshold' => null]);
+
+        $this->makeProductWithStock(0);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $this->assertSame(0, $response->json('low_stock.count'));
+    }
+
+    public function test_the_low_stock_queue_is_absent_without_the_stock_permission(): void
+    {
+        $this->makeUser(['view sales']);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $response->assertOk();
+        $this->assertArrayNotHasKey('low_stock', $response->json());
+    }
+
+    /** « Commander » doit ouvrir un achat pre-rempli : la ligne porte de quoi le faire. */
+    public function test_a_low_stock_row_carries_what_the_purchase_draft_needs(): void
+    {
+        $this->makeUser(['view sales', 'view stock']);
+        CompanySetting::query()->create(['company_name' => 'Test', 'default_alert_threshold' => 4]);
+
+        $product = $this->makeProductWithStock(1);
+
+        $response = $this->getJson('/api/work-queues');
+        $row = collect($response->json('low_stock.rows'))->firstWhere('product_id', $product->id);
+
+        $this->assertNotNull($row);
+        $this->assertSame(1, $row['stock']);
+        $this->assertSame(4, $row['threshold']);
+        $this->assertNotNull($row['stock_id'], 'Une ligne d\'achat exige un lot.');
+        $this->assertArrayHasKey('unit_price', $row);
+        $this->assertArrayHasKey('supplier_id', $row);
     }
 }

@@ -292,7 +292,7 @@
       <button aria-label="Fermer" class="btn-icon" (click)="closeForm()"><app-icon name="close" /></button>
     </div>
     <div class="modal-body p-0">
-      <app-purchase-form [purchase]="selectedPurchase()" (save)="onFormSaved()" (cancel)="closeForm()"></app-purchase-form>
+      <app-purchase-form [purchase]="selectedPurchase()" [preset]="formPreset()" (save)="onFormSaved()" (cancel)="closeForm()"></app-purchase-form>
     </div>
   </div>
 </div>

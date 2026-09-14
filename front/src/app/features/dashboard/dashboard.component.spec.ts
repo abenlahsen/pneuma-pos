@@ -32,13 +32,44 @@ describe('DashboardComponent — liste de travail (5a/5b)', () => {
 
   it('additionne les lignes en attente de toutes les files', () => {
     getWorkQueues.mockReturnValue(of({
-      unpaid: { scope: 'own', count: 3, rows: [] },
-      to_invoice: { scope: 'own', count: 2, rows: [] },
+      unpaid: { scope: 'own', count: 3, total: 900, rows: [] },
+      to_invoice: { scope: 'own', count: 2, total: 400, rows: [] },
+      low_stock: { scope: 'shared', count: 6, total: null, rows: [] },
     }));
     comp = build();
     comp.ngOnInit();
 
-    expect(comp.pendingTotal()).toBe(5);
+    expect(comp.pendingTotal()).toBe(11);
+    expect(comp.hasAnyQueue()).toBe(true);
+  });
+
+  // ── « Commander » doit faire gagner du temps, pas seulement signaler ──────
+  describe('commander', () => {
+    it('ouvre un achat pre-rempli avec de quoi remonter au seuil', () => {
+      comp = build();
+      comp.order({
+        product_id: 42, reference: 'REF-1', dimension: null,
+        stock: 2, threshold: 6, stock_id: 7, unit_price: 480, supplier_id: 3,
+      });
+
+      expect(navigate).toHaveBeenCalledWith(['/achats'], {
+        queryParams: {
+          new: 1, product_id: 42, reference: 'REF-1', stock_id: 7, quantity: 4,
+          unit_price: 480, supplier_id: 3,
+        },
+      });
+    });
+
+    // Stock au-dessus du seuil (cas limite) : on commande au moins une unite.
+    it('ne propose jamais une quantite nulle', () => {
+      comp = build();
+      comp.order({
+        product_id: 42, reference: null, dimension: null,
+        stock: 9, threshold: 6, stock_id: 7, unit_price: 0, supplier_id: null,
+      });
+
+      expect(navigate.mock.calls[0][1].queryParams.quantity).toBe(1);
+    });
   });
 
   it("n'affiche aucune file quand le serveur n'en renvoie aucune", () => {
@@ -50,12 +81,73 @@ describe('DashboardComponent — liste de travail (5a/5b)', () => {
     expect(comp.pendingTotal()).toBe(0);
   });
 
-  it('nomme la portee telle que le serveur la rapporte', () => {
-    comp = build();
+  // ── Badges de portee : le possessif doit dire DE QUOI on est proprietaire ──
+  describe('scopeLabel', () => {
+    it('nomme les clients pour les files qui en ont', () => {
+      comp = build();
 
-    expect(comp.scopeLabel('own')).toBe('Mes lignes');
-    expect(comp.scopeLabel('all')).toBe('Toute l’agence');
-    expect(comp.scopeLabel(undefined)).toBe('Mes lignes');
+      expect(comp.scopeLabel('unpaid', 'own')).toBe('Mes clients');
+      expect(comp.scopeLabel('unpaid', 'all')).toBe('Toutes agences');
+      expect(comp.scopeLabel('to_invoice', 'own')).toBe('Mes clients');
+      expect(comp.scopeLabel('to_invoice', 'all')).toBe('Toutes agences');
+    });
+
+    // Le stock n'a pas de proprietaire : le premier qui le voit commande.
+    it('marque la file stock comme partagee quelle que soit la portee', () => {
+      comp = build();
+
+      expect(comp.scopeLabel('low_stock', 'shared')).toBe('Agence · partagé');
+      expect(comp.scopeLabel('low_stock', 'all')).toBe('Agence · partagé');
+    });
+  });
+
+  describe('queueTitle', () => {
+    it('porte le possessif en portee personnelle', () => {
+      comp = build();
+
+      expect(comp.queueTitle('unpaid', 'own')).toBe('Mes impayés');
+      expect(comp.queueTitle('to_invoice', 'own')).toBe('Mes ordres à facturer');
+    });
+
+    it('le retire en portee agence', () => {
+      comp = build();
+
+      expect(comp.queueTitle('unpaid', 'all')).toBe('Impayés à relancer');
+      expect(comp.queueTitle('to_invoice', 'all')).toBe('Ordres terminés à facturer');
+    });
+
+    it('nomme la file stock sans possessif', () => {
+      comp = build();
+
+      expect(comp.queueTitle('low_stock', 'shared')).toBe('Produits sous seuil');
+    });
+  });
+
+  // ── Libelles d'action : le gerant distribue le travail, il ne le fait pas ──
+  describe('actionLabel', () => {
+    it('bascule de Relancer a Assigner selon la portee', () => {
+      comp = build();
+
+      expect(comp.actionLabel('unpaid', 'own')).toBe('Relancer');
+      expect(comp.actionLabel('unpaid', 'all')).toBe('Assigner');
+    });
+
+    it('ne bascule pas ce qui ne se delegue pas', () => {
+      comp = build();
+
+      expect(comp.actionLabel('to_invoice', 'own')).toBe('Facturer');
+      expect(comp.actionLabel('to_invoice', 'all')).toBe('Facturer');
+      expect(comp.actionLabel('low_stock', 'shared')).toBe('Commander');
+    });
+
+    // Primaire pour Facturer seul : c'est la seule action qui conclut.
+    it('reserve le bouton primaire a Facturer', () => {
+      comp = build();
+
+      expect(comp.isPrimaryAction('to_invoice')).toBe(true);
+      expect(comp.isPrimaryAction('unpaid')).toBe(false);
+      expect(comp.isPrimaryAction('low_stock')).toBe(false);
+    });
   });
 
   it('ouvre la vente pour encaisser un impaye', () => {
@@ -95,15 +187,15 @@ describe('DashboardComponent — liste de travail (5a/5b)', () => {
   describe('colonne des chiffres (5a/5b)', () => {
     const figures = (over: Record<string, unknown> = {}) => ({
       scope: 'own',
-      today: { sales: 2, revenue: 4800 },
-      month: { revenue: 113545, margin: 12842 },
+      today: { sales: 2, revenue: 4800, margin: 900, open_orders: 3 },
+      month: { revenue: 113545, margin: 12842, agency_average: null, target: null },
       ranking: [],
       trend: [],
       ...over,
     });
 
     it("n'affiche pas de chiffres quand le serveur n'en renvoie pas", () => {
-      getWorkQueues.mockReturnValue(of({ unpaid: { scope: 'own', count: 0, rows: [] } }));
+      getWorkQueues.mockReturnValue(of({ unpaid: { scope: 'own', count: 0, total: 0, rows: [] } }));
       comp = build();
       comp.ngOnInit();
 
@@ -159,22 +251,90 @@ describe('DashboardComponent — liste de travail (5a/5b)', () => {
       expect(comp.rankingPct(0)).toBe(0);
     });
 
-    it('trace la tendance des trente jours', () => {
+    // ── Tendance en barres : trente jours, creux compris ───────────────────
+    it('dimensionne chaque barre sur le plus haut jour', () => {
       getWorkQueues.mockReturnValue(of({
         figures: figures({
           scope: 'all',
           trend: [
-            { date: '2026-09-01', revenue: 1000 },
-            { date: '2026-09-02', revenue: 3000 },
+            { date: '2026-09-01', revenue: 0 },
+            { date: '2026-09-02', revenue: 2000 },
+            { date: '2026-09-03', revenue: 1000 },
           ],
         }),
       }));
       comp = build();
       comp.ngOnInit();
 
-      expect(comp.trendPolyline()).toContain(' ');
-      expect(comp.trendPolyline().split(' ')).toHaveLength(2);
+      const bars = comp.trendBars();
+      expect(bars).toHaveLength(3);
+      // Un jour creux garde une barre visible : c'est ce qu'une courbe cachait.
+      expect(bars[0].height).toBe(0);
+      expect(bars[1].height).toBe(100);
+      expect(bars[2].height).toBe(50);
+      // Le dernier jour porte l'accent : c'est aujourd'hui.
+      expect(bars[2].isToday).toBe(true);
+      expect(bars[1].isToday).toBe(false);
     });
+
+    it('place le trait de moyenne a sa hauteur reelle', () => {
+      getWorkQueues.mockReturnValue(of({
+        figures: figures({
+          scope: 'all',
+          trend: [
+            { date: '2026-09-01', revenue: 0 },
+            { date: '2026-09-02', revenue: 2000 },
+          ],
+        }),
+      }));
+      comp = build();
+      comp.ngOnInit();
+
+      expect(comp.trendAverage()).toBe(1000);
+      expect(comp.trendAveragePct()).toBe(50);
+    });
+
+    it('ne divise pas par zero quand aucun jour n a vendu', () => {
+      getWorkQueues.mockReturnValue(of({
+        figures: figures({ scope: 'all', trend: [{ date: '2026-09-01', revenue: 0 }] }),
+      }));
+      comp = build();
+      comp.ngOnInit();
+
+      expect(comp.trendBars()[0].height).toBe(0);
+      expect(comp.trendAveragePct()).toBe(0);
+    });
+
+    // ── Barre d'objectif ───────────────────────────────────────────────────
+    it('mesure le mois contre l objectif', () => {
+      getWorkQueues.mockReturnValue(of({
+        figures: figures({ month: { revenue: 340000, margin: 0, agency_average: null, target: 400000 } }),
+      }));
+      comp = build();
+      comp.ngOnInit();
+
+      expect(comp.targetPct()).toBe(85);
+    });
+
+    // Depasser l'objectif ne doit pas faire deborder la barre.
+    it('plafonne la barre a cent pour cent', () => {
+      getWorkQueues.mockReturnValue(of({
+        figures: figures({ month: { revenue: 900000, margin: 0, agency_average: null, target: 400000 } }),
+      }));
+      comp = build();
+      comp.ngOnInit();
+
+      expect(comp.targetPct()).toBe(100);
+    });
+
+    it('ne mesure rien sans objectif fixe', () => {
+      getWorkQueues.mockReturnValue(of({ figures: figures() }));
+      comp = build();
+      comp.ngOnInit();
+
+      expect(comp.targetPct()).toBeNull();
+    });
+
   });
 
   it('expose le detail technique quand le chargement echoue', () => {
