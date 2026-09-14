@@ -574,3 +574,59 @@ $_radius-md: 12px;
 
   .checkbox-control { margin-top: 0; }
 }
+
+/* ─── Saisie au comptoir (2b) ───────────────────────────────────────────────
+   Deux colonnes : la saisie a gauche, le recapitulatif a droite qui reste
+   en vue. Tokens uniquement. */
+
+.sale-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.sale-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.sale-recap {
+  position: sticky;
+  top: 0;
+  min-width: 0;
+}
+
+/* Le recapitulatif empile ses lignes au lieu de les etaler. */
+.recap-card {
+  .totals-preview {
+    margin-top: 0;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+
+  .total-item,
+  .summary-item {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .value { font-size: 1rem; }
+
+  .total-margin {
+    padding-top: 0.75rem;
+    border-top: 2px solid var(--text);
+
+    .value { font-size: 1.25rem; }
+  }
+}
+
+@media (max-width: 1024px) {
+  .sale-layout { grid-template-columns: minmax(0, 1fr); }
+  .sale-recap { position: static; }
+}
