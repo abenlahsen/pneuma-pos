@@ -78,11 +78,35 @@
         </div>
       </article>
 
-      <article class="kpi-card" [class.kpi-card--danger]="(profile()?.outstanding_balance ?? 0) > 0">
+      <!-- La carte d'encours porte son plafond et son action : on regle
+           l'impaye depuis l'endroit ou on le lit (3i). -->
+      <article class="kpi-card outstanding-card"
+               [class.kpi-card--danger]="(profile()?.outstanding_balance ?? 0) > 0"
+               [class.outstanding-card--over]="overCreditLimit()">
         <span class="kpi-icon"><app-icon name="pending" /></span>
         <div class="kpi-body">
           <p class="kpi-label">SOLDE IMPAYÉ</p>
           <p class="kpi-val">{{ (profile()?.outstanding_balance ?? 0) | number:'1.2-2' }} <small>DH</small></p>
+
+          @if ((profile()?.client?.credit_limit ?? 0) > 0) {
+            <p class="outstanding-limit">
+              sur un plafond de {{ profile()?.client?.credit_limit | number:'1.2-2' }} DH
+            </p>
+            <div class="outstanding-gauge" role="presentation">
+              <span class="outstanding-gauge-fill" [style.width.%]="creditUsage() * 100"></span>
+            </div>
+            @if (overCreditLimit()) {
+              <p class="outstanding-over">Plafond dépassé</p>
+            }
+          } @else {
+            <p class="outstanding-limit">Aucun plafond défini</p>
+          }
+
+          @if (authService.hasPermission('manage sale-payments') && (profile()?.outstanding_balance ?? 0) > 0) {
+            <button type="button" class="btn btn-primary outstanding-action" (click)="openPaymentModal()">
+              <app-icon name="invoice" /> Régler
+            </button>
+          }
         </div>
       </article>
 

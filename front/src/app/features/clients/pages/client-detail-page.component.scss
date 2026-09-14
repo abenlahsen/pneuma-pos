@@ -744,3 +744,50 @@ h1 {
   .client-avatar { width: 48px; height: 48px; font-size: 1.25rem; }
   h1 { font-size: 1.25rem; }
 }
+
+/* ─── Carte d'encours (motif « fiche », 3i) ────────────────────────────────
+   Elle porte son plafond, sa jauge et son action. Tokens uniquement. */
+
+.outstanding-card {
+  .kpi-body { gap: var(--sp-2); }
+
+  &--over {
+    border-color: var(--accent-700);
+  }
+}
+
+.outstanding-limit {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.outstanding-gauge {
+  height: 8px;
+  border-radius: var(--radius);
+  background: var(--neutral-200);
+  overflow: hidden;
+}
+
+.outstanding-gauge-fill {
+  display: block;
+  height: 100%;
+  background: var(--neutral-800);
+  transition: width 0.2s;
+}
+
+.outstanding-card--over .outstanding-gauge-fill { background: var(--accent-700); }
+
+.outstanding-over {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-700);
+}
+
+.outstanding-action {
+  align-self: flex-start;
+  margin-top: var(--sp-1);
+}

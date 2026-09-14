@@ -74,6 +74,27 @@ export class ClientDetailPageComponent implements OnInit {
   readonly showVehicleForm = signal(false);
   readonly editingVehicle = signal<Vehicle | null>(null);
 
+  // ── Encours (motif « fiche », 3i) ────────────────────────────────────────
+  // La carte d'encours porte son plafond et son action : un impayé se règle
+  // depuis l'endroit où on le lit, pas en renvoyant ailleurs.
+
+  /** Part du plafond consommée, 0 à 1. Vaut 0 sans plafond défini. */
+  creditUsage(): number {
+    const limit = Number(this.profile()?.client?.credit_limit ?? 0);
+    if (limit <= 0) return 0;
+
+    const outstanding = Number(this.profile()?.outstanding_balance ?? 0);
+    return Math.min(1, Math.max(0, outstanding / limit));
+  }
+
+  /** Sans plafond défini, aucun dépassement possible — on n'invente pas de limite. */
+  overCreditLimit(): boolean {
+    const limit = Number(this.profile()?.client?.credit_limit ?? 0);
+    if (limit <= 0) return false;
+
+    return Number(this.profile()?.outstanding_balance ?? 0) > limit;
+  }
+
   readonly showSaleForm = signal(false);
   readonly allCarriers = signal<Carrier[]>([]);
   readonly allPartners = signal<Partner[]>([]);
