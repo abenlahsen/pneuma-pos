@@ -806,6 +806,27 @@ class SaleControllerTest extends TestCase
             ->assertJsonPath('tyres_period', 8);
     }
 
+    /** Un pneu vendable, pour les tests qui ont besoin d'un article et d'un lot. */
+    private function createTyreProduct(): Product
+    {
+        $brand = Brand::query()->create(['name' => 'Brouillon '.fake()->unique()->numerify('###'), 'is_active' => true]);
+
+        $product = Product::query()->create([
+            'reference' => 'REF-'.fake()->unique()->numerify('#####'),
+            'type' => 'tyre',
+            'brand_id' => $brand->id,
+            'is_active' => true,
+        ]);
+
+        DB::table('product_tyres')->insert([
+            'product_id' => $product->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return $product;
+    }
+
     public function test_store_creates_sale()
     {
         $brand = Brand::query()->create(['name' => 'TestBrand', 'is_active' => true]);
@@ -2144,5 +2165,90 @@ class SaleControllerTest extends TestCase
 
         $this->assertTrue($ids->contains($saleA->id));
         $this->assertTrue($ids->contains($saleB->id));
+    }
+
+    // ── Brouillon (`2b`) : une saisie interrompue se garde ─────────────────
+
+    /**
+     * LE point du brouillon : il ne touche pas au stock. Une vente au comptoir
+     * s'interrompt souvent — le client va chercher sa carte — et rien ne doit
+     * sortir du stock pour une vente qui peut ne jamais avoir lieu.
+     */
+    public function test_a_draft_sale_does_not_move_the_stock(): void
+    {
+        $product = $this->createTyreProduct();
+        $stock = Stock::query()->create([
+            'product_id' => $product->id,
+            'quantity' => 10,
+            'purchase_price' => 100,
+            'user_id' => $this->user->id,
+        ]);
+
+        $partner = $this->createPartner();
+
+        $response = $this->postJson('/api/sales', [
+            'date' => '2026-03-15',
+            'client' => 'Client brouillon',
+            'commercial_id' => $this->user->id,
+            'partner_id' => $partner->id,
+            'status' => SaleStatus::BROUILLON->value,
+            'items' => [[
+                'product_id' => $product->id,
+                'stock_id' => $stock->id,
+                'quantity' => 3,
+                'purchase_price' => 100,
+                'selling_price' => 200,
+            ]],
+        ], $this->authHeaders());
+
+        $response->assertStatus(201)->assertJsonPath('status', SaleStatus::BROUILLON->value);
+
+        $this->assertSame(10, (int) $stock->fresh()->quantity, 'Un brouillon ne doit rien sortir du stock.');
+    }
+
+    /** En le validant, le stock part enfin. */
+    public function test_confirming_a_draft_finally_moves_the_stock(): void
+    {
+        $product = $this->createTyreProduct();
+        $stock = Stock::query()->create([
+            'product_id' => $product->id,
+            'quantity' => 10,
+            'purchase_price' => 100,
+            'user_id' => $this->user->id,
+        ]);
+
+        $partner = $this->createPartner();
+
+        $created = $this->postJson('/api/sales', [
+            'date' => '2026-03-15',
+            'client' => 'Client brouillon',
+            'commercial_id' => $this->user->id,
+            'partner_id' => $partner->id,
+            'status' => SaleStatus::BROUILLON->value,
+            'items' => [[
+                'product_id' => $product->id,
+                'stock_id' => $stock->id,
+                'quantity' => 3,
+                'purchase_price' => 100,
+                'selling_price' => 200,
+            ]],
+        ], $this->authHeaders())->json();
+
+        $this->putJson('/api/sales/'.$created['id'], [
+            'date' => '2026-03-15',
+            'client' => 'Client brouillon',
+            'commercial_id' => $this->user->id,
+            'partner_id' => $partner->id,
+            'status' => SaleStatus::EN_COURS->value,
+            'items' => [[
+                'product_id' => $product->id,
+                'stock_id' => $stock->id,
+                'quantity' => 3,
+                'purchase_price' => 100,
+                'selling_price' => 200,
+            ]],
+        ], $this->authHeaders())->assertOk();
+
+        $this->assertSame(7, (int) $stock->fresh()->quantity);
     }
 }

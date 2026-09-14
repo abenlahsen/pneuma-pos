@@ -414,7 +414,16 @@
       <div class="recap-actions">
         <button type="submit" class="btn btn-primary recap-btn"
                 [disabled]="!form.valid || !formData.items || formData.items.length === 0">Valider la vente</button>
-        <button type="button" class="btn btn-secondary recap-btn" (click)="cancel.emit(); cancelled.emit()">Annuler</button>
+
+        <!-- Au comptoir une vente s'interrompt : le client va chercher sa carte,
+             le technicien verifie une dimension. « Annuler » jetait la saisie ;
+             le brouillon la garde, et ne sort rien du stock. -->
+        <button type="button" class="btn btn-secondary recap-btn" (click)="saveDraft()"
+                [disabled]="!formData.items || formData.items.length === 0">Enregistrer en brouillon</button>
+
+        <!-- Sortie sans enregistrer : un lien, pas un bouton du meme poids que
+             la validation. -->
+        <button type="button" class="recap-quit" (click)="cancel.emit(); cancelled.emit()">Quitter sans enregistrer</button>
       </div>
     </div>
   </aside>

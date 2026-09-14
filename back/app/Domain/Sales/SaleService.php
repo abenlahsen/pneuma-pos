@@ -33,9 +33,14 @@ class SaleService
 
             $saleData = $this->prepareSalePayload($validated, $items);
             $saleData['created_by'] = $userId;
-            // A new sale always starts at the first step of the workflow —
-            // any other status submitted at creation time is ignored.
-            $saleData['status'] = SaleStatus::EN_COURS->value;
+            // Une vente demarre a la premiere etape du flux, et tout autre
+            // statut soumis a la creation est ignore — sauf BROUILLON, qui est
+            // justement une vente pas encore entree dans le flux : elle ne
+            // bouge pas le stock et ne compte nulle part tant qu'on ne la
+            // valide pas.
+            $saleData['status'] = ($validated['status'] ?? null) === SaleStatus::BROUILLON->value
+                ? SaleStatus::BROUILLON->value
+                : SaleStatus::EN_COURS->value;
 
             $sale = Sale::create($this->filterColumns('sales', $saleData));
 
@@ -382,9 +387,14 @@ class SaleService
      * Whether this sale status keeps its lines' stock deducted. Only ANNULE
      * releases the stock — mirrors PurchaseService::statusAppliesStock().
      */
+    /**
+     * Un brouillon ne bouge pas le stock, au meme titre qu'une vente annulee :
+     * la marchandise reste vendable tant que la vente n'est pas confirmee.
+     */
     private function statusAppliesStock(?string $status): bool
     {
-        return $status !== SaleStatus::ANNULE->value;
+        return $status !== SaleStatus::ANNULE->value
+            && $status !== SaleStatus::BROUILLON->value;
     }
 
     /**

@@ -1,9 +1,10 @@
-export const SALE_STATUSES = ['EN COURS', 'LIVRE', 'MONTE', 'TERMINEE', 'ANNULE'] as const;
+export const SALE_STATUSES = ['BROUILLON', 'EN COURS', 'LIVRE', 'MONTE', 'TERMINEE', 'ANNULE'] as const;
 export type SaleStatus = typeof SALE_STATUSES[number];
 export const SALE_STATUS_LABELS: Record<SaleStatus, string> = {
   'EN COURS': 'En cours',
   'LIVRE':    'Livrée',
   'MONTE':    'Montée',
+  'BROUILLON': 'Brouillon',
   'TERMINEE': 'Terminée',
   'ANNULE':   'Annulée',
 };
@@ -16,6 +17,7 @@ export const SALE_STATUS_LABELS: Record<SaleStatus, string> = {
  */
 export const SALE_STATUS_TRANSITIONS: Record<SaleStatus, SaleStatus[]> = {
   'EN COURS': ['LIVRE', 'MONTE', 'ANNULE'],
+  'BROUILLON': ['EN COURS', 'ANNULE'],
   'LIVRE':    ['EN COURS', 'MONTE', 'TERMINEE'],
   'MONTE':    ['EN COURS', 'LIVRE', 'TERMINEE'],
   'TERMINEE': ['LIVRE', 'MONTE'],

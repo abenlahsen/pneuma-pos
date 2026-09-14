@@ -134,7 +134,7 @@ class MonthlyReportService
         $start = $end->copy()->startOfMonth()->subMonthsNoOverflow(11);
 
         $monthly = fn (Carbon $from, Carbon $to) => DB::table('sales')
-            ->whereNot('status', 'ANNULE')
+            ->whereNotIn('status', ['ANNULE', 'BROUILLON'])
             ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
             ->groupByRaw("DATE_FORMAT(date, '%Y-%m')")
             ->selectRaw("DATE_FORMAT(date, '%Y-%m') AS m, COALESCE(SUM(total_sale), 0) AS revenue")
@@ -250,7 +250,7 @@ class MonthlyReportService
     private function stockTurns(string $start, string $end): float
     {
         $cogs = (float) DB::table('sales')
-            ->whereNot('status', 'ANNULE')
+            ->whereNotIn('status', ['ANNULE', 'BROUILLON'])
             ->whereBetween('date', [$start, $end])
             ->sum('total_purchase');
 
@@ -265,7 +265,7 @@ class MonthlyReportService
     private function unpaidOver(string $start, string $end): float
     {
         $q = DB::table('sales')
-            ->whereNot('status', 'ANNULE')
+            ->whereNotIn('status', ['ANNULE', 'BROUILLON'])
             ->whereBetween('date', [$start, $end])
             ->whereIn('payment_status', ['NON PAYE', 'PARTIEL']);
 

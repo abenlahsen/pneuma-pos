@@ -109,7 +109,7 @@ class SaleController extends Controller
         // liste en rendait 109.
         if ($request->boolean('unpaid')) {
             $query->whereIn('payment_status', [SalePaymentStatus::NON_PAYE->value, SalePaymentStatus::PARTIEL->value])
-                ->where('status', '!=', SaleStatus::ANNULE->value);
+                ->whereNotIn('status', [SaleStatus::ANNULE->value, SaleStatus::BROUILLON->value]);
         }
 
         // Repointed at the actual recorded payments — never the legacy `payments`
@@ -544,13 +544,13 @@ class SaleController extends Controller
         // Les comptes portes par les chips se calculent AVANT les filtres d'etat :
         // sinon le nombre affiche sur une chip changerait des qu'on la clique, et
         // « Impayées · 96 » deviendrait « Impayées · 89 » une fois selectionnee.
-        $chipQuery = (clone $query)->where('status', '!=', SaleStatus::ANNULE->value);
+        $chipQuery = (clone $query)->whereNotIn('status', [SaleStatus::ANNULE->value, SaleStatus::BROUILLON->value]);
 
         if ($request->filled('status') && Schema::hasColumn('sales', 'status')) {
             $query->where('status', (string) $request->string('status'));
         } elseif (Schema::hasColumn('sales', 'status')) {
             // No explicit status filter: cancelled sales must not inflate the KPI cards.
-            $query->where('status', '!=', SaleStatus::ANNULE->value);
+            $query->whereNotIn('status', [SaleStatus::ANNULE->value, SaleStatus::BROUILLON->value]);
         }
 
         if ($request->filled('payment_status') && Schema::hasColumn('sales', 'payment_status')) {

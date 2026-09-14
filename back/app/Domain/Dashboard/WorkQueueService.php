@@ -205,7 +205,7 @@ class WorkQueueService
     {
         $all = $user->can('view reporting.all');
 
-        $base = fn () => Sale::query()->whereNot('status', 'ANNULE')
+        $base = fn () => Sale::query()->whereNotIn('status', ['ANNULE', 'BROUILLON'])
             ->when(! $all, fn (Builder $q) => $q->where('commercial_id', $user->id));
 
         $today = (clone $base())->whereDate('date', today())
@@ -267,7 +267,7 @@ class WorkQueueService
     private function agencyAverage(): ?float
     {
         $row = DB::table('sales')
-            ->whereNot('status', 'ANNULE')
+            ->whereNotIn('status', ['ANNULE', 'BROUILLON'])
             ->whereNotNull('commercial_id')
             ->whereBetween('date', [today()->startOfMonth(), today()->endOfMonth()])
             ->selectRaw('COALESCE(SUM(total_sale), 0) AS revenue, COUNT(DISTINCT commercial_id) AS commercials')
@@ -323,7 +323,7 @@ class WorkQueueService
         $start = today()->subDays(29);
 
         $byDay = DB::table('sales')
-            ->whereNot('status', 'ANNULE')
+            ->whereNotIn('status', ['ANNULE', 'BROUILLON'])
             ->where('date', '>=', $start)
             ->groupBy('date')
             ->selectRaw('date, COALESCE(SUM(total_sale), 0) AS revenue')
@@ -354,7 +354,7 @@ class WorkQueueService
 
         $query = Sale::query()
             ->with(['linkedClient:id,name,phone', 'commercial:id,name'])
-            ->whereNot('status', 'ANNULE')
+            ->whereNotIn('status', ['ANNULE', 'BROUILLON'])
             ->whereIn('payment_status', ['NON PAYE', 'PARTIEL']);
 
         $this->scope($query, $user, $all);

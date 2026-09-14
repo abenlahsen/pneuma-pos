@@ -229,7 +229,7 @@ class SalePaymentService
     public function unpaidSalesForClient(Client $client)
     {
         return $client->sales()
-            ->where('status', '!=', SaleStatus::ANNULE->value)
+            ->whereNotIn('status', [SaleStatus::ANNULE->value, SaleStatus::BROUILLON->value])
             ->orderBy('date')
             ->orderBy('id')
             ->get()

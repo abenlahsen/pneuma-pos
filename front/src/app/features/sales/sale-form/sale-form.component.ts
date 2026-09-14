@@ -862,6 +862,16 @@ export class SaleFormComponent implements OnInit, OnDestroy {
     this.showQuickCreate.set(false);
   }
 
+  /**
+   * Enregistre la saisie en brouillon : la vente existe, mais elle n'entre pas
+   * dans le flux — elle ne bouge pas le stock et ne compte dans aucun chiffre
+   * tant qu'on ne la valide pas.
+   */
+  saveDraft(): void {
+    this.formData.status = 'BROUILLON';
+    this.onSubmit();
+  }
+
   onSubmit(): void {
     if (!this.formData.commercial_id) {
       alert('Veuillez sélectionner un commercial.');
