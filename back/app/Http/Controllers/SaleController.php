@@ -103,6 +103,15 @@ class SaleController extends Controller
             $query->where('payment_status', (string) $request->string('payment_status'));
         }
 
+        // Meme regle que la chip du resume : « impaye » couvre NON PAYE et PARTIEL,
+        // et jamais une vente annulee — on ne relance pas un impaye sur une vente
+        // qui n'existe plus. Sans cette exclusion la chip promettait 96 et la
+        // liste en rendait 109.
+        if ($request->boolean('unpaid')) {
+            $query->whereIn('payment_status', [SalePaymentStatus::NON_PAYE->value, SalePaymentStatus::PARTIEL->value])
+                ->where('status', '!=', SaleStatus::ANNULE->value);
+        }
+
         // Repointed at the actual recorded payments — never the legacy `payments`
         // relation, which misses multi-sale client payments. Keep in sync with
         // the identical block in export().
@@ -532,6 +541,11 @@ class SaleController extends Controller
             }
         }
 
+        // Les comptes portes par les chips se calculent AVANT les filtres d'etat :
+        // sinon le nombre affiche sur une chip changerait des qu'on la clique, et
+        // « Impayées · 96 » deviendrait « Impayées · 89 » une fois selectionnee.
+        $chipQuery = (clone $query)->where('status', '!=', SaleStatus::ANNULE->value);
+
         if ($request->filled('status') && Schema::hasColumn('sales', 'status')) {
             $query->where('status', (string) $request->string('status'));
         } elseif (Schema::hasColumn('sales', 'status')) {
@@ -541,6 +555,13 @@ class SaleController extends Controller
 
         if ($request->filled('payment_status') && Schema::hasColumn('sales', 'payment_status')) {
             $query->where('payment_status', (string) $request->string('payment_status'));
+        }
+
+        // `unpaid=1` : la chip « Impayées » couvre NON PAYE *et* PARTIEL. Un
+        // simple `payment_status=NON PAYE` excluait les partiels, donc la chip
+        // promettait un nombre et en livrait un autre.
+        if ($request->boolean('unpaid')) {
+            $query->whereIn('payment_status', [SalePaymentStatus::NON_PAYE->value, SalePaymentStatus::PARTIEL->value]);
         }
 
         if ($request->filled('carrier_id')) {
@@ -617,6 +638,28 @@ class SaleController extends Controller
             })(),
             'ca_avec_facture' => round((float) (clone $query)->where('with_invoice', true)->sum('total_sale'), 2),
             'ca_sans_facture' => round((float) (clone $query)->where('with_invoice', false)->sum('total_sale'), 2),
+
+            // Rangee de cadrans de `2a` : CA du jour, marge nette, ventes, impayes.
+            // « Du jour » est une fenetre calendaire fixe ; la croiser avec un
+            // filtre de dates donnerait un zero trompeur, donc on la rapporte
+            // nulle dans ce cas et on expose le CA de la periode a la place.
+            'revenue_today' => $hasDateFilter || $dateColumn === 'id'
+                ? null
+                : round((float) (clone $query)->whereDate($dateColumn, $today)->sum('total_sale'), 2),
+            'revenue_period' => $hasDateFilter
+                ? round((float) (clone $query)->sum('total_sale'), 2)
+                : null,
+            'margin_total' => round((float) (clone $query)->sum('margin'), 2),
+            'sales_count' => (int) (clone $query)->count(),
+
+            // Comptes des chips de filtre : ils portent leur nombre, donc on
+            // n'ouvre pas la liste pour savoir s'il y a quelque chose dedans.
+            'count_all' => (int) (clone $chipQuery)->count(),
+            'count_en_cours' => (int) (clone $chipQuery)->where('status', SaleStatus::EN_COURS->value)->count(),
+            'count_livre' => (int) (clone $chipQuery)->whereIn('status', [SaleStatus::LIVRE->value, SaleStatus::MONTE->value])->count(),
+            'count_unpaid' => (int) (clone $chipQuery)
+                ->whereIn('payment_status', [SalePaymentStatus::NON_PAYE->value, SalePaymentStatus::PARTIEL->value])
+                ->count(),
         ]);
     }
 

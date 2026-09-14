@@ -1,79 +1,47 @@
 <div class="page-container">
 
+  <!-- Rangee de cadrans (`2a`) : quatre indicateurs dans UN cadre, cellules
+       egales separees par un filet. Pas d'icone — l'etiquette porte le sens. -->
   <div class="summary-cards">
-    <ng-container *ngIf="!hasDateFilter()">
-      <div class="card summary-card info">
-        <div class="card-icon"><app-icon name="calendar" /></div>
-        <div class="card-content">
-          <p class="card-label">Pneus vendus aujourd'hui</p>
-          <h3 class="card-value">{{ summary().tyres_today }}</h3>
-        </div>
-      </div>
-
-      <div class="card summary-card info">
-        <div class="card-icon"><app-icon name="stock" /></div>
-        <div class="card-content">
-          <p class="card-label">Pneus vendus ce mois</p>
-          <h3 class="card-value">{{ summary().tyres_this_month }}</h3>
-        </div>
-      </div>
-    </ng-container>
-
-    <div class="card summary-card info" *ngIf="hasDateFilter()">
-      <div class="card-icon"><app-icon name="calendar" /></div>
-      <div class="card-content">
-        <p class="card-label">Pneus vendus (période filtrée)</p>
-        <h3 class="card-value">{{ summary().tyres_period }}</h3>
-      </div>
+    <div class="card summary-card">
+      <p class="card-label">{{ summary().revenue_today !== null ? 'CA du jour' : 'CA de la période' }}</p>
+      <h3 class="card-value">
+        {{ (summary().revenue_today ?? summary().revenue_period ?? 0) | number:'1.0-0' }}<small> DH</small>
+      </h3>
     </div>
 
-    <div class="card summary-card info">
-      <div class="card-icon"><app-icon name="pending" /></div>
-      <div class="card-content">
-        <p class="card-label">Pneus en cours</p>
-        <h3 class="card-value">{{ summary().tyres_en_cours }}</h3>
-      </div>
+    <div class="card summary-card">
+      <p class="card-label">Marge nette</p>
+      <h3 class="card-value">{{ summary().margin_total | number:'1.0-0' }}<small> DH</small></h3>
     </div>
 
-    <div class="card summary-card info">
-      <div class="card-icon"><app-icon name="inventory" /></div>
-      <div class="card-content">
-        <p class="card-label">Ventes en cours</p>
-        <h3 class="card-value">{{ summary().sales_en_cours }}</h3>
-      </div>
+    <div class="card summary-card">
+      <p class="card-label">Ventes</p>
+      <h3 class="card-value">{{ summary().sales_count | number:'1.0-0' }}</h3>
     </div>
 
-    <div class="card summary-card expense">
-      <div class="card-icon"><app-icon name="pending" /></div>
-      <div class="card-content">
-        <p class="card-label">Impayé en cours</p>
-        <h3 class="card-value">{{ summary().unpaid_en_cours | number:'1.2-2' }} DH</h3>
-      </div>
+    <!-- L'impaye en `--accent-700` : `--accent` ne fait que 3,7:1 a cette taille. -->
+    <div class="card summary-card negative">
+      <p class="card-label">Impayés</p>
+      <h3 class="card-value">
+        {{ (summary().unpaid_en_cours + summary().unpaid_livre_monte) | number:'1.0-0' }}<small> DH</small>
+      </h3>
     </div>
+  </div>
 
-    <div class="card summary-card expense">
-      <div class="card-icon"><app-icon name="carrier" /></div>
-      <div class="card-content">
-        <p class="card-label">Impayé livré/monté</p>
-        <h3 class="card-value">{{ summary().unpaid_livre_monte | number:'1.2-2' }} DH</h3>
-      </div>
-    </div>
-
-    <div class="card summary-card income">
-      <div class="card-icon"><app-icon name="invoice" /></div>
-      <div class="card-content">
-        <p class="card-label">CA avec facture</p>
-        <h3 class="card-value">{{ summary().ca_avec_facture | number:'1.2-2' }} DH</h3>
-      </div>
-    </div>
-
-    <div class="card summary-card balance">
-      <div class="card-icon"><app-icon name="cash" /></div>
-      <div class="card-content">
-        <p class="card-label">CA sans facture</p>
-        <h3 class="card-value">{{ summary().ca_sans_facture | number:'1.2-2' }} DH</h3>
-      </div>
-    </div>
+  <!-- Chips de filtre (`2a`) : chacune porte son compte, donc on n'ouvre pas la
+       liste pour savoir s'il y a quelque chose dedans. « Impayées » est teintee
+       en permanence — c'est la seule qui coute de l'argent. -->
+  <div class="chip-row">
+    <button type="button" class="chip" [class.chip--on]="quickFilter() === 'all'"
+            (click)="setQuickFilter('all')">Toutes</button>
+    <button type="button" class="chip" [class.chip--on]="quickFilter() === 'en_cours'"
+            (click)="setQuickFilter('en_cours')">En cours · {{ summary().count_en_cours }}</button>
+    <button type="button" class="chip" [class.chip--on]="quickFilter() === 'livre'"
+            (click)="setQuickFilter('livre')">Livrées · {{ summary().count_livre }}</button>
+    <button type="button" class="chip chip--alert" [class.chip--on]="quickFilter() === 'unpaid'"
+            (click)="setQuickFilter('unpaid')">Impayées · {{ summary().count_unpaid }}</button>
+    <span class="chip-count">{{ total() }} vente{{ total() > 1 ? 's' : '' }} · {{ today | date:'dd/MM/yyyy' }}</span>
   </div>
 
   <div class="card filters-section">

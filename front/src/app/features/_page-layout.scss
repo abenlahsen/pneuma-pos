@@ -235,12 +235,73 @@
       line-height: 1.1;
       color: var(--text);
       font-variant-numeric: tabular-nums;
+
+      // Le suffixe d'unite ne concurrence pas le chiffre.
+      small {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
     }
 
     // Un KPI negatif passe en accent-700 : l'accent pur ne tient pas
     // le seuil de contraste a cette taille.
     &.negative .card-value,
     .card-value.negative { color: var(--accent-700); }
+  }
+
+  // ── Chips de filtre (`2a`) ────────────────────────────────────────────────
+  // Une chip est un raccourci vers un etat de filtre, et elle porte son compte.
+  .chip-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: var(--sp-6);
+  }
+
+  .chip {
+    padding: 7px 12px;
+    border: 2px solid var(--neutral-400);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--neutral-800);
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+
+    &:hover { border-color: var(--text); }
+
+    // Selectionnee : l'encre s'inverse, aucune ambiguite sur l'etat actif.
+    &--on {
+      background: var(--text);
+      border-color: var(--text);
+      color: var(--bg);
+    }
+
+    // « Impayées » est teintee en permanence : c'est la seule qui coute de
+    // l'argent tant qu'on ne s'en occupe pas.
+    &--alert {
+      border-color: var(--accent-300);
+      background: var(--accent-100);
+      color: var(--accent-700);
+
+      &.chip--on {
+        background: var(--accent-700);
+        border-color: var(--accent-700);
+        color: var(--on-accent);
+      }
+    }
+  }
+
+  .chip-count {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--text-muted);
   }
 
   // ── Search hero ───────────────────────────────────────────────────────────

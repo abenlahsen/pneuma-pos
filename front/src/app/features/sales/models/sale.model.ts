@@ -95,6 +95,19 @@ export interface SaleSummary {
   unpaid_livre_monte: number;
   ca_avec_facture: number;
   ca_sans_facture: number;
+
+  /** Rangee de cadrans `2a`. `revenue_today` est nul des qu'un filtre de dates
+   *  est actif : « du jour » croise avec une periode ne voudrait rien dire. */
+  revenue_today: number | null;
+  revenue_period: number | null;
+  margin_total: number;
+  sales_count: number;
+
+  /** Comptes portes par les chips de filtre. */
+  count_all: number;
+  count_en_cours: number;
+  count_livre: number;
+  count_unpaid: number;
 }
 
 export interface SaleFilters {

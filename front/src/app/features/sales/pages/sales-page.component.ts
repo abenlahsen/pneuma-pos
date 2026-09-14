@@ -41,7 +41,7 @@ export class SalesPageComponent implements OnInit, OnDestroy {
   readonly paymentMethodClass = paymentMethodClass;
 
   sales = signal<Sale[]>([]);
-  summary = signal<SaleSummary>({ tyres_this_month: 0, tyres_today: 0, tyres_period: null, tyres_en_cours: 0, sales_en_cours: 0, unpaid_en_cours: 0, unpaid_livre_monte: 0, ca_avec_facture: 0, ca_sans_facture: 0 });
+  summary = signal<SaleSummary>({ tyres_this_month: 0, tyres_today: 0, tyres_period: null, tyres_en_cours: 0, sales_en_cours: 0, unpaid_en_cours: 0, unpaid_livre_monte: 0, ca_avec_facture: 0, ca_sans_facture: 0, revenue_today: 0, revenue_period: null, margin_total: 0, sales_count: 0, count_all: 0, count_en_cours: 0, count_livre: 0, count_unpaid: 0 });
   filterOptions = signal<SaleFilters>({ brands: [], clients: [], cities: [], statuses: [], carriers: [], partners: [], payment_statuses: [], commercials: [] });
 
   currentPage = signal(1);
@@ -54,8 +54,28 @@ export class SalesPageComponent implements OnInit, OnDestroy {
   filterClient = signal('');
   filterCity = signal('');
   cities = signal<string[]>([]);
+  readonly today = new Date();
+
+  /**
+   * Chips de filtre (`2a`). Elles pilotent les memes signaux que les selects —
+   * ce sont des raccourcis vers un etat de filtre, pas un second mecanisme.
+   * « Livrées » couvre LIVRE et MONTE : au comptoir c'est la meme chose.
+   */
+  readonly quickFilter = signal<'all' | 'en_cours' | 'livre' | 'unpaid'>('all');
+
+  setQuickFilter(which: 'all' | 'en_cours' | 'livre' | 'unpaid'): void {
+    this.quickFilter.set(which);
+    this.filterStatus.set(which === 'en_cours' ? 'EN COURS' : which === 'livre' ? 'LIVRE' : '');
+    // `unpaid` plutot que `payment_status=NON PAYE` : la chip compte aussi les
+    // partiels, elle doit filtrer sur les memes.
+    this.filterUnpaid.set(which === 'unpaid');
+    this.applyFilters();
+  }
+
   filterStatus = signal('');
   filterPaymentStatus = signal('');
+  /** Chip « Impayées » : NON PAYE *et* PARTIEL. */
+  filterUnpaid = signal(false);
   filterPaymentMethod = signal('');
   filterCarrier = signal('');
   filterPartner = signal('');
@@ -200,6 +220,7 @@ export class SalesPageComponent implements OnInit, OnDestroy {
       city: this.filterCity(),
       status: this.filterStatus(),
       payment_status: this.filterPaymentStatus(),
+      unpaid: this.filterUnpaid() ? '1' : '',
       payment_method: this.filterPaymentMethod(),
       carrier_id: this.filterCarrier(),
       partner_id: this.filterPartner(),
