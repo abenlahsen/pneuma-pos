@@ -21,8 +21,10 @@ class EnumsTest extends TestCase
 
     public function test_sale_status_values(): void
     {
-        $this->assertSame(['EN COURS', 'LIVRE', 'MONTE', 'TERMINEE', 'ANNULE'], SaleStatus::values());
-        $this->assertCount(5, SaleStatus::cases());
+        // BROUILLON ouvre la liste : une saisie gardee qui n'est pas encore
+        // entree dans le flux, et qui ne bouge pas le stock.
+        $this->assertSame(['BROUILLON', 'EN COURS', 'LIVRE', 'MONTE', 'TERMINEE', 'ANNULE'], SaleStatus::values());
+        $this->assertCount(6, SaleStatus::cases());
     }
 
     public function test_sale_payment_status_has_no_accent(): void
