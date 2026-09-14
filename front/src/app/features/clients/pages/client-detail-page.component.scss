@@ -1,33 +1,34 @@
-// ── Design tokens ─────────────────────────────────────────────────────────────
-$primary:       #ff2d37;
-$primary-dark:  #e8000b;
-$primary-light: rgba(255, 45, 55, 0.10);
+// ── Tokens ────────────────────────────────────────────────────────────────
+// Alias locaux vers `src/app/_tokens.scss` : aucune couleur en dur ici.
+$primary:       var(--accent);
+$primary-dark:  var(--accent-600);
+$primary-light: var(--accent-100);
 
-$success-bg:   rgba(34, 197, 94, 0.10);
-$success-text: #15803d;
-$warning-bg:   rgba(234, 179, 8, 0.12);
-$warning-text: #a16207;
-$danger-bg:    rgba(239, 68, 68, 0.10);
-$danger-text:  #dc2626;
+$success-bg:   var(--ok-bg);
+$success-text: var(--ok-text);
+$warning-bg:   var(--warn-bg);
+$warning-text: var(--warn-text);
+$danger-bg:    var(--bad-bg);
+$danger-text:  var(--bad-text);
 
-$bg:       #f1f5f9;
-$surface:  #ffffff;
-$surface2: #f8fafc;
-$border:   #e8edf3;
-$border2:  #d0d9e4;
-$text:     #0f172a;
-$muted:    #64748b;
-$dim:      #94a3b8;
-$label:    #334155;
-$strong:   #1e293b;
+$bg:       var(--bg);
+$surface:  var(--surface);
+$surface2: var(--neutral-100);
+$border:   var(--neutral-200);
+$border2:  var(--divider);
+$text:     var(--text);
+$muted:    var(--text-muted);
+$dim:      var(--neutral-500);
+$label:    var(--neutral-800);
+$strong:   var(--text);
 
-$shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.04);
-$shadow-md: 0 1px 3px rgba(15, 23, 42, 0.05), 0 4px 12px rgba(15, 23, 42, 0.08);
+$shadow-sm: var(--shadow-sm);
+$shadow-md: var(--shadow-sm);
 
-$radius-sm:   8px;
-$radius-md:   12px;
-$radius-lg:   14px;
-$radius-full: 999px;
+$radius-sm:   var(--radius);
+$radius-md:   var(--radius);
+$radius-lg:   var(--radius-lg);
+$radius-full: var(--radius);
 
 // ── Host ──────────────────────────────────────────────────────────────────────
 :host { display: block; }
@@ -86,7 +87,7 @@ $radius-full: 999px;
   font-size: 1.625rem;
   font-weight: 700;
   flex-shrink: 0;
-  box-shadow: 0 4px 14px rgba($primary, 0.35);
+  box-shadow: var(--shadow-lg);
 }
 
 .client-identity {
@@ -167,12 +168,12 @@ h1 {
 .btn-primary {
   background: $primary;
   color: white;
-  box-shadow: 0 2px 6px rgba($primary, 0.3);
+  box-shadow: var(--shadow-sm);
   border-color: $primary;
 
   &:hover:not(:disabled) {
     background: $primary-dark;
-    box-shadow: 0 4px 10px rgba($primary, 0.4);
+    box-shadow: var(--shadow-lg);
     transform: translateY(-1px);
   }
 }
@@ -183,7 +184,7 @@ h1 {
   border-color: $border2;
   box-shadow: $shadow-sm;
 
-  &:hover:not(:disabled) { background: $surface2; border-color: #bcc6d4; }
+  &:hover:not(:disabled) { background: $surface2; border-color: var(--divider); }
 }
 
 .btn-sm {
@@ -202,17 +203,37 @@ h1 {
 .btn-danger {
   background: $surface;
   color: $danger-text;
-  border-color: #fca5a5;
+  border-color: var(--accent-300);
 
-  &:hover:not(:disabled) { background: #fee2e2; border-color: $danger-text; }
+  &:hover:not(:disabled) { background: var(--bad-bg); border-color: $danger-text; }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
 // ── KPI grid ──────────────────────────────────────────────────────────────────
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
+}
+
+/* Motif « fiche » (`3i`) : deux colonnes, la droite fixe a 360 px. */
+.fiche-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.fiche-main,
+.fiche-side {
+  display: grid;
+  gap: 1.25rem;
+  align-content: start;
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .fiche-layout { grid-template-columns: minmax(0, 1fr); }
 }
 
 .kpi-card {
@@ -228,12 +249,12 @@ h1 {
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05), 0 8px 20px rgba(15, 23, 42, 0.1);
+    box-shadow: var(--shadow-lg);
   }
 
   &.kpi-card--danger {
-    border-color: #fca5a5;
-    background: linear-gradient(135deg, #fff5f5 0%, $surface 100%);
+    border-color: var(--accent-300);
+    background: var(--accent-100);
   }
 }
 
@@ -312,7 +333,7 @@ h1 {
 }
 
 .centered { display: flex; justify-content: center; padding: 2rem; }
-.error-panel { color: #b91c1c; }
+.error-panel { color: var(--bad-text); }
 
 // ── Details grid ──────────────────────────────────────────────────────────────
 .details-grid {
@@ -483,8 +504,8 @@ h1 {
   &:hover { background: $surface2; border-color: $border2; }
 
   &.btn-icon-danger:hover {
-    background: #fee2e2;
-    border-color: #fca5a5;
+    background: var(--bad-bg);
+    border-color: var(--accent-300);
     color: $danger-text;
   }
 }
@@ -672,7 +693,7 @@ h1 {
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
+  box-shadow: var(--shadow-lg);
   border: 1px solid $border;
 
   &.modal-container--wide {

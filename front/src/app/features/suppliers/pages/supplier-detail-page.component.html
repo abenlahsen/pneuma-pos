@@ -46,6 +46,11 @@
     <section class="panel centered error-panel"><p>{{ errorMessage() }}</p></section>
   } @else if (profile()?.supplier) {
 
+    <!-- Motif « fiche » (`3i`) : deux colonnes. La synthese et l'historique a
+         gauche ; a droite ce sur quoi on agit — le solde du et l'identite. -->
+    <div class="fiche-layout">
+    <div class="fiche-main">
+
     <!-- ── KPIs ── -->
     <section class="kpi-grid">
       <article class="kpi-card">
@@ -64,14 +69,6 @@
         </div>
       </article>
 
-      <article class="kpi-card" [class.kpi-card--danger]="(profile()?.outstanding_balance ?? 0) > 0">
-        <span class="kpi-icon"><app-icon name="pending" /></span>
-        <div class="kpi-body">
-          <p class="kpi-label">SOLDE DÛ</p>
-          <p class="kpi-val">{{ (profile()?.outstanding_balance ?? 0) | number:'1.2-2' }} <small>DH</small></p>
-        </div>
-      </article>
-
       <article class="kpi-card">
         <span class="kpi-icon"><app-icon name="calendar" /></span>
         <div class="kpi-body">
@@ -82,29 +79,6 @@
         </div>
       </article>
     </section>
-
-    <!-- ── Informations fournisseur ── -->
-    <article class="panel">
-      <h2 class="panel-title">Informations fournisseur</h2>
-      <dl class="info-list">
-        <div class="info-row">
-          <dt>Personne de contact</dt>
-          <dd>{{ profile()?.supplier?.contact_person || '—' }}</dd>
-        </div>
-        <div class="info-row">
-          <dt>Téléphone</dt>
-          <dd>{{ profile()?.supplier?.phone || '—' }}</dd>
-        </div>
-        <div class="info-row">
-          <dt>Email</dt>
-          <dd>{{ profile()?.supplier?.email || '—' }}</dd>
-        </div>
-        <div class="info-row">
-          <dt>Adresse</dt>
-          <dd>{{ profile()?.supplier?.address || '—' }}</dd>
-        </div>
-      </dl>
-    </article>
 
     <!-- ── Historique & Relevé ── -->
     <section class="panel tab-panel">
@@ -331,6 +305,52 @@
         }
       }
     </section>
+    </div><!-- /fiche-main -->
+
+    <!-- Colonne de droite : ce sur quoi on agit depuis cette fiche. -->
+    <aside class="fiche-side">
+
+    <!-- La carte de solde porte son action : on regle depuis l'endroit ou on
+         lit le montant, pas depuis un autre ecran (`3i`). -->
+    <article class="kpi-card outstanding-card" [class.kpi-card--danger]="(profile()?.outstanding_balance ?? 0) > 0">
+      <span class="kpi-icon"><app-icon name="pending" /></span>
+      <div class="kpi-body">
+        <p class="kpi-label">SOLDE DÛ</p>
+        <p class="kpi-val">{{ (profile()?.outstanding_balance ?? 0) | number:'1.2-2' }} <small>DH</small></p>
+        @if (authService.hasPermission('manage purchase-payments') && (profile()?.outstanding_balance ?? 0) > 0) {
+          <button type="button" class="btn btn-primary outstanding-action" (click)="openPaymentModal()">
+            <app-icon name="invoice" /> Régler
+          </button>
+        }
+      </div>
+    </article>
+
+    <!-- ── Informations fournisseur ── -->
+    <article class="panel">
+      <h2 class="panel-title">Informations fournisseur</h2>
+      <dl class="info-list">
+        <div class="info-row">
+          <dt>Personne de contact</dt>
+          <dd>{{ profile()?.supplier?.contact_person || '—' }}</dd>
+        </div>
+        <div class="info-row">
+          <dt>Téléphone</dt>
+          <dd>{{ profile()?.supplier?.phone || '—' }}</dd>
+        </div>
+        <div class="info-row">
+          <dt>Email</dt>
+          <dd>{{ profile()?.supplier?.email || '—' }}</dd>
+        </div>
+        <div class="info-row">
+          <dt>Adresse</dt>
+          <dd>{{ profile()?.supplier?.address || '—' }}</dd>
+        </div>
+      </dl>
+    </article>
+
+    </aside>
+    </div><!-- /fiche-layout -->
+
   }
 </section>
 
