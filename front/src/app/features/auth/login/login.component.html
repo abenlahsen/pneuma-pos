@@ -1,53 +1,74 @@
-<div class="auth-container">
-  <div class="auth-card">
-    <div class="auth-header">
-      <img src="logo.png" alt="PNEU.MA" class="auth-logo">
-      <p>Connectez-vous à votre compte</p>
+<!-- Connexion (3k) : deux moities. Le seul endroit du systeme ou l'accent
+     occupe une surface pleine — ailleurs il ne sert qu'aux etats et aux
+     actions primaires. -->
+<div class="auth-split">
+
+  <section class="auth-form-half">
+    <div class="auth-form-inner">
+      <div class="auth-header">
+        <img src="logo.png" alt="PNEU.MA" class="auth-logo">
+        <h1>Connexion</h1>
+        <p class="auth-subtitle">Espace commercial interne.</p>
+      </div>
+
+      @if (error()) {
+        <div class="alert alert-error" role="alert">
+          {{ error() }}
+        </div>
+      }
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label for="email">Courriel</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            autocomplete="username"
+            placeholder="votre@email.com"
+            [class.invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+          />
+          @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
+            <span class="error-text">Veuillez entrer un email valide</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="password">Mot de passe</label>
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            autocomplete="current-password"
+            placeholder="••••••••"
+            [class.invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+          />
+          @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+            <span class="error-text">Le mot de passe est requis</span>
+          }
+        </div>
+
+        <button type="submit" [disabled]="loginForm.invalid || loading()" class="btn btn-primary">
+          @if (loading()) {
+            <span>Connexion...</span>
+          } @else {
+            <span>Se connecter</span>
+          }
+        </button>
+      </form>
     </div>
+  </section>
 
-    @if (error()) {
-      <div class="alert alert-error">
-        {{ error() }}
-      </div>
-    }
-
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input
-          id="email"
-          type="email"
-          formControlName="email"
-          placeholder="votre@email.com"
-          [class.invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
-        />
-        @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
-          <span class="error-text">Veuillez entrer un email valide</span>
-        }
-      </div>
-
-      <div class="form-group">
-        <label for="password">Mot de passe</label>
-        <input
-          id="password"
-          type="password"
-          formControlName="password"
-          placeholder="••••••••"
-          [class.invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
-        />
-        @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
-          <span class="error-text">Le mot de passe est requis</span>
-        }
-      </div>
-
-      <button type="submit" [disabled]="loginForm.invalid || loading()" class="btn btn-primary">
-        @if (loading()) {
-          <span>Connexion...</span>
-        } @else {
-          <span>Se connecter</span>
-        }
-      </button>
-    </form>
-  </div>
+  <!-- L'aplat. Aucune information actionnable ici : il disparait sur mobile
+       sans rien emporter. -->
+  <aside class="auth-brand-half" aria-hidden="true">
+    <div class="auth-brand-inner">
+      <p class="brand-claim">
+        Le comptoir,<br>
+        le stock<br>
+        et la caisse.
+      </p>
+      <p class="brand-sub">Une seule application, du devis à l'encaissement.</p>
+    </div>
+  </aside>
 </div>
-

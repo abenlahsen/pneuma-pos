@@ -1,128 +1,151 @@
-.auth-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+/* ─── Connexion (3k) ───────────────────────────────────────────────────────
+   Deux moities : le formulaire a gauche, l'aplat accent a droite. C'est le
+   seul endroit du systeme ou l'accent occupe une surface pleine.
+   Aucune valeur en dur : tout vient de _tokens.scss. */
+
+.auth-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   min-height: 100vh;
-  background: linear-gradient(135deg, #282828 0%, #3a3a3a 100%);
-  padding: 1rem;
+  background: var(--surface);
 }
 
-.auth-card {
-  background: white;
-  border-radius: 12px;
-  padding: 2.5rem;
+/* ── Moitie formulaire ─────────────────────────────────────────────────── */
+.auth-form-half {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-8) var(--sp-6);
+  min-width: 0;
+}
+
+.auth-form-inner {
   width: 100%;
-  max-width: 420px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  max-width: 380px;
 }
 
 .auth-header {
-  text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: var(--sp-8);
 
   .auth-logo {
-    height: 48px;
+    height: 40px;
     width: auto;
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--sp-4);
   }
 
-  p {
-    color: #718096;
+  h1 {
+    margin: 0 0 var(--sp-1);
+    font-size: var(--fs-h1);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    color: var(--text);
+  }
+
+  .auth-subtitle {
     margin: 0;
-    font-size: 0.95rem;
+    font-size: var(--fs-cell);
+    color: var(--text-muted);
   }
 }
 
 .alert-error {
-  background: #fed7d7;
-  color: #c53030;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  font-size: 0.875rem;
+  padding: 12px 14px;
+  margin-bottom: var(--sp-4);
+  border: 2px solid var(--accent-700);
+  border-radius: var(--radius);
+  background: var(--accent-100);
+  color: var(--accent-800);
+  font-size: 13px;
 }
 
 .form-group {
-  margin-bottom: 1.25rem;
+  margin-bottom: var(--sp-4);
 
   label {
     display: block;
-    font-weight: 600;
-    color: #4a5568;
-    margin-bottom: 0.4rem;
-    font-size: 0.875rem;
+    margin-bottom: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
   }
 
   input {
     width: 100%;
-    padding: 0.7rem 1rem;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: border-color 0.2s;
+    padding: 11px 14px;
+    border: 2px solid var(--neutral-400);
+    border-radius: var(--radius);
+    font-family: var(--font);
+    font-size: var(--fs-body);
+    color: var(--text);
+    background: var(--surface);
     box-sizing: border-box;
+    transition: border-color 0.12s;
 
-    &:focus {
-      outline: none;
-      border-color: #ff2d37;
-    }
-
-    &.invalid {
-      border-color: #e53e3e;
-    }
+    &::placeholder { color: var(--text-muted); }
+    &:hover { border-color: var(--text); }
+    &.invalid { border-color: var(--accent-700); }
   }
 
   .error-text {
-    color: #e53e3e;
-    font-size: 0.8rem;
-    margin-top: 0.25rem;
     display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--accent-700);
   }
 }
 
 .btn {
   width: 100%;
-  padding: 0.75rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
+  padding: 12px;
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: var(--fs-body);
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.12s, border-color 0.12s;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #ff2d37 0%, #cc0a13 100%);
-  color: white;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 
-  &:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(255, 45, 55, 0.4);
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
+  &:hover:not(:disabled) { background: var(--accent-600); border-color: var(--accent-600); }
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
 }
 
-.auth-footer {
-  text-align: center;
-  margin-top: 1.5rem;
-
-  p {
-    color: #718096;
-    font-size: 0.875rem;
-  }
-
-  a {
-    color: #ff2d37;
-    text-decoration: none;
-    font-weight: 600;
-
-    &:hover {
-      text-decoration: underline;
-    }
-  }
+/* ── Moitie accent ─────────────────────────────────────────────────────── */
+.auth-brand-half {
+  display: flex;
+  align-items: center;
+  padding: var(--sp-8);
+  background: var(--accent);
+  color: #fff;
+  min-width: 0;
 }
 
+.brand-claim {
+  margin: 0 0 var(--sp-4);
+  font-size: clamp(32px, 4.5vw, 56px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+}
+
+.brand-sub {
+  margin: 0;
+  font-size: var(--fs-body);
+  /* Blanc a 80 % : l'accent est deja sature, un blanc plein ecraserait le titre. */
+  color: rgb(255 255 255 / 0.8);
+}
+
+/* Sous 900 px l'aplat disparait : il ne porte aucune information
+   actionnable, donc rien n'est perdu. */
+@media (max-width: 900px) {
+  .auth-split { grid-template-columns: minmax(0, 1fr); }
+  .auth-brand-half { display: none; }
+}
