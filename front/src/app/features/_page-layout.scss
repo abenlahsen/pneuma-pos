@@ -571,19 +571,23 @@
     color: var(--neutral-800);
   }
 
+  // Deux etats lus, pas sept. Neutre par defaut ; alerte quand la valeur
+  // coute quelque chose — un impaye, un partiel, une annulation. Le vert et
+  // l'ambre disparaissent : une couleur de plus n'ajoute pas de sens, elle
+  // dilue le seul signal qui compte.
   .badge {
-    &-primary   { border-color: var(--accent-700);  color: var(--accent-700); }
-    &-success   { border-color: var(--ok-text);     color: var(--ok-text); }
-    &-danger    { border-color: var(--accent-700);  color: var(--accent-700); }
-    &-warning   { border-color: var(--warn-text);   color: var(--warn-text); }
-    &-secondary { border-color: var(--neutral-300); color: var(--neutral-800); }
-    &-blue      { border-color: var(--neutral-300); color: var(--neutral-800); }
+    &-danger,
+    &-warning   { border-color: var(--accent-700);  color: var(--accent-700); }
+    &-primary,
+    &-success,
+    &-secondary,
+    &-blue,
     &-purple    { border-color: var(--neutral-300); color: var(--neutral-800); }
   }
 
   .status-badge {
-    border-color: var(--ok-text);
-    color: var(--ok-text);
+    border-color: var(--neutral-300);
+    color: var(--neutral-800);
     &.inactive { border-color: var(--accent-700); color: var(--accent-700); }
   }
 
@@ -611,17 +615,35 @@
     &:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   }
 
-  // ── Sale/purchase status colors ───────────────────────────────────────────
-  // Sur un badge plat, la couleur porte le filet et le texte, pas le fond.
-  // Le <select> modifiable reste neutre : c'est le chevron qui le signale.
-  .bg-en-cours  { border-color: var(--warn-text);   color: var(--warn-text); }
-  .bg-livre,
-  .bg-monte     { border-color: var(--ok-text);     color: var(--ok-text); }
-  .bg-terminee,
-  .bg-termine,
-  .bg-recu,
-  .bg-retour    { border-color: var(--neutral-300); color: var(--neutral-800); }
-  .bg-annule    { border-color: var(--accent-700);  color: var(--accent-700); }
+  // ── Couleurs de statut ────────────────────────────────────────────────────
+  // Seules deux valeurs meritent l'alerte : une vente annulee et un ordre
+  // annule. Le reste est un etat lu, donc neutre.
+  .badge.bg-annule,
+  .badge.bg-annulee { border-color: var(--accent-700); color: var(--accent-700); }
+
+  .badge.bg-en-cours,
+  .badge.bg-livre,
+  .badge.bg-monte,
+  .badge.bg-terminee,
+  .badge.bg-termine,
+  .badge.bg-recu,
+  .badge.bg-retour  { border-color: var(--neutral-300); color: var(--neutral-800); }
+
+  // Un etat MODIFIABLE ne porte pas de couleur : sinon il se confond avec un
+  // etat lu, et c'est exactement le defaut qu'on corrige. Le chevron est le
+  // seul signe de modifiabilite du systeme — une regle, aucune exception.
+  .status-select.bg-en-cours,
+  .status-select.bg-livre,
+  .status-select.bg-monte,
+  .status-select.bg-terminee,
+  .status-select.bg-termine,
+  .status-select.bg-recu,
+  .status-select.bg-retour,
+  .status-select.bg-annule,
+  .status-select.bg-annulee {
+    border-color: var(--neutral-400);
+    color: var(--text);
+  }
 
   // ── Link helpers ──────────────────────────────────────────────────────────
   .client-link, .link-text {
