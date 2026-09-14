@@ -163,19 +163,23 @@ describe('buildComparisonBars (3h)', () => {
     expect(buildComparisonBars([])).toEqual([]);
   });
 
-  it('met le plus grand du groupe a 100 %', () => {
+  it('met le plus grand des deux mois a 100 %, paire par paire', () => {
     const bars = buildComparisonBars([card('CA', 800, 400), card('Marge', 200, 100)]);
 
     expect(bars[0].currentPct).toBe(100);
     expect(bars[0].previousPct).toBe(50);
-    expect(bars[1].currentPct).toBe(25);
+    // La marge a sa propre echelle : 200 vs 100 se lit comme 800 vs 400.
+    expect(bars[1].currentPct).toBe(100);
+    expect(bars[1].previousPct).toBe(50);
   });
 
-  it('partage une echelle commune : chaque barre sa propre echelle ne comparerait rien', () => {
-    const bars = buildComparisonBars([card('Gros', 1000, 0), card('Petit', 10, 0)]);
+  it('met chaque paire a l echelle sur elle-meme : des dirhams et des unites ne se comparent pas', () => {
+    // Sur une echelle commune, « 58 pneus » a cote de « 113 545 DH »
+    // s'ecraserait a plat et la comparaison disparaitrait.
+    const bars = buildComparisonBars([card('CA', 113545, 200000), card('Pneus', 58, 29)]);
 
-    expect(bars[0].currentPct).toBe(100);
-    expect(bars[1].currentPct).toBe(1);
+    expect(bars[1].currentPct).toBe(100);
+    expect(bars[1].previousPct).toBe(50);
   });
 
   it('prend le maximum sur les deux periodes, pas seulement la courante', () => {
