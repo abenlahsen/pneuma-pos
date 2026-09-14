@@ -126,7 +126,7 @@
 
   <div class="card table-card">
     <div class="table-responsive">
-      <table class="table">
+      <table class="table table--cards">
         <thead>
           <tr>
             <th *ngIf="authService.hasPermission('edit stock')" class="text-center">Actions</th>
@@ -176,14 +176,14 @@
             <td *ngIf="authService.hasPermission('edit stock')" class="text-center actions-cell">
               <button class="btn-icon btn-sm" type="button" (click)="openEditModal(stock)" title="Corriger le stock"><app-icon name="edit" /></button>
             </td>
-            <td>
+            <td data-card-title="Référence">
               <button class="reference-link" type="button" (click)="openMovementsModal(stock)" [disabled]="!stock.product_id">
                 {{ stock.product?.reference || '-' }}
               </button>
             </td>
-            <td>{{ stock.product?.brand?.name || '-' }}</td>
+            <td data-card="Marque">{{ stock.product?.brand?.name || '-' }}</td>
             <td>{{ stock.product?.profile || '-' }}</td>
-            <td>{{ dimensionsLabel(stock) }}</td>
+            <td data-card="Dimensions">{{ dimensionsLabel(stock) }}</td>
             <td>{{ stock.product?.tyre?.tire_load_index || '-' }}</td>
             <td>{{ stock.product?.tyre?.tire_speed_index || '-' }}</td>
             <td>
@@ -210,11 +210,11 @@
               <span *ngIf="stock.product?.tyre?.tire_reinforced" class="tag tag-xl" title="Renforcé">XL</span>
               <span *ngIf="!stock.product?.tyre?.tire_marking && !stock.product?.tyre?.tire_runflat && !stock.product?.tyre?.tire_reinforced">-</span>
             </td>
-            <td>{{ stock.depot || '-' }}</td>
+            <td data-card="Dépôt">{{ stock.depot || '-' }}</td>
             <td>{{ stock.zone || '-' }}</td>
             <td>{{ stock.made_in || '-' }}</td>
             <td>{{ stock.dot || '-' }}</td>
-            <td class="text-right">
+            <td class="text-right" data-card="Quantité">
               <span class="qty-badge" [class.qty-zero]="stock.quantity <= 0">{{ stock.quantity }}</span>
             </td>
             <td class="text-right">{{ formatMoney(stock.purchase_price) }}</td>

@@ -1,12 +1,12 @@
 import { Component, ElementRef, HostListener, ViewChild, computed, effect, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
 import { Subject, forkJoin, of } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { SaleService } from '../../core/services/sale.service';
 import { ProductService } from '../../core/services/product.service';
 import { IconComponent } from '../icon/icon.component';
-import { NAV_ITEMS, RailItem } from '../rail/nav-items';
+import { NAV_ITEMS, PORTAL_NAV_ITEMS, RailItem } from '../rail/nav-items';
 
 interface DestinationResult {
   kind: 'destination';
@@ -60,6 +60,15 @@ export class CommandPaletteComponent {
 
   @ViewChild('paletteInput') private readonly inputRef?: ElementRef<HTMLInputElement>;
 
+  /**
+   * L'espace client B2B (`2c`) est cloisonné : aucune destination interne ne
+   * doit y être atteignable NI DEVINABLE. La palette étant montée une seule
+   * fois pour toute l'application, c'est ici qu'on le garantit — sinon
+   * `Ctrl K` y listerait Ventes, Achats, Stock et Administration.
+   */
+  private readonly currentUrl = signal('/');
+  private readonly isPortal = computed(() => this.currentUrl().startsWith('/portail'));
+
   /** Destinations aplaties, filtrées par permission — même règle que RailComponent.items(). */
   private readonly flatDestinations = computed<DestinationResult[]>(() => {
     const flat: DestinationResult[] = [];
@@ -74,7 +83,7 @@ export class CommandPaletteComponent {
         }
       }
     };
-    visit(NAV_ITEMS);
+    visit(this.isPortal() ? PORTAL_NAV_ITEMS : NAV_ITEMS);
     return flat;
   });
 
@@ -98,6 +107,13 @@ export class CommandPaletteComponent {
     private readonly productService: ProductService,
   ) {
     this.query$.pipe(debounceTime(250), distinctUntilChanged()).subscribe((q) => this.search(q));
+
+    // `router.url` n'est pas un signal : sans cet abonnement la cloison
+    // resterait figee sur l'ecran ou la palette a ete evaluee la premiere fois.
+    this.currentUrl.set(this.router.url);
+    this.router.events
+      .pipe(filter((e) => e instanceof NavigationEnd))
+      .subscribe(() => this.currentUrl.set(this.router.url));
 
     // L'index actif retombe sur le premier résultat à chaque nouvelle recherche —
     // sinon il pourrait pointer au-delà de la nouvelle liste, plus courte.
@@ -199,7 +215,9 @@ export class CommandPaletteComponent {
   private search(rawQuery: string): void {
     const query = rawQuery.trim();
 
-    if (query.length < MIN_QUERY_LENGTH) {
+    // Depuis le portail, le resultat lui-meme renseigne : on n'interroge ni
+    // les ventes ni le catalogue interne.
+    if (this.isPortal() || query.length < MIN_QUERY_LENGTH) {
       this.saleResults.set([]);
       this.productResults.set([]);
       this.loading.set(false);

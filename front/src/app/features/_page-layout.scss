@@ -755,6 +755,64 @@
       th { font-size: 0.65rem; }
     }
 
+    /* `3l` — sous 768 px, un tableau de plus de quatre colonnes devient des
+       cartes. Le repli n'est pas mecanique : dix-sept colonnes empilees
+       donneraient un mur de texte. Chaque page designe ce que la carte
+       montre avec `data-card` (le libelle) et `data-card-title` (l'entete) ;
+       le reste est masque, pas reduit. Les cellules d'action restent. */
+    .table--cards {
+      thead { display: none; }
+
+      tbody, tr, td { display: block; }
+
+      tr {
+        position: relative;
+        margin-bottom: 0.6rem;
+        padding: 0.75rem;
+        border: 2px solid var(--text);
+        background: var(--surface);
+      }
+
+      td { display: none; padding: 0; border: none; }
+
+      td[data-card-title] {
+        display: block;
+        margin-bottom: 0.5rem;
+        padding-right: 6rem;   /* place pour les actions, posees en haut a droite */
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      td[data-card] {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 0.75rem;
+        padding: 0.3rem 0;
+        border-top: 1px solid var(--divider);
+        font-size: 0.85rem;
+
+        &::before {
+          content: attr(data-card);
+          flex-shrink: 0;
+          font-size: 0.7rem;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--text-muted);
+        }
+      }
+
+      td.actions-cell {
+        display: flex;
+        position: absolute;
+        top: 0.6rem;
+        right: 0.6rem;
+        gap: 0.25rem;
+      }
+    }
+
     .pagination-wrapper {
       flex-direction: column; gap: 0.75rem; padding: 0.75rem; align-items: center;
       .pagination-info { font-size: 0.76rem; }

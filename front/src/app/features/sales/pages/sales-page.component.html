@@ -206,7 +206,7 @@
 
   <div class="card table-card">
     <div class="table-responsive">
-      <table class="table">
+      <table class="table table--cards">
         <thead>
           <tr>
             <th class="text-center">Actions</th>
@@ -256,13 +256,13 @@
               </button>
             </td>
             <td class="text-center cell-id">{{ sale.id }}</td>
-            <td>{{ sale.date | date:'dd/MM/yyyy' }}</td>
+            <td data-card="Date">{{ sale.date | date:'dd/MM/yyyy' }}</td>
             <td class="text-center">
               <span class="badge" [class.badge-success]="sale.with_invoice" [class.badge-secondary]="!sale.with_invoice">
                 {{ sale.with_invoice ? 'Oui' : 'Non' }}
               </span>
             </td>
-            <td class="col-client">
+            <td class="col-client" data-card-title="Client">
               <a *ngIf="sale.client_id" class="fw-medium link-text client-link" [routerLink]="['/clients', sale.client_id]">{{ getClientName(sale) }}</a>
               <div *ngIf="!sale.client_id" class="fw-medium">{{ getClientName(sale) }}</div>
               <div class="text-small text-muted">{{ getClientPhone(sale) }}</div>
@@ -277,7 +277,7 @@
               </span>
               <ng-template #noSaleMethod>-</ng-template>
             </td>
-            <td class="text-right fw-semibold">
+            <td class="text-right fw-semibold" data-card="Total">
               {{ sale.total_sale | number:'1.2-2' }}
             </td>
             <td class="text-right fw-semibold">
@@ -286,7 +286,7 @@
                 {{ marginPct(sale) | number:'1.0-1' }}%
               </span>
             </td>
-            <td>
+            <td data-card="Paiement">
               <span class="badge"
                 [class.badge-danger]="sale.payment_status === 'NON PAYE' || !sale.payment_status"
                 [class.badge-warning]="sale.payment_status === 'PARTIEL'"
@@ -294,7 +294,7 @@
                 {{ sale.payment_status || 'NON PAYE' }}
               </span>
             </td>
-            <td class="status-cell">
+            <td class="status-cell" data-card="Statut">
               <select class="status-select"
                       [class.bg-en-cours]="sale.status === 'EN COURS'"
                       [class.bg-livre]="sale.status === 'LIVRE'"
