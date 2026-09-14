@@ -30,12 +30,6 @@ export class CompanySettingsPageComponent implements OnInit {
     { value: 'dark', label: 'Sombre' },
   ];
 
-  readonly navbarVariantOptions: Array<{ value: NavbarVariantOption; label: string }> = [
-    { value: 'default', label: 'Standard' },
-    { value: 'compact', label: 'Compacte' },
-    { value: 'flat', label: 'Plate' },
-  ];
-
   readonly contentWidthOptions: Array<{ value: ContentWidthOption; label: string }> = [
     { value: 'full', label: 'Pleine largeur' },
     { value: 'boxed', label: 'Encadrée' },
@@ -66,6 +60,7 @@ export class CompanySettingsPageComponent implements OnInit {
     navbar_variant: (DEFAULT_COMPANY_THEME_SETTINGS as UpdateCompanySettingsPayload & { navbar_variant?: NavbarVariantOption }).navbar_variant ?? 'default',
     content_width: (DEFAULT_COMPANY_THEME_SETTINGS as UpdateCompanySettingsPayload & { content_width?: ContentWidthOption }).content_width ?? 'full',
     prime_threshold: 0,
+    default_alert_threshold: null,
   });
 
   // ── Sections des reglages (3j) ──────────────────────────────────────────
@@ -75,9 +70,10 @@ export class CompanySettingsPageComponent implements OnInit {
     { id: 'company' as const, label: 'Société', icon: 'supplier', hint: 'Identité, adresse, identifiants légaux' },
     { id: 'theme' as const, label: 'Thème', icon: 'settings', hint: 'Mode d’affichage et couleurs' },
     { id: 'primes' as const, label: 'Primes', icon: 'bonus', hint: 'Objectif mensuel de pneus' },
+    { id: 'stock' as const, label: 'Stock', icon: 'inventory', hint: 'Seuil de réapprovisionnement' },
   ];
 
-  readonly activeSection = signal<'company' | 'theme' | 'primes'>('company');
+  readonly activeSection = signal<'company' | 'theme' | 'primes' | 'stock'>('company');
 
   loading = signal(false);
   saving = signal(false);
@@ -89,7 +85,6 @@ export class CompanySettingsPageComponent implements OnInit {
   selectedFaviconFile = signal<File | null>(null);
 
   previewThemeMode = computed(() => this.form().theme_mode);
-  previewNavbarVariant = computed(() => ((this.form() as UpdateCompanySettingsPayload & { navbar_variant?: NavbarVariantOption }).navbar_variant ?? 'default'));
   previewContentWidth = computed(() => ((this.form() as UpdateCompanySettingsPayload & { content_width?: ContentWidthOption }).content_width ?? 'full'));
   previewStyles = computed(() => ({
     '--preview-primary': this.form().primary_color,
@@ -246,6 +241,7 @@ export class CompanySettingsPageComponent implements OnInit {
       navbar_variant: layoutSettings.navbar_variant ?? 'default',
       content_width: layoutSettings.content_width ?? 'full',
       prime_threshold: settings.prime_threshold ?? 0,
+      default_alert_threshold: settings.default_alert_threshold ?? null,
     } as UpdateCompanySettingsPayload;
   }
 

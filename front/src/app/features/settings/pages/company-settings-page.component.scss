@@ -186,11 +186,24 @@ $_radius-lg: 14px;
   align-items: start;
 }
 
+/* Une seule colonne depuis le retrait du style de barre supérieure : à deux
+   colonnes de 220 px minimum, la grille débordait de sa colonne et rognait
+   les lignes d'explication. */
 .layout-grid {
+  grid-template-columns: minmax(0, 1fr);
   padding: 1.25rem;
   border: 1px solid $_border;
   border-radius: $_radius-md;
   background: $_surface;
+}
+
+/* La ligne qui dit ce que le réglage fait réellement (`3j`). */
+.field-hint {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--text-muted);
 }
 
 .theme-controls {
@@ -321,25 +334,6 @@ $_radius-lg: 14px;
   justify-content: space-between;
   gap: 1rem;
   transition: padding 0.2s ease, box-shadow 0.2s ease;
-}
-
-.theme-preview--navbar-compact {
-  .theme-preview__topbar {
-    padding: 0.65rem 1rem;
-  }
-
-  .theme-preview__logo {
-    width: 1.9rem;
-    height: 1.9rem;
-    border-radius: 10px;
-  }
-}
-
-.theme-preview--navbar-flat {
-  .theme-preview__topbar {
-    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.12);
-    background: color-mix(in srgb, var(--preview-accent) 82%, var(--preview-surface));
-  }
 }
 
 .theme-preview__brand {

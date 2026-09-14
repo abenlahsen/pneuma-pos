@@ -28,6 +28,8 @@ export interface CompanySettings {
   navbar_variant: NavbarVariant;
   content_width: ContentWidth;
   prime_threshold: number;
+  /** Seuil de reappro applique aux articles sans seuil propre ; null = aucun. */
+  default_alert_threshold: number | null;
   created_at?: string | null;
   updated_at?: string | null;
 }
@@ -56,6 +58,7 @@ export interface UpdateCompanySettingsPayload {
   navbar_variant: NavbarVariant;
   content_width: ContentWidth;
   prime_threshold?: number;
+  default_alert_threshold?: number | null;
 }
 
 export const DEFAULT_COMPANY_THEME_SETTINGS: Pick<

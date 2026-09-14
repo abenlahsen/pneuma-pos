@@ -303,24 +303,14 @@
                       {{ option.label }}
                     </option>
                   </select>
+                  <!-- `3j` : chaque réglage dit ce qu'il fait réellement. -->
+                  <small class="field-hint">
+                    « Système » suit le réglage clair/sombre de l’ordinateur ; les deux autres
+                    l’imposent pour tout le monde, sur tous les postes.
+                  </small>
                 </div>
 
                 <div class="layout-grid">
-                  <div class="form-group">
-                    <label for="navbar_variant">Style de la barre supérieure</label>
-                    <select
-                      id="navbar_variant"
-                      class="form-control"
-                      [ngModel]="form().navbar_variant"
-                      (ngModelChange)="updateField('navbar_variant', $event)"
-                      name="navbar_variant"
-                    >
-                      <option *ngFor="let option of navbarVariantOptions" [ngValue]="option.value">
-                        {{ option.label }}
-                      </option>
-                    </select>
-                  </div>
-
                   <div class="form-group form-group-wide">
                     <label for="content_width">Largeur du contenu</label>
                     <select
@@ -334,6 +324,10 @@
                         {{ option.label }}
                       </option>
                     </select>
+                    <small class="field-hint">
+                      Borne la largeur des écrans. « Pleine » occupe tout le moniteur : pratique
+                      sur les tableaux larges, fatigant à la lecture sur un grand écran.
+                    </small>
                   </div>
                 </div>
 
@@ -406,8 +400,6 @@
               <div
                 class="theme-preview"
                 [class.theme-preview--dark]="previewThemeMode() === 'dark'"
-                [class.theme-preview--navbar-compact]="previewNavbarVariant() === 'compact'"
-                [class.theme-preview--navbar-flat]="previewNavbarVariant() === 'flat'"
                 [class.theme-preview--width-boxed]="previewContentWidth() === 'boxed'"
                 [class.theme-preview--width-compact]="previewContentWidth() === 'compact'"
                 [ngStyle]="previewStyles()"
@@ -462,9 +454,39 @@
                 </div>
 
                 <div class="theme-preview__legend">
-                  <span><strong>Barre supérieure :</strong> {{ previewNavbarVariant() === 'compact' ? 'Compacte' : (previewNavbarVariant() === 'flat' ? 'Plate' : 'Standard') }}</span>
                   <span><strong>Contenu :</strong> {{ previewContentWidth() === 'boxed' ? 'Encadré' : (previewContentWidth() === 'compact' ? 'Compact' : 'Pleine largeur') }}</span>
                 </div>
+              </div>
+            </div>
+          </div>
+
+           <div class="stock-section" *ngIf="activeSection() === 'stock'">
+            <div class="section-header section-header--split">
+              <div>
+                <h2>Stock</h2>
+                <p class="section-subtitle">Quand un article doit-il remonter dans la file de réapprovisionnement de l'accueil.</p>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="form-group form-group-wide">
+                <label for="default_alert_threshold">Seuil de réapprovisionnement par défaut</label>
+                <input
+                  id="default_alert_threshold"
+                  type="number"
+                  class="form-control"
+                  [ngModel]="form().default_alert_threshold"
+                  (ngModelChange)="updateField('default_alert_threshold', $event)"
+                  name="default_alert_threshold"
+                  placeholder="Aucun"
+                  min="0"
+                  step="1"
+                />
+                <small class="field-hint">
+                  Un article passe dans la file « Produits sous seuil » de l'accueil dès que son
+                  stock descend à ce niveau. Chaque article peut porter son propre seuil, qui
+                  l'emporte sur celui-ci. Laissé vide, seuls les articles ayant leur propre seuil
+                  sont surveillés.
+                </small>
               </div>
             </div>
           </div>
@@ -492,6 +514,7 @@
                 />
                 <small class="field-hint">Si le shop vend ≥ ce nombre de pneus sur le mois, tous les commerciaux reçoivent leur prime.</small>
               </div>
+
             </div>
           </div>
 
