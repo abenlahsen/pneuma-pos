@@ -153,6 +153,94 @@ describe('DetailNavigator', () => {
   });
 });
 
+/**
+ * Liste affichée du plus récent au plus ancien (tri serveur par défaut :
+ * date DESC, id DESC). « Suivant » doit alors mener à la commande de numéro
+ * SUPÉRIEUR — la ligne du dessus — et non à la ligne du dessous : sur la
+ * commande 11, Suivant ouvre la 12, Précédent la 10.
+ */
+describe('DetailNavigator — liste descendante (plus récent en premier)', () => {
+  let items: ReturnType<typeof signal<Row[]>>;
+  let current: ReturnType<typeof signal<Row | null>>;
+  let page: ReturnType<typeof signal<number>>;
+  let lastPage: ReturnType<typeof signal<number>>;
+  let descending: ReturnType<typeof signal<boolean>>;
+  let goToPage: Mock<(page: number) => void>;
+  let nav: DetailNavigator<Row>;
+
+  beforeEach(() => {
+    // page 1 = 12, 11, 10 — page 2 = 9, 8
+    items = signal<Row[]>(rows(12, 11, 10));
+    current = signal<Row | null>(null);
+    page = signal(1);
+    lastPage = signal(2);
+    descending = signal(true);
+    goToPage = vi.fn<(page: number) => void>((p) => page.set(p));
+    nav = new DetailNavigator<Row>({
+      items, current, page, lastPage, descending,
+      loading: signal(false),
+      perPage: signal(3),
+      total: signal(5),
+      goToPage,
+    });
+  });
+
+  it('Suivant ouvre le numéro supérieur, Précédent le numéro inférieur', () => {
+    current.set({ id: 11 });
+    nav.next();
+    expect(current()).toEqual({ id: 12 });
+    nav.prev();
+    expect(current()).toEqual({ id: 11 });
+    nav.prev();
+    expect(current()).toEqual({ id: 10 });
+    expect(goToPage).not.toHaveBeenCalled();
+  });
+
+  it('hasNext est faux sur le tout premier enregistrement (le plus récent), hasPrev sur le tout dernier', () => {
+    current.set({ id: 12 });
+    expect(nav.hasNext()).toBe(false);
+    expect(nav.hasPrev()).toBe(true);
+
+    page.set(2);
+    items.set(rows(9, 8));
+    current.set({ id: 8 });
+    expect(nav.hasPrev()).toBe(false);
+    expect(nav.hasNext()).toBe(true);
+  });
+
+  it('Précédent en bas de page charge la page suivante et ouvre sa première ligne', () => {
+    current.set({ id: 10 });
+    nav.prev();
+
+    expect(goToPage).toHaveBeenCalledWith(2);
+    expect(current()).toEqual({ id: 10 }); // inchangé tant que la liste n'est pas arrivée
+
+    items.set(rows(9, 8));
+    nav.onListLoaded();
+    expect(current()).toEqual({ id: 9 });
+  });
+
+  it('Suivant en haut de page 2 charge la page 1 et ouvre sa dernière ligne', () => {
+    page.set(2);
+    items.set(rows(9, 8));
+    current.set({ id: 9 });
+    nav.next();
+
+    expect(goToPage).toHaveBeenCalledWith(1);
+    items.set(rows(12, 11, 10));
+    nav.onListLoaded();
+    expect(current()).toEqual({ id: 10 });
+  });
+
+  it("revient à l'ordre des lignes dès que la liste repasse en croissant", () => {
+    descending.set(false);
+    items.set(rows(10, 11, 12));
+    current.set({ id: 11 });
+    nav.next();
+    expect(current()).toEqual({ id: 12 });
+  });
+});
+
 describe('isTypingTarget', () => {
   it('is true for inputs, textareas, selects and contenteditable elements', () => {
     expect(isTypingTarget(document.createElement('input'))).toBe(true);

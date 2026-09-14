@@ -12,6 +12,14 @@ export interface DetailNavigatorDeps<T extends { id: number }> {
   loading: Signal<boolean>;
   /** Triggers a reload of the list for the given page (the page's own `goToPage`). */
   goToPage: (page: number) => void;
+  /**
+   * True when the table shows the most recent record first (the server's
+   * default: date DESC, id DESC — or an explicit descending sort). "Suivant"
+   * then means the row ABOVE, so that on order 11 it opens order 12, not 10:
+   * next/prev always step toward the higher/lower sort key, whichever way
+   * the rows happen to be laid out. Omitted = rows are ascending.
+   */
+  descending?: Signal<boolean>;
 }
 
 /**
@@ -33,16 +41,27 @@ export class DetailNavigator<T extends { id: number }> {
     return id == null ? -1 : this.deps.items().findIndex(item => item.id === id);
   });
 
-  readonly hasPrev = computed(() => {
-    if (this.deps.loading()) return false;
+  /** Rows are displayed newest-first: "next" walks UP the table. */
+  private readonly reversed = computed(() => this.deps.descending?.() ?? false);
+
+  private readonly hasRowBefore = computed(() => {
     const i = this.index();
     return i > 0 || (i === 0 && this.deps.page() > 1);
   });
 
-  readonly hasNext = computed(() => {
-    if (this.deps.loading()) return false;
+  private readonly hasRowAfter = computed(() => {
     const i = this.index();
     return i >= 0 && (i < this.deps.items().length - 1 || this.deps.page() < this.deps.lastPage());
+  });
+
+  readonly hasPrev = computed(() => {
+    if (this.deps.loading()) return false;
+    return this.reversed() ? this.hasRowAfter() : this.hasRowBefore();
+  });
+
+  readonly hasNext = computed(() => {
+    if (this.deps.loading()) return false;
+    return this.reversed() ? this.hasRowBefore() : this.hasRowAfter();
   });
 
   /** "12 / 340" — global position in the filtered result, null when not navigable. */
@@ -56,6 +75,18 @@ export class DetailNavigator<T extends { id: number }> {
 
   prev(): void {
     if (!this.hasPrev()) return;
+    if (this.reversed()) this.stepToRowAfter();
+    else this.stepToRowBefore();
+  }
+
+  next(): void {
+    if (!this.hasNext()) return;
+    if (this.reversed()) this.stepToRowBefore();
+    else this.stepToRowAfter();
+  }
+
+  /** Row above; on the first row, the last row of the previous page. */
+  private stepToRowBefore(): void {
     const i = this.index();
     if (i > 0) {
       this.deps.current.set(this.deps.items()[i - 1]);
@@ -65,8 +96,8 @@ export class DetailNavigator<T extends { id: number }> {
     this.deps.goToPage(this.deps.page() - 1);
   }
 
-  next(): void {
-    if (!this.hasNext()) return;
+  /** Row below; on the last row, the first row of the next page. */
+  private stepToRowAfter(): void {
     const i = this.index();
     if (i < this.deps.items().length - 1) {
       this.deps.current.set(this.deps.items()[i + 1]);

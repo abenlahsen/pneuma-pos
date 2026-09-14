@@ -88,6 +88,10 @@ export class SalesPageComponent implements OnInit {
     total: this.total,
     loading: this.loading,
     goToPage: (page) => this.goToPage(page),
+    // Sans tri explicite, le serveur renvoie du plus récent au plus ancien
+    // (date DESC, id DESC) : « Suivant » doit alors remonter vers le numéro
+    // supérieur, pas descendre la table.
+    descending: computed(() => this.sortBy() === '' || this.sortDirection() === 'desc'),
   });
 
   allCarriers = signal<Carrier[]>([]);
