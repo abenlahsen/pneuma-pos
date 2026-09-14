@@ -120,6 +120,43 @@
       </p>
     </section>
 
+    <!-- ── Devis sans réponse ──────────────────────────────────────────── -->
+    <section class="queue" *ngIf="queues().quotes as quotes">
+      <header class="queue-head">
+        <h2>{{ queueTitle('quotes', quotes.scope) }}</h2>
+        <span class="queue-count">
+          {{ quotes.count }}<span *ngIf="quotes.total"> · {{ quotes.total | number:'1.0-0' }} DH</span>
+        </span>
+        <span class="queue-scope">{{ scopeLabel('quotes', quotes.scope) }}</span>
+      </header>
+
+      <app-empty-state
+        *ngIf="!loading() && quotes.rows.length === 0"
+        icon="check"
+        title="Aucun devis en attente"
+        message="Tous vos devis ont reçu une réponse." />
+
+      <div class="task" *ngFor="let row of quotes.rows">
+        <span class="t-main">
+          <span class="t-head">
+            <span class="t-title">{{ row.reference }} · {{ row.client || 'Client non lié' }}</span>
+            <span class="t-own" *ngIf="row.commercial && quotes.scope === 'all'">{{ row.commercial }}</span>
+          </span>
+          <span class="t-sub">
+            Émis {{ row.issued_at | date:'dd/MM' }} · {{ row.days_waiting }} jour{{ row.days_waiting > 1 ? 's' : '' }} sans réponse
+          </span>
+        </span>
+        <span class="t-amt">{{ row.amount | number:'1.2-2' }} DH</span>
+        <button type="button" class="btn btn-secondary" (click)="openQuote(row.id)">
+          {{ actionLabel('quotes', quotes.scope) }}
+        </button>
+      </div>
+
+      <p class="queue-more" *ngIf="quotes.count > quotes.rows.length">
+        et {{ quotes.count - quotes.rows.length }} autre{{ quotes.count - quotes.rows.length > 1 ? 's' : '' }}
+      </p>
+    </section>
+
     <app-empty-state
       *ngIf="!loading() && !hasAnyQueue() && !loadError()"
       icon="home"

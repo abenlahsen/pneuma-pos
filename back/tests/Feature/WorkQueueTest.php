@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Enums\QuoteStatus;
+use App\Enums\ServiceOrderStatus;
 use App\Models\Client;
 use App\Models\CompanySetting;
 use App\Models\Product;
+use App\Models\Quote;
 use App\Models\Sale;
-use App\Enums\ServiceOrderStatus;
 use App\Models\ServiceOrder;
 use App\Models\Stock;
 use App\Models\User;
@@ -35,8 +37,8 @@ class WorkQueueTest extends TestCase
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         foreach ([
-            'view sales', 'view service-orders', 'view stock',
-            'view unpaid.all', 'view service-orders.all',
+            'view sales', 'view service-orders', 'view stock', 'view quotes',
+            'view unpaid.all', 'view service-orders.all', 'view quotes.all',
         ] as $permission) {
             Permission::findOrCreate($permission, 'web');
         }
@@ -375,5 +377,102 @@ class WorkQueueTest extends TestCase
         $this->assertNotNull($row['stock_id'], 'Une ligne d\'achat exige un lot.');
         $this->assertArrayHasKey('unit_price', $row);
         $this->assertArrayHasKey('supplier_id', $row);
+    }
+
+    // ── Devis sans reponse : ses devis, sauf permission `.all` ─────────────
+
+    private function makeQuote(User $commercial, float $amount = 1000, ?string $respondedAt = null): Quote
+    {
+        return Quote::query()->create([
+            'reference' => 'DEV-'.fake()->unique()->numerify('####'),
+            'client_id' => $this->makeClient('Client devis '.fake()->unique()->numerify('###'))->id,
+            'commercial_id' => $commercial->id,
+            'issued_at' => now()->subDays(16)->toDateString(),
+            'total_amount' => $amount,
+            'status' => QuoteStatus::ENVOYE->value,
+            'responded_at' => $respondedAt,
+        ]);
+    }
+
+    public function test_commercial_only_sees_his_own_quotes(): void
+    {
+        $colleague = User::query()->create([
+            'name' => 'Collegue devis',
+            'email' => fake()->unique()->safeEmail(),
+            'password' => 'password',
+            'phone' => '0600000020',
+            'commission_rate' => 0,
+            'must_change_password' => false,
+        ]);
+
+        $commercial = $this->makeUser(['view sales', 'view quotes']);
+        $mine = $this->makeQuote($commercial, 1500);
+        $theirs = $this->makeQuote($colleague, 9000);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $response->assertOk()->assertJsonPath('quotes.scope', 'own');
+        $ids = collect($response->json('quotes.rows'))->pluck('id')->all();
+
+        $this->assertContains($mine->id, $ids);
+        $this->assertNotContains($theirs->id, $ids, "Le devis d'un collegue ne doit jamais quitter le serveur.");
+    }
+
+    public function test_manager_sees_every_quote(): void
+    {
+        $colleague = User::query()->create([
+            'name' => 'Collegue devis',
+            'email' => fake()->unique()->safeEmail(),
+            'password' => 'password',
+            'phone' => '0600000021',
+            'commission_rate' => 0,
+            'must_change_password' => false,
+        ]);
+
+        $manager = $this->makeUser(['view sales', 'view quotes', 'view quotes.all']);
+        $mine = $this->makeQuote($manager, 1000);
+        $theirs = $this->makeQuote($colleague, 3000);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $response->assertOk()->assertJsonPath('quotes.scope', 'all');
+        $ids = collect($response->json('quotes.rows'))->pluck('id')->all();
+
+        $this->assertContains($mine->id, $ids);
+        $this->assertContains($theirs->id, $ids);
+    }
+
+    /** Un devis auquel on a repondu n'attend plus rien. */
+    public function test_an_answered_quote_leaves_the_queue(): void
+    {
+        $commercial = $this->makeUser(['view sales', 'view quotes']);
+        $answered = $this->makeQuote($commercial, 800, now()->toDateTimeString());
+
+        $response = $this->getJson('/api/work-queues');
+
+        $ids = collect($response->json('quotes.rows'))->pluck('id')->all();
+        $this->assertNotContains($answered->id, $ids);
+    }
+
+    public function test_the_quote_queue_carries_its_count_and_total(): void
+    {
+        $commercial = $this->makeUser(['view sales', 'view quotes']);
+        $this->makeQuote($commercial, 1200);
+        $this->makeQuote($commercial, 800);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $response->assertOk()->assertJsonPath('quotes.count', 2);
+        $this->assertEqualsWithDelta(2000, $response->json('quotes.total'), 0.01);
+    }
+
+    public function test_the_quote_queue_is_absent_without_the_permission(): void
+    {
+        $this->makeUser(['view sales']);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $response->assertOk();
+        $this->assertArrayNotHasKey('quotes', $response->json());
     }
 }

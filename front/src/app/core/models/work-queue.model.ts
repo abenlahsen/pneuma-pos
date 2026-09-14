@@ -10,7 +10,7 @@
 export type QueueScope = 'own' | 'all' | 'shared';
 
 /** Les trois files de l'accueil. Sert a nommer titres, badges et actions. */
-export type QueueKey = 'unpaid' | 'to_invoice' | 'low_stock';
+export type QueueKey = 'unpaid' | 'to_invoice' | 'low_stock' | 'quotes';
 
 export interface UnpaidRow {
   id: number;
@@ -29,6 +29,18 @@ export interface ToInvoiceRow {
   commercial: string | null;
   amount: number;
   payment_status: string;
+}
+
+/** Une ligne de la file « Devis sans réponse ». */
+export interface QuoteRow {
+  id: number;
+  reference: string;
+  client: string | null;
+  commercial: string | null;
+  issued_at: string | null;
+  /** Jours ecoules depuis l'emission : c'est ce qui dit s'il est encore temps. */
+  days_waiting: number;
+  amount: number;
 }
 
 /** Une ligne de la file « Produits sous seuil ». */
@@ -97,5 +109,6 @@ export interface WorkQueues {
   unpaid?: WorkQueue<UnpaidRow>;
   to_invoice?: WorkQueue<ToInvoiceRow>;
   low_stock?: WorkQueue<LowStockRow>;
+  quotes?: WorkQueue<QuoteRow>;
   figures?: WorkFigures;
 }

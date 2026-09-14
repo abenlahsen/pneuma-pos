@@ -35,11 +35,12 @@ describe('DashboardComponent — liste de travail (5a/5b)', () => {
       unpaid: { scope: 'own', count: 3, total: 900, rows: [] },
       to_invoice: { scope: 'own', count: 2, total: 400, rows: [] },
       low_stock: { scope: 'shared', count: 6, total: null, rows: [] },
+      quotes: { scope: 'own', count: 4, total: 62400, rows: [] },
     }));
     comp = build();
     comp.ngOnInit();
 
-    expect(comp.pendingTotal()).toBe(11);
+    expect(comp.pendingTotal()).toBe(15);
     expect(comp.hasAnyQueue()).toBe(true);
   });
 
@@ -99,6 +100,14 @@ describe('DashboardComponent — liste de travail (5a/5b)', () => {
       expect(comp.scopeLabel('low_stock', 'shared')).toBe('Agence · partagé');
       expect(comp.scopeLabel('low_stock', 'all')).toBe('Agence · partagé');
     });
+
+    // Le possessif dit de QUOI on est proprietaire : des devis, pas des clients.
+    it('nomme les devis pour la file des devis', () => {
+      comp = build();
+
+      expect(comp.scopeLabel('quotes', 'own')).toBe('Mes devis');
+      expect(comp.scopeLabel('quotes', 'all')).toBe('Toutes agences');
+    });
   });
 
   describe('queueTitle', () => {
@@ -121,6 +130,13 @@ describe('DashboardComponent — liste de travail (5a/5b)', () => {
 
       expect(comp.queueTitle('low_stock', 'shared')).toBe('Produits sous seuil');
     });
+
+    it('porte le possessif sur les devis en portee personnelle', () => {
+      comp = build();
+
+      expect(comp.queueTitle('quotes', 'own')).toBe('Mes devis sans réponse');
+      expect(comp.queueTitle('quotes', 'all')).toBe('Devis sans réponse');
+    });
   });
 
   // ── Libelles d'action : le gerant distribue le travail, il ne le fait pas ──
@@ -138,6 +154,8 @@ describe('DashboardComponent — liste de travail (5a/5b)', () => {
       expect(comp.actionLabel('to_invoice', 'own')).toBe('Facturer');
       expect(comp.actionLabel('to_invoice', 'all')).toBe('Facturer');
       expect(comp.actionLabel('low_stock', 'shared')).toBe('Commander');
+      expect(comp.actionLabel('quotes', 'own')).toBe('Rappeler');
+      expect(comp.actionLabel('quotes', 'all')).toBe('Rappeler');
     });
 
     // Primaire pour Facturer seul : c'est la seule action qui conclut.
@@ -147,6 +165,7 @@ describe('DashboardComponent — liste de travail (5a/5b)', () => {
       expect(comp.isPrimaryAction('to_invoice')).toBe(true);
       expect(comp.isPrimaryAction('unpaid')).toBe(false);
       expect(comp.isPrimaryAction('low_stock')).toBe(false);
+      expect(comp.isPrimaryAction('quotes')).toBe(false);
     });
   });
 
@@ -368,6 +387,10 @@ describe('DashboardComponent — rendu en portee commercial', () => {
       scope: 'shared', count: 6, total: null,
       rows: [{ product_id: 3, reference: 'M120701251P-CG', dimension: '120/70R12', stock: 1, threshold: 5, stock_id: 3, unit_price: 450, supplier_id: null }],
     },
+    quotes: {
+      scope: 'own', count: 2, total: 39200,
+      rows: [{ id: 1, reference: 'DEV-0309', client: 'Transport Chaouia', commercial: 'Omar', issued_at: '2026-08-29', days_waiting: 16, amount: 26800 }],
+    },
     figures: {
       scope: 'own',
       today: { sales: 2, revenue: 4800, margin: 900, open_orders: 3 },
@@ -398,6 +421,8 @@ describe('DashboardComponent — rendu en portee commercial', () => {
     expect(text).toContain('Mes impayés');
     expect(text).toContain('Mes ordres à facturer');
     expect(text).toContain('Mes clients');
+    expect(text).toContain('Mes devis sans réponse');
+    expect(text).toContain('Mes devis');
     expect(text).not.toContain('Toutes agences');
   });
 
