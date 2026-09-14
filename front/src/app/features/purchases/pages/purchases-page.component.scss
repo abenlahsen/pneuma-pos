@@ -16,13 +16,9 @@
   white-space: normal; // .table td forces nowrap — allow wrapping here
   max-width: 13rem;
 }
+// Meme raison que sur les ventes : un mode de paiement est une categorie,
+// pas un etat. Badge plat et neutre, le libelle fait la distinction.
 .badge-method {
-  background: rgba(100, 116, 139, 0.1);
-  color: #475569; // neutral fallback for legacy/unmapped values
-
-  &.method-especes  { background: rgba(16, 185, 129, 0.12); color: #065f46; }
-  &.method-cheque   { background: rgba(59, 130, 246, 0.10); color: #1d4ed8; }
-  &.method-virement { background: rgba(139, 92, 246, 0.10); color: #6d28d9; }
-  &.method-effet    { background: rgba(245, 158, 11, 0.12); color: #92400e; }
-  &.method-carte    { background: rgba(236, 72, 153, 0.10); color: #9d174d; }
+  border-color: var(--neutral-300);
+  color: var(--neutral-800);
 }

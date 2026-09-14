@@ -218,7 +218,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(45, 43, 43, 0.55);
+  background: var(--scrim);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -229,7 +229,7 @@
 .detail-modal {
   background: var(--surface);
   border-radius: var(--radius-lg);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-lg);
   width: 100%;
   max-width: 680px;
   max-height: 85vh;

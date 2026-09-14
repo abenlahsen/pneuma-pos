@@ -10,9 +10,11 @@
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0;
-  &.margin-low  { color: #dc2626; }
-  &.margin-mid  { color: #d97706; }
-  &.margin-high { color: #16a34a; }
+  // Une marge faible/moyenne/forte est un etat : les trois tokens semantiques
+  // existent pour ca, et ils passent le seuil de contraste.
+  &.margin-low  { color: var(--bad-text); }
+  &.margin-mid  { color: var(--warn-text); }
+  &.margin-high { color: var(--ok-text); }
 }
 
 // Payment-method badges (aggregated from the sale's actual payments).
@@ -26,13 +28,12 @@
   white-space: normal; // .table td forces nowrap — allow wrapping here
   max-width: 13rem;
 }
+// Un mode de paiement est une CATEGORIE, pas un etat : il n'y a rien de bon
+// ni de mauvais a etre paye en cheque. Les cinq aplats colores d'avant
+// (bleu, violet, rose...) donnaient du sens ou il n'y en a pas, et deux
+// d'entre eux ne passaient pas le seuil de contraste. Le libelle suffit a
+// distinguer : le badge reste plat et neutre, comme tout etat lu.
 .badge-method {
-  background: rgba(100, 116, 139, 0.1);
-  color: #475569; // neutral fallback for legacy/unmapped values
-
-  &.method-especes  { background: rgba(16, 185, 129, 0.12); color: #065f46; }
-  &.method-cheque   { background: rgba(59, 130, 246, 0.10); color: #1d4ed8; }
-  &.method-virement { background: rgba(139, 92, 246, 0.10); color: #6d28d9; }
-  &.method-effet    { background: rgba(245, 158, 11, 0.12); color: #92400e; }
-  &.method-carte    { background: rgba(236, 72, 153, 0.10); color: #9d174d; }
+  border-color: var(--neutral-300);
+  color: var(--neutral-800);
 }

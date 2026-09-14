@@ -191,7 +191,11 @@
     margin-bottom: var(--sp-6);
     border: 2px solid var(--text);
     border-radius: var(--radius-lg);
-    background: var(--surface);
+    // Les gouttieres SONT les filets : le fond du cadre transparait entre les
+    // cellules. Tient quel que soit le nombre de rangees — une rangee de huit
+    // cadrans se replie sans filet manquant ni filet en trop.
+    gap: 2px;
+    background: var(--text);
     overflow: hidden;
   }
 
@@ -201,10 +205,7 @@
     justify-content: center;
     gap: var(--sp-1);
     padding: 16px 18px;
-    border-left: 2px solid var(--text);
     background: var(--surface);
-
-    &:first-child { border-left: none; }
 
     // Le cadran n'a plus d'icone : l'etiquette porte le sens.
     .card-icon { display: none; }
@@ -671,7 +672,7 @@
   .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(45, 43, 43, 0.55);
+    background: var(--scrim);
     display: flex;
     align-items: center;
     justify-content: center;

@@ -2,15 +2,6 @@
 @include layout.page-layout();
 
 // Internal tokens (mirror _page-layout internals)
-$_red:     #ff2d37;
-$_text:    #0f172a;
-$_muted:   #64748b;
-$_dim:     #94a3b8;
-$_bg:      #f1f5f9;
-$_surface: #ffffff;
-$_surface-2: #f8fafc;
-$_border:  #e8edf3;
-$_border-2: #d0d9e4;
 
 // ── Table-card spacing ───────────────────────────────────────────────────────
 .table-card {
@@ -35,33 +26,33 @@ $_border-2: #d0d9e4;
   display: inline-flex;
   align-items: center;
   padding: 0.15rem 0.55rem;
-  border-radius: 999px;
+  border-radius: var(--radius);
   font-size: 0.68rem;
   font-weight: 600;
-  background: rgba(59, 130, 246, 0.08);
-  color: #1d4ed8;
-  border: 1px solid rgba(59, 130, 246, 0.18);
+  background: transparent;
+  color: var(--neutral-800);
+  border: 2px solid var(--neutral-300);
   white-space: nowrap;
 }
 
 // ── Permissions reference card ───────────────────────────────────────────────
 .permissions-card {
   overflow: hidden;
-  border-radius: 14px;
-  border: 1px solid $_border;
-  background: $_surface;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05), 0 4px 12px rgba(15, 23, 42, 0.04);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--divider);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
 
   .card-header {
     padding: 0.8rem 1.25rem;
-    border-bottom: 1px solid $_border;
-    background: $_surface-2;
+    border-bottom: 1px solid var(--divider);
+    background: var(--surface-sunk);
 
     h2 {
       margin: 0;
       font-size: 0.72rem;
       font-weight: 700;
-      color: $_muted;
+      color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.08em;
     }
@@ -79,9 +70,9 @@ $_border-2: #d0d9e4;
 }
 
 .permission-group {
-  background: $_surface-2;
-  border: 1px solid $_border;
-  border-radius: 10px;
+  background: var(--surface-sunk);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius);
   overflow: hidden;
 }
 
@@ -90,11 +81,11 @@ $_border-2: #d0d9e4;
   padding: 0.5rem 0.75rem;
   font-size: 0.7rem;
   font-weight: 700;
-  color: $_muted;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  background: $_bg;
-  border-bottom: 1px solid $_border;
+  background: var(--bg);
+  border-bottom: 1px solid var(--divider);
 }
 
 .group-perms {
@@ -106,18 +97,18 @@ $_border-2: #d0d9e4;
   align-items: center;
   justify-content: space-between;
   padding: 0.25rem 0.5rem;
-  border-radius: 6px;
+  border-radius: var(--radius);
   gap: 0.5rem;
   transition: background 0.15s;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.03);
+    background: var(--neutral-100);
   }
 }
 
 .perm-name {
   font-size: 0.78rem;
-  color: $_text;
+  color: var(--text);
   font-weight: 500;
   flex: 1;
   min-width: 0;
@@ -134,7 +125,7 @@ $_border-2: #d0d9e4;
 // ── Modal: permissions section ────────────────────────────────────────────────
 .permissions-section {
   margin-top: 1.25rem;
-  border-top: 1px solid $_border;
+  border-top: 1px solid var(--divider);
   padding-top: 1.25rem;
 }
 
@@ -150,7 +141,7 @@ $_border-2: #d0d9e4;
     margin: 0;
     font-size: 0.72rem;
     font-weight: 700;
-    color: $_muted;
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.08em;
   }
@@ -168,13 +159,13 @@ $_border-2: #d0d9e4;
 }
 
 .btn-outline {
-  background: $_surface !important;
-  color: $_muted !important;
-  border: 1px solid $_border-2 !important;
+  background: var(--surface) !important;
+  color: var(--text-muted) !important;
+  border: 1px solid var(--neutral-400) !important;
   &:hover {
-    background: $_bg !important;
-    color: $_text !important;
-    border-color: #c4cdd8 !important;
+    background: var(--bg) !important;
+    color: var(--text) !important;
+    border-color: var(--neutral-400) !important;
   }
 }
 
@@ -189,26 +180,26 @@ $_border-2: #d0d9e4;
 
   // Custom scrollbar
   &::-webkit-scrollbar { width: 5px; }
-  &::-webkit-scrollbar-track { background: $_bg; border-radius: 4px; }
-  &::-webkit-scrollbar-thumb { background: $_border-2; border-radius: 4px; &:hover { background: $_dim; } }
+  &::-webkit-scrollbar-track { background: var(--bg); border-radius: var(--radius); }
+  &::-webkit-scrollbar-thumb { background: var(--neutral-400); border-radius: var(--radius); &:hover { background: var(--text-muted); } }
 }
 
 .matrix-group {
-  background: $_surface-2;
-  border: 1px solid $_border;
-  border-radius: 10px;
+  background: var(--surface-sunk);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius);
   overflow: hidden;
 }
 
 .matrix-group-header {
   padding: 0.45rem 0.65rem;
-  background: $_bg;
-  border-bottom: 1px solid $_border;
+  background: var(--bg);
+  border-bottom: 1px solid var(--divider);
 
   .checkbox-label {
     font-size: 0.72rem;
     font-weight: 700;
-    color: $_muted;
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.07em;
   }
@@ -226,21 +217,21 @@ $_border-2: #d0d9e4;
   align-items: center;
   gap: 0.45rem;
   padding: 0.25rem 0.5rem;
-  border-radius: 6px;
+  border-radius: var(--radius);
   cursor: pointer;
   font-size: 0.8rem;
-  color: $_text;
+  color: var(--text);
   font-weight: 500;
   transition: background 0.12s;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.04);
+    background: var(--neutral-100);
   }
 
   input[type="checkbox"] {
     width: 14px;
     height: 14px;
-    accent-color: $_red;
+    accent-color: var(--accent);
     cursor: pointer;
     flex-shrink: 0;
   }
@@ -253,7 +244,7 @@ $_border-2: #d0d9e4;
   gap: 0.65rem;
   margin-top: 1.5rem;
   padding-top: 1.25rem;
-  border-top: 1px solid $_border;
+  border-top: 1px solid var(--divider);
 }
 
 // ── Responsive ────────────────────────────────────────────────────────────────
