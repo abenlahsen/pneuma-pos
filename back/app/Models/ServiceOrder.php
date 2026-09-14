@@ -12,6 +12,9 @@ class ServiceOrder extends Model
         'client_id',
         'vehicle_id',
         'date',
+        'scheduled_at',
+        'duration_minutes',
+        'bay_id',
         'vehicle',
         'mileage',
         'total_amount',
@@ -29,6 +32,7 @@ class ServiceOrder extends Model
 
     protected $casts = [
         'date' => 'date',
+        'scheduled_at' => 'datetime',
         'total_amount' => 'decimal:2',
         'total_purchase' => 'decimal:2',
         'margin' => 'decimal:2',
@@ -84,5 +88,10 @@ class ServiceOrder extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(ServicePayment::class);
+    }
+
+    public function bay(): BelongsTo
+    {
+        return $this->belongsTo(Bay::class);
     }
 }

@@ -35,7 +35,7 @@ class StockDeductionService
             $item->updateQuietly(['stock_id' => $stock->id]);
 
             $clientName = $order->client_id ? ($order->clientRecord?->name ?? null) : null;
-            $reason = "Ordre #{$order->id} — {$order->vehicle}" . ($clientName ? " ({$clientName})" : '');
+            $reason = "Ordre #{$order->id} — {$order->vehicle}".($clientName ? " ({$clientName})" : '');
             $this->movementService->recordServiceOut(
                 $stock->id,
                 $item->product_id,
@@ -61,7 +61,7 @@ class StockDeductionService
             $stock->increment('quantity', (int) $item->quantity);
 
             $clientName = $order->client_id ? ($order->clientRecord?->name ?? null) : null;
-            $reason = "Ordre #{$order->id} — {$order->vehicle}" . ($clientName ? " ({$clientName})" : '');
+            $reason = "Ordre #{$order->id} — {$order->vehicle}".($clientName ? " ({$clientName})" : '');
             $this->movementService->recordServiceIn(
                 $stock->id,
                 $item->product_id,

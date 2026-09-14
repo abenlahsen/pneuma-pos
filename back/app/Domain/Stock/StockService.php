@@ -24,9 +24,6 @@ class StockService
      */
     private $movements;
 
-    /**
-     * @param StockMovementService $movements
-     */
     public function __construct(StockMovementService $movements)
     {
         $this->movements = $movements;
@@ -160,16 +157,16 @@ class StockService
     {
         $filters['in_stock'] = 1;
 
-        $fileName = 'stock-disponible-' . now()->format('Y-m-d-His') . '.xlsx';
+        $fileName = 'stock-disponible-'.now()->format('Y-m-d-His').'.xlsx';
         $headers = [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+            'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
             'Cache-Control' => 'max-age=0, no-store, no-cache, must-revalidate',
             'Pragma' => 'public',
         ];
 
         return response()->streamDownload(function () use ($filters) {
-            $spreadsheet = new Spreadsheet();
+            $spreadsheet = new Spreadsheet;
             $sheet = $spreadsheet->getActiveSheet();
             $sheet->setTitle('Stock disponible');
 
@@ -235,7 +232,7 @@ class StockService
                 $sheet->getColumnDimension($column)->setAutoSize(true);
             }
 
-            $sheet->getStyle('L2:M' . max(count($rows), 2))
+            $sheet->getStyle('L2:M'.max(count($rows), 2))
                 ->getNumberFormat()
                 ->setFormatCode('#,##0.00');
 

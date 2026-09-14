@@ -58,6 +58,15 @@ export const routes: Routes = [
       import('./features/service-orders/pages/service-orders.component').then((m) => m.ServiceOrdersComponent),
   },
   {
+    // Planning de l'atelier (`3f`) : la liste reste accessible, mais c'est le
+    // tableau qui montre les trous et les chevauchements.
+    path: 'service-orders/planning',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'view service-orders' },
+    loadComponent: () =>
+      import('./features/service-orders/pages/workshop-planning.component').then((m) => m.WorkshopPlanningComponent),
+  },
+  {
     path: 'suppliers',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view suppliers' },

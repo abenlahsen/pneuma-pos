@@ -45,7 +45,7 @@ class AccountService
         ", [$today, $today, $today, $today]);
 
         if (! empty($filters['search'])) {
-            $query->where('name', 'like', '%' . $filters['search'] . '%');
+            $query->where('name', 'like', '%'.$filters['search'].'%');
         }
 
         if (array_key_exists('is_active', $filters)) {

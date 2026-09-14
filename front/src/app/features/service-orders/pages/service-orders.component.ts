@@ -2,7 +2,7 @@ import { Component, DestroyRef, OnDestroy, OnInit, computed, inject, signal } fr
 import { PageHeaderService } from '../../../core/services/page-header.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ServiceOrder, ServiceOrderFilters, ServiceOrderPayload, ServiceOrderSummary } from '../../../core/models/service-order.model';
 import { PaymentStatus, ServiceOrderStatus, SERVICE_ORDER_STATUSES, SERVICE_ORDER_STATUS_LABELS, PAYMENT_STATUSES, PAYMENT_STATUS_LABELS } from '../../../core/constants/status.constants';
@@ -28,6 +28,7 @@ import { IconComponent } from '../../../shared/icon/icon.component';
 })
 export class ServiceOrdersComponent implements OnInit, OnDestroy {
   private readonly pageHeader = inject(PageHeaderService);
+  private readonly router = inject(Router);
   readonly SERVICE_ORDER_STATUSES = SERVICE_ORDER_STATUSES;
   readonly SERVICE_ORDER_STATUS_LABELS = SERVICE_ORDER_STATUS_LABELS;
   readonly PAYMENT_STATUSES = PAYMENT_STATUSES;
@@ -75,6 +76,7 @@ export class ServiceOrdersComponent implements OnInit, OnDestroy {
   private publishHeader(): void {
     this.pageHeader.set('Service Auto');
     this.pageHeader.setActions([
+      { label: 'Planning', run: () => this.router.navigate(['/service-orders/planning']), variant: 'secondary' },
       { label: 'Nouvelle intervention', run: () => this.openAddForm(), variant: 'primary', hidden: () => !this.authService.hasPermission('create service-orders') },
       { label: 'Exporter Excel', run: () => this.exportOrders(), variant: 'secondary', disabled: () => this.isExporting() },
     ]);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\ServiceOrders\ServiceOrderService;
+use App\Domain\ServiceOrders\WorkshopPlanningService;
 use App\Http\Requests\ServiceOrders\StoreServiceOrderRequest;
 use App\Http\Requests\ServiceOrders\UpdateServiceOrderRequest;
 use App\Http\Resources\ServiceOrders\ServiceOrderResource;
@@ -11,6 +12,7 @@ use App\Models\Client;
 use App\Models\Product;
 use App\Models\ServiceOrder;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -119,9 +121,9 @@ class ServiceOrderController extends Controller
         if (strlen($search) >= 2) {
             $query->where(function ($q) use ($search) {
                 $q->where('profile', 'like', "%{$search}%")
-                  ->orWhere('reference', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhereHas('part', fn ($p) => $p->where('oem_reference', 'like', "%{$search}%"));
+                    ->orWhere('reference', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('part', fn ($p) => $p->where('oem_reference', 'like', "%{$search}%"));
             });
         }
 
@@ -182,9 +184,9 @@ class ServiceOrderController extends Controller
             ]];
 
             $query->get()->each(function (ServiceOrder $order) use (&$rows) {
-                $net    = round((float) ($order->net_amount ?? 0), 2);
-                $paid   = round((float) ($order->payments_sum_amount ?? 0), 2);
-                $reste  = max(0, round($net - $paid, 2));
+                $net = round((float) ($order->net_amount ?? 0), 2);
+                $paid = round((float) ($order->payments_sum_amount ?? 0), 2);
+                $reste = max(0, round($net - $paid, 2));
 
                 $vehicle = $order->vehicle
                     ? $order->vehicle->display_name
@@ -316,5 +318,37 @@ class ServiceOrderController extends Controller
                     });
             });
         }
+    }
+
+    /** Planning de l'atelier (`3f`) : baies, ordres places, file d'attente. */
+    public function planning(Request $request, WorkshopPlanningService $planning): JsonResponse
+    {
+        $day = $request->filled('date')
+            ? Carbon::parse((string) $request->string('date'))
+            : now();
+
+        return response()->json($planning->forDay($day));
+    }
+
+    /**
+     * Place un ordre dans une baie — c'est ce que fait le glisser-deposer.
+     * Une baie nulle le renvoie dans la file d'attente.
+     */
+    public function schedule(ServiceOrder $serviceOrder, Request $request, WorkshopPlanningService $planning): JsonResponse
+    {
+        $data = $request->validate([
+            'bay_id' => ['nullable', 'exists:bays,id'],
+            'scheduled_at' => ['nullable', 'date'],
+            'duration_minutes' => ['nullable', 'integer', 'min:15', 'max:480'],
+        ]);
+
+        $order = $planning->schedule(
+            $serviceOrder,
+            $data['bay_id'] ?? null,
+            $data['scheduled_at'] ?? null,
+            $data['duration_minutes'] ?? null,
+        );
+
+        return response()->json((new ServiceOrderResource($order))->resolve());
     }
 }

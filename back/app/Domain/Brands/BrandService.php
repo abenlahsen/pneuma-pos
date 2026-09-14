@@ -19,8 +19,8 @@ class BrandService
     {
         $query = Brand::query();
 
-        if (!empty($filters['search'])) {
-            $query->where('name', 'like', '%' . $filters['search'] . '%');
+        if (! empty($filters['search'])) {
+            $query->where('name', 'like', '%'.$filters['search'].'%');
         }
 
         if (array_key_exists('is_active', $filters)) {
@@ -28,7 +28,7 @@ class BrandService
         }
 
         $sortable = ['name', 'created_at'];
-        if (!empty($filters['sort_by']) && in_array($filters['sort_by'], $sortable, true)) {
+        if (! empty($filters['sort_by']) && in_array($filters['sort_by'], $sortable, true)) {
             $direction = ($filters['sort_direction'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
             $query->orderBy($filters['sort_by'], $direction);
         } else {

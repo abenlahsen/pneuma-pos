@@ -7,6 +7,7 @@ use App\Enums\ServiceOrderStatus;
 use App\Models\ServiceItem;
 use App\Models\ServiceOrder;
 use App\Models\Transaction;
+use App\Models\Vehicle;
 use App\Services\ActivityLogService;
 use Illuminate\Support\Facades\DB;
 
@@ -164,12 +165,12 @@ class ServiceOrderService
 
     private function resolveVehicleSnapshot(array $validated): string
     {
-        if (!empty($validated['vehicle'])) {
+        if (! empty($validated['vehicle'])) {
             return $validated['vehicle'];
         }
 
-        if (!empty($validated['vehicle_id'])) {
-            $v = \App\Models\Vehicle::find($validated['vehicle_id']);
+        if (! empty($validated['vehicle_id'])) {
+            $v = Vehicle::find($validated['vehicle_id']);
             if ($v) {
                 return "{$v->brand} {$v->model_name}";
             }

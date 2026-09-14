@@ -1,0 +1,273 @@
+/* ─── Planning de l'atelier (`3f`) ─────────────────────────────────────────
+   Le seul ecran qui n'est pas un tableau. Aucune valeur en dur : tout vient
+   de src/app/_tokens.scss. */
+
+:host { display: block; }
+
+.day-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+
+.day-label {
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.planning {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: var(--sp-4);
+  align-items: start;
+}
+
+/* ─── Le tableau ───────────────────────────────────────────────────────── */
+.board {
+  display: grid;
+  border: 2px solid var(--text);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.axis-head,
+.bay-head {
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--text);
+  background: var(--surface-sunk);
+}
+
+.bay-head {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border-left: 1px solid var(--divider);
+}
+
+.bay-name {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.bay-tech { font-size: 12px; color: var(--text-muted); }
+
+/* L'axe : huit lignes egales, chacune d'un huitieme de la hauteur. */
+.axis {
+  display: flex;
+  flex-direction: column;
+  height: 520px;
+}
+
+.axis-hour {
+  flex: 1;
+  padding: 2px 8px 0 0;
+  text-align: right;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  border-top: 1px solid var(--divider);
+
+  &:first-child { border-top: none; }
+}
+
+/* Chaque colonne porte ses cartes en absolu : leur position encode l'heure. */
+.bay {
+  position: relative;
+  height: 520px;
+  border-left: 1px solid var(--divider);
+  overflow: hidden;
+}
+
+.grid-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--divider);
+}
+
+/* La pause : hachures a 45°, pas un blanc — un blanc se lirait comme un trou
+   planifiable. */
+.lunch {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--neutral-200) 0 6px,
+    transparent 6px 12px
+  );
+  pointer-events: none;
+}
+
+/* L'heure courante sort de la meme formule que les cartes. */
+.now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* ─── Les quatre etats de carte ────────────────────────────────────────── */
+.slot {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 8px;
+  border: 2px solid var(--neutral-400);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+
+  /* En cours : bordure d'encre et point d'accent. */
+  &--running {
+    border-color: var(--text);
+
+    .slot-title { color: var(--accent-700); }
+  }
+
+  /* Termine : la coche suffit, pas de couleur en plus. */
+  &--done {
+    background: var(--surface-sunk);
+
+    .slot-title { color: var(--text-muted); }
+  }
+}
+
+.slot-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.slot-dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.slot-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.slot-sub,
+.slot-time {
+  font-size: 11px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.slot-time { margin-top: auto; font-variant-numeric: tabular-nums; }
+
+.slot-out {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  border: none;
+  background: none;
+  padding: 0 3px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+
+  &:hover { color: var(--accent-700); }
+}
+
+/* Libre : bordure tiretee, libelle centre. */
+.free {
+  position: absolute;
+  inset: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--neutral-300);
+  border-radius: var(--radius);
+  font-size: 12px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+/* ─── File d'attente ───────────────────────────────────────────────────── */
+.queue {
+  border: 2px solid var(--text);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.queue-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--text);
+  background: var(--surface-sunk);
+}
+
+.queue-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.queue-n {
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.queue-empty {
+  margin: 0;
+  padding: var(--sp-4);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* `cursor: grab` : la carte annonce qu'elle se deplace. */
+.qcard {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--divider);
+  cursor: grab;
+
+  &:last-child { border-bottom: none; }
+  &:active { cursor: grabbing; }
+  &:hover { background: var(--neutral-100); }
+}
+
+.qcard-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.qcard-sub { font-size: 12px; color: var(--text-muted); }
+.qcard-amount { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 1024px) {
+  .planning { grid-template-columns: minmax(0, 1fr); }
+}

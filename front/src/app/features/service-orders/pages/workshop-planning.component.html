@@ -1,0 +1,75 @@
+<app-error-banner
+  *ngIf="loadError()"
+  title="Impossible de charger le planning"
+  [detail]="loadError()"
+  (retry)="load()" />
+
+<div class="day-bar">
+  <button type="button" class="btn btn-secondary btn-sm" (click)="shiftDay(-1)" aria-label="Jour précédent">←</button>
+  <span class="day-label">{{ dayLabel() | titlecase }}</span>
+  <button type="button" class="btn btn-secondary btn-sm" (click)="shiftDay(1)" aria-label="Jour suivant">→</button>
+</div>
+
+<div class="planning" *ngIf="planning() as p">
+
+  <!-- Grille : axe des heures, puis une colonne par baie. -->
+  <div class="board" [style.grid-template-columns]="'52px repeat(' + p.bays.length + ', minmax(0, 1fr))'">
+
+    <div class="axis-head"></div>
+    <div class="bay-head" *ngFor="let bay of p.bays">
+      <span class="bay-name">{{ bay.name }}</span>
+      <span class="bay-tech">{{ bay.technician || 'Non affectée' }}</span>
+    </div>
+
+    <!-- L'axe : huit lignes égales de 09:00 à 17:00, 13:00 incluse. -->
+    <div class="axis">
+      <span class="axis-hour" *ngFor="let h of hours()">{{ h }}</span>
+    </div>
+
+    <!-- Chaque colonne est `position: relative` : les cartes y sont posées en
+         absolu depuis la seule fonction du temps. -->
+    <div class="bay" *ngFor="let bay of p.bays"
+         (dragover)="allowDrop($event)" (drop)="onDrop(bay.id, $event)">
+
+      <span class="grid-line" *ngFor="let h of hours(); let i = index" [style.top.%]="i / hours().length * 100"></span>
+
+      <!-- La pause : une bande hachurée, pas un blanc. -->
+      <span class="lunch" [style.top.%]="lunch().top" [style.height.%]="lunch().height"></span>
+
+      <span class="now" *ngIf="nowLine() !== null" [style.top.%]="nowLine()"></span>
+
+      <article class="slot" *ngFor="let placed of cardsFor(bay.id)"
+               [class.slot--running]="placed.card.status === 'EN COURS'"
+               [class.slot--done]="placed.card.status === 'TERMINE'"
+               [style.top.%]="placed.top" [style.height.%]="placed.height">
+        <span class="slot-head">
+          <span class="slot-dot" *ngIf="placed.card.status === 'EN COURS'"></span>
+          <app-icon name="check" [size]="13" *ngIf="placed.card.status === 'TERMINE'" />
+          <span class="slot-title">{{ placed.card.vehicle || 'Véhicule non renseigné' }}</span>
+        </span>
+        <span class="slot-sub">{{ placed.card.client || 'Client non lié' }}</span>
+        <span class="slot-time">{{ placed.label }}</span>
+        <button type="button" class="slot-out" (click)="unschedule(placed.card)" title="Remettre en file">↩</button>
+      </article>
+
+      <!-- Une baie vide le dit, elle ne reste pas blanche. -->
+      <span class="free" *ngIf="!cardsFor(bay.id).length">Libre</span>
+    </div>
+  </div>
+
+  <!-- File d'attente : on fait glisser une carte dans une baie pour planifier. -->
+  <aside class="queue">
+    <div class="queue-head">
+      <span class="queue-label">File d’attente</span>
+      <span class="queue-n">{{ p.queue.length }}</span>
+    </div>
+
+    <p class="queue-empty" *ngIf="!p.queue.length">Rien à planifier : tout ce qui est en cours est déjà placé.</p>
+
+    <article class="qcard" *ngFor="let card of p.queue" draggable="true" (dragstart)="onDragStart(card)">
+      <span class="qcard-title">{{ card.vehicle || 'Véhicule non renseigné' }}</span>
+      <span class="qcard-sub">{{ card.client || 'Client non lié' }}</span>
+      <span class="qcard-amount">{{ card.amount | number:'1.2-2' }} DH</span>
+    </article>
+  </aside>
+</div>
