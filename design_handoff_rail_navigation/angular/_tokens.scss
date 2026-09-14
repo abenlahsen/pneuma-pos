@@ -1,0 +1,158 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   PNEU.Ma — source unique des tokens.
+   Remplace : le bloc :root de app.scss, les --navbar-* du navbar,
+   et (à terme) features/_variables.scss.
+
+   Importé une seule fois, depuis src/styles.scss :
+       @use './app/_tokens.scss';
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* — rôles — */
+  --bg:            #f3f2f2;
+  --surface:       #ffffff;
+  --surface-sunk:  #eae9e9;
+  --text:          #201e1d;
+  --text-muted:    #605d5d;
+  --divider:       #bab6b6;
+
+  /* Accent. Pour garder le rouge PNEU.Ma actuel, remplacer par #ff2d37
+     et décaler la rampe d'un pas (voir README, § « Choisir l'accent »). */
+  --accent:        #ec3013;
+
+  /* — rampe accent : 100–300 fonds teintés, 500 base, 700+ texte — */
+  --accent-100: #fff2ef;
+  --accent-200: #ffe0d9;
+  --accent-300: #ffc4b8;
+  --accent-400: #ff9783;
+  --accent-500: #ff563c;
+  --accent-600: #dd2b0f;
+  --accent-700: #ae1800;
+  --accent-800: #7c1405;
+  --accent-900: #4d170e;
+
+  /* — rampe neutre — */
+  --neutral-100: #f8f4f4;
+  --neutral-200: #eae7e7;
+  --neutral-300: #d7d3d3;
+  --neutral-400: #bab6b6;
+  --neutral-500: #9b9797;
+  --neutral-600: #7d7979;
+  --neutral-700: #605d5d;
+  --neutral-800: #444141;
+  --neutral-900: #2d2b2b;
+
+  /* — sémantique. Le fond vient du pas 100, le TEXTE du pas 700 :
+       c'est ce qui règle les contrastes sous le seuil (constat 04). — */
+  --ok-bg:     #eef8f1;
+  --ok-text:   #1b6b3a;
+  --warn-bg:   #fdf3e7;
+  --warn-text: #8a4b06;
+  --bad-bg:    var(--accent-100);
+  --bad-text:  var(--accent-700);
+
+  /* — type : six pas, plus de demi-pixels — */
+  --font: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --fs-label: 13px;
+  --fs-cell:  14px;
+  --fs-body:  16px;
+  --fs-h3:    20px;
+  --fs-h2:    26px;
+  --fs-h1:    34px;
+  --fw-label: 700;
+  --ls-label: 0.1em;
+
+  /* — espacement — */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+
+  /* — rayon : 8 / 12 px, choix du commanditaire. Remplace sept valeurs
+       (4, 6, 8, 12, 16, 20, 999 px). Pour le zero Modernist : 0 / 0. — */
+  --radius:    8px;
+  --radius-lg: 12px;
+
+  /* — élévation : deux niveaux, pas cinq — */
+  --shadow-sm: 0 1px 2px rgba(45, 43, 43, 0.14);
+  --shadow-lg: 0 12px 32px rgba(45, 43, 43, 0.22);
+
+  /* — chrome de navigation — */
+  --rail-w:   64px;
+  --rail-bg:  var(--neutral-900);
+  --rail-fg:  var(--neutral-500);
+  --rail-fg-strong: var(--neutral-100);
+  --panel-w:  252px;
+  --topbar-h: 56px;
+
+  color-scheme: light;
+}
+
+/* Mode sombre — on ne redéfinit QUE les rôles, jamais les rampes.
+   --surface en fait partie : c'est la ligne qui manquait (constat 05). */
+:root[data-theme-resolved='dark'] {
+  --bg:           #17201f;
+  --surface:      #201e1d;
+  --surface-sunk: #2d2b2b;
+  --text:         #f8f4f4;
+  --text-muted:   #bab6b6;
+  --divider:      #605d5d;
+  --accent:       var(--accent-500);   /* un pas plus clair sur fond sombre */
+
+  --ok-bg:     #18332a;
+  --ok-text:   #7ddba4;
+  --warn-bg:   #33281a;
+  --warn-text: #f0b878;
+  --bad-bg:    #3a1a14;
+  --bad-text:  var(--accent-400);
+
+  --rail-bg:   #131110;
+
+  --shadow-sm: 0 1px 2px rgba(2, 6, 23, 0.5);
+  --shadow-lg: 0 16px 40px rgba(2, 6, 23, 0.55);
+
+  color-scheme: dark;
+}
+
+/* Thème client B2B — un attribut sur <html> repeint l'accent, rien d'autre.
+   Posé par ThemeService.applyCompanyTheme() à partir des réglages entreprise. */:root[data-brand='client'] {
+  --accent: #1f5ea8;
+  --accent-100: #eef4fb;
+  --accent-200: #d6e5f6;
+  --accent-300: #adc9ea;
+  --accent-400: #6f9fd8;
+  --accent-500: #3d7cc0;
+  --accent-600: #1b5296;
+  --accent-700: #133f75;
+  --accent-800: #0d2d55;
+  --accent-900: #0a1f3b;
+}
+
+/* ─── États, définis une fois pour toute l'application ─────────────────── */
+
+:focus { outline: none; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--accent-200);
+  color: var(--text);
+}
+
+[disabled],
+.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Chiffres : toujours en chasse fixe, pour que les colonnes s'alignent. */
+.num,
+td.num,
+.kpi-v {
+  font-variant-numeric: tabular-nums;
+}

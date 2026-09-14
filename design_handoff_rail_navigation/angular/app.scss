@@ -1,0 +1,56 @@
+/* Remplace src/app/app.scss.
+   Le bloc :root est parti dans _tokens.scss ; ce fichier ne garde que
+   la géométrie de la coquille. La grille passe de 280px à --rail-w. */
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: var(--rail-w) minmax(0, 1fr);
+  align-items: stretch;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.main-content {
+  min-height: 100vh;
+  min-width: 0;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content__inner {
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--sp-6);
+  min-width: 0;
+}
+
+:root[data-content-width='full'] .main-content__inner    { max-width: 100%; }
+:root[data-content-width='boxed'] .main-content__inner   { max-width: 1440px; }
+:root[data-content-width='compact'] .main-content__inner { max-width: 1120px; }
+
+/* Sous 1024px le rail devient une barre inférieure : la grille redevient
+   une colonne et le contenu réserve la hauteur de la barre. */
+@media (max-width: 1024px) {
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .main-content {
+    min-height: calc(100vh - 64px);
+    padding-bottom: 64px;
+  }
+
+  .main-content__inner {
+    padding: var(--sp-4);
+  }
+}

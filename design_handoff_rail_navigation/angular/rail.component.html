@@ -1,0 +1,67 @@
+<nav class="rail" aria-label="Navigation principale">
+  <a routerLink="/dashboard" class="rail__brand" (click)="closePanel()" aria-label="Accueil">
+    <img [src]="brandLogoUrl()" [alt]="companySettings()?.company_name || 'PNEU.MA'">
+  </a>
+
+  <div class="rail__items">
+    @for (item of items(); track item.label) {
+      @if (item.children) {
+        <button
+          type="button"
+          class="rail__i"
+          [class.rail__i--open]="openPanel() === item.label"
+          [class.rail__i--active]="activeGroup() === item.label"
+          [attr.aria-expanded]="openPanel() === item.label"
+          [attr.aria-label]="item.label"
+          [title]="item.label"
+          (click)="togglePanel(item)"
+        >
+          <app-icon [name]="item.icon" />
+        </button>
+      } @else {
+        <a
+          class="rail__i"
+          [routerLink]="item.route"
+          routerLinkActive="rail__i--active"
+          [routerLinkActiveOptions]="{ exact: !!item.exact }"
+          [attr.aria-label]="item.label"
+          [title]="item.label"
+          (click)="closePanel()"
+        >
+          <app-icon [name]="item.icon" />
+        </a>
+      }
+
+      @if (item.label === 'Cash Flow') {
+        <span class="rail__sep" aria-hidden="true"></span>
+      }
+    }
+  </div>
+
+  <button type="button" class="rail__user" [title]="userName() + ' — ' + userRole()" (click)="logout()">
+    <span class="rail__avatar">{{ initials() }}</span>
+  </button>
+</nav>
+
+@if (panelItem(); as panel) {
+  <!-- Superposé, pas juxtaposé : la largeur de travail ne change jamais. -->
+  <div class="panel__scrim" (click)="closePanel()" aria-hidden="true"></div>
+  <aside class="panel" [attr.aria-label]="panel.label">
+    <header class="panel__head">
+      <span class="panel__title">{{ panel.label }}</span>
+      <button type="button" class="panel__close" (click)="closePanel()" aria-label="Fermer">
+        <app-icon name="close" [size]="16" />
+      </button>
+    </header>
+    <div class="panel__items">
+      @for (child of panel.children; track child.route) {
+        <a
+          class="panel__i"
+          [routerLink]="child.route"
+          routerLinkActive="panel__i--active"
+          (click)="closePanel()"
+        >{{ child.label }}</a>
+      }
+    </div>
+  </aside>
+}

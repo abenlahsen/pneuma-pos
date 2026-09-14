@@ -1,0 +1,18 @@
+<!-- Remplace src/app/app.html.
+     Plus de menuLayout : le rail est la seule disposition.
+     RailComponent rend à la fois le rail (grid-column 1) et le panneau
+     (position fixed) — d'où le :host { display: contents }. -->
+
+@if (authService.isAuthenticated()) {
+  <div class="app-shell">
+    <app-rail />
+
+    <main class="main-content">
+      <div class="main-content__inner">
+        <router-outlet />
+      </div>
+    </main>
+  </div>
+} @else {
+  <router-outlet />
+}

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_ds/modernist-c14075a3-7e47-498e-a6ce-5ff80a0266f8/styles.css">
+<script src="_ds/modernist-c14075a3-7e47-498e-a6ce-5ff80a0266f8/_ds_bundle.js"></script>
+<style>
+  :root { --surface-raised: #ffffff; }
+  body { margin: 0; background: #e6e4e3; }
+  a { color: var(--color-accent-700); text-decoration: none; border-bottom: 1px solid var(--color-accent-300); }
+  a:hover { color: var(--color-text); border-bottom-color: var(--color-text); }
+  .rail-i { width: 100%; height: 48px; display: flex; align-items: center; justify-content: center; color: var(--color-neutral-500); cursor: pointer; }
+  .rail-i:hover { background: var(--color-neutral-800); color: var(--color-neutral-100); }
+  .rail-i[aria-current='page'] { background: var(--color-accent); color: #fff; }
+  .rail-i[data-open='true'] { background: var(--color-neutral-800); color: var(--color-neutral-100); }
+  .panel-i { font-size: 14px; padding: 11px 16px; border-left: 3px solid transparent; cursor: pointer; display: block; }
+  .panel-i:hover { background: var(--color-neutral-100); border-left-color: var(--color-neutral-400); }
+  .panel-i[aria-current='page'] { font-weight: 600; border-left-color: var(--color-accent); background: var(--color-accent-100); }
+  .kpi { padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; border-right: 2px solid var(--color-text); }
+  .kpi:last-child { border-right: 0; }
+  .kpi-l { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-neutral-700); }
+  .kpi-v { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .chip { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 7px 12px; border: 2px solid var(--color-neutral-400); color: var(--color-neutral-800); cursor: pointer; }
+  .chip:hover { border-color: var(--color-text); color: var(--color-text); }
+  .chip[aria-pressed='true'] { background: var(--color-text); color: var(--color-bg); border-color: var(--color-text); }
+  .st { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 8px; border: 2px solid var(--color-neutral-400); color: var(--color-text); cursor: pointer; }
+  .st:hover { border-color: var(--color-text); }
+  .ro { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 8px; border: 2px solid var(--color-neutral-300); color: var(--color-neutral-800); }
+  .rd { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 8px; border: 2px solid var(--color-accent-700); color: var(--color-accent-700); }
+  .frame { flex: 0 0 1240px; width: 1240px; min-width: 1240px; display: flex; flex-direction: column; gap: 14px; }
+  .shell { position: relative; display: grid; grid-template-columns: 64px minmax(0,1fr); grid-template-rows: minmax(0, 1fr); border: 2px solid var(--color-text); background: var(--color-bg); height: 760px; overflow: hidden; }
+  .shell > * { min-height: 0; }
+  .badge { font-size: 13px; font-weight: 700; letter-spacing: 0.1em; padding: 4px 10px; background: var(--color-text); color: var(--color-bg); }
+  .sec-h { display: flex; align-items: baseline; gap: 16px; border-bottom: 2px solid var(--color-text); padding-bottom: 10px; }
+  .sec-h h2 { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+  code, pre { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+</style>
+</helmet>
+
+<section style="display:flex;flex-direction:column;gap:56px;padding:56px 64px 96px;font-family:var(--font-body);color:var(--color-text)">
+
+  <div style="display:flex;flex-direction:column;gap:20px;max-width:1080px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent)">Tour 2 · direction retenue</span>
+      <span style="flex:1;height:2px;background:var(--color-text)"></span>
+    </div>
+    <h1 style="margin:0;font-size:56px;line-height:1.02;letter-spacing:-0.02em;text-wrap:pretty">Direction 1a — rail permanent<br>et panneau de section</h1>
+    <p style="margin:0;max-width:780px;font-size:17px;line-height:1.55;color:var(--color-neutral-800)">La direction retenue, développée sur trois écrans : la liste des ventes, la saisie d'une vente, et l'espace client B2B qui réutilise le même rail. Suivent la spécification du rail, les tokens prêts à coller, et l'ordre de mise en œuvre dans le dépôt.</p>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:24px">
+    <div class="sec-h">
+      <h2>1 — Ventes</h2>
+      <span style="font-size:13px;color:var(--color-neutral-700)">Panneau « Stock » ouvert pour montrer la superposition</span>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start">
+
+      <div id="2a" class="frame">
+        <div style="display:flex;align-items:baseline;gap:14px"><span class="badge">2a</span><h3 style="margin:0;font-size:26px;letter-spacing:-0.01em">Liste des ventes</h3></div>
+
+        <div class="shell">
+          <div style="display:flex;flex-direction:column;align-items:center;background:var(--color-neutral-900)">
+            <div style="height:56px;width:100%;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--color-neutral-700)"><span style="font-size:15px;font-weight:800;color:var(--color-accent);letter-spacing:-0.02em">PM</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;width:100%">
+              <span class="rail-i" title="Accueil"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg></span>
+              <span class="rail-i" aria-current="page" title="Ventes"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 3h7l11 11-7 7L3 10V3z"></path><circle cx="7" cy="7" r="1.4" fill="currentColor" stroke="none"></circle></svg></span>
+              <span class="rail-i" title="Service Auto"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M14.5 3.5a5 5 0 0 0-6.3 6.3L3 15v6h6l5.2-5.2a5 5 0 0 0 6.3-6.3l-3.2 3.2-3-3 3.2-3.2z"></path></svg></span>
+              <span class="rail-i" title="Achats"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9z"></path><path d="M3 7.5 12 12l9-4.5M12 12v9"></path></svg></span>
+              <span class="rail-i" title="Cash Flow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 6h18v12H3z"></path><circle cx="12" cy="12" r="2.5"></circle></svg></span>
+              <span style="width:32px;height:1px;background:var(--color-neutral-600);margin:8px 0"></span>
+              <span class="rail-i" data-open="true" title="Stock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="3.5"></circle></svg></span>
+              <span class="rail-i" title="Tiers"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><circle cx="9" cy="8" r="3.2"></circle><path d="M3 20v-1.5c0-2.2 2.7-3.5 6-3.5s6 1.3 6 3.5V20"></path><path d="M16 5.5a3.2 3.2 0 0 1 0 6.2M18 20v-1.5c0-1.5-.9-2.6-2.3-3.2"></path></svg></span>
+              <span class="rail-i" title="Finance"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 9.5 12 4l9 5.5"></path><path d="M5 9.5V19h14V9.5M9 19v-6M15 19v-6M3 21h18"></path></svg></span>
+              <span class="rail-i" title="Administration"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"></path></svg></span>
+            </div>
+            <div style="margin-top:auto;width:100%;height:56px;display:flex;align-items:center;justify-content:center;border-top:1px solid var(--color-neutral-700)"><span style="width:30px;height:30px;background:var(--color-accent);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">AB</span></div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;min-width:0">
+            <div style="height:56px;display:flex;align-items:center;gap:20px;padding:0 20px;border-bottom:2px solid var(--color-text);flex-shrink:0">
+              <span style="font-size:13px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase">Ventes</span>
+              <div style="display:flex;align-items:center;gap:10px;flex:1;max-width:420px;border:2px solid var(--color-neutral-400);background:#fff;padding:7px 10px">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-neutral-600)" stroke-width="2" stroke-linecap="square"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M15.5 15.5 21 21"></path></svg>
+                <span style="font-size:13px;color:var(--color-neutral-700);flex:1">Rechercher une vente, un client, une page…</span>
+                <span style="font-size:11px;font-weight:700;letter-spacing:0.06em;color:var(--color-neutral-700);border:1px solid var(--color-neutral-300);padding:2px 5px">CTRL K</span>
+              </div>
+              <div style="margin-left:auto;display:flex;align-items:center;gap:14px">
+                <span style="font-size:12px;color:var(--color-neutral-700)">Agence Casablanca</span>
+                <button class="btn btn-primary">Nouvelle vente</button>
+              </div>
+            </div>
+
+            <div style="flex:1;overflow:hidden;padding:20px;display:flex;flex-direction:column;gap:18px;min-width:0">
+              <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:2px solid var(--color-text);background:#fff">
+                <div class="kpi"><span class="kpi-l">CA du jour</span><span class="kpi-v">48 320<span style="font-size:15px;font-weight:600;color:var(--color-neutral-700)"> DH</span></span></div>
+                <div class="kpi"><span class="kpi-l">Marge nette</span><span class="kpi-v">9 745<span style="font-size:15px;font-weight:600;color:var(--color-neutral-700)"> DH</span></span></div>
+                <div class="kpi"><span class="kpi-l">Ventes</span><span class="kpi-v">37</span></div>
+                <div class="kpi"><span class="kpi-l">Impayés</span><span class="kpi-v" style="color:var(--color-accent-700)">12 400<span style="font-size:15px;font-weight:600"> DH</span></span></div>
+              </div>
+
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <span class="chip" aria-pressed="true">Toutes</span>
+                <span class="chip">En cours</span>
+                <span class="chip">Livrées</span>
+                <span class="chip" style="border-color:var(--color-accent-300);background:var(--color-accent-100);color:var(--color-accent-700)">Impayées · 5</span>
+                <span style="margin-left:auto;font-size:13px;color:var(--color-neutral-700)">37 ventes · 02/09/2026</span>
+              </div>
+
+              <div style="border:2px solid var(--color-text);background:#fff;flex:1;overflow:hidden">
+                <table class="table">
+                  <thead>
+                    <tr style="background:var(--color-surface)">
+                      <th style="padding:11px 14px">Réf</th>
+                      <th style="padding:11px 14px">Date</th>
+                      <th style="padding:11px 14px">Client</th>
+                      <th style="padding:11px 14px">Véhicule</th>
+                      <th style="padding:11px 14px;text-align:right">Montant</th>
+                      <th style="padding:11px 14px">Paiement</th>
+                      <th style="padding:11px 14px">Statut</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <sc-for list="{{ ventes }}" as="v" hint-placeholder-count="7">
+                      <tr>
+                        <td style="padding:12px 14px;font-weight:600;font-variant-numeric:tabular-nums">{{ v.ref }}</td>
+                        <td style="padding:12px 14px;color:var(--color-neutral-800);font-variant-numeric:tabular-nums">{{ v.date }}</td>
+                        <td style="padding:12px 14px">{{ v.client }}</td>
+                        <td style="padding:12px 14px;color:var(--color-neutral-800)">{{ v.vehicule }}</td>
+                        <td style="padding:12px 14px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums">{{ v.montant }}</td>
+                        <td style="padding:12px 14px">
+                          <sc-if value="{{ v.impaye }}" hint-placeholder-val="{{ false }}"><span class="rd">{{ v.paiement }}</span></sc-if>
+                          <sc-if value="{{ v.regle }}" hint-placeholder-val="{{ true }}"><span class="ro">{{ v.paiement }}</span></sc-if>
+                        </td>
+                        <td style="padding:12px 14px"><span class="st">{{ v.statut }} <span style="font-size:9px">▾</span></span></td>
+                      </tr>
+                    </sc-for>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div style="position:absolute;left:64px;top:0;bottom:0;width:252px;background:#fff;border-right:2px solid var(--color-text);box-shadow:var(--shadow-lg);display:flex;flex-direction:column;z-index:5">
+            <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:2px solid var(--color-text);background:var(--color-surface)">
+              <span style="font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase">Stock</span>
+              <span style="font-size:16px;color:var(--color-neutral-700);cursor:pointer">×</span>
+            </div>
+            <div style="display:flex;flex-direction:column;padding:8px 0">
+              <span class="panel-i" aria-current="page">Produits</span>
+              <span class="panel-i">Inventaire</span>
+              <span class="panel-i">Marques</span>
+              <hr class="hr" style="margin:10px 16px">
+              <span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-neutral-700);padding:6px 16px 8px">Raccourcis</span>
+              <span class="panel-i">Alertes de seuil · 6</span>
+              <span class="panel-i">Dernier inventaire</span>
+            </div>
+            <div style="margin-top:auto;padding:14px 16px;border-top:2px solid var(--color-neutral-300)"><span style="font-size:12px;line-height:1.5;color:var(--color-neutral-700)">Le panneau se referme dès la navigation. La largeur de travail ne change jamais.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="2b" class="frame">
+        <div style="display:flex;align-items:baseline;gap:14px"><span class="badge">2b</span><h3 style="margin:0;font-size:26px;letter-spacing:-0.01em">Nouvelle vente — saisie au comptoir</h3></div>
+        <p style="margin:0;max-width:960px;font-size:15px;line-height:1.6;color:var(--color-neutral-800)">Le rail reste en place pendant la saisie : on ne perd jamais le contexte, et la colonne de droite tient le récapitulatif sans jamais défiler. Tout est atteignable au clavier — d'où l'anneau d'accent visible sur le champ actif.</p>
+
+        <div class="shell">
+          <div style="display:flex;flex-direction:column;align-items:center;background:var(--color-neutral-900)">
+            <div style="height:56px;width:100%;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--color-neutral-700)"><span style="font-size:15px;font-weight:800;color:var(--color-accent);letter-spacing:-0.02em">PM</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;width:100%">
+              <span class="rail-i" title="Accueil"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg></span>
+              <span class="rail-i" aria-current="page" title="Ventes"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 3h7l11 11-7 7L3 10V3z"></path><circle cx="7" cy="7" r="1.4" fill="currentColor" stroke="none"></circle></svg></span>
+              <span class="rail-i" title="Service Auto"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M14.5 3.5a5 5 0 0 0-6.3 6.3L3 15v6h6l5.2-5.2a5 5 0 0 0 6.3-6.3l-3.2 3.2-3-3 3.2-3.2z"></path></svg></span>
+              <span class="rail-i" title="Achats"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9z"></path><path d="M3 7.5 12 12l9-4.5M12 12v9"></path></svg></span>
+              <span class="rail-i" title="Cash Flow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 6h18v12H3z"></path><circle cx="12" cy="12" r="2.5"></circle></svg></span>
+              <span style="width:32px;height:1px;background:var(--color-neutral-600);margin:8px 0"></span>
+              <span class="rail-i" title="Stock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="3.5"></circle></svg></span>
+              <span class="rail-i" title="Tiers"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><circle cx="9" cy="8" r="3.2"></circle><path d="M3 20v-1.5c0-2.2 2.7-3.5 6-3.5s6 1.3 6 3.5V20"></path><path d="M16 5.5a3.2 3.2 0 0 1 0 6.2M18 20v-1.5c0-1.5-.9-2.6-2.3-3.2"></path></svg></span>
+              <span class="rail-i" title="Finance"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 9.5 12 4l9 5.5"></path><path d="M5 9.5V19h14V9.5M9 19v-6M15 19v-6M3 21h18"></path></svg></span>
+              <span class="rail-i" title="Administration"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"></path></svg></span>
+            </div>
+            <div style="margin-top:auto;width:100%;height:56px;display:flex;align-items:center;justify-content:center;border-top:1px solid var(--color-neutral-700)"><span style="width:30px;height:30px;background:var(--color-accent);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">AB</span></div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;min-width:0">
+            <div style="height:56px;display:flex;align-items:center;gap:14px;padding:0 20px;border-bottom:2px solid var(--color-text);flex-shrink:0">
+              <span style="font-size:13px;color:var(--color-neutral-700)">Ventes</span>
+              <span style="font-size:13px;color:var(--color-neutral-500)">/</span>
+              <span style="font-size:13px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase">Nouvelle vente</span>
+              <span style="margin-left:auto;font-size:12px;color:var(--color-neutral-700)">Brouillon enregistré · 14:22</span>
+            </div>
+
+            <div style="flex:1;display:grid;grid-template-columns:minmax(0,1fr) 340px;overflow:hidden">
+
+              <div style="padding:20px;display:flex;flex-direction:column;gap:18px;overflow:hidden;min-width:0">
+                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+                  <div class="field"><label>Client</label><div style="display:flex;gap:8px"><input class="input" value="Transport Chaouia" style="outline:2px solid var(--color-accent);outline-offset:0;border-color:var(--color-accent)"><button class="btn btn-secondary" style="flex-shrink:0">Nouveau</button></div></div>
+                  <div class="field"><label>Véhicule</label><input class="input" value="Iveco Daily — 2458-A-16"></div>
+                </div>
+
+                <div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--color-text);padding-bottom:8px;margin-bottom:0">
+                    <span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase">Lignes</span>
+                    <button class="btn btn-ghost">+ Ajouter un article</button>
+                  </div>
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th style="padding:10px 12px 10px 0">Article</th>
+                        <th style="padding:10px 12px;text-align:right;width:70px">Qté</th>
+                        <th style="padding:10px 12px;text-align:right;width:110px">P.U.</th>
+                        <th style="padding:10px 12px;text-align:right;width:70px">Rem.</th>
+                        <th style="padding:10px 0 10px 12px;text-align:right;width:120px">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <sc-for list="{{ lignes }}" as="l" hint-placeholder-count="4">
+                        <tr>
+                          <td style="padding:11px 12px 11px 0"><span style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">{{ l.nom }}</span><span style="font-size:12px;color:var(--color-neutral-700)">{{ l.ref }}</span></span></td>
+                          <td style="padding:11px 12px;text-align:right;font-variant-numeric:tabular-nums">{{ l.qte }}</td>
+                          <td style="padding:11px 12px;text-align:right;font-variant-numeric:tabular-nums">{{ l.pu }}</td>
+                          <td style="padding:11px 12px;text-align:right;font-variant-numeric:tabular-nums;color:var(--color-neutral-700)">{{ l.remise }}</td>
+                          <td style="padding:11px 0 11px 12px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums">{{ l.total }}</td>
+                        </tr>
+                      </sc-for>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style="margin-top:auto;border:2px solid var(--color-accent-300);background:var(--color-accent-100);padding:14px 16px;display:flex;align-items:center;gap:14px">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="2" stroke-linecap="square" style="flex-shrink:0"><path d="M12 3 22 20H2L12 3z"></path><path d="M12 9v5M12 17h.01"></path></svg>
+                  <span style="font-size:13px;line-height:1.5;color:var(--color-accent-800)">Ce client a <span style="font-weight:700">11 640 DH</span> d'impayé sur la vente VTE-2416. Le règlement au comptant est recommandé.</span>
+                </div>
+              </div>
+
+              <div style="border-left:2px solid var(--color-text);background:var(--color-surface);padding:20px;display:flex;flex-direction:column;gap:16px;overflow:hidden">
+                <span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase">Récapitulatif</span>
+                <div style="display:flex;flex-direction:column">
+                  <span style="display:flex;justify-content:space-between;font-size:14px;padding:9px 0;border-top:1px solid var(--color-neutral-300)"><span style="color:var(--color-neutral-800)">Sous-total</span><span style="font-variant-numeric:tabular-nums">9 700.00 DH</span></span>
+                  <span style="display:flex;justify-content:space-between;font-size:14px;padding:9px 0;border-top:1px solid var(--color-neutral-300)"><span style="color:var(--color-neutral-800)">Remise</span><span style="font-variant-numeric:tabular-nums">−340.00 DH</span></span>
+                  <span style="display:flex;justify-content:space-between;font-size:14px;padding:9px 0;border-top:1px solid var(--color-neutral-300)"><span style="color:var(--color-neutral-800)">Main-d'œuvre</span><span style="font-variant-numeric:tabular-nums">280.00 DH</span></span>
+                  <span style="display:flex;justify-content:space-between;font-size:14px;padding:9px 0;border-top:1px solid var(--color-neutral-300)"><span style="color:var(--color-neutral-800)">TVA 20 %</span><span style="font-variant-numeric:tabular-nums">1 928.00 DH</span></span>
+                  <span style="display:flex;justify-content:space-between;align-items:baseline;padding:14px 0 0;border-top:2px solid var(--color-text);margin-top:4px"><span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase">Total</span><span style="font-size:28px;font-weight:800;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">11 568.00<span style="font-size:14px;font-weight:600;color:var(--color-neutral-700)"> DH</span></span></span>
+                </div>
+
+                <div class="field" style="margin-top:4px"><label>Mode de règlement</label>
+                  <div style="display:flex;flex-direction:column;gap:8px">
+                    <span class="chip" aria-pressed="true" style="text-align:left">Espèces</span>
+                    <span class="chip">Chèque</span>
+                    <span class="chip">Virement</span>
+                    <span class="chip">À crédit</span>
+                  </div>
+                </div>
+
+                <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px">
+                  <button class="btn btn-primary btn-block">Valider la vente</button>
+                  <button class="btn btn-secondary btn-block">Enregistrer en brouillon</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="2c" class="frame">
+        <div style="display:flex;align-items:baseline;gap:14px"><span class="badge">2c</span><h3 style="margin:0;font-size:26px;letter-spacing:-0.01em">Espace client B2B — même rail, quatre icônes</h3></div>
+        <p style="margin:0;max-width:960px;font-size:15px;line-height:1.6;color:var(--color-neutral-800)">C'est l'argument décisif de cette direction : l'espace client n'est pas le menu interne filtré par permission, c'est le même rail avec quatre destinations et aucun panneau de section. Rien de la structure interne ne fuit — ni Primes, ni Charges RH, ni groupes vides. Les tokens, les tableaux et les boutons sont partagés à l'identique.</p>
+
+        <div class="shell">
+          <div style="display:flex;flex-direction:column;align-items:center;background:var(--color-neutral-900)">
+            <div style="height:56px;width:100%;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--color-neutral-700)"><span style="font-size:15px;font-weight:800;color:var(--color-accent);letter-spacing:-0.02em">PM</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;width:100%">
+              <span class="rail-i" aria-current="page" title="Mes commandes"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9z"></path><path d="M3 7.5 12 12l9-4.5M12 12v9"></path></svg></span>
+              <span class="rail-i" title="Devis"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M5 3h10l4 4v14H5z"></path><path d="M9 12h6M9 16h4"></path></svg></span>
+              <span class="rail-i" title="Factures"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M4 3h16v18l-4-2-4 2-4-2-4 2z"></path><path d="M8 8h8M8 12h8"></path></svg></span>
+              <span class="rail-i" title="Mon compte"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><circle cx="12" cy="8" r="3.4"></circle><path d="M5 20v-1.6c0-2.3 3.1-3.6 7-3.6s7 1.3 7 3.6V20"></path></svg></span>
+            </div>
+            <div style="margin-top:auto;width:100%;height:56px;display:flex;align-items:center;justify-content:center;border-top:1px solid var(--color-neutral-700)"><span style="width:30px;height:30px;background:var(--color-accent);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">TC</span></div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;min-width:0">
+            <div style="height:56px;display:flex;align-items:center;gap:20px;padding:0 20px;border-bottom:2px solid var(--color-text);flex-shrink:0">
+              <span style="font-size:13px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase">Mes commandes</span>
+              <span style="margin-left:auto;font-size:12px;color:var(--color-neutral-700)">Transport Chaouia · Compte 1042</span>
+              <button class="btn btn-primary">Demander un devis</button>
+            </div>
+
+            <div style="flex:1;overflow:hidden;padding:24px;display:flex;flex-direction:column;gap:22px;min-width:0">
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:2px solid var(--color-text);border-bottom:2px solid var(--color-text)">
+                <div style="padding:16px 20px 16px 0;display:flex;flex-direction:column;gap:6px;border-right:1px solid var(--color-neutral-300)"><span class="kpi-l">Commandes en cours</span><span class="kpi-v">3</span></div>
+                <div style="padding:16px 20px;display:flex;flex-direction:column;gap:6px;border-right:1px solid var(--color-neutral-300)"><span class="kpi-l">Encours facturé</span><span class="kpi-v">11 640<span style="font-size:15px;font-weight:600;color:var(--color-neutral-700)"> DH</span></span></div>
+                <div style="padding:16px 20px;display:flex;flex-direction:column;gap:6px"><span class="kpi-l">Échéance la plus proche</span><span class="kpi-v" style="font-size:22px">15/09/2026</span></div>
+              </div>
+
+              <div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:10px">
+                  <span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase">Historique</span>
+                  <span style="font-size:13px;color:var(--color-neutral-700)">12 commandes sur 2026</span>
+                </div>
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th style="padding:10px 14px 10px 0">Commande</th>
+                      <th style="padding:10px 14px">Date</th>
+                      <th style="padding:10px 14px">Articles</th>
+                      <th style="padding:10px 14px;text-align:right">Montant</th>
+                      <th style="padding:10px 14px">État</th>
+                      <th style="padding:10px 0 10px 14px">Document</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <sc-for list="{{ commandes }}" as="c" hint-placeholder-count="5">
+                      <tr>
+                        <td style="padding:13px 14px 13px 0;font-weight:600;font-variant-numeric:tabular-nums">{{ c.ref }}</td>
+                        <td style="padding:13px 14px;color:var(--color-neutral-800);font-variant-numeric:tabular-nums">{{ c.date }}</td>
+                        <td style="padding:13px 14px">{{ c.articles }}</td>
+                        <td style="padding:13px 14px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums">{{ c.montant }}</td>
+                        <td style="padding:13px 14px">
+                          <sc-if value="{{ c.attente }}" hint-placeholder-val="{{ false }}"><span class="rd">{{ c.etat }}</span></sc-if>
+                          <sc-if value="{{ c.close }}" hint-placeholder-val="{{ true }}"><span class="ro">{{ c.etat }}</span></sc-if>
+                        </td>
+                        <td style="padding:13px 0 13px 14px"><span style="font-size:13px;color:var(--color-accent-700);border-bottom:1px solid var(--color-accent-300);cursor:pointer">Facture PDF</span></td>
+                      </tr>
+                    </sc-for>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:24px">
+    <div class="sec-h"><h2>2 — Spécification du rail</h2><span style="font-size:13px;color:var(--color-neutral-700)">Ce qu'il faut trancher avant de coder</span></div>
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px">
+      <div style="display:flex;flex-direction:column;gap:10px;border-top:2px solid var(--color-text);padding-top:16px">
+        <h4 style="margin:0;font-size:19px">Géométrie</h4>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:var(--color-neutral-800)">Rail 64 px, cible tactile 48 × 64 px — au-delà du minimum de 44 px pour l'usage en atelier sur tablette. Panneau 252 px, superposé, ombre <code style="font-size:13px">--shadow-lg</code>, bord droit de 2 px. La zone de contenu ne se redimensionne jamais : aucun recalcul de tableau à l'ouverture.</p>
+        <p style="margin:0;font-size:13px;line-height:1.6;color:var(--color-neutral-700)">En dessous de 1024 px, le rail passe en barre inférieure à cinq cibles et le panneau en feuille pleine hauteur.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;border-top:2px solid var(--color-text);padding-top:16px">
+        <h4 style="margin:0;font-size:19px">Comportement</h4>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:var(--color-neutral-800)">Cinq icônes = navigation directe. Quatre icônes = ouverture de panneau, et le clic sur l'icône devient un basculement — plus de clic mort. Le panneau se ferme à la navigation, sur <code style="font-size:13px">Échap</code>, et au clic hors zone. Un seul panneau ouvert à la fois : l'accordéon additif actuel disparaît.</p>
+        <p style="margin:0;font-size:13px;line-height:1.6;color:var(--color-neutral-700)">L'état actif du rail suit la route, y compris quand on arrive par la recherche.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;border-top:2px solid var(--color-text);padding-top:16px">
+        <h4 style="margin:0;font-size:19px">Recherche <code style="font-size:13px">Ctrl K</code></h4>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:var(--color-neutral-800)">Trois sources dans une seule liste : les 27 destinations, les ventes par référence ou client, les produits par référence. C'est le chemin principal vers tout ce qui est rare — Rôles, Charges RH, Activité n'ont plus besoin d'être atteignables à la souris en deux clics.</p>
+        <p style="margin:0;font-size:13px;line-height:1.6;color:var(--color-neutral-700)">À construire : un composant autonome, indépendant du rail. C'est le seul développement neuf de la direction.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:24px">
+    <div class="sec-h"><h2>3 — Tokens, prêts à coller</h2><span style="font-size:13px;color:var(--color-neutral-700)">Remplace les trois sources actuelles par une seule</span></div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:start">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <p style="margin:0;font-size:14px;line-height:1.6;color:var(--color-neutral-800)">Un seul fichier <code style="font-size:13px">front/src/app/_tokens.scss</code> déclare tout en propriétés CSS. <code style="font-size:13px">features/_variables.scss</code> ne garde que des alias vers ces propriétés, le temps de la transition ; les blocs <code style="font-size:13px">--navbar-*</code> du navbar disparaissent. Le mode sombre ne redéfinit que les rôles, jamais la rampe — et cette fois <code style="font-size:13px">--surface</code> en fait partie (constat 05).</p>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:var(--color-neutral-800)">Le thème client B2B se branche au même endroit : un attribut <code style="font-size:13px">data-brand</code> sur <code style="font-size:13px">:root</code> suffit à repeindre l'accent sans toucher un écran.</p>
+        <p style="margin:0;font-size:13px;line-height:1.6;color:var(--color-neutral-700)">Deux valeurs à trancher : garder le rouge PNEU.Ma <code style="font-size:13px">#ff2d37</code> ou adopter l'accent Modernist <code style="font-size:13px">#ec3013</code>, et conserver ou non le rayon — les écrans ci-dessus sont à zéro.</p>
+      </div>
+      <pre style="margin:0;background:var(--color-neutral-900);color:var(--color-neutral-200);padding:24px;font-size:12.5px;line-height:1.75;overflow:auto;max-height:620px">:root {
+  /* — rôles — */
+  --bg:            #f3f2f2;
+  --surface:       #ffffff;
+  --surface-sunk:  #eae9e9;
+  --text:          #201e1d;
+  --text-muted:    #605d5d;
+  --divider:       #bab6b6;
+  --accent:        #ec3013;   /* ou #ff2d37 */
+
+  /* — rampe accent : 100 fonds, 500 base, 700 texte — */
+  --accent-100: #fff2ef;
+  --accent-200: #ffe0d9;
+  --accent-300: #ffc4b8;
+  --accent-500: #ff563c;
+  --accent-600: #dd2b0f;
+  --accent-700: #ae1800;
+  --accent-800: #7c1405;
+
+  /* — rampe neutre — */
+  --neutral-100: #f8f4f4;
+  --neutral-300: #d7d3d3;
+  --neutral-500: #9b9797;
+  --neutral-700: #605d5d;
+  --neutral-900: #2d2b2b;
+
+  /* — type : six pas, plus de demi-pixels — */
+  --font: "Archivo", system-ui, sans-serif;
+  --fs-label: 13px;  --fw-label: 700;
+  --fs-cell:  14px;
+  --fs-body:  16px;
+  --fs-h3:    20px;
+  --fs-h2:    26px;
+  --fs-h1:    34px;
+
+  /* — espacement, rayon, ombre — */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px;
+  --sp-4: 16px; --sp-6: 24px; --sp-8: 32px;
+  --radius: 0;
+  --shadow-sm: 0 1px 2px rgba(45,43,43,.14);
+  --shadow-lg: 0 12px 32px rgba(45,43,43,.22);
+
+  /* — chrome de navigation — */
+  --rail-w: 64px;
+  --rail-bg: var(--neutral-900);
+  --panel-w: 252px;
+}
+
+:root[data-theme-resolved='dark'] {
+  --bg:           #17201f;
+  --surface:      #201e1d;   /* le manquant du constat 05 */
+  --surface-sunk: #2d2b2b;
+  --text:         #f8f4f4;
+  --text-muted:   #bab6b6;
+  --divider:      #605d5d;
+  --accent:       #ff563c;   /* un pas plus clair sur fond sombre */
+}
+
+/* — états, définis une fois pour toute l'application — */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+::selection { background: var(--accent-200); }
+[disabled] { opacity: .45; cursor: not-allowed; }</pre>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:24px;max-width:1080px">
+    <div class="sec-h"><h2>4 — Ordre de mise en œuvre</h2><span style="font-size:13px;color:var(--color-neutral-700)">Du moins risqué au plus structurant</span></div>
+    <div style="display:flex;flex-direction:column">
+      <div style="display:grid;grid-template-columns:36px minmax(0,1fr) 180px;gap:20px;border-top:2px solid var(--color-text);padding:16px 0">
+        <span style="font-size:13px;font-weight:700;color:var(--color-accent)">01</span>
+        <span><span style="font-weight:700;font-size:16px">Les tokens et les états</span><br><span style="font-size:14px;line-height:1.6;color:var(--color-neutral-800)">Créer <code style="font-size:13px">_tokens.scss</code>, y basculer <code style="font-size:13px">app.scss</code>, réduire <code style="font-size:13px">_variables.scss</code> à des alias, corriger <code style="font-size:13px">--surface</code> en sombre, poser le <code style="font-size:13px">:focus-visible</code> global. Aucun écran ne change d'aspect.</span></span>
+        <span style="font-size:13px;color:var(--color-neutral-700)">Invisible pour l'équipe</span>
+      </div>
+      <div style="display:grid;grid-template-columns:36px minmax(0,1fr) 180px;gap:20px;border-top:2px solid var(--color-text);padding:16px 0">
+        <span style="font-size:13px;font-weight:700;color:var(--color-accent)">02</span>
+        <span><span style="font-weight:700;font-size:16px">Les icônes</span><br><span style="font-size:14px;line-height:1.6;color:var(--color-neutral-800)">Remplacer les 17 emoji par les SVG Lucide correspondants, dans un composant <code style="font-size:13px">&lt;app-icon name="…"&gt;</code>. Les libellés du tableau <code style="font-size:13px">allNavItems</code> perdent leur préfixe emoji.</span></span>
+        <span style="font-size:13px;color:var(--color-neutral-700)">Visible, sans réapprentissage</span>
+      </div>
+      <div style="display:grid;grid-template-columns:36px minmax(0,1fr) 180px;gap:20px;border-top:2px solid var(--color-text);padding:16px 0">
+        <span style="font-size:13px;font-weight:700;color:var(--color-accent)">03</span>
+        <span><span style="font-weight:700;font-size:16px">Le rail et le panneau</span><br><span style="font-size:14px;line-height:1.6;color:var(--color-neutral-800)">Réécrire <code style="font-size:13px">navbar.component</code> en <code style="font-size:13px">rail.component</code> + <code style="font-size:13px">section-panel.component</code>. <code style="font-size:13px">allNavItems</code> et le filtrage par permission restent tels quels ; seuls <code style="font-size:13px">expandedGroups</code> et l'accordéon additif sont remplacés par un panneau unique. La grille de <code style="font-size:13px">app.scss</code> passe de 280 px à <code style="font-size:13px">var(--rail-w)</code>.</span></span>
+        <span style="font-size:13px;color:var(--color-neutral-700)">Le changement de fond</span>
+      </div>
+      <div style="display:grid;grid-template-columns:36px minmax(0,1fr) 180px;gap:20px;border-top:2px solid var(--color-text);padding:16px 0">
+        <span style="font-size:13px;font-weight:700;color:var(--color-accent)">04</span>
+        <span><span style="font-weight:700;font-size:16px">La recherche</span><br><span style="font-size:14px;line-height:1.6;color:var(--color-neutral-800)">Composant autonome, trois sources (destinations, ventes, produits), ouvert par <code style="font-size:13px">Ctrl K</code> et par le champ de la barre. Peut être livré après le rail sans le bloquer.</span></span>
+        <span style="font-size:13px;color:var(--color-neutral-700)">Développement neuf</span>
+      </div>
+      <div style="display:grid;grid-template-columns:36px minmax(0,1fr) 180px;gap:20px;border-top:2px solid var(--color-text);border-bottom:2px solid var(--color-text);padding:16px 0">
+        <span style="font-size:13px;font-weight:700;color:var(--color-accent)">05</span>
+        <span><span style="font-weight:700;font-size:16px">L'espace B2B</span><br><span style="font-size:14px;line-height:1.6;color:var(--color-neutral-800)">Un second jeu de <code style="font-size:13px">navItems</code> à quatre entrées et un <code style="font-size:13px">data-brand</code> sur <code style="font-size:13px">:root</code>. Aucun composant à dupliquer — c'est ce que l'étape 03 rend possible.</span></span>
+        <span style="font-size:13px;color:var(--color-neutral-700)">Au lancement client</span>
+      </div>
+    </div>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:var(--color-neutral-800)">Les étapes 01 et 02 sont indépendantes de la direction : elles valent même si vous changez d'avis sur le rail. Dis-moi si tu veux que je détaille un écran de plus — Stock, Reporting ou la palette de recherche elle-même.</p>
+  </div>
+
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;rowCount&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:7,&quot;min&quot;:3,&quot;max&quot;:8,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Affichage&quot;,&quot;unit&quot;:&quot;lignes&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const ventes = [
+      { ref: 'VTE-2418', date: '02/09/2026', client: 'Garage Atlas', vehicule: 'Dacia Logan', montant: '4 280.00', paiement: 'Payé', statut: 'Livré' },
+      { ref: 'VTE-2417', date: '02/09/2026', client: 'M. Rachidi', vehicule: 'Renault Clio IV', montant: '2 150.00', paiement: 'Partiel', statut: 'En cours' },
+      { ref: 'VTE-2416', date: '02/09/2026', client: 'Transport Chaouia', vehicule: 'Iveco Daily', montant: '11 640.00', paiement: 'Non payé', statut: 'En cours' },
+      { ref: 'VTE-2415', date: '01/09/2026', client: 'Mme Bennani', vehicule: 'Peugeot 208', montant: '3 100.00', paiement: 'Payé', statut: 'Monté' },
+      { ref: 'VTE-2414', date: '01/09/2026', client: 'Flotte Ocean', vehicule: 'Ford Transit', montant: '8 920.00', paiement: 'Payé', statut: 'Livré' },
+      { ref: 'VTE-2413', date: '01/09/2026', client: 'Auto Souss', vehicule: 'Hyundai Tucson', montant: '5 470.00', paiement: 'Non payé', statut: 'En cours' },
+      { ref: 'VTE-2412', date: '31/08/2026', client: 'M. Alaoui', vehicule: 'VW Golf VII', montant: '2 890.00', paiement: 'Payé', statut: 'Monté' },
+      { ref: 'VTE-2411', date: '31/08/2026', client: 'Garage Zerhouni', vehicule: 'Toyota Hilux', montant: '9 350.00', paiement: 'Partiel', statut: 'Livré' }
+    ];
+    const n = Math.max(3, Math.min(8, this.props.rowCount ?? 7));
+    const lignes = [
+      { nom: 'Michelin Agilis 3', ref: '215/75 R16C · PN-4412', qte: '4', pu: '1 640.00', remise: '5 %', total: '6 232.00' },
+      { nom: 'Valve TR600HP', ref: 'ACC-0188', qte: '4', pu: '45.00', remise: '—', total: '180.00' },
+      { nom: 'Équilibrage', ref: 'SRV-002', qte: '4', pu: '60.00', remise: '—', total: '240.00' },
+      { nom: 'Géométrie train avant', ref: 'SRV-011', qte: '1', pu: '280.00', remise: '—', total: '280.00' }
+    ];
+    const commandes = [
+      { ref: 'CMD-1042-09', date: '02/09/2026', articles: '4 × Michelin Agilis 3', montant: '11 640.00 DH', etat: 'En attente de règlement' },
+      { ref: 'CMD-1042-08', date: '19/08/2026', articles: '6 × Bridgestone Duravis', montant: '17 400.00 DH', etat: 'Livrée' },
+      { ref: 'CMD-1042-07', date: '04/08/2026', articles: '2 × Continental VanCo', montant: '5 180.00 DH', etat: 'Livrée' },
+      { ref: 'CMD-1042-06', date: '21/07/2026', articles: '4 × Michelin Agilis 3', montant: '11 200.00 DH', etat: 'Livrée' },
+      { ref: 'CMD-1042-05', date: '03/07/2026', articles: 'Géométrie + équilibrage', montant: '640.00 DH', etat: 'Livrée' }
+    ];
+    return {
+      ventes: ventes.slice(0, n).map(v => ({
+        ...v,
+        montant: v.montant + ' DH',
+        impaye: v.paiement !== 'Payé',
+        regle: v.paiement === 'Payé'
+      })),
+      lignes: lignes.map(l => ({ ...l, pu: l.pu + ' DH', total: l.total + ' DH' })),
+      commandes: commandes.map(c => ({
+        ...c,
+        attente: c.etat !== 'Livrée',
+        close: c.etat === 'Livrée'
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

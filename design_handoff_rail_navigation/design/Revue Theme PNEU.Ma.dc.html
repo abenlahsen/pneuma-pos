@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #e6e4e3; font-family: "Archivo", system-ui, sans-serif; color: #201e1d; -webkit-font-smoothing: antialiased; }
+  a { color: #ae1800; text-decoration: none; border-bottom: 1px solid #ffc4b8; }
+  a:hover { color: #201e1d; border-bottom-color: #201e1d; }
+  * { box-sizing: border-box; }
+</style>
+</helmet>
+
+<section style="display:flex;flex-direction:column;gap:56px;padding:56px 64px 96px">
+
+  <div style="display:flex;flex-direction:column;gap:20px;max-width:1080px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#ec3013">Tour 1</span>
+      <span style="flex:1;height:2px;background:#201e1d"></span>
+    </div>
+    <h1 style="margin:0;font-size:56px;line-height:1.02;font-weight:800;letter-spacing:-0.02em;text-wrap:pretty">Revue du thème PNEU.Ma<br>et trois directions pour le menu</h1>
+    <p style="margin:0;max-width:760px;font-size:17px;line-height:1.55;color:#444141">Revue du thème Angular en place (<span style="font-family:ui-monospace,monospace;font-size:15px">front/src</span> : <span style="font-family:ui-monospace,monospace;font-size:15px">app.scss</span>, <span style="font-family:ui-monospace,monospace;font-size:15px">navbar.component.*</span>, <span style="font-family:ui-monospace,monospace;font-size:15px">DESIGN_SYSTEM.md</span>), puis une proposition de tokens v2 et trois architectures de navigation comparées sur le même écran : Ventes. Les directions <a href="#1a">1a</a> et <a href="#1b">1b</a> adoptent le système Modernist ; <a href="#1c">1c</a> garde la marque actuelle et ne corrige que le menu.</p>
+  </div>
+
+  <sc-if value="{{ showReview }}" hint-placeholder-val="{{ true }}">
+  <div style="display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:baseline;gap:16px;border-bottom:2px solid #201e1d;padding-bottom:10px">
+      <h2 style="margin:0;font-size:13px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase">1 — Revue commentée</h2>
+      <span style="font-size:13px;color:#7d7979">Dix constats, du plus structurant au plus local</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 40px">
+
+      <div style="display:flex;flex-direction:column;border-top:2px solid #201e1d;padding:18px 0 20px;gap:8px">
+        <div style="display:flex;gap:14px;align-items:baseline"><span style="font-size:13px;font-weight:700;color:#ec3013;min-width:24px">01</span><h3 style="margin:0;font-size:19px;font-weight:700;letter-spacing:-0.01em">Le menu porte 27 destinations sur un seul niveau</h3></div>
+        <p style="margin:0 0 0 38px;font-size:14px;line-height:1.6;color:#444141">Cinq liens directs et six groupes accordéon, tous de même poids visuel. Les libellés de groupe sont des <span style="font-family:ui-monospace,monospace;font-size:13px">&lt;button&gt;</span> qui n'ouvrent aucune page : le clic ne mène nulle part, il déplie. Pas de champ de recherche, pas de repli en rail, aucune hiérarchie entre « Ventes » (20 fois par jour) et « Rôles » (deux fois par an).</p>
+        <p style="margin:0 0 0 38px;font-size:13px;line-height:1.6;color:#7d7979"><span style="font-weight:700;color:#201e1d">Effet</span> — en disposition horizontale, dix items centrés par <span style="font-family:ui-monospace,monospace;font-size:12px">justify-content:center</span> débordent dès 1400 px ; en vertical, la colonne de 280 px consomme 20 % de la largeur en permanence.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;border-top:2px solid #201e1d;padding:18px 0 20px;gap:8px">
+        <div style="display:flex;gap:14px;align-items:baseline"><span style="font-size:13px;font-weight:700;color:#ec3013;min-width:24px">02</span><h3 style="margin:0;font-size:19px;font-weight:700;letter-spacing:-0.01em">Les emoji tiennent le rôle d'icônes</h3></div>
+        <p style="margin:0 0 0 38px;font-size:14px;line-height:1.6;color:#444141">Dix-sept emoji documentés comme système d'icônes. Ils changent de dessin entre Windows, macOS, Android et Firefox, ne s'alignent pas optiquement, ne prennent pas la couleur de l'état actif, et sont annoncés à voix haute par les lecteurs d'écran (« maison Accueil », « camion de livraison Transporteurs »).</p>
+        <p style="margin:0 0 0 38px;font-size:13px;line-height:1.6;color:#7d7979"><span style="font-weight:700;color:#201e1d">Effet</span> — le menu n'a pas la même silhouette sur deux postes de l'agence, et <span style="font-family:ui-monospace,monospace;font-size:12px">🧑‍💼</span> (séquence ZWJ) tombe en rectangle sur les navigateurs anciens.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;border-top:2px solid #201e1d;padding:18px 0 20px;gap:8px">
+        <div style="display:flex;gap:14px;align-items:baseline"><span style="font-size:13px;font-weight:700;color:#ec3013;min-width:24px">03</span><h3 style="margin:0;font-size:19px;font-weight:700;letter-spacing:-0.01em">Trois sources de vérité pour les mêmes valeurs</h3></div>
+        <p style="margin:0 0 0 38px;font-size:14px;line-height:1.6;color:#444141">Les variables SCSS de <span style="font-family:ui-monospace,monospace;font-size:13px">features/_variables.scss</span>, les propriétés CSS <span style="font-family:ui-monospace,monospace;font-size:13px">--app-*</span> de <span style="font-family:ui-monospace,monospace;font-size:13px">app.scss</span>, et une troisième série <span style="font-family:ui-monospace,monospace;font-size:13px">--navbar-*</span> redéfinie dans le navbar. Le rouge existe en deux écritures (<span style="font-family:ui-monospace,monospace;font-size:13px">$primary</span> et <span style="font-family:ui-monospace,monospace;font-size:13px">--app-primary</span>) et en valeur de secours en dur dans <span style="font-family:ui-monospace,monospace;font-size:13px">.user-avatar</span>.</p>
+        <p style="margin:0 0 0 38px;font-size:13px;line-height:1.6;color:#7d7979"><span style="font-weight:700;color:#201e1d">Effet</span> — changer la couleur de marque demande trois passages, et un thème client B2B en marque blanche est aujourd'hui impossible à brancher.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;border-top:2px solid #201e1d;padding:18px 0 20px;gap:8px">
+        <div style="display:flex;gap:14px;align-items:baseline"><span style="font-size:13px;font-weight:700;color:#ec3013;min-width:24px">04</span><h3 style="margin:0;font-size:19px;font-weight:700;letter-spacing:-0.01em">Quatre contrastes sous le seuil lisible</h3></div>
+        <p style="margin:0 0 0 38px;font-size:14px;line-height:1.6;color:#444141">Mesuré sur fond blanc : <span style="font-family:ui-monospace,monospace;font-size:13px">#a0aec0</span> (placeholders, texte subtil) 2,3:1 ; <span style="font-family:ui-monospace,monospace;font-size:13px">#48bb78</span> (marges positives, statut PAYÉ) 2,4:1 ; <span style="font-family:ui-monospace,monospace;font-size:13px">#f56565</span> (valeurs négatives) 3,1:1 ; blanc sur <span style="font-family:ui-monospace,monospace;font-size:13px">#ff2d37</span> 3,7:1 — acceptable au-delà de 24 px, or il sert sur des boutons à 13 px.</p>
+        <p style="margin:0 0 0 38px;font-size:13px;line-height:1.6;color:#7d7979"><span style="font-weight:700;color:#201e1d">Correctif</span> — garder la teinte comme fond teinté et passer le texte sur le pas foncé de la rampe (700–900), comme le fait déjà <span style="font-family:ui-monospace,monospace;font-size:12px">.badge-success</span>. Le motif est bon, il n'est pas généralisé.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;border-top:2px solid #201e1d;padding:18px 0 20px;gap:8px">
+        <div style="display:flex;gap:14px;align-items:baseline"><span style="font-size:13px;font-weight:700;color:#ec3013;min-width:24px">05</span><h3 style="margin:0;font-size:19px;font-weight:700;letter-spacing:-0.01em">Le mode sombre laisse les cartes en blanc</h3></div>
+        <p style="margin:0 0 0 38px;font-size:14px;line-height:1.6;color:#444141">Le bloc <span style="font-family:ui-monospace,monospace;font-size:13px">:root[data-theme-resolved='dark']</span> de <span style="font-family:ui-monospace,monospace;font-size:13px">app.scss</span> redéfinit le fond, le texte, la bordure et l'ombre — mais pas <span style="font-family:ui-monospace,monospace;font-size:13px">--app-surface</span>, qui reste <span style="font-family:ui-monospace,monospace;font-size:13px">#ffffff</span>. La documentation annonce <span style="font-family:ui-monospace,monospace;font-size:13px">#1e293b</span> ; le code ne l'applique pas.</p>
+        <p style="margin:0 0 0 38px;font-size:13px;line-height:1.6;color:#7d7979"><span style="font-weight:700;color:#201e1d">Effet</span> — en sombre, toute carte, tout modal et tout menu déroulant reste une plaque blanche sur fond nuit. À trancher : corriger la ligne, ou retirer le mode sombre tant qu'il n'est pas tenu.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;border-top:2px solid #201e1d;padding:18px 0 20px;gap:8px">
+        <div style="display:flex;gap:14px;align-items:baseline"><span style="font-size:13px;font-weight:700;color:#ec3013;min-width:24px">06</span><h3 style="margin:0;font-size:19px;font-weight:700;letter-spacing:-0.01em">Aucun état de focus clavier n'est défini</h3></div>
+        <p style="margin:0 0 0 38px;font-size:14px;line-height:1.6;color:#444141">Les champs posent <span style="font-family:ui-monospace,monospace;font-size:13px">outline:none</span> et remplacent par un halo rouge, ce qui est juste — mais aucune règle <span style="font-family:ui-monospace,monospace;font-size:13px">:focus-visible</span> n'existe pour les liens, boutons, lignes de tableau ou items de menu. Ils gardent l'anneau bleu du navigateur.</p>
+        <p style="margin:0 0 0 38px;font-size:13px;line-height:1.6;color:#7d7979"><span style="font-weight:700;color:#201e1d">Effet</span> — une saisie de vente au clavier, qui est le mode de travail rapide en comptoir, se navigue en bleu système dans une interface rouge.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;border-top:2px solid #201e1d;padding:18px 0 20px;gap:8px">
+        <div style="display:flex;gap:14px;align-items:baseline"><span style="font-size:13px;font-weight:700;color:#ec3013;min-width:24px">07</span><h3 style="margin:0;font-size:19px;font-weight:700;letter-spacing:-0.01em">L'échelle typographique est écrasée là où il faut de la hiérarchie</h3></div>
+        <p style="margin:0 0 0 38px;font-size:14px;line-height:1.6;color:#444141">Cinq tailles se pressent entre 12 et 14 px (0,75 / 0,8125 / 0,82 / 0,85 / 0,875 rem) pendant que le saut suivant monte d'un coup à 29 px. Les cellules de tableau sont à 13 px avec <span style="font-family:ui-monospace,monospace;font-size:13px">white-space:nowrap</span>, pour des équipes à huit heures d'écran.</p>
+        <p style="margin:0 0 0 38px;font-size:13px;line-height:1.6;color:#7d7979"><span style="font-weight:700;color:#201e1d">Correctif</span> — un pas unique de 13/14/16/20/26/34, cellules à 14 px, et la différenciation par le poids et la casse plutôt que par un demi-pixel de taille.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;border-top:2px solid #201e1d;padding:18px 0 20px;gap:8px">
+        <div style="display:flex;gap:14px;align-items:baseline"><span style="font-size:13px;font-weight:700;color:#ec3013;min-width:24px">08</span><h3 style="margin:0;font-size:19px;font-weight:700;letter-spacing:-0.01em">Sept rayons, cinq ombres, un décollement au survol</h3></div>
+        <p style="margin:0 0 0 38px;font-size:14px;line-height:1.6;color:#444141">4, 6, 8, 12, 16, 20 et 999 px — dont 6 px pour le seul bouton de déconnexion et 20 px pour le seul badge KPI. Les cartes KPI montent de 4 px au survol avec une transition de 300 ms.</p>
+        <p style="margin:0 0 0 38px;font-size:13px;line-height:1.6;color:#7d7979"><span style="font-weight:700;color:#201e1d">Correctif</span> — trois rayons au maximum (ou zéro, cf. <a href="#1a">1a</a>), deux ombres, et pas de mouvement décoratif sur un outil de saisie : le survol sert à indiquer la cible, pas à animer la page.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;border-top:2px solid #201e1d;padding:18px 0 20px;gap:8px">
+        <div style="display:flex;gap:14px;align-items:baseline"><span style="font-size:13px;font-weight:700;color:#ec3013;min-width:24px">09</span><h3 style="margin:0;font-size:19px;font-weight:700;letter-spacing:-0.01em">Un statut modifiable déguisé en badge</h3></div>
+        <p style="margin:0 0 0 38px;font-size:14px;line-height:1.6;color:#444141">Le statut de vente est un <span style="font-family:ui-monospace,monospace;font-size:13px">&lt;select&gt;</span> en <span style="font-family:ui-monospace,monospace;font-size:13px">appearance:none</span>, rayon 999 px, sans chevron — visuellement identique aux badges de paiement, qui eux ne sont pas modifiables. Rien ne distingue ce qu'on peut changer de ce qu'on lit.</p>
+        <p style="margin:0 0 0 38px;font-size:13px;line-height:1.6;color:#7d7979"><span style="font-weight:700;color:#201e1d">Correctif</span> — un seul signe de modifiabilité dans tout le système (chevron + bordure), appliqué partout ; les états lus restent plats.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;border-top:2px solid #201e1d;padding:18px 0 20px;gap:8px">
+        <div style="display:flex;gap:14px;align-items:baseline"><span style="font-size:13px;font-weight:700;color:#ec3013;min-width:24px">10</span><h3 style="margin:0;font-size:19px;font-weight:700;letter-spacing:-0.01em">L'arrivée des clients B2B n'a pas de place dans cette navigation</h3></div>
+        <p style="margin:0 0 0 38px;font-size:14px;line-height:1.6;color:#444141">La navigation se filtre par permission Angular. Un client externe verrait donc le même menu, amputé — avec ses groupes vides ou ses intitulés internes (Primes, Charges RH, Activité, Rôles) comme squelette de lecture.</p>
+        <p style="margin:0 0 0 38px;font-size:13px;line-height:1.6;color:#7d7979"><span style="font-weight:700;color:#201e1d">Correctif</span> — un espace distinct, pas le menu interne filtré : quatre destinations (Commandes, Devis, Factures, Mon compte) sur le même socle de tokens. C'est le critère qui départage les trois directions ci-dessous.</p>
+      </div>
+
+    </div>
+  </div>
+  </sc-if>
+
+  <div style="display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:baseline;gap:16px;border-bottom:2px solid #201e1d;padding-bottom:10px">
+      <h2 style="margin:0;font-size:13px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase">2 — Tokens v2</h2>
+      <span style="font-size:13px;color:#7d7979">Une source unique, deux marques possibles</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:32px">
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <h4 style="margin:0;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#7d7979">Encre &amp; fond</h4>
+        <div style="display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;gap:12px;border-top:1px solid #d7d3d3;padding:8px 0"><span style="width:28px;height:28px;background:#201e1d;flex-shrink:0"></span><span style="font-size:13px;font-weight:600">text</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:12px;color:#7d7979">#201e1d</span></div>
+          <div style="display:flex;align-items:center;gap:12px;border-top:1px solid #d7d3d3;padding:8px 0"><span style="width:28px;height:28px;background:#605d5d;flex-shrink:0"></span><span style="font-size:13px;font-weight:600">text-muted</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:12px;color:#7d7979">#605d5d</span></div>
+          <div style="display:flex;align-items:center;gap:12px;border-top:1px solid #d7d3d3;padding:8px 0"><span style="width:28px;height:28px;background:#f3f2f2;border:1px solid #d7d3d3;flex-shrink:0"></span><span style="font-size:13px;font-weight:600">bg</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:12px;color:#7d7979">#f3f2f2</span></div>
+          <div style="display:flex;align-items:center;gap:12px;border-top:1px solid #d7d3d3;padding:8px 0"><span style="width:28px;height:28px;background:#ffffff;border:1px solid #d7d3d3;flex-shrink:0"></span><span style="font-size:13px;font-weight:600">surface</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:12px;color:#7d7979">#ffffff</span></div>
+          <div style="display:flex;align-items:center;gap:12px;border-top:1px solid #d7d3d3;border-bottom:1px solid #d7d3d3;padding:8px 0"><span style="width:28px;height:28px;background:#bab6b6;flex-shrink:0"></span><span style="font-size:13px;font-weight:600">divider</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:12px;color:#7d7979">2px solid</span></div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <h4 style="margin:0;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#7d7979">Accent — rampe complète</h4>
+        <div style="display:flex;height:56px">
+          <span style="flex:1;background:#fff2ef"></span>
+          <span style="flex:1;background:#ffe0d9"></span>
+          <span style="flex:1;background:#ffc4b8"></span>
+          <span style="flex:1;background:#ff9783"></span>
+          <span style="flex:1;background:#ff563c"></span>
+          <span style="flex:1;background:#ec3013"></span>
+          <span style="flex:1;background:#dd2b0f"></span>
+          <span style="flex:1;background:#ae1800"></span>
+          <span style="flex:1;background:#7c1405"></span>
+          <span style="flex:1;background:#4d170e"></span>
+        </div>
+        <p style="margin:0;font-size:13px;line-height:1.55;color:#444141">Base <span style="font-family:ui-monospace,monospace;font-size:12px">500</span> pour les fonds pleins et l'état actif, <span style="font-family:ui-monospace,monospace;font-size:12px">100–200</span> pour les fonds teintés, <span style="font-family:ui-monospace,monospace;font-size:12px">700</span> pour tout texte accentué en petit corps : c'est ce pas qui règle le constat 04. Le rouge PNEU.Ma actuel <span style="font-family:ui-monospace,monospace;font-size:12px">#ff2d37</span> se branche au même endroit si vous gardez la marque.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <h4 style="margin:0;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#7d7979">Échelle — six pas</h4>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <div style="display:flex;align-items:baseline;gap:12px;border-top:1px solid #d7d3d3;padding-top:6px"><span style="font-size:34px;font-weight:800;letter-spacing:-0.02em;line-height:1.1">Titre</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:11px;color:#7d7979">34 / 800</span></div>
+          <div style="display:flex;align-items:baseline;gap:12px;border-top:1px solid #d7d3d3;padding-top:6px"><span style="font-size:26px;font-weight:700;letter-spacing:-0.01em">Section</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:11px;color:#7d7979">26 / 700</span></div>
+          <div style="display:flex;align-items:baseline;gap:12px;border-top:1px solid #d7d3d3;padding-top:6px"><span style="font-size:20px;font-weight:700">Sous-titre</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:11px;color:#7d7979">20 / 700</span></div>
+          <div style="display:flex;align-items:baseline;gap:12px;border-top:1px solid #d7d3d3;padding-top:6px"><span style="font-size:16px;font-weight:400">Corps de texte</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:11px;color:#7d7979">16 / 400</span></div>
+          <div style="display:flex;align-items:baseline;gap:12px;border-top:1px solid #d7d3d3;padding-top:6px"><span style="font-size:14px;font-weight:400">Cellule de tableau</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:11px;color:#7d7979">14 / 400</span></div>
+          <div style="display:flex;align-items:baseline;gap:12px;border-top:1px solid #d7d3d3;border-bottom:1px solid #d7d3d3;padding:6px 0"><span style="font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase">En-tête / étiquette</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:11px;color:#7d7979">13 / 700</span></div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <h4 style="margin:0;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#7d7979">États — définis une fois</h4>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:12px;border-top:1px solid #d7d3d3;padding-top:10px"><button style="font-family:inherit;font-size:13px;font-weight:600;padding:8px 14px;border:0;background:#ec3013;color:#fff;cursor:pointer;text-align:left" style-hover="background:#dd2b0f">Nouvelle vente</button><span style="font-size:12px;color:#7d7979">base → 600 au survol</span></div>
+          <div style="display:flex;align-items:center;gap:12px;border-top:1px solid #d7d3d3;padding-top:10px"><button style="font-family:inherit;font-size:13px;font-weight:600;padding:8px 14px;border:2px solid #201e1d;background:transparent;color:#201e1d;cursor:pointer;outline:2px solid #ec3013;outline-offset:2px;text-align:left">Focus clavier</button><span style="font-size:12px;color:#7d7979">anneau accent 2 px</span></div>
+          <div style="display:flex;align-items:center;gap:12px;border-top:1px solid #d7d3d3;padding-top:10px"><span style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:5px 10px;border:2px solid #ae1800;color:#ae1800">Non payé</span><span style="font-size:12px;color:#7d7979">état lu — plat</span></div>
+          <div style="display:flex;align-items:center;gap:12px;border-top:1px solid #d7d3d3;border-bottom:1px solid #d7d3d3;padding:10px 0"><span style="display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:5px 10px;border:2px solid #bab6b6;color:#444141">Livré <span style="font-size:10px">▾</span></span><span style="font-size:12px;color:#7d7979">état modifiable — chevron</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:baseline;gap:16px;border-bottom:2px solid #201e1d;padding-bottom:10px">
+      <h2 style="margin:0;font-size:13px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase">3 — Trois directions, même écran</h2>
+      <span style="font-size:13px;color:#7d7979">Ventes — l'écran le plus ouvert de la journée</span>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start">
+
+      <div id="1a" style="display:flex;flex-direction:column;gap:14px;flex:0 0 1240px;width:1240px;min-width:1240px">
+        <div style="display:flex;align-items:baseline;gap:14px">
+          <span style="font-size:13px;font-weight:700;letter-spacing:0.1em;padding:4px 10px;background:#201e1d;color:#f3f2f2">1a</span>
+          <h3 style="margin:0;font-size:26px;font-weight:700;letter-spacing:-0.01em">Rail permanent + panneau de section</h3>
+        </div>
+        <p style="margin:0;max-width:960px;font-size:15px;line-height:1.6;color:#444141">Huit icônes dans un rail de 64 px, toujours visible. Un clic sur une section ouvre un panneau par-dessus le contenu, pas à côté : la largeur de travail ne bouge jamais. Les cinq pages quotidiennes sont des cibles directes du rail, le reste vit dans les panneaux. La recherche (<span style="font-family:ui-monospace,monospace;font-size:14px">Ctrl K</span>) devient le chemin principal pour les 22 destinations rares. Système Modernist : Archivo, zéro rayon, filets de 2 px.</p>
+
+        <div style="position:relative;display:grid;grid-template-columns:64px minmax(0,1fr);border:2px solid #201e1d;background:#f3f2f2;height:760px;overflow:hidden;font-family:'Archivo',system-ui,sans-serif">
+
+          <div style="display:flex;flex-direction:column;align-items:center;background:#201e1d;border-right:2px solid #201e1d">
+            <div style="height:56px;width:100%;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #444141"><span style="font-size:15px;font-weight:800;color:#ec3013;letter-spacing:-0.02em">PM</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;width:100%">
+              <div style="width:100%;height:48px;display:flex;align-items:center;justify-content:center;color:#9b9797;cursor:pointer" style-hover="background:#444141;color:#f8f4f4" title="Accueil"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg></div>
+              <div style="width:100%;height:48px;display:flex;align-items:center;justify-content:center;background:#ec3013;color:#fff;cursor:pointer" title="Ventes"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 3h7l11 11-7 7L3 10V3z"></path><circle cx="7" cy="7" r="1.4" fill="currentColor" stroke="none"></circle></svg></div>
+              <div style="width:100%;height:48px;display:flex;align-items:center;justify-content:center;color:#9b9797;cursor:pointer" style-hover="background:#444141;color:#f8f4f4" title="Service Auto"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M14.5 3.5a5 5 0 0 0-6.3 6.3L3 15v6h6l5.2-5.2a5 5 0 0 0 6.3-6.3l-3.2 3.2-3-3 3.2-3.2z"></path></svg></div>
+              <div style="width:100%;height:48px;display:flex;align-items:center;justify-content:center;color:#9b9797;cursor:pointer" style-hover="background:#444141;color:#f8f4f4" title="Achats"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9z"></path><path d="M3 7.5 12 12l9-4.5M12 12v9"></path></svg></div>
+              <div style="width:100%;height:48px;display:flex;align-items:center;justify-content:center;color:#9b9797;cursor:pointer" style-hover="background:#444141;color:#f8f4f4" title="Cash Flow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 6h18v12H3z"></path><circle cx="12" cy="12" r="2.5"></circle></svg></div>
+              <div style="width:32px;height:1px;background:#605d5d;margin:8px 0"></div>
+              <div style="width:100%;height:48px;display:flex;align-items:center;justify-content:center;color:#f8f4f4;background:#444141;cursor:pointer" title="Stock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="3.5"></circle></svg></div>
+              <div style="width:100%;height:48px;display:flex;align-items:center;justify-content:center;color:#9b9797;cursor:pointer" style-hover="background:#444141;color:#f8f4f4" title="Tiers"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><circle cx="9" cy="8" r="3.2"></circle><path d="M3 20v-1.5c0-2.2 2.7-3.5 6-3.5s6 1.3 6 3.5V20"></path><path d="M16 5.5a3.2 3.2 0 0 1 0 6.2M18 20v-1.5c0-1.5-.9-2.6-2.3-3.2"></path></svg></div>
+              <div style="width:100%;height:48px;display:flex;align-items:center;justify-content:center;color:#9b9797;cursor:pointer" style-hover="background:#444141;color:#f8f4f4" title="Finance"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 9.5 12 4l9 5.5"></path><path d="M5 9.5V19h14V9.5M9 19v-6M15 19v-6M3 21h18"></path></svg></div>
+              <div style="width:100%;height:48px;display:flex;align-items:center;justify-content:center;color:#9b9797;cursor:pointer" style-hover="background:#444141;color:#f8f4f4" title="Administration"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"></path></svg></div>
+            </div>
+            <div style="margin-top:auto;width:100%;height:56px;display:flex;align-items:center;justify-content:center;border-top:1px solid #444141"><span style="width:30px;height:30px;background:#ec3013;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">AB</span></div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;min-width:0">
+            <div style="height:56px;display:flex;align-items:center;gap:20px;padding:0 20px;background:#f3f2f2;border-bottom:2px solid #201e1d;flex-shrink:0">
+              <span style="font-size:13px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase">Ventes</span>
+              <div style="display:flex;align-items:center;gap:10px;flex:1;max-width:420px;border:2px solid #bab6b6;background:#fff;padding:7px 10px" style-hover="border-color:#201e1d">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7d7979" stroke-width="2" stroke-linecap="square"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M15.5 15.5 21 21"></path></svg>
+                <span style="font-size:13px;color:#7d7979;flex:1">Rechercher une vente, un client, une page…</span>
+                <span style="font-size:11px;font-weight:700;letter-spacing:0.06em;color:#7d7979;border:1px solid #d7d3d3;padding:2px 5px">CTRL K</span>
+              </div>
+              <div style="margin-left:auto;display:flex;align-items:center;gap:14px">
+                <span style="font-size:12px;color:#605d5d">Agence Casablanca</span>
+                <button style="font-family:inherit;font-size:13px;font-weight:600;padding:8px 14px;border:0;background:#ec3013;color:#fff;cursor:pointer;text-align:left" style-hover="background:#dd2b0f">Nouvelle vente</button>
+              </div>
+            </div>
+
+            <div style="flex:1;overflow:hidden;padding:20px;display:flex;flex-direction:column;gap:18px;min-width:0">
+              <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:2px solid #201e1d;background:#fff">
+                <div style="padding:16px 18px;border-right:2px solid #201e1d;display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#605d5d">CA du jour</span><span style="font-size:30px;font-weight:800;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">48 320<span style="font-size:15px;font-weight:600;color:#605d5d"> DH</span></span></div>
+                <div style="padding:16px 18px;border-right:2px solid #201e1d;display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#605d5d">Marge nette</span><span style="font-size:30px;font-weight:800;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">9 745<span style="font-size:15px;font-weight:600;color:#605d5d"> DH</span></span></div>
+                <div style="padding:16px 18px;border-right:2px solid #201e1d;display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#605d5d">Ventes</span><span style="font-size:30px;font-weight:800;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">37</span></div>
+                <div style="padding:16px 18px;display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#605d5d">Impayés</span><span style="font-size:30px;font-weight:800;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:#ae1800">12 400<span style="font-size:15px;font-weight:600"> DH</span></span></div>
+              </div>
+
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <span style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:7px 12px;background:#201e1d;color:#f3f2f2;cursor:pointer">Toutes</span>
+                <span style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:7px 12px;border:2px solid #bab6b6;color:#444141;cursor:pointer" style-hover="border-color:#201e1d;color:#201e1d">En cours</span>
+                <span style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:7px 12px;border:2px solid #bab6b6;color:#444141;cursor:pointer" style-hover="border-color:#201e1d;color:#201e1d">Livrées</span>
+                <span style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:7px 12px;border:2px solid #ffc4b8;background:#fff2ef;color:#ae1800;cursor:pointer">Impayées · 5</span>
+                <span style="margin-left:auto;font-size:13px;color:#605d5d">37 ventes · 02/09/2026</span>
+              </div>
+
+              <div style="border:2px solid #201e1d;background:#fff;flex:1;overflow:hidden">
+                <table style="width:100%;border-collapse:collapse">
+                  <thead>
+                    <tr style="background:#eae9e9">
+                      <th style="text-align:left;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#444141;padding:11px 14px;border-bottom:2px solid #201e1d">Réf</th>
+                      <th style="text-align:left;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#444141;padding:11px 14px;border-bottom:2px solid #201e1d">Date</th>
+                      <th style="text-align:left;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#444141;padding:11px 14px;border-bottom:2px solid #201e1d">Client</th>
+                      <th style="text-align:left;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#444141;padding:11px 14px;border-bottom:2px solid #201e1d">Véhicule</th>
+                      <th style="text-align:right;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#444141;padding:11px 14px;border-bottom:2px solid #201e1d">Montant</th>
+                      <th style="text-align:left;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#444141;padding:11px 14px;border-bottom:2px solid #201e1d">Paiement</th>
+                      <th style="text-align:left;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#444141;padding:11px 14px;border-bottom:2px solid #201e1d">Statut</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <sc-for list="{{ ventes }}" as="v" hint-placeholder-count="7">
+                      <tr style="border-bottom:1px solid #d7d3d3" style-hover="background:#f8f4f4">
+                        <td style="padding:12px 14px;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">{{ v.ref }}</td>
+                        <td style="padding:12px 14px;font-size:14px;color:#444141;font-variant-numeric:tabular-nums">{{ v.date }}</td>
+                        <td style="padding:12px 14px;font-size:14px">{{ v.client }}</td>
+                        <td style="padding:12px 14px;font-size:14px;color:#444141">{{ v.vehicule }}</td>
+                        <td style="padding:12px 14px;font-size:14px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums">{{ v.montant }}</td>
+                        <td style="padding:12px 14px">
+                          <sc-if value="{{ v.impaye }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:4px 8px;border:2px solid #ae1800;color:#ae1800">{{ v.paiement }}</span></sc-if>
+                          <sc-if value="{{ v.regle }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:4px 8px;border:2px solid #d7d3d3;color:#444141">{{ v.paiement }}</span></sc-if>
+                        </td>
+                        <td style="padding:12px 14px"><span style="display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:4px 8px;border:2px solid #bab6b6;color:#201e1d;cursor:pointer" style-hover="border-color:#201e1d">{{ v.statut }} <span style="font-size:9px">▾</span></span></td>
+                      </tr>
+                    </sc-for>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <sc-if value="{{ showPanel }}" hint-placeholder-val="{{ true }}">
+          <div style="position:absolute;left:64px;top:0;bottom:0;width:252px;background:#fff;border-right:2px solid #201e1d;box-shadow:0 12px 32px rgba(45,43,43,0.22);display:flex;flex-direction:column;z-index:5">
+            <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:2px solid #201e1d;background:#eae9e9">
+              <span style="font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase">Stock</span>
+              <span style="font-size:16px;color:#7d7979;cursor:pointer" style-hover="color:#201e1d">×</span>
+            </div>
+            <div style="display:flex;flex-direction:column;padding:8px 0">
+              <span style="font-size:14px;font-weight:600;padding:11px 16px;border-left:3px solid #ec3013;background:#fff2ef;cursor:pointer">Produits</span>
+              <span style="font-size:14px;padding:11px 16px;border-left:3px solid transparent;cursor:pointer" style-hover="background:#f8f4f4;border-left-color:#bab6b6">Inventaire</span>
+              <span style="font-size:14px;padding:11px 16px;border-left:3px solid transparent;cursor:pointer" style-hover="background:#f8f4f4;border-left-color:#bab6b6">Marques</span>
+              <div style="height:2px;background:#d7d3d3;margin:10px 16px"></div>
+              <span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#7d7979;padding:6px 16px 8px">Raccourcis</span>
+              <span style="font-size:14px;padding:11px 16px;border-left:3px solid transparent;cursor:pointer" style-hover="background:#f8f4f4;border-left-color:#bab6b6">Alertes de seuil · 6</span>
+              <span style="font-size:14px;padding:11px 16px;border-left:3px solid transparent;cursor:pointer" style-hover="background:#f8f4f4;border-left-color:#bab6b6">Dernier inventaire</span>
+            </div>
+            <div style="margin-top:auto;padding:14px 16px;border-top:2px solid #d7d3d3"><span style="font-size:12px;line-height:1.5;color:#605d5d">Le panneau se referme dès la navigation. La largeur de travail ne change jamais.</span></div>
+          </div>
+          </sc-if>
+
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;border-top:2px solid #201e1d;padding-top:14px">
+          <div><span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#7d7979">Pour</span><p style="margin:6px 0 0;font-size:14px;line-height:1.6;color:#444141">Tient 27 destinations sans jamais peser sur la largeur. Le rail devient l'espace client B2B à quatre icônes sans rien changer d'autre. La recherche remplace l'exploration pour tout ce qui est rare.</p></div>
+          <div><span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#7d7979">Contre</span><p style="margin:6px 0 0;font-size:14px;line-height:1.6;color:#444141">Demande un jeu d'icônes Lucide et l'abandon des emoji, plus une palette de commande à développer. Le rail sans libellé impose un apprentissage des premiers jours.</p></div>
+        </div>
+      </div>
+
+      <div id="1b" style="display:flex;flex-direction:column;gap:14px;flex:0 0 1240px;width:1240px;min-width:1240px">
+        <div style="display:flex;align-items:baseline;gap:14px">
+          <span style="font-size:13px;font-weight:700;letter-spacing:0.1em;padding:4px 10px;background:#201e1d;color:#f3f2f2">1b</span>
+          <h3 style="margin:0;font-size:26px;font-weight:700;letter-spacing:-0.01em">Barre supérieure + sous-navigation contextuelle</h3>
+        </div>
+        <p style="margin:0;max-width:960px;font-size:15px;line-height:1.6;color:#444141">Six domaines sur une première ligne, la sous-navigation du domaine actif sur la seconde. Toute la largeur de l'écran revient aux tableaux — c'est la direction qui donne le plus de colonnes visibles d'un coup. Le fil d'Ariane disparaît : la seconde ligne dit en permanence où l'on est. Même système Modernist que <a href="#1a">1a</a>.</p>
+
+        <div style="display:flex;flex-direction:column;border:2px solid #201e1d;background:#f3f2f2;height:760px;overflow:hidden;font-family:'Archivo',system-ui,sans-serif">
+
+          <div style="display:flex;align-items:stretch;background:#201e1d;flex-shrink:0;height:52px">
+            <span style="display:flex;align-items:center;padding:0 20px;font-size:16px;font-weight:800;color:#ec3013;letter-spacing:-0.02em;border-right:1px solid #444141">PNEU.MA</span>
+            <span style="display:flex;align-items:center;padding:0 18px;font-size:13px;font-weight:600;color:#9b9797;cursor:pointer" style-hover="color:#f8f4f4;background:#444141">Accueil</span>
+            <span style="display:flex;align-items:center;padding:0 18px;font-size:13px;font-weight:700;color:#fff;background:#ec3013;cursor:pointer">Commerce</span>
+            <span style="display:flex;align-items:center;padding:0 18px;font-size:13px;font-weight:600;color:#9b9797;cursor:pointer" style-hover="color:#f8f4f4;background:#444141">Stock</span>
+            <span style="display:flex;align-items:center;padding:0 18px;font-size:13px;font-weight:600;color:#9b9797;cursor:pointer" style-hover="color:#f8f4f4;background:#444141">Tiers</span>
+            <span style="display:flex;align-items:center;padding:0 18px;font-size:13px;font-weight:600;color:#9b9797;cursor:pointer" style-hover="color:#f8f4f4;background:#444141">Finance</span>
+            <span style="display:flex;align-items:center;padding:0 18px;font-size:13px;font-weight:600;color:#9b9797;cursor:pointer" style-hover="color:#f8f4f4;background:#444141">Administration</span>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:14px;padding:0 18px">
+              <div style="display:flex;align-items:center;gap:8px;border:1px solid #605d5d;padding:5px 9px">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9b9797" stroke-width="2" stroke-linecap="square"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M15.5 15.5 21 21"></path></svg>
+                <span style="font-size:12px;color:#9b9797">Rechercher</span>
+              </div>
+              <span style="width:28px;height:28px;background:#ec3013;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">AB</span>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:stretch;background:#eae9e9;border-bottom:2px solid #201e1d;flex-shrink:0;height:44px">
+            <span style="display:flex;align-items:center;padding:0 18px;font-size:13px;font-weight:700;color:#201e1d;box-shadow:inset 0 -3px 0 #ec3013;cursor:pointer">Ventes</span>
+            <span style="display:flex;align-items:center;padding:0 18px;font-size:13px;color:#444141;cursor:pointer" style-hover="color:#201e1d;background:#f8f4f4">Service Auto</span>
+            <span style="display:flex;align-items:center;padding:0 18px;font-size:13px;color:#444141;cursor:pointer" style-hover="color:#201e1d;background:#f8f4f4">Achats</span>
+            <span style="display:flex;align-items:center;padding:0 18px;font-size:13px;color:#444141;cursor:pointer" style-hover="color:#201e1d;background:#f8f4f4">Cash Flow</span>
+            <span style="display:flex;align-items:center;padding:0 18px;font-size:13px;color:#444141;cursor:pointer" style-hover="color:#201e1d;background:#f8f4f4">Devis</span>
+            <span style="margin-left:auto;display:flex;align-items:center;padding:0 18px;font-size:12px;color:#605d5d">Agence Casablanca · 02/09/2026</span>
+          </div>
+
+          <div style="flex:1;overflow:hidden;padding:20px;display:flex;flex-direction:column;gap:18px;min-width:0">
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px">
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <span style="font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#7d7979">Commerce</span>
+                <h4 style="margin:0;font-size:34px;font-weight:800;letter-spacing:-0.025em;line-height:1">Ventes</h4>
+              </div>
+              <div style="display:flex;gap:10px">
+                <button style="font-family:inherit;font-size:13px;font-weight:600;padding:9px 14px;border:2px solid #201e1d;background:transparent;color:#201e1d;cursor:pointer;text-align:left" style-hover="background:#eae9e9">Exporter</button>
+                <button style="font-family:inherit;font-size:13px;font-weight:600;padding:9px 16px;border:0;background:#ec3013;color:#fff;cursor:pointer;text-align:left" style-hover="background:#dd2b0f">Nouvelle vente</button>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:2px solid #201e1d;border-bottom:2px solid #201e1d">
+              <div style="padding:14px 18px 14px 0;display:flex;flex-direction:column;gap:4px"><span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#605d5d">CA du jour</span><span style="font-size:26px;font-weight:800;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">48 320 DH</span></div>
+              <div style="padding:14px 18px;border-left:1px solid #d7d3d3;display:flex;flex-direction:column;gap:4px"><span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#605d5d">Marge nette</span><span style="font-size:26px;font-weight:800;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">9 745 DH</span></div>
+              <div style="padding:14px 18px;border-left:1px solid #d7d3d3;display:flex;flex-direction:column;gap:4px"><span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#605d5d">Ventes</span><span style="font-size:26px;font-weight:800;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">37</span></div>
+              <div style="padding:14px 18px;border-left:1px solid #d7d3d3;display:flex;flex-direction:column;gap:4px"><span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#605d5d">Impayés</span><span style="font-size:26px;font-weight:800;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:#ae1800">12 400 DH</span></div>
+            </div>
+
+            <div style="flex:1;overflow:hidden;border-bottom:2px solid #201e1d">
+              <table style="width:100%;border-collapse:collapse">
+                <thead>
+                  <tr>
+                    <th style="text-align:left;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#444141;padding:10px 14px 10px 0;border-bottom:2px solid #201e1d">Réf</th>
+                    <th style="text-align:left;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#444141;padding:10px 14px;border-bottom:2px solid #201e1d">Date</th>
+                    <th style="text-align:left;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#444141;padding:10px 14px;border-bottom:2px solid #201e1d">Client</th>
+                    <th style="text-align:left;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#444141;padding:10px 14px;border-bottom:2px solid #201e1d">Véhicule</th>
+                    <th style="text-align:right;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#444141;padding:10px 14px;border-bottom:2px solid #201e1d">Montant</th>
+                    <th style="text-align:left;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#444141;padding:10px 14px;border-bottom:2px solid #201e1d">Paiement</th>
+                    <th style="text-align:left;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#444141;padding:10px 14px;border-bottom:2px solid #201e1d">Statut</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <sc-for list="{{ ventes }}" as="v" hint-placeholder-count="7">
+                    <tr style="border-bottom:1px solid #d7d3d3" style-hover="background:#eae9e9">
+                      <td style="padding:12px 14px 12px 0;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">{{ v.ref }}</td>
+                      <td style="padding:12px 14px;font-size:14px;color:#444141;font-variant-numeric:tabular-nums">{{ v.date }}</td>
+                      <td style="padding:12px 14px;font-size:14px">{{ v.client }}</td>
+                      <td style="padding:12px 14px;font-size:14px;color:#444141">{{ v.vehicule }}</td>
+                      <td style="padding:12px 14px;font-size:14px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums">{{ v.montant }}</td>
+                      <td style="padding:12px 14px">
+                        <sc-if value="{{ v.impaye }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#ae1800">{{ v.paiement }}</span></sc-if>
+                        <sc-if value="{{ v.regle }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#7d7979">{{ v.paiement }}</span></sc-if>
+                      </td>
+                      <td style="padding:12px 14px"><span style="display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:4px 8px;border:2px solid #bab6b6;color:#201e1d;cursor:pointer" style-hover="border-color:#201e1d">{{ v.statut }} <span style="font-size:9px">▾</span></span></td>
+                    </tr>
+                  </sc-for>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;border-top:2px solid #201e1d;padding-top:14px">
+          <div><span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#7d7979">Pour</span><p style="margin:6px 0 0;font-size:14px;line-height:1.6;color:#444141">Largeur maximale pour les tableaux, ce qui est le vrai besoin des pages Ventes, Stock et Reporting. Deux clics pour atteindre n'importe quelle page, sans survol ni accordéon. Se replie proprement en un domaine unique pour l'espace B2B.</p></div>
+          <div><span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#7d7979">Contre</span><p style="margin:6px 0 0;font-size:14px;line-height:1.6;color:#444141">Demande de regrouper les 27 routes en six domaines tenables — travail d'architecture, pas de CSS. 96 px de hauteur consommés en permanence, et la seconde ligne change à chaque domaine : le repère est moins stable qu'un rail fixe.</p></div>
+        </div>
+      </div>
+
+      <div id="1c" style="display:flex;flex-direction:column;gap:14px;flex:0 0 1240px;width:1240px;min-width:1240px">
+        <div style="display:flex;align-items:baseline;gap:14px">
+          <span style="font-size:13px;font-weight:700;letter-spacing:0.1em;padding:4px 10px;background:#201e1d;color:#f3f2f2">1c</span>
+          <h3 style="margin:0;font-size:26px;font-weight:700;letter-spacing:-0.01em">Le menu actuel, corrigé — marque inchangée</h3>
+        </div>
+        <p style="margin:0;max-width:960px;font-size:15px;line-height:1.6;color:#444141">Aucun changement de marque : Inter, rouge <span style="font-family:ui-monospace,monospace;font-size:14px">#ff2d37</span>, rayons arrondis, barre sombre. Cinq corrections seulement — une recherche en tête, les pages quotidiennes épinglées, les libellés de groupe transformés en vrais titres de section non cliquables, des icônes de trait à la place des emoji, et le bloc utilisateur descendu en pied de colonne. C'est la voie sans réécriture des écrans.</p>
+
+        <div style="display:grid;grid-template-columns:248px minmax(0,1fr);border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;height:760px;overflow:hidden;box-shadow:0 10px 25px rgba(15,23,42,0.08);font-family:'Inter',system-ui,sans-serif">
+
+          <div style="display:flex;flex-direction:column;background:#1f2937;overflow:hidden">
+            <div style="height:56px;display:flex;align-items:center;padding:0 16px;flex-shrink:0"><span style="font-size:16px;font-weight:700;color:#fff;letter-spacing:-0.02em">PNEU<span style="color:#ff2d37">.MA</span></span></div>
+            <div style="padding:0 12px 12px">
+              <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);border-radius:8px;padding:8px 10px;cursor:text" style-hover="background:rgba(255,255,255,0.13)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(248,250,252,0.6)" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M15.5 15.5 21 21"></path></svg>
+                <span style="font-size:13px;color:rgba(248,250,252,0.6)">Rechercher…</span>
+              </div>
+            </div>
+            <div style="flex:1;overflow-y:auto;padding:0 8px 8px;display:flex;flex-direction:column;gap:2px">
+              <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;font-size:14px;font-weight:500;color:rgba(248,250,252,0.86);border:0;text-decoration:none" style-hover="background:rgba(255,255,255,0.10);color:#fff"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg>Accueil</a>
+              <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;font-size:14px;font-weight:600;color:#fff;background:#ff2d37;border:0;text-decoration:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7l11 11-7 7L3 10V3z"></path><circle cx="7.2" cy="7.2" r="1.3" fill="currentColor"></circle></svg>Ventes</a>
+              <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;font-size:14px;font-weight:500;color:rgba(248,250,252,0.86);border:0;text-decoration:none" style-hover="background:rgba(255,255,255,0.10);color:#fff"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 3.5a5 5 0 0 0-6.3 6.3L3 15v6h6l5.2-5.2a5 5 0 0 0 6.3-6.3l-3.2 3.2-3-3 3.2-3.2z"></path></svg>Service Auto</a>
+              <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;font-size:14px;font-weight:500;color:rgba(248,250,252,0.86);border:0;text-decoration:none" style-hover="background:rgba(255,255,255,0.10);color:#fff"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9z"></path><path d="M3 7.5 12 12l9-4.5M12 12v9"></path></svg>Achats</a>
+              <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;font-size:14px;font-weight:500;color:rgba(248,250,252,0.86);border:0;text-decoration:none" style-hover="background:rgba(255,255,255,0.10);color:#fff"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v12H3z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>Cash Flow</a>
+
+              <span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(248,250,252,0.45);padding:16px 10px 6px">Stock</span>
+              <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;color:rgba(248,250,252,0.78);border:0;text-decoration:none" style-hover="background:rgba(255,255,255,0.10);color:#fff"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="3.5"></circle></svg>Produits</a>
+              <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;color:rgba(248,250,252,0.78);border:0;text-decoration:none" style-hover="background:rgba(255,255,255,0.10);color:#fff"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14v18H5z"></path><path d="M9 8h6M9 12h6M9 16h4"></path></svg>Inventaire</a>
+              <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;color:rgba(248,250,252,0.78);border:0;text-decoration:none" style-hover="background:rgba(255,255,255,0.10);color:#fff"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V8l8-4 8 4v12"></path><path d="M4 20h16M10 20v-6h4v6"></path></svg>Marques</a>
+
+              <span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(248,250,252,0.45);padding:16px 10px 6px">Tiers</span>
+              <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;color:rgba(248,250,252,0.78);border:0;text-decoration:none" style-hover="background:rgba(255,255,255,0.10);color:#fff"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"></circle><path d="M5 20v-1.6c0-2.3 3.1-3.6 7-3.6s7 1.3 7 3.6V20"></path></svg>Clients</a>
+              <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;color:rgba(248,250,252,0.78);border:0;text-decoration:none" style-hover="background:rgba(255,255,255,0.10);color:#fff"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5h10v16M14 10h6v11"></path><path d="M7 9h4M7 13h4M7 17h4"></path></svg>Fournisseurs</a>
+              <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;color:rgba(248,250,252,0.78);border:0;text-decoration:none" style-hover="background:rgba(255,255,255,0.10);color:#fff"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h11v9H2zM13 10h5l3 3v3h-8"></path><circle cx="6" cy="18" r="1.8"></circle><circle cx="17" cy="18" r="1.8"></circle></svg>Transporteurs</a>
+              <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;color:rgba(248,250,252,0.78);border:0;text-decoration:none" style-hover="background:rgba(255,255,255,0.10);color:#fff"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12 4 8l4-4 3 3h6l3 3-4 4"></path><path d="M4 16h16"></path></svg>Partenaires</a>
+
+              <span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(248,250,252,0.45);padding:16px 10px 6px">Finance &amp; administration</span>
+              <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;color:rgba(248,250,252,0.78);border:0;text-decoration:none" style-hover="background:rgba(255,255,255,0.10);color:#fff"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 4l9 5.5"></path><path d="M5 9.5V19h14V9.5M3 21h18"></path></svg>Comptes &amp; primes</a>
+              <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;color:rgba(248,250,252,0.78);border:0;text-decoration:none" style-hover="background:rgba(255,255,255,0.10);color:#fff"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9M10 20V4M16 20v-8M22 20H2"></path></svg>Reporting</a>
+              <a href="#1c" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;color:rgba(248,250,252,0.78);border:0;text-decoration:none" style-hover="background:rgba(255,255,255,0.10);color:#fff"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"></path></svg>Paramètres</a>
+            </div>
+            <div style="flex-shrink:0;border-top:1px solid rgba(255,255,255,0.12);padding:12px;display:flex;align-items:center;gap:10px">
+              <span style="width:32px;height:32px;border-radius:50%;background:#ff2d37;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">A</span>
+              <span style="display:flex;flex-direction:column;line-height:1.25;min-width:0">
+                <span style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">A. Benlahsen</span>
+                <span style="font-size:11px;color:rgba(248,250,252,0.6)">Administrateur</span>
+              </span>
+              <span style="margin-left:auto;color:rgba(248,250,252,0.7);cursor:pointer;display:flex" style-hover="color:#fff" title="Déconnexion"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h4v16h-4"></path><path d="M11 8l-4 4 4 4M7 12h9"></path></svg></span>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;min-width:0;padding:20px;gap:16px;overflow:hidden">
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px">
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <span style="font-size:12px;color:#64748b">Commerce · <span style="color:#0f172a;font-weight:500">Ventes</span></span>
+                <h4 style="margin:0;font-size:29px;font-weight:700;letter-spacing:-0.02em;color:#0f172a;line-height:1.1">Ventes</h4>
+              </div>
+              <div style="display:flex;gap:10px">
+                <button style="font-family:inherit;font-size:13px;font-weight:500;padding:9px 14px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#334155;cursor:pointer" style-hover="background:#f1f5f9">Exporter</button>
+                <button style="font-family:inherit;font-size:13px;font-weight:600;padding:9px 16px;border:0;border-radius:8px;background:#ff2d37;color:#fff;cursor:pointer" style-hover="background:#cc0a13">Nouvelle vente</button>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px">
+              <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#64748b">CA du jour</span><span style="font-size:24px;font-weight:700;color:#0f172a;font-variant-numeric:tabular-nums">48 320 DH</span></div>
+              <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#64748b">Marge nette</span><span style="font-size:24px;font-weight:700;color:#0f172a;font-variant-numeric:tabular-nums">9 745 DH</span></div>
+              <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#64748b">Ventes</span><span style="font-size:24px;font-weight:700;color:#0f172a;font-variant-numeric:tabular-nums">37</span></div>
+              <div style="background:#fff;border:1px solid #feb2b2;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#64748b">Impayés</span><span style="font-size:24px;font-weight:700;color:#b91c1c;font-variant-numeric:tabular-nums">12 400 DH</span></div>
+            </div>
+
+            <div style="flex:1;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+              <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #e2e8f0;flex-wrap:wrap">
+                <span style="font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;background:#0f172a;color:#fff;cursor:pointer">Toutes</span>
+                <span style="font-size:12px;font-weight:500;padding:6px 12px;border-radius:999px;border:1px solid #e2e8f0;color:#475569;cursor:pointer" style-hover="background:#f1f5f9">En cours</span>
+                <span style="font-size:12px;font-weight:500;padding:6px 12px;border-radius:999px;border:1px solid #e2e8f0;color:#475569;cursor:pointer" style-hover="background:#f1f5f9">Livrées</span>
+                <span style="font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;background:#fef2f2;color:#b91c1c;cursor:pointer">Impayées · 5</span>
+                <span style="margin-left:auto;font-size:12px;color:#64748b">37 ventes · 02/09/2026</span>
+              </div>
+              <table style="width:100%;border-collapse:collapse">
+                <thead>
+                  <tr style="background:#f8fafc">
+                    <th style="text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#64748b;padding:10px 16px;border-bottom:1px solid #e2e8f0">Réf</th>
+                    <th style="text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#64748b;padding:10px 16px;border-bottom:1px solid #e2e8f0">Date</th>
+                    <th style="text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#64748b;padding:10px 16px;border-bottom:1px solid #e2e8f0">Client</th>
+                    <th style="text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#64748b;padding:10px 16px;border-bottom:1px solid #e2e8f0">Véhicule</th>
+                    <th style="text-align:right;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#64748b;padding:10px 16px;border-bottom:1px solid #e2e8f0">Montant</th>
+                    <th style="text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#64748b;padding:10px 16px;border-bottom:1px solid #e2e8f0">Paiement</th>
+                    <th style="text-align:left;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#64748b;padding:10px 16px;border-bottom:1px solid #e2e8f0">Statut</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <sc-for list="{{ ventes }}" as="v" hint-placeholder-count="7">
+                    <tr style="border-bottom:1px solid #f1f5f9" style-hover="background:#f8fafc">
+                      <td style="padding:11px 16px;font-size:14px;font-weight:600;color:#0f172a;font-variant-numeric:tabular-nums">{{ v.ref }}</td>
+                      <td style="padding:11px 16px;font-size:14px;color:#475569;font-variant-numeric:tabular-nums">{{ v.date }}</td>
+                      <td style="padding:11px 16px;font-size:14px;color:#0f172a">{{ v.client }}</td>
+                      <td style="padding:11px 16px;font-size:14px;color:#475569">{{ v.vehicule }}</td>
+                      <td style="padding:11px 16px;font-size:14px;font-weight:600;color:#0f172a;text-align:right;font-variant-numeric:tabular-nums">{{ v.montant }}</td>
+                      <td style="padding:11px 16px">
+                        <sc-if value="{{ v.impaye }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;background:#fef2f2;color:#b91c1c">{{ v.paiement }}</span></sc-if>
+                        <sc-if value="{{ v.regle }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;background:#f0fdf4;color:#15803d">{{ v.paiement }}</span></sc-if>
+                      </td>
+                      <td style="padding:11px 16px"><span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;border:1px solid #cbd5e1;color:#334155;cursor:pointer" style-hover="border-color:#94a3b8">{{ v.statut }} <span style="font-size:9px">▾</span></span></td>
+                    </tr>
+                  </sc-for>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;border-top:2px solid #201e1d;padding-top:14px">
+          <div><span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#7d7979">Pour</span><p style="margin:6px 0 0;font-size:14px;line-height:1.6;color:#444141">Livrable en quelques jours : le navbar et les tokens suffisent, aucun écran à reprendre. Corrige le clic mort, la recherche absente et le manque de hiérarchie. L'équipe ne se réapproprie rien.</p></div>
+          <div><span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#7d7979">Contre</span><p style="margin:6px 0 0;font-size:14px;line-height:1.6;color:#444141">La colonne de 248 px reste payée en permanence, et les 27 destinations restent une longue liste à faire défiler. Ne résout pas la question B2B : il faudrait un second thème et un second menu.</p></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:14px;max-width:1080px;border-top:2px solid #201e1d;padding-top:20px">
+    <h2 style="margin:0;font-size:13px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase">Ce que je ferais</h2>
+    <p style="margin:0;font-size:16px;line-height:1.6;color:#444141"><a href="#1a">1a</a> si l'arrivée des clients B2B est proche : le rail est la seule des trois structures qui accueille une seconde audience sans dupliquer la navigation, et il rend la largeur d'écran aux tableaux. <a href="#1c">1c</a> si la priorité est de débloquer l'équipe cette semaine — les corrections tiennent dans le navbar et les tokens, et rien d'autre ne bouge. Les deux peuvent s'enchaîner : <a href="#1c">1c</a> maintenant, <a href="#1a">1a</a> au moment du lancement B2B. <a href="#1b">1b</a> reste la meilleure réponse si les tableaux larges — Reporting, Inventaire — deviennent le cœur de l'usage.</p>
+    <p style="margin:0;font-size:16px;line-height:1.6;color:#444141">Indépendamment de la direction retenue, les constats 03, 04, 05 et 06 sont à traiter : une source unique de tokens, les rampes pour les contrastes, le <span style="font-family:ui-monospace,monospace;font-size:15px">--app-surface</span> manquant en mode sombre, et un <span style="font-family:ui-monospace,monospace;font-size:15px">:focus-visible</span> global. C'est une journée de travail et cela vaut pour les trois.</p>
+  </div>
+
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showReview&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Affichage&quot;},&quot;showPanel&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Affichage&quot;},&quot;rowCount&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:7,&quot;min&quot;:3,&quot;max&quot;:8,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Affichage&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const all = [
+      { ref: 'VTE-2418', date: '02/09/2026', client: 'Garage Atlas', vehicule: 'Dacia Logan', montant: '4 280.00', paiement: 'Payé', statut: 'Livré' },
+      { ref: 'VTE-2417', date: '02/09/2026', client: 'M. Rachidi', vehicule: 'Renault Clio IV', montant: '2 150.00', paiement: 'Partiel', statut: 'En cours' },
+      { ref: 'VTE-2416', date: '02/09/2026', client: 'Transport Chaouia', vehicule: 'Iveco Daily', montant: '11 640.00', paiement: 'Non payé', statut: 'En cours' },
+      { ref: 'VTE-2415', date: '01/09/2026', client: 'Mme Bennani', vehicule: 'Peugeot 208', montant: '3 100.00', paiement: 'Payé', statut: 'Monté' },
+      { ref: 'VTE-2414', date: '01/09/2026', client: 'Flotte Ocean', vehicule: 'Ford Transit', montant: '8 920.00', paiement: 'Payé', statut: 'Livré' },
+      { ref: 'VTE-2413', date: '01/09/2026', client: 'Auto Souss', vehicule: 'Hyundai Tucson', montant: '5 470.00', paiement: 'Non payé', statut: 'En cours' },
+      { ref: 'VTE-2412', date: '31/08/2026', client: 'M. Alaoui', vehicule: 'VW Golf VII', montant: '2 890.00', paiement: 'Payé', statut: 'Monté' },
+      { ref: 'VTE-2411', date: '31/08/2026', client: 'Garage Zerhouni', vehicule: 'Toyota Hilux', montant: '9 350.00', paiement: 'Partiel', statut: 'Livré' }
+    ];
+    const n = Math.max(3, Math.min(8, this.props.rowCount ?? 7));
+    return {
+      ventes: all.slice(0, n).map(v => ({
+        ...v,
+        montant: v.montant + ' DH',
+        impaye: v.paiement !== 'Payé',
+        regle: v.paiement === 'Payé'
+      })),
+      showReview: this.props.showReview ?? true,
+      showPanel: this.props.showPanel ?? true
+    };
+  }
+}
+</script>
+</body>
+</html>

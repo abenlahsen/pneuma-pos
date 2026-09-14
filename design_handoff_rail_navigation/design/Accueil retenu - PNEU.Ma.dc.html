@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_ds/modernist-c14075a3-7e47-498e-a6ce-5ff80a0266f8/styles.css">
+<script src="_ds/modernist-c14075a3-7e47-498e-a6ce-5ff80a0266f8/_ds_bundle.js"></script>
+<style>
+  :root { --surface-raised: #ffffff; --ac: #ec3013; }
+  body { margin: 0; background: #e6e4e3; }
+  a { color: var(--color-accent-700); text-decoration: none; border-bottom: 1px solid var(--color-accent-300); }
+  a:hover { color: var(--color-text); border-bottom-color: var(--color-text); }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9em; background: var(--color-neutral-200); padding: 1px 5px; border-radius: 4px; }
+  .frame { flex: 0 0 1240px; width: 1240px; min-width: 1240px; display: flex; flex-direction: column; gap: 14px; }
+  .shell { position: relative; display: grid; grid-template-columns: 64px minmax(0,1fr); grid-template-rows: minmax(0, 1fr); border: 2px solid var(--color-text); border-radius: 12px; background: var(--color-bg); height: 760px; overflow: hidden; }
+  .shell > * { min-height: 0; overflow: hidden; }
+  .bar { height: 56px; display: flex; align-items: center; gap: 20px; padding: 0 20px; border-bottom: 2px solid var(--color-text); flex-shrink: 0; }
+  .bar-t { font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .kpi-l { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-neutral-700); }
+  .kpi-v { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .kpi-u { font-size: 13px; font-weight: 600; color: var(--color-neutral-700); }
+  .card2 { border: 2px solid var(--color-text); border-radius: 12px; background: var(--surface-raised); overflow: hidden; }
+  .card-h { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 13px 16px 11px; border-bottom: 2px solid var(--color-text); display: flex; align-items: center; gap: 10px; }
+  .card-h .meta { margin-left: auto; font-size: 12px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--color-neutral-700); }
+  .queue { padding: 20px; display: flex; flex-direction: column; gap: 14px; overflow: auto; min-width: 0; }
+  .queue > .card2 { flex: none; }
+  .task { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-bottom: 1px solid var(--color-neutral-300); cursor: pointer; }
+  .task:hover { background: var(--color-neutral-100); }
+  .task:last-child { border-bottom: 0; }
+  .t-main { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+  .t-title { font-size: 14px; font-weight: 600; }
+  .t-sub { font-size: 12px; color: var(--color-neutral-700); }
+  .t-amt { font-size: 15px; font-weight: 700; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .num { font-variant-numeric: tabular-nums; }
+  .ro { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 8px; border: 2px solid var(--color-neutral-300); border-radius: 8px; color: var(--color-neutral-800); }
+  .rd { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 8px; border: 2px solid var(--color-accent-700); border-radius: 8px; color: var(--color-accent-700); }
+  .own { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 6px; background: var(--color-neutral-200); color: var(--color-neutral-800); flex-shrink: 0; }
+  .scope { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 6px; border: 1px solid var(--color-neutral-400); color: var(--color-neutral-700); flex-shrink: 0; }
+  .badge { font-size: 13px; font-weight: 700; letter-spacing: 0.1em; padding: 4px 10px; border-radius: 8px; background: var(--color-text); color: var(--color-bg); }
+  .chip { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 7px 12px; border: 2px solid var(--color-neutral-400); border-radius: 8px; color: var(--color-neutral-800); cursor: pointer; }
+  .chip[aria-pressed='true'] { background: var(--color-text); color: var(--color-bg); border-color: var(--color-text); }
+  .side { border-left: 2px solid var(--color-text); background: var(--color-surface); display: flex; flex-direction: column; overflow: hidden; }
+  .side-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--color-neutral-300); }
+  .sec-h { display: flex; align-items: baseline; gap: 16px; border-bottom: 2px solid var(--color-text); padding-bottom: 10px; }
+  .sec-h h2 { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+  .cap { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 28px; border-top: 2px solid var(--color-text); padding-top: 14px; }
+  .cap span.k { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-neutral-700); }
+  .cap p { margin: 6px 0 0; font-size: 14px; line-height: 1.6; color: var(--color-neutral-800); }
+  .th { text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-neutral-800); padding: 11px 14px; border-bottom: 2px solid var(--color-text); background: var(--color-surface); }
+  .td { padding: 13px 14px; font-size: 14px; line-height: 1.5; border-bottom: 1px solid var(--color-neutral-300); vertical-align: top; }
+</style>
+</helmet>
+
+<section style="--ac: {{ accent }};display:flex;flex-direction:column;gap:56px;padding:56px 64px 96px;font-family:var(--font-body);color:var(--color-text)">
+
+  <div style="display:flex;flex-direction:column;gap:20px;max-width:1080px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent)">Tour 5 · accueil retenu</span>
+      <span style="flex:1;height:2px;background:var(--color-text)"></span>
+    </div>
+    <h1 style="margin:0;font-size:52px;line-height:1.03;letter-spacing:-0.02em;text-wrap:pretty">Un accueil, deux portées</h1>
+    <p style="margin:0;max-width:800px;font-size:17px;line-height:1.55;color:var(--color-neutral-800)">Tes deux réponses tranchent la question : un commercial ne voit que ses propres impayés, et les seuils de stock sont fiables — donc la file « produits sous seuil » s'affiche telle quelle, partagée par toute l'agence.</p>
+    <p style="margin:0;max-width:800px;font-size:15px;line-height:1.6;color:var(--color-neutral-700)">Même route, même rail, même composant : seule la portée de chaque file suit la permission. <a href="#5a">5a</a> est ce que voit un commercial, <a href="#5b">5b</a> ce que voit un gérant. La règle de portée est tabulée en bas de page — c'est la partie à donner au développement.</p>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start">
+
+    <div id="5a" class="frame">
+      <div style="display:flex;align-items:baseline;gap:14px"><span class="badge">5a</span><h3 style="margin:0;font-size:26px;letter-spacing:-0.01em">Commercial — Omar Fassi</h3></div>
+      <p style="margin:0;max-width:960px;font-size:15px;line-height:1.6;color:var(--color-neutral-800)">Trois files personnelles et une partagée. Le possessif est dans les titres — « Mes impayés », « Mes devis » — pour que la portée se lise sans avoir à la déduire, et chaque file porte son badge de portée. La colonne de droite ne montre que ses chiffres, avec la moyenne de l'agence comme repère mais sans le détail de ses collègues.</p>
+
+      <div class="shell">
+        <dc-import name="Rail" active="home" initials="OF" hint-size="64px,100%"></dc-import>
+
+        <div style="display:flex;flex-direction:column;min-width:0">
+          <div class="bar">
+            <span class="bar-t">Accueil</span>
+            <span style="font-size:13px;color:var(--color-neutral-700)">Bonjour Omar — <span style="font-weight:700;color:var(--color-text)">11 éléments</span> à traiter</span>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:14px">
+              <span style="font-size:12px;color:var(--color-neutral-700)" class="num">Lundi 14/09 · 08:40</span>
+              <button class="btn btn-primary" style="border-radius:8px">Nouvelle vente</button>
+            </div>
+          </div>
+
+          <div style="flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 300px;overflow:hidden">
+
+            <div class="queue">
+
+              <div class="card2" style="border-color:var(--color-accent-700)">
+                <div class="card-h" style="border-bottom-color:var(--color-accent-700);background:var(--color-accent-100);color:var(--color-accent-800)">
+                  Mes impayés
+                  <span class="rd" style="border-color:var(--color-accent-700)">2 · 17 110 DH</span>
+                  <span class="scope" style="border-color:var(--color-accent-300);color:var(--color-accent-800)">Mes clients</span>
+                </div>
+                <sc-for list="{{ mesImpayes }}" as="i" hint-placeholder-count="2">
+                  <div class="task">
+                    <span class="t-main"><span class="t-title">{{ i.client }}</span><span class="t-sub">{{ i.detail }}</span></span>
+                    <span class="t-amt">{{ i.montant }}</span>
+                    <span class="rd">{{ i.retard }}</span>
+                    <button class="btn btn-secondary" style="border-radius:8px;flex-shrink:0">Relancer</button>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div class="card2">
+                <div class="card-h">Mes ordres à facturer<span class="ro">1 · 6 140 DH</span><span class="scope">Mes clients</span></div>
+                <sc-for list="{{ mesOrdres }}" as="f" hint-placeholder-count="1">
+                  <div class="task">
+                    <span class="t-main"><span class="t-title">{{ f.ref }} · {{ f.vehicule }}</span><span class="t-sub">{{ f.client }} · terminé {{ f.fin }}</span></span>
+                    <span class="t-amt">{{ f.montant }}</span>
+                    <button class="btn btn-primary" style="border-radius:8px;flex-shrink:0">Facturer</button>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div class="card2">
+                <div class="card-h">Produits sous seuil<span class="ro">6</span><span class="scope">Agence · partagé</span><span class="meta">Délai fournisseur 5 jours</span></div>
+                <sc-for list="{{ sousSeuil }}" as="s" hint-placeholder-count="3">
+                  <div class="task">
+                    <span class="t-main"><span class="t-title">{{ s.nom }}</span><span class="t-sub">{{ s.dim }} · seuil {{ s.seuil }}</span></span>
+                    <span style="display:flex;align-items:baseline;gap:4px;flex-shrink:0"><span class="num" style="font-size:17px;font-weight:800;color:var(--color-accent-700)">{{ s.stock }}</span><span style="font-size:12px;color:var(--color-neutral-700)">en stock</span></span>
+                    <button class="btn btn-secondary" style="border-radius:8px;flex-shrink:0">Commander</button>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div class="card2">
+                <div class="card-h">Mes devis sans réponse<span class="ro">2 · 26 800 DH</span><span class="scope">Mes devis</span></div>
+                <sc-for list="{{ mesDevis }}" as="d" hint-placeholder-count="2">
+                  <div class="task">
+                    <span class="t-main"><span class="t-title">{{ d.ref }} · {{ d.client }}</span><span class="t-sub">Émis {{ d.emis }} · {{ d.jours }}</span></span>
+                    <span class="t-amt">{{ d.montant }}</span>
+                    <button class="btn btn-secondary" style="border-radius:8px;flex-shrink:0">Rappeler</button>
+                  </div>
+                </sc-for>
+              </div>
+
+            </div>
+
+            <div class="side">
+              <div style="padding:16px;border-bottom:2px solid var(--color-text);display:flex;flex-direction:column;gap:2px;flex-shrink:0">
+                <span class="kpi-l">Mes chiffres · aujourd'hui</span>
+                <span style="font-size:12px;color:var(--color-neutral-700)">Depuis 08:00</span>
+              </div>
+              <div style="display:flex;flex-direction:column;padding:4px 16px 16px;overflow:auto">
+                <sc-for list="{{ mesChiffres }}" as="p" hint-placeholder-count="5">
+                  <span class="side-row">
+                    <span style="font-size:13px;color:var(--color-neutral-800)">{{ p.k }}</span>
+                    <span class="num" style="font-size:15px;font-weight:700;text-align:right">{{ p.v }}</span>
+                  </span>
+                </sc-for>
+              </div>
+              <div style="margin-top:auto;padding:16px;border-top:2px solid var(--color-neutral-300);display:flex;flex-direction:column;gap:8px;flex-shrink:0">
+                <span class="kpi-l">Mon mois</span>
+                <span class="kpi-v" style="font-size:24px">412<span class="kpi-u"> k DH</span></span>
+                <div style="height:8px;border-radius:4px;background:var(--color-neutral-300);overflow:hidden"><span style="display:block;width:85%;height:100%;background:var(--ac, #ec3013)"></span></div>
+                <span style="font-size:12px;color:var(--color-neutral-700);line-height:1.45">85 % de l'objectif mensuel. Moyenne de l'agence : 355 k DH.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cap">
+        <div><span class="k">Ce que la portée retire</span><p>Les impayés des trois autres commerciaux (79 190 DH), leurs devis, leurs ordres, et le détail nominatif du classement. Omar voit sa position relative — « moyenne de l'agence 355 k » — sans voir qui fait quoi.</p></div>
+        <div><span class="k">Le stock reste partagé</span><p>Tes seuils étant fiables, la file s'affiche sans réserve et sans propriétaire : c'est une information d'agence, et le premier qui la voit commande. Le badge « Agence · partagé » lève l'ambiguïté.</p></div>
+      </div>
+    </div>
+
+    <div id="5b" class="frame">
+      <div style="display:flex;align-items:baseline;gap:14px"><span class="badge">5b</span><h3 style="margin:0;font-size:26px;letter-spacing:-0.01em">Gérant — Abdellah Benlahsen</h3></div>
+      <p style="margin:0;max-width:960px;font-size:15px;line-height:1.6;color:var(--color-neutral-800)">Les mêmes files, agrégées sur les quatre commerciaux, avec le responsable en clair sur chaque ligne — c'est cette attribution qui rend la relance déléguable, et le bouton devient « Assigner ». À droite, la tendance et le classement nominatif : exactement ce que le commercial ne voit pas.</p>
+
+      <div class="shell">
+        <dc-import name="Rail" active="home" initials="AB" hint-size="64px,100%"></dc-import>
+
+        <div style="display:flex;flex-direction:column;min-width:0">
+          <div class="bar">
+            <span class="bar-t">Accueil</span>
+            <span style="font-size:13px;color:var(--color-neutral-700)">Bonjour Abdellah — <span style="font-weight:700;color:var(--color-text)">18 éléments</span> sur 4 commerciaux</span>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+              <span class="chip" aria-pressed="true">Toutes agences</span>
+              <button class="btn btn-primary" style="border-radius:8px">Nouvelle vente</button>
+            </div>
+          </div>
+
+          <div style="flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 340px;overflow:hidden">
+
+            <div class="queue">
+
+              <div class="card2" style="border-color:var(--color-accent-700)">
+                <div class="card-h" style="border-bottom-color:var(--color-accent-700);background:var(--color-accent-100);color:var(--color-accent-800)">
+                  Impayés à relancer
+                  <span class="rd" style="border-color:var(--color-accent-700)">5 · 96 300 DH</span>
+                  <span class="scope" style="border-color:var(--color-accent-300);color:var(--color-accent-800)">Toutes agences</span>
+                  <span class="meta" style="color:var(--color-accent-800)">Dont 2 au-delà de 60 jours</span>
+                </div>
+                <sc-for list="{{ tousImpayes }}" as="i" hint-placeholder-count="3">
+                  <div class="task">
+                    <span class="t-main">
+                      <span style="display:flex;align-items:center;gap:8px"><span class="t-title">{{ i.client }}</span><span class="own">{{ i.commercial }}</span></span>
+                      <span class="t-sub">{{ i.detail }}</span>
+                    </span>
+                    <span class="t-amt">{{ i.montant }}</span>
+                    <span class="rd">{{ i.retard }}</span>
+                    <button class="btn btn-secondary" style="border-radius:8px;flex-shrink:0">Assigner</button>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div class="card2">
+                <div class="card-h">Ordres terminés à facturer<span class="ro">3 · 18 240 DH</span><span class="scope">Toutes agences</span></div>
+                <sc-for list="{{ tousOrdres }}" as="f" hint-placeholder-count="3">
+                  <div class="task">
+                    <span class="t-main">
+                      <span style="display:flex;align-items:center;gap:8px"><span class="t-title">{{ f.ref }} · {{ f.vehicule }}</span><span class="own">{{ f.commercial }}</span></span>
+                      <span class="t-sub">{{ f.client }} · terminé {{ f.fin }}</span>
+                    </span>
+                    <span class="t-amt">{{ f.montant }}</span>
+                    <button class="btn btn-primary" style="border-radius:8px;flex-shrink:0">Facturer</button>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div class="card2">
+                <div class="card-h">Produits sous seuil<span class="ro">6</span><span class="scope">Agence · partagé</span><span class="meta">Même file que les commerciaux</span></div>
+                <sc-for list="{{ sousSeuil }}" as="s" hint-placeholder-count="3">
+                  <div class="task">
+                    <span class="t-main"><span class="t-title">{{ s.nom }}</span><span class="t-sub">{{ s.dim }} · seuil {{ s.seuil }}</span></span>
+                    <span style="display:flex;align-items:baseline;gap:4px;flex-shrink:0"><span class="num" style="font-size:17px;font-weight:800;color:var(--color-accent-700)">{{ s.stock }}</span><span style="font-size:12px;color:var(--color-neutral-700)">en stock</span></span>
+                    <button class="btn btn-secondary" style="border-radius:8px;flex-shrink:0">Commander</button>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div class="card2">
+                <div class="card-h">Devis sans réponse<span class="ro">4 · 62 400 DH</span><span class="scope">Toutes agences</span></div>
+                <sc-for list="{{ tousDevis }}" as="d" hint-placeholder-count="2">
+                  <div class="task">
+                    <span class="t-main">
+                      <span style="display:flex;align-items:center;gap:8px"><span class="t-title">{{ d.ref }} · {{ d.client }}</span><span class="own">{{ d.commercial }}</span></span>
+                      <span class="t-sub">Émis {{ d.emis }} · {{ d.jours }}</span>
+                    </span>
+                    <span class="t-amt">{{ d.montant }}</span>
+                    <button class="btn btn-secondary" style="border-radius:8px;flex-shrink:0">Rappeler</button>
+                  </div>
+                </sc-for>
+              </div>
+
+            </div>
+
+            <div class="side">
+              <div style="flex-shrink:0;padding:16px;border-bottom:2px solid var(--color-text);display:flex;flex-direction:column;gap:6px">
+                <span class="kpi-l">CA du mois</span>
+                <span class="kpi-v" style="font-size:32px">1.42<span class="kpi-u" style="font-size:15px"> M DH</span></span>
+                <span style="font-size:12px;color:#1b6b3a;font-weight:600">+ 18.3 % vs septembre 2025</span>
+              </div>
+
+              <div style="flex-shrink:0;padding:14px 16px;border-bottom:2px solid var(--color-text);display:flex;flex-direction:column;gap:8px">
+                <span class="kpi-l">30 derniers jours</span>
+                <div style="height:64px;display:flex;align-items:flex-end;gap:3px;position:relative">
+                  <div style="position:absolute;left:0;right:0;bottom:38%;height:2px;background:var(--color-neutral-500);z-index:2"></div>
+                  <sc-for list="{{ jours }}" as="j" hint-placeholder-count="30">
+                    <span style="flex:1;background:{{ j.couleur }};border-radius:2px 2px 0 0;height:{{ j.h }}"></span>
+                  </sc-for>
+                </div>
+                <span style="font-size:11px;color:var(--color-neutral-700)" class="num">Moyenne 47 300 DH / jour</span>
+              </div>
+
+              <div style="flex:1;min-height:0;display:flex;flex-direction:column">
+                <div class="card-h" style="border-bottom-width:2px">Classement · septembre<span class="meta">Impayé en fin de ligne</span></div>
+                <div style="flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;padding:12px 16px 16px;gap:12px">
+                  <sc-for list="{{ classement }}" as="c" hint-placeholder-count="4">
+                    <span style="display:flex;flex-direction:column;gap:5px">
+                      <span style="display:flex;align-items:baseline;gap:10px">
+                        <span class="num" style="font-size:12px;font-weight:700;color:var(--color-neutral-700);width:14px">{{ c.rang }}</span>
+                        <span style="font-size:13px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.nom }}</span>
+                        <span class="num" style="font-size:13px;font-weight:700;flex-shrink:0">{{ c.ca }}</span>
+                      </span>
+                      <span style="display:flex;align-items:center;gap:10px;padding-left:24px">
+                        <span style="flex:1;height:8px;border-radius:4px;background:var(--color-neutral-200);overflow:hidden;display:block"><span style="display:block;height:100%;width:{{ c.pct }};background:{{ c.couleur }}"></span></span>
+                        <span class="num" style="font-size:11px;color:{{ c.impayeCouleur }};flex-shrink:0;font-weight:600">{{ c.impaye }}</span>
+                      </span>
+                    </span>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cap">
+        <div><span class="k">L'attribution</span><p>Chaque ligne porte son commercial, et le bouton devient « Assigner » au lieu de « Relancer » : le gérant ne fait pas le travail, il le distribue. C'est la seule différence fonctionnelle entre les deux versions.</p></div>
+        <div><span class="k">Le classement</span><p>Nominatif ici, anonyme chez le commercial. La barre porte l'impayé de chacun en fin de ligne — un CA élevé avec un impayé élevé n'est pas une performance, et c'est la lecture qui manque aujourd'hui.</p></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:24px;max-width:1080px">
+    <div class="sec-h"><h2>Règle de portée</h2><span style="font-size:13px;color:var(--color-neutral-700)">La partie à donner au développement</span></div>
+
+    <table class="table" style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr>
+          <th class="th">File</th>
+          <th class="th">Portée commercial</th>
+          <th class="th">Portée gérant</th>
+          <th class="th">Permission à créer</th>
+        </tr>
+      </thead>
+      <tbody>
+        <sc-for list="{{ portees }}" as="p" hint-placeholder-count="4">
+          <tr>
+            <td class="td" style="font-weight:600">{{ p.file }}</td>
+            <td class="td" style="color:var(--color-neutral-800)">{{ p.commercial }}</td>
+            <td class="td" style="color:var(--color-neutral-800)">{{ p.gerant }}</td>
+            <td class="td" style="font-family:ui-monospace,monospace;font-size:12.5px">{{ p.permission }}</td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span class="kpi-l">Ce qu'il faut ajouter</span>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:var(--color-neutral-800)">Les permissions actuelles sont binaires (<code>view sales</code>, <code>view clients</code>…) : elles disent si on accède à l'écran, pas jusqu'où. Il faut une seconde dimension — quatre permissions en <code>.all</code>, ajoutées au <em>seeder</em> et accordées aux rôles gérant et administrateur seulement.</p>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:var(--color-neutral-800)">Défaut sûr : en l'absence de la permission <code>.all</code>, la requête est filtrée sur <code>user_id</code>. Le filtrage se fait côté API, jamais dans le front — sinon les données des collègues transitent quand même sur le réseau, et une console ouverte suffit à les lire.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span class="kpi-l">Le stock, maintenant que les seuils sont fiables</span>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:var(--color-neutral-800)">C'est ce qui permet d'afficher la file sans filet : pas de « vérifier en rayon », pas de compteur approximatif. Un seul point à tenir dans le temps — le jour où les seuils dérivent, la file se fait ignorer en trois jours et ne se récupère pas. Un contrôle après chaque inventaire suffit.</p>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:var(--color-neutral-800)">Le bouton « Commander » doit créer un brouillon d'achat pré-rempli, pas ouvrir un formulaire vide : sinon la file signale sans faire gagner de temps, et l'équipe retourne à son carnet.</p>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;border-top:2px solid var(--color-text);padding-top:16px">
+      <span class="kpi-l">Rattachement au rail</span>
+      <p style="margin:0;font-size:15px;line-height:1.6;color:var(--color-neutral-800)">Une seule route <code>/dashboard</code> et un seul composant : le jeu de files et leur portée viennent de <code>AuthService.hasPermission()</code>, exactement comme le filtrage de la navigation. Il n'y a ni second écran à maintenir, ni bascule à exposer dans les réglages. C'est l'étape 3 de l'intégration, une fois le rail posé.</p>
+    </div>
+  </div>
+
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;options&quot;:[&quot;#ec3013&quot;,&quot;#ff2d37&quot;,&quot;#1f5ea8&quot;],&quot;default&quot;:&quot;#ec3013&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Marque&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const hauteurs = [62, 71, 55, 84, 48, 66, 30, 58, 77, 64, 52, 88, 45, 70, 61, 35, 74, 57, 92, 66, 49, 80, 28, 68, 73, 54, 86, 63, 76, 100];
+    const classementBrut = [
+      { nom: 'Nadia Amrani', ca: 486, impaye: 'aucun impayé', rouge: false },
+      { nom: 'Omar Fassi', ca: 412, impaye: '17 110 DH impayé', rouge: true },
+      { nom: 'Rachid Berrada', ca: 318, impaye: 'aucun impayé', rouge: false },
+      { nom: 'Salma Idrissi', ca: 204, impaye: '4 200 DH impayé', rouge: true }
+    ];
+    return {
+      accent: this.props.accent ?? '#ec3013',
+      mesImpayes: [
+        { client: 'Transport Chaouia', detail: 'VTE-2416 · échéance 02/10 · plafond dépassé', montant: '11 640 DH', retard: '72 j' },
+        { client: 'Auto Souss', detail: 'VTE-2413 · échéance 01/10', montant: '5 470 DH', retard: '64 j' }
+      ],
+      mesOrdres: [
+        { ref: 'OR-0840', vehicule: 'Renault Master', client: 'Transport Chaouia', fin: 'hier 11:00', montant: '6 140 DH' }
+      ],
+      mesDevis: [
+        { ref: 'DEV-0309', client: 'Transport Chaouia', emis: '29/08', jours: '16 jours sans réponse', montant: '17 200 DH' },
+        { ref: 'DEV-0314', client: 'Auto Souss', emis: '06/09', jours: '8 jours sans réponse', montant: '9 600 DH' }
+      ],
+      mesChiffres: [
+        { k: 'Mon CA', v: '4 820 DH' },
+        { k: 'Mes ventes', v: '3' },
+        { k: 'Ma marge nette', v: '1 010 DH' },
+        { k: 'Mes ordres ouverts', v: '2' },
+        { k: 'Mes devis ouverts', v: '2' }
+      ],
+      tousImpayes: [
+        { client: 'Transport Chaouia', commercial: 'Omar F.', detail: 'VTE-2416 · échéance 02/10 · plafond dépassé', montant: '11 640 DH', retard: '72 j' },
+        { client: 'Auto Souss', commercial: 'Omar F.', detail: 'VTE-2413 · échéance 01/10', montant: '5 470 DH', retard: '64 j' },
+        { client: 'Garage Zerhouni', commercial: 'Salma I.', detail: 'VTE-2411 · partiel, reste à régler', montant: '4 200 DH', retard: '31 j' }
+      ],
+      tousOrdres: [
+        { ref: 'OR-0839', vehicule: 'Ford Transit', commercial: 'Nadia A.', client: 'Flotte Ocean', fin: 'hier 13:00', montant: '9 350 DH' },
+        { ref: 'OR-0840', vehicule: 'Renault Master', commercial: 'Omar F.', client: 'Transport Chaouia', fin: 'hier 11:00', montant: '6 140 DH' },
+        { ref: 'OR-0836', vehicule: 'Dacia Duster', commercial: 'Rachid B.', client: 'M. Alaoui', fin: '12/09', montant: '2 750 DH' }
+      ],
+      tousDevis: [
+        { ref: 'DEV-0312', client: 'Flotte Ocean', commercial: 'Nadia A.', emis: '04/09', jours: '10 jours sans réponse', montant: '28 400 DH' },
+        { ref: 'DEV-0309', client: 'Transport Chaouia', commercial: 'Omar F.', emis: '29/08', jours: '16 jours sans réponse', montant: '17 200 DH' }
+      ],
+      sousSeuil: [
+        { nom: 'Michelin Agilis 3', dim: '215/75 R16C', seuil: '12', stock: '6' },
+        { nom: 'Bridgestone Duravis R660', dim: '195/70 R15C', seuil: '10', stock: '4' },
+        { nom: 'Continental VanContact', dim: '205/65 R16C', seuil: '8', stock: '3' }
+      ],
+      classement: classementBrut.map((c, i) => ({
+        nom: c.nom,
+        rang: String(i + 1),
+        ca: c.ca + ' k',
+        impaye: c.impaye,
+        impayeCouleur: c.rouge ? 'var(--color-accent-700)' : 'var(--color-neutral-700)',
+        pct: Math.round(c.ca / 486 * 100) + '%',
+        couleur: i === 0 ? 'var(--ac, #ec3013)' : 'var(--color-neutral-800)'
+      })),
+      jours: hauteurs.map((h, i) => ({
+        h: h + '%',
+        couleur: i === hauteurs.length - 1 ? 'var(--ac, #ec3013)' : 'var(--color-neutral-800)'
+      })),
+      portees: [
+        { file: 'Impayés', commercial: 'Ses clients uniquement', gerant: 'Tous les commerciaux, avec attribution', permission: 'view unpaid.all' },
+        { file: 'Ordres à facturer', commercial: 'Ses clients uniquement', gerant: 'Toutes agences, avec attribution', permission: 'view service-orders.all' },
+        { file: 'Produits sous seuil', commercial: 'Agence — partagé, non filtré', gerant: 'Identique au commercial', permission: '— (aucune)' },
+        { file: 'Devis sans réponse', commercial: 'Ses devis uniquement', gerant: 'Toutes agences, avec attribution', permission: 'view quotes.all' },
+        { file: 'Chiffres latéraux', commercial: 'Ses totaux + moyenne agence', gerant: 'Totaux consolidés + classement nominatif', permission: 'view reporting.all' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
