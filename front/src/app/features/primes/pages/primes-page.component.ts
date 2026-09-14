@@ -9,6 +9,7 @@ import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.com
 import { TableSkeletonComponent } from '../../../shared/table-skeleton/table-skeleton.component';
 import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-banner/error-banner.component';
 
+import { StateBadgeComponent } from '../../../shared/state-badge/state-badge.component';
 const MONTH_NAMES = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
   'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
@@ -17,7 +18,7 @@ const MONTH_NAMES = [
 @Component({
   selector: 'app-primes-page',
   standalone: true,
-  imports: [IconComponent, CommonModule, EmptyStateComponent, TableSkeletonComponent, ErrorBannerComponent],
+  imports: [StateBadgeComponent, IconComponent, CommonModule, EmptyStateComponent, TableSkeletonComponent, ErrorBannerComponent],
   templateUrl: './primes-page.component.html',
   styleUrls: ['./primes-page.component.scss'],
 })

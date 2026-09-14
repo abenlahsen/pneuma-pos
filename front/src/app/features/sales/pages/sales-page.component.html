@@ -210,9 +210,9 @@
             <td class="text-center cell-id">{{ sale.id }}</td>
             <td data-card="Date">{{ sale.date | date:'dd/MM/yyyy' }}</td>
             <td class="text-center">
-              <span class="badge" [class.badge-success]="sale.with_invoice" [class.badge-secondary]="!sale.with_invoice">
+              <app-state-badge [tone]="'neutral'">
                 {{ sale.with_invoice ? 'Oui' : 'Non' }}
-              </span>
+              </app-state-badge>
             </td>
             <td class="col-client" data-card-title="Client">
               <a *ngIf="sale.client_id" class="fw-medium link-text client-link" [routerLink]="['/clients', sale.client_id]">{{ getClientName(sale) }}</a>
@@ -239,25 +239,17 @@
               </span>
             </td>
             <td data-card="Paiement">
-              <span class="badge"
-                [class.badge-danger]="sale.payment_status === 'NON PAYE' || !sale.payment_status"
-                [class.badge-warning]="sale.payment_status === 'PARTIEL'"
-                [class.badge-success]="sale.payment_status === 'PAYE'">
+              <app-state-badge [tone]="paymentTone(sale.payment_status)">
                 {{ sale.payment_status || 'NON PAYE' }}
-              </span>
+              </app-state-badge>
             </td>
             <td class="status-cell" data-card="Statut">
-              <select class="status-select"
-                      [class.bg-en-cours]="sale.status === 'EN COURS'"
-                      [class.bg-livre]="sale.status === 'LIVRE'"
-                      [class.bg-monte]="sale.status === 'MONTE'"
-                      [class.bg-terminee]="sale.status === 'TERMINEE'"
-                      [class.bg-annule]="sale.status === 'ANNULE'"
-                      [ngModel]="sale.status"
-                      [disabled]="isSaleLocked(sale)"
-                      (change)="updateSaleStatus(sale, $event.target)">
-                <option *ngFor="let s of statusOptionsFor(sale)" [value]="s">{{ SALE_STATUS_LABELS[s] }}</option>
-              </select>
+              <app-state-select
+                [value]="sale.status"
+                [options]="statusOptionsFor(sale)"
+                [labels]="SALE_STATUS_LABELS"
+                [disabled]="isSaleLocked(sale)"
+                (valueChange)="updateSaleStatus(sale, $event)" />
             </td>
             <td>{{ sale.creator?.name || '-' }}</td>
             <td>{{ sale.created_at | date:'dd/MM/yyyy HH:mm' }}</td>

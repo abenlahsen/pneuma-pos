@@ -10,6 +10,8 @@ import { SupplierPaymentComponent } from '../components/supplier-payment/supplie
 import { PurchasePaymentDetailComponent } from '../../purchases/components/purchase-payment-detail/purchase-payment-detail.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { IconComponent } from '../../../shared/icon/icon.component';
+import { StateBadgeComponent } from '../../../shared/state-badge/state-badge.component';
+import { paymentTone, statusTone } from '../../../shared/state-badge/state-tone';
 import {
   Supplier,
   SupplierPayload,
@@ -23,11 +25,14 @@ import {
 @Component({
   selector: 'app-supplier-detail-page',
   standalone: true,
-  imports: [IconComponent, CommonModule, RouterLink, SupplierFormComponent, SupplierPaymentComponent, PurchasePaymentDetailComponent],
+  imports: [StateBadgeComponent, IconComponent, CommonModule, RouterLink, SupplierFormComponent, SupplierPaymentComponent, PurchasePaymentDetailComponent],
   templateUrl: './supplier-detail-page.component.html',
   styleUrl: './supplier-detail-page.component.scss',
 })
 export class SupplierDetailPageComponent implements OnInit, OnDestroy {
+  readonly paymentTone = paymentTone;
+  readonly statusTone = statusTone;
+
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly supplierService = inject(SupplierService);
@@ -179,22 +184,6 @@ export class SupplierDetailPageComponent implements OnInit, OnDestroy {
         alert('Impossible de supprimer ce fournisseur. Il est peut-être lié à des achats.');
       },
     });
-  }
-
-  paymentStatusClass(status: string | null | undefined): string {
-    const s = (status ?? '').toUpperCase();
-    if (s === 'PAYE') return 'badge-success';
-    if (s === 'PARTIEL') return 'badge-warning';
-    if (s === 'NON PAYE') return 'badge-danger';
-    return 'badge-neutral';
-  }
-
-  purchaseStatusClass(status: string | null | undefined): string {
-    const s = (status ?? '').toUpperCase();
-    if (s === 'RECU' || s === 'TERMINE') return 'badge-success';
-    if (s === 'EN COURS') return 'badge-warning';
-    if (s === 'ANNULE') return 'badge-danger';
-    return 'badge-neutral';
   }
 
   private loadSupplier(id: number): void {

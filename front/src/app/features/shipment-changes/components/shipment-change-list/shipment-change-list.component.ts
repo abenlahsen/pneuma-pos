@@ -5,14 +5,20 @@ import { ShipmentChangeRequest } from '../../models/shipment-change.model';
 import { ShipmentChangeStatus, SHIPMENT_CHANGE_STATUSES, SHIPMENT_CHANGE_STATUS_LABELS } from '../../../../core/constants/status.constants';
 import { IconComponent } from '../../../../shared/icon/icon.component';
 
+import { StateSelectComponent } from '../../../../shared/state-badge/state-select.component';
+import { StateBadgeComponent } from '../../../../shared/state-badge/state-badge.component';
+import { statusTone } from '../../../../shared/state-badge/state-tone';
+
 @Component({
   selector: 'app-shipment-change-list',
   standalone: true,
-  imports: [IconComponent, CommonModule, FormsModule],
+  imports: [StateBadgeComponent, StateSelectComponent, IconComponent, CommonModule, FormsModule],
   templateUrl: './shipment-change-list.component.html',
   styleUrl: './shipment-change-list.component.scss',
 })
 export class ShipmentChangeListComponent {
+  readonly statusTone = statusTone;
+
   @Input() requests: ShipmentChangeRequest[] = [];
   @Input() loading = false;
   @Input() canCreate = false;
@@ -27,15 +33,6 @@ export class ShipmentChangeListComponent {
 
   readonly statusLabels = SHIPMENT_CHANGE_STATUS_LABELS;
   readonly allStatuses = SHIPMENT_CHANGE_STATUSES;
-
-  statusClass(status: ShipmentChangeStatus): string {
-    switch (status) {
-      case 'ACCEPTEE': return 'badge-success';
-      case 'REFUSEE':  return 'badge-danger';
-      case 'ENVOYEE':  return 'badge-warning';
-      default:         return 'badge-neutral';
-    }
-  }
 
   isClosed(request: ShipmentChangeRequest): boolean {
     return request.status === 'ACCEPTEE' || request.status === 'REFUSEE';

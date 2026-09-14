@@ -154,20 +154,13 @@ $_border2:  #d0d9e4;
   gap: 0.3rem;
 }
 
-.badge-type {
-  background: rgba(255, 45, 55, 0.08);
-  color: $_red;
-}
-
-.badge-part-type {
-  background: rgba(217, 119, 6, 0.10);
-  color: $_amber;
-}
-
+// Annotations : meme silhouette plate que les badges d'etat neutres. Le type
+// d'une prestation ne signale rien, il nomme.
+.badge-type,
+.badge-part-type,
 .badge-more {
-  background: $_surface2;
-  color: $_muted;
-  border: 1px solid $_border2;
+  background: transparent;
+  color: var(--neutral-800);
 }
 
 // ── Action buttons ────────────────────────────────────────────────────────────

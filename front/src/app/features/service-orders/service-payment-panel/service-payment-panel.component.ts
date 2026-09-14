@@ -6,6 +6,8 @@ import { ServiceOrderService } from '../data-access/service-order.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { IconComponent } from '../../../shared/icon/icon.component';
 
+import { StateBadgeComponent } from '../../../shared/state-badge/state-badge.component';
+import { paymentTone } from '../../../shared/state-badge/state-tone';
 const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Carte bancaire'];
 
 interface AccountOption {
@@ -17,11 +19,13 @@ interface AccountOption {
 @Component({
   selector: 'app-service-payment-panel',
   standalone: true,
-  imports: [IconComponent, CommonModule, FormsModule],
+  imports: [StateBadgeComponent, IconComponent, CommonModule, FormsModule],
   templateUrl: './service-payment-panel.component.html',
   styleUrls: ['./service-payment-panel.component.scss'],
 })
 export class ServicePaymentPanelComponent implements OnInit {
+  readonly paymentTone = paymentTone;
+
   @Input() serviceOrder!: ServiceOrder;
   @Output() closed = new EventEmitter<void>();
 

@@ -146,22 +146,8 @@ $_shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
 .mt-3        { margin-top: 0.75rem; }
 
 // ── Badges ────────────────────────────────────────────────────────────────────
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.2rem 0.6rem;
-  border-radius: var(--radius);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  width: fit-content;
-}
-
-.badge-success      { background: rgba(34, 197, 94, 0.10);  color: #15803d; }
-.badge-warning      { background: rgba(234, 179, 8, 0.12);  color: #a16207; }
-.badge-danger       { background: rgba(239, 68, 68, 0.10);  color: #dc2626; }
-.badge-type         { background: rgba(255, 45, 55, 0.08);  color: $_red; }
-.badge-part-inline  { background: rgba(34, 197, 94, 0.10);  color: #15803d; }
+.badge-type,
+.badge-part-inline  { background: transparent; color: var(--neutral-800); }
 
 // ── Item detail helpers ───────────────────────────────────────────────────────
 .item-desc {

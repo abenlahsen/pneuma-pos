@@ -182,21 +182,6 @@ $_border2:  #d0d9e4;
 }
 
 // ── Badges ────────────────────────────────────────────────────────────────────
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.65rem;
-  border-radius: var(--radius);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-
-  &-success { background: rgba(34, 197, 94, 0.10);  color: #15803d; }
-  &-warning { background: rgba(234, 179, 8, 0.12);  color: #a16207; }
-  &-danger  { background: rgba(239, 68, 68, 0.10);  color: #dc2626; }
-}
-
 // ── Payments list ─────────────────────────────────────────────────────────────
 .payments-list {
   display: flex;

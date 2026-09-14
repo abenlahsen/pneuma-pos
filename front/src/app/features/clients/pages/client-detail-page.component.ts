@@ -30,14 +30,19 @@ import { ManagedUser } from '../../../core/models/user-manage.model';
 import { SaleFormComponent } from '../../sales/sale-form/sale-form.component';
 import { IconComponent } from '../../../shared/icon/icon.component';
 
+import { StateBadgeComponent } from '../../../shared/state-badge/state-badge.component';
+import { paymentTone } from '../../../shared/state-badge/state-tone';
+
 @Component({
   selector: 'app-client-detail-page',
   standalone: true,
-  imports: [IconComponent, CommonModule, RouterLink, ClientFormComponent, VehicleFormComponent, SaleFormComponent, ClientPaymentComponent, SalePaymentDetailComponent],
+  imports: [StateBadgeComponent, IconComponent, CommonModule, RouterLink, ClientFormComponent, VehicleFormComponent, SaleFormComponent, ClientPaymentComponent, SalePaymentDetailComponent],
   templateUrl: './client-detail-page.component.html',
   styleUrl: './client-detail-page.component.scss',
 })
 export class ClientDetailPageComponent implements OnInit, OnDestroy {
+  readonly paymentTone = paymentTone;
+
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly clientService = inject(ClientService);
@@ -168,14 +173,6 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
   toggleOpenInvoices(): void { this.openInvoicesCollapsed.update(v => !v); }
   toggleEntries(): void { this.entriesCollapsed.update(v => !v); }
   togglePayments(): void { this.paymentsCollapsed.update(v => !v); }
-
-  paymentStatusClass(status: string | null | undefined): string {
-    const s = (status ?? '').toUpperCase();
-    if (s === 'PAYE') return 'badge-success';
-    if (s === 'PARTIEL') return 'badge-warning';
-    if (s === 'NON PAYE') return 'badge-danger';
-    return 'badge-neutral';
-  }
 
   deleteClient(): void {
     const name = this.profile()?.client?.name ?? 'ce client';

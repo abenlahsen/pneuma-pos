@@ -21,14 +21,20 @@ import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.com
 import { TableSkeletonComponent } from '../../../shared/table-skeleton/table-skeleton.component';
 import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-banner/error-banner.component';
 
+import { StateSelectComponent } from '../../../shared/state-badge/state-select.component';
+import { StateBadgeComponent } from '../../../shared/state-badge/state-badge.component';
+import { paymentTone } from '../../../shared/state-badge/state-tone';
+
 @Component({
   selector: 'app-purchases-page',
   standalone: true,
-  imports: [IconComponent, CommonModule, FormsModule, PurchaseFormComponent, PurchaseDetailComponent, PurchasePaymentsComponent, PurchaseReturnComponent, AutoRefreshControlComponent, EmptyStateComponent, TableSkeletonComponent, ErrorBannerComponent],
+  imports: [StateBadgeComponent, StateSelectComponent, IconComponent, CommonModule, FormsModule, PurchaseFormComponent, PurchaseDetailComponent, PurchasePaymentsComponent, PurchaseReturnComponent, AutoRefreshControlComponent, EmptyStateComponent, TableSkeletonComponent, ErrorBannerComponent],
   templateUrl: './purchases-page.component.html',
   styleUrls: ['./purchases-page.component.scss']
 })
 export class PurchasesPageComponent implements OnInit, OnDestroy {
+  readonly paymentTone = paymentTone;
+
   private readonly pageHeader = inject(PageHeaderService);
   readonly PURCHASE_STATUSES = PURCHASE_STATUSES;
   readonly PURCHASE_STATUS_LABELS = PURCHASE_STATUS_LABELS;
@@ -355,9 +361,7 @@ export class PurchasesPageComponent implements OnInit, OnDestroy {
     this.loadData();
   }
 
-  updatePurchaseStatus(purchase: Purchase, target: EventTarget | null): void {
-    const select = target as HTMLSelectElement | null;
-    const newStatus = select?.value;
+  updatePurchaseStatus(purchase: Purchase, newStatus: string): void {
     if (!newStatus || purchase.status === newStatus) return;
 
     const oldStatus = purchase.status;

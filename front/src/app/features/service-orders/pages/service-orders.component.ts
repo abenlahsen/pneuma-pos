@@ -13,10 +13,14 @@ import { ServicePaymentPanelComponent } from '../service-payment-panel/service-p
 import { AuthService } from '../../../core/services/auth.service';
 import { IconComponent } from '../../../shared/icon/icon.component';
 
+import { StateSelectComponent } from '../../../shared/state-badge/state-select.component';
+import { StateBadgeComponent } from '../../../shared/state-badge/state-badge.component';
+import { paymentTone } from '../../../shared/state-badge/state-tone';
+
 @Component({
   selector: 'app-service-orders',
   standalone: true,
-  imports: [IconComponent, 
+  imports: [StateBadgeComponent, StateSelectComponent, IconComponent, 
     CommonModule,
     FormsModule,
     ServiceOrderFormComponent,
@@ -27,6 +31,8 @@ import { IconComponent } from '../../../shared/icon/icon.component';
   styleUrls: ['./service-orders.component.scss'],
 })
 export class ServiceOrdersComponent implements OnInit, OnDestroy {
+  readonly paymentTone = paymentTone;
+
   private readonly pageHeader = inject(PageHeaderService);
   private readonly router = inject(Router);
   readonly SERVICE_ORDER_STATUSES = SERVICE_ORDER_STATUSES;
@@ -320,8 +326,7 @@ export class ServiceOrdersComponent implements OnInit, OnDestroy {
     });
   }
 
-  updateOrderStatus(order: ServiceOrder, target: any): void {
-    const newStatus = target.value;
+  updateOrderStatus(order: ServiceOrder, newStatus: string): void {
     if (order.status === newStatus) return;
 
     const oldStatus = order.status;
@@ -349,19 +354,4 @@ export class ServiceOrdersComponent implements OnInit, OnDestroy {
     return 'margin-low';
   }
 
-  statusClass(status: ServiceOrderStatus): string {
-    switch (status) {
-      case 'TERMINE': return 'badge-success';
-      case 'ANNULE': return 'badge-danger';
-      default: return 'badge-warning';
-    }
-  }
-
-  paymentClass(ps: PaymentStatus): string {
-    switch (ps) {
-      case 'PAYE': return 'badge-success';
-      case 'PARTIEL': return 'badge-warning';
-      default: return 'badge-danger';
-    }
-  }
 }

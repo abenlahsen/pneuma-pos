@@ -26,14 +26,20 @@ import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.com
 import { TableSkeletonComponent } from '../../../shared/table-skeleton/table-skeleton.component';
 import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-banner/error-banner.component';
 
+import { StateSelectComponent } from '../../../shared/state-badge/state-select.component';
+import { StateBadgeComponent } from '../../../shared/state-badge/state-badge.component';
+import { paymentTone } from '../../../shared/state-badge/state-tone';
+
 @Component({
   selector: 'app-sales-page',
   standalone: true,
-  imports: [IconComponent, CommonModule, FormsModule, RouterLink, SaleFormComponent, SaleDetailComponent, PaymentPanelComponent, AutoRefreshControlComponent, EmptyStateComponent, TableSkeletonComponent, ErrorBannerComponent],
+  imports: [StateBadgeComponent, StateSelectComponent, IconComponent, CommonModule, FormsModule, RouterLink, SaleFormComponent, SaleDetailComponent, PaymentPanelComponent, AutoRefreshControlComponent, EmptyStateComponent, TableSkeletonComponent, ErrorBannerComponent],
   templateUrl: './sales-page.component.html',
   styleUrl: './sales-page.component.scss',
 })
 export class SalesPageComponent implements OnInit, OnDestroy {
+  readonly paymentTone = paymentTone;
+
   private readonly pageHeader = inject(PageHeaderService);
   readonly SALE_STATUSES = SALE_STATUSES;
   readonly SALE_STATUS_LABELS = SALE_STATUS_LABELS;
@@ -438,14 +444,16 @@ export class SalesPageComponent implements OnInit, OnDestroy {
     this.loadData();
   }
 
-  updateSaleStatus(sale: Sale, target: any): void {
-    const newStatus = target.value;
+  updateSaleStatus(sale: Sale, value: string): void {
+    // Le choix vient de `statusOptionsFor(sale)` : on referme le type une fois,
+    // ici, plutot que de le caster a chaque usage.
+    const newStatus = value as SaleStatus;
     if (sale.status === newStatus) return;
 
     const oldStatus = sale.status;
     sale.status = newStatus;
 
-    this.saleService.patchStatus(sale.id, newStatus as SaleStatus).subscribe({
+    this.saleService.patchStatus(sale.id, newStatus).subscribe({
       next: () => {
         this.loadData();
       },

@@ -9,16 +9,20 @@ import { AccountService } from '../../../core/services/account.service';
 import { PurchasePaymentDetailComponent } from '../components/purchase-payment-detail/purchase-payment-detail.component';
 import { IconComponent } from '../../../shared/icon/icon.component';
 
+import { StateBadgeComponent } from '../../../shared/state-badge/state-badge.component';
+import { paymentTone } from '../../../shared/state-badge/state-tone';
 const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Effet', 'Carte bancaire'];
 
 @Component({
   selector: 'app-purchase-payments',
   standalone: true,
-  imports: [IconComponent, CommonModule, FormsModule, PurchasePaymentDetailComponent],
+  imports: [StateBadgeComponent, IconComponent, CommonModule, FormsModule, PurchasePaymentDetailComponent],
   templateUrl: './purchase-payments.component.html',
   styleUrl: './purchase-payments.component.scss',
 })
 export class PurchasePaymentsComponent implements OnInit {
+  readonly paymentTone = paymentTone;
+
   @Input() purchase!: Purchase;
   @Output() closed = new EventEmitter<void>();
   @Output() statusChanged = new EventEmitter<string>();

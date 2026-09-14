@@ -134,17 +134,10 @@
               </a>
             </td>
             <td>
-              <span
-                class="badge"
-                [class.badge-primary]="product.type === 'tyre'"
-                [class.badge-warning]="product.type === 'part'"
-                [class.badge-info]="product.type === 'service'"
-              >
-                {{ typeLabel(product.type) }}
-              </span>
+              <span class="badge">{{ typeLabel(product.type) }}</span>
             </td>
             <td>
-              <span class="badge badge-primary" *ngIf="product.brand">{{ product.brand!.name }}</span>
+              <span class="badge" *ngIf="product.brand">{{ product.brand!.name }}</span>
               <span *ngIf="!product.brand">-</span>
             </td>
             <td>{{ product.profile || '-' }}</td>
@@ -172,9 +165,9 @@
               <span *ngIf="!product.tyre?.tire_marking && !product.tyre?.tire_runflat && !product.tyre?.tire_reinforced && !(product.type === 'part' && product.part?.oem_reference)">-</span>
             </td>
             <td class="text-center">
-              <span class="badge" [class.badge-success]="product.is_active" [class.badge-muted]="!product.is_active">
+              <app-state-badge [tone]="product.is_active ? 'neutral' : 'alert'">
                 {{ product.is_active ? 'Actif' : 'Inactif' }}
-              </span>
+              </app-state-badge>
             </td>
           </tr>
         </tbody>

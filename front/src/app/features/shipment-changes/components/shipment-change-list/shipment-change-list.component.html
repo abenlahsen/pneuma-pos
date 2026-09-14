@@ -31,19 +31,18 @@
           <td>{{ r.shipment_number || '-' }}</td>
           <td class="text-center">{{ r.items?.length || 0 }}</td>
           <td>
-            <span class="badge" [ngClass]="statusClass(r.status)">{{ statusLabels[r.status] }}</span>
+            <app-state-badge [tone]="statusTone(r.status)">{{ statusLabels[r.status] }}</app-state-badge>
           </td>
           <td class="text-right actions-cell">
             <button type="button" class="btn-icon" title="Imprimer" (click)="print.emit(r)"><app-icon name="print" /></button>
             <button type="button" class="btn-icon" title="Modifier" *ngIf="canEdit && !isClosed(r)" (click)="edit.emit(r)"><app-icon name="edit" /></button>
-            <select
-              class="status-select"
+            <app-state-select
               *ngIf="canEdit && !isClosed(r)"
-              [ngModel]="r.status"
-              (ngModelChange)="onStatusSelect(r, $event)"
-              title="Changer le statut">
-              <option *ngFor="let s of allStatuses" [value]="s">{{ statusLabels[s] }}</option>
-            </select>
+              [value]="r.status"
+              [options]="allStatuses"
+              [labels]="statusLabels"
+              title="Changer le statut"
+              (valueChange)="onStatusSelect(r, $event)" />
             <button type="button" class="btn-icon danger" title="Supprimer" *ngIf="canDelete && !isClosed(r)" (click)="delete.emit(r)"><app-icon name="delete" /></button>
           </td>
         </tr>

@@ -10,16 +10,20 @@ import { AccountService } from '../../../core/services/account.service';
 import { SalePaymentDetailComponent } from '../components/sale-payment-detail/sale-payment-detail.component';
 import { IconComponent } from '../../../shared/icon/icon.component';
 
+import { StateBadgeComponent } from '../../../shared/state-badge/state-badge.component';
+import { paymentTone } from '../../../shared/state-badge/state-tone';
 const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Effet', 'Carte bancaire'];
 
 @Component({
   selector: 'app-payment-panel',
   standalone: true,
-  imports: [IconComponent, CommonModule, FormsModule, SalePaymentDetailComponent],
+  imports: [StateBadgeComponent, IconComponent, CommonModule, FormsModule, SalePaymentDetailComponent],
   templateUrl: './payment-panel.component.html',
   styleUrl: './payment-panel.component.scss',
 })
 export class PaymentPanelComponent implements OnInit {
+  readonly paymentTone = paymentTone;
+
   @Input() sale!: Sale;
   @Output() closed = new EventEmitter<void>();
   @Output() statusChanged = new EventEmitter<string>();

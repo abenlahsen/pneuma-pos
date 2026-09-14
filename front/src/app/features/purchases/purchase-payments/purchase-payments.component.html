@@ -44,14 +44,9 @@
       </div>
 
       <div class="status-row">
-        <span
-          class="badge"
-          [class.badge-danger]="paymentStatus() === 'NON PAYE'"
-          [class.badge-warning]="paymentStatus() === 'PARTIEL'"
-          [class.badge-success]="paymentStatus() === 'PAYE'"
-        >
+        <app-state-badge [tone]="paymentTone(paymentStatus())">
           {{ paymentStatus() }}
-        </span>
+        </app-state-badge>
       </div>
     </div>
 

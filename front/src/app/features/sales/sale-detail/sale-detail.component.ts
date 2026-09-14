@@ -15,10 +15,13 @@ import { ShipmentChangeStatus } from '../../../core/constants/status.constants';
 import { isTypingTarget } from '../../../core/utils/detail-navigator';
 import { IconComponent } from '../../../shared/icon/icon.component';
 
+import { StateBadgeComponent } from '../../../shared/state-badge/state-badge.component';
+import { paymentTone, statusTone } from '../../../shared/state-badge/state-tone';
+
 @Component({
   selector: 'app-sale-detail',
   standalone: true,
-  imports: [IconComponent, 
+  imports: [StateBadgeComponent, IconComponent, 
     CommonModule,
     ProductDetailComponent,
     DocumentPrintComponent,
@@ -30,6 +33,9 @@ import { IconComponent } from '../../../shared/icon/icon.component';
   styleUrl: './sale-detail.component.scss'
 })
 export class SaleDetailComponent implements OnInit, OnChanges {
+  readonly paymentTone = paymentTone;
+  readonly statusTone = statusTone;
+
   @Input({ required: true }) sale!: Sale;
   @Input() canEdit = false;
   /** Précédent / Suivant navigation, driven by the parent list page. */

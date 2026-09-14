@@ -122,14 +122,14 @@
                     <td class="ref-cell">Achat #{{ p.id }}</td>
                     <td>{{ p.date ? (p.date | date:'dd/MM/yyyy') : '—' }}</td>
                     <td>
-                      <span class="badge" [ngClass]="purchaseStatusClass(p.status)">
+                      <app-state-badge [tone]="statusTone(p.status)">
                         {{ p.status || '—' }}
-                      </span>
+                      </app-state-badge>
                     </td>
                     <td>
-                      <span class="badge" [ngClass]="paymentStatusClass(p.payment_status)">
+                      <app-state-badge [tone]="paymentTone(p.payment_status)">
                         {{ p.payment_status || '—' }}
-                      </span>
+                      </app-state-badge>
                     </td>
                     <td class="col-right num">{{ (p.net_amount ?? 0) | number:'1.2-2' }} DH</td>
                     <td class="col-right num">{{ (p.paid_amount ?? 0) | number:'1.2-2' }} DH</td>
@@ -271,7 +271,7 @@
                           <td class="ref-cell">
                             {{ payment.reference || ('Paiement #' + payment.id) }}
                             @if (payment.multi) {
-                              <span class="badge badge-warning" title="Ce paiement couvre plusieurs achats">multi</span>
+                              <span class="badge" title="Ce paiement couvre plusieurs achats">multi</span>
                             }
                           </td>
                           <td>{{ payment.date ? (payment.date | date:'dd/MM/yyyy') : '—' }}</td>

@@ -204,19 +204,16 @@
             </span>
           </td>
           <td class="status-cell">
-            <select class="status-select"
-                    [class.bg-en-cours]="order.status === 'EN COURS'"
-                    [class.bg-termine]="order.status === 'TERMINE'"
-                    [class.bg-annule]="order.status === 'ANNULE'"
-                    [ngModel]="order.status"
-                    (change)="updateOrderStatus(order, $event.target)">
-              <option *ngFor="let s of SERVICE_ORDER_STATUSES" [value]="s">{{ SERVICE_ORDER_STATUS_LABELS[s] }}</option>
-            </select>
+            <app-state-select
+              [value]="order.status"
+              [options]="SERVICE_ORDER_STATUSES"
+              [labels]="SERVICE_ORDER_STATUS_LABELS"
+              (valueChange)="updateOrderStatus(order, $event)" />
           </td>
           <td>
-            <span class="badge" [class]="paymentClass(order.payment_status)">
+            <app-state-badge [tone]="paymentTone(order.payment_status)">
               {{ order.payment_status }}
-            </span>
+            </app-state-badge>
           </td>
           <td>{{ order.creator?.name || '-' }}</td>
           <td>{{ order.created_at | date:'dd/MM/yyyy HH:mm' }}</td>

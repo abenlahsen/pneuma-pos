@@ -200,9 +200,9 @@
               <div class="text-small text-muted" *ngIf="purchase.bl_number">BL: {{ purchase.bl_number }}</div>
             </td>
             <td class="text-center">
-              <span class="badge" [class.badge-success]="purchase.with_invoice" [class.badge-secondary]="!purchase.with_invoice">
+              <app-state-badge [tone]="'neutral'">
                 {{ purchase.with_invoice ? 'Oui' : 'Non' }}
-              </span>
+              </app-state-badge>
               <div class="text-small text-muted" *ngIf="purchase.with_invoice && purchase.invoice_number">{{ purchase.invoice_number }}</div>
             </td>
             <td class="clickable-cell" (click)="openDetail(purchase)" data-card-title="Fournisseur">
@@ -214,12 +214,9 @@
               {{ (purchase.net_amount ?? purchase.total_price) | number:'1.2-2' }}
             </td>
             <td data-card="Paiement">
-              <span class="badge"
-                    [class.badge-success]="purchase.payment_status === 'PAYE'"
-                    [class.badge-warning]="purchase.payment_status === 'PARTIEL'"
-                    [class.badge-danger]="purchase.payment_status === 'NON PAYE'">
+              <app-state-badge [tone]="paymentTone(purchase.payment_status)">
                 {{ purchase.payment_status }}
-              </span>
+              </app-state-badge>
             </td>
             <td>
               <span class="method-badges" *ngIf="purchase.payment_methods?.length; else noPurchaseMethod">
@@ -228,16 +225,12 @@
               <ng-template #noPurchaseMethod>-</ng-template>
             </td>
             <td class="status-cell" data-card="Statut">
-              <select class="status-select"
-                      [class.bg-en-cours]="purchase.status === 'EN COURS'"
-                      [class.bg-recu]="purchase.status === 'RECU'"
-                      [class.bg-termine]="purchase.status === 'TERMINE'"
-                      [class.bg-annule]="purchase.status === 'ANNULE'"
-                      [ngModel]="purchase.status"
-                      [disabled]="isPurchaseLocked(purchase)"
-                      (change)="updatePurchaseStatus(purchase, $event.target)">
-                <option *ngFor="let s of statusOptionsFor(purchase)" [value]="s">{{ PURCHASE_STATUS_LABELS[s] }}</option>
-              </select>
+              <app-state-select
+                [value]="purchase.status"
+                [options]="statusOptionsFor(purchase)"
+                [labels]="PURCHASE_STATUS_LABELS"
+                [disabled]="isPurchaseLocked(purchase)"
+                (valueChange)="updatePurchaseStatus(purchase, $event)" />
             </td>
             <td>{{ purchase.creator?.name || '-' }}</td>
             <td>{{ purchase.created_at | date:'dd/MM/yyyy HH:mm' }}</td>

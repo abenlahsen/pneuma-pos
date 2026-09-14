@@ -13,14 +13,20 @@ import { PurchaseReturn } from '../models/purchase.model';
 import { isTypingTarget } from '../../../core/utils/detail-navigator';
 import { IconComponent } from '../../../shared/icon/icon.component';
 
+import { StateBadgeComponent } from '../../../shared/state-badge/state-badge.component';
+import { paymentTone, statusTone } from '../../../shared/state-badge/state-tone';
+
 @Component({
   selector: 'app-purchase-detail',
   standalone: true,
-  imports: [IconComponent, CommonModule, ProductDetailComponent, DocumentPrintComponent],
+  imports: [StateBadgeComponent, IconComponent, CommonModule, ProductDetailComponent, DocumentPrintComponent],
   templateUrl: './purchase-detail.component.html',
   styleUrls: ['../../sales/sale-detail/sale-detail.component.scss', './purchase-detail.component.scss']
 })
 export class PurchaseDetailComponent implements OnInit, OnChanges {
+  readonly paymentTone = paymentTone;
+  readonly statusTone = statusTone;
+
   @Input({ required: true }) purchase!: Purchase;
   @Input() canEdit = false;
   @Input() canReturn = false;

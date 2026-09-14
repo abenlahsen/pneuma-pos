@@ -21,11 +21,9 @@
             @if (profile()?.client?.category) {
               <span class="tag">{{ profile()!.client!.category }}</span>
             }
-            <span class="badge"
-                  [class.badge-success]="profile()?.client?.is_active !== false"
-                  [class.badge-danger]="profile()?.client?.is_active === false">
+            <app-state-badge [tone]="profile()?.client?.is_active === false ? 'alert' : 'neutral'">
               {{ profile()?.client?.is_active === false ? 'Inactif' : 'Actif' }}
-            </span>
+            </app-state-badge>
           </div>
         </div>
 
@@ -194,9 +192,9 @@
                     </td>
                     <td>{{ (sale.sale_date || sale.created_at) ? ((sale.sale_date || sale.created_at) | date:'dd/MM/yyyy') : '—' }}</td>
                     <td>
-                      <span class="badge" [ngClass]="paymentStatusClass(sale.payment_status)">
+                      <app-state-badge [tone]="paymentTone(sale.payment_status)">
                         {{ sale.payment_status || sale.status || '—' }}
-                      </span>
+                      </app-state-badge>
                     </td>
                     <td class="col-right num">{{ (sale.total_amount ?? 0) | number:'1.2-2' }} DH</td>
                     <td class="col-right num">{{ (sale.amount_paid ?? 0) | number:'1.2-2' }} DH</td>
@@ -344,7 +342,7 @@
                           <td class="ref-cell">
                             {{ payment.reference || ('Paiement #' + payment.id) }}
                             @if (payment.multi) {
-                              <span class="badge badge-warning" title="Ce paiement couvre plusieurs ventes">multi</span>
+                              <span class="badge" title="Ce paiement couvre plusieurs ventes">multi</span>
                             }
                           </td>
                           <td>{{ (payment.date || payment.created_at) ? ((payment.date || payment.created_at) | date:'dd/MM/yyyy') : '—' }}</td>
@@ -449,11 +447,9 @@
               <div class="vehicle-card-header">
                 <span class="vehicle-plate">{{ v.plate }}</span>
                 <span class="vehicle-brand">{{ v.brand }} {{ v.model_name }}</span>
-                <span class="badge"
-                      [class.badge-success]="v.is_active"
-                      [class.badge-neutral]="!v.is_active">
+                <app-state-badge [tone]="v.is_active ? 'neutral' : 'alert'">
                   {{ v.is_active ? 'Actif' : 'Inactif' }}
-                </span>
+                </app-state-badge>
                 <div class="vehicle-card-actions">
                   <button type="button" class="btn-icon" (click)="editVehicle(v)" title="Modifier"><app-icon name="edit" /></button>
                   <button type="button" class="btn-icon btn-icon-danger" (click)="deleteVehicle(v)" title="Supprimer"><app-icon name="delete" /></button>

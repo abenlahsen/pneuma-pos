@@ -44,7 +44,7 @@
 
         <h3 class="section-title">
           Ventes concernées
-          <span *ngIf="d.sales.length > 1" class="badge badge-warning">multi</span>
+          <span *ngIf="d.sales.length > 1" class="badge">multi</span>
         </h3>
 
         <div class="table-wrapper">
@@ -66,9 +66,9 @@
                 <td class="col-right num">{{ s.total_sale | number:'1.2-2' }} DH</td>
                 <td class="col-right num">{{ s.allocated_amount | number:'1.2-2' }} DH</td>
                 <td>
-                  <span class="badge" [ngClass]="paymentStatusClass(s.payment_status)">
+                  <app-state-badge [tone]="paymentTone(s.payment_status)">
                     {{ s.payment_status || '—' }}
-                  </span>
+                  </app-state-badge>
                 </td>
                 <td class="col-right">
                   <button type="button" class="btn-icon" title="Voir la vente" (click)="goToSale(s.id)"><app-icon name="link" /></button>

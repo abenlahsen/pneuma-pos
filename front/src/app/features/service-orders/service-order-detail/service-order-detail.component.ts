@@ -5,14 +5,20 @@ import { PaymentStatus, ServiceOrderStatus } from '../../../core/constants/statu
 import { DocumentPrintComponent, PrintDocument, PrintLine } from '../../../shared/document-print/document-print.component';
 import { IconComponent } from '../../../shared/icon/icon.component';
 
+import { StateBadgeComponent } from '../../../shared/state-badge/state-badge.component';
+import { paymentTone, statusTone } from '../../../shared/state-badge/state-tone';
+
 @Component({
   selector: 'app-service-order-detail',
   standalone: true,
-  imports: [IconComponent, CommonModule, DocumentPrintComponent],
+  imports: [StateBadgeComponent, IconComponent, CommonModule, DocumentPrintComponent],
   templateUrl: './service-order-detail.component.html',
   styleUrl: './service-order-detail.component.scss',
 })
 export class ServiceOrderDetailComponent {
+  readonly paymentTone = paymentTone;
+  readonly statusTone = statusTone;
+
   @Input({ required: true }) serviceOrder!: ServiceOrder;
   @Input() canEdit = false;
   @Output() close = new EventEmitter<void>();
@@ -76,19 +82,4 @@ export class ServiceOrderDetailComponent {
     return Number(item.line_total ?? (Number(item.parts_cost || 0) + Number(item.labor_cost || 0)));
   }
 
-  statusClass(status: ServiceOrderStatus): string {
-    switch (status) {
-      case 'TERMINE': return 'badge-success';
-      case 'ANNULE': return 'badge-danger';
-      default: return 'badge-warning';
-    }
-  }
-
-  paymentClass(ps: PaymentStatus): string {
-    switch (ps) {
-      case 'PAYE': return 'badge-success';
-      case 'PARTIEL': return 'badge-warning';
-      default: return 'badge-danger';
-    }
-  }
 }

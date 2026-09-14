@@ -13,10 +13,11 @@ import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.com
 import { TableSkeletonComponent } from '../../../shared/table-skeleton/table-skeleton.component';
 import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-banner/error-banner.component';
 
+import { StateBadgeComponent } from '../../../shared/state-badge/state-badge.component';
 @Component({
   selector: 'app-brands-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, BrandFormComponent, AutoRefreshControlComponent, EmptyStateComponent, TableSkeletonComponent, ErrorBannerComponent],
+  imports: [StateBadgeComponent, CommonModule, FormsModule, BrandFormComponent, AutoRefreshControlComponent, EmptyStateComponent, TableSkeletonComponent, ErrorBannerComponent],
   templateUrl: './brands-page.component.html',
   styleUrls: ['./brands-page.component.scss'],
 })

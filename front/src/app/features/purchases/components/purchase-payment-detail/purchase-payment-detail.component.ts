@@ -5,14 +5,19 @@ import { PurchaseService } from '../../../../core/services/purchase.service';
 import { PurchasePaymentDetail } from '../../../../core/models/purchase.model';
 import { IconComponent } from '../../../../shared/icon/icon.component';
 
+import { StateBadgeComponent } from '../../../../shared/state-badge/state-badge.component';
+import { paymentTone } from '../../../../shared/state-badge/state-tone';
+
 @Component({
   selector: 'app-purchase-payment-detail',
   standalone: true,
-  imports: [IconComponent, CommonModule],
+  imports: [StateBadgeComponent, IconComponent, CommonModule],
   templateUrl: './purchase-payment-detail.component.html',
   styleUrl: './purchase-payment-detail.component.scss',
 })
 export class PurchasePaymentDetailComponent implements OnInit {
+  readonly paymentTone = paymentTone;
+
   @Input() paymentId!: number;
   @Output() closed = new EventEmitter<void>();
 
@@ -37,14 +42,6 @@ export class PurchasePaymentDetailComponent implements OnInit {
         this.loading.set(false);
       },
     });
-  }
-
-  paymentStatusClass(status: string | null | undefined): string {
-    const s = (status ?? '').toUpperCase();
-    if (s === 'PAYE') return 'badge-success';
-    if (s === 'PARTIEL') return 'badge-warning';
-    if (s === 'NON PAYE') return 'badge-danger';
-    return 'badge-neutral';
   }
 
   goToPurchase(purchaseId: number): void {

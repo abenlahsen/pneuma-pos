@@ -98,46 +98,36 @@ describe('ServiceOrderDetailComponent', () => {
   });
 
   // -------------------------------------------------------------------------
-  // statusClass
+  // Ton des badges — deux etats, et rien d'autre.
   // -------------------------------------------------------------------------
 
-  describe('statusClass', () => {
-    it('returns badge-success for TERMINE', () => {
-      expect(comp.statusClass('TERMINE')).toBe('badge-success');
+  describe('statusTone', () => {
+    it('reads a finished or ongoing order as neutral', () => {
+      expect(comp.statusTone('TERMINE')).toBe('neutral');
+      expect(comp.statusTone('EN COURS')).toBe('neutral');
     });
 
-    it('returns badge-danger for ANNULE', () => {
-      expect(comp.statusClass('ANNULE')).toBe('badge-danger');
+    it('raises an alert on a cancelled order', () => {
+      expect(comp.statusTone('ANNULE')).toBe('alert');
     });
 
-    it('returns badge-warning for EN COURS', () => {
-      expect(comp.statusClass('EN COURS')).toBe('badge-warning');
-    });
-
-    it('returns badge-warning for any unknown status', () => {
-      expect(comp.statusClass('INCONNU' as any)).toBe('badge-warning');
+    it('stays neutral on an unknown status', () => {
+      expect(comp.statusTone('INCONNU')).toBe('neutral');
     });
   });
 
-  // -------------------------------------------------------------------------
-  // paymentClass
-  // -------------------------------------------------------------------------
-
-  describe('paymentClass', () => {
-    it('returns badge-success for PAYE', () => {
-      expect(comp.paymentClass('PAYE')).toBe('badge-success');
+  describe('paymentTone', () => {
+    it('reads a settled payment as neutral', () => {
+      expect(comp.paymentTone('PAYE')).toBe('neutral');
     });
 
-    it('returns badge-warning for PARTIEL', () => {
-      expect(comp.paymentClass('PARTIEL')).toBe('badge-warning');
+    it('raises an alert on a partial or missing payment', () => {
+      expect(comp.paymentTone('PARTIEL')).toBe('alert');
+      expect(comp.paymentTone('NON PAYE')).toBe('alert');
     });
 
-    it('returns badge-danger for NON PAYE', () => {
-      expect(comp.paymentClass('NON PAYE')).toBe('badge-danger');
-    });
-
-    it('returns badge-danger for unknown status', () => {
-      expect(comp.paymentClass('AUTRE' as any)).toBe('badge-danger');
+    it('stays neutral on an unknown status', () => {
+      expect(comp.paymentTone('AUTRE')).toBe('neutral');
     });
   });
 

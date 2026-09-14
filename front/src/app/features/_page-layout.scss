@@ -550,11 +550,14 @@
     }
   }
 
-  // ── Badges d'etat ─────────────────────────────────────────────────────────
-  // LA regle du systeme : le chevron est le seul signe de modifiabilite.
-  // Un etat lu est plat ; un etat modifiable porte « ▾ ». Sans exception.
-  // Corrige le defaut d'origine : un <select> en appearance:none, sans
-  // chevron, visuellement identique aux badges non modifiables.
+  // ── Badges d'annotation ───────────────────────────────────────────────────
+  // LA regle des etats vit desormais dans `shared/state-badge/` : poser une
+  // classe ne suffisait pas, dix-huit SCSS de composant la reecrivaient avec
+  // une specificite superieure. Un composant ferme cette porte.
+  //
+  // Ce qui reste ici n'est pas un etat mais une annotation : un mode de
+  // paiement, un type de transaction, un « multi ». Meme silhouette, aucun
+  // ton — une annotation ne signale rien.
   .badge,
   .status-badge {
     display: inline-flex;
@@ -571,78 +574,12 @@
     color: var(--neutral-800);
   }
 
-  // Deux etats lus, pas sept. Neutre par defaut ; alerte quand la valeur
-  // coute quelque chose — un impaye, un partiel, une annulation. Le vert et
-  // l'ambre disparaissent : une couleur de plus n'ajoute pas de sens, elle
-  // dilue le seul signal qui compte.
-  .badge {
-    &-danger,
-    &-warning   { border-color: var(--accent-700);  color: var(--accent-700); }
-    &-primary,
-    &-success,
-    &-secondary,
-    &-blue,
-    &-purple    { border-color: var(--neutral-300); color: var(--neutral-800); }
-  }
-
+  // Seule exception conservee : la liste des clients marque un compte
+  // desactive, sans passer par un composant pour un unique drapeau.
   .status-badge {
     border-color: var(--neutral-300);
     color: var(--neutral-800);
     &.inactive { border-color: var(--accent-700); color: var(--accent-700); }
-  }
-
-  // ── Etat modifiable ───────────────────────────────────────────────────────
-  .status-select {
-    appearance: none;
-    padding: 4px 24px 4px 8px;
-    border: 2px solid var(--neutral-400);
-    border-radius: var(--radius);
-    background-color: var(--surface);
-    color: var(--text);
-    font-family: var(--font);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    cursor: pointer;
-    // Le chevron « ▾ », 9 px, a 7 px du texte.
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6' viewBox='0 0 9 6'%3E%3Cpath d='M1 1l3.5 3.5L8 1' fill='none' stroke='%23201e1d' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    transition: border-color 0.12s;
-
-    &:hover { border-color: var(--text); }
-    &:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  }
-
-  // ── Couleurs de statut ────────────────────────────────────────────────────
-  // Seules deux valeurs meritent l'alerte : une vente annulee et un ordre
-  // annule. Le reste est un etat lu, donc neutre.
-  .badge.bg-annule,
-  .badge.bg-annulee { border-color: var(--accent-700); color: var(--accent-700); }
-
-  .badge.bg-en-cours,
-  .badge.bg-livre,
-  .badge.bg-monte,
-  .badge.bg-terminee,
-  .badge.bg-termine,
-  .badge.bg-recu,
-  .badge.bg-retour  { border-color: var(--neutral-300); color: var(--neutral-800); }
-
-  // Un etat MODIFIABLE ne porte pas de couleur : sinon il se confond avec un
-  // etat lu, et c'est exactement le defaut qu'on corrige. Le chevron est le
-  // seul signe de modifiabilite du systeme — une regle, aucune exception.
-  .status-select.bg-en-cours,
-  .status-select.bg-livre,
-  .status-select.bg-monte,
-  .status-select.bg-terminee,
-  .status-select.bg-termine,
-  .status-select.bg-recu,
-  .status-select.bg-retour,
-  .status-select.bg-annule,
-  .status-select.bg-annulee {
-    border-color: var(--neutral-400);
-    color: var(--text);
   }
 
   // ── Link helpers ──────────────────────────────────────────────────────────

@@ -88,7 +88,7 @@
             <tbody>
               <tr *ngFor="let item of sale.items">
                 <td class="col-produit">
-                  <span class="badge badge-primary mr-1" *ngIf="getProduct(item)?.brand">{{ getProduct(item)!.brand!.name }}</span>
+                  <span class="badge mr-1" *ngIf="getProduct(item)?.brand">{{ getProduct(item)!.brand!.name }}</span>
                   <button class="product-link fw-medium" type="button" (click)="openProductView(item)" *ngIf="getProduct(item); else plainRef" title="Voir le produit">{{ getProduct(item)?.reference || item.product_name || ('Produit #' + item.product_id) }}</button>
                   <ng-template #plainRef><span class="fw-medium">{{ item.product_name || ('Produit #' + item.product_id) }}</span></ng-template>
                   <span class="text-muted ml-1" *ngIf="getProduct(item)?.tyre?.tire_width">{{ getProduct(item)!.tyre!.tire_width }}/{{ getProduct(item)!.tyre!.tire_height }}R{{ getProduct(item)!.tyre!.tire_diameter }}</span>
@@ -163,11 +163,11 @@
           </div>
           <div class="detail-item">
             <span class="label">Statut</span>
-            <span class="value badge" [class.badge-success]="sale.status === 'LIVRE' || sale.status === 'MONTE' || sale.status === 'TERMINEE'" [class.badge-warning]="sale.status === 'EN COURS'" [class.badge-danger]="sale.status === 'ANNULE'">{{ sale.status }}</span>
+            <app-state-badge [tone]="statusTone(sale.status)">{{ sale.status }}</app-state-badge>
           </div>
           <div class="detail-item">
             <span class="label">Paiement</span>
-            <span class="value badge" [class.badge-success]="sale.payment_status === 'PAYE'" [class.badge-warning]="sale.payment_status === 'PARTIEL'" [class.badge-danger]="sale.payment_status === 'NON PAYE'">{{ sale.payment_status }}</span>
+            <app-state-badge [tone]="paymentTone(sale.payment_status)">{{ sale.payment_status }}</app-state-badge>
           </div>
           <div class="detail-item">
             <span class="label">Date Livraison</span>

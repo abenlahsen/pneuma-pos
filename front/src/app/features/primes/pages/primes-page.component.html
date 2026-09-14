@@ -26,14 +26,14 @@
         </span>
       </div>
       <div class="banner-right">
-        <span class="status-badge" [class.badge-success]="res.prime_eligible" [class.badge-danger]="!res.prime_eligible">
+        <app-state-badge [tone]="res.prime_eligible ? 'neutral' : 'alert'">
           <ng-container *ngIf="res.prime_eligible">
             Atteint — {{ res.shop_total_tyres }} pneus vendus
           </ng-container>
           <ng-container *ngIf="!res.prime_eligible">
             Non atteint — {{ res.shop_total_tyres }} / {{ res.prime_threshold }} pneus
           </ng-container>
-        </span>
+        </app-state-badge>
       </div>
     </div>
 

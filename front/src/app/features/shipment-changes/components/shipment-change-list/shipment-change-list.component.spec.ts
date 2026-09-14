@@ -24,21 +24,17 @@ describe('ShipmentChangeListComponent', () => {
     comp = new ShipmentChangeListComponent();
   });
 
-  describe('statusClass', () => {
-    it('maps ACCEPTEE to badge-success', () => {
-      expect(comp.statusClass('ACCEPTEE')).toBe('badge-success');
+  describe('statusTone', () => {
+    // Seul le refus coute quelque chose : une demande acceptee, envoyee ou en
+    // brouillon est un etat qu'on lit, pas un signal.
+    it('raises an alert only on a refused request', () => {
+      expect(comp.statusTone('REFUSEE')).toBe('alert');
     });
 
-    it('maps REFUSEE to badge-danger', () => {
-      expect(comp.statusClass('REFUSEE')).toBe('badge-danger');
-    });
-
-    it('maps ENVOYEE to badge-warning', () => {
-      expect(comp.statusClass('ENVOYEE')).toBe('badge-warning');
-    });
-
-    it('maps BROUILLON to badge-neutral', () => {
-      expect(comp.statusClass('BROUILLON')).toBe('badge-neutral');
+    it('reads every other status as neutral', () => {
+      expect(comp.statusTone('ACCEPTEE')).toBe('neutral');
+      expect(comp.statusTone('ENVOYEE')).toBe('neutral');
+      expect(comp.statusTone('BROUILLON')).toBe('neutral');
     });
   });
 

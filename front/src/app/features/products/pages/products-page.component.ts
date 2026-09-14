@@ -10,10 +10,12 @@ import { ProductFormComponent } from '../product-form/product-form.component';
 import { ProductDetailComponent } from '../product-detail/product-detail.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 
+import { StateBadgeComponent } from '../../../shared/state-badge/state-badge.component';
+
 @Component({
   selector: 'app-products-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ProductFormComponent, ProductDetailComponent, AutoRefreshControlComponent],
+  imports: [StateBadgeComponent, CommonModule, FormsModule, RouterLink, ProductFormComponent, ProductDetailComponent, AutoRefreshControlComponent],
   templateUrl: './products-page.component.html',
   styleUrls: ['./products-page.component.scss'],
 })

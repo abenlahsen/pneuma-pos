@@ -73,9 +73,9 @@
               <span *ngIf="!brand.logo">-</span>
             </td>
             <td class="text-center">
-              <span class="badge" [class.badge-success]="brand.is_active" [class.badge-muted]="!brand.is_active">
+              <app-state-badge [tone]="brand.is_active ? 'neutral' : 'alert'">
                 {{ brand.is_active ? 'Actif' : 'Inactif' }}
-              </span>
+              </app-state-badge>
             </td>
             <td>{{ brand.created_at | date:'dd/MM/yyyy' }}</td>
             <td class="text-center actions-cell">
