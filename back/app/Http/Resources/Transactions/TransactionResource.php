@@ -28,6 +28,9 @@ class TransactionResource extends JsonResource
             ] : null),
             'person' => $this->person,
             'amount' => $this->amount,
+            // Solde du compte apres ce mouvement (3g) — calcule sur tous les
+            // mouvements du compte, pas sur la page ni sur le filtre courant.
+            'balance_after' => $this->balance_after,
             'date' => $this->date?->format('Y-m-d'),
             'description' => $this->description,
             'reference' => $this->reference,

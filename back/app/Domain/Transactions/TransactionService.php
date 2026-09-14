@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Services\ActivityLogService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 
 class TransactionService
@@ -44,8 +45,54 @@ class TransactionService
         $paginated = $query->paginate((int) ($filters['per_page'] ?? 20));
         $this->attachPurchasePaymentIds($paginated->getCollection());
         $this->attachSalePaymentIds($paginated->getCollection());
+        $this->attachRunningBalance($paginated->getCollection());
 
         return $paginated;
+    }
+
+    /**
+     * Solde du compte apres chaque mouvement (`3g`).
+     *
+     * Le cumul est calcule sur TOUS les mouvements du compte, jamais sur la
+     * page affichee ni sur le sous-ensemble filtre : un solde cumule sur les
+     * seules depenses serait faux et credible a la fois. On part du solde
+     * initial du compte, puis on somme les entrees moins les sorties jusqu'au
+     * mouvement courant, a date puis id egaux — deux mouvements du meme jour
+     * se suivent dans l'ordre ou ils ont ete saisis.
+     *
+     * Un mouvement sans compte n'a pas de solde : la colonne reste vide.
+     *
+     * @param  Collection<int, Transaction>  $transactions
+     */
+    private function attachRunningBalance(Collection $transactions): void
+    {
+        $accountIds = $transactions->pluck('account_id')->filter()->unique()->values();
+
+        if ($accountIds->isEmpty()) {
+            $transactions->each(fn (Transaction $t) => $t->setAttribute('balance_after', null));
+
+            return;
+        }
+
+        $initial = Account::whereIn('id', $accountIds)->pluck('initial_balance', 'id');
+
+        $cumulative = DB::table('transactions')
+            ->selectRaw('id, account_id, SUM(CASE WHEN type = ? THEN amount ELSE -amount END) OVER (
+                    PARTITION BY account_id ORDER BY date, id
+                    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+                ) AS running', ['income'])
+            ->whereIn('account_id', $accountIds)
+            ->get()
+            ->keyBy('id');
+
+        $transactions->each(function (Transaction $t) use ($cumulative, $initial) {
+            $row = $t->account_id ? $cumulative->get($t->id) : null;
+
+            $t->setAttribute(
+                'balance_after',
+                $row ? round((float) ($initial[$t->account_id] ?? 0) + (float) $row->running, 2) : null,
+            );
+        });
     }
 
     /**

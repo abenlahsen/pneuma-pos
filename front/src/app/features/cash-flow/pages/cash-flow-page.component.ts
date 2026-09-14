@@ -19,6 +19,7 @@ import { SalePaymentDetailComponent } from '../../sales/components/sale-payment-
 import { TransactionCategoryService } from '../../transaction-categories/data-access/transaction-category.service';
 import { TransactionCategory } from '../../transaction-categories/models/transaction-category.model';
 import { IconComponent } from '../../../shared/icon/icon.component';
+import { buildBalanceCurve } from './balance-curve';
 
 @Component({
   selector: 'app-cash-flow-page',
@@ -43,6 +44,23 @@ export class CashFlowPageComponent implements OnInit {
   filterCategory = signal('');
   filterSubcategory = signal('');
   filterAccount = signal('');
+
+  // ── Courbe de solde quotidien (3g) ──────────────────────────────────────
+  // Elle n'a de sens que sur UN compte : melanger deux comptes tracerait une
+  // ligne en dents de scie qui ne represente rien. Sans filtre de compte, on
+  // ne montre pas de courbe plutot qu'une courbe fausse.
+  readonly balanceCurve = computed(() =>
+    this.filterAccount() ? buildBalanceCurve(this.transactions(), 30) : [],
+  );
+
+  readonly balancePolyline = computed(
+    () => buildBalanceCurve.toSvg(this.balanceCurve(), 900, 120).polyline,
+  );
+
+  readonly balanceRange = computed(() => {
+    const values = this.balanceCurve().map((p) => p.balance);
+    return values.length ? { min: Math.min(...values), max: Math.max(...values) } : null;
+  });
   filterPerson = signal('');
   filterDateFrom = signal('');
   filterDateTo = signal('');

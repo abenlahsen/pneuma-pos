@@ -2,6 +2,8 @@ export interface Transaction {
   id: number;
   date: string;
   amount: number;
+  /** Solde du compte apres ce mouvement (3g). Calcule cote serveur. */
+  balance_after?: number | null;
   type: 'income' | 'expense';
   category: string | null;
   method: string | null;

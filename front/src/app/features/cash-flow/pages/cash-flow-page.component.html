@@ -241,6 +241,27 @@
     </div>
   }
 
+  <!-- Courbe de solde quotidien (3g). En encre : une polyligne, pas d'aplat.
+       Affichee seulement sur un compte donne — melanger deux comptes tracerait
+       une ligne qui ne represente rien. -->
+  <div class="card balance-chart" *ngIf="balanceCurve().length > 1">
+    <div class="section-header">
+      <span class="section-title">Solde quotidien · {{ balanceCurve().length }} jours</span>
+      <span class="section-count" *ngIf="balanceRange() as r">
+        de {{ r.min | number:'1.0-0' }} à {{ r.max | number:'1.0-0' }} DH
+      </span>
+    </div>
+    <svg class="balance-svg" viewBox="0 0 900 120" preserveAspectRatio="none" role="img"
+         aria-label="Évolution du solde du compte sur les derniers jours">
+      <polyline [attr.points]="balancePolyline()" fill="none" stroke="currentColor" stroke-width="2"
+                vector-effect="non-scaling-stroke" />
+    </svg>
+    <div class="balance-axis">
+      <span>{{ balanceCurve()[0].date | date:'dd/MM' }}</span>
+      <span>{{ balanceCurve()[balanceCurve().length - 1].date | date:'dd/MM' }}</span>
+    </div>
+  </div>
+
   <div class="card table-card">
     <div class="section-header">
       <span class="section-title">Transactions réalisées</span>
@@ -253,6 +274,9 @@
             <th>Actions</th>
             <th class="sortable" (click)="toggleSort('date')">Date <span class="sort-icon">{{ sortBy() === 'date' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th class="sortable" (click)="toggleSort('amount')">Montant <span class="sort-icon">{{ sortBy() === 'amount' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <!-- Solde apres mouvement (3g) : c'est cette colonne qui permet de
+                 retrouver le jour ou la tresorerie a bascule sans sortir de l'ecran. -->
+            <th class="text-right">Solde</th>
             <th class="sortable" (click)="toggleSort('type')">Type <span class="sort-icon">{{ sortBy() === 'type' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
             <th>Compte</th>
             <th class="sortable" (click)="toggleSort('category')">Catégorie <span class="sort-icon">{{ sortBy() === 'category' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
@@ -262,7 +286,7 @@
         </thead>
         <tbody>
           <tr *ngIf="loading()">
-            <td colspan="7" class="text-center py-4">
+            <td colspan="9" class="text-center py-4">
               <div class="spinner"></div>
               Chargement...
             </td>
@@ -306,6 +330,13 @@
                   {{ t.type === 'expense' ? '-' : '+' }}{{ t.amount | number:'1.2-2' }} DH
                 </span>
               </td>
+              <td class="balance-cell">
+                <span *ngIf="t.balance_after != null; else noBalance"
+                      [class.balance-negative]="(t.balance_after ?? 0) < 0">
+                  {{ t.balance_after | number:'1.2-2' }} DH
+                </span>
+                <ng-template #noBalance><span class="text-muted">—</span></ng-template>
+              </td>
               <td>
                 <span class="badge" [class.badge-income]="t.type === 'income'" [class.badge-expense]="t.type === 'expense'">
                   {{ t.type === 'income' ? 'Revenu' : 'Dépense' }}
@@ -318,7 +349,7 @@
             </tr>
           } @empty {
             <tr *ngIf="transactions().length === 0">
-              <td colspan="7" class="empty-state">
+              <td colspan="9" class="empty-state">
                 @if (!loading()) {
                   <span>Aucune transaction trouvée.</span>
                 }
