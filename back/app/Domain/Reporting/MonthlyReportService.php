@@ -217,14 +217,18 @@ class MonthlyReportService
         $cursor = $from->copy()->startOfMonth();
         $total = 0.0;
         $bySub = [];
+        $employees = 0;
 
+        // La forme est celle d'un mois : une table associative sous-categorie →
+        // montant. Les mois de la periode s'y additionnent, ils ne s'empilent
+        // pas — le front lit toujours le meme contrat.
         while ($cursor->lte($to)) {
             $month = $this->hrChargeService->summary($cursor->year, $cursor->month);
             $total += (float) ($month['total'] ?? 0);
+            $employees = max($employees, (int) ($month['employee_count'] ?? 0));
 
-            foreach (($month['by_subcategory'] ?? []) as $row) {
-                $key = $row['subcategory'] ?? 'Autre';
-                $bySub[$key] = ($bySub[$key] ?? 0) + (float) ($row['total'] ?? 0);
+            foreach (($month['by_subcategory'] ?? []) as $key => $amount) {
+                $bySub[$key] = round(($bySub[$key] ?? 0) + (float) $amount, 2);
             }
 
             $cursor->addMonthNoOverflow();
@@ -232,10 +236,8 @@ class MonthlyReportService
 
         return [
             'total' => round($total, 2),
-            'by_subcategory' => collect($bySub)
-                ->map(fn ($v, $k) => ['subcategory' => $k, 'total' => round($v, 2)])
-                ->values()
-                ->all(),
+            'by_subcategory' => $bySub,
+            'employee_count' => $employees,
         ];
     }
 
