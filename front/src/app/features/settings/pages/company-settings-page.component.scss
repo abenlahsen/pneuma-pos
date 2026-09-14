@@ -297,7 +297,7 @@ $_radius-lg: 14px;
   --preview-border: rgba(148, 163, 184, 0.3);
   --preview-shadow: rgba(15, 23, 42, 0.08);
 
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--preview-accent) 10%, #f8fafc) 0%,
@@ -320,7 +320,7 @@ $_radius-lg: 14px;
 .theme-preview__window {
   background: var(--preview-surface);
   border: 1px solid var(--preview-border);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   box-shadow: 0 20px 45px var(--preview-shadow);
   overflow: hidden;
 }
@@ -355,7 +355,7 @@ $_radius-lg: 14px;
 .theme-preview__logo {
   width: 2.2rem;
   height: 2.2rem;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   background: var(--preview-primary);
   display: flex;
   align-items: center;
@@ -365,7 +365,7 @@ $_radius-lg: 14px;
 
 .theme-preview__badge {
   padding: 0.35rem 0.7rem;
-  border-radius: 999px;
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.14);
   font-size: 0.8rem;
   font-weight: 600;
@@ -387,7 +387,7 @@ $_radius-lg: 14px;
 }
 
 .theme-preview__nav-item {
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   padding: 0.65rem 0.75rem;
   color: var(--preview-muted);
   font-size: 0.85rem;
@@ -429,7 +429,7 @@ $_radius-lg: 14px;
 
 .theme-preview__hero {
   border: 1px solid var(--preview-border);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   padding: 1rem;
   display: flex;
   align-items: flex-start;
@@ -451,7 +451,7 @@ $_radius-lg: 14px;
 
 .theme-preview__cta {
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   background: var(--preview-primary);
   color: #fff;
   padding: 0.7rem 0.95rem;
@@ -466,7 +466,7 @@ $_radius-lg: 14px;
 
 .theme-preview__stat {
   border: 1px solid var(--preview-border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 0.85rem;
   background: color-mix(in srgb, var(--preview-surface) 92%, var(--preview-accent));
 
@@ -492,7 +492,7 @@ $_radius-lg: 14px;
 
   span {
     padding: 0.45rem 0.65rem;
-    border-radius: 999px;
+    border-radius: var(--radius);
     background: rgba(255, 255, 255, 0.72);
   }
 }

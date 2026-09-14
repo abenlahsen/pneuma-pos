@@ -30,14 +30,14 @@ $_danger:  #ef4444;
   font-size: 0.75rem;
   font-weight: 600;
   padding: 0.2rem 0.6rem;
-  border-radius: 999px;
+  border-radius: var(--radius);
 }
 
 // Filters
 .filters-card {
   background: $_surface;
   border: 1px solid $_border;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   padding: 1rem 1.25rem;
   margin-bottom: 1.25rem;
@@ -55,7 +55,7 @@ $_danger:  #ef4444;
 .form-control {
   padding: 0.5rem 0.75rem;
   border: 1px solid $_border;
-  border-radius: 8px;
+  border-radius: var(--radius);
   font-size: 0.875rem;
   color: $_text;
   background: white;
@@ -64,19 +64,19 @@ $_danger:  #ef4444;
 
 .btn-primary {
   background: $_red; color: white; border: none;
-  padding: 0.5rem 1rem; border-radius: 8px; font-weight: 500; font-size: 0.875rem;
+  padding: 0.5rem 1rem; border-radius: var(--radius); font-weight: 500; font-size: 0.875rem;
   cursor: pointer; white-space: nowrap;
   &:hover { filter: brightness(0.95); }
 }
 .btn-secondary {
   background: white; border: 1px solid $_border; color: #4a5568;
-  padding: 0.5rem 1rem; border-radius: 8px; font-weight: 500; font-size: 0.875rem;
+  padding: 0.5rem 1rem; border-radius: var(--radius); font-weight: 500; font-size: 0.875rem;
   cursor: pointer; white-space: nowrap;
   &:hover { background: $_bg; }
 }
 .btn-icon {
   width: 2rem; height: 2rem; border: 1px solid $_border; background: white;
-  border-radius: 8px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--radius); display: inline-flex; align-items: center; justify-content: center;
   cursor: pointer; font-size: 0.9rem;
   &:hover { background: $_bg; }
 }
@@ -85,7 +85,7 @@ $_danger:  #ef4444;
 .table-card {
   background: $_surface;
   border: 1px solid $_border;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   overflow: hidden;
 }
@@ -140,7 +140,7 @@ $_danger:  #ef4444;
 }
 .page-btn {
   min-width: 2rem; height: 2rem; border: 1px solid $_border; background: white;
-  border-radius: 6px; font-size: 0.8rem; cursor: pointer; padding: 0 0.4rem;
+  border-radius: var(--radius); font-size: 0.8rem; cursor: pointer; padding: 0 0.4rem;
   &.active { background: $_red; color: white; border-color: $_red; font-weight: 600; }
   &:hover:not(.active):not(:disabled) { background: $_bg; }
   &:disabled { opacity: 0.4; cursor: default; }
@@ -152,7 +152,7 @@ $_danger:  #ef4444;
   display: flex; align-items: center; justify-content: center; z-index: 1000;
 }
 .modal-container {
-  background: white; border-radius: 12px;
+  background: white; border-radius: var(--radius-lg);
   width: 95vw; max-width: 900px; max-height: 90vh;
   display: flex; flex-direction: column;
   box-shadow: 0 10px 25px rgba(15,23,42,0.15);
@@ -211,7 +211,7 @@ $_danger:  #ef4444;
   display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.75rem;
 }
 .stock-card {
-  background: $_bg; border: 1px solid $_border; border-radius: 8px;
+  background: $_bg; border: 1px solid $_border; border-radius: var(--radius);
   padding: 0.75rem 1rem; display: flex; flex-direction: column; gap: 0.25rem;
 }
 .stock-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: $_muted; }

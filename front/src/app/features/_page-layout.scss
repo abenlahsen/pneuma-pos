@@ -208,6 +208,13 @@
     padding: 16px 18px;
     background: var(--surface);
 
+    // Une cellule de cadre n'est pas une carte : elle porte la classe `.card`
+    // dans les gabarits, mais son rayon laisserait passer le fond sombre du
+    // cadre aux intersections. Seul le cadre est arrondi.
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+
     // Le cadran n'a plus d'icone : l'etiquette porte le sens.
     .card-icon { display: none; }
 

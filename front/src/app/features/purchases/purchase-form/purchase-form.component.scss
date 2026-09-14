@@ -75,7 +75,7 @@ $_radius-md: 12px;
   cursor: pointer;
   font-size: 1rem;
   padding: 0.25rem 0.4rem;
-  border-radius: 6px;
+  border-radius: var(--radius);
   color: $_muted;
   transition: background 0.15s, color 0.15s;
 
@@ -232,7 +232,7 @@ $_radius-md: 12px;
   text-align: right;
   padding: 0.3rem 0.5rem;
   border: 1.5px solid $_border2;
-  border-radius: 6px;
+  border-radius: var(--radius);
   font-size: 0.875rem;
   color: $_text;
   background: $_surface;

@@ -72,7 +72,7 @@ $_radius-lg: 14px;
   flex: 1;
   padding: 0.65rem;
   border: 2px solid $_border2;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   background: $_surface2;
   color: $_muted;
   font-size: 0.9rem;
@@ -188,7 +188,7 @@ $_radius-lg: 14px;
   display: inline-flex;
   align-items: center;
   padding: 0.15rem 0.5rem;
-  border-radius: 999px;
+  border-radius: var(--radius);
   font-size: 0.6875rem;
   font-weight: 700;
 }

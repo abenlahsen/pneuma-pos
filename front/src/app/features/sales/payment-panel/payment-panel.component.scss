@@ -72,7 +72,7 @@ $_border2:  #d0d9e4;
 .btn-close {
   background: none;
   border: 1.5px solid $_border2;
-  border-radius: 8px;
+  border-radius: var(--radius);
   width: 2rem;
   height: 2rem;
   cursor: pointer;
@@ -100,7 +100,7 @@ $_border2:  #d0d9e4;
 // ── Summary ───────────────────────────────────────────────────────────────────
 .summary-section {
   background: $_surface2;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   padding: 1rem 1.25rem;
   border: 1px solid $_border;
   display: flex;
@@ -132,7 +132,7 @@ $_border2:  #d0d9e4;
   align-items: center;
   background: rgba(237, 137, 54, 0.1);
   border: 1px solid rgba(237, 137, 54, 0.3);
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 0.4rem 0.6rem;
   font-size: 0.875rem;
   color: #c05621;
@@ -152,14 +152,14 @@ $_border2:  #d0d9e4;
   flex: 1;
   height: 6px;
   background: $_border;
-  border-radius: 999px;
+  border-radius: var(--radius);
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
   background: #22c55e;
-  border-radius: 999px;
+  border-radius: var(--radius);
   transition: width 0.35s ease;
 }
 
@@ -181,7 +181,7 @@ $_border2:  #d0d9e4;
   display: inline-flex;
   align-items: center;
   padding: 0.25rem 0.65rem;
-  border-radius: 999px;
+  border-radius: var(--radius);
   font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -219,7 +219,7 @@ $_border2:  #d0d9e4;
   font-size: 0.875rem;
   padding: 1.5rem;
   background: $_surface2;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   border: 1.5px dashed $_border2;
 }
 
@@ -228,7 +228,7 @@ $_border2:  #d0d9e4;
   border-collapse: collapse;
   font-size: 0.875rem;
   border: 1px solid $_border;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   table-layout: fixed;
 
@@ -301,7 +301,7 @@ $_border2:  #d0d9e4;
   letter-spacing: 0.04em;
   color: #a16207;
   background: rgba(234, 179, 8, 0.12);
-  border-radius: 6px;
+  border-radius: var(--radius);
   vertical-align: middle;
 }
 
@@ -312,7 +312,7 @@ $_border2:  #d0d9e4;
 // ── Add payment form ──────────────────────────────────────────────────────────
 .add-payment-form {
   background: $_surface2;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   padding: 1.25rem;
   border: 1.5px solid $_border;
 
@@ -349,7 +349,7 @@ $_border2:  #d0d9e4;
 
 .form-control {
   border: 1.5px solid $_border2;
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 0.55rem 0.75rem;
   font-size: 0.875rem;
   color: $_text;
@@ -383,7 +383,7 @@ $_border2:  #d0d9e4;
 // ── Buttons ───────────────────────────────────────────────────────────────────
 .btn {
   padding: 0.55rem 1.1rem;
-  border-radius: 8px;
+  border-radius: var(--radius);
   border: 1.5px solid transparent;
   font-weight: 600;
   cursor: pointer;

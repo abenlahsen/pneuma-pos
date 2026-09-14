@@ -28,7 +28,7 @@ $_border-hover: #d0d9e4;
     width: 2rem;
     height: 2rem;
     border: 1px solid $_border;
-    border-radius: 6px;
+    border-radius: var(--radius);
     background: $_surface;
     cursor: pointer;
     font-size: 1rem;
@@ -58,7 +58,7 @@ $_border-hover: #d0d9e4;
   justify-content: space-between;
   gap: 1rem;
   padding: 0.875rem 1.25rem;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   background: #fff5f5;
   border: 1px solid #fecaca;
   color: #c53030;
@@ -100,7 +100,7 @@ $_border-hover: #d0d9e4;
 .kpi-card {
   background: $_surface;
   border: 1px solid $_border;
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   padding: 1.4rem 1.5rem;
   display: flex;
   flex-direction: column;
@@ -125,7 +125,7 @@ $_border-hover: #d0d9e4;
     height: 42px;
     background: $_surface-2;
     border: 1px solid $_border;
-    border-radius: 11px;
+    border-radius: var(--radius);
   }
 
   .kpi-info {
@@ -196,7 +196,7 @@ $_border-hover: #d0d9e4;
   font-size: 0.7rem;
   font-weight: 700;
   padding: 0.2rem 0.6rem;
-  border-radius: 999px;
+  border-radius: var(--radius);
   border: 1px solid $_border;
   background: $_surface-2;
   color: $_muted;

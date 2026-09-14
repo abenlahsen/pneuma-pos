@@ -61,7 +61,7 @@
   display: inline-flex;
   align-items: center;
   padding: 0.2rem 0.6rem;
-  border-radius: 999px;
+  border-radius: var(--radius);
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.03em;

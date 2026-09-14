@@ -25,7 +25,7 @@
 
 .modal-content {
   background: #fff;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   width: 100%;
   max-width: 960px;
   max-height: 90vh;
@@ -55,7 +55,7 @@
   color: $text-light;
   cursor: pointer;
   padding: 0.3rem 0.5rem;
-  border-radius: 6px;
+  border-radius: var(--radius);
   transition: all 0.15s;
 
   &:hover {
@@ -72,7 +72,7 @@
 .lines-table-wrapper {
   overflow-x: auto;
   border: 1px solid $border-color;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
 }
 
 .lines-table {
@@ -103,7 +103,7 @@
     width: 100%;
     padding: 0.4rem 0.5rem;
     border: 1.5px solid $border-color;
-    border-radius: 6px;
+    border-radius: var(--radius);
     font-size: 0.85rem;
     color: $text-dark;
     background: #fff;
@@ -130,7 +130,7 @@
   cursor: pointer;
   font-size: 0.9rem;
   padding: 0.3rem 0.4rem;
-  border-radius: 6px;
+  border-radius: var(--radius);
 
   &:hover { background: $bg-body; }
   &.danger:hover { color: #dc2626; }
@@ -140,7 +140,7 @@
   margin-top: 0.75rem;
   background: none;
   border: 1.5px dashed $border-color;
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 0.5rem 1rem;
   font-size: 0.85rem;
   font-weight: 600;
@@ -178,7 +178,7 @@
   color: $text-muted;
   border: 1px solid $border-color;
   padding: 0.55rem 1.25rem;
-  border-radius: 8px;
+  border-radius: var(--radius);
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.15s;
@@ -191,7 +191,7 @@
   color: #fff;
   border: none;
   padding: 0.55rem 1.5rem;
-  border-radius: 8px;
+  border-radius: var(--radius);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;

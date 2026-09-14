@@ -28,7 +28,7 @@ $_shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.04);
 // ── Modal ─────────────────────────────────────────────────────────────────────
 .modal-content {
   background: $_surface;
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   width: 100%;
   max-width: 520px;
   max-height: 90vh;
@@ -60,7 +60,7 @@ $_shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.04);
 .btn-close {
   background: none;
   border: 1.5px solid $_border2;
-  border-radius: 8px;
+  border-radius: var(--radius);
   width: 2rem;
   height: 2rem;
   cursor: pointer;
@@ -108,7 +108,7 @@ $_shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.04);
   textarea {
     padding: 0.55rem 0.8rem;
     border: 1.5px solid $_border2;
-    border-radius: 8px;
+    border-radius: var(--radius);
     font-size: 0.9rem;
     color: $_text;
     background: $_surface;
@@ -142,7 +142,7 @@ $_shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.04);
 // ── Buttons ───────────────────────────────────────────────────────────────────
 .btn {
   padding: 0.6rem 1.25rem;
-  border-radius: 8px;
+  border-radius: var(--radius);
   border: 1.5px solid transparent;
   font-size: 0.875rem;
   font-weight: 600;

@@ -52,7 +52,7 @@ $_border2:  #d0d9e4;
   .form-control {
     padding: 0.45rem 0.7rem;
     border: 1px solid $_border2;
-    border-radius: 8px;
+    border-radius: var(--radius);
     font-size: 0.875rem;
     color: $_text;
     background: $_surface;

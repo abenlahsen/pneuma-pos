@@ -25,7 +25,7 @@
 
 .modal-content {
   background: #fff;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   width: 100%;
   max-width: 560px;
   max-height: 90vh;
@@ -56,7 +56,7 @@
   color: $text-light;
   cursor: pointer;
   padding: 0.3rem 0.5rem;
-  border-radius: 6px;
+  border-radius: var(--radius);
   transition: all 0.15s;
 
   &:hover {
@@ -81,7 +81,7 @@
   flex: 1;
   padding: 0.65rem;
   border: 2px solid $border-color;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   background: $bg-body;
   color: $text-muted;
   font-size: 0.9rem;
@@ -133,7 +133,7 @@
   select {
     padding: 0.55rem 0.75rem;
     border: 1.5px solid $border-color;
-    border-radius: 8px;
+    border-radius: var(--radius);
     font-size: 0.9rem;
     color: $text-dark;
     background: #fff;
@@ -173,7 +173,7 @@
   color: $text-muted;
   border: 1px solid $border-color;
   padding: 0.55rem 1.25rem;
-  border-radius: 8px;
+  border-radius: var(--radius);
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.15s;
@@ -188,7 +188,7 @@
   color: #fff;
   border: none;
   padding: 0.55rem 1.5rem;
-  border-radius: 8px;
+  border-radius: var(--radius);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
