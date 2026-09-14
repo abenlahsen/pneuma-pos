@@ -396,4 +396,104 @@ describe('SaleFormComponent', () => {
       expect(comp.isParalAvailable()).toBe(false);
     });
   });
+
+  // ── Tâche 7 (`2b`) : la ligne porte le nom en clair, la référence dessous ──
+  describe('etiquette de ligne', () => {
+    const tyre = {
+      id: 1,
+      type: 'tyre',
+      reference: 'MI-2055516-PR4',
+      brand: { name: 'MICHELIN' },
+      profile: 'Primacy 4',
+      tyre: { tire_width: 205, tire_height: 55, tire_diameter: 16 },
+    } as any;
+
+    it('nomme l article par ce qu on dit au comptoir', () => {
+      // La marque et la dimension : ce qu'un client demande a voix haute.
+      expect(comp.productName(tyre)).toBe('MICHELIN 205/55R16 Primacy 4');
+    });
+
+    it('renvoie la reference et le type sur la ligne du dessous', () => {
+      expect(comp.productRef(tyre)).toBe('Pneu · MI-2055516-PR4');
+    });
+
+    it('ne laisse pas de separateur orphelin quand une donnee manque', () => {
+      const bare = { id: 2, type: 'part', reference: null, brand: null, part: {} } as any;
+
+      expect(comp.productName(bare)).toBe('Article #2');
+      expect(comp.productRef(bare)).toBe('Pièce');
+    });
+
+    it('remplace le nom par le numero de produit quand la ligne n est pas resolue', () => {
+      expect(comp.productName(null)).toBe('');
+      expect(comp.productRef(null)).toBe('');
+    });
+
+    // Une prestation n'a ni marque ni dimension : son nom est celui du
+    // catalogue, sinon la ligne se lit « Article #1188 » au comptoir.
+    it('nomme une prestation par son libelle de catalogue', () => {
+      prestationServiceStub.getCatalog = () => of({
+        montage: { product_id: 1188, label: 'Montage + Équilibrage', default_price: 30 },
+        alignment_vt: { product_id: 1189, label: 'Parallélisme — Tourisme', default_price: 100 },
+        alignment_suv: { product_id: 1190, label: 'Parallélisme — SUV / 4x4', default_price: 150 },
+      });
+      comp.ngOnInit();
+
+      const service = { id: 1188, type: 'service', reference: 'SVC-MONTAGE-EQ' } as any;
+
+      expect(comp.productName(service)).toBe('Montage + Équilibrage');
+      expect(comp.productRef(service)).toBe('Service · SVC-MONTAGE-EQ');
+    });
+  });
+
+  // ── Tâche 7 : l'alerte se declenche sur l'encours reel, jamais sur un seuil fige ──
+  describe('alerte d impaye client', () => {
+    const profile = (sales: any[]) => ({
+      client: { id: 7, name: 'SAVANNAH AUTO', credit_limit: 0 },
+      sales_count: sales.length,
+      total_purchased: 0,
+      outstanding_balance: sales.reduce((s, r) => s + (r.balance_due ?? 0), 0),
+      sales,
+      sales_history: sales,
+    }) as any;
+
+    it('est muette sans client', () => {
+      expect(comp.unpaidAlert()).toBeNull();
+    });
+
+    it('est muette quand tout est regle', () => {
+      comp.clientProfile.set(profile([
+        { id: 11, type: 'sale', reference: 'VTE-2416', balance_due: 0, sale_date: '2026-08-01' },
+      ]));
+
+      expect(comp.unpaidAlert()).toBeNull();
+    });
+
+    it('nomme le document impaye quand il n y en a qu un', () => {
+      comp.clientProfile.set(profile([
+        { id: 11, type: 'sale', reference: 'VTE-2416', balance_due: 11640, sale_date: '2026-08-01' },
+        { id: 12, type: 'sale', reference: 'VTE-2500', balance_due: 0, sale_date: '2026-09-01' },
+      ]));
+
+      expect(comp.unpaidAlert()).toEqual({ amount: 11640, count: 1, oldest: 'VTE-2416' });
+    });
+
+    // Plusieurs impayes : c'est le plus ancien qui pique, pas le dernier.
+    it('cite le plus ancien quand plusieurs documents restent dus', () => {
+      comp.clientProfile.set(profile([
+        { id: 12, type: 'sale', reference: 'VTE-2500', balance_due: 2000, sale_date: '2026-09-01' },
+        { id: 11, type: 'sale', reference: 'VTE-2416', balance_due: 11640, sale_date: '2026-08-01' },
+      ]));
+
+      expect(comp.unpaidAlert()).toEqual({ amount: 13640, count: 2, oldest: 'VTE-2416' });
+    });
+
+    it('se rabat sur le numero quand le document n a pas de reference', () => {
+      comp.clientProfile.set(profile([
+        { id: 11, type: 'service_order', reference: null, balance_due: 500, sale_date: '2026-08-01' },
+      ]));
+
+      expect(comp.unpaidAlert()?.oldest).toBe('n° 11');
+    });
+  });
 });

@@ -49,7 +49,7 @@ class PrestationCatalog
      * whose product hasn't been seeded yet resolves to null instead of
      * throwing, so callers (the sale form) can degrade gracefully.
      *
-     * @return array<string, array{product_id:int,label:string,default_price:float}|null>
+     * @return array<string, array{product_id:int,reference:string,label:string,default_price:float}|null>
      */
     public function resolve(): array
     {
@@ -69,6 +69,7 @@ class PrestationCatalog
 
             $result[$key] = $product ? [
                 'product_id' => $product->id,
+                'reference' => $entry['reference'],
                 'label' => $entry['label'],
                 'default_price' => $entry['default_price'],
             ] : null;

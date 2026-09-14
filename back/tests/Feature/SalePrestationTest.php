@@ -96,6 +96,23 @@ class SalePrestationTest extends TestCase
             ->assertJsonPath('alignment_suv.default_price', 150);
     }
 
+    /**
+     * La reference descend jusqu'au formulaire : sans elle, une ligne de
+     * prestation fraichement ajoutee n'affiche pas la meme chose qu'une ligne
+     * relue depuis le serveur.
+     */
+    public function test_index_carries_the_catalog_reference()
+    {
+        $this->authenticateWithPermissions(['view sales']);
+        $this->createPrestationProduct('SVC-MONTAGE-EQ', 30);
+        $this->createPrestationProduct('SVC-PARAL-SUV', 150);
+
+        $this->getJson('/api/sale-prestations')
+            ->assertOk()
+            ->assertJsonPath('montage.reference', 'SVC-MONTAGE-EQ')
+            ->assertJsonPath('alignment_suv.reference', 'SVC-PARAL-SUV');
+    }
+
     public function test_index_returns_null_for_missing_prestation_product()
     {
         $this->authenticateWithPermissions(['view sales']);

@@ -176,6 +176,31 @@ export class SaleFormComponent implements OnInit, OnDestroy {
     this.clientCreditLimit() > 0 && this.projectedBalance() > this.clientCreditLimit()
   );
 
+  /**
+   * Alerte d'impaye (`2b`). Elle se declenche sur l'encours **reel** : la somme
+   * des documents encore dus dans le profil charge. Pas de seuil fige — un
+   * seuil ne dit rien de ce client-ci, et au comptoir c'est le montage du
+   * dossier qui decide si on encaisse comptant.
+   *
+   * On cite le **plus ancien** document : c'est celui qui pique, pas le dernier.
+   */
+  readonly unpaidAlert = computed<{ amount: number; count: number; oldest: string } | null>(() => {
+    const rows = this.clientProfile()?.sales_history ?? this.clientProfile()?.sales ?? [];
+    const due = rows.filter((r) => Number(r.balance_due ?? 0) > 0);
+
+    if (due.length === 0) return null;
+
+    const oldest = [...due].sort((a, b) =>
+      String(a.sale_date ?? a.created_at ?? '').localeCompare(String(b.sale_date ?? b.created_at ?? ''))
+    )[0];
+
+    return {
+      amount: due.reduce((sum, r) => sum + Number(r.balance_due ?? 0), 0),
+      count: due.length,
+      oldest: oldest.reference || `n° ${oldest.id}`,
+    };
+  });
+
   ngOnInit(): void {
     this.cityService.getCities().subscribe(cities => this.cities.set(cities));
     this.carriers.set(this.initialCarriers);
@@ -446,6 +471,55 @@ export class SaleFormComponent implements OnInit, OnDestroy {
     return [typeTag, ref, brand, detail, profile].filter(Boolean).join(' — ');
   }
 
+  /**
+   * Nom d'article tel qu'on le prononce au comptoir : la marque, la dimension,
+   * le profil. La reference n'est pas un nom — elle part sur la ligne du
+   * dessous (`2b`), ou elle sert a verifier sans encombrer la lecture.
+   */
+  productName(p: Product | null | undefined): string {
+    if (!p) return '';
+
+    // Une prestation n'a ni marque ni dimension : son nom est son libelle de
+    // catalogue, le seul mot qu'on emploie pour elle au comptoir.
+    const prestation = this.prestationLabelFor(p.id);
+    if (prestation) return prestation;
+
+    return [p.brand?.name, this.productDetail(p), p.profile].filter(Boolean).join(' ')
+      || `Article #${p.id}`;
+  }
+
+  /** Libelle catalogue d'une prestation, ou null si le produit n'en est pas une. */
+  private prestationLabelFor(productId: number | null | undefined): string | null {
+    const cat = this.prestationCatalog();
+    if (!cat || productId == null) return null;
+
+    for (const entry of [cat.montage, cat.alignment_vt, cat.alignment_suv]) {
+      if (entry?.product_id === productId) return entry.label;
+    }
+
+    return null;
+  }
+
+  /** Deuxieme ligne de la cellule : le type, puis la reference. */
+  productRef(p: Product | null | undefined): string {
+    if (!p) return '';
+
+    const type = p.type === 'tyre' ? 'Pneu' : p.type === 'part' ? 'Pièce' : 'Service';
+
+    return [type, p.reference].filter(Boolean).join(' · ');
+  }
+
+  /** Ce qui distingue deux articles de la meme marque : dimension ou categorie. */
+  private productDetail(p: Product): string {
+    if (p.type === 'tyre' && p.tyre?.tire_width) {
+      return `${p.tyre.tire_width}/${p.tyre.tire_height}R${p.tyre.tire_diameter}`;
+    }
+
+    if (p.type === 'part') return p.part?.category ?? '';
+
+    return p.service?.category ?? '';
+  }
+
   viewingProduct = signal<any>(null);
 
   getProduct(item: any): any {
@@ -642,7 +716,9 @@ export class SaleFormComponent implements OnInit, OnDestroy {
       purchase_price: 0,
       selling_price: price,
       discount: offert ? 100 : 0,
-      linkedProduct: { id: entry.product_id, type: 'service', reference: entry.label, profile: '' },
+      // La vraie reference, pas le libelle : une ligne ajoutee a l'instant doit
+      // se lire exactement comme la meme ligne relue depuis le serveur.
+      linkedProduct: { id: entry.product_id, type: 'service', reference: entry.reference ?? '', profile: '' },
       stock: null,
     };
   }

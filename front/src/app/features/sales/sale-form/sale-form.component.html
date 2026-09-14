@@ -112,6 +112,18 @@
           <p>Cette vente rapprocherait fortement le client de sa limite de crédit.</p>
         </div>
       </div>
+
+      <!-- `2b` : l'alerte se lit sur l'encours reel du dossier, pas sur un
+           seuil. Elle cite le plus ancien document — c'est celui qui pique. -->
+      <div class="unpaid-alert" *ngIf="unpaidAlert() as alert">
+        <app-icon name="pending" [size]="18" />
+        <span>
+          Ce client a <strong>{{ alert.amount | number:'1.2-2' }} DH</strong> d’impayé<!--
+          --><ng-container *ngIf="alert.count === 1"> sur {{ alert.oldest }}.</ng-container><!--
+          --><ng-container *ngIf="alert.count > 1"> sur {{ alert.count }} documents, le plus ancien {{ alert.oldest }}.</ng-container>
+          Le règlement au comptant est recommandé.
+        </span>
+      </div>
     </div>
 
     <!-- Véhicule (optionnel, visible si client sélectionné) -->
@@ -162,9 +174,16 @@
         </thead>
         <tbody>
           <tr *ngFor="let item of formData.items; let i = index" [class.table-active]="editingItemIndex === i">
+            <!-- `2b` : le nom en clair, la reference dessous — on lit la ligne
+                 sans la dechiffrer, et la reference reste la pour verifier. -->
             <td>
-              {{ getProduct(item) ? formatProductLabel(getProduct(item)) : 'Produit #' + item.product_id }}
-              <button class="product-link" type="button" (click)="openProductView(item)" *ngIf="getProduct(item) && !isPrestationLine(item)" title="Voir le produit">↗</button>
+              <span class="line-article">
+                <span class="line-name">
+                  {{ productName(getProduct(item)) || 'Produit #' + item.product_id }}
+                  <button class="product-link" type="button" (click)="openProductView(item)" *ngIf="getProduct(item) && !isPrestationLine(item)" title="Voir le produit">↗</button>
+                </span>
+                <span class="line-ref" *ngIf="productRef(getProduct(item))">{{ productRef(getProduct(item)) }}</span>
+              </span>
             </td>
             <td>
               <ng-container *ngIf="item.stock_id; else serviceLine">{{ item.stock ? formatStockLabel(item.stock) : 'Stock #' + item.stock_id }}</ng-container>

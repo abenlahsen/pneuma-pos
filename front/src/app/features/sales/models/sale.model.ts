@@ -120,6 +120,8 @@ export interface PaginatedResponse<T> {
 
 export interface PrestationEntry {
   product_id: number;
+  /** Reference catalogue — affichee sous le nom dans le tableau des lignes. */
+  reference?: string;
   label: string;
   default_price: number;
 }

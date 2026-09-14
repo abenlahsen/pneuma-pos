@@ -1,22 +1,24 @@
-// ── Design tokens ─────────────────────────────────────────────────────────────
-$_red:      #ff2d37;
-$_red-dark: #e8000b;
-$_text:     #0f172a;
-$_strong:   #1e293b;
-$_label:    #334155;
-$_muted:    #64748b;
-$_dim:      #94a3b8;
-$_surface:  #ffffff;
-$_surface2: #f8fafc;
-$_bg:       #f1f5f9;
-$_border:   #e8edf3;
-$_border2:  #d0d9e4;
+// ── Tokens ────────────────────────────────────────────────────────────────
+// Alias locaux vers `src/app/_tokens.scss` : aucune couleur en dur ici, et le
+// theme sombre suit sans rien redefinir.
+$_red:      var(--accent);
+$_red-dark: var(--accent-600);
+$_text:     var(--text);
+$_strong:   var(--text);
+$_label:    var(--neutral-800);
+$_muted:    var(--text-muted);
+$_dim:      var(--neutral-500);
+$_surface:  var(--surface);
+$_surface2: var(--neutral-100);
+$_bg:       var(--bg);
+$_border:   var(--neutral-200);
+$_border2:  var(--divider);
 
-$_shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.04);
-$_shadow-md: 0 1px 3px rgba(15, 23, 42, 0.05), 0 4px 12px rgba(15, 23, 42, 0.08);
+$_shadow-sm: var(--shadow-sm);
+$_shadow-md: var(--shadow-sm);
 
-$_radius-sm: 8px;
-$_radius-md: 12px;
+$_radius-sm: var(--radius);
+$_radius-md: var(--radius-lg);
 
 // ── Form container ────────────────────────────────────────────────────────────
 .form-container {
@@ -84,7 +86,7 @@ $_radius-md: 12px;
     &:focus {
       outline: none;
       border-color: $_red;
-      box-shadow: 0 0 0 3px rgba(255, 45, 55, 0.1);
+      box-shadow: 0 0 0 3px var(--accent-200);
     }
   }
 
@@ -174,7 +176,7 @@ $_radius-md: 12px;
     &:focus {
       outline: none;
       border-color: $_red;
-      box-shadow: 0 0 0 3px rgba(255, 45, 55, 0.1);
+      box-shadow: 0 0 0 3px var(--accent-200);
     }
   }
 }
@@ -205,8 +207,8 @@ $_radius-md: 12px;
   transition: border-color 0.15s, background 0.15s;
 
   &:hover {
-    border-color: rgba(255, 45, 55, 0.25);
-    background: rgba(255, 45, 55, 0.03);
+    border-color: var(--accent-300);
+    background: var(--accent-100);
   }
 
   .result-name {
@@ -249,7 +251,7 @@ $_radius-md: 12px;
   align-items: center;
   padding: 0.2rem 0.65rem;
   border-radius: 999px;
-  background: rgba(255, 45, 55, 0.1);
+  background: var(--accent-100);
   color: $_red;
   font-size: 0.8rem;
   font-weight: 700;
@@ -318,15 +320,15 @@ $_radius-md: 12px;
 }
 
 .soft-warning {
-  background: rgba(234, 179, 8, 0.08);
-  border: 1px solid rgba(234, 179, 8, 0.3);
-  color: #a16207;
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-text);
+  color: var(--warn-text);
 }
 
 .danger-warning {
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  color: #b91c1c;
+  background: var(--bad-bg);
+  border: 1px solid var(--bad-text);
+  color: var(--bad-text);
 }
 
 .empty-state.small {
@@ -338,6 +340,40 @@ $_radius-md: 12px;
 
 // ── Items table ───────────────────────────────────────────────────────────────
 .items-table { overflow-x: auto; }
+
+/* `2b` : le nom porte la ligne, la reference la confirme sans l'encombrer. */
+.line-article {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.line-name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.line-ref {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* L'alerte d'impaye : elle doit couper la lecture, pas la decorer. */
+.unpaid-alert {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+  padding: 14px 16px;
+  border: 2px solid var(--accent-300);
+  background: var(--accent-100);
+  color: var(--accent-800);
+  font-size: 13px;
+  line-height: 1.5;
+
+  app-icon { flex-shrink: 0; color: var(--accent-700); }
+  strong { font-weight: 700; }
+}
 
 .product-link {
   background: none;
@@ -387,7 +423,7 @@ $_radius-md: 12px;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
 
-    &.negative { color: #dc2626; }
+    &.negative { color: var(--accent-700); }
   }
 }
 
@@ -450,7 +486,7 @@ $_radius-md: 12px;
   &:focus {
     outline: none;
     border-color: $_red;
-    box-shadow: 0 0 0 3px rgba(255, 45, 55, 0.1);
+    box-shadow: 0 0 0 3px var(--accent-200);
   }
 }
 
@@ -517,16 +553,16 @@ $_radius-md: 12px;
     border-color: $_border2;
     box-shadow: $_shadow-sm;
 
-    &:hover { background: $_surface2; border-color: #bcc6d4; }
+    &:hover { background: $_surface2; border-color: var(--divider); }
   }
 
   &.btn-primary {
     background: $_red;
     color: white;
     border-color: $_red;
-    box-shadow: 0 2px 6px rgba(255, 45, 55, 0.3);
+    box-shadow: var(--shadow-sm);
 
-    &:hover { background: $_red-dark; box-shadow: 0 4px 10px rgba(255, 45, 55, 0.4); transform: translateY(-1px); }
+    &:hover { background: $_red-dark; box-shadow: var(--shadow-lg); transform: translateY(-1px); }
     &:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
   }
 }
@@ -541,11 +577,11 @@ $_radius-md: 12px;
   color: $_muted;
   transition: background 0.15s, color 0.15s;
 
-  &:hover { background: rgba(239, 68, 68, 0.08); color: #dc2626; }
+  &:hover { background: var(--bad-bg); color: var(--bad-text); }
 }
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
-.text-danger  { color: #dc2626; }
+.text-danger  { color: var(--accent-700); }
 .text-primary { color: $_red; }
 .text-muted   { color: $_muted; }
 .text-small   { font-size: 0.8125rem; }
