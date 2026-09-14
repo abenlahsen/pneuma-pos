@@ -1,5 +1,14 @@
 @use './app/_tokens.scss';
 
+// Le motif « liste » est charge UNE fois, ici. Il etait jusqu'ici recopie
+// dans dix-sept feuilles de composant (11,5 ko chacune), ce qui faisait
+// depasser leur budget a plusieurs d'entre elles. Ses selecteurs sont des
+// classes partagees : les styles de composant, injectes apres, continuent
+// de les surcharger a specificite egale.
+@use './app/features/page-layout' as layout;
+@include layout.page-layout();
+
+
 @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap');
 
 /* You can add global styles to this file, and also import other style files */
@@ -89,4 +98,41 @@ button {
     background: #fff !important;
     overflow: visible !important;
   }
+}
+
+
+/* ─── Impression (3h) ──────────────────────────────────────────────────────
+   « Exporter PDF » imprime la mise en page de l'ecran, il n'en prend pas une
+   capture : barres en HTML et tableaux en tableaux, donc le navigateur les
+   rend en vectoriel et selectionnables. Regle globale — imprimer concerne le
+   document entier, pas un composant. */
+@media print {
+  /* Le chrome de navigation et les commandes ne s'impriment pas. */
+  app-rail,
+  app-command-palette,
+  .no-print,
+  .nav-btn,
+  .filters-section,
+  .pagination-wrapper {
+    display: none !important;
+  }
+
+  .page-container { margin: 0; padding: 0; }
+
+  /* Les fonds sont indispensables : sans eux, les barres disparaissent. */
+  .compare-chart,
+  .compare-col,
+  .card,
+  .kpi-card,
+  .summary-cards,
+  .summary-card {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    break-inside: avoid;
+  }
+
+  .kpi-group-header { break-after: avoid; }
+
+  table { break-inside: auto; }
+  tr { break-inside: avoid; }
 }

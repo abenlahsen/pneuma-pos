@@ -3,6 +3,7 @@ import { CommonModule, formatNumber } from '@angular/common';
 import { ReportingService } from '../data-access/reporting.service';
 import { MonthlyReport, ReportPeriodData } from '../models/reporting.model';
 import { IconComponent } from '../../../shared/icon/icon.component';
+import { buildComparisonBars } from './comparison-bars';
 
 const MONTH_NAMES = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -324,4 +325,24 @@ export class ReportingPageComponent implements OnInit {
   trackSection(_: number, s: ReportSection): string { return s.key; }
   trackCard(_: number, c: KpiCard): string { return c.label; }
   trackRow(_: number, r: CompareRow): string { return r.label; }
+
+  /**
+   * Barres comparatives d'une section (`3h`) : mois courant en encre, mois
+   * precedent en gris. Les pourcentages sont relatifs au maximum du groupe,
+   * pour que les barres d'une meme section se comparent entre elles.
+   * Les taux (marge en %) sont exclus : les melanger a des dirhams sur une
+   * echelle commune ecraserait les uns ou les autres.
+   */
+  barsFor(section: ReportSection) {
+    return buildComparisonBars(section.cards.filter((c) => c.kind !== 'percent'));
+  }
+
+  /**
+   * « Exporter PDF » (`3h`) : on imprime la mise en page de l'ecran, on n'en
+   * prend pas une capture. Les graphiques sont en SVG et les tableaux en HTML,
+   * donc le navigateur les rend nativement, en vectoriel et selectionnables.
+   */
+  exportPdf(): void {
+    window.print();
+  }
 }

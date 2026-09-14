@@ -4,6 +4,11 @@
       <h1>Reporting Mensuel</h1>
       <p class="subtitle">Bilan global du mois : ventes, achats, marge, trésorerie, charges et masse salariale.</p>
     </div>
+    <div class="actions no-print">
+      <button type="button" class="btn btn-secondary" (click)="exportPdf()">
+        <app-icon name="print" /> Exporter PDF
+      </button>
+    </div>
   </div>
 
   <!-- Month navigation -->
@@ -31,6 +36,20 @@
     <ng-container *ngFor="let section of sections(); trackBy: trackSection">
       <div class="kpi-group-header">
         <h2 class="kpi-group-title">{{ section.title }}</h2>
+      </div>
+
+      <!-- Graphique en encre (3h) : mois courant plein, mois precedent en gris.
+           Une seule teinte porteuse de sens ; l'echelle est commune au groupe. -->
+      <div class="compare-chart" *ngIf="barsFor(section).length > 1">
+        <div class="compare-bar" *ngFor="let bar of barsFor(section)">
+          <div class="compare-columns">
+            <span class="compare-col compare-col--prev" [style.height.%]="bar.previousPct"
+                  [title]="previousLabel() + ' : ' + formatMoney(bar.previous) + ' DH'"></span>
+            <span class="compare-col compare-col--cur" [style.height.%]="bar.currentPct"
+                  [title]="monthLabel() + ' : ' + formatMoney(bar.current) + ' DH'"></span>
+          </div>
+          <span class="compare-label">{{ bar.label }}</span>
+        </div>
       </div>
 
       <div class="kpi-grid">

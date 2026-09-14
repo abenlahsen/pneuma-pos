@@ -1,5 +1,3 @@
-@use '../../_page-layout' as layout;
-@include layout.page-layout();
 
 .summary-cards {
   grid-template-columns: repeat(4, 1fr);

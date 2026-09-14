@@ -1,3 +1,4 @@
+import { buildComparisonBars } from './comparison-bars';
 import { of, throwError } from 'rxjs';
 import { ReportingPageComponent } from './reporting-page.component';
 import { MonthlyReport, ReportPeriodData } from '../models/reporting.model';
@@ -154,4 +155,48 @@ describe('ReportingPageComponent', () => {
       ]);
     });
   });
+
+describe('buildComparisonBars (3h)', () => {
+  const card = (label: string, value: number, prev: number) => ({ label, value, prev });
+
+  it('ne trace rien sans carte', () => {
+    expect(buildComparisonBars([])).toEqual([]);
+  });
+
+  it('met le plus grand du groupe a 100 %', () => {
+    const bars = buildComparisonBars([card('CA', 800, 400), card('Marge', 200, 100)]);
+
+    expect(bars[0].currentPct).toBe(100);
+    expect(bars[0].previousPct).toBe(50);
+    expect(bars[1].currentPct).toBe(25);
+  });
+
+  it('partage une echelle commune : chaque barre sa propre echelle ne comparerait rien', () => {
+    const bars = buildComparisonBars([card('Gros', 1000, 0), card('Petit', 10, 0)]);
+
+    expect(bars[0].currentPct).toBe(100);
+    expect(bars[1].currentPct).toBe(1);
+  });
+
+  it('prend le maximum sur les deux periodes, pas seulement la courante', () => {
+    const bars = buildComparisonBars([card('CA', 200, 1000)]);
+
+    expect(bars[0].previousPct).toBe(100);
+    expect(bars[0].currentPct).toBe(20);
+  });
+
+  it('rend visible une valeur negative au lieu de la faire disparaitre', () => {
+    const bars = buildComparisonBars([card('Trésorerie', -500, 1000)]);
+
+    expect(bars[0].currentPct).toBe(50);
+    expect(bars[0].current).toBe(-500);
+  });
+
+  it('ne divise pas par zero quand tout est a zero', () => {
+    const bars = buildComparisonBars([card('CA', 0, 0)]);
+
+    expect(bars[0].currentPct).toBe(0);
+    expect(bars[0].previousPct).toBe(0);
+  });
+});
 });

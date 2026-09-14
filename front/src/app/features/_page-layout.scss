@@ -1,5 +1,6 @@
 // ─── _page-layout.scss — motif « liste » commun a tous les ecrans de liste ───
-// Usage: @use '../../_page-layout' as layout; @include layout.page-layout();
+// Charge UNE fois depuis src/styles.scss. Ne pas l'inclure par composant :
+// il etait recopie dans dix-sept feuilles, 11,5 ko a chaque fois.
 //
 // Aucune valeur en dur : couleurs, tailles et rayons viennent tous de
 // src/app/_tokens.scss, seule source du theme. Ce fichier ne redeclare plus
