@@ -1,10 +1,21 @@
 <div class="page-container">
 
-  <!-- Month navigation -->
+  <!-- Mois / Trimestre / Année (`3h`). Les flèches naviguent DANS la période
+       choisie : c'est cet écran qui porte le détail par période que l'accueil
+       ne porte plus. -->
   <div class="month-nav">
-    <button class="nav-btn" (click)="prevMonth()" aria-label="Mois précédent">&#8592;</button>
+    <div class="chip-row period-switch">
+      <button type="button" class="chip" [class.chip--on]="granularity() === 'month'"
+              (click)="setGranularity('month')">Mois</button>
+      <button type="button" class="chip" [class.chip--on]="granularity() === 'quarter'"
+              (click)="setGranularity('quarter')">Trimestre</button>
+      <button type="button" class="chip" [class.chip--on]="granularity() === 'year'"
+              (click)="setGranularity('year')">Année</button>
+    </div>
+
+    <button class="nav-btn" (click)="prevMonth()" aria-label="Période précédente">&#8592;</button>
     <span class="month-label">{{ monthLabel() }}</span>
-    <button class="nav-btn" (click)="nextMonth()" [disabled]="isCurrentMonth()" aria-label="Mois suivant">&#8594;</button>
+    <button class="nav-btn" (click)="nextMonth()" [disabled]="isCurrentMonth() && granularity() === 'month'" aria-label="Période suivante">&#8594;</button>
     <span class="compare-hint" *ngIf="report()">Variations calculées par rapport à {{ previousLabel() }}</span>
   </div>
 
@@ -21,24 +32,42 @@
 
   <ng-container *ngIf="!loading() && !error() && cur() as c">
 
+    <!-- Rangée de cinq cadrans dans un cadre unique — sans icône : une icône
+         par KPI ajoute du bruit sans ajouter de sens. -->
+    <div class="summary-cards">
+      <div class="card summary-card" *ngFor="let k of kpis()" [class.negative]="k.alert">
+        <p class="card-label">{{ k.label }}</p>
+        <h3 class="card-value">
+          {{ k.unit === 'x' ? (k.value | number:'1.1-2') : (k.value | number:'1.0-0') }}<small> {{ k.unit }}</small>
+        </h3>
+        <span class="kpi-delta" [ngClass]="deltaClass(k.value, k.prev, k.alert ? 'up-bad' : 'up-good')">
+          {{ deltaLabel(k.value, k.prev) }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Un seul graphique : le CA mois par mois, année précédente en gris 300
+         derrière. Le rouge ne sert qu'à pointer une valeur — le mois record. -->
+    <div class="card series-card" *ngIf="seriesBars().length">
+      <div class="card-header"><h3>Chiffre d'affaires — {{ monthLabel() }}</h3></div>
+      <div class="series">
+        <div class="series-bar" *ngFor="let bar of seriesBars()">
+          <span class="series-cols">
+            <span class="series-col series-col--prev" [style.height.%]="bar.previousPct"
+                  [title]="'N-1 : ' + formatMoney(bar.previous) + ' DH'"></span>
+            <span class="series-col series-col--cur" [class.series-col--peak]="bar.isPeak"
+                  [style.height.%]="bar.pct" [title]="formatMoney(bar.revenue) + ' DH'"></span>
+          </span>
+          <span class="series-label">{{ bar.label }}</span>
+        </div>
+      </div>
+      <p class="series-legend">Barre pleine : période en cours · Barre grise : même mois l'an dernier</p>
+    </div>
+
     <!-- KPI sections -->
     <ng-container *ngFor="let section of sections(); trackBy: trackSection">
       <div class="kpi-group-header">
         <h2 class="kpi-group-title">{{ section.title }}</h2>
-      </div>
-
-      <!-- Graphique en encre (3h) : mois courant plein, mois precedent en gris.
-           Une seule teinte porteuse de sens ; l'echelle est commune au groupe. -->
-      <div class="compare-chart" *ngIf="barsFor(section).length > 1">
-        <div class="compare-bar" *ngFor="let bar of barsFor(section)">
-          <div class="compare-columns">
-            <span class="compare-col compare-col--prev" [style.height.%]="bar.previousPct"
-                  [title]="previousLabel() + ' : ' + formatMoney(bar.previous) + ' DH'"></span>
-            <span class="compare-col compare-col--cur" [style.height.%]="bar.currentPct"
-                  [title]="monthLabel() + ' : ' + formatMoney(bar.current) + ' DH'"></span>
-          </div>
-          <span class="compare-label">{{ bar.label }}</span>
-        </div>
       </div>
 
       <div class="kpi-grid">
@@ -50,7 +79,6 @@
           [class.warning-card]="card.variant === 'warning'"
           [class.negative-card]="card.kind === 'money' && card.value < 0"
         >
-          <div class="kpi-icon"><app-icon [name]="card.icon" /></div>
           <div class="kpi-info">
             <span class="kpi-label">{{ card.label }}</span>
             <span class="kpi-val">

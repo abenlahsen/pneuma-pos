@@ -21,14 +21,20 @@ function makePeriod(overrides: Partial<ReportPeriodData> = {}): ReportPeriodData
     commercials: [{ commercial_name: 'Admin', sales_count: 2, total_sales: 1300, total_tyres: 2, total_margin: 600, margin_rate: 46.2, total_unpaid: 500 }],
     top_brands: [{ brand: 'ReportBrand', tyres_qty: 2, share_pct: 100, total_sales: 800, margin: 400 }],
     clients: { new_count: 3 },
+    kpi: { revenue: 1500, gross_margin: 800, basket: 650, stock_turns: 1.2, unpaid: 500 },
     ...overrides,
   };
 }
 
 function makeReport(): MonthlyReport {
   return {
-    period: { year: 2026, month: 8, start: '2026-08-01', end: '2026-08-31' },
-    previous_period: { year: 2026, month: 7, start: '2026-07-01', end: '2026-07-31' },
+    granularity: 'month',
+    series: [
+      { month: '2026-07', label: 'Juillet', revenue: 1000, previous_revenue: 900 },
+      { month: '2026-08', label: 'Aout', revenue: 1300, previous_revenue: 1100 },
+    ],
+    period: { year: 2026, month: 8, quarter: 3, label: 'Aout 2026', start: '2026-08-01', end: '2026-08-31' },
+    previous_period: { year: 2026, month: 7, quarter: 3, label: 'Juillet 2026', start: '2026-07-01', end: '2026-07-31' },
     current: makePeriod(),
     previous: makePeriod({
       sales: { total: 1000, with_invoice: 500, without_invoice: 500, count: 1, avg_basket: 1000, gross_margin: 400, tyres_qty: 4, parts_qty: 0, avg_price_per_tyre: 250, unpaid_generated: 0 },
@@ -54,7 +60,7 @@ describe('ReportingPageComponent', () => {
 
       comp.ngOnInit();
 
-      expect(mockService.getMonthly).toHaveBeenCalledWith(2026, 8);
+      expect(mockService.getMonthly).toHaveBeenCalledWith(2026, 8, 'month');
       expect(comp.report()).not.toBeNull();
       expect(comp.loading()).toBe(false);
       expect(comp.cur()?.sales.total).toBe(1300);
@@ -81,7 +87,7 @@ describe('ReportingPageComponent', () => {
 
       expect(comp.selectedMonth()).toBe(12);
       expect(comp.selectedYear()).toBe(2025);
-      expect(mockService.getMonthly).toHaveBeenCalledWith(2025, 12);
+      expect(mockService.getMonthly).toHaveBeenCalledWith(2025, 12, 'month');
     });
 
     it('nextMonth rolls from December to January of the next year', () => {

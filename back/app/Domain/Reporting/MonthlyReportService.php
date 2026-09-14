@@ -42,31 +42,128 @@ class MonthlyReportService
      */
     public function build(int $year, int $month): array
     {
-        $current = Carbon::createFromDate($year, $month, 1)->startOfDay();
-        $previous = $current->copy()->subMonthNoOverflow();
+        return $this->buildFor('month', $year, $month);
+    }
+
+    /**
+     * Rapport sur un mois, un trimestre ou une annee (`3h`).
+     *
+     * La periode precedente est toujours la meme duree juste avant : le mois
+     * d'avant, le trimestre d'avant, l'annee d'avant. Comparer un trimestre a
+     * un mois ne voudrait rien dire.
+     *
+     * @param  'month'|'quarter'|'year'  $granularity
+     * @param  int  $unit  mois 1-12, trimestre 1-4, ignore pour l'annee
+     */
+    public function buildFor(string $granularity, int $year, int $unit = 1): array
+    {
+        [$start, $end] = $this->rangeFor($granularity, $year, $unit);
+        [$prevStart, $prevEnd] = $this->previousRange($granularity, $start);
 
         return [
-            'period' => $this->periodMeta($current),
-            'previous_period' => $this->periodMeta($previous),
-            'current' => $this->computePeriod($current),
-            'previous' => $this->computePeriod($previous),
+            'granularity' => $granularity,
+            'period' => $this->periodMeta($granularity, $start, $end),
+            'previous_period' => $this->periodMeta($granularity, $prevStart, $prevEnd),
+            'current' => $this->computePeriod($start, $end),
+            'previous' => $this->computePeriod($prevStart, $prevEnd),
+            // Un seul graphique : le CA mois par mois sur la periode, l'annee
+            // precedente derriere en gris.
+            'series' => $this->series($start, $end),
         ];
     }
 
-    private function periodMeta(Carbon $monthStart): array
+    /** @return array{0: Carbon, 1: Carbon} */
+    private function rangeFor(string $granularity, int $year, int $unit): array
+    {
+        return match ($granularity) {
+            'year' => [Carbon::createFromDate($year, 1, 1)->startOfDay(), Carbon::createFromDate($year, 12, 31)->endOfDay()],
+            'quarter' => [
+                Carbon::createFromDate($year, ($unit - 1) * 3 + 1, 1)->startOfDay(),
+                Carbon::createFromDate($year, ($unit - 1) * 3 + 3, 1)->endOfMonth(),
+            ],
+            default => [
+                Carbon::createFromDate($year, $unit, 1)->startOfDay(),
+                Carbon::createFromDate($year, $unit, 1)->endOfMonth(),
+            ],
+        };
+    }
+
+    /** @return array{0: Carbon, 1: Carbon} */
+    private function previousRange(string $granularity, Carbon $start): array
+    {
+        return match ($granularity) {
+            'year' => [$start->copy()->subYear(), $start->copy()->subYear()->endOfYear()],
+            'quarter' => [$start->copy()->subMonthsNoOverflow(3), $start->copy()->subMonthNoOverflow()->endOfMonth()],
+            default => [$start->copy()->subMonthNoOverflow(), $start->copy()->subMonthNoOverflow()->endOfMonth()],
+        };
+    }
+
+    private function periodMeta(string $granularity, Carbon $start, Carbon $end): array
     {
         return [
-            'year' => $monthStart->year,
-            'month' => $monthStart->month,
-            'start' => $monthStart->toDateString(),
-            'end' => $monthStart->copy()->endOfMonth()->toDateString(),
+            'year' => $start->year,
+            'month' => $start->month,
+            'quarter' => (int) ceil($start->month / 3),
+            'label' => match ($granularity) {
+                'year' => (string) $start->year,
+                'quarter' => 'T'.(int) ceil($start->month / 3).' '.$start->year,
+                default => self::MONTHS[$start->month].' '.$start->year,
+            },
+            'start' => $start->toDateString(),
+            'end' => $end->toDateString(),
         ];
     }
 
-    private function computePeriod(Carbon $monthStart): array
+    /** Noms de mois en clair : la locale serveur n'est pas garantie francaise. */
+    private const MONTHS = [
+        1 => 'Janvier', 2 => 'Fevrier', 3 => 'Mars', 4 => 'Avril', 5 => 'Mai', 6 => 'Juin',
+        7 => 'Juillet', 8 => 'Aout', 9 => 'Septembre', 10 => 'Octobre', 11 => 'Novembre', 12 => 'Decembre',
+    ];
+
+    /**
+     * CA mois par mois sur la periode, avec le meme mois un an plus tot. Les
+     * mois sans vente valent zero : un creux doit se voir.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function series(Carbon $start, Carbon $end): array
     {
-        $start = $monthStart->toDateString();
-        $end = $monthStart->copy()->endOfMonth()->toDateString();
+        // Toujours douze mois se terminant a la fin de la periode : sur un mois
+        // le graphique n'aurait qu'une barre, et une barre seule ne compare
+        // rien. Sur une annee, les douze mois SONT la periode.
+        $start = $end->copy()->startOfMonth()->subMonthsNoOverflow(11);
+
+        $monthly = fn (Carbon $from, Carbon $to) => DB::table('sales')
+            ->whereNot('status', 'ANNULE')
+            ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
+            ->groupByRaw("DATE_FORMAT(date, '%Y-%m')")
+            ->selectRaw("DATE_FORMAT(date, '%Y-%m') AS m, COALESCE(SUM(total_sale), 0) AS revenue")
+            ->pluck('revenue', 'm');
+
+        $now = $monthly($start, $end);
+        $before = $monthly($start->copy()->subYear(), $end->copy()->subYear());
+
+        $rows = [];
+        $cursor = $start->copy()->startOfMonth();
+
+        while ($cursor->lte($end)) {
+            $key = $cursor->format('Y-m');
+            $rows[] = [
+                'month' => $key,
+                'label' => self::MONTHS[$cursor->month],
+                'revenue' => round((float) ($now[$key] ?? 0), 2),
+                'previous_revenue' => round((float) ($before[$cursor->copy()->subYear()->format('Y-m')] ?? 0), 2),
+            ];
+            $cursor->addMonthNoOverflow();
+        }
+
+        return $rows;
+    }
+
+    private function computePeriod(Carbon $from, Carbon $to): array
+    {
+        $start = $from->toDateString();
+        $end = $to->toDateString();
 
         $sales = $this->salesBlock($start, $end);
         $purchases = $this->purchasesBlock($start, $end);
@@ -93,7 +190,7 @@ class MonthlyReportService
             'collections' => $this->collectionsBlock($start, $end),
             'supplier_payments' => $this->supplierPaymentsBlock($start, $end),
             'expenses' => $expenses,
-            'payroll' => $this->hrChargeService->summary($monthStart->year, $monthStart->month),
+            'payroll' => $this->payrollOver($from, $to),
             'cash_flow' => $this->cashFlowBlock($start, $end),
             'commercials' => $this->commercialsBlock($start, $end),
             'top_brands' => $this->topBrandsBlock($start, $end),
@@ -102,7 +199,80 @@ class MonthlyReportService
                     ->whereBetween('created_at', [$start.' 00:00:00', $end.' 23:59:59'])
                     ->count(),
             ],
+            // Rangee de cinq cadrans (`3h`) : CA, marge brute, panier moyen,
+            // rotation de stock, impayes.
+            'kpi' => [
+                'revenue' => round($revenue, 2),
+                'gross_margin' => $grossMargin,
+                'basket' => ($sales['count'] ?? 0) > 0 ? round($sales['total'] / $sales['count'], 2) : 0.0,
+                'stock_turns' => $this->stockTurns($start, $end),
+                'unpaid' => $this->unpaidOver($start, $end),
+            ],
         ];
+    }
+
+    /** La masse salariale est mensuelle : on additionne les mois de la periode. */
+    private function payrollOver(Carbon $from, Carbon $to): array
+    {
+        $cursor = $from->copy()->startOfMonth();
+        $total = 0.0;
+        $bySub = [];
+
+        while ($cursor->lte($to)) {
+            $month = $this->hrChargeService->summary($cursor->year, $cursor->month);
+            $total += (float) ($month['total'] ?? 0);
+
+            foreach (($month['by_subcategory'] ?? []) as $row) {
+                $key = $row['subcategory'] ?? 'Autre';
+                $bySub[$key] = ($bySub[$key] ?? 0) + (float) ($row['total'] ?? 0);
+            }
+
+            $cursor->addMonthNoOverflow();
+        }
+
+        return [
+            'total' => round($total, 2),
+            'by_subcategory' => collect($bySub)
+                ->map(fn ($v, $k) => ['subcategory' => $k, 'total' => round($v, 2)])
+                ->values()
+                ->all(),
+        ];
+    }
+
+    /**
+     * Rotation de stock : cout des marchandises vendues sur la periode rapporte
+     * a la valeur du stock actuel. Le denominateur est un instantane — la valeur
+     * de stock n'est pas historisee — donc c'est un ordre de grandeur, pas une
+     * mesure comptable.
+     */
+    private function stockTurns(string $start, string $end): float
+    {
+        $cogs = (float) DB::table('sales')
+            ->whereNot('status', 'ANNULE')
+            ->whereBetween('date', [$start, $end])
+            ->sum('total_purchase');
+
+        $stockValue = (float) DB::table('stocks')
+            ->selectRaw('COALESCE(SUM(quantity * purchase_price), 0) AS v')
+            ->value('v');
+
+        return $stockValue > 0 ? round($cogs / $stockValue, 2) : 0.0;
+    }
+
+    /** Reste du sur les ventes de la periode. */
+    private function unpaidOver(string $start, string $end): float
+    {
+        $q = DB::table('sales')
+            ->whereNot('status', 'ANNULE')
+            ->whereBetween('date', [$start, $end])
+            ->whereIn('payment_status', ['NON PAYE', 'PARTIEL']);
+
+        $total = (float) (clone $q)->sum('total_sale');
+        $paid = (float) DB::table('sale_payment_allocations')
+            ->whereIn('sale_id', (clone $q)->select('id'))
+            ->sum('amount');
+
+        return round(max($total - $paid, 0), 2);
     }
 
     // ── Sales ────────────────────────────────────────────────────────────────

@@ -3,6 +3,8 @@ export interface ReportPeriod {
   month: number;
   start: string;
   end: string;
+  quarter: number;
+  label: string;
 }
 
 export interface ReportSales {
@@ -117,11 +119,31 @@ export interface ReportPeriodData {
   commercials: ReportCommercial[];
   top_brands: ReportBrand[];
   clients: { new_count: number };
+
+  /** Les cinq cadrans de `3h`. */
+  kpi: {
+    revenue: number;
+    gross_margin: number;
+    basket: number;
+    /** Ordre de grandeur : la valeur de stock n'est pas historisee. */
+    stock_turns: number;
+    unpaid: number;
+  };
+}
+
+/** Un mois de la serie unique : CA, et le meme mois un an plus tot. */
+export interface ReportSeriesPoint {
+  month: string;
+  label: string;
+  revenue: number;
+  previous_revenue: number;
 }
 
 export interface MonthlyReport {
+  granularity: 'month' | 'quarter' | 'year';
   period: ReportPeriod;
   previous_period: ReportPeriod;
   current: ReportPeriodData;
   previous: ReportPeriodData;
+  series: ReportSeriesPoint[];
 }

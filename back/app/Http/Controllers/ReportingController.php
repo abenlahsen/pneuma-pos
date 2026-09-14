@@ -12,6 +12,10 @@ class ReportingController extends Controller
 
     public function monthly(MonthlyReportRequest $request): JsonResponse
     {
-        return response()->json($this->reportService->build($request->year(), $request->month()));
+        return response()->json($this->reportService->buildFor(
+            $request->granularity(),
+            $request->year(),
+            $request->unit(),
+        ));
     }
 }

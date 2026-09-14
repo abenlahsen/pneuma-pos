@@ -66,15 +66,54 @@ export class ReportingPageComponent implements OnInit, OnDestroy {
   selectedYear = signal(new Date().getFullYear());
   selectedMonth = signal(new Date().getMonth() + 1);
 
+  /**
+   * Mois / Trimestre / Annee (`3h`). C'est l'ecran qui porte le detail par
+   * periode que l'accueil ne porte plus : sans les trois vues, l'information
+   * a disparu de l'application.
+   */
+  readonly granularity = signal<'month' | 'quarter' | 'year'>('month');
+
+  readonly selectedQuarter = computed(() => Math.ceil(this.selectedMonth() / 3));
+
   readonly now = new Date();
   readonly currentYear = this.now.getFullYear();
   readonly currentMonth = this.now.getMonth() + 1;
 
-  monthLabel = computed(() => `${MONTH_NAMES[this.selectedMonth() - 1]} ${this.selectedYear()}`);
+  /** Le libelle vient du serveur : lui seul connait les bornes reelles. */
+  monthLabel = computed(() => this.report()?.period?.label
+    ?? `${MONTH_NAMES[this.selectedMonth() - 1]} ${this.selectedYear()}`);
 
-  previousLabel = computed(() => {
-    const p = this.report()?.previous_period;
-    return p ? `${MONTH_NAMES[p.month - 1]} ${p.year}` : 'M-1';
+  previousLabel = computed(() => this.report()?.previous_period?.label ?? 'la période précédente');
+
+  /** Les cinq cadrans de `3h`, dans un seul cadre comme le motif liste. */
+  readonly kpis = computed(() => {
+    const c = this.cur()?.kpi;
+    const p = this.prev()?.kpi;
+    if (!c) return [];
+
+    return [
+      { label: 'CA de période', value: c.revenue, prev: p?.revenue ?? 0, unit: 'DH' },
+      { label: 'Marge brute', value: c.gross_margin, prev: p?.gross_margin ?? 0, unit: 'DH' },
+      { label: 'Panier moyen', value: c.basket, prev: p?.basket ?? 0, unit: 'DH' },
+      { label: 'Rotation de stock', value: c.stock_turns, prev: p?.stock_turns ?? 0, unit: 'x' },
+      { label: 'Impayés', value: c.unpaid, prev: p?.unpaid ?? 0, unit: 'DH', alert: true },
+    ];
+  });
+
+  /** Le graphique unique : CA du mois, annee precedente derriere en gris. */
+  readonly seriesBars = computed(() => {
+    const rows = this.report()?.series ?? [];
+    const max = Math.max(0, ...rows.flatMap((r) => [r.revenue, r.previous_revenue]));
+
+    return rows.map((r) => ({
+      label: r.label.slice(0, 3),
+      revenue: r.revenue,
+      previous: r.previous_revenue,
+      pct: max === 0 ? 0 : Math.round((r.revenue / max) * 1000) / 10,
+      previousPct: max === 0 ? 0 : Math.round((r.previous_revenue / max) * 1000) / 10,
+      // Le rouge ne sert qu'a pointer une valeur : ici le mois record.
+      isPeak: max > 0 && r.revenue === max,
+    }));
   });
 
   isCurrentMonth = computed(
@@ -259,7 +298,9 @@ export class ReportingPageComponent implements OnInit, OnDestroy {
   loadData(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.reportingService.getMonthly(this.selectedYear(), this.selectedMonth()).subscribe({
+    const unit = this.granularity() === 'quarter' ? this.selectedQuarter() : this.selectedMonth();
+
+    this.reportingService.getMonthly(this.selectedYear(), unit, this.granularity()).subscribe({
       next: (res) => {
         this.report.set(res);
         this.loading.set(false);
@@ -271,7 +312,27 @@ export class ReportingPageComponent implements OnInit, OnDestroy {
     });
   }
 
+  setGranularity(g: 'month' | 'quarter' | 'year'): void {
+    this.granularity.set(g);
+    this.loadData();
+  }
+
+  /** Les fleches naviguent dans la periode choisie, pas toujours en mois. */
   prevMonth(): void {
+    if (this.granularity() === 'year') {
+      this.selectedYear.update((y) => y - 1);
+      this.loadData();
+      return;
+    }
+
+    if (this.granularity() === 'quarter') {
+      const m = this.selectedMonth() - 3;
+      if (m < 1) { this.selectedMonth.set(m + 12); this.selectedYear.update((y) => y - 1); }
+      else this.selectedMonth.set(m);
+      this.loadData();
+      return;
+    }
+
     if (this.selectedMonth() === 1) {
       this.selectedMonth.set(12);
       this.selectedYear.update(y => y - 1);
@@ -282,6 +343,22 @@ export class ReportingPageComponent implements OnInit, OnDestroy {
   }
 
   nextMonth(): void {
+    if (this.granularity() === 'year') {
+      if (this.selectedYear() >= this.currentYear) return;
+      this.selectedYear.update((y) => y + 1);
+      this.loadData();
+      return;
+    }
+
+    if (this.granularity() === 'quarter') {
+      if (this.isCurrentMonth()) return;
+      const m = this.selectedMonth() + 3;
+      if (m > 12) { this.selectedMonth.set(m - 12); this.selectedYear.update((y) => y + 1); }
+      else this.selectedMonth.set(m);
+      this.loadData();
+      return;
+    }
+
     if (this.isCurrentMonth()) return;
     if (this.selectedMonth() === 12) {
       this.selectedMonth.set(1);
