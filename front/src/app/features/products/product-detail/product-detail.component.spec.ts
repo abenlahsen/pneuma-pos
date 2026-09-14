@@ -33,19 +33,27 @@ describe('ProductDetailComponent', () => {
     });
   });
 
-  describe('toggleMovements', () => {
-    it('fetches movements and sets showMovements true on first toggle', () => {
+  // Le repli a ete remplace par un onglet (motif « fiche », 3e) : le
+  // chargement paresseux se declenche desormais a la selection de l'onglet.
+  describe("selection de l onglet Mouvements", () => {
+    it('charge les mouvements a la premiere selection de l onglet', () => {
+      mockAuthService.hasPermission.mockReturnValue(true);
       mockMovementService.getMovements.mockReturnValue(of({ data: [{ id: 10 }] }));
-      comp.toggleMovements();
-      expect(comp.showMovements()).toBe(true);
+
+      comp.selectTab('movements');
+
+      expect(comp.activeTab()).toBe('movements');
       expect(mockMovementService.getMovements).toHaveBeenCalledWith({ product_id: 1, per_page: 100 });
     });
 
-    it('does NOT re-fetch when movements already loaded on second show', () => {
+    it('ne recharge pas si les mouvements sont deja la', () => {
+      mockAuthService.hasPermission.mockReturnValue(true);
       comp.movements.set([{ id: 1 } as any]);
-      comp.toggleMovements(); // show (movements exist → no fetch)
-      comp.toggleMovements(); // hide
-      comp.toggleMovements(); // show again (movements still exist → no fetch)
+
+      comp.selectTab('movements');
+      comp.selectTab('detail');
+      comp.selectTab('movements');
+
       expect(mockMovementService.getMovements).not.toHaveBeenCalled();
     });
   });
@@ -95,6 +103,56 @@ describe('ProductDetailComponent', () => {
 
       comp.product = { id: 1, type: 'tyre', tyre: {} } as any;
       expect(comp.seasonLabel()).toBe('-');
+    });
+  });
+
+  describe('onglets de la fiche (motif « fiche », 3e)', () => {
+    it('offre Détail, Stock et Mouvements pour un pneu quand la permission est accordée', () => {
+      mockAuthService.hasPermission.mockReturnValue(true);
+      comp.product = { id: 1, type: 'tyre', is_active: true } as any;
+
+      expect(comp.tabs().map((t) => t.id)).toEqual(['detail', 'stock', 'movements']);
+    });
+
+    it("n'offre que Détail pour un service : il n'a ni stock ni mouvement", () => {
+      mockAuthService.hasPermission.mockReturnValue(true);
+      comp.product = { id: 2, type: 'service', is_active: true } as any;
+
+      expect(comp.tabs().map((t) => t.id)).toEqual(['detail']);
+    });
+
+    it('masque Mouvements sans la permission view stock-movements', () => {
+      mockAuthService.hasPermission.mockReturnValue(false);
+      comp.product = { id: 1, type: 'tyre', is_active: true } as any;
+
+      expect(comp.tabs().map((t) => t.id)).toEqual(['detail', 'stock']);
+    });
+
+    it("retombe sur Détail si l'onglet actif disparaît avec le produit", () => {
+      mockAuthService.hasPermission.mockReturnValue(true);
+      comp.product = { id: 1, type: 'tyre', is_active: true } as any;
+      comp.selectTab('movements');
+      expect(comp.activeTab()).toBe('movements');
+
+      comp.product = { id: 2, type: 'service', is_active: true } as any;
+
+      expect(comp.activeTab()).toBe('detail');
+    });
+  });
+
+  describe('valeur du stock', () => {
+    it("somme quantite x prix d'achat sur tous les lots", () => {
+      comp.stockItems.set([
+        { id: 1, quantity: 4, purchase_price: 1050 },
+        { id: 2, quantity: 2, purchase_price: 900 },
+      ] as any);
+
+      expect(comp.stockValue).toBe(6000);
+    });
+
+    it('vaut 0 sans aucun lot', () => {
+      comp.stockItems.set([]);
+      expect(comp.stockValue).toBe(0);
     });
   });
 });

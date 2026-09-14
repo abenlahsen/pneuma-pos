@@ -9,7 +9,49 @@
       <button class="btn-icon" (click)="close.emit()" title="Fermer"><app-icon name="close" /></button>
     </div>
 
+    <!-- En-tete d'objet : vignette, kicker, titre, ligne d'identifiants (3e) -->
+    <div class="object-header">
+      <div class="object-thumb">
+        <app-icon [name]="isTyre ? 'stock' : isPart ? 'inventory' : 'service'" [size]="38" />
+      </div>
+
+      <div class="object-identity">
+        <span class="object-kicker">{{ typeLabel() }}</span>
+        <h3 class="object-title">{{ product.profile || product.reference || ('Produit #' + product.id) }}</h3>
+        <span class="object-meta">
+          <ng-container *ngIf="product.reference">Réf. {{ product.reference }}</ng-container>
+          <ng-container *ngIf="product.brand?.name"> · {{ product.brand?.name }}</ng-container>
+          <ng-container *ngIf="isTyre && product.tyre?.tire_width">
+            · {{ product.tyre?.tire_width }}/{{ product.tyre?.tire_height }} R{{ product.tyre?.tire_diameter }}
+          </ng-container>
+        </span>
+      </div>
+
+      <div class="object-badges">
+        <span class="badge" [class.badge-active]="product.is_active" [class.badge-inactive]="!product.is_active">
+          {{ product.is_active ? 'Actif' : 'Inactif' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Onglets : seuls ceux qui ont des donnees sont offerts -->
+    <div class="object-tabs" role="tablist">
+      <button
+        type="button"
+        class="object-tab"
+        role="tab"
+        *ngFor="let tab of tabs()"
+        [class.active]="activeTab() === tab.id"
+        [attr.aria-selected]="activeTab() === tab.id"
+        (click)="selectTab(tab.id)"
+      >{{ tab.label }}</button>
+    </div>
+
     <div class="modal-body">
+
+      <!-- Onglet Detail : deux colonnes, minmax(0,1fr) 360px (3e) -->
+      <div class="fiche-columns" *ngIf="activeTab() === 'detail'">
+       <div class="fiche-main">
 
       <!-- General info -->
       <div class="detail-section">
@@ -152,8 +194,31 @@
         </div>
       </div>
 
-      <!-- Stock inventory -->
-      <div class="detail-section" *ngIf="!isService">
+       </div><!-- /fiche-main -->
+
+       <aside class="fiche-aside" *ngIf="!isService">
+         <div class="aside-card">
+           <span class="aside-label">En stock</span>
+           <span class="aside-value">{{ totalStock }}<span class="aside-unit"> u.</span></span>
+           <span class="aside-note" *ngIf="stockItems().length">
+             réparties sur {{ stockItems().length }} lot{{ stockItems().length > 1 ? 's' : '' }}
+           </span>
+         </div>
+
+         <div class="aside-card">
+           <span class="aside-label">Valeur d'achat immobilisée</span>
+           <span class="aside-value">{{ stockValue | number:'1.2-2' }}<span class="aside-unit"> DH</span></span>
+         </div>
+
+         <div class="aside-card" *ngIf="isTyre && product.tyre?.tire_season">
+           <span class="aside-label">Saison</span>
+           <span class="aside-value small">{{ seasonLabel() }}</span>
+         </div>
+       </aside>
+      </div><!-- /fiche-columns -->
+
+      <!-- Onglet Stock -->
+      <div class="detail-section" *ngIf="activeTab() === 'stock' && !isService">
         <h3 class="section-title">
           <app-icon name="inventory" /> Inventaire
           <span class="stock-total-badge" *ngIf="!stockLoading()">{{ totalStock }} en stock</span>
@@ -192,15 +257,14 @@
         </ng-container>
       </div>
 
-      <!-- Stock movements history -->
-      <div class="detail-section" *ngIf="!isService && authService.hasPermission('view stock-movements')">
-        <h3 class="section-title collapsible" (click)="toggleMovements()">
+      <!-- Onglet Mouvements -->
+      <div class="detail-section" *ngIf="activeTab() === 'movements'">
+        <h3 class="section-title">
           Historique des mouvements
           <span class="mv-count" *ngIf="movements().length > 0">({{ movements().length }})</span>
-          <span class="collapse-icon">{{ showMovements() ? '▾' : '▸' }}</span>
         </h3>
 
-        <div *ngIf="showMovements()">
+        <div>
           <div class="table-loading" *ngIf="movementsLoading()">Chargement...</div>
 
           <ng-container *ngIf="!movementsLoading()">

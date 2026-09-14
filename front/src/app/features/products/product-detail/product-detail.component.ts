@@ -8,6 +8,9 @@ import { StockMovementService } from '../../../core/services/stock-movement.serv
 import { AuthService } from '../../../core/services/auth.service';
 import { IconComponent } from '../../../shared/icon/icon.component';
 
+/** Onglets de la fiche produit — seuls ceux qui ont des donnees sont offerts. */
+export type ProductTab = 'detail' | 'stock' | 'movements';
+
 @Component({
   selector: 'app-product-detail',
   standalone: true,
@@ -24,7 +27,6 @@ export class ProductDetailComponent implements OnInit {
   stockLoading = signal(false);
   movements = signal<StockMovement[]>([]);
   movementsLoading = signal(false);
-  showMovements = signal(false);
 
   constructor(
     private stockService: StockService,
@@ -46,6 +48,45 @@ export class ProductDetailComponent implements OnInit {
     return this.stockItems().reduce((sum, s) => sum + s.quantity, 0);
   }
 
+  /** Valeur d'achat immobilisee : somme quantite x prix d'achat sur tous les lots. */
+  get stockValue(): number {
+    return this.stockItems().reduce((sum, s) => sum + s.quantity * Number(s.purchase_price ?? 0), 0);
+  }
+
+  // ── Onglets (motif « fiche », 3e) ────────────────────────────────────────
+  // `product` est un @Input simple, pas un signal : les onglets se recalculent
+  // a chaque lecture plutot que de dependre d'un cycle de vie.
+  private readonly requestedTab = signal<ProductTab>('detail');
+
+  tabs(): { id: ProductTab; label: string }[] {
+    const list: { id: ProductTab; label: string }[] = [{ id: 'detail', label: 'Détail' }];
+
+    if (!this.isService) {
+      list.push({ id: 'stock', label: 'Stock' });
+
+      if (this.authService.hasPermission('view stock-movements')) {
+        list.push({ id: 'movements', label: 'Mouvements' });
+      }
+    }
+
+    return list;
+  }
+
+  /** L'onglet actif est toujours un onglet qui existe : changer de produit
+   *  peut faire disparaitre celui qu'on regardait (un service n'a pas de stock). */
+  activeTab(): ProductTab {
+    const wanted = this.requestedTab();
+    return this.tabs().some((t) => t.id === wanted) ? wanted : 'detail';
+  }
+
+  selectTab(id: ProductTab): void {
+    this.requestedTab.set(id);
+
+    if (id === 'movements' && this.movements().length === 0) {
+      this.loadMovements();
+    }
+  }
+
   loadStock(): void {
     this.stockLoading.set(true);
     this.stockService.getStocks({ product_id: this.product.id.toString(), per_page: '200' }).subscribe({
@@ -54,13 +95,6 @@ export class ProductDetailComponent implements OnInit {
     });
   }
 
-  toggleMovements(): void {
-    const next = !this.showMovements();
-    this.showMovements.set(next);
-    if (next && this.movements().length === 0) {
-      this.loadMovements();
-    }
-  }
 
   loadMovements(): void {
     this.movementsLoading.set(true);
