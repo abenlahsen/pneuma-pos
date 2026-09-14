@@ -9,6 +9,10 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
+// Files de travail de l'accueil — ouvertes a tout utilisateur authentifie :
+// c'est WorkQueueService qui decide quelles files et quelle portee.
+Route::get('/work-queues', [DashboardController::class, 'workQueues']);
+
 // Admin dashboard KPI snapshot
 Route::get('/dashboard-kpi', [DashboardController::class, 'kpi'])
     ->middleware('role:Administrator');

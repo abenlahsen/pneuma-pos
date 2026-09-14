@@ -1,110 +1,92 @@
-import { Component, OnInit, computed, effect, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { DashboardService } from '../../core/services/dashboard.service';
 import { User } from '../../core/models/auth.model';
-import { DashboardKpi } from '../../core/models/dashboard-kpi.model';
+import { QueueScope, WorkQueues } from '../../core/models/work-queue.model';
 import { AutoRefreshControlComponent } from '../../shared/auto-refresh-control/auto-refresh-control.component';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
+import { ErrorBannerComponent, formatErrorDetail } from '../../shared/error-banner/error-banner.component';
 
+/**
+ * Accueil (`5a`/`5b`) — une liste de travail, pas un tableau de chiffres.
+ *
+ * Une seule route et un seul composant : le jeu de files et leur portee
+ * viennent du serveur, qui filtre les donnees. Le front n'a rien a masquer,
+ * et donc rien a laisser fuir.
+ */
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [IconComponent, CommonModule, RouterLink, AutoRefreshControlComponent],
+  imports: [IconComponent, CommonModule, AutoRefreshControlComponent, EmptyStateComponent, ErrorBannerComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent implements OnInit {
-  user = signal<User | null>(null);
-  kpi = signal<DashboardKpi | null>(null);
-  loadingKpi = signal(false);
+  private readonly router = inject(Router);
+  private readonly dashboardService = inject(DashboardService);
+  readonly authService = inject(AuthService);
 
-  private readonly now = new Date();
-  selectedDay = signal(this.formatDay(this.now));
-  selectedMonth = signal(this.formatMonth(this.now));
-  selectedYear = signal(String(this.now.getFullYear()));
-  yearOptions = computed(() => {
-    const currentYear = this.now.getFullYear();
-    const years: string[] = [];
+  readonly user = signal<User | null>(null);
+  readonly queues = signal<WorkQueues>({});
+  readonly loading = signal(false);
+  readonly loadError = signal('');
 
-    for (let year = currentYear - 5; year <= currentYear + 2; year++) {
-      years.push(String(year));
-    }
-
-    return years;
+  /** Total de lignes en attente, toutes files confondues. */
+  readonly pendingTotal = computed(() => {
+    const q = this.queues();
+    return (q.unpaid?.count ?? 0) + (q.to_invoice?.count ?? 0);
   });
 
-  constructor(
-    public authService: AuthService,
-    private dashboardService: DashboardService,
-  ) {
-    effect(() => {
-      if (!this.authService.hasRole('Administrator')) {
-        return;
-      }
-
-      this.selectedDay();
-      this.selectedMonth();
-      this.selectedYear();
-
-      this.refreshKpi();
-    });
-  }
+  readonly hasAnyQueue = computed(() => {
+    const q = this.queues();
+    return !!q.unpaid || !!q.to_invoice;
+  });
 
   ngOnInit(): void {
     this.user.set(this.authService.user());
+    this.loadQueues();
   }
 
-  onDayChange(value: string): void {
-    if (!value) {
-      return;
-    }
+  loadQueues(): void {
+    this.loading.set(true);
+    this.loadError.set('');
 
-    this.selectedDay.set(value);
-  }
-
-  onMonthChange(value: string): void {
-    if (!value) {
-      return;
-    }
-
-    this.selectedMonth.set(value);
-  }
-
-  onYearChange(value: string): void {
-    if (!value) {
-      return;
-    }
-
-    this.selectedYear.set(value);
-  }
-
-  logout(): void {
-    this.authService.logout();
-  }
-
-  refreshKpi(): void {
-    this.loadingKpi.set(true);
-
-    this.dashboardService.getKpi({
-      day: this.selectedDay(),
-      month: this.selectedMonth(),
-      year: this.selectedYear(),
-    }).subscribe({
-      next: (kpi) => {
-        this.kpi.set(kpi);
-        this.loadingKpi.set(false);
+    this.dashboardService.getWorkQueues().subscribe({
+      next: (queues) => {
+        this.queues.set(queues);
+        this.loading.set(false);
       },
-      error: () => this.loadingKpi.set(false),
+      error: (err) => {
+        this.loading.set(false);
+        this.loadError.set(formatErrorDetail('GET', err?.url ?? '/api/work-queues', err?.status ?? 0));
+      },
     });
   }
 
-  private formatDay(date: Date): string {
-    return date.toISOString().slice(0, 10);
+  /** « Agence · partagé » quand la file couvre tout le monde, sinon « Mes lignes ». */
+  scopeLabel(scope: QueueScope | undefined): string {
+    return scope === 'all' ? 'Toute l’agence' : 'Mes lignes';
   }
 
-  private formatMonth(date: Date): string {
-    return date.toISOString().slice(0, 7);
+  /** Un impayé se règle sur la vente : on ouvre la vente, pas une page intermédiaire. */
+  openSale(id: number): void {
+    this.router.navigate(['/sales'], { queryParams: { id } });
+  }
+
+  openServiceOrder(id: number): void {
+    this.router.navigate(['/service-orders'], { queryParams: { id } });
+  }
+
+  /** Une ligne en retard se lit au premier coup d'œil. */
+  isOverdue(date: string | null | undefined, days = 30): boolean {
+    if (!date) return false;
+
+    const when = new Date(date).getTime();
+    if (Number.isNaN(when)) return false;
+
+    return (Date.now() - when) / 86_400_000 > days;
   }
 }

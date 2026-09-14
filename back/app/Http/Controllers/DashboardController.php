@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Dashboard\WorkQueueService;
 use App\Domain\Suppliers\SupplierService;
 use App\Enums\PurchaseStatus;
 use App\Enums\SalePaymentStatus;
@@ -24,6 +25,15 @@ class DashboardController extends Controller
     /**
      * Aggregated KPI snapshot for the admin dashboard.
      */
+    /**
+     * Files de travail de l'accueil (`5a`/`5b`). La portee est appliquee dans
+     * la requete par WorkQueueService, jamais a l'affichage.
+     */
+    public function workQueues(Request $request, WorkQueueService $queues): JsonResponse
+    {
+        return response()->json($queues->forUser($request->user()));
+    }
+
     public function kpi(Request $request, SupplierService $supplierService): JsonResponse
     {
         $selectedDay = $request->query('day');

@@ -138,6 +138,14 @@ class RolesAndPermissionsSeeder extends Seeder
 
             // Reporting (Administrator only)
             'view reporting',
+
+            // Portee des files de travail de l'accueil (`5a`/`5b`).
+            // Les permissions ci-dessus disent SI on accede a un ecran ;
+            // celles-ci disent JUSQU'OU. Sans elles, la requete est filtree
+            // sur commercial_id cote serveur : un commercial ne voit que ses
+            // propres lignes. Accordees a Manager et Administrator seulement.
+            'view unpaid.all',
+            'view service-orders.all',
         ];
 
         foreach ($permissions as $permission) {

@@ -1,546 +1,107 @@
-<div class="dashboard-container">
+<div class="page-container">
 
-  <main class="dashboard-main">
-    <div class="welcome-card">
-      <h2>Bienvenue{{ user() ? ', ' + user()?.name : '' }} !</h2>
-      <p>Votre point de vente est prêt à être utilisé.</p>
-
-
+  <div class="header">
+    <div class="title-section">
+      <h1>Bonjour{{ user()?.name ? ', ' + user()!.name : '' }}</h1>
+      <p class="subtitle">
+        @if (pendingTotal() > 0) {
+          {{ pendingTotal() }} ligne{{ pendingTotal() > 1 ? 's' : '' }} en attente de votre part.
+        } @else {
+          Rien ne vous attend. Bonne journée.
+        }
+      </p>
     </div>
-
-    <div class="kpi-dashboard" *ngIf="authService.hasRole('Administrator') && kpi() as k">
-      <div class="section-title-row">
-        <h3 class="section-title">Tableau de bord KPI</h3>
-        <div class="kpi-loading-indicator" *ngIf="loadingKpi()">
-          <span class="kpi-loading-spinner" aria-hidden="true"></span>
-          <span>Chargement...</span>
-        </div>
-        <app-auto-refresh-control pageKey="dashboard" [defaultIntervalMs]="60000" (refresh)="refreshKpi()" />
-      </div>
-
-      <!-- Aujourd'hui -->
-      <div class="kpi-group-header">
-        <h4 class="kpi-group-title">📅 Aujourd'hui</h4>
-        <label class="kpi-filter" for="dashboard-day-filter">
-          <span class="kpi-filter-label">Date</span>
-          <input
-            id="dashboard-day-filter"
-            class="kpi-filter-control"
-            type="date"
-            [value]="selectedDay()"
-            (change)="onDayChange($any($event.target).value)"
-          />
-        </label>
-      </div>
-      <div class="kpi-grid">
-        <div class="kpi-card highlight-red">
-          <div class="kpi-icon"><app-icon name="cash" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">CA Aujourd'hui</span>
-            <span class="kpi-val">{{ k.sales_today_amount | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-          <div class="kpi-badge">{{ k.tyres_today }} Pneus vendus</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon">🛒</div>
-          <div class="kpi-info">
-            <span class="kpi-label">Achats</span>
-            <span class="kpi-val">{{ k.purchases_today_amount | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-          <div class="kpi-badge">{{ k.tyres_purchased_today }} Pneus achetés</div>
-        </div>
-        <div class="kpi-card warning-card">
-          <div class="kpi-icon">💸</div>
-          <div class="kpi-info">
-            <span class="kpi-label">Dépenses</span>
-            <span class="kpi-val">{{ k.expenses_today | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon">🪙</div>
-          <div class="kpi-info">
-            <span class="kpi-label">Autres revenus</span>
-            <span class="kpi-val">{{ k.other_revenue_today | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-        </div>
-        <div class="kpi-card" [class.negative-card]="k.margin_today < 0">
-          <div class="kpi-icon"><app-icon name="kpi" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Marge Brute</span>
-            <span class="kpi-val">{{ k.margin_today | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-        </div>
-        <div class="kpi-card" [class.negative-card]="k.net_margin_today < 0">
-          <div class="kpi-icon">📉</div>
-          <div class="kpi-info">
-            <span class="kpi-label">Marge Nette</span>
-            <span class="kpi-val">{{ k.net_margin_today | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Ce mois -->
-      <div class="kpi-group-header">
-        <h4 class="kpi-group-title"><app-icon name="reporting" /> Ce mois</h4>
-        <label class="kpi-filter" for="dashboard-month-filter">
-          <span class="kpi-filter-label">Mois</span>
-          <input
-            id="dashboard-month-filter"
-            class="kpi-filter-control"
-            type="month"
-            [value]="selectedMonth()"
-            (change)="onMonthChange($any($event.target).value)"
-          />
-        </label>
-      </div>
-      <div class="kpi-grid">
-        <div class="kpi-card highlight-blue">
-          <div class="kpi-icon"><app-icon name="cash" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">CA Mois</span>
-            <span class="kpi-val">{{ k.sales_month_amount | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_month > 0">
-              ≈ {{ (k.sales_month_amount / k.tyres_month) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-          <div class="kpi-badges">
-            <div class="kpi-badge">{{ k.tyres_month }} Pneus vendus</div>
-            <div class="kpi-badge kpi-badge--parts" *ngIf="k.parts_month > 0">{{ k.parts_month }} Pièces vendues</div>
-          </div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon">🛒</div>
-          <div class="kpi-info">
-            <span class="kpi-label">Achats</span>
-            <span class="kpi-val">{{ k.purchases_month_amount | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_purchased_month > 0">
-              ≈ {{ (k.purchases_month_amount / k.tyres_purchased_month) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-          <div class="kpi-badges">
-            <div class="kpi-badge">{{ k.tyres_purchased_month }} Pneus achetés</div>
-            <div class="kpi-badge kpi-badge--parts" *ngIf="k.parts_purchased_month > 0">{{ k.parts_purchased_month }} Pièces achetées</div>
-          </div>
-        </div>
-        <div class="kpi-card warning-card">
-          <div class="kpi-icon">💸</div>
-          <div class="kpi-info">
-            <span class="kpi-label">Dépenses</span>
-            <span class="kpi-val">{{ k.expenses_month | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_month > 0">
-              ≈ {{ (k.expenses_month / k.tyres_month) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon">🪙</div>
-          <div class="kpi-info">
-            <span class="kpi-label">Autres revenus</span>
-            <span class="kpi-val">{{ k.other_revenue_month | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-        </div>
-        <div class="kpi-card" [class.negative-card]="k.margin_month < 0">
-          <div class="kpi-icon"><app-icon name="kpi" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Marge Brute</span>
-            <span class="kpi-val">{{ k.margin_month | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_month > 0">
-              ≈ {{ (k.margin_month / k.tyres_month) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-        </div>
-        <div class="kpi-card" [class.negative-card]="k.net_margin_month < 0">
-          <div class="kpi-icon">📉</div>
-          <div class="kpi-info">
-            <span class="kpi-label">Marge Nette</span>
-            <span class="kpi-val">{{ k.net_margin_month | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_month > 0">
-              ≈ {{ (k.net_margin_month / k.tyres_month) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Performances Ventes par mois -->
-      <div class="commercials-section">
-        <h3 class="section-title"><app-icon name="sales" /> Ventes — Performances — {{ selectedMonth() }}</h3>
-        <div class="modern-table-container">
-          <table class="modern-table">
-            <thead>
-              <tr>
-                <th>Commercial</th>
-                <th>Pneus Vendus</th>
-                <th>Chiffre d'Affaires</th>
-                <th>Marge Brute</th>
-                <th>Marge / Pneu</th>
-                <th>% Marge</th>
-                <th>Impayés</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let com of k.sales_by_commercial">
-                <td>
-                  <div class="user-cell">
-                    <div class="avatar">{{ com.commercial_name.charAt(0) | uppercase }}</div>
-                    <span class="user-name">{{ com.commercial_name }}</span>
-                  </div>
-                </td>
-                <td class="font-numeric">{{ com.total_tyres }}</td>
-                <td class="font-numeric">{{ com.total_sales | number:'1.2-2' }} <small>DH</small></td>
-                <td class="font-numeric" [class.negative]="com.total_margin < 0">
-                  {{ com.total_margin | number:'1.2-2' }} <small>DH</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.avg_margin_per_tyre < 0">
-                  {{ com.avg_margin_per_tyre | number:'1.2-2' }} <small>DH</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.margin_rate < 0">
-                  {{ com.margin_rate | number:'1.1-1' }}<small>%</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.total_unpaid > 0">
-                  {{ com.total_unpaid | number:'1.2-2' }} <small>DH</small>
-                </td>
-              </tr>
-              <tr *ngIf="k.sales_by_commercial.length === 0">
-                <td colspan="7" class="empty-row">Aucune vente ce mois-ci</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Performances Service Auto par mois -->
-      <div class="commercials-section">
-        <h3 class="section-title section-title--service"><app-icon name="service" /> Service Auto — Performances — {{ selectedMonth() }}</h3>
-        <div class="modern-table-container">
-          <table class="modern-table">
-            <thead>
-              <tr>
-                <th>Commercial</th>
-                <th>Ordres</th>
-                <th>Chiffre d'Affaires</th>
-                <th>Marge Brute</th>
-                <th>% Marge</th>
-                <th>Impayés</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let com of k.service_by_commercial">
-                <td>
-                  <div class="user-cell">
-                    <div class="avatar avatar--service">{{ com.commercial_name.charAt(0) | uppercase }}</div>
-                    <span class="user-name">{{ com.commercial_name }}</span>
-                  </div>
-                </td>
-                <td class="font-numeric">{{ com.total_orders }}</td>
-                <td class="font-numeric">{{ com.total_ca | number:'1.2-2' }} <small>DH</small></td>
-                <td class="font-numeric" [class.negative]="com.total_margin < 0">
-                  {{ com.total_margin | number:'1.2-2' }} <small>DH</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.margin_rate < 0">
-                  {{ com.margin_rate | number:'1.1-1' }}<small>%</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.total_unpaid > 0">
-                  {{ com.total_unpaid | number:'1.2-2' }} <small>DH</small>
-                </td>
-              </tr>
-              <tr *ngIf="k.service_by_commercial.length === 0">
-                <td colspan="6" class="empty-row">Aucun ordre de service ce mois-ci</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Cette année -->
-      <div class="kpi-group-header">
-        <h4 class="kpi-group-title"><app-icon name="kpi" /> Cette année</h4>
-        <label class="kpi-filter" for="dashboard-year-filter">
-          <span class="kpi-filter-label">Année</span>
-          <select
-            id="dashboard-year-filter"
-            class="kpi-filter-control"
-            [value]="selectedYear()"
-            (change)="onYearChange($any($event.target).value)"
-          >
-            <option *ngFor="let year of yearOptions()" [value]="year">{{ year }}</option>
-          </select>
-        </label>
-      </div>
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-icon"><app-icon name="cash" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">CA Année</span>
-            <span class="kpi-val">{{ k.total_sale_year | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_year > 0">
-              ≈ {{ (k.total_sale_year / k.tyres_year) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-          <div class="kpi-badges">
-            <div class="kpi-badge">{{ k.tyres_year }} Pneus vendus</div>
-            <div class="kpi-badge kpi-badge--parts" *ngIf="k.parts_year > 0">{{ k.parts_year }} Pièces vendues</div>
-          </div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon">🛒</div>
-          <div class="kpi-info">
-            <span class="kpi-label">Achats</span>
-            <span class="kpi-val">{{ k.total_purchase_year | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_purchased_year > 0">
-              ≈ {{ (k.total_purchase_year / k.tyres_purchased_year) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-          <div class="kpi-badges">
-            <div class="kpi-badge">{{ k.tyres_purchased_year }} Pneus achetés</div>
-            <div class="kpi-badge kpi-badge--parts" *ngIf="k.parts_purchased_year > 0">{{ k.parts_purchased_year }} Pièces achetées</div>
-          </div>
-        </div>
-        <div class="kpi-card warning-card">
-          <div class="kpi-icon">💸</div>
-          <div class="kpi-info">
-            <span class="kpi-label">Dépenses</span>
-            <span class="kpi-val">{{ k.expenses_year | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_year > 0">
-              ≈ {{ (k.expenses_year / k.tyres_year) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon">🪙</div>
-          <div class="kpi-info">
-            <span class="kpi-label">Autres revenus</span>
-            <span class="kpi-val">{{ k.other_revenue_year | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-        </div>
-        <div class="kpi-card" [class.negative-card]="k.margin_year < 0">
-          <div class="kpi-icon"><app-icon name="kpi" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Marge Brute</span>
-            <span class="kpi-val">{{ k.margin_year | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_year > 0">
-              ≈ {{ (k.margin_year / k.tyres_year) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-        </div>
-        <div class="kpi-card" [class.negative-card]="k.net_margin_year < 0">
-          <div class="kpi-icon">📉</div>
-          <div class="kpi-info">
-            <span class="kpi-label">Marge Nette</span>
-            <span class="kpi-val">{{ k.net_margin_year | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_year > 0">
-              ≈ {{ (k.net_margin_year / k.tyres_year) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Performances Ventes par année -->
-      <div class="commercials-section">
-        <h3 class="section-title"><app-icon name="sales" /> Ventes — Performances — {{ selectedYear() }}</h3>
-        <div class="modern-table-container">
-          <table class="modern-table">
-            <thead>
-              <tr>
-                <th>Commercial</th>
-                <th>Pneus Vendus</th>
-                <th>Chiffre d'Affaires</th>
-                <th>Marge Brute</th>
-                <th>Marge / Pneu</th>
-                <th>% Marge</th>
-                <th>Impayés</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let com of k.sales_by_commercial_year">
-                <td>
-                  <div class="user-cell">
-                    <div class="avatar">{{ com.commercial_name.charAt(0) | uppercase }}</div>
-                    <span class="user-name">{{ com.commercial_name }}</span>
-                  </div>
-                </td>
-                <td class="font-numeric">{{ com.total_tyres }}</td>
-                <td class="font-numeric">{{ com.total_sales | number:'1.2-2' }} <small>DH</small></td>
-                <td class="font-numeric" [class.negative]="com.total_margin < 0">
-                  {{ com.total_margin | number:'1.2-2' }} <small>DH</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.avg_margin_per_tyre < 0">
-                  {{ com.avg_margin_per_tyre | number:'1.2-2' }} <small>DH</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.margin_rate < 0">
-                  {{ com.margin_rate | number:'1.1-1' }}<small>%</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.total_unpaid > 0">
-                  {{ com.total_unpaid | number:'1.2-2' }} <small>DH</small>
-                </td>
-              </tr>
-              <tr *ngIf="k.sales_by_commercial_year.length === 0">
-                <td colspan="7" class="empty-row">Aucune vente cette année</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Performances Service Auto par année -->
-      <div class="commercials-section">
-        <h3 class="section-title section-title--service"><app-icon name="service" /> Service Auto — Performances — {{ selectedYear() }}</h3>
-        <div class="modern-table-container">
-          <table class="modern-table">
-            <thead>
-              <tr>
-                <th>Commercial</th>
-                <th>Ordres</th>
-                <th>Chiffre d'Affaires</th>
-                <th>Marge Brute</th>
-                <th>% Marge</th>
-                <th>Impayés</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let com of k.service_by_commercial_year">
-                <td>
-                  <div class="user-cell">
-                    <div class="avatar avatar--service">{{ com.commercial_name.charAt(0) | uppercase }}</div>
-                    <span class="user-name">{{ com.commercial_name }}</span>
-                  </div>
-                </td>
-                <td class="font-numeric">{{ com.total_orders }}</td>
-                <td class="font-numeric">{{ com.total_ca | number:'1.2-2' }} <small>DH</small></td>
-                <td class="font-numeric" [class.negative]="com.total_margin < 0">
-                  {{ com.total_margin | number:'1.2-2' }} <small>DH</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.margin_rate < 0">
-                  {{ com.margin_rate | number:'1.1-1' }}<small>%</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.total_unpaid > 0">
-                  {{ com.total_unpaid | number:'1.2-2' }} <small>DH</small>
-                </td>
-              </tr>
-              <tr *ngIf="k.service_by_commercial_year.length === 0">
-                <td colspan="6" class="empty-row">Aucun ordre de service cette année</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Général -->
-      <h4 class="kpi-group-title"><app-icon name="finance" /> Général</h4>
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-icon"><app-icon name="purchases" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Valeur du Stock</span>
-            <span class="kpi-val">{{ k.stock_value | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-          <div class="kpi-badge">{{ k.stock_quantity }} Qté en stock</div>
-        </div>
-        <div class="kpi-card" [class.negative-card]="k.cash_balance < 0">
-          <div class="kpi-icon">💵</div>
-          <div class="kpi-info">
-            <span class="kpi-label">Solde de Caisse</span>
-            <span class="kpi-val">{{ k.cash_balance | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-        </div>
-        <div class="kpi-card warning-card">
-          <div class="kpi-icon"><app-icon name="pending" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Impayés Clients</span>
-            <span class="kpi-val">{{ k.unpaid_sales | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-        </div>
-        <div class="kpi-card warning-card">
-          <div class="kpi-icon"><app-icon name="warning" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Reste à payer (Frs)</span>
-            <span class="kpi-val">{{ k.unpaid_purchases | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-        </div>
-      </div>
-
+    <div class="actions">
+      <app-auto-refresh-control pageKey="dashboard" (refresh)="loadQueues()" />
     </div>
+  </div>
 
-    <div class="quick-links">
-      <a routerLink="/sales" class="quick-link-card" id="link-sales" *ngIf="authService.hasPermission('view sales')">
-        <span class="ql-icon"><app-icon name="sales" /></span>
-        <div class="ql-text">
-          <span class="ql-title">Ventes</span>
-          <span class="ql-desc">Gérer les ventes et marges</span>
-        </div>
-        <span class="ql-arrow">→</span>
-      </a>
+  <app-error-banner
+    *ngIf="loadError()"
+    title="Impossible de charger vos files de travail"
+    [detail]="loadError()"
+    (retry)="loadQueues()" />
 
-      <a routerLink="/suppliers" class="quick-link-card" id="link-suppliers" *ngIf="authService.hasPermission('view suppliers')">
-        <span class="ql-icon"><app-icon name="supplier" /></span>
-        <div class="ql-text">
-          <span class="ql-title">Fournisseurs</span>
-          <span class="ql-desc">Gérer les fournisseurs</span>
-        </div>
-        <span class="ql-arrow">→</span>
-      </a>
+  <div class="queues">
 
-      <a routerLink="/users" class="quick-link-card" id="link-users" *ngIf="authService.hasPermission('view users')">
-        <span class="ql-icon"><app-icon name="users" /></span>
-        <div class="ql-text">
-          <span class="ql-title">Utilisateurs</span>
-          <span class="ql-desc">Gérer les utilisateurs</span>
+    <!-- ── Impayés à relancer ─────────────────────────────────────────── -->
+    <section class="queue queue--alert" *ngIf="queues().unpaid as unpaid">
+      <header class="queue-head">
+        <div class="queue-title">
+          <app-icon name="pending" [size]="18" />
+          <h2>Impayés à relancer</h2>
+          <span class="queue-count">{{ unpaid.count }}</span>
         </div>
-        <span class="ql-arrow">→</span>
-      </a>
+        <span class="queue-scope">{{ scopeLabel(unpaid.scope) }}</span>
+      </header>
 
-      <a routerLink="/achats" class="quick-link-card" id="link-purchases" *ngIf="authService.hasPermission('view purchases')">
-        <span class="ql-icon"><app-icon name="purchases" /></span>
-        <div class="ql-text">
-          <span class="ql-title">Achats</span>
-          <span class="ql-desc">Gérer les achats</span>
-        </div>
-        <span class="ql-arrow">→</span>
-      </a>
+      <app-empty-state
+        *ngIf="!loading() && unpaid.rows.length === 0"
+        icon="check"
+        title="Aucun impayé"
+        message="Rien à relancer sur votre périmètre." />
 
-      <a routerLink="/cash-flow" class="quick-link-card" id="link-cash-flow" *ngIf="authService.hasPermission('view cash-flow')">
-        <span class="ql-icon"><app-icon name="cash" /></span>
-        <div class="ql-text">
-          <span class="ql-title">Cash Flow</span>
-          <span class="ql-desc">Revenus, dépenses et solde</span>
-        </div>
-        <span class="ql-arrow">→</span>
-      </a>
+      <ul class="queue-rows" *ngIf="unpaid.rows.length">
+        <li class="queue-row" *ngFor="let row of unpaid.rows">
+          <div class="row-main">
+            <span class="row-title">{{ row.client || 'Client non lié' }}</span>
+            <span class="row-meta">
+              Vente n° {{ row.id }} · {{ row.date | date:'dd/MM/yyyy' }}
+              <ng-container *ngIf="row.commercial && unpaid.scope === 'all'"> · {{ row.commercial }}</ng-container>
+              <span class="row-overdue" *ngIf="isOverdue(row.date)">en retard</span>
+            </span>
+          </div>
+          <span class="row-amount">{{ row.amount | number:'1.2-2' }} DH</span>
+          <button type="button" class="btn btn-primary btn-sm" (click)="openSale(row.id)">Encaisser</button>
+        </li>
+      </ul>
 
-      <a routerLink="/products" class="quick-link-card" id="link-products" *ngIf="authService.hasPermission('view products')">
-        <span class="ql-icon"><app-icon name="stock" /></span>
-        <div class="ql-text">
-          <span class="ql-title">Produits</span>
-          <span class="ql-desc">Catalogue des pneus</span>
-        </div>
-        <span class="ql-arrow">→</span>
-      </a>
+      <p class="queue-more" *ngIf="unpaid.count > unpaid.rows.length">
+        et {{ unpaid.count - unpaid.rows.length }} autre{{ unpaid.count - unpaid.rows.length > 1 ? 's' : '' }}
+      </p>
+    </section>
 
-      <a routerLink="/stock" class="quick-link-card" id="link-stock" *ngIf="authService.hasPermission('view stock')">
-        <span class="ql-icon"><app-icon name="inventory" /></span>
-        <div class="ql-text">
-          <span class="ql-title">Inventaire</span>
-          <span class="ql-desc">Stock des pneus</span>
+    <!-- ── Ordres terminés à facturer ─────────────────────────────────── -->
+    <section class="queue" *ngIf="queues().to_invoice as toInvoice">
+      <header class="queue-head">
+        <div class="queue-title">
+          <app-icon name="service" [size]="18" />
+          <h2>Ordres terminés à facturer</h2>
+          <span class="queue-count">{{ toInvoice.count }}</span>
         </div>
-        <span class="ql-arrow">→</span>
-      </a>
+        <span class="queue-scope">{{ scopeLabel(toInvoice.scope) }}</span>
+      </header>
 
-      <a routerLink="/brands" class="quick-link-card" id="link-brands" *ngIf="authService.hasPermission('view brands')">
-        <span class="ql-icon"><app-icon name="brands" /></span>
-        <div class="ql-text">
-          <span class="ql-title">Marques</span>
-          <span class="ql-desc">Gérer les marques de pneus</span>
-        </div>
-        <span class="ql-arrow">→</span>
-      </a>
+      <app-empty-state
+        *ngIf="!loading() && toInvoice.rows.length === 0"
+        icon="check"
+        title="Aucun ordre en attente"
+        message="Tout ce qui est terminé a été facturé." />
 
-      <a routerLink="/roles" class="quick-link-card" id="link-roles" *ngIf="authService.hasPermission('view roles')">
-        <span class="ql-icon"><app-icon name="roles" /></span>
-        <div class="ql-text">
-          <span class="ql-title">Rôles</span>
-          <span class="ql-desc">Gérer les rôles et permissions</span>
-        </div>
-        <span class="ql-arrow">→</span>
-      </a>
-    </div>
-  </main>
+      <ul class="queue-rows" *ngIf="toInvoice.rows.length">
+        <li class="queue-row" *ngFor="let row of toInvoice.rows">
+          <div class="row-main">
+            <span class="row-title">{{ row.vehicle || 'Véhicule non renseigné' }}</span>
+            <span class="row-meta">
+              Ordre n° {{ row.id }} · {{ row.date | date:'dd/MM/yyyy' }}
+              <ng-container *ngIf="row.commercial && toInvoice.scope === 'all'"> · {{ row.commercial }}</ng-container>
+              <span class="row-overdue" *ngIf="isOverdue(row.date, 7)">en retard</span>
+            </span>
+          </div>
+          <span class="row-amount">{{ row.amount | number:'1.2-2' }} DH</span>
+          <button type="button" class="btn btn-primary btn-sm" (click)="openServiceOrder(row.id)">Facturer</button>
+        </li>
+      </ul>
+
+      <p class="queue-more" *ngIf="toInvoice.count > toInvoice.rows.length">
+        et {{ toInvoice.count - toInvoice.rows.length }} autre{{ toInvoice.count - toInvoice.rows.length > 1 ? 's' : '' }}
+      </p>
+    </section>
+
+    <app-empty-state
+      *ngIf="!loading() && !hasAnyQueue() && !loadError()"
+      icon="home"
+      title="Aucune file de travail"
+      message="Votre compte n'a accès à aucune des files de l'accueil. Voyez avec un administrateur si ce n'est pas attendu." />
+  </div>
 </div>
