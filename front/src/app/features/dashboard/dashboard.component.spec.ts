@@ -92,6 +92,91 @@ describe('DashboardComponent — liste de travail (5a/5b)', () => {
     });
   });
 
+  describe('colonne des chiffres (5a/5b)', () => {
+    const figures = (over: Record<string, unknown> = {}) => ({
+      scope: 'own',
+      today: { sales: 2, revenue: 4800 },
+      month: { revenue: 113545, margin: 12842 },
+      ranking: [],
+      trend: [],
+      ...over,
+    });
+
+    it("n'affiche pas de chiffres quand le serveur n'en renvoie pas", () => {
+      getWorkQueues.mockReturnValue(of({ unpaid: { scope: 'own', count: 0, rows: [] } }));
+      comp = build();
+      comp.ngOnInit();
+
+      expect(comp.figures()).toBeNull();
+      expect(comp.isAgencyScope()).toBe(false);
+    });
+
+    // La portee vient du serveur : le front ne la deduit pas d'une permission
+    // locale, il rapporte ce que la requete a reellement filtre.
+    it('reserve la portee agence a ce que le serveur a rapporte', () => {
+      getWorkQueues.mockReturnValue(of({ figures: figures({ scope: 'all' }) }));
+      comp = build();
+      comp.ngOnInit();
+
+      expect(comp.isAgencyScope()).toBe(true);
+    });
+
+    it('ne compte pas les chiffres comme des lignes en attente', () => {
+      getWorkQueues.mockReturnValue(of({ figures: figures() }));
+      comp = build();
+      comp.ngOnInit();
+
+      expect(comp.pendingTotal()).toBe(0);
+      expect(comp.hasAnyQueue()).toBe(false);
+    });
+
+    it('dimensionne les barres du classement sur le meilleur CA', () => {
+      getWorkQueues.mockReturnValue(of({
+        figures: figures({
+          scope: 'all',
+          ranking: [
+            { id: 1, name: 'Azeddine', revenue: 80000, unpaid: 40000 },
+            { id: 2, name: 'Ahmed', revenue: 20000, unpaid: 0 },
+          ],
+        }),
+      }));
+      comp = build();
+      comp.ngOnInit();
+
+      expect(comp.rankingPct(80000)).toBe(100);
+      expect(comp.rankingPct(20000)).toBe(25);
+      // L'impaye se lit sur la meme echelle que le CA, sinon la barre ment.
+      expect(comp.rankingPct(40000)).toBe(50);
+    });
+
+    it('ne divise pas par zero quand personne n a vendu', () => {
+      getWorkQueues.mockReturnValue(of({
+        figures: figures({ scope: 'all', ranking: [{ id: 1, name: 'Azeddine', revenue: 0, unpaid: 0 }] }),
+      }));
+      comp = build();
+      comp.ngOnInit();
+
+      expect(comp.rankingPct(0)).toBe(0);
+    });
+
+    it('trace la tendance des trente jours', () => {
+      getWorkQueues.mockReturnValue(of({
+        figures: figures({
+          scope: 'all',
+          trend: [
+            { date: '2026-09-01', revenue: 1000 },
+            { date: '2026-09-02', revenue: 3000 },
+          ],
+        }),
+      }));
+      comp = build();
+      comp.ngOnInit();
+
+      expect(comp.trendPolyline()).toContain(' ');
+      expect(comp.trendPolyline().split(' ')).toHaveLength(2);
+    });
+  });
+
   it('expose le detail technique quand le chargement echoue', () => {
     getWorkQueues.mockReturnValue(throwError(() => ({ url: '/api/work-queues', status: 503 })));
     comp = build();

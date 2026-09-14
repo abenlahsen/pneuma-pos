@@ -5,6 +5,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { DashboardService } from '../../core/services/dashboard.service';
 import { User } from '../../core/models/auth.model';
 import { QueueScope, WorkQueues } from '../../core/models/work-queue.model';
+import { buildBalanceCurve } from '../cash-flow/pages/balance-curve';
 import { AutoRefreshControlComponent } from '../../shared/auto-refresh-control/auto-refresh-control.component';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
@@ -43,6 +44,29 @@ export class DashboardComponent implements OnInit {
   readonly hasAnyQueue = computed(() => {
     const q = this.queues();
     return !!q.unpaid || !!q.to_invoice;
+  });
+
+  // ── Colonne laterale (5a/5b) ────────────────────────────────────────────
+  readonly figures = computed(() => this.queues().figures ?? null);
+
+  /** Le gerant gagne la tendance et le classement ; le commercial ses chiffres. */
+  readonly isAgencyScope = computed(() => this.figures()?.scope === 'all');
+
+  /** Part du CA du meilleur, pour dimensionner les barres du classement. */
+  readonly rankingMax = computed(() => {
+    const rows = this.figures()?.ranking ?? [];
+    return rows.length ? Math.max(...rows.map((r) => r.revenue)) : 0;
+  });
+
+  rankingPct(value: number): number {
+    const max = this.rankingMax();
+    return max === 0 ? 0 : Math.round((value / max) * 1000) / 10;
+  }
+
+  /** Tendance 30 jours, tracee par la meme fonction que la courbe de solde. */
+  readonly trendPolyline = computed(() => {
+    const points = (this.figures()?.trend ?? []).map((p) => ({ date: p.date, balance: p.revenue }));
+    return buildBalanceCurve.toSvg(points, 300, 60).polyline;
   });
 
   ngOnInit(): void {

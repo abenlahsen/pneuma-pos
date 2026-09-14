@@ -22,6 +22,10 @@
     [detail]="loadError()"
     (retry)="loadQueues()" />
 
+  <!-- Deux colonnes (5a/5b) : les files a gauche, les chiffres a droite.
+       300 px pour un commercial, 340 px pour un gerant — il y gagne la
+       tendance et le classement nominatif. -->
+  <div class="home-layout" [class.home-layout--agency]="isAgencyScope()">
   <div class="queues">
 
     <!-- ── Impayés à relancer ─────────────────────────────────────────── -->
@@ -104,4 +108,50 @@
       title="Aucune file de travail"
       message="Votre compte n'a accès à aucune des files de l'accueil. Voyez avec un administrateur si ce n'est pas attendu." />
   </div>
+
+  <!-- Colonne des chiffres -->
+  <aside class="home-figures" *ngIf="figures() as f">
+    <section class="figure-card">
+      <span class="figure-label">
+        {{ isAgencyScope() ? 'Agence · aujourd’hui' : 'Mes chiffres · aujourd’hui' }}
+      </span>
+      <span class="figure-value">{{ f.today.revenue | number:'1.2-2' }}<span class="figure-unit"> DH</span></span>
+      <span class="figure-note">
+        {{ f.today.sales }} vente{{ f.today.sales > 1 ? 's' : '' }} depuis ce matin
+      </span>
+    </section>
+
+    <section class="figure-card">
+      <span class="figure-label">{{ isAgencyScope() ? 'CA du mois' : 'Mon mois' }}</span>
+      <span class="figure-value">{{ f.month.revenue | number:'1.2-2' }}<span class="figure-unit"> DH</span></span>
+      <span class="figure-note">Marge {{ f.month.margin | number:'1.2-2' }} DH</span>
+    </section>
+
+    <!-- Tendance : reservee a la portee agence. -->
+    <section class="figure-card" *ngIf="isAgencyScope() && f.trend.length > 1">
+      <span class="figure-label">30 derniers jours</span>
+      <svg class="trend-svg" viewBox="0 0 300 60" preserveAspectRatio="none" role="img"
+           aria-label="Chiffre d’affaires quotidien sur trente jours">
+        <polyline [attr.points]="trendPolyline()" fill="none" stroke="currentColor" stroke-width="2"
+                  vector-effect="non-scaling-stroke" />
+      </svg>
+    </section>
+
+    <!-- Classement nominatif : un commercial ne classe pas ses collegues. -->
+    <section class="figure-card" *ngIf="isAgencyScope() && f.ranking.length">
+      <span class="figure-label">Classement du mois</span>
+      <div class="rank-row" *ngFor="let row of f.ranking">
+        <span class="rank-name">{{ row.name }}</span>
+        <div class="rank-bar">
+          <span class="rank-fill" [style.width.%]="rankingPct(row.revenue)"></span>
+          <!-- L'impaye en fin de barre : un CA eleve avec un impaye eleve
+               n'est pas une performance. -->
+          <span class="rank-unpaid" *ngIf="row.unpaid > 0" [style.width.%]="rankingPct(row.unpaid)"></span>
+        </div>
+        <span class="rank-value">{{ row.revenue | number:'1.0-0' }} DH</span>
+        <span class="rank-note" *ngIf="row.unpaid > 0">dont {{ row.unpaid | number:'1.0-0' }} impayé</span>
+      </div>
+    </section>
+  </aside>
+  </div><!-- /home-layout -->
 </div>

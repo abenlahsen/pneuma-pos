@@ -146,6 +146,7 @@ class RolesAndPermissionsSeeder extends Seeder
             // propres lignes. Accordees a Manager et Administrator seulement.
             'view unpaid.all',
             'view service-orders.all',
+            'view reporting.all',
         ];
 
         foreach ($permissions as $permission) {

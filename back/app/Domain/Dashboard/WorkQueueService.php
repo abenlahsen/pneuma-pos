@@ -6,6 +6,7 @@ use App\Models\Sale;
 use App\Models\ServiceOrder;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Files de travail de l'accueil (`5a`/`5b` du handoff).
@@ -36,7 +37,102 @@ class WorkQueueService
             $queues['to_invoice'] = $this->ordersToInvoice($user);
         }
 
+        if ($user->can('view sales')) {
+            $queues['figures'] = $this->figures($user);
+        }
+
         return $queues;
+    }
+
+    /**
+     * Colonne laterale (`5a`/`5b`) : « mes chiffres » ou ceux de l'agence.
+     *
+     * Meme regle de portee que les files, et pour la meme raison : un total
+     * d'agence permet de deduire les chiffres d'un collegue des qu'on connait
+     * les siens. Sans `view reporting.all`, tout est filtre sur commercial_id.
+     *
+     * @return array<string, mixed>
+     */
+    private function figures(User $user): array
+    {
+        $all = $user->can('view reporting.all');
+
+        $base = fn () => Sale::query()->whereNot('status', 'ANNULE')
+            ->when(! $all, fn (Builder $q) => $q->where('commercial_id', $user->id));
+
+        $today = (clone $base())->whereDate('date', today())
+            ->selectRaw('COUNT(*) AS sales, COALESCE(SUM(total_sale), 0) AS revenue')
+            ->first();
+
+        $month = (clone $base())->whereBetween('date', [today()->startOfMonth(), today()->endOfMonth()])
+            ->selectRaw('COALESCE(SUM(total_sale), 0) AS revenue, COALESCE(SUM(margin), 0) AS margin')
+            ->first();
+
+        return [
+            'scope' => $all ? 'all' : 'own',
+            'today' => [
+                'sales' => (int) $today->sales,
+                'revenue' => round((float) $today->revenue, 2),
+            ],
+            'month' => [
+                'revenue' => round((float) $month->revenue, 2),
+                'margin' => round((float) $month->margin, 2),
+            ],
+            // Le classement nominatif n'existe que pour le gerant : un
+            // commercial ne classe pas ses collegues.
+            'ranking' => $all ? $this->ranking() : [],
+            'trend' => $all ? $this->trend() : [],
+        ];
+    }
+
+    /**
+     * Classement par commercial, chacun avec son impaye : un CA eleve
+     * accompagne d'un impaye eleve n'est pas une performance.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function ranking(): array
+    {
+        return DB::table('sales')
+            ->join('users', 'users.id', '=', 'sales.commercial_id')
+            ->whereNot('sales.status', 'ANNULE')
+            ->whereBetween('sales.date', [today()->startOfMonth(), today()->endOfMonth()])
+            ->groupBy('users.id', 'users.name')
+            ->orderByDesc('revenue')
+            ->selectRaw("users.id, users.name,
+                COALESCE(SUM(sales.total_sale), 0) AS revenue,
+                COALESCE(SUM(CASE WHEN sales.payment_status <> 'PAYÉ' THEN sales.total_sale ELSE 0 END), 0) AS unpaid")
+            ->get()
+            ->map(fn ($row) => [
+                'id' => (int) $row->id,
+                'name' => $row->name,
+                'revenue' => round((float) $row->revenue, 2),
+                'unpaid' => round((float) $row->unpaid, 2),
+            ])
+            ->all();
+    }
+
+    /**
+     * Tendance : chiffre d'affaires quotidien sur 30 jours. Les jours sans
+     * vente sont absents — la courbe les traite comme des creux, pas comme
+     * des trous.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function trend(): array
+    {
+        return DB::table('sales')
+            ->whereNot('status', 'ANNULE')
+            ->where('date', '>=', today()->subDays(29))
+            ->groupBy('date')
+            ->orderBy('date')
+            ->selectRaw('date, COALESCE(SUM(total_sale), 0) AS revenue')
+            ->get()
+            ->map(fn ($row) => [
+                'date' => (string) $row->date,
+                'revenue' => round((float) $row->revenue, 2),
+            ])
+            ->all();
     }
 
     /**
