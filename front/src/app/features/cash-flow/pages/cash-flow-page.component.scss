@@ -168,6 +168,20 @@ $_border2:  #d0d9e4;
   padding-bottom: var(--sp-3);
 }
 
+/* Discrète : elle indique une possibilité, elle ne réclame rien. */
+.balance-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0 0 var(--sp-6);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px dashed var(--divider);
+  font-size: 13px;
+  color: var(--text-muted);
+
+  app-icon { flex-shrink: 0; }
+}
+
 .balance-svg {
   display: block;
   width: 100%;

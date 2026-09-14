@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { of, throwError } from 'rxjs';
 
@@ -345,5 +345,108 @@ describe('DashboardComponent — liste de travail (5a/5b)', () => {
     expect(comp.loadError()).toContain('/api/work-queues');
     expect(comp.loadError()).toContain('503');
     expect(comp.loading()).toBe(false);
+  });
+});
+
+/**
+ * Rendu reel du gabarit. La suite ci-dessus n'assène que des assertions de
+ * classe : elle passerait meme si le gabarit n'affichait rien. Ces tests-ci
+ * couvrent la portee commercial, qu'un compte administrateur ne montre jamais
+ * a l'ecran — il a `view reporting.all` et bascule toujours en portee agence.
+ */
+describe('DashboardComponent — rendu en portee commercial', () => {
+  let fixture: ComponentFixture<DashboardComponent>;
+  let text: string;
+
+  const commercialQueues = {
+    unpaid: {
+      scope: 'own', count: 2, total: 17110,
+      rows: [{ id: 85, date: '2026-09-01', client: 'ABDELLAH BAALIKI', phone: null, commercial: 'Mariem', amount: 1260, payment_status: 'NON PAYE' }],
+    },
+    to_invoice: { scope: 'own', count: 1, total: 6140, rows: [] },
+    low_stock: {
+      scope: 'shared', count: 6, total: null,
+      rows: [{ product_id: 3, reference: 'M120701251P-CG', dimension: '120/70R12', stock: 1, threshold: 5, stock_id: 3, unit_price: 450, supplier_id: null }],
+    },
+    figures: {
+      scope: 'own',
+      today: { sales: 2, revenue: 4800, margin: 900, open_orders: 3 },
+      month: { revenue: 340000, margin: 40000, agency_average: 355000, target: 400000 },
+      ranking: [],
+      trend: [],
+    },
+  };
+
+  beforeEach(async () => {
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [DashboardComponent],
+      providers: [
+        provideZonelessChangeDetection(),
+        { provide: DashboardService, useValue: { getWorkQueues: () => of(commercialQueues), getKpi: () => of({}) } },
+        { provide: AuthService, useValue: { user: () => ({ name: 'Omar' }), hasPermission: () => true } },
+        { provide: Router, useValue: { navigate: vi.fn() } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+    text = fixture.nativeElement.textContent ?? '';
+  });
+
+  it('porte le possessif dans les titres et nomme les clients dans les badges', () => {
+    expect(text).toContain('Mes impayés');
+    expect(text).toContain('Mes ordres à facturer');
+    expect(text).toContain('Mes clients');
+    expect(text).not.toContain('Toutes agences');
+  });
+
+  it('propose de relancer, pas d assigner', () => {
+    const boutons = [...fixture.nativeElement.querySelectorAll('.task button')].map((b: any) => b.textContent.trim());
+
+    expect(boutons).toContain('Relancer');
+    expect(boutons).not.toContain('Assigner');
+  });
+
+  it('affiche le compte et le montant de chaque file', () => {
+    const compteurs = [...fixture.nativeElement.querySelectorAll('.queue-count')].map((e: any) => e.textContent.replace(/\s+/g, ' ').trim());
+
+    expect(compteurs[0]).toContain('2');
+    expect(compteurs[0]).toContain('17,110');
+    // La file stock compte des articles : pas de montant.
+    expect(compteurs[2]).toBe('6');
+  });
+
+  // Un commercial ne classe pas ses collegues, et ne voit pas la tendance.
+  it('ne montre ni classement nominatif ni tendance', () => {
+    expect(fixture.nativeElement.querySelector('.rank')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.trend')).toBeNull();
+    expect(text).not.toContain('Classement du mois');
+  });
+
+  it('montre ses chiffres du jour en liste', () => {
+    const lignes = [...fixture.nativeElement.querySelectorAll('.side-row')].map((e: any) => e.textContent.replace(/\s+/g, ' ').trim());
+
+    expect(lignes).toHaveLength(4);
+    expect(lignes[0]).toContain('Chiffre d’affaires');
+    expect(lignes[3]).toContain('Ordres ouverts');
+  });
+
+  it('mesure son mois contre son objectif et le situe sans nommer personne', () => {
+    const barre = fixture.nativeElement.querySelector('.target-fill') as HTMLElement;
+
+    expect(barre).not.toBeNull();
+    expect(barre.style.width).toBe('85%');
+    expect(text).toContain('85 % de l’objectif mensuel');
+    expect(text).toContain('Moyenne agence');
+    expect(text).toContain('en dessous');
+    expect(text).not.toContain('Azeddine');
+  });
+
+  it('affiche l article sous seuil avec son stock et son seuil', () => {
+    expect(text).toContain('M120701251P-CG');
+    expect(text).toContain('120/70R12');
+    expect(text).toContain('seuil 5');
+    expect(fixture.nativeElement.querySelector('.t-stock-n').textContent.trim()).toBe('1');
   });
 });

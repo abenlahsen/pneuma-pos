@@ -244,6 +244,13 @@
   <!-- Courbe de solde quotidien (3g). En encre : une polyligne, pas d'aplat.
        Affichee seulement sur un compte donne — melanger deux comptes tracerait
        une ligne qui ne represente rien. -->
+  <!-- Sans compte choisi la courbe n'existe pas, et rien ne le disait : elle
+       etait introuvable. Cette ligne prend sa place et explique le geste. -->
+  <p class="balance-hint" *ngIf="!filterAccount()">
+    <app-icon name="finance" [size]="16" />
+    Choisissez un compte pour suivre l’évolution de son solde jour par jour.
+  </p>
+
   <div class="card balance-chart" *ngIf="balanceCurve().length > 1">
     <div class="section-header">
       <span class="section-title">Solde quotidien · {{ balanceCurve().length }} jours</span>

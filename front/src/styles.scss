@@ -48,7 +48,10 @@ button {
    Any modal can opt in by tagging its overlay with .print-overlay and its
    content with .print-area. ---- */
 @media print {
-  body * {
+  /* Conditionne tout le bloc a la presence d'une zone d'impression. Sans ce
+     garde-fou, `body *` masquait aussi les pages qui s'impriment en entier —
+     « Exporter PDF » du Reporting sortait une feuille blanche. */
+  body:has(.print-area) * {
     display: none !important;
   }
   body :has(.print-area),
