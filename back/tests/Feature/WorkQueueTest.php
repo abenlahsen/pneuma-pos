@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\CompanySetting;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Enums\ServiceOrderStatus;
 use App\Models\ServiceOrder;
 use App\Models\Stock;
 use App\Models\User;
@@ -209,7 +210,7 @@ class WorkQueueTest extends TestCase
             'total_amount' => 500,
             'discount' => 0,
             'net_amount' => 500,
-            'status' => 'TERMINÉE',
+            'status' => ServiceOrderStatus::TERMINE->value,
             'payment_status' => 'NON PAYE',
             'commercial_id' => $commercial->id,
             'created_by' => $commercial->id,
@@ -221,7 +222,7 @@ class WorkQueueTest extends TestCase
             'total_amount' => 700,
             'discount' => 0,
             'net_amount' => 700,
-            'status' => 'TERMINÉE',
+            'status' => ServiceOrderStatus::TERMINE->value,
             'payment_status' => 'NON PAYE',
             'commercial_id' => $colleague->id,
             'created_by' => $colleague->id,

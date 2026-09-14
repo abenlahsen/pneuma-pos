@@ -2,6 +2,7 @@
 
 namespace App\Domain\Dashboard;
 
+use App\Enums\ServiceOrderStatus;
 use App\Models\CompanySetting;
 use App\Models\Product;
 use App\Models\Sale;
@@ -343,7 +344,9 @@ class WorkQueueService
 
         $query = ServiceOrder::query()
             ->with(['commercial:id,name'])
-            ->where('status', 'TERMINÉE')
+            // `TERMINE` sans accent : c'est la valeur de `ServiceOrderStatus`,
+            // pas celle annoncee par le CLAUDE.md du depot, qui est perimee.
+            ->where('status', ServiceOrderStatus::TERMINE->value)
             ->whereNot('payment_status', 'PAYE');
 
         $this->scope($query, $user, $all);
