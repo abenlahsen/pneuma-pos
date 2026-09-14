@@ -68,6 +68,17 @@ export class CompanySettingsPageComponent implements OnInit {
     prime_threshold: 0,
   });
 
+  // ── Sections des reglages (3j) ──────────────────────────────────────────
+  // Une navigation laterale plutot qu'un formulaire de 485 lignes a derouler :
+  // on ne cherche pas « le champ ICE » en scrollant, on va a « Societe ».
+  readonly sections = [
+    { id: 'company' as const, label: 'Société', icon: 'supplier', hint: 'Identité, adresse, identifiants légaux' },
+    { id: 'theme' as const, label: 'Thème', icon: 'settings', hint: 'Mode d’affichage et couleurs' },
+    { id: 'primes' as const, label: 'Primes', icon: 'bonus', hint: 'Objectif mensuel de pneus' },
+  ];
+
+  readonly activeSection = signal<'company' | 'theme' | 'primes'>('company');
+
   loading = signal(false);
   saving = signal(false);
   errorMessage = signal('');

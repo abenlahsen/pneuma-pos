@@ -669,3 +669,83 @@ $_radius-lg: 14px;
     width: 100%;
   }
 }
+
+/* ─── Reglages : navigation laterale de sections (3j) ──────────────────────
+   Le formulaire est borne a 720 px : au-dela, l'oeil perd la colonne. */
+
+.settings-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: var(--sp-6);
+  align-items: start;
+}
+
+.settings-nav {
+  position: sticky;
+  top: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 2px solid var(--text);
+  border-radius: var(--radius-lg);
+  background: var(--text);
+  overflow: hidden;
+}
+
+.settings-nav-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: 'icon label' '. hint';
+  gap: 2px var(--sp-2);
+  padding: 11px 14px;
+  border: none;
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: background 0.12s, color 0.12s;
+
+  app-icon { grid-area: icon; align-self: center; }
+
+  .nav-label {
+    grid-area: label;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .nav-hint {
+    grid-area: hint;
+    font-size: 11px;
+    line-height: 1.35;
+    color: var(--text-muted);
+  }
+
+  &:hover { background: var(--neutral-100); }
+
+  &.active {
+    background: var(--accent-100);
+    box-shadow: inset 3px 0 0 var(--accent);
+
+    .nav-label { color: var(--accent-700); }
+  }
+}
+
+.settings-panel {
+  min-width: 0;
+  max-width: 720px;
+}
+
+@media (max-width: 900px) {
+  .settings-layout { grid-template-columns: minmax(0, 1fr); }
+
+  .settings-nav {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+
+    .nav-hint { display: none; }
+  }
+
+  .settings-nav-item { flex: 1; min-width: 120px; }
+}

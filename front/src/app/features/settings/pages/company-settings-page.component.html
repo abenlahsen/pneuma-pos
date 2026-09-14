@@ -28,6 +28,25 @@
         <div class="alert alert-success" *ngIf="successMessage()">{{ successMessage() }}</div>
 
         <form class="settings-form" (ngSubmit)="save()">
+         <!-- Navigation laterale de sections (3j) : on va a la section, on ne
+              deroule pas 485 lignes de formulaire. -->
+         <div class="settings-layout">
+          <nav class="settings-nav" aria-label="Sections des réglages">
+            <button
+              type="button"
+              class="settings-nav-item"
+              *ngFor="let section of sections"
+              [class.active]="activeSection() === section.id"
+              (click)="activeSection.set(section.id)"
+            >
+              <app-icon [name]="section.icon" [size]="16" />
+              <span class="nav-label">{{ section.label }}</span>
+              <span class="nav-hint">{{ section.hint }}</span>
+            </button>
+          </nav>
+
+          <div class="settings-panel">
+           <div class="company-section" *ngIf="activeSection() === 'company'">
           <div class="media-grid">
             <div class="media-card">
               <div class="media-card__header">
@@ -255,7 +274,9 @@
             </div>
           </div>
 
-          <div class="theme-section">
+           </div><!-- /company-section -->
+
+           <div class="theme-section" *ngIf="activeSection() === 'theme'">
             <div class="section-header section-header--split">
               <div>
                 <h2>Thème de l'application</h2>
@@ -448,7 +469,7 @@
             </div>
           </div>
 
-          <div class="primes-section">
+           <div class="primes-section" *ngIf="activeSection() === 'primes'">
             <div class="section-header">
               <div>
                 <h2>Primes commerciaux</h2>
@@ -473,6 +494,9 @@
               </div>
             </div>
           </div>
+
+          </div><!-- /settings-panel -->
+         </div><!-- /settings-layout -->
 
           <div class="form-actions">
             <button class="btn btn-primary" type="submit" [disabled]="saving() || loading()">
