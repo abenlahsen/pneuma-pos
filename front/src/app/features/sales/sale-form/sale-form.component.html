@@ -385,35 +385,41 @@
 
   </div><!-- /sale-main -->
 
+  <!-- Colonne de droite (`2b`) : le récapitulatif ne défile pas, et il porte
+       les deux boutons de conclusion. On ne perd jamais le total de vue. -->
   <aside class="sale-recap">
-  <div class="form-section recap-card">
-    <h3 class="section-title">Récapitulatif</h3>
-    <div class="totals-preview">
-      <div class="total-item">
-        <span class="label">Total Articles:</span>
-        <span class="value">{{ formData.total_quantity }}</span>
+    <div class="recap-card">
+      <span class="recap-title">Récapitulatif</span>
+
+      <div class="recap-lines">
+        <span class="recap-line">
+          <span>Articles</span><span class="recap-n">{{ formData.total_quantity }}</span>
+        </span>
+        <span class="recap-line">
+          <span>Total achat</span><span class="recap-n">{{ formData.total_purchase | number:'1.2-2' }} DH</span>
+        </span>
+        <span class="recap-line">
+          <span>Marge nette</span>
+          <span class="recap-n" [class.negative]="(formData.margin || 0) < 0">{{ formData.margin | number:'1.2-2' }} DH</span>
+        </span>
       </div>
-      <div class="total-item">
-        <span class="label">Total Achat:</span>
-        <span class="value">{{ formData.total_purchase | number:'1.2-2' }} DH</span>
+
+      <!-- Le total se detache sur un filet d'encre : c'est le chiffre qu'on
+           annonce au client. -->
+      <div class="recap-total">
+        <span class="recap-total-label">Total vente</span>
+        <span class="recap-total-value">{{ formData.total_sale | number:'1.2-2' }}<small> DH</small></span>
       </div>
-      <div class="total-item">
-        <span class="label">Total Vente:</span>
-        <span class="value">{{ formData.total_sale | number:'1.2-2' }} DH</span>
-      </div>
-      <div class="summary-item total-margin">
-        <span class="label">Marge Nette:</span>
-        <span class="value" [class.negative]="(formData.margin || 0) < 0">{{ formData.margin | number:'1.2-2' }} DH</span>
+
+      <div class="recap-actions">
+        <button type="submit" class="btn btn-primary recap-btn"
+                [disabled]="!form.valid || !formData.items || formData.items.length === 0">Valider la vente</button>
+        <button type="button" class="btn btn-secondary recap-btn" (click)="cancel.emit(); cancelled.emit()">Annuler</button>
       </div>
     </div>
-  </div>
   </aside>
  </div><!-- /sale-layout -->
 
-  <div class="form-actions mt-4 text-right">
-    <button type="button" class="btn btn-secondary mr-2" (click)="cancel.emit(); cancelled.emit()">Annuler</button>
-    <button type="submit" class="btn btn-primary" [disabled]="!form.valid || !formData.items || formData.items.length === 0">Enregistrer</button>
-  </div>
 </form>
 
 <app-product-detail
