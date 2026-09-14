@@ -125,6 +125,15 @@
       <span class="figure-label">{{ isAgencyScope() ? 'CA du mois' : 'Mon mois' }}</span>
       <span class="figure-value">{{ f.month.revenue | number:'1.2-2' }}<span class="figure-unit"> DH</span></span>
       <span class="figure-note">Marge {{ f.month.margin | number:'1.2-2' }} DH</span>
+
+      <!-- Se situer sans voir personne : la moyenne par commercial, jamais un
+           nom. Absente quand elle laisserait deduire le chiffre d'un collegue. -->
+      <span class="figure-note figure-compare" *ngIf="f.month.agency_average as avg">
+        Moyenne agence {{ avg | number:'1.0-0' }} DH ·
+        <span [class.above]="f.month.revenue >= avg">
+          {{ f.month.revenue >= avg ? 'au-dessus' : 'en dessous' }}
+        </span>
+      </span>
     </section>
 
     <!-- Tendance : reservee a la portee agence. -->

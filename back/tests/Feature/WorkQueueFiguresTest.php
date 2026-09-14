@@ -91,6 +91,76 @@ class WorkQueueFiguresTest extends TestCase
         $this->assertSame(1, $response->json('figures.today.sales'));
     }
 
+    /**
+     * Le commercial se situe sans voir personne : la moyenne par commercial
+     * lui dit s'il est au-dessus ou en dessous, sans nommer qui que ce soit
+     * (tableau de portee du README, ligne « Chiffres lateraux »).
+     */
+    public function test_a_commercial_gets_the_agency_average_alongside_his_own(): void
+    {
+        $others = [];
+        foreach (['A', 'B'] as $name) {
+            $others[] = User::query()->create([
+                'name' => 'Collegue '.$name,
+                'email' => fake()->unique()->safeEmail(),
+                'password' => 'password',
+                'phone' => '0600000001',
+                'commission_rate' => 0,
+                'must_change_password' => false,
+            ]);
+        }
+
+        $commercial = $this->makeUser(['view sales']);
+
+        $this->sale($commercial, now()->toDateString(), 1000);
+        $this->sale($others[0], now()->toDateString(), 5000);
+        $this->sale($others[1], now()->toDateString(), 3000);
+
+        $response = $this->getJson('/api/work-queues');
+
+        // 9 000 sur trois commerciaux : il sait qu'il est sous la moyenne.
+        $response->assertOk()->assertJsonPath('figures.scope', 'own');
+        $this->assertEqualsWithDelta(3000, $response->json('figures.month.agency_average'), 0.01);
+    }
+
+    /**
+     * A deux commerciaux, moyenne + ses propres chiffres = le chiffre exact du
+     * collegue. On la supprime : le but est de se situer, pas de deduire.
+     */
+    public function test_the_agency_average_is_withheld_when_it_would_expose_a_colleague(): void
+    {
+        $colleague = User::query()->create([
+            'name' => 'Collegue seul',
+            'email' => fake()->unique()->safeEmail(),
+            'password' => 'password',
+            'phone' => '0600000002',
+            'commission_rate' => 0,
+            'must_change_password' => false,
+        ]);
+
+        $commercial = $this->makeUser(['view sales']);
+
+        $this->sale($commercial, now()->toDateString(), 1000);
+        $this->sale($colleague, now()->toDateString(), 5000);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $response->assertOk();
+        $this->assertNull($response->json('figures.month.agency_average'));
+    }
+
+    /** Le gerant voit le nominatif : la moyenne ne lui apprend rien. */
+    public function test_the_agency_average_is_absent_from_the_agency_scope(): void
+    {
+        $manager = $this->makeUser(['view sales', 'view reporting.all']);
+        $this->sale($manager, now()->toDateString(), 1000);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $response->assertOk()->assertJsonPath('figures.scope', 'all');
+        $this->assertNull($response->json('figures.month.agency_average'));
+    }
+
     public function test_a_manager_gets_the_agency_figures(): void
     {
         $colleague = User::query()->create([

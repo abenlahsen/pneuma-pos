@@ -258,6 +258,12 @@
   color: var(--text-muted);
 }
 
+/* Etre sous la moyenne se lit sans lire le chiffre. */
+.figure-compare {
+  span { font-weight: 700; color: var(--accent-700); }
+  span.above { color: var(--ok-text); }
+}
+
 .trend-svg {
   display: block;
   width: 100%;

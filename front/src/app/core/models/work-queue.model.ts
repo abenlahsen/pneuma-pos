@@ -46,7 +46,12 @@ export interface TrendPoint {
 export interface WorkFigures {
   scope: QueueScope;
   today: { sales: number; revenue: number };
-  month: { revenue: number; margin: number };
+  /**
+   * `agency_average` : moyenne du mois par commercial, pour se situer sans
+   * voir personne. Null pour le gerant (il a le nominatif) et quand trop peu
+   * de commerciaux sont actifs pour qu'une moyenne ne trahisse pas un collegue.
+   */
+  month: { revenue: number; margin: number; agency_average: number | null };
   /** Vide pour un commercial : il ne classe pas ses collegues. */
   ranking: RankingRow[];
   trend: TrendPoint[];

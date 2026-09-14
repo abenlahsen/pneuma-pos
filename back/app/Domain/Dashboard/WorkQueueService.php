@@ -22,6 +22,9 @@ class WorkQueueService
     /** Nombre de lignes remontees par file : c'est une file de travail, pas un export. */
     private const LIMIT = 12;
 
+    /** En dessous, la moyenne agence laisse deduire le chiffre d'un collegue. */
+    private const MIN_COMMERCIALS_FOR_AVERAGE = 3;
+
     /**
      * @return array<string, mixed>
      */
@@ -77,12 +80,41 @@ class WorkQueueService
             'month' => [
                 'revenue' => round((float) $month->revenue, 2),
                 'margin' => round((float) $month->margin, 2),
+                // Le commercial se situe sans voir personne ; le gerant a deja
+                // le nominatif, la moyenne ne lui apprendrait rien.
+                'agency_average' => $all ? null : $this->agencyAverage(),
             ],
             // Le classement nominatif n'existe que pour le gerant : un
             // commercial ne classe pas ses collegues.
             'ranking' => $all ? $this->ranking() : [],
             'trend' => $all ? $this->trend() : [],
         ];
+    }
+
+    /**
+     * Moyenne du mois par commercial. Elle repond a « est-ce que je suis
+     * au-dessus ou en dessous ? » sans nommer personne.
+     *
+     * En dessous de trois commerciaux actifs elle n'est plus une moyenne mais
+     * une soustraction : a deux, moyenne + ses propres chiffres donne le
+     * chiffre exact du collegue. On la supprime plutot que de la publier.
+     */
+    private function agencyAverage(): ?float
+    {
+        $row = DB::table('sales')
+            ->whereNot('status', 'ANNULE')
+            ->whereNotNull('commercial_id')
+            ->whereBetween('date', [today()->startOfMonth(), today()->endOfMonth()])
+            ->selectRaw('COALESCE(SUM(total_sale), 0) AS revenue, COUNT(DISTINCT commercial_id) AS commercials')
+            ->first();
+
+        $commercials = (int) $row->commercials;
+
+        if ($commercials < self::MIN_COMMERCIALS_FOR_AVERAGE) {
+            return null;
+        }
+
+        return round((float) $row->revenue / $commercials, 2);
     }
 
     /**
