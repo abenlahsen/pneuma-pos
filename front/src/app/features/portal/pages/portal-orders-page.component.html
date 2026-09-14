@@ -1,23 +1,15 @@
-<div class="portal-topbar">
-  <h1>Mes commandes</h1>
-  <div class="portal-topbar__right">
-    <span class="portal-topbar__account">Transport Chaouia · Compte 1042</span>
-    <button type="button" class="portal-btn-primary">Demander un devis</button>
+<div class="summary-cards">
+  <div class="card summary-card">
+    <span class="card-label">Commandes en cours</span>
+    <strong class="card-value">{{ ordersInProgress }}</strong>
   </div>
-</div>
-
-<div class="portal-stats">
-  <div class="portal-stat">
-    <span class="portal-stat__label">Commandes en cours</span>
-    <strong class="portal-stat__value">{{ ordersInProgress }}</strong>
+  <div class="card summary-card">
+    <span class="card-label">Encours facturé</span>
+    <strong class="card-value">{{ invoicedOutstanding }}</strong>
   </div>
-  <div class="portal-stat">
-    <span class="portal-stat__label">Encours facturé</span>
-    <strong class="portal-stat__value">{{ invoicedOutstanding }}</strong>
-  </div>
-  <div class="portal-stat">
-    <span class="portal-stat__label">Échéance la plus proche</span>
-    <strong class="portal-stat__value portal-stat__value--sm">{{ nextDueDate }}</strong>
+  <div class="card summary-card">
+    <span class="card-label">Échéance la plus proche</span>
+    <strong class="card-value card-value--sm">{{ nextDueDate }}</strong>
   </div>
 </div>
 

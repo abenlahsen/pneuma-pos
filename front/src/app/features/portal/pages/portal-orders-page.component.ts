@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { PageHeaderService } from '../../../core/services/page-header.service';
 
 interface PortalOrderRow {
   reference: string;
@@ -21,7 +22,22 @@ interface PortalOrderRow {
   templateUrl: './portal-orders-page.component.html',
   styleUrl: './portal-orders-page.component.scss',
 })
-export class PortalOrdersPageComponent {
+export class PortalOrdersPageComponent implements OnInit, OnDestroy {
+  private readonly pageHeader = inject(PageHeaderService);
+
+  /** Le titre va dans la barre de la coquille, comme les ecrans internes : le
+   *  portail est le dernier endroit ou laisser deux motifs concurrents. */
+  ngOnInit(): void {
+    this.pageHeader.set('Mes commandes', 'Transport Chaouia · ', 'Compte 1042');
+    this.pageHeader.setActions([
+      { label: 'Demander un devis', run: () => undefined, variant: 'primary' },
+    ]);
+  }
+
+  ngOnDestroy(): void {
+    this.pageHeader.clear();
+  }
+
   readonly ordersInProgress = 3;
   readonly invoicedOutstanding = '11 640 DH';
   readonly nextDueDate = '15/09/2026';

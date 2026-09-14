@@ -9,10 +9,9 @@
 
     <!-- Barre supérieure : une seule ligne, à la hauteur du bandeau de marque
          du rail. Elle porte le titre de section, le fil d'Ariane des fiches et
-         les actions primaires de la page — c'est ce qui remplace les vingt-six
-         gros titres qui la doublonnaient. Le portail client a la sienne. -->
-    @if (!isPortal()) {
-      <header class="topbar">
+         les actions primaires de la page — c'est ce qui remplace les gros
+         titres qui la doublonnaient, portail client compris. -->
+    <header class="topbar">
         <span class="topbar__title">{{ pageHeader.title() }}</span>
 
         @if (pageHeader.breadcrumb().length) {
@@ -47,8 +46,7 @@
               (click)="action.run()">{{ action.label }}</button>
           }
         }
-      </header>
-    }
+    </header>
 
     <main class="main-content">
       <div class="main-content__inner">

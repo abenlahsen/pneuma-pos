@@ -4,36 +4,8 @@
    Tokens de _tokens.scss uniquement, aucune valeur en dur hors de celles
    listées par le README (section "3. Espace client B2B"). */
 
-.portal-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-4);
-  height: var(--topbar-h);
-  padding: 0 var(--sp-2);
-  border-bottom: 2px solid var(--text);
-  margin-bottom: var(--sp-6);
-  flex-wrap: wrap;
 
-  h1 {
-    margin: 0;
-    font-size: 13px;
-    font-weight: var(--fw-label);
-    letter-spacing: var(--ls-label);
-    text-transform: uppercase;
-  }
-}
 
-.portal-topbar__right {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-4);
-}
-
-.portal-topbar__account {
-  font-size: var(--fs-cell);
-  color: var(--neutral-700);
-}
 
 .portal-btn-primary {
   padding: 8px var(--sp-4);
@@ -51,25 +23,7 @@
   }
 }
 
-.portal-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  border-top: 2px solid var(--text);
-  border-bottom: 2px solid var(--text);
-  margin-bottom: var(--sp-6);
-}
 
-.portal-stat {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-  padding: var(--sp-4) var(--sp-2);
-  border-left: 1px solid var(--neutral-300);
-
-  &:first-child {
-    border-left: 0;
-  }
-}
 
 .portal-stat__label {
   font-size: 11px;
