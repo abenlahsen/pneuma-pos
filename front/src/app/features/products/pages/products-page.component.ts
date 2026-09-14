@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { PageHeaderService } from '../../../core/services/page-header.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ProductService } from '../data-access/product.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Product, ProductFilters, ProductPayload } from '../models/product.model';
@@ -13,7 +13,7 @@ import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-contro
 @Component({
   selector: 'app-products-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductFormComponent, ProductDetailComponent, AutoRefreshControlComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ProductFormComponent, ProductDetailComponent, AutoRefreshControlComponent],
   templateUrl: './products-page.component.html',
   styleUrls: ['./products-page.component.scss'],
 })

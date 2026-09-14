@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Products\ProductProfileService;
 use App\Domain\Products\ProductService;
 use App\Http\Requests\Products\StoreProductRequest;
 use App\Http\Requests\Products\UpdateProductRequest;
@@ -12,9 +13,7 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    public function __construct(private ProductService $productService)
-    {
-    }
+    public function __construct(private ProductService $productService) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -80,4 +79,9 @@ class ProductController extends Controller
         return response()->json($this->productService->filters());
     }
 
+    /** Fiche produit (`3e`) : stock, marge, historique, mouvements, tarifs, fournisseurs. */
+    public function profile(Product $product, ProductProfileService $profiles): JsonResponse
+    {
+        return response()->json($profiles->build($product));
+    }
 }

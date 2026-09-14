@@ -1,0 +1,192 @@
+<app-error-banner
+  *ngIf="loadError()"
+  title="Impossible de charger la fiche produit"
+  [detail]="loadError()"
+  (retry)="load(product()?.id ?? 0)" />
+
+<ng-container *ngIf="profile() as p">
+
+  <!-- En-tête d'objet (`3e`) : c'est le motif de la fiche, il remplace le
+       titre de page plutôt que de s'ajouter à la barre. -->
+  <header class="object-head">
+    <div class="object-thumb"><app-icon name="stock" [size]="32" /></div>
+
+    <div class="object-identity">
+      <span class="object-kicker">{{ kicker() }}</span>
+      <h1 class="object-title">{{ title() }}</h1>
+      <span class="object-ids">{{ identifiers().join(' · ') }}</span>
+    </div>
+
+    <div class="object-badges">
+      <span class="state" [class.state--off]="!p.product.is_active">
+        {{ p.product.is_active ? 'Actif' : 'Inactif' }}
+      </span>
+      <span class="state state--alert" *ngIf="p.stock.below_threshold">Sous le seuil</span>
+    </div>
+  </header>
+
+  <!-- Onglets : l'actif porte un filet d'accent, pas un fond. -->
+  <nav class="tabs" aria-label="Sections de la fiche">
+    <button type="button" class="tab" [class.tab--on]="activeTab() === 'detail'" (click)="setTab('detail')">Détail</button>
+    <button type="button" class="tab" [class.tab--on]="activeTab() === 'movements'" (click)="setTab('movements')">
+      Mouvements<span class="tab-n" *ngIf="p.movements.length"> · {{ p.movements.length }}</span>
+    </button>
+    <button type="button" class="tab" [class.tab--on]="activeTab() === 'prices'" (click)="setTab('prices')">Tarifs</button>
+    <button type="button" class="tab" [class.tab--on]="activeTab() === 'suppliers'" (click)="setTab('suppliers')">
+      Fournisseurs<span class="tab-n" *ngIf="p.suppliers.length"> · {{ p.suppliers.length }}</span>
+    </button>
+  </nav>
+
+  <div class="fiche-layout">
+    <div class="fiche-main">
+
+      <!-- ── Détail ──────────────────────────────────────────────────────── -->
+      <ng-container *ngIf="activeTab() === 'detail'">
+        <section class="summary-cards">
+          <div class="card summary-card">
+            <p class="card-label">En stock</p>
+            <h3 class="card-value">{{ p.stock.quantity }}</h3>
+          </div>
+          <div class="card summary-card">
+            <p class="card-label">Seuil</p>
+            <h3 class="card-value">{{ p.stock.threshold || '—' }}</h3>
+          </div>
+          <div class="card summary-card">
+            <p class="card-label">Réservé</p>
+            <h3 class="card-value">{{ p.stock.reserved }}</h3>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2 class="panel-title">Caractéristiques</h2>
+          <dl class="spec-grid">
+            <div class="spec" *ngFor="let c of characteristics()">
+              <dt>{{ c.key }}</dt>
+              <dd>{{ c.value }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="panel" *ngIf="p.stock.lots.length">
+          <h2 class="panel-title">Lots</h2>
+          <table class="table">
+            <thead>
+              <tr><th>Dépôt</th><th>Zone</th><th>DOT</th><th>Origine</th><th class="text-right">Qté</th><th class="text-right">PU achat</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let lot of p.stock.lots">
+                <td>{{ lot.depot || '—' }}</td>
+                <td>{{ lot.zone || '—' }}</td>
+                <td>{{ lot.dot || '—' }}</td>
+                <td>{{ lot.made_in || '—' }}</td>
+                <td class="text-right">{{ lot.quantity }}</td>
+                <td class="text-right">{{ lot.purchase_price | number:'1.2-2' }} DH</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Le détail qui compte : « 6 en stock » ne veut rien dire seul.
+             C'est la seule question qu'on pose devant un client. -->
+        <p class="available-banner" [class.available-banner--alert]="p.stock.below_threshold">
+          <app-icon name="stock" [size]="18" />
+          <span>
+            <strong>{{ p.stock.available }}</strong> disponible{{ p.stock.available > 1 ? 's' : '' }}
+            — {{ p.stock.quantity }} en stock, {{ p.stock.reserved }} réservé{{ p.stock.reserved > 1 ? 's' : '' }}.
+            <ng-container *ngIf="p.stock.below_threshold">Sous le seuil de {{ p.stock.threshold }}.</ng-container>
+          </span>
+        </p>
+      </ng-container>
+
+      <!-- ── Mouvements ──────────────────────────────────────────────────── -->
+      <section class="panel" *ngIf="activeTab() === 'movements'">
+        <h2 class="panel-title">Mouvements de stock</h2>
+        <p class="empty-line" *ngIf="!p.movements.length">Aucun mouvement enregistré pour cet article.</p>
+        <table class="table" *ngIf="p.movements.length">
+          <thead>
+            <tr><th>Date</th><th>Type</th><th>Dépôt</th><th class="text-right">Variation</th><th class="text-right">Après</th><th>Motif</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let m of p.movements">
+              <td>{{ m.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ m.type }}</td>
+              <td>{{ m.depot || '—' }}</td>
+              <td class="text-right" [class.negative]="m.delta < 0">{{ m.delta > 0 ? '+' : '' }}{{ m.delta }}</td>
+              <td class="text-right">{{ m.quantity_after }}</td>
+              <td>{{ m.reason || '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ── Tarifs ──────────────────────────────────────────────────────── -->
+      <section class="panel" *ngIf="activeTab() === 'prices'">
+        <h2 class="panel-title">Prix pratiqués</h2>
+        <p class="empty-line" *ngIf="!p.prices.length">Cet article n'a encore jamais été vendu.</p>
+        <table class="table" *ngIf="p.prices.length">
+          <thead>
+            <tr><th>Vente</th><th>Date</th><th class="text-right">Qté</th><th class="text-right">PU vente</th><th class="text-right">Remise</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of p.prices">
+              <td>n° {{ row.sale_id }}</td>
+              <td>{{ row.date | date:'dd/MM/yyyy' }}</td>
+              <td class="text-right">{{ row.quantity }}</td>
+              <td class="text-right">{{ row.selling_price | number:'1.2-2' }} DH</td>
+              <td class="text-right">{{ (row.discount || 0) | number:'1.0-2' }} %</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ── Fournisseurs ────────────────────────────────────────────────── -->
+      <section class="panel" *ngIf="activeTab() === 'suppliers'">
+        <h2 class="panel-title">Fournisseurs</h2>
+        <p class="empty-line" *ngIf="!p.suppliers.length">Aucun achat enregistré pour cet article.</p>
+        <table class="table" *ngIf="p.suppliers.length">
+          <thead>
+            <tr><th>Fournisseur</th><th class="text-right">Achats</th><th>Dernier</th><th class="text-right">PU moyen</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of p.suppliers">
+              <td><a class="link-text" [routerLink]="['/suppliers', s.id]">{{ s.name }}</a></td>
+              <td class="text-right">{{ s.purchases }}</td>
+              <td>{{ s.last_date ? (s.last_date | date:'dd/MM/yyyy') : '—' }}</td>
+              <td class="text-right">{{ s.avg_price | number:'1.2-2' }} DH</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <!-- Colonne de droite : la marge et l'historique. -->
+    <aside class="fiche-side">
+      <section class="panel">
+        <h2 class="panel-title">Marge</h2>
+        <p class="margin-pct">{{ p.margin.margin_pct | number:'1.0-1' }} <small>%</small></p>
+        <p class="margin-line">{{ p.margin.margin | number:'1.2-2' }} DH par unité</p>
+
+        <!-- La barre montre ce que l'achat prend dans le prix de vente. -->
+        <div class="margin-bar" role="presentation">
+          <span class="margin-bar__buy" [style.width.%]="purchaseShare()"></span>
+        </div>
+        <p class="margin-legend">
+          <span>Achat {{ p.margin.purchase_price | number:'1.0-0' }} DH</span>
+          <span>Vente {{ p.margin.selling_price | number:'1.0-0' }} DH</span>
+        </p>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-title">Douze derniers mois</h2>
+        <div class="history" role="img" aria-label="Quantités vendues sur douze mois">
+          <span class="history-bar" *ngFor="let bar of historyBars()"
+                [style.height.%]="bar.height" [title]="bar.label + ' : ' + bar.quantity"></span>
+        </div>
+        <p class="history-legend">
+          <span>{{ historyBars()[0]?.label }}</span>
+          <span>{{ historyBars()[historyBars().length - 1]?.label }}</span>
+        </p>
+      </section>
+    </aside>
+  </div>
+</ng-container>

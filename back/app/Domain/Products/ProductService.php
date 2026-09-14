@@ -13,9 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class ProductService
 {
-    public function __construct(private StockMovementService $movements)
-    {
-    }
+    public function __construct(private StockMovementService $movements) {}
 
     /**
      * @param  array<string, mixed>  $filters

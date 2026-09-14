@@ -126,7 +126,13 @@
                 &#128465;&#65039;
               </button>
             </td>
-            <td>{{ product.reference || '-' }}</td>
+            <!-- La reference ouvre la fiche (`3e`) : c'est par elle qu'on
+                 cherche un article au comptoir. -->
+            <td>
+              <a class="reference-link link-text" [routerLink]="['/products', product.id]">
+                {{ product.reference || 'Article n° ' + product.id }}
+              </a>
+            </td>
             <td>
               <span
                 class="badge"
