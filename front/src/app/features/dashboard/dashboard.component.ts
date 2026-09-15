@@ -48,12 +48,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** Total de lignes en attente, toutes files confondues. */
   readonly pendingTotal = computed(() => {
     const q = this.queues();
-    return (q.unpaid?.count ?? 0) + (q.to_invoice?.count ?? 0) + (q.low_stock?.count ?? 0) + (q.quotes?.count ?? 0);
+    return (q.unpaid?.count ?? 0) + (q.to_invoice?.count ?? 0) + (q.low_stock?.count ?? 0);
   });
 
   readonly hasAnyQueue = computed(() => {
     const q = this.queues();
-    return !!q.unpaid || !!q.to_invoice || !!q.low_stock || !!q.quotes;
+    return !!q.unpaid || !!q.to_invoice || !!q.low_stock;
   });
 
   // ── Libelles ────────────────────────────────────────────────────────────
@@ -66,9 +66,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (queue === 'low_stock') return 'Agence · partagé';
     if (scope === 'all') return 'Toutes agences';
 
-    // Le possessif dit de QUOI on est proprietaire : des clients pour les
-    // ventes et les ordres, des devis pour les devis.
-    return queue === 'quotes' ? 'Mes devis' : 'Mes clients';
+    // Le possessif dit de QUOI on est proprietaire : des clients, pour les
+    // ventes comme pour les ordres.
+    return 'Mes clients';
   }
 
   /** Titre de file : possessif en portee personnelle, neutre en portee agence. */
@@ -77,7 +77,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     if (queue === 'unpaid') return own ? 'Mes impayés' : 'Impayés à relancer';
     if (queue === 'to_invoice') return own ? 'Mes ordres à facturer' : 'Ordres terminés à facturer';
-    if (queue === 'quotes') return own ? 'Mes devis sans réponse' : 'Devis sans réponse';
 
     return 'Produits sous seuil';
   }
@@ -89,7 +88,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   actionLabel(queue: QueueKey, scope: QueueScope | undefined): string {
     if (queue === 'to_invoice') return 'Facturer';
     if (queue === 'low_stock') return 'Commander';
-    if (queue === 'quotes') return 'Rappeler';
 
     return scope === 'all' ? 'Assigner' : 'Relancer';
   }
@@ -214,16 +212,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** Le CA du jour mène au détail de la journée, pas à la liste entière. */
   openToday(): void {
     this.router.navigate(['/sales'], { queryParams: { date: todayIso() } });
-  }
-
-  /**
-   * Rappeler : il n'existe pas encore d'ecran de devis, donc on ouvre la fiche
-   * du client pour le joindre. Le jour ou l'ecran existera, c'est cette seule
-   * ligne qui changera.
-   */
-  openQuote(id: number): void {
-    const row = this.queues().quotes?.rows.find((r) => r.id === id);
-    this.router.navigate(['/clients'], { queryParams: { search: row?.client ?? '' } });
   }
 
   openServiceOrder(id: number): void {

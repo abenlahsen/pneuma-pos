@@ -2,11 +2,9 @@
 
 namespace App\Domain\Dashboard;
 
-use App\Enums\QuoteStatus;
 use App\Enums\ServiceOrderStatus;
 use App\Models\CompanySetting;
 use App\Models\Product;
-use App\Models\Quote;
 use App\Models\Sale;
 use App\Models\ServiceOrder;
 use App\Models\User;
@@ -50,64 +48,11 @@ class WorkQueueService
             $queues['low_stock'] = $this->lowStock();
         }
 
-        if ($user->can('view quotes')) {
-            $queues['quotes'] = $this->quotesWithoutAnswer($user);
-        }
-
         if ($user->can('view sales')) {
             $queues['figures'] = $this->figures($user);
         }
 
         return $queues;
-    }
-
-    /**
-     * Devis sans reponse. Portee : ses devis, sauf permission `view quotes.all`.
-     *
-     * « Sans reponse » se lit `responded_at IS NULL` : un devis accepte ou
-     * refuse a une date de reponse et n'attend plus rien.
-     *
-     * @return array<string, mixed>
-     */
-    private function quotesWithoutAnswer(User $user): array
-    {
-        $all = $user->can('view quotes.all');
-
-        $query = Quote::query()
-            ->with(['client:id,name', 'commercial:id,name'])
-            ->where('status', QuoteStatus::ENVOYE->value)
-            ->whereNull('responded_at');
-
-        if (! $all) {
-            $query->where('commercial_id', $user->id);
-        }
-
-        $total = (clone $query)->count();
-        $amount = (clone $query)->sum('total_amount');
-
-        $rows = $query
-            ->orderBy('issued_at')
-            ->limit(self::LIMIT)
-            ->get()
-            ->map(fn (Quote $quote) => [
-                'id' => $quote->id,
-                'reference' => $quote->reference,
-                'client' => $quote->client?->name,
-                'commercial' => $quote->commercial?->name,
-                'issued_at' => $quote->issued_at?->toDateString(),
-                // Le nombre de jours sans reponse : c'est lui qui dit s'il est
-                // encore temps de rappeler.
-                'days_waiting' => $quote->issued_at ? (int) $quote->issued_at->diffInDays(today()) : 0,
-                'amount' => round((float) $quote->total_amount, 2),
-            ])
-            ->values();
-
-        return [
-            'scope' => $all ? 'all' : 'own',
-            'count' => $total,
-            'total' => round((float) $amount, 2),
-            'rows' => $rows,
-        ];
     }
 
     /**

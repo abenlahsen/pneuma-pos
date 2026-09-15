@@ -138,7 +138,6 @@ class RolesAndPermissionsSeeder extends Seeder
 
             // Reporting (Administrator only)
             'view reporting',
-            'view quotes',
 
             // Portee des files de travail de l'accueil (`5a`/`5b`).
             // Les permissions ci-dessus disent SI on accede a un ecran ;
@@ -148,7 +147,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'view unpaid.all',
             'view service-orders.all',
             'view reporting.all',
-            'view quotes.all',
         ];
 
         foreach ($permissions as $permission) {
@@ -183,10 +181,6 @@ class RolesAndPermissionsSeeder extends Seeder
 
         $commercial = Role::findOrCreate('Commercial');
         $commercial->syncPermissions([
-            // Devis : ses devis uniquement — la portee agence demande
-            // `view quotes.all`, reservee au gerant.
-            'view quotes',
-
             // Service Orders
             'view service-orders',
             'create service-orders',
