@@ -187,7 +187,9 @@ mkdir -p "\$BACKUP_DIR"
 echo "  → Backing up database..."
 
 DUMP_CMD=\$(command -v mariadb-dump 2>/dev/null || command -v mysqldump)
-\$DUMP_CMD --user='$DB_USERNAME' --password='$DB_PASSWORD' --host='$DB_HOST' \
+# Password via MYSQL_PWD (environment), never on the argv: --password= is
+# readable by every local user through ps / /proc for the whole dump.
+MYSQL_PWD='$DB_PASSWORD' \$DUMP_CMD --user='$DB_USERNAME' --host='$DB_HOST' \
   --single-transaction --routines --triggers \
   "$DB_DATABASE" | gzip > "\$BACKUP_DIR/db_${DB_DATABASE}.sql.gz"
 echo "  ✓ Database backup: \$BACKUP_DIR/db_${DB_DATABASE}.sql.gz"
@@ -231,7 +233,8 @@ rsync -az \
   --exclude=vendor/ \
   --exclude=.env \
   --exclude=.git/ \
-  --exclude='storage/logs/*.log' \
+  --exclude='storage/app/' \
+  --exclude='storage/logs/' \
   --exclude='bootstrap/cache/' \
   "$PROJECT_ROOT/back/" \
   "$VPS_USER@$VPS_HOST:$APP_DIR/back/"
@@ -344,6 +347,7 @@ $VPS_SUDO chown -R $WWW_OWNER "$APP_DIR"
 $VPS_SUDO find "$APP_DIR" -type d -exec chmod 755 {} \;
 $VPS_SUDO find "$APP_DIR" -type f -exec chmod 644 {} \;
 $VPS_SUDO chmod -R 775 "$APP_DIR/back/storage" "$APP_DIR/back/bootstrap/cache"
+$VPS_SUDO chmod 640 "$APP_DIR/back/.env"
 
 # ── Cron scheduler (drives Schedule::command(...) entries, e.g. kpi:snapshot) ──
 # Installed as a /etc/cron.d drop-in (not via "crontab -l | grep -v | crontab -")
@@ -388,8 +392,9 @@ echo "    sudo systemctl reload php8.3-fpm"
 echo ""
 echo "  To rollback (run on VPS):"
 echo "    # Restore database (drop + recreate to remove any new tables):"
-echo "    mysql -u $DB_USERNAME -p$DB_PASSWORD -h $DB_HOST -e 'DROP DATABASE \`$DB_DATABASE\`; CREATE DATABASE \`$DB_DATABASE\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'"
-echo "    gunzip < $BACKUP_DIR/$TIMESTAMP/db_${DB_DATABASE}.sql.gz | mysql -u $DB_USERNAME -p$DB_PASSWORD -h $DB_HOST $DB_DATABASE"
+echo "    mysql -u $DB_USERNAME -p -h $DB_HOST -e 'DROP DATABASE \`$DB_DATABASE\`; CREATE DATABASE \`$DB_DATABASE\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'"
+echo "    gunzip < $BACKUP_DIR/$TIMESTAMP/db_${DB_DATABASE}.sql.gz | mysql -u $DB_USERNAME -p -h $DB_HOST $DB_DATABASE"
+echo "    # (-p sans valeur : mysql demande le mot de passe, voir deploy.env)"
 echo "    tar xzf $BACKUP_DIR/$TIMESTAMP/back_source.tar.gz -C $APP_DIR"
 echo "    tar xzf $BACKUP_DIR/$TIMESTAMP/front_dist.tar.gz  -C $APP_DIR"
 echo "============================================================"

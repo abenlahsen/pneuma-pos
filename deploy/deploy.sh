@@ -155,7 +155,9 @@ mkdir -p "\$BACKUP_DIR"
 echo "  → Backing up database..."
 
 DUMP_CMD=\$(command -v mariadb-dump 2>/dev/null || command -v mysqldump)
-\$DUMP_CMD --user='$DB_USERNAME' --password='$DB_PASSWORD' --host='$DB_HOST' \
+# Password via MYSQL_PWD (environment), never on the argv: --password= is
+# readable by every local user through ps / /proc for the whole dump.
+MYSQL_PWD='$DB_PASSWORD' \$DUMP_CMD --user='$DB_USERNAME' --host='$DB_HOST' \
   --single-transaction --routines --triggers \
   "$DB_DATABASE" | gzip > "\$BACKUP_DIR/db_${DB_DATABASE}.sql.gz"
 echo "  ✓ Database backup: \$BACKUP_DIR/db_${DB_DATABASE}.sql.gz"
@@ -331,6 +333,7 @@ echo "  → Setting permissions..."
 $VPS_SUDO chown -R www-data:www-data "$APP_DIR/back" "$APP_DIR/front-dist"
 $VPS_SUDO chmod -R 755 "$APP_DIR/back" "$APP_DIR/front-dist"
 $VPS_SUDO chmod -R 775 "$APP_DIR/back/storage" "$APP_DIR/back/bootstrap/cache"
+$VPS_SUDO chmod 640 "$APP_DIR/back/.env"
 
 # ── Cron scheduler (drives Schedule::command(...) entries, e.g. kpi:snapshot) ──
 # Installed as a /etc/cron.d drop-in (not via "crontab -l | grep -v | crontab -")
@@ -356,6 +359,14 @@ $VPS_SUDO -u www-data \$PHP_BIN "$APP_DIR/back/artisan" kpi:snapshot || true
 
 # ── Nginx ─────────────────────────────────────────────────────
 echo "  → Configuring Nginx..."
+# Security-headers snippet: refreshed on every deploy, unlike the vhost.
+$VPS_SUDO mkdir -p /etc/nginx/snippets
+$VPS_SUDO cp "$APP_DIR/deploy/nginx/security-headers.conf" /etc/nginx/snippets/quel-pneu-security-headers.conf
+if ! grep -q "quel-pneu-security-headers.conf" /etc/nginx/sites-available/quel-pneu.ma.conf 2>/dev/null; then
+  echo "  ! Le vhost en place n'inclut pas encore le snippet d'en-tetes de securite."
+  echo "    Ajouter les lignes 'include /etc/nginx/snippets/quel-pneu-security-headers.conf;'"
+  echo "    comme dans deploy/nginx/quel-pneu.ma.conf, puis: nginx -t && systemctl reload nginx"
+fi
 NGINX_SRC="$APP_DIR/deploy/nginx/quel-pneu.ma.conf"
 NGINX_DEST="/etc/nginx/sites-available/quel-pneu.ma.conf"
 
@@ -436,8 +447,9 @@ echo "    tail -f /var/log/nginx/error.log"
 echo ""
 echo "  To rollback (run on VPS):"
 echo "    # Restore database (drop + recreate to remove any new tables):"
-echo "    mysql -u $DB_USERNAME -p$DB_PASSWORD -h $DB_HOST -e 'DROP DATABASE \`$DB_DATABASE\`; CREATE DATABASE \`$DB_DATABASE\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'"
-echo "    gunzip < $BACKUP_DIR/$TIMESTAMP/db_${DB_DATABASE}.sql.gz | mysql -u $DB_USERNAME -p$DB_PASSWORD -h $DB_HOST $DB_DATABASE"
+echo "    mysql -u $DB_USERNAME -p -h $DB_HOST -e 'DROP DATABASE \`$DB_DATABASE\`; CREATE DATABASE \`$DB_DATABASE\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'"
+echo "    gunzip < $BACKUP_DIR/$TIMESTAMP/db_${DB_DATABASE}.sql.gz | mysql -u $DB_USERNAME -p -h $DB_HOST $DB_DATABASE"
+echo "    # (-p sans valeur : mysql demande le mot de passe, voir deploy.env)"
 echo "    # Restore backend source:"
 echo "    tar xzf $BACKUP_DIR/$TIMESTAMP/back_source.tar.gz -C $APP_DIR"
 echo "    # Restore frontend:"
