@@ -19,6 +19,8 @@ Initial admin account is seeded from `ADMIN_EMAIL` / `ADMIN_INITIAL_PASSWORD` en
 - Apply the principle of least privilege
 - Flag any code that could introduce XSS, CSRF, or injection vulnerabilities
 - Before finishing any task, check if the changes introduced new security risks
+- `SECURITY_AUDIT.md` (racine) is the reference security audit: check it before touching auth, roles, uploads, exports, Nginx or the deploy scripts, and keep its status table current
+- Uploads served from `/storage/` must never accept SVG (`mimes:` without `svg`, or the `image` rule which excludes it); Nginx security headers live in `deploy/nginx/security-headers.conf` and must be `include`d in every `location` that declares its own `add_header`
 
 ## Development Commands
 
@@ -136,9 +138,9 @@ Config (`e2e/playwright.config.ts`): `timeout: 30_000` per test, `expect: { time
 
 Each payment creation (Payment, PurchasePayment, ServicePayment) auto-creates a corresponding `Transaction` record.
 
-**Authentication**: Sanctum stateless tokens stored client-side. All previous tokens are revoked on new login (single active session).
+**Authentication**: Sanctum stateless tokens stored client-side. All previous tokens are revoked on new login (single active session). `must_change_password` is enforced **server-side** by the `password.changed` middleware (`app/Http/Middleware/EnsurePasswordChanged.php`, applied to the whole protected group in `routes/api.php`): a flagged user gets `403 {code: "PASSWORD_CHANGE_REQUIRED"}` on every business route and can only reach `/api/user`, `/api/logout` and `/api/change-password` (registered outside the group in `routes/api/auth.php`). The Angular interceptor redirects that 403 to `/change-password`. `/api/login` and `/api/change-password` share the `login` rate limiter (5/min per email+IP **and** 20/min per IP). Changing a password revokes every other token; an admin-initiated password reset (`PUT /api/users/{user}` with `password`) sets `must_change_password = true` and revokes the target's tokens, and `POST /api/users` always creates the account flagged.
 
-**ACL**: Spatie Laravel Permission with roles (Administrator, Commercial, Manager, Driver) and granular permissions per resource (view, create, edit, delete + special ones like `import stock`, `manage sale-payments`, `transfer accounts`, `manage service-payments`, `view activity-log`). The `RolesAndPermissionsSeeder` manages all permissions and role assignments across all modules. All API routes are protected with `permission:` middleware. Frontend uses `authService.hasPermission()` to conditionally show UI elements and `permissionGuard` on routes. `view activity-log` is assigned to Administrator only — explicitly excluded from Manager.
+**ACL**: Spatie Laravel Permission with roles (Administrator, Commercial, Manager, Driver) and granular permissions per resource (view, create, edit, delete + special ones like `import stock`, `manage sale-payments`, `transfer accounts`, `manage service-payments`, `view activity-log`). The `RolesAndPermissionsSeeder` manages all permissions and role assignments across all modules. All API routes are protected with `permission:` middleware. Frontend uses `authService.hasPermission()` to conditionally show UI elements and `permissionGuard` on routes. `view activity-log` is assigned to Administrator only — explicitly excluded from Manager. **Privilege-escalation guards** (`Domain/Roles/RoleService::guardPermissionGrant`, `Domain/Users/UserService::guardAdministratorTarget`): the Administrator role's permission set is immutable through the API (422); a non-Administrator cannot change the permissions of a role they hold themselves, and can only grant permissions they already hold (403); a non-Administrator cannot edit or delete an Administrator account (403); creating/deleting permissions is Administrator-only and a permission still attached to a role cannot be deleted (422). See `SECURITY_AUDIT.md` for the audit these rules come from.
 
 ### Frontend Structure
 
