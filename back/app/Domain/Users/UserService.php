@@ -23,6 +23,8 @@ class UserService
             ], 403);
         }
 
+        // Le mot de passe saisi par l'admin est un mot de passe temporaire :
+        // l'utilisateur doit le remplacer a sa premiere connexion.
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -30,6 +32,8 @@ class UserService
             'phone' => $request->phone,
             'commission_rate' => $request->commission_rate,
             'prime_per_tyre' => $request->prime_per_tyre,
+            'monthly_target' => $request->monthly_target,
+            'must_change_password' => true,
         ]);
 
         if ($request->filled('role')) {
@@ -47,6 +51,10 @@ class UserService
     public function update($request, $user)
     {
         $actor = $request->user();
+
+        if ($denied = $this->guardAdministratorTarget($actor, $user)) {
+            return $denied;
+        }
 
         if ($request->has('role')) {
             if (! $actor->hasRole('Administrator')) {
@@ -76,13 +84,26 @@ class UserService
             'phone' => $request->phone,
             'commission_rate' => $request->commission_rate,
             'prime_per_tyre' => $request->prime_per_tyre,
+            'monthly_target' => $request->monthly_target,
         ];
+
+        $passwordResetByOther = $request->filled('password') && $actor->id !== $user->id;
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
         }
 
+        if ($passwordResetByOther) {
+            // Reinitialisation par un tiers : mot de passe temporaire, et les
+            // sessions ouvertes de la cible tombent.
+            $data['must_change_password'] = true;
+        }
+
         $user->update($data);
+
+        if ($passwordResetByOther) {
+            $user->tokens()->delete();
+        }
 
         if ($request->has('role')) {
             $user->syncRoles($request->filled('role') ? [$request->role] : []);
@@ -106,6 +127,10 @@ class UserService
             ], 422);
         }
 
+        if ($denied = $this->guardAdministratorTarget($actor, $user)) {
+            return $denied;
+        }
+
         if ($user->hasRole('Administrator')) {
             $otherAdmins = User::role('Administrator')->where('id', '!=', $user->id)->count();
 
@@ -117,6 +142,21 @@ class UserService
         }
 
         $user->delete();
+
+        return null;
+    }
+
+    /**
+     * Un compte Administrateur n'est modifiable (mot de passe compris) que
+     * par un autre Administrateur — sinon `edit users` vaut prise de controle.
+     */
+    private function guardAdministratorTarget(User $actor, User $target): ?JsonResponse
+    {
+        if ($target->hasRole('Administrator') && ! $actor->hasRole('Administrator')) {
+            return response()->json([
+                'message' => 'Seul un Administrateur peut modifier un compte Administrateur.',
+            ], 403);
+        }
 
         return null;
     }

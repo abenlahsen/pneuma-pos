@@ -38,6 +38,14 @@ class PermissionController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        // Le catalogue des permissions est une donnee de structure : seul un
+        // Administrateur le fait evoluer, `create roles` ne suffit pas.
+        if (! $request->user()->hasRole('Administrator')) {
+            return response()->json([
+                'message' => 'Seul un Administrateur peut créer des permissions.',
+            ], 403);
+        }
+
         $request->validate([
             'name' => 'required|string|unique:permissions,name',
         ]);
@@ -55,7 +63,7 @@ class PermissionController extends Controller
     public function update(Request $request, Permission $permission): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|unique:permissions,name,' . $permission->id,
+            'name' => 'required|string|unique:permissions,name,'.$permission->id,
         ]);
 
         $permission->update(['name' => $request->name]);
@@ -63,8 +71,22 @@ class PermissionController extends Controller
         return response()->json((new PermissionResource($permission))->resolve($request));
     }
 
-    public function destroy(Permission $permission): JsonResponse
+    public function destroy(Request $request, Permission $permission): JsonResponse
     {
+        if (! $request->user()->hasRole('Administrator')) {
+            return response()->json([
+                'message' => 'Seul un Administrateur peut supprimer des permissions.',
+            ], 403);
+        }
+
+        // Supprimer une permission encore attribuee revoquerait silencieusement
+        // le garde `permission:` de toutes les routes qui la portent.
+        if ($permission->roles()->exists()) {
+            return response()->json([
+                'message' => 'Cette permission est attribuée à un ou plusieurs rôles.',
+            ], 422);
+        }
+
         $permission->delete();
 
         return response()->json(null, 204);

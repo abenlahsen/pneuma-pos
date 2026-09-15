@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\Sanctum;
@@ -630,5 +631,188 @@ class UserAndRoleTest extends TestCase
 
         $this->deleteJson("/api/roles/{$roleInUse->id}")
             ->assertUnprocessable();
+    }
+
+    // =========================================================================
+    // SECURITE — escalade de privileges (audit 2026-09-15)
+    // =========================================================================
+
+    private function makeUserWithRole(Role $role, array $extraPermissions = []): User
+    {
+        $user = User::query()->create([
+            'name' => 'Role Holder',
+            'email' => fake()->unique()->safeEmail(),
+            'password' => bcrypt('password'),
+            'phone' => '0655555555',
+            'commission_rate' => 0,
+            'must_change_password' => false,
+        ]);
+        $user->assignRole($role);
+
+        foreach ($extraPermissions as $perm) {
+            $user->givePermissionTo($perm);
+        }
+
+        return $user;
+    }
+
+    public function test_roles_assign_permissions_forbids_non_admin_from_editing_own_role(): void
+    {
+        $editor = $this->makeUserWithRole($this->commercialRole, ['edit roles']);
+        Sanctum::actingAs($editor, [], 'web');
+
+        $all = Permission::query()->pluck('id')->all();
+
+        $this->putJson("/api/roles/{$this->commercialRole->id}/permissions", ['permissions' => $all])
+            ->assertForbidden();
+
+        $this->assertFalse($this->commercialRole->fresh()->hasPermissionTo('delete users'));
+    }
+
+    public function test_roles_assign_permissions_forbids_granting_permissions_not_held(): void
+    {
+        $editor = $this->makeUserWithRole($this->commercialRole, ['edit roles', 'view users']);
+        Sanctum::actingAs($editor, [], 'web');
+
+        $target = Role::findOrCreate('TargetRole', 'web');
+        $deleteUsers = Permission::findOrCreate('delete users', 'web');
+
+        $this->putJson("/api/roles/{$target->id}/permissions", ['permissions' => [$deleteUsers->id]])
+            ->assertForbidden()
+            ->assertJsonFragment(['message' => 'Vous ne pouvez pas accorder des permissions que vous ne détenez pas : delete users.']);
+
+        $this->assertFalse($target->fresh()->hasPermissionTo('delete users'));
+    }
+
+    public function test_roles_assign_permissions_allows_non_admin_to_grant_held_permissions(): void
+    {
+        $editor = $this->makeUserWithRole($this->commercialRole, ['edit roles', 'view users']);
+        Sanctum::actingAs($editor, [], 'web');
+
+        $target = Role::findOrCreate('TargetRole', 'web');
+        $viewUsers = Permission::findOrCreate('view users', 'web');
+
+        $this->putJson("/api/roles/{$target->id}/permissions", ['permissions' => [$viewUsers->id]])
+            ->assertOk();
+
+        $this->assertTrue($target->fresh()->hasPermissionTo('view users'));
+    }
+
+    public function test_roles_assign_permissions_protects_administrator_permission_set(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+
+        $viewUsers = Permission::findOrCreate('view users', 'web');
+
+        $this->putJson("/api/roles/{$this->adminRole->id}/permissions", ['permissions' => [$viewUsers->id]])
+            ->assertUnprocessable();
+
+        $this->assertTrue($this->adminRole->fresh()->hasPermissionTo('delete roles'));
+    }
+
+    public function test_roles_update_protects_administrator_permission_set(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+
+        $viewUsers = Permission::findOrCreate('view users', 'web');
+
+        $this->putJson("/api/roles/{$this->adminRole->id}", [
+            'name' => 'Administrator',
+            'permissions' => [$viewUsers->id],
+        ])->assertUnprocessable();
+
+        $this->assertTrue($this->adminRole->fresh()->hasPermissionTo('delete roles'));
+    }
+
+    public function test_roles_store_forbids_non_admin_from_creating_role_with_permissions_not_held(): void
+    {
+        $creator = $this->makeUserWithRole($this->commercialRole, ['create roles']);
+        Sanctum::actingAs($creator, [], 'web');
+
+        $deleteUsers = Permission::findOrCreate('delete users', 'web');
+
+        $this->postJson('/api/roles', ['name' => 'Sneaky', 'permissions' => [$deleteUsers->id]])
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('roles', ['name' => 'Sneaky']);
+    }
+
+    public function test_users_update_forbids_non_admin_from_editing_administrator(): void
+    {
+        $editor = $this->makeUserWithRole($this->commercialRole, ['edit users']);
+        Sanctum::actingAs($editor, [], 'web');
+
+        $this->putJson("/api/users/{$this->admin->id}", [
+            'name' => $this->admin->name,
+            'email' => $this->admin->email,
+            'password' => 'owned12345',
+            'password_confirmation' => 'owned12345',
+        ])->assertForbidden();
+
+        $this->assertTrue(Hash::check('password', $this->admin->fresh()->password));
+    }
+
+    public function test_users_destroy_forbids_non_admin_from_deleting_administrator(): void
+    {
+        $secondAdmin = $this->makeUserWithRole($this->adminRole);
+        $deleter = $this->makeUserWithRole($this->commercialRole, ['delete users']);
+        Sanctum::actingAs($deleter, [], 'web');
+
+        $this->deleteJson("/api/users/{$secondAdmin->id}")->assertForbidden();
+
+        $this->assertDatabaseHas('users', ['id' => $secondAdmin->id]);
+    }
+
+    public function test_users_update_password_reset_by_admin_flags_user_and_revokes_tokens(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+
+        $target = $this->makeUserWithRole($this->commercialRole);
+        $target->createToken('session-1');
+        $target->createToken('session-2');
+
+        $this->putJson("/api/users/{$target->id}", [
+            'name' => $target->name,
+            'email' => $target->email,
+            'password' => 'temporary123',
+            'password_confirmation' => 'temporary123',
+        ])->assertOk();
+
+        $fresh = $target->fresh();
+        $this->assertTrue((bool) $fresh->must_change_password);
+        $this->assertSame(0, $fresh->tokens()->count());
+    }
+
+    public function test_users_update_without_password_keeps_flag_and_tokens(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+
+        $target = $this->makeUserWithRole($this->commercialRole);
+        $target->createToken('session-1');
+
+        $this->putJson("/api/users/{$target->id}", [
+            'name' => 'Renamed',
+            'email' => $target->email,
+        ])->assertOk();
+
+        $fresh = $target->fresh();
+        $this->assertFalse((bool) $fresh->must_change_password);
+        $this->assertSame(1, $fresh->tokens()->count());
+    }
+
+    public function test_users_store_flags_new_user_for_password_change(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+
+        $email = fake()->unique()->safeEmail();
+
+        $this->postJson('/api/users', [
+            'name' => 'Fresh User',
+            'email' => $email,
+            'password' => 'temporary123',
+            'password_confirmation' => 'temporary123',
+        ])->assertCreated();
+
+        $this->assertDatabaseHas('users', ['email' => $email, 'must_change_password' => true]);
     }
 }

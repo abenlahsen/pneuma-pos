@@ -54,6 +54,10 @@ class RoleController extends Controller
 
         $role = $this->roleService->create($request);
 
+        if ($role instanceof JsonResponse) {
+            return $role;
+        }
+
         return response()->json((new RoleResource($role))->resolve($request), 201);
     }
 
@@ -65,7 +69,7 @@ class RoleController extends Controller
     public function update(Request $request, Role $role): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|unique:roles,name,' . $role->id,
+            'name' => 'required|string|unique:roles,name,'.$role->id,
             'permissions' => 'array',
             'permissions.*' => 'integer|exists:permissions,id',
         ]);
@@ -98,6 +102,10 @@ class RoleController extends Controller
         ]);
 
         $updatedRole = $this->roleService->assignPermissions($request, $role);
+
+        if ($updatedRole instanceof JsonResponse) {
+            return $updatedRole;
+        }
 
         return response()->json((new RoleResource($updatedRole))->resolve($request));
     }

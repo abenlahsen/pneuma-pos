@@ -672,6 +672,28 @@ class DashboardAndPermissionTest extends TestCase
         $this->deleteJson("/api/permissions/{$perm->id}")->assertForbidden();
     }
 
+    public function test_permissions_destroy_refuses_permission_still_assigned_to_a_role(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+
+        $perm = Permission::create(['name' => 'perm in use '.fake()->unique()->numerify('###'), 'guard_name' => 'web']);
+        Role::findOrCreate('Commercial', 'web')->givePermissionTo($perm);
+
+        $this->deleteJson("/api/permissions/{$perm->id}")->assertUnprocessable();
+
+        $this->assertDatabaseHas('permissions', ['id' => $perm->id]);
+    }
+
+    public function test_permissions_store_requires_administrator_role_even_with_create_roles(): void
+    {
+        $this->nonAdmin->givePermissionTo('create roles');
+        Sanctum::actingAs($this->nonAdmin, [], 'web');
+
+        $this->postJson('/api/permissions', ['name' => 'minted perm'])->assertForbidden();
+
+        $this->assertDatabaseMissing('permissions', ['name' => 'minted perm']);
+    }
+
     public function test_permissions_destroy_deletes_permission(): void
     {
         Sanctum::actingAs($this->admin, [], 'web');
