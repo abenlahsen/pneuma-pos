@@ -37,7 +37,9 @@ class UpdateCompanySettingsRequest extends FormRequest
             'cnss' => ['nullable', 'string', 'max:255'],
             'patente' => ['nullable', 'string', 'max:255'],
             'logo' => ['nullable', 'file', 'image', 'max:5120'],
-            'favicon' => ['nullable', 'file', 'mimes:ico,png,jpg,jpeg,svg,webp', 'max:2048'],
+            // Pas de SVG : servi depuis /storage/ sur l'origine de l'app, un SVG
+            // avec <script> vaudrait XSS stocke (constat H4 de SECURITY_AUDIT.md).
+            'favicon' => ['nullable', 'file', 'mimes:ico,png,jpg,jpeg,webp', 'max:2048'],
             'remove_logo' => ['nullable', 'boolean'],
             'remove_favicon' => ['nullable', 'boolean'],
             'theme_mode' => ['nullable', 'in:light,dark,system'],

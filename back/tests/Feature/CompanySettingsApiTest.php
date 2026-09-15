@@ -7,8 +7,10 @@ use App\Models\CompanySetting;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -401,5 +403,50 @@ class CompanySettingsApiTest extends TestCase
                 'email',
                 'primary_color',
             ]);
+    }
+
+    // -------------------------------------------------------------------------
+    // SECURITE — favicon : pas de SVG (XSS stocke, audit 2026-09-15)
+    // -------------------------------------------------------------------------
+
+    public function test_update_rejects_svg_favicon(): void
+    {
+        $this->authenticateWithPermissions(['edit settings']);
+        Storage::fake('public');
+
+        $svg = UploadedFile::fake()->createWithContent(
+            'icon.svg',
+            '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'
+        );
+
+        $this->post($this->baseUrl, [
+            '_method' => 'PUT',
+            'company_name' => 'Pneuma',
+            'favicon' => $svg,
+        ], ['Accept' => 'application/json'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['favicon']);
+
+        Storage::disk('public')->assertDirectoryEmpty('settings/company');
+    }
+
+    public function test_update_accepts_png_favicon(): void
+    {
+        $this->authenticateWithPermissions(['edit settings']);
+        Storage::fake('public');
+
+        $png = UploadedFile::fake()->createWithContent(
+            'icon.png',
+            base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==')
+        );
+
+        $this->post($this->baseUrl, [
+            '_method' => 'PUT',
+            'company_name' => 'Pneuma',
+            'favicon' => $png,
+        ], ['Accept' => 'application/json'])
+            ->assertOk();
+
+        $this->assertNotEmpty(Storage::disk('public')->files('settings/company'));
     }
 }
