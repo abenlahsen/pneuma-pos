@@ -77,6 +77,12 @@ class AuthController extends Controller
             'must_change_password' => false,
         ]);
 
+        // Un changement de mot de passe ferme toute autre session ouverte.
+        $current = $user->currentAccessToken();
+        $user->tokens()
+            ->when($current && isset($current->id), fn ($q) => $q->where('id', '!=', $current->id))
+            ->delete();
+
         return response()->json([
             'message' => 'Mot de passe modifié avec succès.',
         ]);

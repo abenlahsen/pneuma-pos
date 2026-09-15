@@ -8,10 +8,8 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
-use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
@@ -301,6 +299,95 @@ class AuthTest extends TestCase
         ]);
 
         $response->assertOk();
+    }
+
+    // -------------------------------------------------------------------------
+    // SECURITE — must_change_password cote serveur, sessions, limiteurs
+    // -------------------------------------------------------------------------
+
+    public function test_flagged_user_is_blocked_on_business_routes_until_password_changed(): void
+    {
+        $user = $this->createUser(['must_change_password' => true]);
+        Sanctum::actingAs($user, [], 'web');
+
+        $this->getJson('/api/cities')
+            ->assertForbidden()
+            ->assertJsonPath('code', 'PASSWORD_CHANGE_REQUIRED');
+
+        $this->getJson('/api/user')->assertOk();
+
+        $this->postJson('/api/change-password', [
+            'current_password' => 'password123',
+            'password' => 'newpassword123',
+            'password_confirmation' => 'newpassword123',
+        ])->assertOk();
+
+        $this->getJson('/api/cities')->assertOk();
+    }
+
+    public function test_change_password_rejects_password_without_digits(): void
+    {
+        $user = $this->createUser();
+        Sanctum::actingAs($user, [], 'web');
+
+        $this->postJson('/api/change-password', [
+            'current_password' => 'password123',
+            'password' => 'onlyletters',
+            'password_confirmation' => 'onlyletters',
+        ])->assertUnprocessable()
+            ->assertJsonValidationErrors(['password']);
+    }
+
+    public function test_change_password_revokes_every_other_token(): void
+    {
+        $user = $this->createUser();
+        $current = $user->createToken('current')->plainTextToken;
+        $user->createToken('other-device');
+
+        $this->withHeader('Authorization', 'Bearer '.$current)
+            ->postJson('/api/change-password', [
+                'current_password' => 'password123',
+                'password' => 'newpassword123',
+                'password_confirmation' => 'newpassword123',
+            ])->assertOk();
+
+        $this->assertSame(1, $user->tokens()->count());
+        $this->assertSame('current', $user->tokens()->first()->name);
+    }
+
+    public function test_login_is_rate_limited_per_ip_across_accounts(): void
+    {
+        for ($i = 0; $i < 20; $i++) {
+            $this->postJson('/api/login', [
+                'email' => "spray{$i}@test.com",
+                'password' => 'wrong-password',
+            ])->assertUnauthorized();
+        }
+
+        $this->postJson('/api/login', [
+            'email' => 'spray-last@test.com',
+            'password' => 'wrong-password',
+        ])->assertTooManyRequests();
+    }
+
+    public function test_change_password_is_rate_limited(): void
+    {
+        $user = $this->createUser();
+        Sanctum::actingAs($user, [], 'web');
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->postJson('/api/change-password', [
+                'current_password' => 'wrong',
+                'password' => 'newpassword123',
+                'password_confirmation' => 'newpassword123',
+            ])->assertUnprocessable();
+        }
+
+        $this->postJson('/api/change-password', [
+            'current_password' => 'wrong',
+            'password' => 'newpassword123',
+            'password_confirmation' => 'newpassword123',
+        ])->assertTooManyRequests();
     }
 
     // -------------------------------------------------------------------------

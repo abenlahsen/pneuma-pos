@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 require __DIR__.'/api/auth.php';
 
-Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
+Route::middleware(['auth:sanctum', 'password.changed', 'throttle:api'])->group(function () {
     require __DIR__.'/api/accounts.php';
     require __DIR__.'/api/transaction_categories.php';
     require __DIR__.'/api/catalog.php';
