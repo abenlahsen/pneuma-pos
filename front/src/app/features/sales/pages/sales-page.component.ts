@@ -2,7 +2,8 @@ import { Component, DestroyRef, OnDestroy, OnInit, computed, inject, signal } fr
 import { PageHeaderService } from '../../../core/services/page-header.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, ActivatedRoute } from '@angular/router';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
+import { dayLabel, isoWeekBounds, shiftDays, shortDayLabel, todayIso } from '../../../core/constants/date.constants';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../../core/services/auth.service';
 import { SaleDetailComponent } from '../sale-detail/sale-detail.component';
@@ -29,6 +30,9 @@ import { ErrorBannerComponent, formatErrorDetail } from '../../../shared/error-b
 import { StateSelectComponent } from '../../../shared/state-badge/state-select.component';
 import { StateBadgeComponent } from '../../../shared/state-badge/state-badge.component';
 import { paymentTone } from '../../../shared/state-badge/state-tone';
+
+/** `?date` n'est pris que s'il ressemble a un jour : une URL bricolee ne pilote pas la requete. */
+const DAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 @Component({
   selector: 'app-sales-page',
@@ -60,7 +64,26 @@ export class SalesPageComponent implements OnInit, OnDestroy {
   filterClient = signal('');
   filterCity = signal('');
   cities = signal<string[]>([]);
-  readonly today = new Date();
+
+  // ── Lecture de journee (R6) ───────────────────────────────────────────────
+  /**
+   * Le jour affiche, en `YYYY-MM-DD`. Vide = plage libre, portee par les
+   * filtres Du/Au — c'est ce que laisse « Voir la semaine ».
+   */
+  readonly selectedDay = signal(todayIso());
+  readonly isToday = computed(() => this.selectedDay() === todayIso());
+  /** CA du meme jour de la semaine precedente : la seule comparaison honnete a l'echelle du jour. */
+  readonly previousWeekRevenue = signal<number | null>(null);
+
+  readonly dayLabel = dayLabel;
+  readonly selectedDayShort = computed(() => {
+    const day = this.selectedDay();
+    return day ? `${day.slice(8, 10)}/${day.slice(5, 7)}` : '';
+  });
+  readonly previousWeekLabel = computed(() => {
+    const day = this.selectedDay();
+    return day ? shortDayLabel(shiftDays(day, -7)) : '';
+  });
 
   /**
    * Chips de filtre (`2a`). Elles pilotent les memes signaux que les selects —
@@ -127,6 +150,7 @@ export class SalesPageComponent implements OnInit, OnDestroy {
   allCommercials = signal<ManagedUser[]>([]);
 
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private destroyRef = inject(DestroyRef);
 
   constructor(
@@ -161,6 +185,19 @@ export class SalesPageComponent implements OnInit, OnDestroy {
     this.route.queryParamMap
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(params => {
+        // `?date` d'abord : la branche `id` sort tot sur tout le reste.
+        const date = params.get('date');
+        if (date && DAY_PATTERN.test(date)) {
+          // Garde anti-boucle : `setDay()` ecrit l'URL, qui reemet ici.
+          if (date !== this.selectedDay()) {
+            this.selectedDay.set(date);
+            this.applyFilters();
+          }
+        } else if (!date && this.selectedDay()) {
+          // Arrivee nue : on normalise l'URL pour que la vue se partage.
+          this.writeDayToUrl(this.selectedDay());
+        }
+
         const id = Number(params.get('id'));
         if (!Number.isFinite(id) || id <= 0) return;
 
@@ -205,6 +242,8 @@ export class SalesPageComponent implements OnInit, OnDestroy {
     this.saleService.getSummary(filters).subscribe({
       next: (summary) => this.summary.set(summary),
     });
+
+    this.loadPreviousWeek();
   }
 
   loadFilters(): void {
@@ -231,8 +270,10 @@ export class SalesPageComponent implements OnInit, OnDestroy {
       carrier_id: this.filterCarrier(),
       partner_id: this.filterPartner(),
       commercial_id: this.filterCommercial(),
-      date_from: this.filterDateFrom(),
-      date_to: this.filterDateTo(),
+      // Le jour l'emporte quand il est pose ; sinon les bornes Du/Au passent,
+      // c'est ce qui porte la vue semaine.
+      date_from: this.selectedDay() || this.filterDateFrom(),
+      date_to: this.selectedDay() || this.filterDateTo(),
       with_invoice: this.filterWithInvoice(),
       amount_min: this.filterAmountMin(),
       amount_max: this.filterAmountMax(),
@@ -244,6 +285,72 @@ export class SalesPageComponent implements OnInit, OnDestroy {
   applyFilters(): void {
     this.currentPage.set(1);
     this.loadData();
+  }
+
+  // ── Navigation au jour ────────────────────────────────────────────────────
+
+  /** Pose le jour affiche, l'ecrit dans l'URL et recharge. `''` rend la main aux bornes Du/Au. */
+  setDay(day: string): void {
+    if (day === this.selectedDay()) return;
+
+    this.selectedDay.set(day);
+    this.writeDayToUrl(day);
+    this.applyFilters();
+  }
+
+  /** Les fleches sont le chemin principal : au comptoir on navigue au jour, pas au calendrier. */
+  stepDay(days: number): void {
+    const day = this.selectedDay();
+    if (!day) return;
+
+    this.setDay(shiftDays(day, days));
+  }
+
+  goToday(): void {
+    this.setDay(todayIso());
+  }
+
+  /**
+   * Elargit a la semaine (lundi -> dimanche) du jour affiche : le selecteur se
+   * vide et les bornes Du/Au prennent le relais. La plage ne va pas dans l'URL
+   * — seul `?date` est partageable, un rechargement revient donc a aujourd'hui.
+   */
+  showWeek(): void {
+    const { from, to } = isoWeekBounds(this.selectedDay() || todayIso());
+
+    this.selectedDay.set('');
+    this.filterDateFrom.set(from);
+    this.filterDateTo.set(to);
+    this.writeDayToUrl(null);
+    this.applyFilters();
+  }
+
+  private writeDayToUrl(day: string | null): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { date: day || null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  /** CA du meme jour, sept jours plus tot, sous les memes filtres. */
+  private loadPreviousWeek(): void {
+    const day = this.selectedDay();
+    if (!day) {
+      this.previousWeekRevenue.set(null);
+      return;
+    }
+
+    const previous = shiftDays(day, -7);
+    this.saleService
+      .getSummary({ ...this.buildFilters(), date_from: previous, date_to: previous })
+      .subscribe({
+        // `revenue_period` porte la somme filtree des qu'une borne est posee ;
+        // `revenue_today` est alors nul. Voir SaleController::summary().
+        next: (summary) => this.previousWeekRevenue.set(summary.revenue_period),
+        error: () => this.previousWeekRevenue.set(null),
+      });
   }
 
   /** Les filtres réellement actifs, en clair — sert à expliquer un tableau vide (`3b`). */
@@ -269,11 +376,24 @@ export class SalesPageComponent implements OnInit, OnDestroy {
 
   readonly hasActiveFilters = computed(() => this.activeFilterSummary() !== '');
 
-  readonly emptyStateMessage = computed(() =>
-    this.hasActiveFilters()
-      ? `${this.activeFilterSummary()} Élargissez la période ou retirez les filtres pour voir davantage de ventes.`
-      : "Aucune vente n'a encore été enregistrée. Créez la première pour démarrer.",
+  /** Un jour sans vente n'est pas une anomalie : le titre dit lequel, pas « cette sélection ». */
+  readonly emptyStateTitle = computed(() =>
+    this.selectedDay()
+      ? `Aucune vente le ${dayLabel(this.selectedDay())}`
+      : 'Aucune vente sur cette sélection',
   );
+
+  readonly emptyStateMessage = computed(() => {
+    if (this.selectedDay()) {
+      return this.hasActiveFilters()
+        ? `${this.activeFilterSummary()} Changez de jour ou retirez les filtres.`
+        : 'Rien n’a été vendu ce jour-là. Voyez la semaine pour situer, ou changez de jour.';
+    }
+
+    return this.hasActiveFilters()
+      ? `${this.activeFilterSummary()} Élargissez la période ou retirez les filtres pour voir davantage de ventes.`
+      : "Aucune vente n'a encore été enregistrée. Créez la première pour démarrer.";
+  });
 
   /** Un id de filtre ne dit rien à l'utilisateur : on affiche le nom. */
   private labelOf(list: { id: number; name?: string }[], id: string): string {
@@ -310,6 +430,10 @@ export class SalesPageComponent implements OnInit, OnDestroy {
     this.filterAmountMax.set('');
     this.sortBy.set('');
     this.sortDirection.set('asc');
+    // La chip restait en surbrillance alors que son filtre venait d'etre vide.
+    this.quickFilter.set('all');
+    this.selectedDay.set(todayIso());
+    this.writeDayToUrl(this.selectedDay());
     this.currentPage.set(1);
     this.loadData();
   }

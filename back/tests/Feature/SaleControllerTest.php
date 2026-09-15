@@ -806,6 +806,78 @@ class SaleControllerTest extends TestCase
             ->assertJsonPath('tyres_period', 8);
     }
 
+    /**
+     * Les comptes portes par les chips doivent suivre les bornes de date.
+     *
+     * Ils se calculent deliberement AVANT les filtres d'etat, pour qu'une chip
+     * ne change pas de nombre quand on la clique. La date, elle, doit etre du
+     * bon cote de cette ligne : sur une lecture de journee, « Impayees · 2 »
+     * n'a de sens que si le 2 porte sur le jour affiche.
+     */
+    public function test_sales_summary_chip_counts_follow_the_date_range()
+    {
+        $this->createSale([
+            'date' => '2026-03-10',
+            'status' => 'EN COURS',
+            'payment_status' => 'NON PAYE',
+            'total_sale' => 100,
+        ]);
+        $this->createSale([
+            'date' => '2026-03-10',
+            'status' => 'LIVRE',
+            'payment_status' => 'PAYE',
+            'total_sale' => 200,
+        ]);
+
+        // Un autre jour : il ne doit gonfler aucune chip du 10.
+        $this->createSale([
+            'date' => '2026-03-11',
+            'status' => 'EN COURS',
+            'payment_status' => 'PARTIEL',
+            'total_sale' => 300,
+        ]);
+
+        $response = $this->getJson(
+            '/api/sales-summary?date_from=2026-03-10&date_to=2026-03-10',
+            $this->authHeaders()
+        );
+
+        $response->assertOk()
+            ->assertJsonPath('count_all', 2)
+            ->assertJsonPath('count_en_cours', 1)
+            ->assertJsonPath('count_livre', 1)
+            ->assertJsonPath('count_unpaid', 1);
+    }
+
+    /**
+     * Le correctif ci-dessus ne doit pas ramener le bug qu'evite le clonage
+     * anticipe : selectionner une chip ne change pas son propre compte.
+     */
+    public function test_sales_summary_chip_counts_hold_when_a_status_filter_is_applied()
+    {
+        $this->createSale([
+            'date' => '2026-03-10',
+            'status' => 'EN COURS',
+            'payment_status' => 'NON PAYE',
+            'total_sale' => 100,
+        ]);
+        $this->createSale([
+            'date' => '2026-03-10',
+            'status' => 'LIVRE',
+            'payment_status' => 'PAYE',
+            'total_sale' => 200,
+        ]);
+
+        $response = $this->getJson(
+            '/api/sales-summary?date_from=2026-03-10&date_to=2026-03-10&status=EN+COURS',
+            $this->authHeaders()
+        );
+
+        $response->assertOk()
+            ->assertJsonPath('count_all', 2)
+            ->assertJsonPath('count_livre', 1);
+    }
+
     /** Un pneu vendable, pour les tests qui ont besoin d'un article et d'un lot. */
     private function createTyreProduct(): Product
     {

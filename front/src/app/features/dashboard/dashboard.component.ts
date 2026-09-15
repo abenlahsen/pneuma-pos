@@ -10,6 +10,7 @@ import { IconComponent } from '../../shared/icon/icon.component';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 import { ErrorBannerComponent, formatErrorDetail } from '../../shared/error-banner/error-banner.component';
 import { PageHeaderService } from '../../core/services/page-header.service';
+import { todayIso } from '../../core/constants/date.constants';
 
 /** Une barre de la tendance : sa hauteur relative et si c'est aujourd'hui. */
 interface TrendBar {
@@ -208,6 +209,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** Un impayé se règle sur la vente : on ouvre la vente, pas une page intermédiaire. */
   openSale(id: number): void {
     this.router.navigate(['/sales'], { queryParams: { id } });
+  }
+
+  /** Le CA du jour mène au détail de la journée, pas à la liste entière. */
+  openToday(): void {
+    this.router.navigate(['/sales'], { queryParams: { date: todayIso() } });
   }
 
   /**

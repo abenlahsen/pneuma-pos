@@ -15,6 +15,7 @@ use App\Models\Partner;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -125,14 +126,7 @@ class SaleController extends Controller
         }
 
         $dateColumn = $this->resolveDateColumn();
-
-        if ($dateColumn !== 'id' && $request->filled('date_from')) {
-            $query->whereDate($dateColumn, '>=', (string) $request->string('date_from'));
-        }
-
-        if ($dateColumn !== 'id' && $request->filled('date_to')) {
-            $query->whereDate($dateColumn, '<=', (string) $request->string('date_to'));
-        }
+        $this->applyDateRange($query, $request, $dateColumn);
 
         if ($request->filled('with_invoice') && Schema::hasColumn('sales', 'with_invoice')) {
             $query->where('with_invoice', filter_var($request->input('with_invoice'), FILTER_VALIDATE_BOOLEAN));
@@ -314,14 +308,7 @@ class SaleController extends Controller
         }
 
         $dateColumn = $this->resolveDateColumn();
-
-        if ($dateColumn !== 'id' && $request->filled('date_from')) {
-            $query->whereDate($dateColumn, '>=', (string) $request->string('date_from'));
-        }
-
-        if ($dateColumn !== 'id' && $request->filled('date_to')) {
-            $query->whereDate($dateColumn, '<=', (string) $request->string('date_to'));
-        }
+        $this->applyDateRange($query, $request, $dateColumn);
 
         if ($request->filled('with_invoice') && Schema::hasColumn('sales', 'with_invoice')) {
             $query->where('with_invoice', filter_var($request->input('with_invoice'), FILTER_VALIDATE_BOOLEAN));
@@ -573,14 +560,13 @@ class SaleController extends Controller
         }
 
         $dateColumn = $this->resolveDateColumn();
+        $this->applyDateRange($query, $request, $dateColumn);
 
-        if ($dateColumn !== 'id' && $request->filled('date_from')) {
-            $query->whereDate($dateColumn, '>=', (string) $request->string('date_from'));
-        }
-
-        if ($dateColumn !== 'id' && $request->filled('date_to')) {
-            $query->whereDate($dateColumn, '<=', (string) $request->string('date_to'));
-        }
+        // Les chips suivent la date, pas l'etat. Sur une lecture de journee,
+        // « Impayées · 2 » n'a de sens que si le 2 porte sur le jour affiche ;
+        // on pose donc les bornes ici plutot que de deplacer le clonage apres
+        // les filtres d'etat, ce qui ramenerait le bug qu'il evite.
+        $this->applyDateRange($chipQuery, $request, $dateColumn);
 
         $today = now()->toDateString();
         $monthStart = now()->startOfMonth()->toDateString();
@@ -709,6 +695,28 @@ class SaleController extends Controller
             ->sort()
             ->values()
             ->all();
+    }
+
+    /**
+     * Applique les bornes `date_from` / `date_to`, inclusives.
+     *
+     * Extrait parce que `summary()` doit les poser deux fois : sur la requete
+     * principale et sur `$chipQuery`, qui est clone avant les filtres d'etat.
+     * `index()` et `export()` portaient le meme bloc, recopie a l'identique.
+     */
+    protected function applyDateRange(Builder $query, Request $request, string $dateColumn): void
+    {
+        if ($dateColumn === 'id') {
+            return;
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate($dateColumn, '>=', (string) $request->string('date_from'));
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate($dateColumn, '<=', (string) $request->string('date_to'));
+        }
     }
 
     protected function resolveDateColumn(): string

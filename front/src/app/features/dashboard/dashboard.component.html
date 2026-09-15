@@ -176,10 +176,11 @@
 
     <!-- Une liste, pas des cadrans : quatre chiffres se lisent en colonne. -->
     <div class="side-list">
-      <span class="side-row">
+      <!-- On voit le chiffre, on veut le détail : la ligne mène à la journée. -->
+      <button type="button" class="side-row side-row--link" (click)="openToday()">
         <span class="side-k">Chiffre d’affaires</span>
         <span class="side-v">{{ f.today.revenue | number:'1.0-0' }} DH</span>
-      </span>
+      </button>
       <span class="side-row">
         <span class="side-k">Ventes</span>
         <span class="side-v">{{ f.today.sales }}</span>

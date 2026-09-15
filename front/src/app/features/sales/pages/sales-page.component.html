@@ -4,7 +4,11 @@
        egales separees par un filet. Pas d'icone — l'etiquette porte le sens. -->
   <div class="summary-cards">
     <div class="card summary-card">
-      <p class="card-label">{{ summary().revenue_today !== null ? 'CA du jour' : 'CA de la période' }}</p>
+      <!-- L'etiquette porte le jour des qu'on quitte aujourd'hui : sans elle on
+           lit les chiffres d'un mardi en croyant voir ceux du jour. -->
+      <p class="card-label">
+        {{ isToday() ? 'CA du jour' : selectedDay() ? 'CA du ' + selectedDayShort() : 'CA de la période' }}
+      </p>
       <h3 class="card-value">
         {{ (summary().revenue_today ?? summary().revenue_period ?? 0) | number:'1.0-0' }}<small> DH</small>
       </h3>
@@ -29,6 +33,12 @@
     </div>
   </div>
 
+  <!-- La seule comparaison honnete a l'echelle du jour : le meme jour de la
+       semaine precedente. Un lundi ne se compare pas a un dimanche. -->
+  <p class="day-compare" *ngIf="selectedDay() && previousWeekRevenue() !== null">
+    {{ previousWeekLabel() }} : {{ previousWeekRevenue() | number:'1.0-0' }} DH
+  </p>
+
   <!-- Chips de filtre (`2a`) : chacune porte son compte, donc on n'ouvre pas la
        liste pour savoir s'il y a quelque chose dedans. « Impayées » est teintee
        en permanence — c'est la seule qui coute de l'argent. -->
@@ -41,7 +51,21 @@
             (click)="setQuickFilter('livre')">Livrées · {{ summary().count_livre }}</button>
     <button type="button" class="chip chip--alert" [class.chip--on]="quickFilter() === 'unpaid'"
             (click)="setQuickFilter('unpaid')">Impayées · {{ summary().count_unpaid }}</button>
-    <span class="chip-count">{{ total() }} vente{{ total() > 1 ? 's' : '' }} · {{ today | date:'dd/MM/yyyy' }}</span>
+    <!-- Selecteur de jour (R6) : les fleches sont le chemin principal, le champ
+         sert a sauter loin. Au comptoir on navigue au jour, pas au calendrier. -->
+    <div class="day-picker">
+      <button type="button" class="day-step" (click)="stepDay(-1)"
+              [disabled]="!selectedDay()" title="Jour précédent" aria-label="Jour précédent">‹</button>
+      <input type="date" class="day-input" [ngModel]="selectedDay()"
+             (ngModelChange)="setDay($event)" aria-label="Jour affiché">
+      <button type="button" class="day-step" (click)="stepDay(1)"
+              [disabled]="!selectedDay()" title="Jour suivant" aria-label="Jour suivant">›</button>
+      <button type="button" class="chip" (click)="goToday()" [disabled]="isToday()">Aujourd’hui</button>
+    </div>
+
+    <span class="chip-count">
+      {{ total() }} vente{{ total() > 1 ? 's' : '' }}<ng-container *ngIf="selectedDay()"> · {{ selectedDayShort() }}</ng-container>
+    </span>
   </div>
 
   <div class="card filters-section">
@@ -186,14 +210,18 @@
         <tbody>
           <tr *ngIf="!loading() && sales().length === 0 && !loadError()">
             <td colspan="17">
+              <!-- Sur une journee vide on propose la sortie par le jour, pas
+                   par les filtres : c'est le jour qui a ferme, pas la selection. -->
               <app-empty-state
                 icon="sales"
-                title="Aucune vente sur cette sélection"
+                [title]="emptyStateTitle()"
                 [message]="emptyStateMessage()"
-                [secondaryLabel]="hasActiveFilters() ? 'Retirer les filtres' : ''"
-                [primaryLabel]="authService.hasPermission('create sales') ? 'Nouvelle vente' : ''"
-                (secondaryAction)="resetFilters()"
-                (primaryAction)="openAddForm()" />
+                [secondaryLabel]="selectedDay() ? 'Voir la semaine' : (hasActiveFilters() ? 'Retirer les filtres' : '')"
+                [primaryLabel]="selectedDay() && !isToday()
+                  ? 'Revenir à aujourd’hui'
+                  : (authService.hasPermission('create sales') ? 'Nouvelle vente' : '')"
+                (secondaryAction)="selectedDay() ? showWeek() : resetFilters()"
+                (primaryAction)="selectedDay() && !isToday() ? goToday() : openAddForm()" />
             </td>
           </tr>
 
