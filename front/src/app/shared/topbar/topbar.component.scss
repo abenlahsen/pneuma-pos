@@ -1,0 +1,133 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.topbar {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 18px;
+  background: #f4f8fd;
+  border-bottom: 1px solid #cfdcec;
+}
+
+.topbar-logo {
+  height: 26px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.topbar-search {
+  flex: 1;
+  max-width: 580px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 13px;
+  background: #fff;
+  border: 1px solid #adc2da;
+  color: #4a5c75;
+  cursor: not-allowed;
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13.5px;
+    color: #4a5c75;
+    cursor: not-allowed;
+    &::placeholder { color: #4a5c75; }
+  }
+
+  .topbar-search-hint {
+    font: 600 10px ui-monospace, Menlo, monospace;
+    color: #4a5c75;
+    border: 1px solid #cfdcec;
+    padding: 2px 5px;
+    flex-shrink: 0;
+  }
+}
+
+.topbar-clock {
+  margin-left: auto;
+  font-size: 12px;
+  color: #4a5c75;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.topbar-user {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.topbar-avatar {
+  width: 30px;
+  height: 30px;
+  background: #ff2d37;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.topbar-user-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 180px;
+  background: #fff;
+  border: 1px solid #adc2da;
+  box-shadow: 0 10px 25px rgba(12, 30, 51, 0.18);
+  z-index: 200;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.topbar-user-info {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e7eef8;
+}
+
+.topbar-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0c1e33;
+}
+
+.topbar-user-role {
+  font-size: 11px;
+  color: #4a5c75;
+}
+
+.topbar-logout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 4px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #c2181f;
+  cursor: pointer;
+  text-align: left;
+  &:hover { text-decoration: underline; }
+}
+
+@media (max-width: 1024px) {
+  .topbar-search { display: none; }
+}

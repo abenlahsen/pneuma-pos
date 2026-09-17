@@ -195,14 +195,12 @@ not elevation. The `box-shadow` used by `:focus-visible` rings is
   &:hover { background: $bg-body; }
 }
 
-// Logout (navbar context — dark bg)
-.btn-logout {
-  background: transparent;
-  color: #f8fafc;
-  border: 1px solid rgba(255,255,255,0.18);
-  padding: 0.3rem 0.75rem;
-  border-radius: 6px;
-  font-size: 0.8rem;
+// Déconnexion (menu déroulant sous l'avatar de la barre haute, fond clair)
+.topbar-logout {
+  background: none;
+  color: #c2181f;
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
 ```
 
@@ -317,25 +315,36 @@ not elevation. The `box-shadow` used by `:focus-visible` rings is
 }
 ```
 
-### Navbar
+### Rail + barre haute (refonte 2b, étape 3)
+
+Remplace l'ancien navbar horizontal/vertical (`menuLayout`, disparu). Deux
+composants distincts, montés côte à côte dans `app.html` :
 
 ```scss
-.navbar {
-  background: #1f2937;
-  height: 56px;
-  padding: 0 1.5rem;
-  box-shadow: 0 2px 10px rgba(15,23,42,0.16);
-  position: sticky; top: 0; z-index: 1000;
+// Rail — 72px, sombre, fixe à gauche
+.rail {
+  width: 72px;
+  background: #081627;
 }
-.navbar-links a {
-  color: rgba(248,250,252,0.88);
-  font-size: 0.82rem; font-weight: 500;
-  padding: 0.4rem 0.7rem; border-radius: 6px;
-  &:hover { background: rgba(255,255,255,0.10); }
-  &.active { background: $primary; color: white; font-weight: 600; }
+.rail-item {
+  width: 56px; height: 54px;
+  color: rgba(230,237,247,.66);
+  font-size: 8.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  &.active { background: #ff2d37; color: #fff; }
 }
-// Responsive: hamburger menu below 1024px
+// Un item avec enfants ouvre un volet superposé (.rail-flyout) à droite du
+// rail au lieu d'un dropdown horizontal — un seul volet ouvert à la fois.
+
+// Barre haute — 60px, claire, pleine largeur au-dessus du rail
+.topbar {
+  height: 60px;
+  background: #f4f8fd;
+  border-bottom: 1px solid #cfdcec;
+}
 ```
+
+La case de recherche de la barre haute est un placeholder visuel (`⌘K`) —
+aucune palette de commandes n'est encore branchée dessus.
 
 ### Modals
 
@@ -407,7 +416,8 @@ Activated via `[data-theme-resolved='dark']` on `:root`.
 | CSS custom properties (`:root`) | `front/src/styles.scss` (NOT `app.scss` — a `:root` rule written inside a component's stylesheet is scoped away by Angular's view encapsulation and never matches `<html>`) |
 | SCSS variables | `front/src/app/features/_variables.scss` |
 | Global reset + print styles | `front/src/styles.scss` |
-| Navbar styles | `front/src/app/shared/navbar/navbar.component.scss` |
+| Rail (navigation) styles | `front/src/app/shared/rail/rail.component.scss` |
+| Barre haute styles | `front/src/app/shared/topbar/topbar.component.scss` |
 | Dashboard styles | `front/src/app/features/dashboard/dashboard.component.scss` |
 | Sales page styles | `front/src/app/features/sales/pages/sales-page.component.scss` |
 | Sales variables | `front/src/app/features/sales/variables.scss` |

@@ -1,0 +1,25 @@
+<header class="topbar">
+  <img [src]="brandLogoUrl()" alt="PNEU.MA" class="topbar-logo">
+
+  <label class="topbar-search" title="Recherche — pas encore branchée">
+    <app-icon name="search" [size]="16" />
+    <input type="text" placeholder="Client, dimension (2055516), n° de vente…" disabled>
+    <span class="topbar-search-hint">⌘K</span>
+  </label>
+
+  <span class="topbar-clock">{{ now() | date:'EEE d MMM · HH:mm' }}</span>
+
+  <div class="topbar-user">
+    <button type="button" class="topbar-avatar" (click)="toggleUserMenu()">{{ userInitial() }}</button>
+
+    <div class="topbar-user-menu" *ngIf="userMenuOpen()">
+      <div class="topbar-user-info">
+        <span class="topbar-user-name">{{ userName() }}</span>
+        <span class="topbar-user-role" *ngIf="userRole()">{{ userRole() }}</span>
+      </div>
+      <button type="button" class="topbar-logout" (click)="logout()">
+        <app-icon name="log-out" [size]="14" /> Déconnexion
+      </button>
+    </div>
+  </div>
+</header>

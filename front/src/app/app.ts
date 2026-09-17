@@ -1,22 +1,21 @@
-import { Component, OnInit, computed, effect, signal } from '@angular/core';
+import { Component, OnInit, effect, signal } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { RouterOutlet } from '@angular/router';
-import { NavbarComponent } from './shared/navbar/navbar.component';
+import { RailComponent } from './shared/rail/rail.component';
+import { TopbarComponent } from './shared/topbar/topbar.component';
 import { AuthService } from './core/services/auth.service';
 import { environment } from '../environments/environment';
 import { SettingsService } from './features/settings/data-access/settings.service';
 import { ThemeService } from './core/services/theme.service';
-import { MenuLayout } from './features/settings/models/company-settings.model';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, NavbarComponent],
+  imports: [RouterOutlet, RailComponent, TopbarComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
 export class App implements OnInit {
-  private companySettings = signal<{ menu_layout?: MenuLayout } | null>(null);
-  readonly menuLayout = computed<MenuLayout>(() => this.companySettings()?.menu_layout ?? 'vertical');
+  private companySettings = signal<unknown | null>(null);
 
   constructor(
     public authService: AuthService,

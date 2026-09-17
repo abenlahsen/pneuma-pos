@@ -1,0 +1,33 @@
+<nav class="rail">
+  <ng-container *ngFor="let item of visibleNavItems()">
+    <a *ngIf="!item.children"
+       class="rail-item"
+       [routerLink]="item.route"
+       routerLinkActive="active"
+       [routerLinkActiveOptions]="{ exact: !!item.exact }">
+      <app-icon [name]="item.icon" [size]="19" />
+      <span>{{ item.label }}</span>
+    </a>
+
+    <div class="rail-group" *ngIf="item.children">
+      <button type="button"
+              class="rail-item"
+              [class.active]="isGroupActive(item) || isGroupOpen(item)"
+              (click)="toggleGroup(item, $event)">
+        <app-icon [name]="item.icon" [size]="19" />
+        <span>{{ item.label }}</span>
+      </button>
+
+      <div class="rail-flyout" *ngIf="isGroupOpen(item)" [style.top.px]="flyoutTop()">
+        <div class="rail-flyout-title">{{ item.label }}</div>
+        <a *ngFor="let child of item.children"
+           [routerLink]="child.route"
+           routerLinkActive="active"
+           (click)="closeGroup()">
+          <app-icon [name]="child.icon" [size]="16" />
+          {{ child.label }}
+        </a>
+      </div>
+    </div>
+  </ng-container>
+</nav>

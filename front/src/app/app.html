@@ -1,8 +1,9 @@
 @if (authService.isAuthenticated()) {
-  <div class="app-shell" [class.app-shell--vertical]="menuLayout() === 'vertical'">
-    <app-navbar></app-navbar>
+  <div class="app-shell">
+    <app-topbar></app-topbar>
+    <app-rail></app-rail>
 
-    <main class="main-content" [class.main-content--vertical]="menuLayout() === 'vertical'">
+    <main class="main-content">
       <div class="main-content__inner">
         <router-outlet />
       </div>

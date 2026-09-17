@@ -13,20 +13,33 @@
   color: var(--app-text);
 }
 
+// Rail 72px + barre haute 60px (refonte 2b, étape 3 — remplace le navbar et
+// ses deux variantes horizontale/verticale pilotées par `menuLayout`).
 .app-shell {
   min-height: 100vh;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  grid-template-rows: 60px minmax(0, 1fr);
   background: var(--app-background);
   color: var(--app-text);
 }
 
-.app-shell--vertical {
-  display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
-  align-items: start;
+app-topbar {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
+app-rail {
+  grid-column: 1;
+  grid-row: 2;
+  min-height: 0;
 }
 
 .main-content {
-  min-height: calc(100vh - 72px);
+  grid-column: 2;
+  grid-row: 2;
+  min-height: 0;
+  overflow-y: auto;
   background: var(--app-background);
   color: var(--app-text);
 }
@@ -49,20 +62,7 @@
   max-width: 1120px;
 }
 
-:root[data-menu-layout='vertical'] .main-content {
-  min-height: 100vh;
-}
-
 @media (max-width: 1024px) {
-  .app-shell--vertical {
-    display: block;
-  }
-
-  .main-content,
-  :root[data-menu-layout='vertical'] .main-content {
-    min-height: calc(100vh - 72px);
-  }
-
   .main-content__inner {
     padding: 1rem;
   }
