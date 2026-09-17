@@ -53,6 +53,9 @@ export interface DashboardKpi {
   stock_value: number;
   unpaid_sales: number;
   unpaid_purchases: number;
+  /** Absent des snapshots antérieurs à cette fonctionnalité — toujours optionnel. */
+  unpaid_purchases_overdue_legal?: number;
+  unpaid_purchases_overdue_legal_count?: number;
   cash_balance: number;
 }
 

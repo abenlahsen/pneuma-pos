@@ -139,7 +139,7 @@
 
 .total-row {
   background: var(--surface-sunk);
-  td { border-top: 2px solid var(--divider); font-size: 0.875rem; }
+  td { border-top: 1px solid var(--divider); font-size: 0.875rem; }
 }
 
 tfoot .total-row td { border-bottom: none; }
@@ -181,7 +181,7 @@ tfoot .total-row td { border-bottom: none; }
 .spinner {
   width: 20px;
   height: 20px;
-  border: 2px solid var(--accent-300);
+  border: 1px solid var(--accent-300);
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;

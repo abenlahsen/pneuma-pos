@@ -55,6 +55,12 @@ export interface Product {
   id: number;
   profile: string | null;
   reference: string | null;
+  /**
+   * Seuil de réapprovisionnement propre à cet article ; null = suit le défaut
+   * agence. Optionnel : les pages ventes/achats réutilisent ce type pour leur
+   * `Product` local (`core/models/product.model.ts`), qui ne le porte pas.
+   */
+  alert_threshold?: number | null;
   type: ProductType;
   brand_id: number | null;
   brand?: Brand;
@@ -71,6 +77,7 @@ export interface Product {
 export interface ProductPayload {
   profile?: string | null;
   reference?: string | null;
+  alert_threshold?: number | null;
   type: ProductType;
   brand_id?: number | null;
   description?: string | null;

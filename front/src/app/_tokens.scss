@@ -53,6 +53,22 @@
   --bad-bg:    var(--accent-100);
   --bad-text:  var(--accent-700);
 
+  /* — tons doux (R8_ALLEGEMENT_COULEURS.md) : le rouge ne reste que sur
+       l'argent dû. Bleu = action de facturation, ocre = réapprovisionnement,
+       ni l'un ni l'autre n'est une dette. — */
+  --tone-blue-border: #a9c0d0;
+  --tone-blue-bg:     #e8eef3;
+  --tone-blue-ink:    #1f5068;
+  --tone-sand-border: #d8c493;
+  --tone-sand-bg:     #f6efe0;
+  --tone-sand-ink:    #7a5a14;
+
+  /* — barres de graphique (R8) : décoratives, partagées entre thèmes comme
+       les rampes ci-dessus — un bleu-gris clair reste lisible sur fond
+       sombre sans retouche. — */
+  --chart-bar:  #c4cdd4;
+  --chart-rank: #a9c0d0;
+
   /* — type : six pas, plus de demi-pixels — */
   --font: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --fs-label: 13px;
@@ -115,6 +131,16 @@
   --warn-text: #f0b878;
   --bad-bg:    #3a1a14;
   --bad-text:  var(--accent-400);
+
+  /* Tons doux (R8) — dérivés, pas fournis par la maquette : même logique que
+     ok/warn/bad ci-dessus (fond clair → fond sombre désaturé, encre foncée
+     → encre claire). À valider visuellement. */
+  --tone-blue-border: #3d5f70;
+  --tone-blue-bg:     #182830;
+  --tone-blue-ink:    #8fc4dd;
+  --tone-sand-border: #6b5a3a;
+  --tone-sand-bg:     #33291a;
+  --tone-sand-ink:    #e0b968;
 
   --rail-bg:   #131110;
   --scrim:     rgba(5, 4, 4, 0.7);

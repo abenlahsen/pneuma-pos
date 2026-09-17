@@ -38,6 +38,7 @@ class ProductService
             $product = Product::create([
                 'profile' => $validated['profile'] ?? null,
                 'reference' => $validated['reference'] ?? null,
+                'alert_threshold' => $validated['alert_threshold'] ?? null,
                 'type' => $validated['type'],
                 'brand_id' => $validated['brand_id'] ?? null,
                 'description' => $validated['description'] ?? null,
@@ -72,6 +73,7 @@ class ProductService
             $product->update([
                 'profile' => $validated['profile'] ?? null,
                 'reference' => $validated['reference'] ?? null,
+                'alert_threshold' => $validated['alert_threshold'] ?? null,
                 'type' => $validated['type'],
                 'brand_id' => $validated['brand_id'] ?? null,
                 'description' => $validated['description'] ?? null,

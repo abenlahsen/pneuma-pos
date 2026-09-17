@@ -12,11 +12,15 @@ use App\Models\Supplier;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\ActivityLogService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class PurchasePaymentService
 {
+    /** Loi 69-21 : au-delà, un achat facturé impayé expose à des pénalités de retard. */
+    public const LEGAL_PENALTY_DAYS = 120;
+
     public function __construct(private ActivityLogService $activityLog) {}
 
     public function listForPurchase(Purchase $purchase): array
@@ -282,6 +286,107 @@ class PurchasePaymentService
             ])
             ->filter(fn ($row) => $row['remaining'] > 0.01)
             ->values();
+    }
+
+    /**
+     * Base partagee par `legalOverdueTotals()` et `unpaidPurchaseRows()` : tout
+     * achat non-ANNULE avec un reste du, au grain de l'achat (pas du
+     * fournisseur). Memes expressions SQL que `SupplierService::unpaidBySupplier()`
+     * — l'aggregat par fournisseur et ces lignes par achat doivent toujours
+     * s'additionner au meme total, d'ou la reprise a l'identique plutot qu'une
+     * 4e formule.
+     */
+    private function outstandingPurchasesQuery(): \Illuminate\Database\Query\Builder
+    {
+        $effectiveNet = 'purchases.net_amount - purchases.returned_amount * (1 - purchases.discount / 100)';
+        $netPaid = 'COALESCE(alloc.paid, 0) - COALESCE(ret.refunded, 0)';
+        $outstanding = "GREATEST(($effectiveNet) - ($netPaid), 0)";
+
+        $allocSub = DB::table('purchase_payment_allocations')
+            ->selectRaw('purchase_id, SUM(amount) as paid')
+            ->groupBy('purchase_id');
+
+        $returnSub = DB::table('purchase_returns')
+            ->selectRaw('purchase_id, SUM(refund_amount) as refunded')
+            ->groupBy('purchase_id');
+
+        $inner = DB::table('purchases')
+            ->leftJoin('suppliers', 'purchases.supplier_id', '=', 'suppliers.id')
+            ->leftJoinSub($allocSub, 'alloc', 'alloc.purchase_id', '=', 'purchases.id')
+            ->leftJoinSub($returnSub, 'ret', 'ret.purchase_id', '=', 'purchases.id')
+            ->whereNot('purchases.status', PurchaseStatus::ANNULE->value)
+            ->selectRaw("purchases.id, purchases.date, purchases.supplier_id,
+                COALESCE(suppliers.name, 'Sans fournisseur') as supplier_name,
+                purchases.with_invoice, {$outstanding} as outstanding");
+
+        return DB::query()->fromSub($inner, 'p')->where('outstanding', '>', 0.01);
+    }
+
+    /**
+     * Montant et nombre d'achats factures impayes au-dela du delai legal —
+     * alimente le KPI dashboard. `date < cutoff` : strictement plus de 120
+     * jours ecoules, un achat pile a 120 jours n'est pas encore en risque.
+     */
+    public function legalOverdueTotals(): array
+    {
+        $cutoff = today()->subDays(self::LEGAL_PENALTY_DAYS)->toDateString();
+
+        $row = $this->outstandingPurchasesQuery()
+            ->where('with_invoice', 1)
+            ->where('date', '<', $cutoff)
+            ->selectRaw('COUNT(*) as c, COALESCE(SUM(outstanding), 0) as t')
+            ->first();
+
+        return [
+            'count' => (int) $row->c,
+            'total' => round((float) $row->t, 2),
+        ];
+    }
+
+    /**
+     * Achats fournisseurs a regler, toutes agences confondues, pour la file
+     * de l'accueil : risque legal d'abord, puis factures, puis plus anciens.
+     * `legal_risk` reprend EXACTEMENT la comparaison de `legalOverdueTotals()`
+     * (jamais `days_late > 120`) pour que le compte de la file et celui du
+     * KPI restent toujours d'accord.
+     */
+    public function unpaidPurchaseRows(int $limit = 12): \Illuminate\Support\Collection
+    {
+        $cutoff = today()->subDays(self::LEGAL_PENALTY_DAYS)->toDateString();
+
+        return $this->outstandingPurchasesQuery()
+            ->orderByRaw('(with_invoice = 1 AND date < ?) DESC', [$cutoff])
+            ->orderByDesc('with_invoice')
+            ->orderBy('date')
+            ->orderBy('id')
+            ->limit($limit)
+            ->get()
+            ->map(fn ($row) => [
+                'id' => (int) $row->id,
+                'date' => $row->date,
+                'supplier_id' => $row->supplier_id !== null ? (int) $row->supplier_id : null,
+                'supplier' => $row->supplier_name,
+                'with_invoice' => (bool) $row->with_invoice,
+                'amount' => round((float) $row->outstanding, 2),
+                'days_late' => (int) today()->diffInDays(Carbon::parse($row->date)),
+                'legal_risk' => (bool) $row->with_invoice && $row->date < $cutoff,
+            ]);
+    }
+
+    /**
+     * Compte et montant total des achats a regler (`unpaidPurchaseRows()` sans
+     * la limite d'affichage) — sert d'en-tete a la file de l'accueil.
+     */
+    public function unpaidPurchaseTotals(): array
+    {
+        $row = $this->outstandingPurchasesQuery()
+            ->selectRaw('COUNT(*) as c, COALESCE(SUM(outstanding), 0) as t')
+            ->first();
+
+        return [
+            'count' => (int) $row->c,
+            'total' => round((float) $row->t, 2),
+        ];
     }
 
     public function deletePayment(Purchase $purchase, PurchasePayment $payment, ?int $userId = null, ?string $userName = null): void

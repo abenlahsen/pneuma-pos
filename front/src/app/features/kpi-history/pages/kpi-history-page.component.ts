@@ -113,6 +113,7 @@ export class KpiHistoryPageComponent implements OnInit {
       { label: 'Valeur du stock',    value: this.fmt(data.stock_value) + ' DH' },
       { label: 'Impayés ventes',     value: this.fmt(data.unpaid_sales) + ' DH' },
       { label: 'Impayés achats',     value: this.fmt(data.unpaid_purchases) + ' DH' },
+      { label: 'Dont > 120 j facturés', value: this.fmt(data.unpaid_purchases_overdue_legal) + ' DH' },
       { label: 'Trésorerie',         value: this.fmt(data.cash_balance) + ' DH' },
     ];
   }

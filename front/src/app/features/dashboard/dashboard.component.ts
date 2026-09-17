@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { DashboardService } from '../../core/services/dashboard.service';
 import { User } from '../../core/models/auth.model';
-import { LowStockRow, QueueKey, QueueScope, WorkQueues } from '../../core/models/work-queue.model';
+import { LowStockRow, PurchaseDueRow, QueueKey, QueueScope, WorkQueues } from '../../core/models/work-queue.model';
 import { AutoRefreshControlComponent } from '../../shared/auto-refresh-control/auto-refresh-control.component';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
@@ -45,15 +45,29 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly loading = signal(false);
   readonly loadError = signal('');
 
-  /** Total de lignes en attente, toutes files confondues. */
+  // Repliables : deplie par defaut, comme les 4 autres cartes repliables de
+  // l'app. Seules ces deux files le sont — elles seules peuvent depasser la
+  // douzaine de lignes affichees et valoir la peine d'etre reduites.
+  readonly unpaidCollapsed = signal(false);
+  readonly toPayCollapsed = signal(false);
+
+  toggleUnpaid(): void { this.unpaidCollapsed.update((v) => !v); }
+  toggleToPay(): void { this.toPayCollapsed.update((v) => !v); }
+
+  /**
+   * Total de lignes en attente, toutes files confondues. `to_pay` n'y verse
+   * que `legal_count` : un achat fournisseur en retard de quinze jours n'est
+   * pas une chose « a traiter aujourd'hui », un risque de penalite legale si.
+   */
   readonly pendingTotal = computed(() => {
     const q = this.queues();
-    return (q.unpaid?.count ?? 0) + (q.to_invoice?.count ?? 0) + (q.low_stock?.count ?? 0);
+    return (q.unpaid?.count ?? 0) + (q.to_invoice?.count ?? 0)
+      + (q.to_pay?.legal_count ?? 0) + (q.low_stock?.count ?? 0);
   });
 
   readonly hasAnyQueue = computed(() => {
     const q = this.queues();
-    return !!q.unpaid || !!q.to_invoice || !!q.low_stock;
+    return !!q.unpaid || !!q.to_invoice || !!q.to_pay || !!q.low_stock;
   });
 
   // ── Libelles ────────────────────────────────────────────────────────────
@@ -63,7 +77,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
    * quoi* on est proprietaire. Le stock, lui, n'a pas de proprietaire.
    */
   scopeLabel(queue: QueueKey, scope: QueueScope | undefined): string {
-    if (queue === 'low_stock') return 'Agence · partagé';
+    if (queue === 'low_stock' || queue === 'to_pay') return 'Agence · partagé';
     if (scope === 'all') return 'Toutes agences';
 
     // Le possessif dit de QUOI on est proprietaire : des clients, pour les
@@ -77,6 +91,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     if (queue === 'unpaid') return own ? 'Mes impayés' : 'Impayés à relancer';
     if (queue === 'to_invoice') return own ? 'Mes ordres à facturer' : 'Ordres terminés à facturer';
+    // Pas de possessif : la dette fournisseur n'appartient a personne en particulier.
+    if (queue === 'to_pay') return 'Achats à régler';
 
     return 'Produits sous seuil';
   }
@@ -87,6 +103,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
    */
   actionLabel(queue: QueueKey, scope: QueueScope | undefined): string {
     if (queue === 'to_invoice') return 'Facturer';
+    if (queue === 'to_pay') return 'Régler';
     if (queue === 'low_stock') return 'Commander';
 
     return scope === 'all' ? 'Assigner' : 'Relancer';
@@ -216,6 +233,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   openServiceOrder(id: number): void {
     this.router.navigate(['/service-orders'], { queryParams: { id } });
+  }
+
+  /**
+   * Un achat en retard se regle sur l'achat : on ouvre directement son
+   * panneau de paiement, pas seulement sa fiche — une file qui signale sans
+   * faire gagner de temps ne sert a rien (voir `order()` ci-dessous).
+   */
+  payPurchase(row: PurchaseDueRow): void {
+    this.router.navigate(['/achats'], { queryParams: { id: row.id, pay: 1 } });
   }
 
   /**

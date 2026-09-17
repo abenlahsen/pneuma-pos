@@ -117,6 +117,8 @@ class DashboardAndPermissionTest extends TestCase
                 'stock_value',
                 'unpaid_sales',
                 'unpaid_purchases',
+                'unpaid_purchases_overdue_legal',
+                'unpaid_purchases_overdue_legal_count',
                 'cash_balance',
             ]);
     }
@@ -577,6 +579,81 @@ class DashboardAndPermissionTest extends TestCase
         $after = $this->getJson('/api/dashboard-kpi')->json();
 
         $this->assertEqualsWithDelta($before['unpaid_purchases'] - 300.00, $after['unpaid_purchases'], 0.01);
+    }
+
+    // =========================================================================
+    // unpaid_purchases_overdue_legal — loi 69-21, delai de 120 jours
+    // =========================================================================
+
+    public function test_kpi_legal_overdue_moves_for_an_invoiced_purchase_past_120_days_and_not_for_a_non_invoiced_one(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+
+        $supplier = Supplier::query()->create([
+            'name' => 'Fournisseur KPI Legal',
+            'user_id' => $this->admin->id,
+        ]);
+
+        $before = $this->getJson('/api/dashboard-kpi')->json();
+
+        // Facture, 121 jours : au-dela du delai legal.
+        Purchase::query()->create([
+            'date' => now()->subDays(121)->toDateString(),
+            'supplier_id' => $supplier->id,
+            'total_quantity' => 1,
+            'total_price' => 1000.00,
+            'net_amount' => 1000.00,
+            'with_invoice' => true,
+            'status' => 'EN COURS',
+            'payment_status' => 'NON PAYE',
+            'created_by' => $this->admin->id,
+        ]);
+
+        // Non facturee, 200 jours : la loi ne s'applique qu'aux factures.
+        Purchase::query()->create([
+            'date' => now()->subDays(200)->toDateString(),
+            'supplier_id' => $supplier->id,
+            'total_quantity' => 1,
+            'total_price' => 500.00,
+            'net_amount' => 500.00,
+            'with_invoice' => false,
+            'status' => 'EN COURS',
+            'payment_status' => 'NON PAYE',
+            'created_by' => $this->admin->id,
+        ]);
+
+        $after = $this->getJson('/api/dashboard-kpi')->json();
+
+        $this->assertEqualsWithDelta($before['unpaid_purchases_overdue_legal'] + 1000.00, $after['unpaid_purchases_overdue_legal'], 0.01);
+        $this->assertEquals($before['unpaid_purchases_overdue_legal_count'] + 1, $after['unpaid_purchases_overdue_legal_count']);
+    }
+
+    public function test_kpi_legal_overdue_does_not_count_an_invoiced_purchase_at_exactly_120_days(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+
+        $supplier = Supplier::query()->create([
+            'name' => 'Fournisseur KPI Legal Frontiere',
+            'user_id' => $this->admin->id,
+        ]);
+
+        $before = $this->getJson('/api/dashboard-kpi')->json();
+
+        Purchase::query()->create([
+            'date' => now()->subDays(120)->toDateString(),
+            'supplier_id' => $supplier->id,
+            'total_quantity' => 1,
+            'total_price' => 1000.00,
+            'net_amount' => 1000.00,
+            'with_invoice' => true,
+            'status' => 'EN COURS',
+            'payment_status' => 'NON PAYE',
+            'created_by' => $this->admin->id,
+        ]);
+
+        $after = $this->getJson('/api/dashboard-kpi')->json();
+
+        $this->assertEquals($before['unpaid_purchases_overdue_legal_count'], $after['unpaid_purchases_overdue_legal_count'], 'Un achat pile a 120 jours ne doit pas encore etre en risque.');
     }
 
     // =========================================================================

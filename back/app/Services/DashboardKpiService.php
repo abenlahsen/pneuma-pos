@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Domain\Purchases\PurchasePaymentService;
 use App\Domain\Suppliers\SupplierService;
 use App\Enums\PurchaseStatus;
 use App\Enums\SalePaymentStatus;
@@ -19,7 +20,10 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardKpiService
 {
-    public function __construct(private SupplierService $supplierService) {}
+    public function __construct(
+        private SupplierService $supplierService,
+        private PurchasePaymentService $purchasePayments,
+    ) {}
 
     /**
      * Calculate all dashboard KPIs for a given reference date.
@@ -95,6 +99,7 @@ class DashboardKpiService
             ->sum('purchase_items.quantity');
 
         $unpaidSuppliers = $this->supplierService->unpaidBySupplier();
+        $legalOverdue = $this->purchasePayments->legalOverdueTotals();
 
         $tyreItemsSub = DB::table('sale_items')
             ->join('products', 'sale_items.product_id', '=', 'products.id')
@@ -321,6 +326,9 @@ class DashboardKpiService
             // Receivables / payables (lifetime totals)
             'unpaid_sales' => round(Sale::where('payment_status', SalePaymentStatus::NON_PAYE->value)->where('status', '!=', $saleAnnule)->sum('total_sale'), 2),
             'unpaid_purchases' => $unpaidSuppliers['total'],
+            // Loi 69-21 : achats factures impayes au-dela du delai legal de 120 jours.
+            'unpaid_purchases_overdue_legal' => $legalOverdue['total'],
+            'unpaid_purchases_overdue_legal_count' => $legalOverdue['count'],
 
             // Cash balance (always current)
             'cash_balance' => round(

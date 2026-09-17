@@ -1,6 +1,31 @@
 
+// La grille partagee (`auto-fit, minmax(180px, 1fr)`) ne collapse une colonne
+// vide que si AUCUNE rangee n'y met de carte : des que le compte de cadrans
+// ne divise pas le nombre de colonnes choisi, la derniere rangee laisse une
+// colonne "pleine" du fond noir du filet au lieu de se recomposer. Passer
+// cette rangee en flex (scope a cette page) laisse chaque carte garder sa
+// largeur minimale et la derniere rangee se repartir sur l'espace reellement
+// occupe.
 .summary-cards {
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  flex-wrap: wrap;
+}
+
+// Quatre colonnes fixes pour huit cadrans constants (voir le commentaire du
+// gabarit sur `tyres_this_month`, jamais affiche) : deux rangees de quatre,
+// toujours pleines. Le `gap` de 2px s'ajoute au `%` de base — 3 gouttieres
+// grignotent 6px que le calcul en `%` seul ignore — `calc(25% - 2px)` laisse
+// la marge necessaire pour que la quatrieme carte ne deborde pas de ligne.
+.summary-card {
+  flex: 1 1 calc(25% - 2px);
+}
+
+@media (max-width: 768px) {
+  .summary-card { flex-basis: calc(50% - 2px); }
+}
+
+@media (max-width: 480px) {
+  .summary-card { flex-basis: 100%; }
 }
 
 // ── Lecture de journee (R6) ───────────────────────────────────────────────
@@ -29,7 +54,7 @@
 
 .day-input {
   padding: 5px 8px;
-  border: 2px solid var(--neutral-400);
+  border: 1px solid var(--neutral-500);
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--text);
@@ -51,7 +76,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--neutral-400);
+  border: 1px solid var(--neutral-500);
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--text);

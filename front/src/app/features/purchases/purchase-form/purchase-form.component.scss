@@ -253,11 +253,9 @@ $_radius-md: 12px;
   color: $_red;
   font-size: 0.8rem;
   margin-left: 0.35rem;
-  opacity: 0.75;
   cursor: pointer;
-  transition: opacity 0.15s;
 
-  &:hover { opacity: 1; text-decoration: underline; }
+  &:hover { text-decoration: underline; }
 }
 
 // ── Responsive ────────────────────────────────────────────────────────────────

@@ -13,43 +13,92 @@
 
     <!-- ── Impayés ─────────────────────────────────────────────────────── -->
     <section class="queue queue--alert" *ngIf="queues().unpaid as unpaid">
-      <header class="queue-head">
-        <h2>{{ queueTitle('unpaid', unpaid.scope) }}</h2>
+      <button type="button" class="queue-head" [attr.aria-expanded]="!unpaidCollapsed()" (click)="toggleUnpaid()">
+        <span class="queue-title">{{ queueTitle('unpaid', unpaid.scope) }}</span>
         <!-- Le compte ET le montant : on arbitre entre les files sans les ouvrir. -->
         <span class="queue-count">
           {{ unpaid.count }}<span *ngIf="unpaid.total"> · {{ unpaid.total | number:'1.0-0' }} DH</span>
         </span>
         <span class="queue-scope">{{ scopeLabel('unpaid', unpaid.scope) }}</span>
-      </header>
+        <app-icon name="chevron" class="queue-chevron" [class.is-collapsed]="unpaidCollapsed()" />
+      </button>
 
-      <app-empty-state
-        *ngIf="!loading() && unpaid.rows.length === 0"
-        icon="check"
-        title="Aucun impayé"
-        message="Rien à relancer sur votre périmètre." />
+      <ng-container *ngIf="!unpaidCollapsed()">
+        <app-empty-state
+          *ngIf="!loading() && unpaid.rows.length === 0"
+          icon="check"
+          title="Aucun impayé"
+          message="Rien à relancer sur votre périmètre." />
 
-      <div class="task" *ngFor="let row of unpaid.rows">
-        <span class="t-main">
-          <span class="t-head">
-            <span class="t-title">{{ row.client || 'Client non lié' }}</span>
-            <span class="t-own" *ngIf="row.commercial && unpaid.scope === 'all'">{{ row.commercial }}</span>
+        <div class="task" *ngFor="let row of unpaid.rows">
+          <span class="t-main">
+            <span class="t-head">
+              <span class="t-title">{{ row.client || 'Client non lié' }}</span>
+              <span class="t-own" *ngIf="row.city">{{ row.city }}</span>
+              <span class="t-own" *ngIf="row.commercial && unpaid.scope === 'all'">{{ row.commercial }}</span>
+            </span>
+            <span class="t-sub">
+              Vente n° {{ row.id }} · {{ row.date | date:'dd/MM/yyyy' }}<span *ngIf="row.partner"> · {{ row.partner }}</span>
+            </span>
           </span>
-          <span class="t-sub">Vente n° {{ row.id }} · {{ row.date | date:'dd/MM/yyyy' }}</span>
-        </span>
-        <span class="t-amt">{{ row.amount | number:'1.2-2' }} DH</span>
-        <span class="t-late" *ngIf="isOverdue(row.date)">en retard</span>
-        <button type="button" class="btn btn-secondary" (click)="openSale(row.id)">
-          {{ actionLabel('unpaid', unpaid.scope) }}
-        </button>
-      </div>
+          <span class="t-amt">{{ row.amount | number:'1.2-2' }} DH</span>
+          <span class="t-late" *ngIf="isOverdue(row.date)">en retard</span>
+          <button type="button" class="btn btn-secondary" (click)="openSale(row.id)">
+            {{ actionLabel('unpaid', unpaid.scope) }}
+          </button>
+        </div>
 
-      <p class="queue-more" *ngIf="unpaid.count > unpaid.rows.length">
-        et {{ unpaid.count - unpaid.rows.length }} autre{{ unpaid.count - unpaid.rows.length > 1 ? 's' : '' }}
-      </p>
+        <p class="queue-more" *ngIf="unpaid.count > unpaid.rows.length">
+          et {{ unpaid.count - unpaid.rows.length }} autre{{ unpaid.count - unpaid.rows.length > 1 ? 's' : '' }}
+        </p>
+      </ng-container>
+    </section>
+
+    <!-- ── Achats à régler : la seule file où le retard coûte des pénalités ── -->
+    <section class="queue" [class.queue--alert]="toPay.legal_count > 0" *ngIf="queues().to_pay as toPay">
+      <button type="button" class="queue-head" [attr.aria-expanded]="!toPayCollapsed()" (click)="toggleToPay()">
+        <span class="queue-title">{{ queueTitle('to_pay', toPay.scope) }}</span>
+        <span class="queue-count">
+          {{ toPay.count }}<span *ngIf="toPay.total"> · {{ toPay.total | number:'1.0-0' }} DH</span>
+        </span>
+        <!-- Le chiffre qui decide : ce qui expose a des penalites legales. -->
+        <span class="queue-legal" *ngIf="toPay.legal_count">
+          dont {{ toPay.legal_count }} à risque légal · {{ toPay.legal_total | number:'1.0-0' }} DH
+        </span>
+        <span class="queue-scope">{{ scopeLabel('to_pay', toPay.scope) }}</span>
+        <app-icon name="chevron" class="queue-chevron" [class.is-collapsed]="toPayCollapsed()" />
+      </button>
+
+      <ng-container *ngIf="!toPayCollapsed()">
+        <app-empty-state
+          *ngIf="!loading() && toPay.rows.length === 0"
+          icon="check"
+          title="Aucun achat à régler"
+          message="Tous les achats fournisseurs sont soldés." />
+
+        <div class="task" *ngFor="let row of toPay.rows">
+          <span class="t-main">
+            <span class="t-head">
+              <span class="t-title">{{ row.supplier || 'Sans fournisseur' }}</span>
+              <span class="t-own" *ngIf="row.with_invoice">facturé</span>
+            </span>
+            <span class="t-sub">Achat n° {{ row.id }} · {{ row.date | date:'dd/MM/yyyy' }}</span>
+          </span>
+          <span class="t-amt">{{ row.amount | number:'1.2-2' }} DH</span>
+          <span class="t-late" *ngIf="row.legal_risk">risque légal · {{ row.days_late }} j</span>
+          <button type="button" class="btn btn-secondary" (click)="payPurchase(row)">
+            {{ actionLabel('to_pay', toPay.scope) }}
+          </button>
+        </div>
+
+        <p class="queue-more" *ngIf="toPay.count > toPay.rows.length">
+          et {{ toPay.count - toPay.rows.length }} autre{{ toPay.count - toPay.rows.length > 1 ? 's' : '' }}
+        </p>
+      </ng-container>
     </section>
 
     <!-- ── Ordres à facturer ───────────────────────────────────────────── -->
-    <section class="queue" *ngIf="queues().to_invoice as toInvoice">
+    <section class="queue queue--info" *ngIf="queues().to_invoice as toInvoice">
       <header class="queue-head">
         <h2>{{ queueTitle('to_invoice', toInvoice.scope) }}</h2>
         <span class="queue-count">
@@ -85,7 +134,7 @@
     </section>
 
     <!-- ── Produits sous seuil : la seule file sans propriétaire ───────── -->
-    <section class="queue" *ngIf="queues().low_stock as lowStock">
+    <section class="queue queue--stock" *ngIf="queues().low_stock as lowStock">
       <header class="queue-head">
         <h2>{{ queueTitle('low_stock', lowStock.scope) }}</h2>
         <!-- Une file de stock compte des articles : pas de montant. -->
@@ -181,7 +230,7 @@
         </span>
         <span class="rank-line">
           <span class="rank-bar">
-            <span class="rank-fill" [style.width.%]="rankingPct(row.revenue)"></span>
+            <span class="rank-fill" [class.rank-fill--lead]="i === 0" [style.width.%]="rankingPct(row.revenue)"></span>
             <!-- L'impayé ferme la barre : un CA élevé avec un impayé élevé
                  n'est pas une performance. -->
             <span class="rank-unpaid" *ngIf="row.unpaid > 0" [style.width.%]="rankingPct(row.unpaid)"></span>

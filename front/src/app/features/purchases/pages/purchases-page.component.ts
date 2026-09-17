@@ -141,8 +141,12 @@ export class PurchasesPageComponent implements OnInit, OnDestroy {
         const id = Number(params.get('id'));
         if (!Number.isFinite(id) || id <= 0) return;
 
+        // `pay=1` : vient de la file « Achats à régler » de l'accueil — un
+        // achat en retard se règle sur l'achat, pas sur sa fiche.
         this.purchaseService.getPurchase(id).subscribe({
-          next: purchase => this.openDetail(purchase),
+          next: purchase => params.get('pay') === '1'
+            ? this.openPayments(purchase)
+            : this.openDetail(purchase),
         });
       });
   }

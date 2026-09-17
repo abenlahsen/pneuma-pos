@@ -86,7 +86,7 @@ $_border-hover: #d0d9e4;
   text-transform: uppercase;
   letter-spacing: 0.14em;
   padding-bottom: 0.6rem;
-  border-bottom: 2px solid $_border;
+  border-bottom: 1px solid $_border;
 }
 
 // ── KPI grid & cards (dashboard vocabulary) ──────────────────────────────────
@@ -257,7 +257,7 @@ $_border-hover: #d0d9e4;
 
 .total-row td {
   background: $_surface-2;
-  border-top: 2px solid $_border;
+  border-top: 1px solid $_border;
 }
 
 .text-right { text-align: right; }
@@ -288,7 +288,7 @@ $_border-hover: #d0d9e4;
   gap: var(--sp-4);
   margin-bottom: var(--sp-4);
   padding: var(--sp-4) var(--sp-4) var(--sp-3);
-  border: 2px solid var(--text);
+  border: 1px solid var(--neutral-400);
   border-radius: var(--radius-lg);
   background: var(--surface);
   overflow-x: auto;

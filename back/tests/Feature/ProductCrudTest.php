@@ -420,6 +420,52 @@ class ProductCrudTest extends TestCase
         ]);
     }
 
+    /**
+     * Regression : `ProductService::create()` validait et retournait
+     * `alert_threshold` sans jamais l'ecrire en base (colonne absente du
+     * tableau passe a `Product::create()`).
+     */
+    public function test_store_persists_alert_threshold(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $response = $this->postJson('/api/products', [
+            'type' => 'tyre',
+            'reference' => 'SEUIL-' . fake()->unique()->numerify('######'),
+            'alert_threshold' => 5,
+        ]);
+
+        $response->assertCreated()->assertJsonPath('alert_threshold', 5);
+
+        $this->assertDatabaseHas('products', [
+            'id' => $response->json('id'),
+            'alert_threshold' => 5,
+        ]);
+    }
+
+    public function test_store_without_alert_threshold_leaves_it_null(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $response = $this->postJson('/api/products', [
+            'type' => 'tyre',
+            'reference' => 'SEUIL-NULL-' . fake()->unique()->numerify('######'),
+        ]);
+
+        $response->assertCreated()->assertJsonPath('alert_threshold', null);
+    }
+
+    public function test_store_rejects_negative_alert_threshold(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $this->postJson('/api/products', [
+            'type' => 'tyre',
+            'reference' => 'SEUIL-NEG-' . fake()->unique()->numerify('######'),
+            'alert_threshold' => -1,
+        ])->assertUnprocessable()->assertJsonValidationErrors(['alert_threshold']);
+    }
+
     public function test_store_creates_service_product_without_stock(): void
     {
         Sanctum::actingAs($this->user, [], 'web');
@@ -529,6 +575,35 @@ class ProductCrudTest extends TestCase
             'tire_width' => 215,
             'tire_height' => 60,
         ]);
+    }
+
+    /** Meme regression que la creation, sur le chemin de mise a jour. */
+    public function test_update_persists_alert_threshold(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $response = $this->putJson("/api/products/{$this->tyreProduct->id}", [
+            'type' => 'tyre',
+            'alert_threshold' => 8,
+        ]);
+
+        $response->assertOk()->assertJsonPath('alert_threshold', 8);
+
+        $this->assertDatabaseHas('products', [
+            'id' => $this->tyreProduct->id,
+            'alert_threshold' => 8,
+        ]);
+    }
+
+    /** Omettre le seuil a la mise a jour le remet a null — meme convention que les autres champs optionnels du service. */
+    public function test_update_without_alert_threshold_resets_it_to_null(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+        $this->tyreProduct->update(['alert_threshold' => 5]);
+
+        $this->putJson("/api/products/{$this->tyreProduct->id}", ['type' => 'tyre'])
+            ->assertOk()
+            ->assertJsonPath('alert_threshold', null);
     }
 
     // -------------------------------------------------------------------------

@@ -52,7 +52,7 @@
 .alert-error {
   padding: 12px 14px;
   margin-bottom: var(--sp-4);
-  border: 2px solid var(--accent-700);
+  border: 1px solid var(--accent-300);
   border-radius: var(--radius);
   background: var(--accent-100);
   color: var(--accent-800);
@@ -75,7 +75,7 @@
   input {
     width: 100%;
     padding: 11px 14px;
-    border: 2px solid var(--neutral-400);
+    border: 1px solid var(--neutral-500);
     border-radius: var(--radius);
     font-family: var(--font);
     font-size: var(--fs-body);

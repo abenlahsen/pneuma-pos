@@ -71,7 +71,7 @@ $_radius-lg: 14px;
 .toggle-btn {
   flex: 1;
   padding: 0.65rem;
-  border: 2px solid $_border2;
+  border: 1px solid $_border2;
   border-radius: var(--radius-lg);
   background: $_surface2;
   color: $_muted;
@@ -309,7 +309,7 @@ $_radius-lg: 14px;
   display: inline-block;
   width: 16px;
   height: 16px;
-  border: 2px solid $_border2;
+  border: 1px solid $_border2;
   border-top-color: $_red;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;

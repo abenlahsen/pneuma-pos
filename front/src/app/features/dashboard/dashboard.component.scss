@@ -25,13 +25,14 @@
   min-width: 0;
 }
 
-/* Une file = un cadre. Celle des impayés porte l'accent : c'est la seule qui
-   coûte de l'argent tant qu'on ne s'en occupe pas. */
+/* Une file = un cadre. `--alert` marque celles qui coûtent de l'argent tant
+   qu'on ne s'en occupe pas : les impayés toujours, les achats à régler
+   seulement quand un risque légal (120 j) existe réellement. */
 .queue {
   /* `flex: none` est indispensable : une carte en `overflow: hidden` perd son
      minimum automatique et se fait comprimer en rognant ses lignes. */
   flex: none;
-  border: 2px solid var(--text);
+  border: 1px solid var(--neutral-400);
   border-radius: var(--radius-lg);
   background: var(--surface);
   overflow: hidden;
@@ -48,21 +49,60 @@
     .queue-count { border-color: var(--accent-700); color: var(--accent-700); }
     .queue-scope { border-color: var(--accent-300); color: var(--accent-800); }
   }
+
+  /* Ordres à facturer : une action de facturation, pas une alerte (R8). */
+  &--info {
+    border-color: var(--tone-blue-border);
+
+    .queue-head {
+      background: var(--tone-blue-bg);
+      border-bottom-color: var(--tone-blue-border);
+      color: var(--tone-blue-ink);
+    }
+
+    .queue-count { border-color: var(--tone-blue-border); color: var(--tone-blue-ink); }
+    .queue-scope { border-color: var(--tone-blue-border); color: var(--tone-blue-ink); }
+  }
+
+  /* Produits sous seuil : un réapprovisionnement, pas une dette (R8). */
+  &--stock {
+    border-color: var(--tone-sand-border);
+
+    .queue-head {
+      background: var(--tone-sand-bg);
+      border-bottom-color: var(--tone-sand-border);
+      color: var(--tone-sand-ink);
+    }
+
+    .queue-count { border-color: var(--tone-sand-border); color: var(--tone-sand-ink); }
+    .queue-scope { border-color: var(--tone-sand-border); color: var(--tone-sand-ink); }
+  }
 }
 
+// `unpaid` et `to_pay` seules sont repliables : leur en-tete est un vrai
+// <button> (focusable, Entree/Espace fonctionnent sans code — contrairement
+// aux 4 cartes repliables copiees-collees ailleurs dans l'app, qui n'ont
+// qu'une <div> cliquee a la souris). `to_invoice`/`low_stock` gardent un
+// <header> statique, ces regles s'appliquent aux deux indifferemment.
 .queue-head {
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
   padding: 13px 16px 11px;
-  border-bottom: 2px solid var(--text);
+  border: none;
+  border-bottom: 1px solid var(--neutral-400);
   background: var(--surface-sunk);
+  color: inherit;
+  font: inherit;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: var(--ls-label);
   text-transform: uppercase;
+  text-align: left;
+  appearance: none;
 
-  h2 {
+  h2, .queue-title {
     margin: 0;
     font-size: inherit;
     font-weight: inherit;
@@ -71,11 +111,22 @@
   }
 }
 
+button.queue-head { cursor: pointer; }
+
+/* Deplie = pointe vers le bas (le contenu est juste en dessous, orientation
+   native de l'icone) ; replie = pivote vers la droite. */
+.queue-chevron {
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+
+  &.is-collapsed { transform: rotate(-90deg); }
+}
+
 /* Le compte ET le montant : on arbitre entre les files sans les ouvrir. */
 .queue-count {
   flex-shrink: 0;
   padding: 4px 8px;
-  border: 2px solid var(--neutral-300);
+  border: 1px solid var(--neutral-400);
   border-radius: var(--radius);
   color: var(--neutral-800);
   font-variant-numeric: tabular-nums;
@@ -90,6 +141,19 @@
   font-size: 10px;
   letter-spacing: 0.06em;
   color: var(--neutral-700);
+}
+
+/* Le chiffre qui decide : ce qui expose a des penalites legales (loi 69-21).
+   Bordure ET texte en `--accent-700`, jamais `--accent` seul (R2_BADGES.md). */
+.queue-legal {
+  flex-shrink: 0;
+  padding: 3px 7px;
+  border: 1px solid var(--accent-700);
+  border-radius: var(--radius);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--accent-700);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ─── Une ligne de travail ──────────────────────────────────────────────── */
@@ -157,7 +221,7 @@
 .t-late {
   flex-shrink: 0;
   padding: 4px 8px;
-  border: 2px solid var(--accent-700);
+  border: 1px solid var(--accent-300);
   border-radius: var(--radius);
   color: var(--accent-700);
   font-size: 11px;
@@ -178,7 +242,8 @@
   font-size: 17px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
-  color: var(--accent-700);
+  /* Un stock bas n'est pas une dette (R8) : ton ocre, pas rouge. */
+  color: var(--tone-sand-ink);
 }
 
 .t-stock-l { font-size: 12px; color: var(--text-muted); }
@@ -222,7 +287,7 @@
 
 /* ─── Colonne des chiffres ──────────────────────────────────────────────── */
 .side {
-  border-left: 2px solid var(--text);
+  border-left: 1px solid var(--neutral-400);
   background: var(--surface);
   display: flex;
   flex-direction: column;
@@ -236,7 +301,7 @@
   align-items: center;
   gap: var(--sp-2);
   padding: var(--sp-4);
-  border-bottom: 2px solid var(--text);
+  border-bottom: 1px solid var(--neutral-400);
 }
 
 .side-label {
@@ -302,7 +367,7 @@
   flex-direction: column;
   gap: var(--sp-2);
   padding: 14px var(--sp-4);
-  border-bottom: 2px solid var(--text);
+  border-bottom: 1px solid var(--neutral-400);
 
   &--grow {
     flex: 1;
@@ -330,7 +395,7 @@
      invisible, et un creux redeviendrait un trou — exactement ce qu'on
      reprochait à la courbe. */
   min-height: 2px;
-  background: var(--neutral-400);
+  background: var(--chart-bar);
   border-radius: 2px 2px 0 0;
 
   /* Aujourd'hui porte l'accent : c'est le jour qu'on regarde. */
@@ -404,7 +469,12 @@
   overflow: hidden;
 }
 
-.rank-fill { background: var(--text); }
+.rank-fill {
+  background: var(--chart-rank);
+
+  /* Le premier du classement garde l'accent (R8) : c'est lui qu'on regarde. */
+  &--lead { background: var(--accent); }
+}
 
 /* L'impayé ferme la barre : un CA élevé avec un impayé élevé n'est pas une
    performance, et ça doit se voir sans lire le chiffre. */
@@ -426,7 +496,7 @@
   flex-direction: column;
   gap: var(--sp-2);
   padding: var(--sp-4);
-  border-top: 2px solid var(--neutral-300);
+  border-top: 1px solid var(--neutral-400);
 }
 
 .side-big {
@@ -469,6 +539,6 @@
 
   .side {
     border-left: none;
-    border-top: 2px solid var(--text);
+    border-top: 1px solid var(--neutral-400);
   }
 }

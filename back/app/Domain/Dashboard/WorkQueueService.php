@@ -2,6 +2,7 @@
 
 namespace App\Domain\Dashboard;
 
+use App\Domain\Purchases\PurchasePaymentService;
 use App\Enums\ServiceOrderStatus;
 use App\Models\CompanySetting;
 use App\Models\Product;
@@ -28,6 +29,8 @@ class WorkQueueService
     /** En dessous, la moyenne agence laisse deduire le chiffre d'un collegue. */
     private const MIN_COMMERCIALS_FOR_AVERAGE = 3;
 
+    public function __construct(private PurchasePaymentService $purchasePayments) {}
+
     /**
      * @return array<string, mixed>
      */
@@ -43,6 +46,13 @@ class WorkQueueService
             $queues['to_invoice'] = $this->ordersToInvoice($user);
         }
 
+        // Les achats fournisseurs se reglent ; qui ne regle pas ne les voit
+        // pas. `view purchases` est tenue par les quatre roles (inutile comme
+        // filtre) ; `manage purchase-payments` exclut justement le Driver.
+        if ($user->can('manage purchase-payments')) {
+            $queues['to_pay'] = $this->purchasesToPay();
+        }
+
         // `view stock` au singulier : c'est le nom de la permission du depot.
         if ($user->can('view stock')) {
             $queues['low_stock'] = $this->lowStock();
@@ -53,6 +63,28 @@ class WorkQueueService
         }
 
         return $queues;
+    }
+
+    /**
+     * Achats fournisseurs a regler, toute l'agence — la dette fournisseur n'a
+     * pas de proprietaire individuel, meme portee `shared` que `lowStock()`.
+     *
+     * @return array<string, mixed>
+     */
+    private function purchasesToPay(): array
+    {
+        $totals = $this->purchasePayments->unpaidPurchaseTotals();
+        $legal = $this->purchasePayments->legalOverdueTotals();
+        $rows = $this->purchasePayments->unpaidPurchaseRows(self::LIMIT);
+
+        return [
+            'scope' => 'shared',
+            'count' => $totals['count'],
+            'total' => $totals['total'],
+            'legal_count' => $legal['count'],
+            'legal_total' => $legal['total'],
+            'rows' => $rows,
+        ];
     }
 
     /**
@@ -298,7 +330,12 @@ class WorkQueueService
         $all = $user->can('view unpaid.all');
 
         $query = Sale::query()
-            ->with(['linkedClient:id,name,phone', 'commercial:id,name'])
+            ->with([
+                'linkedClient:id,name,phone,city_id',
+                'linkedClient.cityRelation:id,name',
+                'commercial:id,name',
+                'linkedPartner:id,name',
+            ])
             ->whereNotIn('status', ['ANNULE', 'BROUILLON'])
             ->whereIn('payment_status', ['NON PAYE', 'PARTIEL']);
 
@@ -318,7 +355,10 @@ class WorkQueueService
                 'date' => $sale->date,
                 'client' => $sale->linkedClient?->name,
                 'phone' => $sale->linkedClient?->phone,
+                'city' => $sale->linkedClient?->city,
                 'commercial' => $sale->commercial?->name,
+                // Partenaire de montage : qui a monte/aligne les pneus de cette vente.
+                'partner' => $sale->linkedPartner?->name,
                 'amount' => (float) $sale->total_sale,
                 'payment_status' => $sale->payment_status,
             ])

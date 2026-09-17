@@ -28,7 +28,7 @@
 /* ─── Le tableau ───────────────────────────────────────────────────────── */
 .board {
   display: grid;
-  border: 2px solid var(--text);
+  border: 1px solid var(--neutral-400);
   border-radius: var(--radius-lg);
   background: var(--surface);
   overflow: hidden;
@@ -37,7 +37,7 @@
 .axis-head,
 .bay-head {
   padding: 10px 12px;
-  border-bottom: 2px solid var(--text);
+  border-bottom: 1px solid var(--neutral-400);
   background: var(--surface-sunk);
 }
 
@@ -128,7 +128,7 @@
   flex-direction: column;
   gap: 1px;
   padding: 6px 8px;
-  border: 2px solid var(--neutral-400);
+  border: 1px solid var(--neutral-500);
   border-radius: var(--radius);
   background: var(--surface);
   overflow: hidden;
@@ -213,7 +213,7 @@
 
 /* ─── File d'attente ───────────────────────────────────────────────────── */
 .queue {
-  border: 2px solid var(--text);
+  border: 1px solid var(--neutral-400);
   border-radius: var(--radius-lg);
   background: var(--surface);
   overflow: hidden;
@@ -225,7 +225,7 @@
   justify-content: space-between;
   gap: var(--sp-2);
   padding: 10px 12px;
-  border-bottom: 2px solid var(--text);
+  border-bottom: 1px solid var(--neutral-400);
   background: var(--surface-sunk);
 }
 

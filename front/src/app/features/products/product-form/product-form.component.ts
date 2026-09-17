@@ -25,6 +25,7 @@ export class ProductFormComponent implements OnInit {
   formData: ProductPayload = {
     profile: '',
     reference: '',
+    alert_threshold: null,
     type: 'tyre',
     brand_id: null,
     description: '',
@@ -90,6 +91,7 @@ export class ProductFormComponent implements OnInit {
       this.formData = {
         profile: this.product.profile || '',
         reference: this.product.reference || '',
+        alert_threshold: this.product.alert_threshold ?? null,
         type: this.product.type,
         brand_id: this.product.brand_id,
         description: this.product.description || '',

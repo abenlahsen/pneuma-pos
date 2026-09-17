@@ -229,7 +229,7 @@ $_border2:  #d0d9e4;
     letter-spacing: 0.07em;
     text-transform: uppercase;
     padding: 0.6rem 0.75rem;
-    border-bottom: 2px solid $_border;
+    border-bottom: 1px solid $_border;
     background: $_surface2;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -263,11 +263,10 @@ $_border2:  #d0d9e4;
   cursor: pointer;
   padding: 0.25rem;
   font-size: 0.9rem;
-  opacity: 0.5;
-  transition: opacity 0.15s, color 0.15s;
+  transition: color 0.15s;
   color: $_muted;
 
-  &:hover { opacity: 1; color: #dc2626; }
+  &:hover { color: #dc2626; }
 }
 
 // ── Add payment form ──────────────────────────────────────────────────────────

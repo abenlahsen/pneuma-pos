@@ -1,3 +1,13 @@
+/* La ligne qui dit ce que le reglage fait reellement — meme regle que
+   company-settings-page.component.scss:201-207 (champ jumeau). */
+.field-hint {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
 .checkbox-inline {
   display: flex;
   align-items: flex-end;
@@ -13,7 +23,7 @@
 
 /* ── Inventory Section ── */
 .inventory-section {
-  border-top: 2px solid #edf2f7;
+  border-top: 1px solid #edf2f7;
   margin-top: 1rem;
 }
 
@@ -180,7 +190,7 @@
 
 /* ── Stock Movements History ── */
 .movements-section {
-  border-top: 2px solid #edf2f7;
+  border-top: 1px solid #edf2f7;
   margin-top: 1rem;
 }
 

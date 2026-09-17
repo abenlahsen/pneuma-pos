@@ -31,6 +31,9 @@ export interface DashboardKpi {
   stock_value: number;
   unpaid_sales: number;
   unpaid_purchases: number;
+  /** Loi 69-21 : achats facturés impayés au-delà du délai légal de 120 jours. */
+  unpaid_purchases_overdue_legal: number;
+  unpaid_purchases_overdue_legal_count: number;
   cash_balance: number;
   sales_by_commercial: CommercialPerf[];
   sales_by_commercial_year: CommercialPerf[];

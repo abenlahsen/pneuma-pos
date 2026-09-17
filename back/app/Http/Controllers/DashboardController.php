@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Dashboard\WorkQueueService;
+use App\Domain\Purchases\PurchasePaymentService;
 use App\Domain\Suppliers\SupplierService;
 use App\Enums\PurchaseStatus;
 use App\Enums\SalePaymentStatus;
@@ -34,7 +35,7 @@ class DashboardController extends Controller
         return response()->json($queues->forUser($request->user()));
     }
 
-    public function kpi(Request $request, SupplierService $supplierService): JsonResponse
+    public function kpi(Request $request, SupplierService $supplierService, PurchasePaymentService $purchasePayments): JsonResponse
     {
         $selectedDay = $request->query('day');
         $selectedMonth = $request->query('month');
@@ -110,6 +111,7 @@ class DashboardController extends Controller
             ->sum('purchase_items.quantity');
 
         $unpaidSuppliers = $supplierService->unpaidBySupplier();
+        $legalOverdue = $purchasePayments->legalOverdueTotals();
 
         $tyreItemsSub = DB::table('sale_items')
             ->join('products', 'sale_items.product_id', '=', 'products.id')
@@ -348,6 +350,9 @@ class DashboardController extends Controller
             // Receivables / payables
             'unpaid_sales' => round(Sale::where('payment_status', SalePaymentStatus::NON_PAYE->value)->where('status', '!=', $saleAnnule)->sum('total_sale'), 2),
             'unpaid_purchases' => $unpaidSuppliers['total'],
+            // Loi 69-21 : achats factures impayes au-dela du delai legal de 120 jours.
+            'unpaid_purchases_overdue_legal' => $legalOverdue['total'],
+            'unpaid_purchases_overdue_legal_count' => $legalOverdue['count'],
 
             // Solde de caisse — cash accounts only (excludes future-dated Chèque/Effet)
             'cash_balance' => round(

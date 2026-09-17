@@ -43,6 +43,19 @@ describe('DashboardComponent — liste de travail (5a/5b)', () => {
     expect(comp.hasAnyQueue()).toBe(true);
   });
 
+  // Un achat en retard de quinze jours n'est pas « a traiter aujourd'hui » ;
+  // un risque de penalite legale (120 j) si — seul `legal_count` compte.
+  it("ne compte que le risque legal des achats a regler, pas tous les impayes", () => {
+    getWorkQueues.mockReturnValue(of({
+      to_pay: { scope: 'shared', count: 9, total: 50_000, legal_count: 2, legal_total: 12_000, rows: [] },
+    }));
+    comp = build();
+    comp.ngOnInit();
+
+    expect(comp.pendingTotal()).toBe(2);
+    expect(comp.hasAnyQueue()).toBe(true);
+  });
+
   // ── « Commander » doit faire gagner du temps, pas seulement signaler ──────
   describe('commander', () => {
     it('ouvre un achat pre-rempli avec de quoi remonter au seuil', () => {
@@ -99,6 +112,13 @@ describe('DashboardComponent — liste de travail (5a/5b)', () => {
       expect(comp.scopeLabel('low_stock', 'shared')).toBe('Agence · partagé');
       expect(comp.scopeLabel('low_stock', 'all')).toBe('Agence · partagé');
     });
+
+    // La dette fournisseur n'a pas non plus de proprietaire individuel.
+    it('marque la file des achats a regler comme partagee', () => {
+      comp = build();
+
+      expect(comp.scopeLabel('to_pay', 'shared')).toBe('Agence · partagé');
+    });
   });
 
   describe('queueTitle', () => {
@@ -121,6 +141,13 @@ describe('DashboardComponent — liste de travail (5a/5b)', () => {
 
       expect(comp.queueTitle('low_stock', 'shared')).toBe('Produits sous seuil');
     });
+
+    // La dette fournisseur n'appartient a personne en particulier.
+    it('nomme la file des achats a regler sans possessif', () => {
+      comp = build();
+
+      expect(comp.queueTitle('to_pay', 'shared')).toBe('Achats à régler');
+    });
   });
 
   // ── Libelles d'action : le gerant distribue le travail, il ne le fait pas ──
@@ -138,6 +165,7 @@ describe('DashboardComponent — liste de travail (5a/5b)', () => {
       expect(comp.actionLabel('to_invoice', 'own')).toBe('Facturer');
       expect(comp.actionLabel('to_invoice', 'all')).toBe('Facturer');
       expect(comp.actionLabel('low_stock', 'shared')).toBe('Commander');
+      expect(comp.actionLabel('to_pay', 'shared')).toBe('Régler');
     });
 
     // Primaire pour Facturer seul : c'est la seule action qui conclut.
@@ -147,6 +175,7 @@ describe('DashboardComponent — liste de travail (5a/5b)', () => {
       expect(comp.isPrimaryAction('to_invoice')).toBe(true);
       expect(comp.isPrimaryAction('unpaid')).toBe(false);
       expect(comp.isPrimaryAction('low_stock')).toBe(false);
+      expect(comp.isPrimaryAction('to_pay')).toBe(false);
     });
   });
 
@@ -162,6 +191,49 @@ describe('DashboardComponent — liste de travail (5a/5b)', () => {
     comp.openServiceOrder(77);
 
     expect(navigate).toHaveBeenCalledWith(['/service-orders'], { queryParams: { id: 77 } });
+  });
+
+  // Un achat en retard se regle sur l'achat : le panneau de paiement s'ouvre direct.
+  it('ouvre le panneau de paiement pour regler un achat fournisseur', () => {
+    comp = build();
+    comp.payPurchase({
+      id: 42, date: '2026-01-01', supplier_id: 3, supplier: 'ACME',
+      with_invoice: true, amount: 1000, days_late: 130, legal_risk: true,
+    });
+
+    expect(navigate).toHaveBeenCalledWith(['/achats'], { queryParams: { id: 42, pay: 1 } });
+  });
+
+  // Seules les deux files qui peuvent depasser la douzaine de lignes sont repliables.
+  describe('files repliables (impayes, achats a regler)', () => {
+    it('sont depliees par defaut', () => {
+      comp = build();
+
+      expect(comp.unpaidCollapsed()).toBe(false);
+      expect(comp.toPayCollapsed()).toBe(false);
+    });
+
+    it('toggleUnpaid bascule uniquement son propre signal', () => {
+      comp = build();
+      comp.toggleUnpaid();
+
+      expect(comp.unpaidCollapsed()).toBe(true);
+      expect(comp.toPayCollapsed()).toBe(false);
+
+      comp.toggleUnpaid();
+      expect(comp.unpaidCollapsed()).toBe(false);
+    });
+
+    it('toggleToPay bascule uniquement son propre signal', () => {
+      comp = build();
+      comp.toggleToPay();
+
+      expect(comp.toPayCollapsed()).toBe(true);
+      expect(comp.unpaidCollapsed()).toBe(false);
+
+      comp.toggleToPay();
+      expect(comp.toPayCollapsed()).toBe(false);
+    });
   });
 
   describe('isOverdue', () => {

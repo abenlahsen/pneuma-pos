@@ -5,19 +5,22 @@
  *  - `own`    : ses propres lignes ;
  *  - `all`    : celles de tout le monde, avec attribution ;
  *  - `shared` : rien a filtrer — l'information est d'agence et sans
- *               proprietaire (les produits sous seuil).
+ *               proprietaire (les produits sous seuil, les achats a regler).
  */
 export type QueueScope = 'own' | 'all' | 'shared';
 
-/** Les trois files de l'accueil. Sert a nommer titres, badges et actions. */
-export type QueueKey = 'unpaid' | 'to_invoice' | 'low_stock';
+/** Les files de l'accueil. Sert a nommer titres, badges et actions. */
+export type QueueKey = 'unpaid' | 'to_invoice' | 'to_pay' | 'low_stock';
 
 export interface UnpaidRow {
   id: number;
   date: string;
   client: string | null;
   phone: string | null;
+  city: string | null;
   commercial: string | null;
+  /** Partenaire de montage de la vente. */
+  partner: string | null;
   amount: number;
   payment_status: string;
 }
@@ -29,6 +32,21 @@ export interface ToInvoiceRow {
   commercial: string | null;
   amount: number;
   payment_status: string;
+}
+
+/** Une ligne de la file « Achats à régler ». */
+export interface PurchaseDueRow {
+  id: number;
+  /** Date d'achat/BL : c'est elle qui fait courir le délai légal de 120 jours. */
+  date: string;
+  supplier_id: number | null;
+  supplier: string | null;
+  with_invoice: boolean;
+  /** Reste dû, retours déduits. */
+  amount: number;
+  days_late: number;
+  /** Facturé ET au-delà du délai légal de 120 jours : pénalités encourues. */
+  legal_risk: boolean;
 }
 
 /** Une ligne de la file « Produits sous seuil ». */
@@ -56,6 +74,12 @@ export interface WorkQueue<TRow> {
    */
   total: number | null;
   rows: TRow[];
+}
+
+/** La seule file à porter un second total : celui qui expose à des pénalités légales. */
+export interface PurchaseDueQueue extends WorkQueue<PurchaseDueRow> {
+  legal_count: number;
+  legal_total: number;
 }
 
 export interface RankingRow {
@@ -96,6 +120,7 @@ export interface WorkFigures {
 export interface WorkQueues {
   unpaid?: WorkQueue<UnpaidRow>;
   to_invoice?: WorkQueue<ToInvoiceRow>;
+  to_pay?: PurchaseDueQueue;
   low_stock?: WorkQueue<LowStockRow>;
   figures?: WorkFigures;
 }

@@ -3,12 +3,18 @@
 namespace Tests\Feature;
 
 use App\Enums\ServiceOrderStatus;
+use App\Models\City;
 use App\Models\Client;
 use App\Models\CompanySetting;
+use App\Models\Partner;
 use App\Models\Product;
+use App\Models\Purchase;
+use App\Models\PurchasePayment;
+use App\Models\PurchasePaymentAllocation;
 use App\Models\Sale;
 use App\Models\ServiceOrder;
 use App\Models\Stock;
+use App\Models\Supplier;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Laravel\Sanctum\Sanctum;
@@ -35,8 +41,8 @@ class WorkQueueTest extends TestCase
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         foreach ([
-            'view sales', 'view service-orders', 'view stock',
-            'view unpaid.all', 'view service-orders.all',
+            'view sales', 'view service-orders', 'view stock', 'view purchases', 'view suppliers',
+            'view unpaid.all', 'view service-orders.all', 'manage purchase-payments',
         ] as $permission) {
             Permission::findOrCreate($permission, 'web');
         }
@@ -189,6 +195,45 @@ class WorkQueueTest extends TestCase
 
         $ids = collect($response->json('unpaid.rows'))->pluck('id')->all();
         $this->assertNotContains($cancelled->id, $ids);
+    }
+
+    /** La file relance le client : sa ville et le partenaire de montage aident a le faire vite. */
+    public function test_an_unpaid_sale_row_carries_the_client_city_and_montage_partner(): void
+    {
+        $commercial = $this->makeUser(['view sales', 'view service-orders']);
+        $city = City::query()->create(['name' => 'Casablanca']);
+        $client = Client::query()->create([
+            'name' => 'Client Ville',
+            'category' => 'Particulier',
+            'is_active' => true,
+            'city_id' => $city->id,
+        ]);
+        $partner = Partner::query()->create(['name' => 'EAS SM', 'user_id' => $commercial->id]);
+
+        $sale = $this->makeUnpaidSale($commercial, $client, 1200);
+        $sale->update(['partner_id' => $partner->id]);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $row = collect($response->json('unpaid.rows'))->firstWhere('id', $sale->id);
+        $this->assertNotNull($row);
+        $this->assertSame('Casablanca', $row['city']);
+        $this->assertSame('EAS SM', $row['partner']);
+    }
+
+    /** Sans ville ni partenaire, les champs restent null plutot que de faire planter la file. */
+    public function test_an_unpaid_sale_row_tolerates_a_missing_city_and_partner(): void
+    {
+        $commercial = $this->makeUser(['view sales', 'view service-orders']);
+        $client = $this->makeClient('Client Sans Ville');
+        $sale = $this->makeUnpaidSale($commercial, $client, 800);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $row = collect($response->json('unpaid.rows'))->firstWhere('id', $sale->id);
+        $this->assertNotNull($row);
+        $this->assertNull($row['city']);
+        $this->assertNull($row['partner']);
     }
 
     public function test_commercial_only_sees_his_own_orders_to_invoice(): void
@@ -375,5 +420,203 @@ class WorkQueueTest extends TestCase
         $this->assertNotNull($row['stock_id'], 'Une ligne d\'achat exige un lot.');
         $this->assertArrayHasKey('unit_price', $row);
         $this->assertArrayHasKey('supplier_id', $row);
+    }
+
+    // ── Achats à régler : risque légal 120 jours (loi 69-21) ────────────────
+
+    private function makeSupplier(string $name, User $user): Supplier
+    {
+        return Supplier::query()->create(['name' => $name, 'user_id' => $user->id]);
+    }
+
+    private function makePurchase(Supplier $supplier, array $overrides = []): Purchase
+    {
+        return Purchase::query()->create(array_merge([
+            'date' => now()->toDateString(),
+            'supplier_id' => $supplier->id,
+            'total_quantity' => 1,
+            'total_price' => 1000.00,
+            'net_amount' => 1000.00,
+            'with_invoice' => true,
+            'status' => 'EN COURS',
+            'payment_status' => 'NON PAYE',
+        ], $overrides));
+    }
+
+    public function test_the_purchases_to_pay_queue_is_absent_without_the_payment_permission(): void
+    {
+        $this->makeUser(['view purchases']); // pas de manage purchase-payments
+
+        $response = $this->getJson('/api/work-queues');
+
+        $response->assertOk();
+        $this->assertArrayNotHasKey('to_pay', $response->json());
+    }
+
+    public function test_the_purchases_to_pay_queue_is_present_with_the_payment_permission(): void
+    {
+        $this->makeUser(['manage purchase-payments']);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $response->assertOk()->assertJsonPath('to_pay.scope', 'shared');
+    }
+
+    public function test_the_purchases_to_pay_queue_is_shared_and_never_filtered_by_owner(): void
+    {
+        $user = $this->makeUser(['manage purchase-payments']);
+        $supplier = $this->makeSupplier('Fournisseur Partage', $user);
+
+        // `commercial_id` n'existe pas sur ce fixture minimal, mais la dette
+        // fournisseur n'a de toute facon pas de proprietaire individuel : la
+        // portee `shared` ne filtre jamais sur qui que ce soit.
+        $purchase = $this->makePurchase($supplier);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $ids = collect($response->json('to_pay.rows'))->pluck('id')->all();
+        $this->assertContains($purchase->id, $ids);
+    }
+
+    public function test_a_cancelled_purchase_is_not_in_the_to_pay_queue(): void
+    {
+        $user = $this->makeUser(['manage purchase-payments']);
+        $supplier = $this->makeSupplier('Fournisseur Annule', $user);
+        $cancelled = $this->makePurchase($supplier, ['status' => 'ANNULE']);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $ids = collect($response->json('to_pay.rows'))->pluck('id')->all();
+        $this->assertNotContains($cancelled->id, $ids);
+    }
+
+    public function test_a_fully_paid_purchase_is_not_in_the_to_pay_queue(): void
+    {
+        $user = $this->makeUser(['manage purchase-payments']);
+        $supplier = $this->makeSupplier('Fournisseur Solde', $user);
+        $purchase = $this->makePurchase($supplier, ['net_amount' => 500.00, 'total_price' => 500.00]);
+
+        $payment = PurchasePayment::query()->create([
+            'purchase_id' => $purchase->id,
+            'supplier_id' => $supplier->id,
+            'amount' => 500.00,
+            'date' => now()->toDateString(),
+            'method' => 'Espèces',
+        ]);
+        PurchasePaymentAllocation::query()->create([
+            'purchase_payment_id' => $payment->id,
+            'purchase_id' => $purchase->id,
+            'amount' => 500.00,
+        ]);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $ids = collect($response->json('to_pay.rows'))->pluck('id')->all();
+        $this->assertNotContains($purchase->id, $ids);
+    }
+
+    /**
+     * Un achat couvert par un paiement fournisseur multi-achats n'a pas de
+     * `purchase_id` sur le paiement lui-meme — seule l'allocation le relie.
+     * Sommer `purchase_payments.amount` au lieu des allocations donnerait un
+     * montant restant errone.
+     */
+    public function test_a_partially_paid_purchase_via_allocations_reports_the_remaining_balance(): void
+    {
+        $user = $this->makeUser(['manage purchase-payments']);
+        $supplier = $this->makeSupplier('Fournisseur Partiel', $user);
+        $purchase = $this->makePurchase($supplier, ['net_amount' => 1000.00, 'total_price' => 1000.00]);
+
+        $payment = PurchasePayment::query()->create([
+            'purchase_id' => null,
+            'supplier_id' => $supplier->id,
+            'amount' => 400.00,
+            'date' => now()->toDateString(),
+            'method' => 'Espèces',
+        ]);
+        PurchasePaymentAllocation::query()->create([
+            'purchase_payment_id' => $payment->id,
+            'purchase_id' => $purchase->id,
+            'amount' => 400.00,
+        ]);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $row = collect($response->json('to_pay.rows'))->firstWhere('id', $purchase->id);
+        $this->assertNotNull($row);
+        $this->assertEqualsWithDelta(600.00, $row['amount'], 0.01);
+    }
+
+    public function test_an_invoiced_purchase_past_120_days_is_flagged_as_legal_risk(): void
+    {
+        $user = $this->makeUser(['manage purchase-payments']);
+        $supplier = $this->makeSupplier('Fournisseur Legal 121j', $user);
+        $purchase = $this->makePurchase($supplier, ['date' => now()->subDays(121)->toDateString(), 'with_invoice' => true]);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $row = collect($response->json('to_pay.rows'))->firstWhere('id', $purchase->id);
+        $this->assertNotNull($row);
+        $this->assertTrue($row['legal_risk']);
+        $this->assertGreaterThanOrEqual(1, $response->json('to_pay.legal_count'));
+    }
+
+    public function test_an_invoiced_purchase_at_119_days_is_not_flagged(): void
+    {
+        $user = $this->makeUser(['manage purchase-payments']);
+        $supplier = $this->makeSupplier('Fournisseur Legal 119j', $user);
+        $purchase = $this->makePurchase($supplier, ['date' => now()->subDays(119)->toDateString(), 'with_invoice' => true]);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $row = collect($response->json('to_pay.rows'))->firstWhere('id', $purchase->id);
+        $this->assertNotNull($row);
+        $this->assertFalse($row['legal_risk']);
+    }
+
+    public function test_a_non_invoiced_purchase_past_120_days_is_not_flagged(): void
+    {
+        $user = $this->makeUser(['manage purchase-payments']);
+        $supplier = $this->makeSupplier('Fournisseur Sans Facture', $user);
+        $purchase = $this->makePurchase($supplier, ['date' => now()->subDays(200)->toDateString(), 'with_invoice' => false]);
+
+        $response = $this->getJson('/api/work-queues');
+
+        $row = collect($response->json('to_pay.rows'))->firstWhere('id', $purchase->id);
+        $this->assertNotNull($row, 'Un achat non facture reste dans la file, sans le risque legal.');
+        $this->assertFalse($row['legal_risk']);
+    }
+
+    public function test_legal_risk_rows_are_sorted_first(): void
+    {
+        $user = $this->makeUser(['manage purchase-payments']);
+        $supplier = $this->makeSupplier('Fournisseur Tri', $user);
+
+        $recent = $this->makePurchase($supplier, ['date' => now()->subDays(5)->toDateString(), 'with_invoice' => true]);
+        $legal = $this->makePurchase($supplier, ['date' => now()->subDays(150)->toDateString(), 'with_invoice' => true]);
+
+        $rows = collect($this->getJson('/api/work-queues')->json('to_pay.rows'));
+        $legalIndex = $rows->search(fn ($r) => $r['id'] === $legal->id);
+        $recentIndex = $rows->search(fn ($r) => $r['id'] === $recent->id);
+
+        $this->assertLessThan($recentIndex, $legalIndex, 'Le risque legal doit passer avant le reste.');
+    }
+
+    /**
+     * Invariant qui justifie la reprise a l'identique du SQL de
+     * `SupplierService::unpaidBySupplier()` : le meme reste-du, agrege par
+     * achat ou par fournisseur, doit toujours donner le meme total.
+     */
+    public function test_the_queue_total_matches_the_suppliers_summary_total(): void
+    {
+        $user = $this->makeUser(['manage purchase-payments', 'view suppliers']);
+        $supplier = $this->makeSupplier('Fournisseur CrossCheck', $user);
+        $this->makePurchase($supplier, ['net_amount' => 700.00, 'total_price' => 700.00]);
+        $this->makePurchase($supplier, ['net_amount' => 300.00, 'total_price' => 300.00, 'with_invoice' => false]);
+
+        $queueTotal = $this->getJson('/api/work-queues')->json('to_pay.total');
+        $summaryTotal = $this->getJson('/api/suppliers-summary')->json('total');
+
+        $this->assertEqualsWithDelta($summaryTotal, $queueTotal, 0.01);
     }
 }

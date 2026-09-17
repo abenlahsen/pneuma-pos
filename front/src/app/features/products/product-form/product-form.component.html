@@ -43,6 +43,17 @@
         </label>
       </div>
 
+      <div class="form-control full-width" *ngIf="!isService">
+        <label>Seuil critique</label>
+        <input type="number" name="alert_threshold" [(ngModel)]="formData.alert_threshold"
+               min="0" step="1" placeholder="Aucun (utilise le seuil par défaut de l'agence)">
+        <small class="field-hint">
+          Cet article passe dans la file « Produits sous seuil » de l'accueil dès que
+          son stock descend à ce niveau. Laissé vide, c'est le seuil par défaut de
+          l'agence (réglable dans Paramètres) qui s'applique.
+        </small>
+      </div>
+
       <div class="form-control full-width">
         <label>Description</label>
         <textarea name="description" [(ngModel)]="formData.description" rows="2" placeholder="Description du produit..."></textarea>

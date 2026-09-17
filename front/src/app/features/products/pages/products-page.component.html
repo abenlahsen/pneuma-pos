@@ -75,19 +75,20 @@
             <th>RunFlat</th>
             <th>Saison</th>
             <th>Marquage</th>
+            <th class="text-center">Seuil</th>
             <th class="text-center">Statut</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngIf="loading()">
-            <td colspan="12" class="text-center py-4">
+            <td colspan="13" class="text-center py-4">
               <div class="spinner"></div>
               Chargement...
             </td>
           </tr>
 
           <tr *ngIf="!loading() && products().length === 0">
-            <td colspan="12" class="text-center py-4 text-muted">
+            <td colspan="13" class="text-center py-4 text-muted">
               Aucun produit trouvé.
             </td>
           </tr>
@@ -163,6 +164,11 @@
               <span *ngIf="product.tyre?.tire_reinforced" class="tag tag-xl" title="Renforcé">XL</span>
               <span *ngIf="product.type === 'part' && product.part?.oem_reference" class="text-small">{{ product.part?.oem_reference }}</span>
               <span *ngIf="!product.tyre?.tire_marking && !product.tyre?.tire_runflat && !product.tyre?.tire_reinforced && !(product.type === 'part' && product.part?.oem_reference)">-</span>
+            </td>
+            <!-- Seuil propre à l'article ; « — » = pas de seuil propre, suit le
+                 défaut agence. Sans objet pour un service, qui n'a pas de stock. -->
+            <td class="text-center">
+              {{ product.type === 'service' ? '-' : (product.alert_threshold ?? '—') }}
             </td>
             <td class="text-center">
               <app-state-badge [tone]="product.is_active ? 'neutral' : 'alert'">
