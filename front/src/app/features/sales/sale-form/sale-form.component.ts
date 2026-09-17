@@ -22,6 +22,20 @@ import { Vehicle } from '../../vehicles/models/vehicle.model';
 import { VehicleSelectorComponent } from '../../../shared/vehicle-selector/vehicle-selector.component';
 import { QuickClientFormComponent } from '../../../shared/quick-client-form/quick-client-form.component';
 
+/**
+ * Refonte 2b, étape 4 — écran plein deux volets (design_handoff_refonte_2b/
+ * Refonte Nouvelle vente.dc.html), remplace la modale à cinq sections.
+ *
+ * Changement de fond par rapport à l'ancienne version : on ne choisit plus
+ * un produit puis un lot de stock dans deux `<select>` séparés, puis on
+ * "ajoute" une ligne mise en forme dans une zone de saisie à part — on
+ * cherche directement des LOTS DE STOCK (catalogue à gauche, recherche par
+ * dimension "2055516" ou texte), et cliquer une ligne l'ajoute tout de suite
+ * au ticket (à droite). Qté, PU vente et remise se modifient ensuite en
+ * place sur la ligne du ticket — il n'y a donc plus de `currentItem` ni de
+ * mode "édition" séparé : `editItem`/`addItem`/`onProductSelected` etc. ont
+ * disparu, remplacés par des mutations directes sur `formData.items[i]`.
+ */
 @Component({
   selector: 'app-sale-form',
   standalone: true,
@@ -41,6 +55,12 @@ export class SaleFormComponent implements OnInit, OnDestroy {
 
   @Input() sale: Sale | null = null;
   @Input() preselectedClient: Client | null = null;
+  // Lus directement dans le template (initialCarriers()/... non repris dans
+  // un signal local) : ce composant n'est pas OnPush, donc ces @Input()
+  // ordinaires restent à jour à chaque passage de détection de changement.
+  // Les copier une fois dans un signal à ngOnInit() les figeait au moment du
+  // montage — sale-form-page.component charge ces listes de manière
+  // asynchrone, et elles arrivaient presque toujours après ce montage.
   @Input() initialCarriers: Carrier[] = [];
   @Input() initialPartners: Partner[] = [];
   @Input() initialCommercials: ManagedUser[] = [];
@@ -49,22 +69,28 @@ export class SaleFormComponent implements OnInit, OnDestroy {
   @Output() cancel = new EventEmitter<void>();
   @Output() saved = new EventEmitter<SalePayload>();
   @Output() cancelled = new EventEmitter<void>();
+  /** "Valider et encaisser" — même charge utile que `save`, mais le consommateur
+   * enchaîne sur le panneau de paiement au lieu de revenir simplement à la liste. */
+  @Output() saveAndPay = new EventEmitter<SalePayload>();
 
   private readonly productService = inject(ProductService);
   private readonly stockService = inject(StockService);
   private readonly clientService = inject(ClientService);
   private readonly cityService = inject(CityService);
 
-  products = signal<Product[]>([]);
-  productSearch = signal('');
-  loadingProducts = signal(false);
-  stocks = signal<Stock[]>([]);
-  loadingStocks = signal(false);
-  noStockAvailable = signal(false);
+  // ── Catalogue de lots (volet gauche) ─────────────────────────────────────
+  lotSearch = signal('');
+  lots = signal<Stock[]>([]);
+  loadingLots = signal(false);
+  private lotSearchLoaded = false;
 
-  commercials = signal<ManagedUser[]>([]);
-  carriers = signal<Carrier[]>([]);
-  partners = signal<Partner[]>([]);
+  // ── Ligne libre : pièce ou prestation sans lot de stock ─────────────────
+  showFreeLineForm = signal(false);
+  freeLineType = signal<'part' | 'service'>('part');
+  freeLineSearch = signal('');
+  freeLineProducts = signal<Product[]>([]);
+  loadingFreeLineProducts = signal(false);
+
   clients = signal<Client[]>([]);
   filteredClients = signal<Client[]>([]);
   duplicateMatches = signal<Client[]>([]);
@@ -109,22 +135,12 @@ export class SaleFormComponent implements OnInit, OnDestroy {
     comments: '',
   };
 
-  currentItem: any = {
-    product_id: 0,
-    stock_id: null,
-    quantity: 1,
-    purchase_price: 0,
-    selling_price: 0,
-    discount: 0,
-    linkedProduct: null,
-    stock: null
-  };
-
-  editingItemIndex: number | null = null;
-  editingOriginalQuantity = 0;
   logisticsCollapsed = signal(true);
   vehicle_id = signal<number | null>(null);
   saleVehicleMileage = signal<number | null>(null);
+
+  /** Quantités déjà engagées par lot, au chargement d'une vente existante — voir `lineAvailableStock`. */
+  private originalQuantityByStockId = new Map<number, number>();
 
   readonly selectedClientName = computed(() =>
     this.selectedClient()?.name?.trim() || this.formData.client?.trim() || ''
@@ -161,13 +177,9 @@ export class SaleFormComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cityService.getCities().subscribe(cities => this.cities.set(cities));
-    this.carriers.set(this.initialCarriers);
-    this.partners.set(this.initialPartners);
-    this.commercials.set(this.initialCommercials);
 
     this.setupClientSearch();
     this.loadClients();
-    this.searchProducts();
 
     if (this.sale) {
       this.formData = { ...this.sale };
@@ -180,6 +192,15 @@ export class SaleFormComponent implements OnInit, OnDestroy {
       this.clientSearch.set(this.resolveClientName(this.sale));
       this.vehicle_id.set(this.sale.vehicle_id ?? null);
       this.saleVehicleMileage.set(this.sale.mileage ?? null);
+
+      for (const item of this.formData.items as any[]) {
+        if (item.stock_id) {
+          this.originalQuantityByStockId.set(
+            item.stock_id,
+            (this.originalQuantityByStockId.get(item.stock_id) || 0) + Number(item.quantity || 0),
+          );
+        }
+      }
 
       if (this.sale.linked_client) {
         this.selectedClient.set(this.sale.linked_client);
@@ -206,181 +227,147 @@ export class SaleFormComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  searchProducts(): void {
-    this.loadingProducts.set(true);
-    const filters: Record<string, string> = { per_page: '50', is_active: '1' };
+  // ── Catalogue de lots ─────────────────────────────────────────────────────
+  // Un seul gestionnaire pose le signal ET lance la recherche avec la valeur
+  // qu'on vient de recevoir : un (ngModelChange) qui pose le signal PLUS un
+  // (input) séparé qui relit ce signal peuvent s'exécuter dans un ordre où
+  // le second voit encore l'ancienne valeur (les deux écoutent le même
+  // événement natif "input", sans garantie d'ordre entre eux) — la recherche
+  // partait alors toujours un caractère en retard.
+  onLotSearchInput(value: string): void {
+    this.lotSearch.set(value);
+    const search = value.trim();
+    if (!search && !this.lotSearchLoaded) {
+      // Rien tapé pour l'instant : pas d'appel réseau, la liste reste vide.
+      return;
+    }
 
-    if (this.productSearch()) {
-      filters['search'] = this.productSearch();
+    this.lotSearchLoaded = true;
+    this.loadingLots.set(true);
+    this.stockService.getStocks({ search, in_stock: '1', per_page: '30' }).subscribe({
+      next: (res) => {
+        this.lots.set(res.data);
+        this.loadingLots.set(false);
+      },
+      error: () => this.loadingLots.set(false),
+    });
+  }
+
+  /** Quantité déjà présente au ticket pour ce lot (annotation "déjà au ticket ×N"). */
+  ticketQuantityForStock(stockId: number): number {
+    return (this.formData.items || [])
+      .filter((item: any) => item.stock_id === stockId)
+      .reduce((sum: number, item: any) => sum + Number(item.quantity || 0), 0);
+  }
+
+  addLotToTicket(stock: Stock): void {
+    const item: any = {
+      product_id: stock.product_id,
+      stock_id: stock.id,
+      quantity: 1,
+      purchase_price: Number(stock.purchase_price ?? 0),
+      // Pas de prix de vente catalogue pour pneus/pièces dans ce système (voir
+      // Product model — seul ProductService a un selling_price) : la ligne
+      // arrive à 0, le vendeur le saisit sur le ticket, comme aujourd'hui.
+      selling_price: 0,
+      discount: 0,
+      linkedProduct: stock.product ?? null,
+      stock,
+    };
+
+    this.formData.items!.push(item);
+    this.calculateTotals();
+  }
+
+  // ── Ligne libre (pièce/prestation sans lot) ──────────────────────────────
+  openFreeLineForm(type: 'part' | 'service'): void {
+    this.freeLineType.set(type);
+    this.showFreeLineForm.set(true);
+    this.freeLineSearch.set('');
+    this.freeLineProducts.set([]);
+  }
+
+  closeFreeLineForm(): void {
+    this.showFreeLineForm.set(false);
+  }
+
+  onFreeLineSearchInput(value: string): void {
+    this.freeLineSearch.set(value);
+    this.searchFreeLineProducts();
+  }
+
+  searchFreeLineProducts(): void {
+    this.loadingFreeLineProducts.set(true);
+    const filters: Record<string, string> = { per_page: '20', is_active: '1', type: this.freeLineType() };
+    if (this.freeLineSearch().trim()) {
+      filters['search'] = this.freeLineSearch().trim();
     }
 
     this.productService.getProducts(filters).subscribe({
       next: (res) => {
-        this.products.set(res.data);
-        this.loadingProducts.set(false);
+        this.freeLineProducts.set(res.data);
+        this.loadingFreeLineProducts.set(false);
       },
-      error: () => this.loadingProducts.set(false),
+      error: () => this.loadingFreeLineProducts.set(false),
     });
   }
 
-  onProductSelected(event: Event): void {
-    const id = +(event.target as HTMLSelectElement).value;
-    this.currentItem.product_id = id;
-    this.currentItem.stock_id = null;
-    this.currentItem.stock = null;
-
-    const product = this.products().find((p) => p.id === id);
-
-    if (product) {
-      this.currentItem.linkedProduct = product;
-
-      if (product.type === 'service') {
-        this.stocks.set([]);
-        this.noStockAvailable.set(false);
-        this.currentItem.purchase_price = 0;
-        this.currentItem.selling_price = Number(product.service?.selling_price ?? 0);
-      } else {
-        this.loadStocksForProduct(id);
-      }
-    } else {
-      this.currentItem.linkedProduct = null;
-      this.stocks.set([]);
-    }
-  }
-
-  get isCurrentService(): boolean {
-    return this.currentItem.linkedProduct?.type === 'service';
-  }
-
-  get isStockOptional(): boolean {
-    const type = this.currentItem.linkedProduct?.type;
-    return type === 'service' || type === 'part';
-  }
-
-  loadStocksForProduct(productId: number, includeEmpty = false): void {
-    this.loadingStocks.set(true);
-    this.noStockAvailable.set(false);
-    const filters: Record<string, string> = { product_id: String(productId), per_page: '100' };
-
-    if (!includeEmpty) {
-      filters['in_stock'] = '1';
-    }
-
-    this.stockService.getStocks(filters).subscribe({
-      next: (res) => {
-        let list = res.data;
-        const currentStock = this.currentItem.stock;
-        const currentStockId = this.currentItem.stock_id;
-
-        if (currentStockId && !list.find((s) => s.id === currentStockId) && currentStock) {
-          list = [currentStock, ...list];
-        }
-
-        this.stocks.set(list);
-        this.noStockAvailable.set(list.length === 0);
-        this.loadingStocks.set(false);
-
-        if (list.length > 0 && !this.currentItem.stock_id) {
-          this.currentItem.stock_id = list[0].id;
-          this.onStockSelected();
-        }
-      },
-      error: () => this.loadingStocks.set(false),
-    });
-  }
-
-  onStockSelected(): void {
-    const stock = this.selectedStock;
-
-    if (stock) {
-      this.currentItem.stock = stock;
-      if (stock.purchase_price != null) {
-        this.currentItem.purchase_price = Number(stock.purchase_price);
-      }
-    }
-  }
-
-  get selectedStock(): Stock | null {
-    if (!this.currentItem.stock_id) return null;
-    return this.stocks().find((s) => s.id === this.currentItem.stock_id) || null;
-  }
-
-  get stockInsufficient(): boolean {
-    const stock = this.selectedStock;
-    if (!stock) return false;
-
-    let available = stock.quantity;
-    if (this.editingItemIndex !== null) {
-      const original: any = this.sale?.items?.[this.editingItemIndex];
-      if (original && original.stock_id === stock.id) {
-        available += Number(this.editingOriginalQuantity) || 0;
-      }
-    }
-
-    return (this.currentItem.quantity || 0) > available;
-  }
-
-  addItem(): void {
-    if (!this.currentItem.product_id) return;
-
-    const stockOptional = this.isStockOptional;
-    if (!stockOptional && !this.currentItem.stock_id) return;
-
-    if (this.currentItem.stock_id && this.stockInsufficient) {
-      alert('Quantité insuffisante en stock.');
-      return;
-    }
-
-    if (this.editingItemIndex !== null) {
-      this.formData.items![this.editingItemIndex] = { ...this.currentItem };
-    } else {
-      this.formData.items!.push({ ...this.currentItem });
-    }
-
-    this.calculateTotals();
-    this.resetCurrentItem();
-  }
-
-  editItem(index: number): void {
-    const item: any = this.formData.items![index];
-    const product = item.linkedProduct || item.linked_product || item.product || null;
-    this.editingOriginalQuantity = Number(item.quantity) || 0;
-
-    this.currentItem = {
-      product_id: item.product_id || product?.id || 0,
-      stock_id: item.stock_id ?? null,
-      quantity: item.quantity || 1,
-      purchase_price: item.purchase_price ?? 0,
-      selling_price: item.selling_price ?? item.unit_price ?? 0,
-      discount: Number(item.discount ?? 0),
+  addFreeLine(product: Product): void {
+    const item: any = {
+      product_id: product.id,
+      stock_id: null,
+      quantity: 1,
+      purchase_price: 0,
+      selling_price: product.type === 'service' ? Number(product.service?.selling_price ?? 0) : 0,
+      discount: 0,
       linkedProduct: product,
-      stock: item.stock || null
+      stock: null,
     };
 
-    if (product && !this.products().find((p) => p.id === product.id)) {
-      this.products.set([product, ...this.products()]);
-    }
-
-    if (product && product.type !== 'service' && this.currentItem.product_id) {
-      this.loadStocksForProduct(this.currentItem.product_id, true);
-    } else {
-      this.stocks.set([]);
-    }
-
-    this.editingItemIndex = index;
+    this.formData.items!.push(item);
+    this.calculateTotals();
+    this.showFreeLineForm.set(false);
   }
 
-  cancelItemEdit(): void {
-    this.resetCurrentItem();
+  // ── Édition en place sur la ligne du ticket ──────────────────────────────
+  onLineQuantityChange(item: any, value: number): void {
+    item.quantity = Math.max(1, Number(value) || 1);
+    this.calculateTotals();
+  }
+
+  onLineSellingPriceChange(item: any, value: number): void {
+    item.selling_price = Math.max(0, Number(value) || 0);
+    this.calculateTotals();
+  }
+
+  onLineDiscountChange(item: any, value: number): void {
+    item.discount = Math.max(0, Math.min(100, Number(value) || 0));
+    this.calculateTotals();
+  }
+
+  /** Stock disponible pour cette ligne, en réintégrant ce que la vente en cours d'édition avait déjà engagé sur ce même lot (sinon on se bloquerait soi-même). */
+  lineAvailableStock(item: any): number | null {
+    if (!item.stock_id || !item.stock) return null;
+    const original = this.originalQuantityByStockId.get(item.stock_id) || 0;
+    return Number(item.stock.quantity ?? 0) + original;
+  }
+
+  lineStockInsufficient(item: any): boolean {
+    const available = this.lineAvailableStock(item);
+    if (available === null) return false;
+    return Number(item.quantity || 0) > available;
+  }
+
+  // Méthode simple, pas un `computed()` : elle lit `formData.items`, une
+  // propriété ordinaire (pas un signal) mutée en place par push/splice —
+  // un computed() ne recalculerait jamais après sa première lecture. Ce
+  // composant n'est pas OnPush, donc la détection de changement par défaut
+  // la réévalue à chaque passage, comme le reste des champs de formData.
+  hasStockIssues(): boolean {
+    return (this.formData.items || []).some((item: any) => this.lineStockInsufficient(item));
   }
 
   removeItem(index: number): void {
-    if (this.editingItemIndex === index) {
-      this.resetCurrentItem();
-    } else if (this.editingItemIndex !== null && this.editingItemIndex > index) {
-      this.editingItemIndex--;
-    }
-
     this.formData.items!.splice(index, 1);
     this.calculateTotals();
   }
@@ -437,15 +424,25 @@ export class SaleFormComponent implements OnInit, OnDestroy {
     return sell * qte * (1 - discount / 100);
   }
 
+  lineMarginPct(item: any): number | null {
+    const sell = Number(item.selling_price ?? item.unit_price ?? 0);
+    if (!sell) return null;
+    const purchase = Number(item.purchase_price || 0);
+    return ((sell - purchase) / sell) * 100;
+  }
+
   calculateTotals(): void {
     let totalPurchase = 0;
     let totalSale = 0;
     let totalQuantity = 0;
+    let totalDiscountAmount = 0;
 
     for (const item of this.formData.items || []) {
       totalPurchase += Number(item.purchase_price || 0) * Number(item.quantity || 1);
       totalSale += this.lineTotal(item);
       totalQuantity += Number(item.quantity || 0);
+      const grossLine = Number(item.selling_price ?? item.unit_price ?? 0) * Number(item.quantity || 1);
+      totalDiscountAmount += grossLine - this.lineTotal(item);
       item.total = this.lineTotal(item);
       item.total_sale = this.lineTotal(item);
       item.unit_price = Number(item.selling_price ?? item.unit_price ?? 0);
@@ -457,7 +454,11 @@ export class SaleFormComponent implements OnInit, OnDestroy {
     this.formData.subtotal = totalSale;
     this.formData.total = totalSale - Number(this.formData.discount || 0) + Number(this.formData.tax || 0);
     this.formData.margin = totalSale - totalPurchase;
+    this.totalDiscountAmount.set(totalDiscountAmount);
   }
+
+  /** Ligne "Remises accordées" du pied de ticket — somme des remises appliquées, pas un champ saisi. */
+  totalDiscountAmount = signal(0);
 
   onClientSearchInput(value: string): void {
     this.clientSearch.set(value);
@@ -524,25 +525,42 @@ export class SaleFormComponent implements OnInit, OnDestroy {
     this.showQuickCreate.set(false);
   }
 
-  onSubmit(): void {
+  private validate(): boolean {
     if (!this.formData.commercial_id) {
       alert('Veuillez sélectionner un commercial.');
-      return;
+      return false;
     }
     if (!this.formData.partner_id) {
       alert('Veuillez sélectionner un partenaire.');
-      return;
+      return false;
     }
     if (!this.formData.items || this.formData.items.length === 0) {
       alert('Veuillez ajouter au moins un produit.');
-      return;
+      return false;
     }
+    if (this.hasStockIssues()) {
+      alert('Quantité insuffisante en stock sur au moins une ligne.');
+      return false;
+    }
+    return true;
+  }
+
+  onSubmit(): void {
+    if (!this.validate()) return;
 
     this.calculateTotals();
-
     const payload = this.buildPayload();
     this.save.emit(payload);
     this.saved.emit(payload);
+  }
+
+  /** "Valider et encaisser" — même validation, un événement différent pour que la page hôte enchaîne sur le paiement. */
+  onSubmitAndPay(): void {
+    if (!this.validate()) return;
+
+    this.calculateTotals();
+    const payload = this.buildPayload();
+    this.saveAndPay.emit(payload);
   }
 
   private buildPayload(): SalePayload {
@@ -660,24 +678,5 @@ export class SaleFormComponent implements OnInit, OnDestroy {
 
   private resolveClientPhone(sale: Sale): string {
     return sale.linked_client?.phone || sale.client_phone || '';
-  }
-
-  private resetCurrentItem(): void {
-    this.currentItem = {
-      product_id: 0,
-      stock_id: null,
-      quantity: 1,
-      purchase_price: 0,
-      selling_price: 0,
-      discount: 0,
-      linkedProduct: null,
-      stock: null
-    };
-    this.editingItemIndex = null;
-    this.editingOriginalQuantity = 0;
-    this.productSearch.set('');
-    this.products.set([]);
-    this.stocks.set([]);
-    this.searchProducts();
   }
 }

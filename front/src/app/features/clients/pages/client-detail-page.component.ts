@@ -21,18 +21,11 @@ import { Vehicle } from '../../vehicles/models/vehicle.model';
 import { VehicleFormComponent } from '../../../shared/vehicle-form/vehicle-form.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { SaleService } from '../../sales/data-access/sale.service';
-import { SalePayload } from '../../../core/models/sale.model';
-import { CarrierService } from '../../carriers/data-access/carrier.service';
-import { PartnerService } from '../../partners/data-access/partner.service';
-import { Carrier } from '../../carriers/models/carrier.model';
-import { Partner } from '../../partners/models/partner.model';
-import { ManagedUser } from '../../../core/models/user-manage.model';
-import { SaleFormComponent } from '../../sales/sale-form/sale-form.component';
 
 @Component({
   selector: 'app-client-detail-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, ClientFormComponent, VehicleFormComponent, SaleFormComponent, ClientPaymentComponent, SalePaymentDetailComponent, IconComponent],
+  imports: [CommonModule, RouterLink, ClientFormComponent, VehicleFormComponent, ClientPaymentComponent, SalePaymentDetailComponent, IconComponent],
   templateUrl: './client-detail-page.component.html',
   styleUrl: './client-detail-page.component.scss',
 })
@@ -44,8 +37,6 @@ export class ClientDetailPageComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   readonly authService = inject(AuthService);
   private readonly saleService = inject(SaleService);
-  private readonly carrierService = inject(CarrierService);
-  private readonly partnerService = inject(PartnerService);
 
   activeClientId: number | null = null;
 
@@ -74,12 +65,6 @@ export class ClientDetailPageComponent implements OnInit {
   readonly showVehicleForm = signal(false);
   readonly editingVehicle = signal<Vehicle | null>(null);
 
-  readonly showSaleForm = signal(false);
-  readonly allCarriers = signal<Carrier[]>([]);
-  readonly allPartners = signal<Partner[]>([]);
-  readonly allCommercials = signal<ManagedUser[]>([]);
-  readonly saleFormLookupLoaded = signal(false);
-  readonly savingSale = signal(false);
 
   readonly salesHistory = computed<ClientSalesHistoryRow[]>(() => {
     const p = this.profile();
@@ -255,40 +240,9 @@ export class ClientDetailPageComponent implements OnInit {
     });
   }
 
+  /** Refonte 2b, étape 4 : l'ancienne modale d'ajout de vente est remplacée par l'écran plein /sales/new, préchargé avec ce client. */
   openNewSaleForm(): void {
-    if (!this.saleFormLookupLoaded()) {
-      this.carrierService.getCarriers({ all: true }).subscribe({
-        next: (res: any) => this.allCarriers.set(Array.isArray(res) ? res : (res.data ?? [])),
-      });
-      this.partnerService.getPartners({ all: true }).subscribe({
-        next: (res: any) => this.allPartners.set(Array.isArray(res) ? res : (res.data ?? [])),
-      });
-      this.saleService.getFilters().subscribe({
-        next: (filters) => this.allCommercials.set(filters.commercials as unknown as ManagedUser[]),
-      });
-      this.saleFormLookupLoaded.set(true);
-    }
-    this.showSaleForm.set(true);
-  }
-
-  closeSaleForm(): void {
-    this.showSaleForm.set(false);
-  }
-
-  onSaleFormSave(payload: SalePayload): void {
-    this.savingSale.set(true);
-    this.saleService.createSale(payload).subscribe({
-      next: () => {
-        this.savingSale.set(false);
-        this.showSaleForm.set(false);
-        const id = this.activeClientId;
-        if (id) this.loadClient(id);
-      },
-      error: () => {
-        this.savingSale.set(false);
-        alert('Erreur lors de la création de la vente.');
-      },
-    });
+    this.router.navigate(['/sales/new'], { queryParams: { client_id: this.activeClientId } });
   }
 
   private loadClient(clientId: number): void {
@@ -303,7 +257,6 @@ export class ClientDetailPageComponent implements OnInit {
     this.vehicles.set([]);
     this.showVehicleForm.set(false);
     this.editingVehicle.set(null);
-    this.showSaleForm.set(false);
     this.activeTab.set('overview');
     this.openInvoicesCollapsed.set(false);
     this.entriesCollapsed.set(false);

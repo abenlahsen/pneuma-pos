@@ -2,30 +2,24 @@ import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angula
 import { CommonModule } from '@angular/common';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, ActivatedRoute } from '@angular/router';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../../core/services/auth.service';
 import { SaleDetailComponent } from '../sale-detail/sale-detail.component';
-import { SaleFormComponent } from '../sale-form/sale-form.component';
 import { PaymentPanelComponent } from '../payment-panel/payment-panel.component';
-import { Sale, SaleFilters, SalePayload, SaleSummary } from '../models/sale.model';
+import { Sale, SaleFilters, SaleSummary } from '../models/sale.model';
 import { SALE_STATUSES, SALE_STATUS_LABELS, SALE_STATUS_TRANSITIONS, SaleStatus } from '../../../core/constants/status.constants';
 import { PAYMENT_METHODS, paymentMethodClass } from '../../../core/constants/payment-method.constants';
 import { SaleService } from '../data-access/sale.service';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
-import { Carrier } from '../../carriers/models/carrier.model';
-import { CarrierService } from '../../carriers/data-access/carrier.service';
-import { Partner } from '../../partners/models/partner.model';
-import { PartnerService } from '../../partners/data-access/partner.service';
-import { ManagedUser } from '../../../core/models/user-manage.model';
 import { CityService } from '../../../core/services/city.service';
 import { DetailNavigator } from '../../../core/utils/detail-navigator';
 
 @Component({
   selector: 'app-sales-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, SaleFormComponent, SaleDetailComponent, PaymentPanelComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent],
+  imports: [CommonModule, FormsModule, RouterLink, SaleDetailComponent, PaymentPanelComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent],
   templateUrl: './sales-page.component.html',
   styleUrl: './sales-page.component.scss',
 })
@@ -115,8 +109,6 @@ export class SalesPageComponent implements OnInit {
   isExporting = signal(false);
   exportError = signal('');
   deletingSaleId = signal<number | null>(null);
-  showForm = signal(false);
-  editingSale = signal<Sale | null>(null);
   detailSale = signal<Sale | null>(null);
   paymentSale = signal<Sale | null>(null);
 
@@ -132,18 +124,13 @@ export class SalesPageComponent implements OnInit {
     goToPage: (page) => this.goToPage(page),
   });
 
-  allCarriers = signal<Carrier[]>([]);
-  allPartners = signal<Partner[]>([]);
-  allCommercials = signal<ManagedUser[]>([]);
-
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private destroyRef = inject(DestroyRef);
 
   constructor(
     private saleService: SaleService,
     public authService: AuthService,
-    private carrierService: CarrierService,
-    private partnerService: PartnerService,
     private cityService: CityService,
   ) {}
 
@@ -151,27 +138,29 @@ export class SalesPageComponent implements OnInit {
     this.cityService.getCities().subscribe(cities => this.cities.set(cities));
     this.loadFilters();
     this.loadData();
-    this.loadFormLookups();
 
     this.route.queryParamMap
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(params => {
         const id = Number(params.get('id'));
-        if (!Number.isFinite(id) || id <= 0) return;
+        if (Number.isFinite(id) && id > 0) {
+          this.saleService.getSale(id).subscribe({
+            next: sale => this.openDetail(sale),
+          });
+        }
 
-        this.saleService.getSale(id).subscribe({
-          next: sale => this.openDetail(sale),
-        });
+        // "Valider et encaisser" depuis l'écran plein de saisie (sale-form-page)
+        // enchaîne ici : on rouvre directement le panneau de paiement plutôt
+        // que de renvoyer au détail. Retire le paramètre de l'URL une fois
+        // consommé pour qu'un rafraîchissement de page ne le rouvre pas.
+        const payId = Number(params.get('pay'));
+        if (Number.isFinite(payId) && payId > 0) {
+          this.saleService.getSale(payId).subscribe({
+            next: sale => this.openPayments(sale),
+          });
+          this.router.navigate([], { queryParams: { pay: null }, queryParamsHandling: 'merge', replaceUrl: true });
+        }
       });
-  }
-
-  private loadFormLookups(): void {
-    this.carrierService.getCarriers({ all: true }).subscribe({
-      next: (res: any) => this.allCarriers.set(Array.isArray(res) ? res : res.data),
-    });
-    this.partnerService.getPartners({ all: true }).subscribe({
-      next: (res: any) => this.allPartners.set(Array.isArray(res) ? res : res.data),
-    });
   }
 
   loadData(): void {
@@ -200,10 +189,7 @@ export class SalesPageComponent implements OnInit {
 
   loadFilters(): void {
     this.saleService.getFilters().subscribe({
-      next: (filters) => {
-        this.filterOptions.set(filters);
-        this.allCommercials.set(filters.commercials as unknown as ManagedUser[]);
-      },
+      next: (filters) => this.filterOptions.set(filters),
     });
   }
 
@@ -309,48 +295,12 @@ export class SalesPageComponent implements OnInit {
     this.detailNav.reset();
   }
 
+  /** La modification se fait maintenant sur l'écran plein /sales/:id/edit (sale-form-page), pas dans une modale ici. */
   editFromDetail(): void {
     const sale = this.detailSale();
     if (!sale) return;
     this.closeDetail();
-    this.openEditForm(sale);
-  }
-
-  openAddForm(): void {
-    this.editingSale.set(null);
-    this.showForm.set(true);
-  }
-
-  openEditForm(sale: Sale): void {
-    this.editingSale.set(sale);
-    this.showForm.set(true);
-  }
-
-  closeForm(): void {
-    this.showForm.set(false);
-    this.editingSale.set(null);
-  }
-
-  onFormSubmit(payload: SalePayload): void {
-    const editing = this.editingSale();
-
-    if (editing) {
-      this.saleService.updateSale(editing.id, payload).subscribe({
-        next: () => {
-          this.closeForm();
-          this.loadData();
-          this.loadFilters();
-        },
-      });
-    } else {
-      this.saleService.createSale(payload).subscribe({
-        next: () => {
-          this.closeForm();
-          this.loadData();
-          this.loadFilters();
-        },
-      });
-    }
+    this.router.navigate(['/sales', sale.id, 'edit']);
   }
 
   deleteSale(sale: Sale): void {

@@ -458,27 +458,6 @@
   </div>
 }
 
-@if (showSaleForm()) {
-  <div class="modal-overlay" (click)="closeSaleForm()">
-    <div class="modal-container modal-container--wide" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>Nouvelle vente — {{ profile()?.client?.name }}</h2>
-        <button class="btn-icon" type="button" (click)="closeSaleForm()"><app-icon name="close" [size]="14" /></button>
-      </div>
-      <div class="modal-body">
-        <app-sale-form
-          [preselectedClient]="profile()?.client ?? null"
-          [initialCarriers]="allCarriers()"
-          [initialPartners]="allPartners()"
-          [initialCommercials]="allCommercials()"
-          (save)="onSaleFormSave($event)"
-          (cancel)="closeSaleForm()">
-        </app-sale-form>
-      </div>
-    </div>
-  </div>
-}
-
 @if (isPaymentModalOpen() && activeClientId) {
   <app-client-payment
     [clientId]="activeClientId"

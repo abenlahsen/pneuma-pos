@@ -1,0 +1,13 @@
+<div class="loading-state" *ngIf="loading()">Chargement...</div>
+
+<app-sale-form
+  *ngIf="!loading()"
+  [sale]="sale()"
+  [preselectedClient]="preselectedClient()"
+  [initialCarriers]="carriers()"
+  [initialPartners]="partners()"
+  [initialCommercials]="commercials()"
+  (save)="onSave($event)"
+  (saveAndPay)="onSaveAndPay($event)"
+  (cancel)="onCancel()">
+</app-sale-form>

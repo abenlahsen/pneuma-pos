@@ -1,22 +1,150 @@
-<form (ngSubmit)="onSubmit()" #form="ngForm" class="form-container">
-  <div class="form-section">
-    <h3 class="section-title">Informations Générales</h3>
+<form (ngSubmit)="onSubmit()" #form="ngForm" class="sale-form-screen">
 
-    <div class="client-panel">
-      <div class="client-panel-header">
-        <div>
-          <h4>Client enregistré</h4>
-          <p>Liez un client existant ou gardez les champs manuels pour l’historique.</p>
-        </div>
+  <!-- ── Volet gauche : recherche de lots + logistique repliée ──────────── -->
+  <div class="catalog-pane">
 
-        <div class="client-panel-actions">
-          <button type="button" class="btn btn-secondary" (click)="openQuickCreate()">Créer rapidement</button>
-          <button type="button" class="btn btn-secondary" *ngIf="selectedClient()" (click)="clearSelectedClient()">Dissocier</button>
-        </div>
+    <div class="lot-search-bar">
+      <label>
+        <app-icon name="search" [size]="19" />
+        <input type="text"
+               [ngModel]="lotSearch()" (ngModelChange)="onLotSearchInput($event)"
+               name="lotSearch"
+               placeholder="Marque, dimension (2055516), indice, référence…"
+               autocomplete="off">
+      </label>
+    </div>
+
+    <div class="lot-list-header">
+      <span>Référence · lot</span>
+      <span class="text-right">Stock</span>
+      <span class="text-right">PU achat</span>
+      <span class="text-right">PU vente</span>
+      <span class="text-right">Marge</span>
+      <span></span>
+    </div>
+
+    <div class="lot-list">
+      <div class="lot-row" *ngFor="let lot of lots()">
+        <span class="lot-name">
+          <span class="lot-title">{{ lot.product ? formatProductLabel(lot.product) : 'Produit #' + lot.product_id }}</span>
+          <span class="lot-sub">
+            {{ formatStockLabel(lot) }}
+            <ng-container *ngIf="ticketQuantityForStock(lot.id) > 0"> · déjà au ticket ×{{ ticketQuantityForStock(lot.id) }}</ng-container>
+          </span>
+        </span>
+        <span class="text-right fw-semibold">{{ lot.quantity }}</span>
+        <span class="text-right text-muted">{{ lot.purchase_price | number:'1.2-2' }}</span>
+        <span class="text-right">—</span>
+        <span class="text-right">—</span>
+        <button type="button" class="btn-add-lot" (click)="addLotToTicket(lot)">
+          {{ ticketQuantityForStock(lot.id) > 0 ? 'Ajouter' : 'Au ticket' }}
+        </button>
       </div>
 
-      <div class="client-search-box">
-        <label>Recherche client</label>
+      <div class="empty-state" *ngIf="!loadingLots() && lots().length === 0 && lotSearch()">
+        Aucun lot ne correspond à « {{ lotSearch() }} ».
+      </div>
+      <div class="empty-state" *ngIf="!loadingLots() && lots().length === 0 && !lotSearch()">
+        Tapez une dimension (2055516), une marque ou une référence pour chercher un lot.
+      </div>
+      <div class="helper-text" *ngIf="loadingLots()">Chargement…</div>
+    </div>
+
+    <div class="free-line-bar">
+      <span>Pas de pneu ? Ajoutez une prestation ou une pièce sans lot de stock.</span>
+      <button type="button" class="btn btn-secondary" (click)="openFreeLineForm('part')">Ligne libre</button>
+      <button type="button" class="btn btn-secondary" (click)="openFreeLineForm('service')">Prestation</button>
+    </div>
+
+    <div class="free-line-form" *ngIf="showFreeLineForm()">
+      <div class="free-line-form-header">
+        <strong>{{ freeLineType() === 'service' ? 'Ajouter une prestation' : 'Ajouter une pièce' }}</strong>
+        <button type="button" class="btn-icon" (click)="closeFreeLineForm()"><app-icon name="close" [size]="14" /></button>
+      </div>
+      <input type="text"
+             [ngModel]="freeLineSearch()" (ngModelChange)="onFreeLineSearchInput($event)"
+             name="freeLineSearch"
+             [placeholder]="freeLineType() === 'service' ? 'Chercher une prestation…' : 'Chercher une pièce…'"
+             autocomplete="off">
+
+      <div class="free-line-results">
+        <button type="button" class="free-line-result" *ngFor="let p of freeLineProducts()" (click)="addFreeLine(p)">
+          {{ formatProductLabel(p) }}
+        </button>
+        <div class="empty-state small" *ngIf="!loadingFreeLineProducts() && freeLineProducts().length === 0">
+          Aucun résultat.
+        </div>
+      </div>
+    </div>
+
+    <div class="logistics-panel">
+      <span class="logistics-title">Logistique &amp; suivi</span>
+
+      <div class="logistics-chips">
+        <select name="commercial_id" [(ngModel)]="formData.commercial_id" class="chip-select" [class.chip-select--required]="!formData.commercial_id" required>
+          <option [ngValue]="null">-- Commercial * --</option>
+          <option *ngFor="let rep of initialCommercials" [ngValue]="rep.id">{{ rep.name }}</option>
+        </select>
+
+        <select name="partner_id" [(ngModel)]="formData.partner_id" class="chip-select" [class.chip-select--required]="!formData.partner_id" required>
+          <option [ngValue]="null">-- Partenaire * --</option>
+          <option *ngFor="let p of initialPartners" [ngValue]="p.id">{{ p.name }} {{ p.city ? '(' + p.city + ')' : '' }}</option>
+        </select>
+
+        <button type="button" class="chip-toggle" (click)="logisticsCollapsed.set(!logisticsCollapsed())">
+          {{ logisticsCollapsed() ? 'Déplier les 6 champs' : 'Replier' }}
+          <app-icon [name]="logisticsCollapsed() ? 'chevron-down' : 'chevron-up'" [size]="12" />
+        </button>
+      </div>
+
+      <p class="logistics-hint" *ngIf="logisticsCollapsed()">
+        Les deux champs obligatoires (commercial, partenaire) sont préremplis et visibles ; transport, n° de suivi, service, statut, date de livraison et commentaires restent repliés.
+      </p>
+
+      <div class="logistics-grid" *ngIf="!logisticsCollapsed()">
+        <div class="form-control">
+          <label>Transport</label>
+          <select name="carrier_id" [(ngModel)]="formData.carrier_id">
+            <option [ngValue]="null">-- Sélectionner --</option>
+            <option *ngFor="let c of initialCarriers" [ngValue]="c.id">{{ c.name }}</option>
+          </select>
+        </div>
+        <div class="form-control">
+          <label>N° Suivi</label>
+          <input type="text" name="tracking_number" [(ngModel)]="formData.tracking_number" placeholder="Ex: TR-20260321-001">
+        </div>
+        <div class="form-control">
+          <label>Service</label>
+          <input type="text" name="service" [(ngModel)]="formData.service">
+        </div>
+        <div class="form-control" *ngIf="sale">
+          <label>Statut global</label>
+          <select name="status" [(ngModel)]="formData.status">
+            <option *ngFor="let s of statusOptions" [value]="s">{{ SALE_STATUS_LABELS[s] }}</option>
+          </select>
+        </div>
+        <div class="form-control">
+          <label>Date de livraison</label>
+          <input type="date" name="delivery_date" [(ngModel)]="formData.delivery_date">
+        </div>
+        <div class="form-control">
+          <label>Date de vente *</label>
+          <input type="date" name="date" [(ngModel)]="formData.date" required>
+        </div>
+        <div class="form-control full-width">
+          <label>Commentaires</label>
+          <textarea name="comments" [(ngModel)]="formData.comments" rows="2" placeholder="Notes additionnelles..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Volet droit : client, ticket, totaux ────────────────────────────── -->
+  <aside class="ticket-pane">
+
+    <div class="client-banner">
+      <div class="client-search-box" *ngIf="!selectedClient()">
+        <label>Client</label>
         <input
           type="text"
           name="clientSearch"
@@ -26,289 +154,166 @@
           placeholder="Nom, téléphone, email ou ville"
           autocomplete="off"
         />
+        <button type="button" class="btn btn-secondary btn-sm" (click)="openQuickCreate()">Créer rapidement</button>
 
         <div class="client-results" *ngIf="showClientSuggestions()">
-          <button
-            type="button"
-            class="client-result"
-            *ngFor="let client of filteredClients()"
-            (click)="selectClient(client)"
-          >
+          <button type="button" class="client-result" *ngFor="let client of filteredClients()" (click)="selectClient(client)">
             <span class="result-name">{{ client.name }}</span>
             <span class="result-meta">
               {{ client.phone || 'Sans téléphone' }}<ng-container *ngIf="client.city"> — {{ client.city }}</ng-container>
             </span>
           </button>
-
           <div class="empty-state small" *ngIf="!filteredClients().length && !loadingClients() && !loadingSearch()">Aucun client correspondant.</div>
           <div class="helper-text" *ngIf="loadingClients() || loadingSearch()">Chargement...</div>
         </div>
-      </div>
 
-      <div class="selected-client" *ngIf="selectedClient()">
-        <div>
-          <strong>{{ selectedClientName() }}</strong>
-          <p>{{ selectedClientPhone() || 'Sans téléphone' }}</p>
-        </div>
-        <span class="badge-link">Lié</span>
-      </div>
-
-      <div class="warning-banner soft-warning" *ngIf="duplicateMatches().length">
-        <strong>Doublons possibles détectés</strong>
-        <p>Vérifiez les clients existants avant de créer un nouveau profil.</p>
-        <ul>
-          <li *ngFor="let duplicate of duplicateMatches()">
-            {{ duplicate.name }} — {{ duplicate.phone || 'Sans téléphone' }}<ng-container *ngIf="duplicate.city"> ({{ duplicate.city }})</ng-container>
-          </li>
-        </ul>
-      </div>
-
-      <app-quick-client-form
-        *ngIf="showQuickCreate()"
-        [initialName]="clientSearch()"
-        (clientCreated)="onQuickClientCreated($event)"
-        (cancelled)="showQuickCreate.set(false)"
-      />
-
-      <div class="account-banner" *ngIf="selectedClient() && (clientProfile() || loadingClientProfile())">
-        <div class="account-banner-header">
-          <div>
-            <h4>Contexte du compte client</h4>
-            <p>Informations utiles avant validation de la vente.</p>
-          </div>
-          <span class="helper-text" *ngIf="loadingClientProfile()">Chargement...</span>
+        <div class="warning-banner soft-warning" *ngIf="duplicateMatches().length">
+          <strong>Doublons possibles détectés</strong>
+          <ul>
+            <li *ngFor="let duplicate of duplicateMatches()">
+              {{ duplicate.name }} — {{ duplicate.phone || 'Sans téléphone' }}<ng-container *ngIf="duplicate.city"> ({{ duplicate.city }})</ng-container>
+            </li>
+          </ul>
         </div>
 
-        <div class="account-metrics">
-          <div class="metric-card">
-            <span class="metric-label">Solde impayé</span>
-            <strong>{{ clientOutstandingBalance() | number:'1.2-2' }} DH</strong>
+        <app-quick-client-form
+          *ngIf="showQuickCreate()"
+          [initialName]="clientSearch()"
+          (clientCreated)="onQuickClientCreated($event)"
+          (cancelled)="showQuickCreate.set(false)"
+        />
+      </div>
+
+      <ng-container *ngIf="selectedClient()">
+        <div class="client-summary-row">
+          <span class="client-identity">
+            <span class="client-name">{{ selectedClientName() }}</span>
+            <span class="client-meta">{{ selectedClientPhone() || 'Sans téléphone' }}</span>
+          </span>
+          <span class="badge-link">Lié</span>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="clearSelectedClient()">Changer</button>
+        </div>
+
+        <div class="vehicle-section">
+          <app-vehicle-selector
+            [clientId]="selectedClient()!.id"
+            [required]="false"
+            [selectedVehicleId]="vehicle_id()"
+            (vehicleSelected)="onVehicleSelected($event)"
+          />
+          <div class="form-control" *ngIf="vehicle_id()" style="margin-top: 0.5rem;">
+            <label>Kilométrage (km)</label>
+            <input type="number" name="sale_mileage"
+                   [ngModel]="saleVehicleMileage()"
+                   (ngModelChange)="saleVehicleMileage.set($event ? +$event : null)"
+                   placeholder="Ex: 85000" min="0">
           </div>
-          <div class="metric-card">
-            <span class="metric-label">Solde projeté</span>
-            <strong>{{ projectedBalance() | number:'1.2-2' }} DH</strong>
-          </div>
-          <div class="metric-card">
-            <span class="metric-label">Limite de crédit</span>
-            <strong>{{ clientCreditLimit() | number:'1.2-2' }} DH</strong>
-          </div>
-          <div class="metric-card">
-            <span class="metric-label">Dernière vente</span>
+        </div>
+
+        <div class="account-metrics" *ngIf="clientProfile() || loadingClientProfile()">
+          <span class="metric-card">
+            <span class="metric-label">Impayé</span>
+            <strong class="metric-alert">{{ clientOutstandingBalance() | number:'1.2-2' }}</strong>
+          </span>
+          <span class="metric-card">
+            <span class="metric-label">Projeté</span>
+            <strong>{{ projectedBalance() | number:'1.2-2' }}</strong>
+          </span>
+          <span class="metric-card">
+            <span class="metric-label">Limite</span>
+            <strong>{{ clientCreditLimit() | number:'1.2-2' }}</strong>
+          </span>
+          <span class="metric-card">
+            <span class="metric-label">Dern. vente</span>
             <strong>{{ clientProfile()?.last_sale_date || 'N/A' }}</strong>
-          </div>
+          </span>
         </div>
 
         <div class="warning-banner danger-warning" *ngIf="overCreditLimit()">
-          <strong>Limite de crédit dépassée</strong>
+          <strong>Limite de crédit dépassée.</strong>
           <p>Cette vente ferait dépasser la limite configurée pour ce client.</p>
         </div>
 
         <div class="warning-banner soft-warning" *ngIf="!overCreditLimit() && nearCreditLimit()">
-          <strong>Client proche de la limite</strong>
+          <strong>Proche de la limite.</strong>
           <p>Cette vente rapprocherait fortement le client de sa limite de crédit.</p>
         </div>
-      </div>
+      </ng-container>
     </div>
 
-    <!-- Véhicule (optionnel, visible si client sélectionné) -->
-    <div class="vehicle-section" *ngIf="selectedClient()">
-      <app-vehicle-selector
-        [clientId]="selectedClient()!.id"
-        [required]="false"
-        [selectedVehicleId]="vehicle_id()"
-        (vehicleSelected)="onVehicleSelected($event)"
-      />
-      <div class="form-control" *ngIf="vehicle_id()" style="margin-top: 0.5rem;">
-        <label>Kilométrage (km)</label>
-        <input type="number" name="sale_mileage"
-               [ngModel]="saleVehicleMileage()"
-               (ngModelChange)="saleVehicleMileage.set($event ? +$event : null)"
-               placeholder="Ex: 85000" min="0">
-      </div>
-    </div>
-
-    <div class="form-grid">
-      <div class="form-control">
-        <label>Date *</label>
-        <input type="date" name="date" [(ngModel)]="formData.date" required>
-      </div>
-      <div class="form-control checkbox-control">
-        <label>Avec Facture</label>
+    <div class="ticket-header">
+      <span class="ticket-title">Ticket</span>
+      <span class="ticket-count" *ngIf="formData.items?.length">{{ formData.items!.length }} ligne(s) · {{ formData.total_quantity }} article(s)</span>
+      <label class="ticket-invoice-toggle">
         <input type="checkbox" name="with_invoice" [(ngModel)]="formData.with_invoice">
-      </div>
-    </div>
-  </div>
-
-  <div class="form-section">
-    <h3 class="section-title">Produits</h3>
-
-    <div class="items-table mb-3" *ngIf="formData.items && formData.items.length > 0">
-      <table class="table table-sm">
-        <thead>
-          <tr>
-            <th>Produit</th>
-            <th>Stock</th>
-            <th>Qté</th>
-            <th>PU Achat</th>
-            <th>PU Vente</th>
-            <th>Remise %</th>
-            <th>Total Vente</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let item of formData.items; let i = index" [class.table-active]="editingItemIndex === i">
-            <td>
-              {{ getProduct(item) ? formatProductLabel(getProduct(item)) : 'Produit #' + item.product_id }}
-              <button class="product-link" type="button" (click)="openProductView(item)" *ngIf="getProduct(item)" title="Voir le produit"><app-icon name="external-link" [size]="14" /></button>
-            </td>
-            <td>
-              <ng-container *ngIf="item.stock_id; else serviceLine">{{ item.stock ? formatStockLabel(item.stock) : 'Stock #' + item.stock_id }}</ng-container>
-              <ng-template #serviceLine><span class="text-muted">—</span></ng-template>
-            </td>
-            <td>{{ item.quantity }}</td>
-            <td>{{ item.purchase_price | number:'1.2-2' }}</td>
-            <td>{{ (item.selling_price ?? item.unit_price) | number:'1.2-2' }}</td>
-            <td>{{ (item.discount || 0) | number:'1.0-2' }}%</td>
-            <td>{{ lineTotal(item) | number:'1.2-2' }}</td>
-            <td>
-              <button type="button" class="btn-icon text-primary mr-1" title="Modifier" (click)="editItem(i)"><app-icon name="edit" [size]="14" /></button>
-              <button type="button" class="btn-icon text-danger" title="Supprimer" (click)="removeItem(i)"><app-icon name="trash" [size]="14" /></button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+        Avec facture
+      </label>
     </div>
 
-    <div class="item-adder">
-      <div class="form-grid align-items-end">
-        <div class="form-control">
-          <label>Chercher produit</label>
-          <input type="text" [ngModel]="productSearch()" (ngModelChange)="productSearch.set($event)" (input)="searchProducts()" name="productSearch" placeholder="Recherche..." autocomplete="off">
-        </div>
-        <div class="form-control">
-          <label>Produit</label>
-          <select [(ngModel)]="currentItem.product_id" (change)="onProductSelected($event)" name="cur_product_id">
-            <option [value]="0">-- Sélectionner --</option>
-            <option *ngFor="let p of products()" [value]="p.id">{{ formatProductLabel(p) }}</option>
-          </select>
-        </div>
-        <div class="form-control">
-          <label>Stock {{ isStockOptional ? '(facultatif)' : '' }}</label>
-          <select name="cur_stock_id" [(ngModel)]="currentItem.stock_id" (ngModelChange)="onStockSelected()" [disabled]="isCurrentService">
-            <option [ngValue]="null">{{ isCurrentService ? '— (service)' : '-- Sélectionner --' }}</option>
-            <option *ngFor="let s of stocks()" [ngValue]="s.id">{{ formatStockLabel(s) }}</option>
-          </select>
-          <span class="text-small text-danger" *ngIf="noStockAvailable() && !loadingStocks() && !isStockOptional">Aucun stock</span>
-        </div>
-        <div class="form-control">
-          <label>Qté</label>
-          <input type="number" name="cur_quantity" [(ngModel)]="currentItem.quantity" min="1">
-        </div>
-        <div class="form-control">
-          <label>PU Achat (DH)</label>
-          <input type="number" name="cur_purchase_price" [(ngModel)]="currentItem.purchase_price" step="0.01">
-        </div>
-        <div class="form-control">
-          <label>PU Vente (DH)</label>
-          <input type="number" name="cur_selling_price" [(ngModel)]="currentItem.selling_price" step="0.01">
-        </div>
-        <div class="form-control">
-          <label>Remise (%)</label>
-          <input type="number" name="cur_discount" [(ngModel)]="currentItem.discount" min="0" max="100" step="0.01">
-        </div>
-        <div class="form-control">
-          <button type="button" class="btn btn-primary add-item-btn" [disabled]="!currentItem.product_id || (!isStockOptional && !currentItem.stock_id) || (currentItem.stock_id && stockInsufficient)" (click)="addItem()">{{ editingItemIndex !== null ? 'Mettre à jour' : 'Ajouter' }}</button>
-        </div>
-        <div class="form-control" *ngIf="editingItemIndex !== null">
-          <button type="button" class="btn btn-secondary add-item-btn" (click)="cancelItemEdit()">Annuler</button>
-        </div>
+    <div class="ticket-body">
+      <div class="ticket-list-header" *ngIf="formData.items?.length">
+        <span>Article</span>
+        <span class="text-center">Qté</span>
+        <span class="text-right">PU vente</span>
+        <span class="text-center">Rem.</span>
+        <span class="text-right">Total</span>
+        <span></span>
+      </div>
+
+      <div class="ticket-row" *ngFor="let item of formData.items; let i = index">
+        <span class="ticket-item-name">
+          <span class="item-title">{{ getProduct(item) ? formatProductLabel(getProduct(item)) : 'Produit #' + item.product_id }}
+            <button class="product-link" type="button" (click)="openProductView(item)" *ngIf="getProduct(item)" title="Voir le produit"><app-icon name="external-link" [size]="12" /></button>
+          </span>
+          <span class="item-sub">
+            <ng-container *ngIf="item.stock_id; else freeLineSub">achat {{ item.purchase_price | number:'1.0-0' }}<ng-container *ngIf="lineMarginPct(item) !== null"> · marge {{ lineMarginPct(item) | number:'1.1-1' }}%</ng-container></ng-container>
+            <ng-template #freeLineSub>{{ getProduct(item)?.type === 'service' ? 'Prestation' : 'Pièce' }} · sans lot de stock</ng-template>
+          </span>
+          <span class="item-stock-warning" *ngIf="lineStockInsufficient(item)">Stock insuffisant (dispo {{ lineAvailableStock(item) }})</span>
+        </span>
+        <input type="number" class="ticket-input" min="1"
+               [ngModel]="item.quantity" (ngModelChange)="onLineQuantityChange(item, $event)"
+               [name]="'qty_' + i">
+        <input type="number" class="ticket-input" min="0" step="0.01"
+               [ngModel]="item.selling_price ?? item.unit_price" (ngModelChange)="onLineSellingPriceChange(item, $event)"
+               [name]="'price_' + i">
+        <input type="number" class="ticket-input" min="0" max="100" step="0.01"
+               [ngModel]="item.discount || 0" (ngModelChange)="onLineDiscountChange(item, $event)"
+               [name]="'discount_' + i">
+        <span class="ticket-line-total">{{ lineTotal(item) | number:'1.2-2' }}</span>
+        <button type="button" class="btn-remove-line" title="Retirer" (click)="removeItem(i)"><app-icon name="close" [size]="13" /></button>
+      </div>
+
+      <div class="ticket-empty" *ngIf="!formData.items?.length">
+        Les lots ajoutés depuis la recherche apparaissent ici. Qté, prix et remise se modifient sur place.
       </div>
     </div>
-  </div>
 
-  <div class="form-section">
-    <h3 class="section-title">Totaux</h3>
-    <div class="totals-preview">
-      <div class="total-item">
-        <span class="label">Total Articles:</span>
-        <span class="value">{{ formData.total_quantity }}</span>
+    <div class="ticket-footer">
+      <div class="ticket-totals">
+        <span class="totals-row"><span>Total achat</span><span>{{ formData.total_purchase | number:'1.2-2' }}</span></span>
+        <span class="totals-row" *ngIf="totalDiscountAmount() > 0"><span>Remises accordées</span><span class="totals-discount">− {{ totalDiscountAmount() | number:'1.2-2' }}</span></span>
+        <span class="totals-row totals-row--margin">
+          <span>Marge nette</span>
+          <span [class.negative]="(formData.margin || 0) < 0">
+            {{ formData.margin | number:'1.2-2' }}
+            <span class="margin-pct" *ngIf="(formData.total_sale ?? 0) > 0">{{ (formData.margin! / formData.total_sale! * 100) | number:'1.1-1' }}%</span>
+          </span>
+        </span>
       </div>
-      <div class="total-item">
-        <span class="label">Total Achat:</span>
-        <span class="value">{{ formData.total_purchase | number:'1.2-2' }} DH</span>
+
+      <div class="ticket-grand-total">
+        <span>Total vente</span>
+        <span>{{ formData.total_sale | number:'1.2-2' }} <small>DH</small></span>
       </div>
-      <div class="total-item">
-        <span class="label">Total Vente:</span>
-        <span class="value">{{ formData.total_sale | number:'1.2-2' }} DH</span>
-      </div>
-      <div class="summary-item total-margin">
-        <span class="label">Marge Nette:</span>
-        <span class="value" [class.negative]="(formData.margin || 0) < 0">{{ formData.margin | number:'1.2-2' }} DH</span>
+
+      <div class="ticket-actions">
+        <button type="button" class="btn btn-secondary" (click)="cancel.emit(); cancelled.emit()">Annuler</button>
+        <button type="submit" class="btn btn-secondary" [disabled]="!form.valid || !formData.items?.length">Enregistrer en brouillon</button>
+        <button type="button" class="btn btn-primary" [disabled]="!form.valid || !formData.items?.length" (click)="onSubmitAndPay()">Valider et encaisser</button>
       </div>
     </div>
-  </div>
-
-  <div class="form-section">
-    <h3 class="section-title collapsible" (click)="logisticsCollapsed.set(!logisticsCollapsed())" style="cursor: pointer; user-select: none;">
-      <span>Logistique & Suivi</span>
-      <app-icon class="collapse-indicator" style="float: right;" [name]="logisticsCollapsed() ? 'chevron-right' : 'chevron-down'" [size]="12" />
-    </h3>
-
-    <div *ngIf="!logisticsCollapsed()">
-      <div class="form-grid">
-        <div class="form-control">
-          <label>Transport</label>
-          <select name="carrier_id" [(ngModel)]="formData.carrier_id">
-            <option [ngValue]="null">-- Sélectionner --</option>
-            <option *ngFor="let c of carriers()" [ngValue]="c.id">{{ c.name }}</option>
-          </select>
-        </div>
-        <div class="form-control">
-          <label>N° Suivi</label>
-          <input type="text" name="tracking_number" [(ngModel)]="formData.tracking_number" placeholder="Ex: TR-20260321-001">
-        </div>
-        <div class="form-control">
-          <label>Partenaire *</label>
-          <select name="partner_id" [(ngModel)]="formData.partner_id" required>
-            <option [ngValue]="null">-- Sélectionner --</option>
-            <option *ngFor="let p of partners()" [ngValue]="p.id">{{ p.name }} {{ p.city ? '(' + p.city + ')' : '' }}</option>
-          </select>
-        </div>
-        <div class="form-control">
-          <label>Service</label>
-          <input type="text" name="service" [(ngModel)]="formData.service">
-        </div>
-        <div class="form-control">
-          <label>Commercial *</label>
-          <select name="commercial_id" [(ngModel)]="formData.commercial_id" class="form-control" required>
-            <option [ngValue]="null">-- Sélectionner un commercial --</option>
-            <option *ngFor="let rep of commercials()" [ngValue]="rep.id">{{ rep.name }}</option>
-          </select>
-        </div>
-        <div class="form-control" *ngIf="sale">
-          <label>Status Global</label>
-          <select name="status" [(ngModel)]="formData.status">
-            <option *ngFor="let s of statusOptions" [value]="s">{{ SALE_STATUS_LABELS[s] }}</option>
-          </select>
-        </div>
-        <div class="form-control">
-          <label>Date de Livraison</label>
-          <input type="date" name="delivery_date" [(ngModel)]="formData.delivery_date">
-        </div>
-      </div>
-
-      <div class="form-control full-width" style="margin-top: 1rem;">
-        <label>Commentaires</label>
-        <textarea name="comments" [(ngModel)]="formData.comments" rows="3" placeholder="Notes additionnelles..."></textarea>
-      </div>
-    </div>
-  </div>
-
-  <div class="form-actions mt-4 text-right">
-    <button type="button" class="btn btn-secondary mr-2" (click)="cancel.emit(); cancelled.emit()">Annuler</button>
-    <button type="submit" class="btn btn-primary" [disabled]="!form.valid || !formData.items || formData.items.length === 0">Enregistrer</button>
-  </div>
+  </aside>
 </form>
 
 <app-product-detail

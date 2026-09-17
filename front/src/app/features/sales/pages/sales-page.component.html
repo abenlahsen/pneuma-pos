@@ -8,9 +8,9 @@
       <button class="btn btn-secondary" type="button" (click)="exportSales()" [disabled]="isExporting()">
         {{ isExporting() ? 'Export en cours...' : 'Exporter Excel' }}
       </button>
-      <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create sales')">
+      <a class="btn btn-primary" routerLink="/sales/new" *ngIf="authService.hasPermission('create sales')">
         Nouvelle Vente
-      </button>
+      </a>
       <app-auto-refresh-control pageKey="sales" (refresh)="loadData()" />
     </div>
     <p class="export-error" *ngIf="exportError()">{{ exportError() }}</p>
@@ -246,7 +246,7 @@
         <button class="btn-icon" (click)="openDetail(sale)" title="Voir" [disabled]="deletingSaleId() === sale.id"><app-icon name="view" [size]="15" /></button>
         <button class="btn-icon" (click)="openPayments(sale)" title="Paiements" [disabled]="deletingSaleId() === sale.id"><app-icon name="credit-card" [size]="15" /></button>
         <ng-container *ngIf="!isSaleLocked(sale); else lockedActions">
-          <button class="btn-icon text-primary" (click)="openEditForm(sale)" title="Modifier" *ngIf="authService.hasPermission('edit sales')" [disabled]="deletingSaleId() === sale.id"><app-icon name="edit" [size]="15" /></button>
+          <a class="btn-icon text-primary" [routerLink]="['/sales', sale.id, 'edit']" title="Modifier" *ngIf="authService.hasPermission('edit sales')"><app-icon name="edit" [size]="15" /></a>
           <button class="btn-icon text-danger" (click)="deleteSale(sale)" title="Supprimer" *ngIf="authService.hasPermission('delete sales')" [disabled]="deletingSaleId() === sale.id">
             <span *ngIf="deletingSaleId() !== sale.id"><app-icon name="trash" [size]="15" /></span>
             <span *ngIf="deletingSaleId() === sale.id" class="inline-spinner"></span>
@@ -283,24 +283,6 @@
   </div>
 </div>
 
-<div class="modal-overlay" *ngIf="showForm()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>{{ editingSale() ? 'Modifier la vente' : 'Nouvelle vente' }}</h2>
-      <button class="btn-icon" (click)="closeForm()"><app-icon name="close" [size]="14" /></button>
-    </div>
-    <div class="modal-body">
-      <app-sale-form
-        [sale]="editingSale()!"
-        [initialCarriers]="allCarriers()"
-        [initialPartners]="allPartners()"
-        [initialCommercials]="allCommercials()"
-        (save)="onFormSubmit($event)"
-        (cancel)="closeForm()">
-      </app-sale-form>
-    </div>
-  </div>
-</div>
 
 <app-sale-detail
   *ngIf="detailSale()"

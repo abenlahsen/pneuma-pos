@@ -1,0 +1,30 @@
+// "Écran plein" (README) : cet écran touche les bords du rail et de la
+// barre haute, contrairement aux autres pages qui vivent dans le padding
+// de 1.5rem posé par `.main-content__inner` (app.scss). Les marges
+// négatives annulent ce padding pour cette page précise ; la hauteur fixe
+// (barre haute 60px) laisse app-sale-form remplir tout le reste et faire
+// défiler ses deux volets indépendamment plutôt que de faire défiler toute
+// la page.
+:host {
+  display: block;
+  margin: -1.5rem;
+  height: calc(100vh - 60px);
+}
+
+@media (max-width: 1024px) {
+  :host {
+    margin: -1rem;
+    height: calc(100vh - 60px);
+  }
+}
+
+app-sale-form {
+  display: block;
+  height: 100%;
+}
+
+.loading-state {
+  padding: 3rem;
+  text-align: center;
+  color: #4a5c75;
+}

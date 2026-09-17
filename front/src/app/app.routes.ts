@@ -48,6 +48,20 @@ export const routes: Routes = [
       import('./features/sales/pages/sales-page.component').then((m) => m.SalesPageComponent),
   },
   {
+    path: 'sales/new',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'create sales' },
+    loadComponent: () =>
+      import('./features/sales/sale-form-page/sale-form-page.component').then((m) => m.SaleFormPageComponent),
+  },
+  {
+    path: 'sales/:id/edit',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'edit sales' },
+    loadComponent: () =>
+      import('./features/sales/sale-form-page/sale-form-page.component').then((m) => m.SaleFormPageComponent),
+  },
+  {
     path: 'service-orders',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view service-orders' },
