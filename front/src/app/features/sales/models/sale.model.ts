@@ -95,6 +95,10 @@ export interface SaleSummary {
   unpaid_livre_monte: number;
   ca_avec_facture: number;
   ca_sans_facture: number;
+  /** Bande "Sélection filtrée" (refonte 2b) : sur tous les filtres actifs, pas seulement la page affichée. */
+  filtered_count: number;
+  filtered_total: number;
+  filtered_margin: number;
 }
 
 export interface SaleFilters {

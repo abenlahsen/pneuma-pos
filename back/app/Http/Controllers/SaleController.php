@@ -610,6 +610,13 @@ class SaleController extends Controller
             })(),
             'ca_avec_facture' => round((float) (clone $query)->where('with_invoice', true)->sum('total_sale'), 2),
             'ca_sans_facture' => round((float) (clone $query)->where('with_invoice', false)->sum('total_sale'), 2),
+            // Bande "Sélection filtrée" (refonte 2b, étape 2) : total et marge sur
+            // l'ensemble des ventes qui correspondent aux filtres actifs, pas
+            // seulement la page affichée — $query porte déjà tous les filtres
+            // ci-dessus, avant pagination.
+            'filtered_count' => (clone $query)->count(),
+            'filtered_total' => round((float) (clone $query)->sum('total_sale'), 2),
+            'filtered_margin' => round((float) (clone $query)->sum('margin'), 2),
         ]);
     }
 

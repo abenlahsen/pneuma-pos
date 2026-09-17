@@ -738,7 +738,11 @@ class SaleControllerTest extends TestCase
             ->assertJsonPath('tyres_period', null)
             ->assertJsonPath('tyres_en_cours', 9)
             ->assertJsonPath('sales_en_cours', 2)
-            ->assertJsonPath('unpaid_en_cours', 1300);
+            ->assertJsonPath('unpaid_en_cours', 1300)
+            // "Sélection filtrée" (refonte 2b) : les 3 ventes du test, la plus
+            // ancienne exclue d'aucun filtre par défaut (pas ANNULE).
+            ->assertJsonPath('filtered_count', 3)
+            ->assertJsonPath('filtered_total', 2200);
     }
 
     public function test_summary_excludes_cancelled_sales_by_default()

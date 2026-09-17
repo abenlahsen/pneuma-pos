@@ -2,37 +2,273 @@
 @include layout.page-layout();
 
 .summary-cards {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
 }
 
-.margin-pct {
+// ── Summary card extras (card-content/card-hint not in mixin — voir DESIGN_SYSTEM.md) ──
+.card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: #4a5c75;
+}
+
+// ── Impayé (refonte 2b) : le seul cadran teinté sur toute sa surface — le
+// seul sens qui a droit au rouge en dehors de l'action principale d'un
+// écran (règle "une couleur = un sens"). Pas dans le mixin partagé : voir
+// le commentaire équivalent pour .list-grid-* plus bas — n'importe quel
+// ajout au mixin est dupliqué dans les 24 autres écrans qui l'incluent et
+// fait sauter leur budget de style.
+.summary-card.alert {
+  background: #fdeff1;
+  border-color: #c2181f;
+  .card-icon  { background: rgba(194, 24, 31, 0.12); color: #c2181f; }
+  .card-label { color: #8f1218; }
+  .card-value { color: #c2181f; }
+}
+
+.py-4 { padding: 1.5rem 0; }
+
+// ── Barre de filtres à jetons (refonte 2b, étape 2) ───────────────────────
+// Remplace la grille de 15 champs en permanence visible : recherche +
+// jetons retirables pour les filtres actifs + bouton qui déplie le panneau
+// .filters-section existant (mixin, inchangé) pour le reste des champs.
+.filter-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 11px 18px;
+  border-bottom: 1px solid #d0d9e4;
+  background: #f8fafc;
+}
+
+.filter-bar-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  width: 270px;
+  max-width: 100%;
+  padding: 0 11px;
+  background: #fff;
+  border: 1px solid #d0d9e4;
+
+  app-icon { color: #64748b; flex-shrink: 0; }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 12.5px;
+    color: #0f172a;
+    &::placeholder { color: #94a3b8; }
+  }
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 10px;
+  background: #fff;
+  border: 1px solid #0f172a;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+
+  button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: #64748b;
+    font: inherit;
+    font-weight: 400;
+    display: inline-flex;
+    &:hover { color: #ef4444; }
+  }
+
+  // Filtre "à problème" (ex. impayé) : le seul cas où un jeton porte du
+  // rouge, jamais un filtre neutre.
+  &--alert {
+    background: #fdeff1;
+    border-color: #c2181f;
+    color: #c2181f;
+    button { color: #c2181f; &:hover { color: #8f1218; } }
+  }
+}
+
+.filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid #d0d9e4;
+  background: #fff;
+  color: #0f172a;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  &:hover { background: #f8fafc; }
+
+  .filter-toggle-count {
+    padding: 0 5px;
+    background: #0f172a;
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 700;
+  }
+}
+
+.filter-result-count {
+  font-size: 11.5px;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+// ── Motif de ligne (refonte 2b, étape 2, README « Le motif de ligne ») ────
+// Pas dans le mixin partagé _page-layout.scss : celui-ci est inclus par les
+// 25 écrans de liste, et ces classes n'y sont utilisées par aucun autre —
+// les y ajouter dupliquerait tout ce CSS dans les 24 autres écrans et ferait
+// dépasser leur budget de style (déjà le cas documenté pour .badge-method
+// plus bas dans ce même fichier). Quand un deuxième écran migre vers ce
+// motif, dupliquer ce bloc dans son propre SCSS — même convention que le
+// reste du dépôt (voir DESIGN_SYSTEM.md, "chaque page a son SCSS complet").
+.sales-grid {
+  grid-template-columns: 52px 84px minmax(0, 1fr) 78px 118px 118px 98px 112px 120px;
+}
+
+.list-grid-header {
+  display: grid;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 18px;
+  border-bottom: 1px solid #0c1e33;
+  background: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #4a5c75;
+
+  .sortable {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    cursor: pointer;
+    user-select: none;
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    color: inherit;
+    &:hover { color: #0c1e33; }
+  }
+}
+
+.list-grid-row {
+  display: grid;
+  align-items: center;
+  gap: 12px;
+  min-height: 58px;
+  padding: 0 18px;
+  border-bottom: 1px solid #e7eef8;
+
+  &:hover { background: #f8fafc; }
+
+  // Liseré gauche de 3px : une ligne qui demande une action (règle 5 du
+  // motif de ligne). Une seule couleur par ligne, jamais combinée à
+  // d'autres accents de bordure.
+  &--action {
+    border-left: 3px solid #c2181f;
+    margin-left: -3px;
+  }
+}
+
+// Nom principal + étiquette (ex. "FACTURE") sur la même ligne, sous-ligne
+// de qualifiants juste en dessous (règle 3 : ce qui qualifie sans être
+// triable descend en sous-ligne à 11,5px).
+.list-grid-name {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0c1e33;
+  text-decoration: none;
+  &:hover { text-decoration: underline; }
+}
+
+.list-grid-tag {
+  padding: 1px 5px;
+  border: 1px solid #cfdcec;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #4a5c75;
+}
+
+.list-grid-sub {
   display: block;
+  font-size: 11.5px;
+  color: #4a5c75;
+}
+
+// Statut de paiement en texte de couleur (pas un badge) : une seule
+// couleur par sens — encaissé (income), dû (danger), en attente (warning).
+.list-grid-status {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+
+  &--paid    { color: #15616d; }
+  &--unpaid  { color: #c2181f; }
+  &--partial { color: #8a5a00; }
+
+  .list-grid-sub { font-weight: 600; letter-spacing: 0; }
+}
+
+// Case verrouillée : remplace modifier/supprimer quand la ligne est
+// clôturée, plutôt que de les masquer et de faire varier la largeur de la
+// colonne actions (cf. README, détail repris du code).
+.list-grid-lock {
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e7eef8;
+  background: #f4f8fd;
+  color: #d0d9e4;
+}
+
+.pagination-totals {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #0c1e33;
+}
+
+// Refonte 2b : "le pourcentage de marge ne se colore que sous le seuil,
+// au lieu des trois couleurs systématiques" — seul margin-low est teinté,
+// margin-mid/high héritent du gris de la cellule (README §3 Ventes).
+.margin-pct {
+  display: inline;
   font-size: 0.72rem;
   font-weight: 600;
-  letter-spacing: 0;
-  &.margin-low  { color: #dc2626; }
-  &.margin-mid  { color: #d97706; }
-  &.margin-high { color: #16a34a; }
-}
-
-// Payment-method badges (aggregated from the sale's actual payments).
-// Kept as a dedicated `-method` namespace rather than reusing badge-blue /
-// badge-purple etc. so this column never visually collides with the
-// status/category badges elsewhere in the row.
-.method-badges {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  white-space: normal; // .table td forces nowrap — allow wrapping here
-  max-width: 13rem;
-}
-.badge-method {
-  background: rgba(100, 116, 139, 0.1);
-  color: #475569; // neutral fallback for legacy/unmapped values
-
-  &.method-especes  { background: rgba(16, 185, 129, 0.12); color: #065f46; }
-  &.method-cheque   { background: rgba(59, 130, 246, 0.10); color: #1d4ed8; }
-  &.method-virement { background: rgba(139, 92, 246, 0.10); color: #6d28d9; }
-  &.method-effet    { background: rgba(245, 158, 11, 0.12); color: #92400e; }
-  &.method-carte    { background: rgba(236, 72, 153, 0.10); color: #9d174d; }
+  color: #4a5c75;
+  &.margin-low { color: #c2181f; }
 }

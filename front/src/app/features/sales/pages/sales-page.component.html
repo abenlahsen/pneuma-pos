@@ -16,90 +16,80 @@
     <p class="export-error" *ngIf="exportError()">{{ exportError() }}</p>
   </div>
 
+  <!-- Refonte 2b, étape 2 : 8 cadrans → 4 + la sélection filtrée qui suit les filtres. -->
   <div class="summary-cards">
-    <ng-container *ngIf="!hasDateFilter()">
-      <div class="card summary-card info">
-        <div class="card-icon"><app-icon name="calendar" [size]="20" /></div>
-        <div class="card-content">
-          <p class="card-label">Pneus vendus aujourd'hui</p>
-          <h3 class="card-value">{{ summary().tyres_today }}</h3>
-        </div>
-      </div>
-
-      <div class="card summary-card info">
-        <div class="card-icon"><app-icon name="package" [size]="20" /></div>
-        <div class="card-content">
-          <p class="card-label">Pneus vendus ce mois</p>
-          <h3 class="card-value">{{ summary().tyres_this_month }}</h3>
-        </div>
-      </div>
-    </ng-container>
-
-    <div class="card summary-card info" *ngIf="hasDateFilter()">
-      <div class="card-icon"><app-icon name="calendar" [size]="20" /></div>
-      <div class="card-content">
-        <p class="card-label">Pneus vendus (période filtrée)</p>
-        <h3 class="card-value">{{ summary().tyres_period }}</h3>
-      </div>
-    </div>
-
-    <div class="card summary-card info">
-      <div class="card-icon"><app-icon name="clock" [size]="20" /></div>
-      <div class="card-content">
-        <p class="card-label">Pneus en cours</p>
-        <h3 class="card-value">{{ summary().tyres_en_cours }}</h3>
-      </div>
-    </div>
-
     <div class="card summary-card info">
       <div class="card-icon"><app-icon name="package" [size]="20" /></div>
       <div class="card-content">
-        <p class="card-label">Ventes en cours</p>
-        <h3 class="card-value">{{ summary().sales_en_cours }}</h3>
+        <p class="card-label">{{ hasDateFilter() ? 'Pneus vendus (période)' : 'Pneus vendus aujourd\'hui' }}</p>
+        <h3 class="card-value">{{ hasDateFilter() ? summary().tyres_period : summary().tyres_today }}</h3>
+        <p class="card-hint" *ngIf="!hasDateFilter()">{{ summary().tyres_this_month }} ce mois</p>
       </div>
     </div>
 
-    <div class="card summary-card expense">
+    <div class="card summary-card info">
       <div class="card-icon"><app-icon name="clock" [size]="20" /></div>
       <div class="card-content">
-        <p class="card-label">Impayé en cours</p>
-        <h3 class="card-value">{{ summary().unpaid_en_cours | number:'1.2-2' }} DH</h3>
-      </div>
-    </div>
-
-    <div class="card summary-card expense">
-      <div class="card-icon"><app-icon name="truck" [size]="20" /></div>
-      <div class="card-content">
-        <p class="card-label">Impayé livré/monté</p>
-        <h3 class="card-value">{{ summary().unpaid_livre_monte | number:'1.2-2' }} DH</h3>
+        <p class="card-label">Ventes en cours</p>
+        <h3 class="card-value">{{ summary().sales_en_cours }}</h3>
+        <p class="card-hint">{{ summary().tyres_en_cours }} pneus engagés</p>
       </div>
     </div>
 
     <div class="card summary-card income">
-      <div class="card-icon"><app-icon name="receipt" [size]="20" /></div>
+      <div class="card-icon"><app-icon name="banknote" [size]="20" /></div>
       <div class="card-content">
-        <p class="card-label">CA avec facture</p>
-        <h3 class="card-value">{{ summary().ca_avec_facture | number:'1.2-2' }} DH</h3>
+        <p class="card-label">CA {{ hasDateFilter() ? '(période)' : 'du jour' }}</p>
+        <h3 class="card-value">{{ (summary().ca_avec_facture + summary().ca_sans_facture) | number:'1.2-2' }} DH</h3>
+        <p class="card-hint">{{ summary().ca_avec_facture | number:'1.0-0' }} facturé · {{ summary().ca_sans_facture | number:'1.0-0' }} non</p>
       </div>
     </div>
 
-    <div class="card summary-card balance">
-      <div class="card-icon"><app-icon name="coins" [size]="20" /></div>
+    <div class="card summary-card alert">
+      <div class="card-icon"><app-icon name="clock" [size]="20" /></div>
       <div class="card-content">
-        <p class="card-label">CA sans facture</p>
-        <h3 class="card-value">{{ summary().ca_sans_facture | number:'1.2-2' }} DH</h3>
+        <p class="card-label">Impayé</p>
+        <h3 class="card-value">{{ (summary().unpaid_en_cours + summary().unpaid_livre_monte) | number:'1.2-2' }} DH</h3>
+        <p class="card-hint">{{ summary().unpaid_en_cours | number:'1.0-0' }} en cours · {{ summary().unpaid_livre_monte | number:'1.0-0' }} livré/monté</p>
+      </div>
+    </div>
+
+    <div class="card summary-card">
+      <div class="card-icon"><app-icon name="target" [size]="20" /></div>
+      <div class="card-content">
+        <p class="card-label">Sélection filtrée</p>
+        <h3 class="card-value">{{ summary().filtered_total | number:'1.2-2' }} DH</h3>
+        <p class="card-hint">
+          {{ summary().filtered_count }} vente(s) · marge {{ summary().filtered_total ? (summary().filtered_margin / summary().filtered_total * 100 | number:'1.1-1') : '0' }}%
+        </p>
       </div>
     </div>
   </div>
 
-  <div class="card filters-section">
+  <!-- Refonte 2b, étape 2 : 15 filtres en permanence → recherche + jetons + panneau replié. -->
+  <div class="filter-bar">
+    <label class="filter-bar-search">
+      <app-icon name="search" [size]="14" />
+      <input type="text" [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event)" placeholder="Client, produit, marque..." (keyup.enter)="applyFilters()">
+    </label>
+
+    <span class="filter-chip" *ngFor="let chip of activeFilterChips()" [class.filter-chip--alert]="chip.alert">
+      {{ chip.label }}
+      <button type="button" (click)="chip.remove()" title="Retirer ce filtre"><app-icon name="close" [size]="11" /></button>
+    </span>
+
+    <button type="button" class="filter-toggle" (click)="filtersExpanded.set(!filtersExpanded())">
+      <app-icon name="filter" [size]="14" />
+      Filtres
+      <span class="filter-toggle-count" *ngIf="activeFilterCount() > 0">{{ activeFilterCount() }}</span>
+    </button>
+
+    <span class="filter-result-count">{{ total() }} vente(s)</span>
+  </div>
+
+  <div class="card filters-section" *ngIf="filtersExpanded()">
     <div class="card-body">
       <div class="filters-grid">
-        <div class="form-group">
-          <label>Recherche globale</label>
-          <input type="text" class="form-control" [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event)" placeholder="Client, produit, marque..." (keyup.enter)="applyFilters()">
-        </div>
-
         <div class="form-group">
           <label>Client</label>
           <input type="text" class="form-control" [ngModel]="filterClient()" (ngModelChange)="filterClient.set($event)" placeholder="Nom du client..." (keyup.enter)="applyFilters()">
@@ -197,119 +187,82 @@
     </div>
   </div>
 
+  <!-- Refonte 2b, étape 2 : motif de ligne — grille CSS au lieu de <table>, 17 colonnes → 9. -->
   <div class="card table-card">
-    <div class="table-responsive">
-      <table class="table">
-        <thead>
-          <tr>
-            <th class="text-center">Actions</th>
-            <th class="text-center col-id">#</th>
-            <th class="sortable" (click)="toggleSort('date')">Date <app-sort-icon [active]="sortBy() === 'date'" [dir]="sortDirection()" /></th>
-            <th class="text-center">Facture</th>
-            <th class="sortable col-client" (click)="toggleSort('client')">Client <app-sort-icon [active]="sortBy() === 'client'" [dir]="sortDirection()" /></th>
-            <th>Ville</th>
-            <th>Commercial</th>
-            <th class="sortable" (click)="toggleSort('total_quantity')">Qte <app-sort-icon [active]="sortBy() === 'total_quantity'" [dir]="sortDirection()" /></th>
-            <th>Partenaire</th>
-            <th>Mode(s) paiement</th>
-            <th class="sortable text-right" (click)="toggleSort('total_sale')">Total Vente <app-sort-icon [active]="sortBy() === 'total_sale'" [dir]="sortDirection()" /></th>
-            <th class="sortable text-right" (click)="toggleSort('margin')">Marge <app-sort-icon [active]="sortBy() === 'margin'" [dir]="sortDirection()" /></th>
-            <th class="sortable" (click)="toggleSort('payment_status')">Paiement <app-sort-icon [active]="sortBy() === 'payment_status'" [dir]="sortDirection()" /></th>
-            <th class="sortable" (click)="toggleSort('status')">Statut <app-sort-icon [active]="sortBy() === 'status'" [dir]="sortDirection()" /></th>
-            <th>Créé par</th>
-            <th class="sortable" (click)="toggleSort('created_at')">Créé le <app-sort-icon [active]="sortBy() === 'created_at'" [dir]="sortDirection()" /></th>
-            <th class="sortable" (click)="toggleSort('updated_at')">Modifié le <app-sort-icon [active]="sortBy() === 'updated_at'" [dir]="sortDirection()" /></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngIf="loading()">
-            <td colspan="17" class="text-center py-4">
-              <div class="spinner"></div> Chargement...
-            </td>
-          </tr>
+    <div class="list-grid-header sales-grid">
+      <span>N°</span>
+      <button type="button" class="sortable" (click)="toggleSort('date')">Date <app-sort-icon [active]="sortBy() === 'date'" [dir]="sortDirection()" /></button>
+      <button type="button" class="sortable" (click)="toggleSort('client')">Client <app-sort-icon [active]="sortBy() === 'client'" [dir]="sortDirection()" /></button>
+      <button type="button" class="sortable text-right" (click)="toggleSort('total_quantity')">Qté <app-sort-icon [active]="sortBy() === 'total_quantity'" [dir]="sortDirection()" /></button>
+      <button type="button" class="sortable text-right" (click)="toggleSort('total_sale')">Total DH <app-sort-icon [active]="sortBy() === 'total_sale'" [dir]="sortDirection()" /></button>
+      <button type="button" class="sortable text-right" (click)="toggleSort('margin')">Marge DH <app-sort-icon [active]="sortBy() === 'margin'" [dir]="sortDirection()" /></button>
+      <button type="button" class="sortable" (click)="toggleSort('payment_status')">Paiement <app-sort-icon [active]="sortBy() === 'payment_status'" [dir]="sortDirection()" /></button>
+      <button type="button" class="sortable" (click)="toggleSort('status')">Statut <app-sort-icon [active]="sortBy() === 'status'" [dir]="sortDirection()" /></button>
+      <span class="text-right">Actions</span>
+    </div>
 
-          <tr *ngIf="!loading() && sales().length === 0">
-            <td colspan="17" class="text-center py-4 text-muted">
-              Aucune vente trouvée.
-            </td>
-          </tr>
+    <div *ngIf="loading()" class="text-center py-4"><div class="spinner"></div> Chargement...</div>
+    <div *ngIf="!loading() && sales().length === 0" class="text-center py-4 text-muted">Aucune vente trouvée.</div>
 
-          <tr *ngFor="let sale of sales()">
-            <td class="text-center actions-cell">
-              <button class="btn-icon btn-sm" (click)="openDetail(sale)" title="Voir" [disabled]="deletingSaleId() === sale.id"><app-icon name="view" [size]="14" /></button>
-              <button class="btn-icon btn-sm" (click)="openPayments(sale)" title="Paiements" [disabled]="deletingSaleId() === sale.id"><app-icon name="credit-card" [size]="14" /></button>
-              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(sale)" title="Modifier" *ngIf="authService.hasPermission('edit sales') && !isSaleLocked(sale)" [disabled]="deletingSaleId() === sale.id"><app-icon name="edit" [size]="14" /></button>
-              <button class="btn-icon btn-sm text-danger" (click)="deleteSale(sale)" title="Supprimer" *ngIf="authService.hasPermission('delete sales') && !isSaleLocked(sale)" [disabled]="deletingSaleId() === sale.id">
-                <span *ngIf="deletingSaleId() !== sale.id"><app-icon name="trash" [size]="14" /></span>
-                <span *ngIf="deletingSaleId() === sale.id" class="inline-spinner"></span>
-              </button>
-            </td>
-            <td class="text-center cell-id">{{ sale.id }}</td>
-            <td>{{ sale.date | date:'dd/MM/yyyy' }}</td>
-            <td class="text-center">
-              <span class="badge" [class.badge-success]="sale.with_invoice" [class.badge-secondary]="!sale.with_invoice">
-                {{ sale.with_invoice ? 'Oui' : 'Non' }}
-              </span>
-            </td>
-            <td class="col-client">
-              <a *ngIf="sale.client_id" class="fw-medium link-text client-link" [routerLink]="['/clients', sale.client_id]">{{ getClientName(sale) }}</a>
-              <div *ngIf="!sale.client_id" class="fw-medium">{{ getClientName(sale) }}</div>
-              <div class="text-small text-muted">{{ getClientPhone(sale) }}</div>
-            </td>
-            <td>{{ getClientCity(sale) || '-' }}</td>
-            <td>{{ sale.commercial?.name || '-' }}</td>
-            <td>{{ sale.total_quantity }}</td>
-            <td>{{ sale.partner?.name || '-' }}</td>
-            <td>
-              <span class="method-badges" *ngIf="sale.payment_methods?.length; else noSaleMethod">
-                <span class="badge badge-method" *ngFor="let m of sale.payment_methods" [ngClass]="paymentMethodClass(m)">{{ m }}</span>
-              </span>
-              <ng-template #noSaleMethod>-</ng-template>
-            </td>
-            <td class="text-right fw-semibold">
-              {{ sale.total_sale | number:'1.2-2' }}
-            </td>
-            <td class="text-right fw-semibold">
-              {{ sale.margin | number:'1.2-2' }}
-              <span class="margin-pct" [class]="marginClass(sale)" *ngIf="(sale.total_sale ?? 0) > 0">
-                {{ marginPct(sale) | number:'1.0-1' }}%
-              </span>
-            </td>
-            <td>
-              <span class="badge"
-                [class.badge-danger]="sale.payment_status === 'NON PAYE' || !sale.payment_status"
-                [class.badge-warning]="sale.payment_status === 'PARTIEL'"
-                [class.badge-success]="sale.payment_status === 'PAYE'">
-                {{ sale.payment_status || 'NON PAYE' }}
-              </span>
-            </td>
-            <td class="status-cell">
-              <select class="status-select"
-                      [class.bg-en-cours]="sale.status === 'EN COURS'"
-                      [class.bg-livre]="sale.status === 'LIVRE'"
-                      [class.bg-monte]="sale.status === 'MONTE'"
-                      [class.bg-terminee]="sale.status === 'TERMINEE'"
-                      [class.bg-annule]="sale.status === 'ANNULE'"
-                      [ngModel]="sale.status"
-                      [disabled]="isSaleLocked(sale)"
-                      (change)="updateSaleStatus(sale, $event.target)">
-                <option *ngFor="let s of statusOptionsFor(sale)" [value]="s">{{ SALE_STATUS_LABELS[s] }}</option>
-              </select>
-            </td>
-            <td>{{ sale.creator?.name || '-' }}</td>
-            <td>{{ sale.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
-            <td>{{ sale.updated_at | date:'dd/MM/yyyy HH:mm' }}</td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="list-grid-row sales-grid"
+         *ngFor="let sale of sales()"
+         [class.list-grid-row--action]="sale.payment_status === 'NON PAYE'">
+      <span class="cell-id">{{ sale.id }}</span>
+      <span>{{ sale.date | date:'dd/MM/yy' }}</span>
+      <span style="min-width: 0">
+        <span class="list-grid-name">
+          <a *ngIf="sale.client_id" [routerLink]="['/clients', sale.client_id]">{{ getClientName(sale) }}</a>
+          <ng-container *ngIf="!sale.client_id">{{ getClientName(sale) }}</ng-container>
+          <span class="list-grid-tag" *ngIf="sale.with_invoice">FACTURE</span>
+        </span>
+        <span class="list-grid-sub">{{ subLineFor(sale) || '-' }}</span>
+      </span>
+      <span class="text-right">{{ sale.total_quantity }}</span>
+      <span class="text-right fw-semibold">{{ sale.total_sale | number:'1.2-2' }}</span>
+      <span class="text-right">
+        {{ sale.margin | number:'1.2-2' }}
+        <span class="margin-pct" [class]="marginClass(sale)" *ngIf="(sale.total_sale ?? 0) > 0">{{ marginPct(sale) | number:'1.0-1' }}%</span>
+      </span>
+      <span class="list-grid-status"
+            [class.list-grid-status--paid]="sale.payment_status === 'PAYE'"
+            [class.list-grid-status--unpaid]="sale.payment_status === 'NON PAYE' || !sale.payment_status"
+            [class.list-grid-status--partial]="sale.payment_status === 'PARTIEL'">
+        {{ sale.payment_status || 'NON PAYE' }}
+      </span>
+      <span>
+        <select class="status-select"
+                [class.bg-en-cours]="sale.status === 'EN COURS'"
+                [class.bg-livre]="sale.status === 'LIVRE'"
+                [class.bg-monte]="sale.status === 'MONTE'"
+                [class.bg-terminee]="sale.status === 'TERMINEE'"
+                [class.bg-annule]="sale.status === 'ANNULE'"
+                [ngModel]="sale.status"
+                [disabled]="isSaleLocked(sale)"
+                (change)="updateSaleStatus(sale, $event.target)">
+          <option *ngFor="let s of statusOptionsFor(sale)" [value]="s">{{ SALE_STATUS_LABELS[s] }}</option>
+        </select>
+      </span>
+      <span class="actions-cell" style="display: flex; gap: 5px; justify-content: flex-end">
+        <button class="btn-icon" (click)="openDetail(sale)" title="Voir" [disabled]="deletingSaleId() === sale.id"><app-icon name="view" [size]="15" /></button>
+        <button class="btn-icon" (click)="openPayments(sale)" title="Paiements" [disabled]="deletingSaleId() === sale.id"><app-icon name="credit-card" [size]="15" /></button>
+        <ng-container *ngIf="!isSaleLocked(sale); else lockedActions">
+          <button class="btn-icon text-primary" (click)="openEditForm(sale)" title="Modifier" *ngIf="authService.hasPermission('edit sales')" [disabled]="deletingSaleId() === sale.id"><app-icon name="edit" [size]="15" /></button>
+          <button class="btn-icon text-danger" (click)="deleteSale(sale)" title="Supprimer" *ngIf="authService.hasPermission('delete sales')" [disabled]="deletingSaleId() === sale.id">
+            <span *ngIf="deletingSaleId() !== sale.id"><app-icon name="trash" [size]="15" /></span>
+            <span *ngIf="deletingSaleId() === sale.id" class="inline-spinner"></span>
+          </button>
+        </ng-container>
+        <ng-template #lockedActions>
+          <span class="list-grid-lock" title="Vente clôturée — non modifiable"><app-icon name="lock" [size]="14" /></span>
+        </ng-template>
+      </span>
     </div>
 
     <div class="pagination-wrapper" *ngIf="total() > 0">
       <div class="pagination-info">
-        Affichage de {{ (currentPage() - 1) * perPage() + 1 }} à
-        {{ (currentPage() * perPage()) > total() ? total() : (currentPage() * perPage()) }}
-        sur {{ total() }} entrées
+        {{ (currentPage() - 1) * perPage() + 1 }}–{{ (currentPage() * perPage()) > total() ? total() : (currentPage() * perPage()) }} sur {{ total() }} ventes
       </div>
+      <span class="pagination-totals">Total page {{ pageTotal() | number:'1.2-2' }} DH · marge {{ pageMargin() | number:'1.2-2' }} DH</span>
       <div class="pagination">
         <button class="btn-page" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">
           &laquo;

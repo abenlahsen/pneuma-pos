@@ -36,7 +36,7 @@ export class SalesPageComponent implements OnInit {
   readonly paymentMethodClass = paymentMethodClass;
 
   sales = signal<Sale[]>([]);
-  summary = signal<SaleSummary>({ tyres_this_month: 0, tyres_today: 0, tyres_period: null, tyres_en_cours: 0, sales_en_cours: 0, unpaid_en_cours: 0, unpaid_livre_monte: 0, ca_avec_facture: 0, ca_sans_facture: 0 });
+  summary = signal<SaleSummary>({ tyres_this_month: 0, tyres_today: 0, tyres_period: null, tyres_en_cours: 0, sales_en_cours: 0, unpaid_en_cours: 0, unpaid_livre_monte: 0, ca_avec_facture: 0, ca_sans_facture: 0, filtered_count: 0, filtered_total: 0, filtered_margin: 0 });
   filterOptions = signal<SaleFilters>({ brands: [], clients: [], cities: [], statuses: [], carriers: [], partners: [], payment_statuses: [], commercials: [] });
 
   currentPage = signal(1);
@@ -58,11 +58,58 @@ export class SalesPageComponent implements OnInit {
   filterDateFrom = signal('');
   filterDateTo = signal('');
   hasDateFilter = computed(() => !!this.filterDateFrom() || !!this.filterDateTo());
+
+  /** Refonte 2b, étape 2 : jetons retirables pour la barre de filtres (recherche exclue, elle a sa propre case). */
+  activeFilterChips = computed(() => {
+    const chips: { label: string; alert?: boolean; remove: () => void }[] = [];
+    const opts = this.filterOptions();
+
+    if (this.filterClient()) chips.push({ label: `Client : ${this.filterClient()}`, remove: () => { this.filterClient.set(''); this.applyFilters(); } });
+    if (this.filterCity()) chips.push({ label: this.filterCity(), remove: () => { this.filterCity.set(''); this.applyFilters(); } });
+    if (this.filterCommercial()) {
+      const name = opts.commercials.find((c: any) => String(c.id) === this.filterCommercial())?.name || this.filterCommercial();
+      chips.push({ label: name, remove: () => { this.filterCommercial.set(''); this.applyFilters(); } });
+    }
+    if (this.filterStatus()) chips.push({ label: this.filterStatus(), remove: () => { this.filterStatus.set(''); this.applyFilters(); } });
+    if (this.filterPaymentStatus()) {
+      chips.push({
+        label: this.filterPaymentStatus(),
+        alert: this.filterPaymentStatus() === 'NON PAYE',
+        remove: () => { this.filterPaymentStatus.set(''); this.applyFilters(); },
+      });
+    }
+    if (this.filterPaymentMethod()) chips.push({ label: this.filterPaymentMethod(), remove: () => { this.filterPaymentMethod.set(''); this.applyFilters(); } });
+    if (this.filterCarrier()) {
+      const name = opts.carriers.find((c: any) => String(c.id) === this.filterCarrier())?.name || this.filterCarrier();
+      chips.push({ label: name, remove: () => { this.filterCarrier.set(''); this.applyFilters(); } });
+    }
+    if (this.filterPartner()) {
+      const name = opts.partners.find((p: any) => String(p.id) === this.filterPartner())?.name || this.filterPartner();
+      chips.push({ label: name, remove: () => { this.filterPartner.set(''); this.applyFilters(); } });
+    }
+    if (this.filterDateFrom()) chips.push({ label: `Du ${this.filterDateFrom()}`, remove: () => { this.filterDateFrom.set(''); this.applyFilters(); } });
+    if (this.filterDateTo()) chips.push({ label: `Au ${this.filterDateTo()}`, remove: () => { this.filterDateTo.set(''); this.applyFilters(); } });
+    if (this.filterWithInvoice()) chips.push({ label: this.filterWithInvoice() === '1' ? 'Avec facture' : 'Sans facture', remove: () => { this.filterWithInvoice.set(''); this.applyFilters(); } });
+    if (this.filterAmountMin()) chips.push({ label: `Min ${this.filterAmountMin()} DH`, remove: () => { this.filterAmountMin.set(''); this.applyFilters(); } });
+    if (this.filterAmountMax()) chips.push({ label: `Max ${this.filterAmountMax()} DH`, remove: () => { this.filterAmountMax.set(''); this.applyFilters(); } });
+
+    return chips;
+  });
+
+  /** Compte affiché sur le bouton "Filtres N" : jetons actifs + recherche, si saisie. */
+  activeFilterCount = computed(() => this.activeFilterChips().length + (this.filterSearch() ? 1 : 0));
+
+  /** Pied de tableau (refonte 2b) : total et marge de la page affichée — pas de la sélection filtrée entière, calculée côté serveur dans `summary().filtered_total`. */
+  pageTotal = computed(() => this.sales().reduce((sum, s) => sum + Number(s.total_sale ?? 0), 0));
+  pageMargin = computed(() => this.sales().reduce((sum, s) => sum + Number(s.margin ?? 0), 0));
   filterWithInvoice = signal('');
   filterAmountMin = signal('');
   filterAmountMax = signal('');
   sortBy = signal('');
   sortDirection = signal<'asc' | 'desc'>('asc');
+
+  /** Refonte 2b, étape 2 : panneau des 15 filtres replié par défaut, ouvert par le bouton "Filtres N". */
+  filtersExpanded = signal(false);
 
   loading = signal(false);
   isExporting = signal(false);
@@ -243,6 +290,18 @@ export class SalesPageComponent implements OnInit {
 
   getClientCity(sale: Sale): string {
     return sale.linked_client?.city?.trim() || '';
+  }
+
+  /** Refonte 2b, étape 2 : sous-ligne de qualifiants (ville, téléphone, commercial, partenaire, mode de paiement). */
+  subLineFor(sale: Sale): string {
+    const parts = [
+      this.getClientCity(sale),
+      this.getClientPhone(sale),
+      sale.commercial?.name,
+      sale.partner?.name,
+      sale.payment_methods?.length ? sale.payment_methods.join(', ') : null,
+    ].filter((p): p is string => !!p);
+    return parts.join(' · ');
   }
 
   closeDetail(): void {
