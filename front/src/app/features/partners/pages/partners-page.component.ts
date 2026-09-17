@@ -1,17 +1,19 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { PartnerService } from '../data-access/partner.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Partner, PartnerPayload, PaginatedResponse } from '../models/partner.model';
 import { PartnerFormComponent } from '../components/partner-form/partner-form.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
+import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 import { CityService } from '../../../core/services/city.service';
 
 @Component({
   selector: 'app-partners-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, PartnerFormComponent, AutoRefreshControlComponent],
+  imports: [CommonModule, FormsModule, PartnerFormComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent],
   templateUrl: './partners-page.component.html',
   styleUrls: ['./partners-page.component.scss'],
 })

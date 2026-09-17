@@ -3,7 +3,7 @@
   <!-- En-tête -->
   <div class="header">
     <div class="title-section">
-      <h1>🔧 Service Auto</h1>
+      <h1><app-icon name="wrench" [size]="14" /> Service Auto</h1>
       <p class="subtitle">{{ total() }} intervention(s) trouvée(s)</p>
     </div>
     <div class="actions">
@@ -22,28 +22,28 @@
   <!-- Résumé financier -->
   <div class="summary-cards">
     <div class="card summary-card income">
-      <div class="card-icon">🔧</div>
+      <div class="card-icon"><app-icon name="wrench" [size]="20" /></div>
       <div class="card-content">
         <p class="card-label">CA Total</p>
         <h3 class="card-value">{{ summary().total_revenue | number:'1.2-2' }} DH</h3>
       </div>
     </div>
     <div class="card summary-card margin">
-      <div class="card-icon">📈</div>
+      <div class="card-icon"><app-icon name="trending-up" [size]="20" /></div>
       <div class="card-content">
         <p class="card-label">Marge brute</p>
         <h3 class="card-value">{{ summary().total_margin | number:'1.2-2' }} DH</h3>
       </div>
     </div>
     <div class="card summary-card balance">
-      <div class="card-icon">✅</div>
+      <div class="card-icon"><app-icon name="check-circle" [size]="20" /></div>
       <div class="card-content">
         <p class="card-label">Payé</p>
         <h3 class="card-value">{{ summary().total_paid | number:'1.2-2' }} DH</h3>
       </div>
     </div>
     <div class="card summary-card expense">
-      <div class="card-icon">⏳</div>
+      <div class="card-icon"><app-icon name="clock" [size]="20" /></div>
       <div class="card-content">
         <p class="card-label">Reste à Payer</p>
         <h3 class="card-value">{{ summary().remaining | number:'1.2-2' }} DH</h3>
@@ -125,8 +125,8 @@
       </div>
     </div>
     <div class="filter-actions">
-      <button class="btn btn-primary" (click)="applyFilters()">🔍 Rechercher</button>
-      <button class="btn btn-secondary" (click)="resetFilters()">✕ Réinitialiser</button>
+      <button class="btn btn-primary" (click)="applyFilters()"><app-icon name="search" [size]="14" /> Rechercher</button>
+      <button class="btn btn-secondary" (click)="resetFilters()"><app-icon name="close" [size]="14" /> Réinitialiser</button>
     </div>
   </div>
 
@@ -163,32 +163,32 @@
                 title="Voir"
                 [disabled]="deletingId() === order.id"
                 (click)="openDetail(order)"
-              >👁️</button>
+              ><app-icon name="view" [size]="14" /></button>
               <button
                 class="btn-icon"
                 title="Paiements"
                 (click)="openPayments(order)"
-              >💳</button>
+              ><app-icon name="credit-card" [size]="14" /></button>
               <button
                 *ngIf="authService.hasPermission('edit service-orders')"
                 class="btn-icon"
                 title="Modifier"
                 (click)="openEditForm(order)"
-              >✏️</button>
+              ><app-icon name="edit" [size]="14" /></button>
               <button
                 *ngIf="authService.hasPermission('delete service-orders')"
                 class="btn-icon btn-icon--danger"
                 title="Supprimer"
                 [disabled]="deletingId() === order.id"
                 (click)="deleteOrder(order)"
-              >🗑️</button>
+              ><app-icon name="trash" [size]="14" /></button>
             </div>
           </td>
           <td class="date-cell">{{ order.date | date:'dd/MM/yyyy' }}</td>
           <td>
             <div class="client-name">
               {{ order.client_record?.name || '—' }}
-              <span *ngIf="order.client_record" class="client-linked" title="Fiche client liée">🔗</span>
+              <span *ngIf="order.client_record" class="client-linked" title="Fiche client liée"><app-icon name="link" [size]="14" /></span>
             </div>
             <div *ngIf="order.client_record?.phone" class="client-phone">{{ order.client_record!.phone }}</div>
           </td>
@@ -205,7 +205,7 @@
               <span
                 *ngFor="let item of getPartItems(order).slice(0, 2)"
                 class="badge badge-part-type"
-              >🔩 {{ item.product_name || 'Pièce' }}</span>
+              ><app-icon name="wrench" [size]="14" /> {{ item.product_name || 'Pièce' }}</span>
               <span
                 *ngIf="orderProductLabels(order).length > 4"
                 class="badge badge-more"
@@ -246,14 +246,14 @@
         Page {{ currentPage() }} / {{ lastPage() }} — {{ total() }} résultats
       </span>
       <div class="pagination-controls">
-        <button class="btn-page" (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1">‹</button>
+        <button class="btn-page" (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1"><app-icon name="chevron-left" [size]="14" /></button>
         <button
           *ngFor="let p of pages"
           class="btn-page"
           [class.active]="p === currentPage()"
           (click)="goToPage(p)"
         >{{ p }}</button>
-        <button class="btn-page" (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === lastPage()">›</button>
+        <button class="btn-page" (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === lastPage()"><app-icon name="chevron-right" [size]="14" /></button>
       </div>
     </div>
   </div>

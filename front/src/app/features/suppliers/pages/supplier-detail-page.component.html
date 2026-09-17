@@ -2,7 +2,7 @@
 
   <!-- ── En-tête ── -->
   <div class="page-header">
-    <a class="back-link" [routerLink]="['/suppliers']">← Retour aux fournisseurs</a>
+    <a class="back-link" [routerLink]="['/suppliers']"><app-icon name="chevron-left" [size]="14" /> Retour aux fournisseurs</a>
 
     @if (profile()?.supplier) {
       <div class="supplier-hero">
@@ -13,25 +13,25 @@
           <h1>{{ profile()!.supplier!.name }}</h1>
           <div class="supplier-meta">
             @if (profile()?.supplier?.contact_person) {
-              <span class="meta-item">👤 {{ profile()!.supplier!.contact_person }}</span>
+              <span class="meta-item"><app-icon name="user" [size]="14" /> {{ profile()!.supplier!.contact_person }}</span>
             }
             @if (profile()?.supplier?.phone) {
-              <span class="meta-item">📞 {{ profile()!.supplier!.phone }}</span>
+              <span class="meta-item"><app-icon name="phone" [size]="14" /> {{ profile()!.supplier!.phone }}</span>
             }
             @if (profile()?.supplier?.email) {
-              <span class="meta-item">✉️ {{ profile()!.supplier!.email }}</span>
+              <span class="meta-item"><app-icon name="mail" [size]="14" /> {{ profile()!.supplier!.email }}</span>
             }
           </div>
         </div>
 
         <div class="header-actions">
           @if (authService.hasPermission('manage purchase-payments')) {
-            <button type="button" class="btn btn-primary" (click)="openPaymentModal()">💳 Régler des achats</button>
+            <button type="button" class="btn btn-primary" (click)="openPaymentModal()"><app-icon name="credit-card" [size]="14" /> Régler des achats</button>
           }
-          <button type="button" class="btn btn-secondary" (click)="openEditModal()">✏️ Modifier</button>
+          <button type="button" class="btn btn-secondary" (click)="openEditModal()"><app-icon name="edit" [size]="14" /> Modifier</button>
           @if (authService.hasPermission('delete suppliers')) {
             <button type="button" class="btn btn-danger" (click)="deleteSupplier()" [disabled]="deleting()">
-              🗑️ Supprimer
+              <app-icon name="trash" [size]="14" /> Supprimer
             </button>
           }
         </div>
@@ -49,7 +49,7 @@
     <!-- ── KPIs ── -->
     <section class="kpi-grid">
       <article class="kpi-card">
-        <span class="kpi-icon">📦</span>
+        <span class="kpi-icon"><app-icon name="package" [size]="14" /></span>
         <div class="kpi-body">
           <p class="kpi-label">ACHATS</p>
           <p class="kpi-val">{{ profile()?.purchases_count ?? 0 }}</p>
@@ -57,7 +57,7 @@
       </article>
 
       <article class="kpi-card">
-        <span class="kpi-icon">💰</span>
+        <span class="kpi-icon"><app-icon name="banknote" [size]="14" /></span>
         <div class="kpi-body">
           <p class="kpi-label">TOTAL ACHETÉ</p>
           <p class="kpi-val">{{ (profile()?.total_purchased ?? 0) | number:'1.2-2' }} <small>DH</small></p>
@@ -65,7 +65,7 @@
       </article>
 
       <article class="kpi-card" [class.kpi-card--danger]="(profile()?.outstanding_balance ?? 0) > 0">
-        <span class="kpi-icon">⏳</span>
+        <span class="kpi-icon"><app-icon name="clock" [size]="14" /></span>
         <div class="kpi-body">
           <p class="kpi-label">SOLDE DÛ</p>
           <p class="kpi-val">{{ (profile()?.outstanding_balance ?? 0) | number:'1.2-2' }} <small>DH</small></p>
@@ -73,7 +73,7 @@
       </article>
 
       <article class="kpi-card">
-        <span class="kpi-icon">📅</span>
+        <span class="kpi-icon"><app-icon name="calendar" [size]="14" /></span>
         <div class="kpi-body">
           <p class="kpi-label">DERNIER ACHAT</p>
           <p class="kpi-val kpi-val--date">
@@ -112,12 +112,12 @@
         <button type="button" class="tab-btn"
                 [class.active]="activeTab() === 'overview'"
                 (click)="setTab('overview')">
-          📦 Historique des achats
+          <app-icon name="package" [size]="14" /> Historique des achats
         </button>
         <button type="button" class="tab-btn"
                 [class.active]="activeTab() === 'statement'"
                 (click)="setTab('statement')">
-          📋 Relevé de compte
+          <app-icon name="package" [size]="14" /> Relevé de compte
         </button>
       </div>
 
@@ -163,7 +163,7 @@
                       {{ (p.outstanding_amount ?? 0) | number:'1.2-2' }} DH
                     </td>
                     <td class="col-right actions-cell">
-                      <a class="btn-icon" title="Voir la commande fournisseur" [routerLink]="['/achats']" [queryParams]="{ id: p.id }">🔗</a>
+                      <a class="btn-icon" title="Voir la commande fournisseur" [routerLink]="['/achats']" [queryParams]="{ id: p.id }"><app-icon name="link" [size]="14" /></a>
                     </td>
                   </tr>
                 }
@@ -203,7 +203,7 @@
             <div class="subsection">
               <div class="subsection-header" (click)="toggleOpenPurchases()">
                 <h3 class="subsection-title">Achats en attente de paiement</h3>
-                <span class="collapse-icon">{{ openPurchasesCollapsed() ? '▶' : '▼' }}</span>
+                <app-icon class="collapse-icon" [name]="openPurchasesCollapsed() ? 'chevron-right' : 'chevron-down'" [size]="12" />
               </div>
               @if (!openPurchasesCollapsed()) {
                 <div class="table-wrapper">
@@ -235,7 +235,7 @@
           <div class="subsection">
             <div class="subsection-header" (click)="toggleEntries()">
               <h3 class="subsection-title">Écritures comptables</h3>
-              <span class="collapse-icon">{{ entriesCollapsed() ? '▶' : '▼' }}</span>
+              <app-icon class="collapse-icon" [name]="entriesCollapsed() ? 'chevron-right' : 'chevron-down'" [size]="12" />
             </div>
             @if (!entriesCollapsed()) {
               @if (!statementEntries().length) {
@@ -274,7 +274,7 @@
           <div class="subsection">
             <div class="subsection-header" (click)="togglePayments()">
               <h3 class="subsection-title">Paiements effectués</h3>
-              <span class="collapse-icon">{{ paymentsCollapsed() ? '▶' : '▼' }}</span>
+              <app-icon class="collapse-icon" [name]="paymentsCollapsed() ? 'chevron-right' : 'chevron-down'" [size]="12" />
             </div>
             @if (!paymentsCollapsed()) {
               @if (!(statement()?.payments?.length ?? 0)) {
@@ -309,7 +309,7 @@
                               class="btn-icon"
                               title="Voir le détail du paiement"
                               (click)="openPaymentView(payment)"
-                            >👁️</button>
+                            ><app-icon name="view" [size]="14" /></button>
                             @if (authService.hasPermission('manage purchase-payments')) {
                               <button
                                 type="button"
@@ -317,7 +317,7 @@
                                 title="Supprimer ce paiement"
                                 [disabled]="deletingPaymentId() === payment.id"
                                 (click)="deleteStatementPayment(payment)"
-                              >🗑️</button>
+                              ><app-icon name="trash" [size]="14" /></button>
                             }
                           </td>
                         </tr>
@@ -339,7 +339,7 @@
     <div class="modal-container" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2>Modifier fournisseur</h2>
-        <button class="btn-icon" type="button" (click)="closeEditModal()" [disabled]="saving()">✕</button>
+        <button class="btn-icon" type="button" (click)="closeEditModal()" [disabled]="saving()"><app-icon name="close" [size]="14" /></button>
       </div>
       <div class="modal-body">
         <app-supplier-form

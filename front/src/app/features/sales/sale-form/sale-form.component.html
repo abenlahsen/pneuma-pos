@@ -160,7 +160,7 @@
           <tr *ngFor="let item of formData.items; let i = index" [class.table-active]="editingItemIndex === i">
             <td>
               {{ getProduct(item) ? formatProductLabel(getProduct(item)) : 'Produit #' + item.product_id }}
-              <button class="product-link" type="button" (click)="openProductView(item)" *ngIf="getProduct(item)" title="Voir le produit">↗</button>
+              <button class="product-link" type="button" (click)="openProductView(item)" *ngIf="getProduct(item)" title="Voir le produit"><app-icon name="external-link" [size]="14" /></button>
             </td>
             <td>
               <ng-container *ngIf="item.stock_id; else serviceLine">{{ item.stock ? formatStockLabel(item.stock) : 'Stock #' + item.stock_id }}</ng-container>
@@ -172,8 +172,8 @@
             <td>{{ (item.discount || 0) | number:'1.0-2' }}%</td>
             <td>{{ lineTotal(item) | number:'1.2-2' }}</td>
             <td>
-              <button type="button" class="btn-icon text-primary mr-1" title="Modifier" (click)="editItem(i)">✏️</button>
-              <button type="button" class="btn-icon text-danger" title="Supprimer" (click)="removeItem(i)">🗑️</button>
+              <button type="button" class="btn-icon text-primary mr-1" title="Modifier" (click)="editItem(i)"><app-icon name="edit" [size]="14" /></button>
+              <button type="button" class="btn-icon text-danger" title="Supprimer" (click)="removeItem(i)"><app-icon name="trash" [size]="14" /></button>
             </td>
           </tr>
         </tbody>
@@ -252,7 +252,7 @@
   <div class="form-section">
     <h3 class="section-title collapsible" (click)="logisticsCollapsed.set(!logisticsCollapsed())" style="cursor: pointer; user-select: none;">
       <span>Logistique & Suivi</span>
-      <span class="collapse-indicator" style="float: right;">{{ logisticsCollapsed() ? '▸' : '▾' }}</span>
+      <app-icon class="collapse-indicator" style="float: right;" [name]="logisticsCollapsed() ? 'chevron-right' : 'chevron-down'" [size]="12" />
     </h3>
 
     <div *ngIf="!logisticsCollapsed()">

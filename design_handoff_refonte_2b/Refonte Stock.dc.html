@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"><style>body{margin:0;background:#dfe7f2;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}a{color:#c2181f}a:hover{color:#8f1218}</style></helmet>
+
+<section style="padding:36px 40px 44px;display:flex;flex-direction:column;gap:18px">
+
+<div style="display:flex;align-items:baseline;gap:10px">
+<span style="font:700 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#0c1e33;color:#fff;border-radius:4px;letter-spacing:.06em">5</span>
+<span style="font:700 13px/1.2 'Inter',sans-serif;color:#0c1e33">STOCK — palette 2b</span>
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e">L'écran actuel liste 17 colonnes, une ligne par lot. La même référence revient donc autant de fois qu'elle a de dépôts, de zones et de DOT, et la question posée au comptoir — « on a du 205/55R16 ? » — demande de lire treize colonnes d'attributs avant d'arriver à la quantité.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Une ligne par référence, les lots en dessous.</strong> La quantité totale est en tête, avec sa répartition par dépôt ; on déplie pour voir les lots, leur DOT, leur prix d'achat et leur valeur. Les attributs (IC, IV, saison, RFT, XL, marquage) descendent en sous-ligne au lieu d'occuper six colonnes.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">La dimension mène la lecture.</strong> Elle passe en premier, en chiffres tabulaires, parce que c'est la clé d'entrée réelle. La recherche accepte déjà les deux écritures (2055516 et 205/55R16) : c'est le classement qui ne suivait pas.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Le seuil devient visible.</strong> Aujourd'hui les produits sous seuil ne se voient que sur l'Accueil. Ici une jauge par ligne situe la quantité par rapport au seuil, et un filtre isole les références à commander.</p>
+</div>
+
+<div id="5a" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter',sans-serif;color:#41546e"><a href="#5a" style="font:700 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(12,30,51,.1);color:#0c1e33;border-radius:5px;text-decoration:none">5a</a>Stock — recherche 205/55R16, une référence dépliée sur ses lots</div>
+
+<div style="width:1440px;height:880px;display:grid;grid-template-columns:72px minmax(0,1fr);grid-template-rows:60px minmax(0,1fr);background:#e6edf7;color:#0c1e33;border:1px solid #adc2da;overflow:hidden;box-shadow:0 10px 25px rgba(12,30,51,.14)">
+
+  <div style="grid-column:1/-1;display:flex;align-items:center;gap:18px;padding:0 18px;background:#f4f8fd;border-bottom:1px solid #cfdcec">
+    <img src="assets/logo.png" alt="PNEU.MA" style="height:26px;width:auto">
+    <label style="flex:1;max-width:580px;display:flex;align-items:center;gap:10px;height:36px;padding:0 13px;background:#fff;border:1px solid #adc2da">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4a5c75" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+      <span style="font-size:13.5px;color:#4a5c75">Client, dimension (2055516), n° de vente…</span>
+      <span style="margin-left:auto;font:600 10px ui-monospace,Menlo,monospace;color:#4a5c75;border:1px solid #cfdcec;padding:2px 5px">⌘K</span>
+    </label>
+    <span style="margin-left:auto;font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">Jeu. 17 sept. · 11:52</span>
+    <button type="button" style="height:36px;padding:0 13px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Exporter</button>
+    <button type="button" style="height:36px;padding:0 16px;border:1px solid #ff2d37;background:#ff2d37;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Entrée de stock</button>
+    <span style="width:30px;height:30px;background:#ff2d37;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">YB</span>
+  </div>
+
+  <nav style="grid-row:2;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;background:#081627">
+    <a href="#5a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>ACCUEIL</a>
+    <a href="#5a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 3h7l11 11-7 7L3 10V3z"/></svg>VENTES</a>
+    <a href="#5a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M14.5 3.5a5 5 0 0 0-6.3 6.3L3 15v6h6l5.2-5.2a5 5 0 0 0 6.3-6.3l-3.2 3.2-3-3 3.2-3.2z"/></svg>SERVICE</a>
+    <a href="#5a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg>ACHATS</a>
+    <a href="#5a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 6h18v12H3z"/><circle cx="12" cy="12" r="2.5"/></svg>CAISSE</a>
+    <span style="width:34px;height:1px;background:rgba(230,237,247,.2);margin:7px 0"></span>
+    <a href="#5a" style="width:56px;height:54px;background:#ff2d37;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/></svg>STOCK</a>
+    <a href="#5a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><circle cx="12" cy="8" r="3.4"/><path d="M5 20v-1.6c0-2.3 3.1-3.6 7-3.6s7 1.3 7 3.6V20"/></svg>TIERS</a>
+    <a href="#5a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M4 20V9M10 20V4M16 20v-8M22 20H2"/></svg>CHIFFRES</a>
+    <a href="#5a" style="margin-top:auto;width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/></svg>RÉGLAGES</a>
+  </nav>
+
+  <main style="grid-column:2;grid-row:2;overflow:hidden;display:flex;flex-direction:column;background:#fff">
+
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid #0c1e33">
+      <div style="padding:14px 18px;border-right:1px solid #cfdcec">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#4a5c75">Valeur du stock</span>
+        <span style="display:block;margin-top:6px;font-size:25px;font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums">2 418 700</span>
+        <span style="display:block;margin-top:4px;font-size:10.5px;color:#4a5c75;font-variant-numeric:tabular-nums">au prix d'achat · DH</span>
+      </div>
+      <div style="padding:14px 18px;border-right:1px solid #cfdcec">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#4a5c75">Quantité</span>
+        <span style="display:block;margin-top:6px;font-size:25px;font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums">1 842</span>
+        <span style="display:block;margin-top:4px;font-size:10.5px;color:#4a5c75;font-variant-numeric:tabular-nums">412 références · 3 dépôts</span>
+      </div>
+      <div style="padding:14px 18px;border-right:1px solid #cfdcec;background:#fdf6e6">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#8a5a00">Sous seuil</span>
+        <span style="display:block;margin-top:6px;font-size:25px;font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums;color:#8a5a00">9</span>
+        <span style="display:block;margin-top:4px;font-size:10.5px;color:#7a4f00;font-variant-numeric:tabular-nums">dont 3 à zéro</span>
+      </div>
+      <div style="padding:14px 18px;border-right:1px solid #cfdcec">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#4a5c75">Rotation</span>
+        <span style="display:block;margin-top:6px;font-size:25px;font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums">38 j</span>
+        <span style="display:block;margin-top:4px;font-size:10.5px;color:#4a5c75;font-variant-numeric:tabular-nums">couverture moyenne</span>
+      </div>
+      <div style="padding:14px 18px;background:#f4f8fd">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#4a5c75">Dormant &gt; 180 j</span>
+        <span style="display:block;margin-top:6px;font-size:25px;font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums">146 200</span>
+        <span style="display:block;margin-top:4px;font-size:10.5px;color:#4a5c75;font-variant-numeric:tabular-nums">28 références · DH</span>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;padding:11px 18px;border-bottom:1px solid #cfdcec;background:#f4f8fd">
+      <label style="display:flex;align-items:center;gap:8px;height:32px;width:300px;padding:0 11px;background:#fff;border:1px solid #0c1e33">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+        <span style="font-size:13px;font-weight:600;color:#0c1e33">205/55R16</span>
+        <span style="margin-left:auto;font-size:11px;color:#4a5c75">✕</span>
+      </label>
+      <span style="display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 10px;background:#fff;border:1px solid #0c1e33;font-size:12px;font-weight:600">Casa <span style="color:#4a5c75;font-weight:400">✕</span></span>
+      <button type="button" style="display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 5h18M6 12h12M10 19h4"/></svg>Marque, profil, pays, DOT</button>
+      <button type="button" style="display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px;border:1px solid #d4a017;background:#fdf6e6;color:#7a4f00;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer">Sous seuil 9</button>
+      <button type="button" style="height:32px;padding:0 12px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Dormant 28</button>
+      <span style="margin-left:auto;font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">6 références · 118 pneus · 121 400 DH</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:22px 108px minmax(0,1fr) 168px 98px 104px 110px 92px;align-items:center;gap:12px;padding:7px 18px;border-bottom:1px solid #0c1e33;font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#4a5c75">
+      <span></span>
+      <span>Dimension</span>
+      <span>Référence</span>
+      <span>Répartition</span>
+      <span style="text-align:right">Qté ⇅</span>
+      <span style="text-align:right">PU achat</span>
+      <span style="text-align:right">Valeur ⇅</span>
+      <span style="text-align:right">Actions</span>
+    </div>
+
+    <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column">
+
+      <div style="display:grid;grid-template-columns:22px 108px minmax(0,1fr) 168px 98px 104px 110px 92px;align-items:center;gap:12px;min-height:62px;padding:0 18px;border-bottom:1px solid #e7eef8;background:#f4f8fd">
+        <span style="font-size:13px;color:#4a5c75">▾</span>
+        <span style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">205/55R16</span>
+        <span style="min-width:0"><span style="display:block;font-size:14.5px;font-weight:600">MICHELIN PRIMACY 4</span><span style="display:block;font-size:11px;color:#4a5c75">91V · été · MI-PR4-2055516 · 3 lots</span></span>
+        <span style="display:flex;flex-direction:column;gap:3px"><span style="font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">Casa 4 · Rabat 0 · Tanger 0</span><span style="height:5px;background:#e7eef8;position:relative"><span style="display:block;height:100%;width:33%;background:#d4a017"></span></span><span style="font-size:10px;color:#7a4f00;font-variant-numeric:tabular-nums">seuil 12 · 8 manquants</span></span>
+        <span style="text-align:right;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;color:#8a5a00">4</span>
+        <span style="text-align:right;font-size:13px;color:#4a5c75;font-variant-numeric:tabular-nums">980,00</span>
+        <span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">3 920,00</span>
+        <span style="display:flex;justify-content:flex-end"><button type="button" style="height:32px;padding:0 10px;border:1px solid #d4a017;background:#fdf6e6;color:#7a4f00;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Commander</button></span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:22px 108px minmax(0,1fr) 168px 98px 104px 110px 92px;align-items:center;gap:12px;min-height:44px;padding:0 18px;border-bottom:1px solid #e7eef8;background:#fff">
+        <span></span>
+        <span></span>
+        <span style="min-width:0;padding-left:14px;border-left:2px solid #cfdcec;font-size:12.5px;color:#41546e">Lot 2026-07 · DOT 2226 · Maroc</span>
+        <span style="font-size:11.5px;color:#4a5c75">Casa · zone A3</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">4</span>
+        <span style="text-align:right;font-size:12.5px;color:#4a5c75;font-variant-numeric:tabular-nums">980,00</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">3 920,00</span>
+        <span style="display:flex;gap:5px;justify-content:flex-end">
+          <button type="button" title="Ajuster" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M4 20h4L20 8l-4-4L4 16z"/></svg></button>
+          <button type="button" title="Historique" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></button>
+        </span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:22px 108px minmax(0,1fr) 168px 98px 104px 110px 92px;align-items:center;gap:12px;min-height:44px;padding:0 18px;border-bottom:1px solid #cfdcec;background:#fff">
+        <span></span>
+        <span></span>
+        <span style="min-width:0;padding-left:14px;border-left:2px solid #cfdcec;font-size:12.5px;color:#41546e">Lot 2026-03 · DOT 0126 · Espagne <span style="padding:1px 5px;border:1px solid #cfdcec;font-size:9.5px;font-weight:700;letter-spacing:.05em;color:#4a5c75">ÉPUISÉ</span></span>
+        <span style="font-size:11.5px;color:#4a5c75">Casa · zone A3</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums;color:#4a5c75">0</span>
+        <span style="text-align:right;font-size:12.5px;color:#4a5c75;font-variant-numeric:tabular-nums">940,00</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums;color:#4a5c75">—</span>
+        <span style="display:flex;gap:5px;justify-content:flex-end">
+          <button type="button" title="Ajuster" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M4 20h4L20 8l-4-4L4 16z"/></svg></button>
+          <button type="button" title="Historique" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></button>
+        </span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:22px 108px minmax(0,1fr) 168px 98px 104px 110px 92px;align-items:center;gap:12px;min-height:62px;padding:0 18px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13px;color:#4a5c75">▸</span>
+        <span style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">205/55R16</span>
+        <span style="min-width:0"><span style="display:block;font-size:14.5px;font-weight:600">BRIDGESTONE TURANZA T005</span><span style="display:block;font-size:11px;color:#4a5c75">91W · été · BR-T005-2055516 · 2 lots</span></span>
+        <span style="display:flex;flex-direction:column;gap:3px"><span style="font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">Casa 32 · Rabat 8 · Tanger 0</span><span style="height:5px;background:#e7eef8;position:relative"><span style="display:block;height:100%;width:100%;background:#15616d"></span></span><span style="font-size:10px;color:#4a5c75;font-variant-numeric:tabular-nums">seuil 8 · 5 fois le seuil</span></span>
+        <span style="text-align:right;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums">40</span>
+        <span style="text-align:right;font-size:13px;color:#4a5c75;font-variant-numeric:tabular-nums">1 040,00</span>
+        <span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">41 600,00</span>
+        <span style="display:flex;gap:5px;justify-content:flex-end">
+          <button type="button" title="Ajuster" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M4 20h4L20 8l-4-4L4 16z"/></svg></button>
+          <button type="button" title="Historique" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></button>
+        </span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:22px 108px minmax(0,1fr) 168px 98px 104px 110px 92px;align-items:center;gap:12px;min-height:62px;padding:0 18px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13px;color:#4a5c75">▸</span>
+        <span style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">205/55R16</span>
+        <span style="min-width:0"><span style="display:block;font-size:14.5px;font-weight:600">CONTINENTAL ECOCONTACT 6</span><span style="display:block;font-size:11px;color:#4a5c75">91H · été · CO-EC6-2055516 · 1 lot</span></span>
+        <span style="display:flex;flex-direction:column;gap:3px"><span style="font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">Casa 18 · Rabat 0 · Tanger 0</span><span style="height:5px;background:#e7eef8;position:relative"><span style="display:block;height:100%;width:100%;background:#15616d"></span></span><span style="font-size:10px;color:#4a5c75;font-variant-numeric:tabular-nums">seuil 6 · 3 fois le seuil</span></span>
+        <span style="text-align:right;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums">18</span>
+        <span style="text-align:right;font-size:13px;color:#4a5c75;font-variant-numeric:tabular-nums">920,00</span>
+        <span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">16 560,00</span>
+        <span style="display:flex;gap:5px;justify-content:flex-end">
+          <button type="button" title="Ajuster" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M4 20h4L20 8l-4-4L4 16z"/></svg></button>
+          <button type="button" title="Historique" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></button>
+        </span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:22px 108px minmax(0,1fr) 168px 98px 104px 110px 92px;align-items:center;gap:12px;min-height:62px;padding:0 18px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13px;color:#4a5c75">▸</span>
+        <span style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">205/55R16</span>
+        <span style="min-width:0"><span style="display:block;font-size:14.5px;font-weight:600">HANKOOK VENTUS PRIME 4</span><span style="display:block;font-size:11px;color:#4a5c75">91V · été · HA-VP4-2055516 · 2 lots · <span style="color:#41546e">46 à Rabat, transfert 1 j</span></span></span>
+        <span style="display:flex;flex-direction:column;gap:3px"><span style="font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">Casa 0 · Rabat 46 · Tanger 0</span><span style="height:5px;background:#e7eef8;position:relative"><span style="display:block;height:100%;width:100%;background:#15616d"></span></span><span style="font-size:10px;color:#4a5c75;font-variant-numeric:tabular-nums">seuil 10 · hors dépôt Casa</span></span>
+        <span style="text-align:right;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums">46</span>
+        <span style="text-align:right;font-size:13px;color:#4a5c75;font-variant-numeric:tabular-nums">760,00</span>
+        <span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">34 960,00</span>
+        <span style="display:flex;justify-content:flex-end"><button type="button" style="height:32px;padding:0 10px;border:1px solid #0c1e33;background:#fff;color:#0c1e33;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Transférer</button></span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:22px 108px minmax(0,1fr) 168px 98px 104px 110px 92px;align-items:center;gap:12px;min-height:62px;padding:0 18px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13px;color:#4a5c75">▸</span>
+        <span style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">205/55R16</span>
+        <span style="min-width:0"><span style="display:block;font-size:14.5px;font-weight:600">PIRELLI CINTURATO P7</span><span style="display:block;font-size:11px;color:#4a5c75">91V · été · PI-CP7-2055516 · 1 lot · <span style="color:#41546e">dormant 214 j</span></span></span>
+        <span style="display:flex;flex-direction:column;gap:3px"><span style="font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">Casa 11 · Rabat 0 · Tanger 0</span><span style="height:5px;background:#e7eef8;position:relative"><span style="display:block;height:100%;width:100%;background:#15616d"></span></span><span style="font-size:10px;color:#4a5c75;font-variant-numeric:tabular-nums">seuil 4 · aucune vente depuis 214 j</span></span>
+        <span style="text-align:right;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums">11</span>
+        <span style="text-align:right;font-size:13px;color:#4a5c75;font-variant-numeric:tabular-nums">1 010,00</span>
+        <span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">11 110,00</span>
+        <span style="display:flex;gap:5px;justify-content:flex-end">
+          <button type="button" title="Ajuster" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M4 20h4L20 8l-4-4L4 16z"/></svg></button>
+          <button type="button" title="Historique" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></button>
+        </span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:22px 108px minmax(0,1fr) 168px 98px 104px 110px 92px;align-items:center;gap:12px;min-height:62px;padding:0 18px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13px;color:#4a5c75">▸</span>
+        <span style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">205/55R16</span>
+        <span style="min-width:0"><span style="display:block;font-size:14.5px;font-weight:600">GOODYEAR EFFICIENTGRIP</span><span style="display:block;font-size:11px;color:#4a5c75">91V · été · GO-EG-2055516 · 1 lot</span></span>
+        <span style="display:flex;flex-direction:column;gap:3px"><span style="font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">Casa 7 · Rabat 0 · Tanger 0</span><span style="height:5px;background:#e7eef8;position:relative"><span style="display:block;height:100%;width:88%;background:#15616d"></span></span><span style="font-size:10px;color:#4a5c75;font-variant-numeric:tabular-nums">seuil 8 · 1 manquant</span></span>
+        <span style="text-align:right;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums">7</span>
+        <span style="text-align:right;font-size:13px;color:#4a5c75;font-variant-numeric:tabular-nums">890,00</span>
+        <span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">6 230,00</span>
+        <span style="display:flex;gap:5px;justify-content:flex-end">
+          <button type="button" title="Ajuster" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M4 20h4L20 8l-4-4L4 16z"/></svg></button>
+          <button type="button" title="Historique" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></button>
+        </span>
+      </div>
+
+      <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center">
+        <span style="font-size:11.5px;color:#4a5c75">Retirez le filtre de dimension pour parcourir les 412 références.</span>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:14px;padding:11px 18px;border-top:1px solid #0c1e33;background:#f4f8fd">
+      <span style="font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">6 références sur 412 · 9 lots</span>
+      <span style="font-size:12px;color:#4a5c75">·</span>
+      <span style="font-size:12px;font-weight:600;font-variant-numeric:tabular-nums">118 pneus · 121 400 DH au prix d'achat</span>
+      <button type="button" style="margin-left:auto;height:30px;padding:0 12px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Inventaire physique</button>
+    </div>
+
+  </main>
+</div>
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e">Deux cas que le regroupement rend lisibles : une référence dont tout le stock est dans un autre dépôt (Hankook, 46 à Rabat) propose un transfert au lieu d'apparaître comme absente à Casa ; et un lot épuisé reste visible sous sa référence, avec son DOT et son prix, pour l'historique — sans peser sur la ligne principale.</p>
+<p style="margin:0;font:400 12px/1.5 'Inter',sans-serif;color:#4a5c75">À dire ensuite : « le catalogue Produits sur le même modèle » · « l'écran d'inventaire physique » · « enchaîne sur Achats » · « la fiche d'une référence ».</p>
+</div>
+
+</section>
+
+</x-dc>
+</body>
+</html>

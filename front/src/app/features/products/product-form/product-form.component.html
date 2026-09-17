@@ -225,7 +225,7 @@
   <!-- ── Inventory Section (only when editing a non-service product) ── -->
   <div class="form-section inventory-section" *ngIf="isEditing && !isService">
     <div class="inventory-header">
-      <h3>📦 Inventaire <span class="stock-total" *ngIf="totalStock > 0">({{ totalStock }} en stock)</span></h3>
+      <h3><app-icon name="package" [size]="14" /> Inventaire <span class="stock-total" *ngIf="totalStock > 0">({{ totalStock }} en stock)</span></h3>
       <button type="button" class="btn btn-sm btn-add-stock" (click)="openAddStock()" *ngIf="!showStockRow() && authService.hasPermission('create stock')">
         + Ajouter
       </button>
@@ -261,8 +261,8 @@
               </td>
               <td class="text-right">{{ item.purchase_price ? (item.purchase_price | number:'1.2-2') : '-' }}</td>
               <td class="text-center actions-cell">
-                <button type="button" class="btn-icon-sm" (click)="editStock(item)" title="Modifier" *ngIf="authService.hasPermission('edit stock')">✏️</button>
-                <button type="button" class="btn-icon-sm text-danger" (click)="deleteStock(item)" title="Supprimer" *ngIf="authService.hasPermission('delete stock')">🗑️</button>
+                <button type="button" class="btn-icon-sm" (click)="editStock(item)" title="Modifier" *ngIf="authService.hasPermission('edit stock')"><app-icon name="edit" [size]="14" /></button>
+                <button type="button" class="btn-icon-sm text-danger" (click)="deleteStock(item)" title="Supprimer" *ngIf="authService.hasPermission('delete stock')"><app-icon name="trash" [size]="14" /></button>
               </td>
             </tr>
             <!-- Inline edit row -->
@@ -274,8 +274,8 @@
               <td><input type="number" [ngModel]="editingStockQuantity()" (ngModelChange)="editingStockQuantity.set(+$event); stockForm.quantity = +$event" name="edit_qty" min="0" class="inv-input text-center" style="width:60px" (keydown.enter)="$event.preventDefault()"></td>
               <td><input type="number" [(ngModel)]="stockForm.purchase_price" name="edit_price" min="0" step="0.01" class="inv-input text-right" style="width:80px" (keydown.enter)="$event.preventDefault()"></td>
               <td class="text-center actions-cell">
-                <button type="button" class="btn-icon-sm text-success" (click)="saveStock()" title="Enregistrer">✅</button>
-                <button type="button" class="btn-icon-sm" (click)="cancelStockEdit()" title="Annuler">❌</button>
+                <button type="button" class="btn-icon-sm text-success" (click)="saveStock()" title="Enregistrer"><app-icon name="check-circle" [size]="14" /></button>
+                <button type="button" class="btn-icon-sm" (click)="cancelStockEdit()" title="Annuler"><app-icon name="close" [size]="14" /></button>
               </td>
             </tr>
             <!-- Mandatory reason row when editing and quantity changed -->
@@ -309,8 +309,8 @@
             <td><input type="number" [(ngModel)]="stockForm.quantity" name="new_qty" min="0" class="inv-input text-center" style="width:60px"></td>
             <td><input type="number" [(ngModel)]="stockForm.purchase_price" name="new_price" min="0" step="0.01" class="inv-input text-right" style="width:80px"></td>
             <td class="text-center actions-cell">
-              <button type="button" class="btn-icon-sm text-success" (click)="saveStock()" title="Enregistrer">✅</button>
-              <button type="button" class="btn-icon-sm" (click)="cancelStockEdit()" title="Annuler">❌</button>
+              <button type="button" class="btn-icon-sm text-success" (click)="saveStock()" title="Enregistrer"><app-icon name="check-circle" [size]="14" /></button>
+              <button type="button" class="btn-icon-sm" (click)="cancelStockEdit()" title="Annuler"><app-icon name="close" [size]="14" /></button>
             </td>
           </tr>
         </tbody>
@@ -326,8 +326,8 @@
   <div class="form-section movements-section" *ngIf="isEditing && !isService && authService.hasPermission('view stock-movements')">
     <div class="movements-header" (click)="toggleMovements()">
       <h3>
-        <span class="toggle-icon">{{ showMovements() ? '▼' : '▶' }}</span>
-        📜 Historique des mouvements
+        <app-icon class="toggle-icon" [name]="showMovements() ? 'chevron-down' : 'chevron-right'" [size]="12" />
+        <app-icon name="receipt" [size]="14" /> Historique des mouvements
         <span class="mv-count" *ngIf="movements().length > 0">({{ movements().length }})</span>
       </h3>
     </div>

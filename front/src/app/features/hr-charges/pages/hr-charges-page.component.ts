@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { HrChargeService } from '../data-access/hr-charge.service';
 import { HrChargeFormComponent } from '../components/hr-charge-form/hr-charge-form.component';
@@ -21,7 +22,7 @@ const MONTH_NAMES = [
 @Component({
   selector: 'app-hr-charges-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, HrChargeFormComponent],
+  imports: [CommonModule, FormsModule, HrChargeFormComponent, IconComponent],
   templateUrl: './hr-charges-page.component.html',
   styleUrl: './hr-charges-page.component.scss',
 })

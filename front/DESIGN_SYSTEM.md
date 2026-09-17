@@ -36,28 +36,32 @@ Angular 21 SPA, standalone components, signals-based state. UI is 100% in French
 - Always use `font-variant-numeric: tabular-nums` on financial figures
 - Dates: `dd/MM/yyyy` (French format) — Angular pipe: `| date:'dd/MM/yyyy'`
 
-### Emoji as Icons
-No icon library is used. Emoji are the icon system throughout — keep this consistent.
+### Icons
+Emoji are no longer used as icons anywhere (refonte 2b, étape 1). Icons are
+Lucide-style inline SVGs rendered via `<app-icon name="…" [size]="14" />`
+(`front/src/app/shared/icon/icon.component.ts` — `PATHS` holds the SVG bodies,
+`stroke-linecap` is `square` for navigation/objects and `round` for
+alerts/signs). Sort indicators use the dedicated
+`<app-sort-icon [active]="…" [dir]="…" />` (`shared/icon/sort-icon.component.ts`)
+instead of a ternary.
 
-| Emoji | Usage |
+| Icon name | Usage |
 |---|---|
-| 🏷️ | Ventes |
-| 📦 | Achats / Stock |
-| 💰 | Cash Flow / Revenue |
-| 🏢 | Fournisseurs |
-| 👥 | Utilisateurs |
-| 🛞 | Pneus / Produits |
-| 📋 | Inventaire |
-| 🏭 | Marques |
-| 🔐 | Rôles |
-| 💳 | Paiements |
-| 👁️ | Voir (detail) |
-| ✏️ | Modifier |
-| 🗑️ | Supprimer |
-| 🔍 | Rechercher |
-| 📈 | Marge / Tendance |
-| ⏳ | Impayés / En attente |
-| ⚠️ | Avertissement |
+| `tag` | Ventes |
+| `package` | Achats / Stock / Produits |
+| `banknote` | Cash Flow / Finance |
+| `building` | Fournisseurs |
+| `users` | Utilisateurs |
+| `building-2` | Marques |
+| `lock` | Rôles |
+| `credit-card` | Paiements |
+| `view` | Voir (detail) |
+| `edit` | Modifier |
+| `trash` | Supprimer |
+| `search` | Rechercher |
+| `trending-up` | Marge / Tendance |
+| `clock` | Impayés / En attente |
+| `alert-triangle` | Avertissement |
 
 ---
 
@@ -66,37 +70,37 @@ No icon library is used. Emoji are the icon system throughout — keep this cons
 ### Colors
 
 ```scss
-// Brand
-$primary:       #ff2d37;   // Red — CTAs, active nav, avatars, accents
-$primary-dark:  #cc0a13;   // Hover / gradient end
-$primary-light: rgba(255, 45, 55, 0.10);  // Tinted bg for icons
+// Marque (refonte 2b)
+$primary:          #ff2d37;   // action principale, une seule par écran
+$primary-dark:     #c2181f;   // argent dû, retard, texte d'alerte
 
-// Semantic
-$success:       #48bb78;   // Positive margins, PAYÉ status
-$success-dark:  #276749;   // Text on light success bg
-$danger:        #f56565;   // Negative values, errors
-$danger-dark:   #e53e3e;   // Stronger danger text
-$warning:       #ed8936;   // EN COURS status
-$warning-dark:  #c05621;   // Text on warning bg
-
-// Neutrals
-$gray-50:   #f7fafc;   // Page background
-$gray-100:  #edf2f7;   // Card borders, table header bg
-$gray-200:  #e2e8f0;   // Input borders, dividers
-$gray-400:  #a0aec0;   // Placeholder, subtle text
-$gray-500:  #718096;   // Muted text, table headers
-$gray-700:  #4a5568;   // Label text
-$gray-800:  #2d3748;   // Body text (primary)
-$gray-950:  #0f172a;   // Darkest text
+// Encre
+$text-dark:        #0c1e33;   // texte principal, filets forts
+$text-secondary:   #41546e;   // texte secondaire
+$text-muted:       #4a5c75;   // libellés, sous-lignes (plancher contraste 4,5:1)
 
 // Surfaces
-$bg-body:   #f7fafc;   // Page background
-$bg-card:   #ffffff;   // Card / modal background
-$navbar-bg: #1f2937;   // Navigation bar
+$bg-body:          #e6edf7;   // fond d'application
+$bg-card:          #ffffff;   // surface de contenu
+$bg-subtle:        #f4f8fd;   // barre haute, en-têtes de colonne, volet latéral
+$rail-bg:          #081627;   // réservé au rail de navigation (étape 3)
 
-// CSS Custom Properties (defined in app.scss :root)
-// --app-primary, --app-background, --app-surface, --app-text,
-// --app-text-muted, --app-border, --app-shadow
+// Filets
+$border-color:     #adc2da;   // bords de champ et de bouton
+$border-strong:    #cfdcec;   // séparation de blocs
+$border-subtle:    #e7eef8;   // filets de ligne, fonds de jauge
+
+// Sens (une couleur = un sens)
+$income-color:     #15616d;   // encaissé, payé, entrée d'argent
+$expense-color:    #c2181f;   // argent dû, sortie
+$invoice-color:    #2f4fb8;   // à facturer (Service Auto)
+$warning-color:    #8a5a00;   // seuil, attente, risque légal
+$warning-border:   #d4a017;   // bord d'alerte, jauge sous seuil
+$alert-ink:        #8f1218;   // texte d'alerte sur fond rosé
+
+// CSS Custom Properties (defined in styles.scss :root — NOT app.scss, see below)
+// --app-primary, --app-accent, --app-background, --app-surface, --app-text,
+// --app-text-muted, --app-border, --app-shadow (none)
 ```
 
 ### Typography
@@ -135,24 +139,19 @@ $space-12: 3rem;     // 48px
 
 ### Border Radii
 
-```scss
-$radius-xs:     4px;    // Tiny chips
-$radius-sm:     8px;    // Buttons, inputs, icon buttons
-$radius-md:     12px;   // Cards, modals, table containers
-$radius-lg:     16px;   // KPI cards
-$radius-full:   999px;  // Badges, pills, status selects
-$radius-circle: 50%;    // Avatars
-```
+**0 partout, sans exception** (refonte 2b). Enforced globally via
+`*, *::before, *::after { border-radius: 0 !important; }` in `styles.scss` —
+a transitory rule until `_page-layout.scss` and the individual screens drop
+their own hardcoded radii (étapes 2 et 4). `$radius`/`$radius-sm`/`$radius-lg`
+in `_variables.scss` are all `0`.
 
 ### Shadows
 
-```scss
-$shadow-sm:     0 1px 3px rgba(0, 0, 0, 0.08);         // Default card
-$shadow-md:     0 4px 12px rgba(0, 0, 0, 0.08);         // Elevated card
-$shadow-lg:     0 10px 25px rgba(15, 23, 42, 0.08);     // App shell
-$shadow-xl:     0 20px 60px rgba(0, 0, 0, 0.15);        // Login card
-$shadow-navbar: 0 2px 10px rgba(15, 23, 42, 0.16);      // Sticky navbar
-```
+**None.** `$shadow-sm`/`$shadow-md` in `_variables.scss` are `none`;
+`--app-shadow` in `styles.scss` is `none` in both light and dark. Separation
+between elements comes from 1px rules (`$border-color`, `$border-subtle`),
+not elevation. The `box-shadow` used by `:focus-visible` rings is
+**not** touched — it's not an elevation shadow and stays for accessibility.
 
 ---
 
@@ -405,7 +404,7 @@ Activated via `[data-theme-resolved='dark']` on `:root`.
 
 | Token / style | File |
 |---|---|
-| CSS custom properties (`:root`) | `front/src/app/app.scss` |
+| CSS custom properties (`:root`) | `front/src/styles.scss` (NOT `app.scss` — a `:root` rule written inside a component's stylesheet is scoped away by Angular's view encapsulation and never matches `<html>`) |
 | SCSS variables | `front/src/app/features/_variables.scss` |
 | Global reset + print styles | `front/src/styles.scss` |
 | Navbar styles | `front/src/app/shared/navbar/navbar.component.scss` |

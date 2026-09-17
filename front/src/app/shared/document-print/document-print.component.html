@@ -8,9 +8,9 @@
         <button class="btn btn-primary"
                 (click)="downloadPdf()"
                 [disabled]="generatingPdf() || loadingSettings()">
-          {{ generatingPdf() ? 'Génération...' : '⬇ Télécharger PDF' }}
+          @if (generatingPdf()) { Génération... } @else { <app-icon name="download" [size]="14" /> Télécharger PDF }
         </button>
-        <button class="btn btn-ghost" (click)="closed.emit()">✕ Fermer</button>
+        <button class="btn btn-ghost" (click)="closed.emit()"><app-icon name="close" [size]="14" /> Fermer</button>
       </div>
     </div>
 

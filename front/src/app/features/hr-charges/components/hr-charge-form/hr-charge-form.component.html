@@ -1,8 +1,8 @@
 <div class="modal-overlay" (click)="onCancel()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>{{ editMode ? '✏️ Modifier la charge RH' : (charge ? '⧉ Dupliquer la charge RH' : '➕ Nouvelle saisie de charges RH') }}</h2>
-      <button (click)="onCancel()" class="btn-close">✕</button>
+      <h2><app-icon [name]="editMode ? 'edit' : (charge ? 'copy' : 'plus')" [size]="16" /> {{ editMode ? 'Modifier la charge RH' : (charge ? 'Dupliquer la charge RH' : 'Nouvelle saisie de charges RH') }}</h2>
+      <button (click)="onCancel()" class="btn-close"><app-icon name="close" [size]="14" /></button>
     </div>
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-body">
@@ -58,7 +58,7 @@
                 </td>
                 <td><input type="text" formControlName="description" placeholder="Optionnel" /></td>
                 <td>
-                  <button *ngIf="!editMode" type="button" class="btn-icon danger" title="Retirer la ligne" (click)="removeLine(i)">🗑️</button>
+                  <button *ngIf="!editMode" type="button" class="btn-icon danger" title="Retirer la ligne" (click)="removeLine(i)"><app-icon name="trash" [size]="14" /></button>
                 </td>
               </tr>
             }
@@ -70,7 +70,7 @@
         }
       </div>
 
-      <button *ngIf="!editMode" type="button" class="btn-add-line" (click)="addLine()">➕ Ajouter une ligne</button>
+      <button *ngIf="!editMode" type="button" class="btn-add-line" (click)="addLine()"><app-icon name="plus" [size]="14" /> Ajouter une ligne</button>
 
       <div class="total-row">
         Total : <strong>{{ totalAmount() | number: '1.2-2' }} DH</strong>

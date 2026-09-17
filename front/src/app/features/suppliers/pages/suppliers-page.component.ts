@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { SupplierService } from '../data-access/supplier.service';
@@ -7,11 +8,12 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Supplier, SupplierPayload, PaginatedResponse, SupplierUnpaidRow } from '../models/supplier.model';
 import { SupplierFormComponent } from '../components/supplier-form/supplier-form.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
+import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 
 @Component({
   selector: 'app-suppliers-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, SupplierFormComponent, AutoRefreshControlComponent],
+  imports: [CommonModule, FormsModule, SupplierFormComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent],
   templateUrl: './suppliers-page.component.html',
   styleUrls: ['./suppliers-page.component.scss'],
 })

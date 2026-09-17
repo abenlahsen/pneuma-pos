@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"><style>body{margin:0;background:#dfe7f2;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}a{color:#c2181f}a:hover{color:#8f1218}</style></helmet>
+
+<section style="padding:36px 40px 44px;display:flex;flex-direction:column;gap:18px">
+
+<div style="display:flex;align-items:baseline;gap:10px">
+<span style="font:700 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#0c1e33;color:#fff;border-radius:4px;letter-spacing:.06em">6</span>
+<span style="font:700 13px/1.2 'Inter',sans-serif;color:#0c1e33">FICHE CLIENT &amp; RELEVÉ DE COMPTE — palette 2b</span>
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e">La fiche actuelle empile six panneaux : cadrans, informations client, paramètres financiers, véhicules, ventes, puis trois onglets (factures en cours, écritures comptables, paiements). Le solde dû, qui est la raison d'ouvrir la fiche, se trouve en haut ; les écritures qui l'expliquent sont au bas de la page, dans un onglet.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Le relevé devient la colonne vertébrale.</strong> Une seule table chronologique avec débit, crédit et solde progressif — ventes, factures et paiements dans le même fil, au lieu de trois onglets à recouper mentalement. C'est aussi ce qu'on imprime et qu'on envoie au client.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">L'âge de la dette est explicite.</strong> Une bande de vieillissement (0-30, 31-60, 61-90, +90 jours) remplace le seul total impayé : c'est ce qui décide s'il faut relancer, bloquer ou accepter une nouvelle vente.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Les panneaux statiques se replient.</strong> Coordonnées, paramètres financiers et véhicules passent en colonne de droite, compacts et dépliables — consultés rarement, ils n'ont pas à pousser le relevé sous la ligne de flottaison.</p>
+</div>
+
+<div id="6a" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter',sans-serif;color:#41546e"><a href="#6a" style="font:700 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(12,30,51,.1);color:#0c1e33;border-radius:5px;text-decoration:none">6a</a>Fiche client — relevé de compte, dette vieillissante</div>
+
+<div style="width:1440px;height:880px;display:grid;grid-template-columns:72px minmax(0,1fr);grid-template-rows:60px minmax(0,1fr);background:#e6edf7;color:#0c1e33;border:1px solid #adc2da;overflow:hidden;box-shadow:0 10px 25px rgba(12,30,51,.14)">
+
+  <div style="grid-column:1/-1;display:flex;align-items:center;gap:18px;padding:0 18px;background:#f4f8fd;border-bottom:1px solid #cfdcec">
+    <img src="assets/logo.png" alt="PNEU.MA" style="height:26px;width:auto">
+    <span style="display:flex;align-items:center;gap:9px;font-size:12.5px;color:#4a5c75"><a href="#6a" style="color:#41546e;text-decoration:none">Tiers</a><span>›</span><a href="#6a" style="color:#41546e;text-decoration:none">Clients</a><span>›</span><span style="font-weight:600;color:#0c1e33">Garage Atlas Pneus</span></span>
+    <span style="margin-left:auto;font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">Jeu. 17 sept. · 11:52</span>
+    <button type="button" style="height:36px;padding:0 13px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Imprimer le relevé</button>
+    <button type="button" style="height:36px;padding:0 16px;border:1px solid #ff2d37;background:#ff2d37;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Encaisser</button>
+    <span style="width:30px;height:30px;background:#ff2d37;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">YB</span>
+  </div>
+
+  <nav style="grid-row:2;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;background:#081627">
+    <a href="#6a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>ACCUEIL</a>
+    <a href="#6a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 3h7l11 11-7 7L3 10V3z"/></svg>VENTES</a>
+    <a href="#6a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M14.5 3.5a5 5 0 0 0-6.3 6.3L3 15v6h6l5.2-5.2a5 5 0 0 0 6.3-6.3l-3.2 3.2-3-3 3.2-3.2z"/></svg>SERVICE</a>
+    <a href="#6a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg>ACHATS</a>
+    <a href="#6a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 6h18v12H3z"/><circle cx="12" cy="12" r="2.5"/></svg>CAISSE</a>
+    <span style="width:34px;height:1px;background:rgba(230,237,247,.2);margin:7px 0"></span>
+    <a href="#6a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/></svg>STOCK</a>
+    <a href="#6a" style="width:56px;height:54px;background:#ff2d37;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><circle cx="12" cy="8" r="3.4"/><path d="M5 20v-1.6c0-2.3 3.1-3.6 7-3.6s7 1.3 7 3.6V20"/></svg>TIERS</a>
+    <a href="#6a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M4 20V9M10 20V4M16 20v-8M22 20H2"/></svg>CHIFFRES</a>
+    <a href="#6a" style="margin-top:auto;width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/></svg>RÉGLAGES</a>
+  </nav>
+
+  <main style="grid-column:2;grid-row:2;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) 340px;background:#fff">
+
+    <div style="overflow:hidden;display:flex;flex-direction:column;border-right:1px solid #cfdcec">
+
+      <div style="padding:16px 20px 14px;border-bottom:1px solid #cfdcec">
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <span style="min-width:0;flex:1">
+            <span style="display:flex;align-items:center;gap:9px"><span style="font-size:21px;font-weight:700;letter-spacing:-.02em">Garage Atlas Pneus</span><span style="padding:2px 7px;border:1px solid #cfdcec;background:#f4f8fd;font-size:10px;font-weight:700;letter-spacing:.07em;color:#4a5c75">PROFESSIONNEL</span><span style="padding:2px 7px;border:1px solid #15616d;color:#15616d;font-size:10px;font-weight:700;letter-spacing:.07em">ACTIF</span></span>
+            <span style="display:block;margin-top:4px;font-size:12.5px;color:#4a5c75">Casablanca · 0661 24 88 03 · client depuis mars 2021 · 68 ventes</span>
+          </span>
+          <span style="text-align:right">
+            <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Solde dû</span>
+            <span style="display:block;margin-top:3px;font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums;color:#c2181f">48 600,00 <span style="font-size:14px;font-weight:600;color:#4a5c75">DH</span></span>
+          </span>
+        </div>
+
+        <div style="margin-top:14px;display:grid;grid-template-columns:repeat(4,1fr) 168px;border:1px solid #cfdcec">
+          <span style="padding:9px 12px;border-right:1px solid #cfdcec"><span style="display:block;font-size:9px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">0-30 jours</span><span style="display:block;margin-top:3px;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">0,00</span></span>
+          <span style="padding:9px 12px;border-right:1px solid #cfdcec"><span style="display:block;font-size:9px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">31-60 jours</span><span style="display:block;margin-top:3px;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">0,00</span></span>
+          <span style="padding:9px 12px;border-right:1px solid #cfdcec;background:#fdf6e6"><span style="display:block;font-size:9px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#7a4f00">61-90 jours</span><span style="display:block;margin-top:3px;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;color:#7a4f00">48 600,00</span></span>
+          <span style="padding:9px 12px;border-right:1px solid #cfdcec"><span style="display:block;font-size:9px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">+90 jours</span><span style="display:block;margin-top:3px;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">0,00</span></span>
+          <span style="padding:9px 12px;background:#f4f8fd"><span style="display:block;font-size:9px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Crédit restant</span><span style="display:block;margin-top:3px;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">31 400,00 <span style="font-size:10.5px;font-weight:600;color:#4a5c75">/ 80 000</span></span></span>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;padding:11px 20px;border-bottom:1px solid #cfdcec;background:#f4f8fd">
+        <span style="font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase">Relevé de compte</span>
+        <div style="display:flex;margin-left:6px">
+          <button type="button" style="height:30px;padding:0 11px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:11.5px;font-weight:700;letter-spacing:.03em;cursor:pointer">TOUT</button>
+          <button type="button" style="height:30px;padding:0 11px;border:1px solid #cfdcec;border-left:0;background:#fff;color:#c2181f;font-family:inherit;font-size:11.5px;font-weight:700;letter-spacing:.03em;cursor:pointer">DÛ 1</button>
+          <button type="button" style="height:30px;padding:0 11px;border:1px solid #cfdcec;border-left:0;background:#fff;color:#41546e;font-family:inherit;font-size:11.5px;font-weight:700;letter-spacing:.03em;cursor:pointer">VENTES</button>
+          <button type="button" style="height:30px;padding:0 11px;border:1px solid #cfdcec;border-left:0;background:#fff;color:#41546e;font-family:inherit;font-size:11.5px;font-weight:700;letter-spacing:.03em;cursor:pointer">PAIEMENTS</button>
+        </div>
+        <span style="margin-left:auto;font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">Exercice 2026 · 41 écritures</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:82px minmax(0,1fr) 112px 112px 124px 78px;align-items:center;gap:12px;padding:7px 20px;border-bottom:1px solid #0c1e33;font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#4a5c75">
+        <span>Date</span><span>Écriture</span><span style="text-align:right">Débit</span><span style="text-align:right">Crédit</span><span style="text-align:right">Solde</span><span></span>
+      </div>
+
+      <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column">
+
+        <div style="display:grid;grid-template-columns:82px minmax(0,1fr) 112px 112px 124px 78px;align-items:center;gap:12px;min-height:52px;padding:0 20px;border-bottom:1px solid #e7eef8;background:#f4f8fd">
+          <span style="font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">01/01/26</span>
+          <span style="font-size:13px;color:#41546e">Solde d'ouverture</span>
+          <span style="text-align:right;font-size:12.5px;color:#4a5c75">—</span>
+          <span style="text-align:right;font-size:12.5px;color:#4a5c75">—</span>
+          <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">12 400,00</span>
+          <span></span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:82px minmax(0,1fr) 112px 112px 124px 78px;align-items:center;gap:12px;min-height:52px;padding:0 20px;border-bottom:1px solid #e7eef8">
+          <span style="font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">18/05/26</span>
+          <span style="min-width:0"><a href="#6a" style="font-size:13.5px;font-weight:600;color:#0c1e33;text-decoration:none">Vente 4088</a> <span style="font-size:11.5px;color:#4a5c75">· 24 pneus · facture F-2026-0412</span></span>
+          <span style="text-align:right;font-size:13.5px;font-variant-numeric:tabular-nums">36 200,00</span>
+          <span style="text-align:right;font-size:12.5px;color:#4a5c75">—</span>
+          <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">48 600,00</span>
+          <span style="display:flex;justify-content:flex-end"><button type="button" title="Ouvrir" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:82px minmax(0,1fr) 112px 112px 124px 78px;align-items:center;gap:12px;min-height:52px;padding:0 20px;border-bottom:1px solid #e7eef8">
+          <span style="font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">04/06/26</span>
+          <span style="min-width:0"><span style="font-size:13.5px;font-weight:600">Paiement</span> <span style="font-size:11.5px;color:#4a5c75">· virement BMCE · réf VIR-88214 · affecté à 4088</span></span>
+          <span style="text-align:right;font-size:12.5px;color:#4a5c75">—</span>
+          <span style="text-align:right;font-size:13.5px;font-variant-numeric:tabular-nums;color:#15616d">36 200,00</span>
+          <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">12 400,00</span>
+          <span style="display:flex;justify-content:flex-end"><button type="button" title="Ouvrir" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:82px minmax(0,1fr) 112px 112px 124px 78px;align-items:center;gap:12px;min-height:52px;padding:0 20px;border-bottom:1px solid #e7eef8">
+          <span style="font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">21/06/26</span>
+          <span style="min-width:0"><span style="font-size:13.5px;font-weight:600">Paiement</span> <span style="font-size:11.5px;color:#4a5c75">· chèque 4471023 · solde d'ouverture</span></span>
+          <span style="text-align:right;font-size:12.5px;color:#4a5c75">—</span>
+          <span style="text-align:right;font-size:13.5px;font-variant-numeric:tabular-nums;color:#15616d">12 400,00</span>
+          <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">0,00</span>
+          <span style="display:flex;justify-content:flex-end"><button type="button" title="Ouvrir" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:82px minmax(0,1fr) 112px 112px 124px 78px;align-items:center;gap:12px;min-height:58px;padding:0 20px;border-bottom:1px solid #e7eef8;border-left:3px solid #c2181f;margin-left:-3px;background:#fdeff1">
+          <span style="font-size:12px;color:#8f1218;font-variant-numeric:tabular-nums">02/07/26</span>
+          <span style="min-width:0"><a href="#6a" style="font-size:13.5px;font-weight:700;color:#0c1e33;text-decoration:none">Vente 4182</a> <span style="font-size:11.5px;color:#41546e">· 12 pneus · facture F-2026-0517 · K. Amrani · partenaire Zenith</span><span style="display:block;font-size:11px;font-weight:600;color:#c2181f">Échue depuis 47 jours · échéance 01/08/26 (30 j)</span></span>
+          <span style="text-align:right;font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums">48 600,00</span>
+          <span style="text-align:right;font-size:12.5px;color:#4a5c75">—</span>
+          <span style="text-align:right;font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums;color:#c2181f">48 600,00</span>
+          <span style="display:flex;justify-content:flex-end"><button type="button" style="height:30px;padding:0 9px;border:1px solid #c2181f;background:#c2181f;color:#fff;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer">Régler</button></span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:82px minmax(0,1fr) 112px 112px 124px 78px;align-items:center;gap:12px;min-height:52px;padding:0 20px;border-bottom:1px solid #e7eef8">
+          <span style="font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">28/08/26</span>
+          <span style="min-width:0"><a href="#6a" style="font-size:13.5px;font-weight:600;color:#0c1e33;text-decoration:none">Vente 4233</a> <span style="font-size:11.5px;color:#4a5c75">· 8 pneus · sans facture · payée à la livraison</span></span>
+          <span style="text-align:right;font-size:13.5px;font-variant-numeric:tabular-nums">12 950,00</span>
+          <span style="text-align:right;font-size:13.5px;font-variant-numeric:tabular-nums;color:#15616d">12 950,00</span>
+          <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">48 600,00</span>
+          <span style="display:flex;justify-content:flex-end"><button type="button" title="Ouvrir" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:82px minmax(0,1fr) 112px 112px 124px 78px;align-items:center;gap:12px;min-height:52px;padding:0 20px;border-bottom:1px solid #e7eef8">
+          <span style="font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">09/09/26</span>
+          <span style="min-width:0"><span style="font-size:13.5px;font-weight:600">Avoir 2026-31</span> <span style="font-size:11.5px;color:#4a5c75">· retour 2 pneus non montés · vente 4233</span></span>
+          <span style="text-align:right;font-size:12.5px;color:#4a5c75">—</span>
+          <span style="text-align:right;font-size:13.5px;font-variant-numeric:tabular-nums;color:#15616d">2 360,00</span>
+          <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">46 240,00</span>
+          <span style="display:flex;justify-content:flex-end"><button type="button" title="Ouvrir" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:82px minmax(0,1fr) 112px 112px 124px 78px;align-items:center;gap:12px;min-height:52px;padding:0 20px;border-bottom:1px solid #e7eef8">
+          <span style="font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">12/09/26</span>
+          <span style="min-width:0"><span style="font-size:13.5px;font-weight:600">Paiement</span> <span style="font-size:11.5px;color:#4a5c75">· espèce · acompte sur 4182</span></span>
+          <span style="text-align:right;font-size:12.5px;color:#4a5c75">—</span>
+          <span style="text-align:right;font-size:13.5px;font-variant-numeric:tabular-nums;color:#15616d">−2 360,00</span>
+          <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">48 600,00</span>
+          <span style="display:flex;justify-content:flex-end"><button type="button" title="Ouvrir" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></span>
+        </div>
+
+        <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center">
+          <span style="font-size:11.5px;color:#4a5c75">34 écritures antérieures · exercices 2021 à 2025</span>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:14px;padding:12px 20px;border-top:1px solid #0c1e33;background:#0c1e33;color:#fff">
+        <span style="font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(230,237,247,.8)">Solde au 17/09/2026</span>
+        <span style="margin-left:auto;font-size:12px;color:rgba(230,237,247,.8);font-variant-numeric:tabular-nums">Débit 97 750,00 · Crédit 49 150,00</span>
+        <span style="font-size:21px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums">48 600,00 <span style="font-size:12.5px;font-weight:600;color:rgba(230,237,247,.8)">DH</span></span>
+      </div>
+    </div>
+
+    <aside style="overflow:hidden;display:flex;flex-direction:column;background:#f4f8fd">
+
+      <div style="padding:14px 17px;border-bottom:1px solid #cfdcec;display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Actions</span>
+        <button type="button" style="height:38px;border:1px solid #ff2d37;background:#ff2d37;color:#fff;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer">Encaisser un paiement</button>
+        <div style="display:flex;gap:7px">
+          <button type="button" style="flex:1;height:34px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Relancer</button>
+          <button type="button" style="flex:1;height:34px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Nouvelle vente</button>
+        </div>
+        <p style="margin:0;font-size:11px;line-height:1.5;color:#4a5c75">Dernière relance le 02/09/2026 par S. Bennis.</p>
+      </div>
+
+      <div style="padding:13px 17px;border-bottom:1px solid #cfdcec">
+        <span style="display:flex;align-items:center;gap:8px"><span style="font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Paramètres financiers</span><span style="margin-left:auto;font-size:11px;color:#4a5c75">▾</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;margin-top:9px;padding:6px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12px;color:#41546e">Limite de crédit</span><span style="font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums">80 000,00</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12px;color:#41546e">Délai de paiement</span><span style="font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums">30 jours</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12px;color:#41546e">Mode par défaut</span><span style="font-size:12.5px;font-weight:600">Virement</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0"><span style="font-size:12px;color:#41546e">Solde d'ouverture</span><span style="font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums">12 400,00</span></span>
+      </div>
+
+      <div style="padding:13px 17px;border-bottom:1px solid #cfdcec">
+        <span style="display:flex;align-items:center;gap:8px"><span style="font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Coordonnées</span><span style="margin-left:auto;font-size:11px;color:#4a5c75">▸</span></span>
+        <p style="margin:8px 0 0;font-size:12px;line-height:1.6;color:#41546e">0661 24 88 03 · contact@atlaspneus.ma<br>Km 8, route de Rabat, Casablanca</p>
+      </div>
+
+      <div style="padding:13px 17px;border-bottom:1px solid #cfdcec">
+        <span style="display:flex;align-items:center;gap:8px"><span style="font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Véhicules</span><span style="padding:0 6px;border:1px solid #cfdcec;background:#fff;font-size:10.5px;font-weight:700;color:#4a5c75">3</span><span style="margin-left:auto;font-size:11px;color:#4a5c75">▾</span></span>
+        <div style="margin-top:9px;display:flex;flex-direction:column;gap:6px">
+          <span style="display:flex;align-items:baseline;gap:8px;padding:7px 9px;background:#fff;border:1px solid #cfdcec"><span style="font-size:12px;font-weight:700;font-variant-numeric:tabular-nums">44821-A-12</span><span style="font-size:11.5px;color:#4a5c75">Dacia Logan · 03/2019</span></span>
+          <span style="display:flex;align-items:baseline;gap:8px;padding:7px 9px;background:#fff;border:1px solid #cfdcec"><span style="font-size:12px;font-weight:700;font-variant-numeric:tabular-nums">10932-B-06</span><span style="font-size:11.5px;color:#4a5c75">Renault Master · 11/2021</span></span>
+          <span style="display:flex;align-items:baseline;gap:8px;padding:7px 9px;background:#fff;border:1px solid #cfdcec"><span style="font-size:12px;font-weight:700;font-variant-numeric:tabular-nums">78440-C-01</span><span style="font-size:11.5px;color:#4a5c75">Ford Transit · 06/2017</span></span>
+        </div>
+      </div>
+
+      <div style="padding:13px 17px;flex:1;min-height:0;overflow:hidden">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Habitudes d'achat</span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;margin-top:9px;padding:6px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12px;color:#41546e">CA depuis 2021</span><span style="font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums">1 842 300</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12px;color:#41546e">Panier moyen</span><span style="font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums">27 090</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12px;color:#41546e">Marge moyenne</span><span style="font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums">16,8 %</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0"><span style="font-size:12px;color:#41546e">Délai de paiement réel</span><span style="font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums">54 j</span></span>
+        <p style="margin:10px 0 0;font-size:11px;line-height:1.55;color:#4a5c75">Le délai réel (54 j) dépasse le délai contractuel (30 j) : utile avant d'accorder une nouvelle vente à crédit.</p>
+      </div>
+    </aside>
+
+  </main>
+</div>
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e">Le relevé accueille les écritures que les trois onglets actuels séparaient : ventes, factures, paiements, mais aussi avoirs et acomptes — chacune avec son solde progressif, de sorte qu'un désaccord sur le montant se résout en lisant une colonne. La ligne échue est la seule à porter une couleur et un bouton d'action.</p>
+<p style="margin:0;font:400 12px/1.5 'Inter',sans-serif;color:#4a5c75">À dire ensuite : « la liste Clients sur le même modèle » · « l'écran d'encaissement » · « le relevé en version imprimable » · « enchaîne sur Achats ».</p>
+</div>
+
+</section>
+
+</x-dc>
+</body>
+</html>

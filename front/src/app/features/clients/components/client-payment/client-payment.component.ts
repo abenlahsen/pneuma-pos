@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { ClientService } from '../../data-access/client.service';
 import { UnpaidSaleRow, ClientPaymentPayload } from '../../models/client.model';
@@ -11,7 +12,7 @@ const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Effet', 'Carte banc
 @Component({
   selector: 'app-client-payment',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, IconComponent],
   templateUrl: './client-payment.component.html',
   styleUrl: './client-payment.component.scss',
 })

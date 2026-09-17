@@ -1,5 +1,6 @@
 import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, SimpleChanges, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { Sale } from '../../../core/models/sale.model';
 import { Product } from '../../../core/models/product.model';
 import { ProductDetailComponent } from '../../products/product-detail/product-detail.component';
@@ -24,6 +25,7 @@ import { isTypingTarget } from '../../../core/utils/detail-navigator';
     ShipmentChangeListComponent,
     ShipmentChangeFormComponent,
     ShipmentChangePrintComponent,
+    IconComponent,
   ],
   templateUrl: './sale-detail.component.html',
   styleUrl: './sale-detail.component.scss'

@@ -3,6 +3,7 @@ import {
   OnInit, signal, inject, ElementRef, ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../icon/icon.component';
 import { PrintService } from '../../core/services/print.service';
 import { CompanySettings } from '../../features/settings/models/company-settings.model';
 
@@ -48,7 +49,7 @@ export interface PrintDocument {
 @Component({
   selector: 'app-document-print',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   templateUrl: './document-print.component.html',
   styleUrl: './document-print.component.scss',
 })

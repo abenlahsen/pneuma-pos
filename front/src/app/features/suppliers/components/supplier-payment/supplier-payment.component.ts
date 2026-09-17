@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { SupplierService } from '../../data-access/supplier.service';
 import { UnpaidPurchaseRow, SupplierPaymentPayload } from '../../models/supplier.model';
@@ -11,7 +12,7 @@ const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Effet', 'Carte banc
 @Component({
   selector: 'app-supplier-payment',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, IconComponent],
   templateUrl: './supplier-payment.component.html',
   styleUrl: './supplier-payment.component.scss',
 })

@@ -10,6 +10,60 @@
   padding: 0;
 }
 
+/* Refonte 2b — géométrie : rayon 0 partout, sans exception (handoff § Géométrie).
+   Bloc transitoire : les border-radius en dur des SCSS d'écran seront
+   supprimés aux étapes 2 et 4 (_page-layout.scss puis les écrans un par un),
+   après quoi ce bloc disparaît. */
+*,
+*::before,
+*::after {
+  border-radius: 0 !important;
+}
+
+/* Refonte 2b — géométrie : les box-shadow d'élévation en dur (ex. `.kpi-card`
+   dans dashboard.component.scss) ne sont PAS neutralisées globalement ici,
+   contrairement au border-radius : un essai avec un sélecteur global
+   `:not(:focus):not(:focus-visible) { box-shadow: none !important }` a été
+   tenté puis abandonné — vérifié en session que même avec un vrai focus
+   clavier (`:focus-visible` confirmé via `el.matches()`), l'ombre de focus
+   ressortait quand même à zéro une fois combinée à `!important` sur ce
+   moteur, un résultat pas assez fiable pour risquer l'accessibilité au
+   clavier partout dans l'app. La suppression des ombres reste donc, comme
+   prévu, un travail écran par écran (étapes 2 et 4), pas un correctif
+   global. */
+
+/* Jetons de couleur --app-* (refonte 2b, étape 1). Vivent ici, dans la feuille
+   globale, et non dans app.scss : un bloc `:root { … }` écrit dans un
+   composant Angular (app.component est un composant comme un autre) est
+   réécrit par l'encapsulation de vues en `:root[_ngcontent-xxx]` — un
+   sélecteur qui ne correspond jamais à <html> et rendait donc tout ce bloc
+   mort depuis l'origine (seuls --app-primary/--app-accent/--app-surface
+   semblaient fonctionner, injectés à part en JS par ThemeService via
+   `style.setProperty`, ce qui masquait le problème). Tout le reste retombait
+   silencieusement sur les valeurs de repli ci-dessous. */
+:root {
+  --app-primary: #ff2d37;
+  --app-accent: #0c1e33;
+  --app-surface: #ffffff;
+  --app-background: #e6edf7;
+  --app-text: #0c1e33;
+  --app-text-muted: #4a5c75;
+  --app-border: #adc2da;
+  --app-navbar-text: #ffffff;
+  --app-shadow: none;
+  color-scheme: light;
+}
+
+:root[data-theme-resolved='dark'] {
+  --app-background: #0f172a;
+  --app-text: #f8fafc;
+  --app-text-muted: #cbd5e1;
+  --app-border: rgba(148, 163, 184, 0.24);
+  --app-navbar-text: #f8fafc;
+  --app-shadow: none;
+  color-scheme: dark;
+}
+
 html,
 body {
   height: 100%;

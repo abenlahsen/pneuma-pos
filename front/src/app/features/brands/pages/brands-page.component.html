@@ -41,13 +41,13 @@
           <tr>
             <th class="sortable" (click)="toggleSort('name')">
               Nom
-              <span class="sort-icon">{{ sortBy() === 'name' ? (sortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span>
+              <app-sort-icon [active]="sortBy() === 'name'" [dir]="sortDirection()" />
             </th>
             <th>Logo</th>
             <th class="text-center">Statut</th>
             <th class="sortable" (click)="toggleSort('created_at')">
               Date de création
-              <span class="sort-icon">{{ sortBy() === 'created_at' ? (sortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span>
+              <app-sort-icon [active]="sortBy() === 'created_at'" [dir]="sortDirection()" />
             </th>
             <th class="text-center">Actions</th>
           </tr>

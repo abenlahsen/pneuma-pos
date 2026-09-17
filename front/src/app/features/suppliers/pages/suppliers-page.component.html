@@ -14,7 +14,7 @@
 
   <div class="card table-card unpaid-summary-card">
     <div class="card-body" style="padding: 1.25rem 1.5rem 0.5rem;">
-      <h2 class="section-title">💰 Impayés fournisseurs — tous les achats</h2>
+      <h2 class="section-title"><app-icon name="banknote" [size]="14" /> Impayés fournisseurs — tous les achats</h2>
     </div>
     <div class="table-responsive">
       <table class="table">
@@ -77,8 +77,8 @@
           />
         </div>
         <div class="filter-actions">
-          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher">🔍</button>
-          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser">✕</button>
+          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher"><app-icon name="search" [size]="14" /></button>
+          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser"><app-icon name="close" [size]="14" /></button>
         </div>
       </div>
     </div>
@@ -92,19 +92,19 @@
             <th class="text-center">Actions</th>
             <th class="sortable" (click)="toggleSort('name')">
               Nom du Fournisseur
-              <span class="sort-icon">{{ sortBy() === 'name' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+              <app-sort-icon [active]="sortBy() === 'name'" [dir]="sortDirection()" />
             </th>
             <th class="sortable" (click)="toggleSort('contact_person')">
               Contact
-              <span class="sort-icon">{{ sortBy() === 'contact_person' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+              <app-sort-icon [active]="sortBy() === 'contact_person'" [dir]="sortDirection()" />
             </th>
             <th class="sortable" (click)="toggleSort('phone')">
               Téléphone
-              <span class="sort-icon">{{ sortBy() === 'phone' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+              <app-sort-icon [active]="sortBy() === 'phone'" [dir]="sortDirection()" />
             </th>
             <th class="sortable" (click)="toggleSort('email')">
               Email
-              <span class="sort-icon">{{ sortBy() === 'email' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+              <app-sort-icon [active]="sortBy() === 'email'" [dir]="sortDirection()" />
             </th>
             <th>Adresse</th>
           </tr>
@@ -130,7 +130,7 @@
                 (click)="viewSupplier(supplier)"
                 title="Voir la fiche"
               >
-                👁️
+                <app-icon name="view" [size]="14" />
               </button>
               <button
                 class="btn-icon btn-sm text-primary"
@@ -138,7 +138,7 @@
                 title="Modifier"
                 *ngIf="authService.hasPermission('edit suppliers')"
               >
-                ✏️
+                <app-icon name="edit" [size]="14" />
               </button>
               <button
                 class="btn-icon btn-sm text-danger"
@@ -146,7 +146,7 @@
                 title="Supprimer"
                 *ngIf="authService.hasPermission('delete suppliers')"
               >
-                🗑️
+                <app-icon name="trash" [size]="14" />
               </button>
             </td>
             <td>

@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, computed, signal, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../../shared/icon/icon.component';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Account } from '../../../accounts/models/account.model';
 import { Transaction, TransactionFilters, TransactionPayload } from '../../models/transaction.model';
@@ -8,7 +9,7 @@ import { TransactionCategory, TransactionCategoryType } from '../../../transacti
 @Component({
   selector: 'app-transaction-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, IconComponent],
   templateUrl: './transaction-form.component.html',
   styleUrl: './transaction-form.component.scss',
 })

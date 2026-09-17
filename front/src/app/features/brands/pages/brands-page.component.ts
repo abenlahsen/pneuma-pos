@@ -6,11 +6,12 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Brand, BrandPayload } from '../models/brand.model';
 import { BrandFormComponent } from '../components/brand-form/brand-form.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
+import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 
 @Component({
   selector: 'app-brands-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, BrandFormComponent, AutoRefreshControlComponent],
+  imports: [CommonModule, FormsModule, BrandFormComponent, AutoRefreshControlComponent, SortIconComponent],
   templateUrl: './brands-page.component.html',
   styleUrls: ['./brands-page.component.scss'],
 })

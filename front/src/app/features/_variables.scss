@@ -1,18 +1,41 @@
-$primary: #ff2d37;
-$primary-dark: #cc0a13;
-$income-color: #48bb78;
-$expense-color: #f56565;
-$warning-color: #ed8936;
-$warning-dark: #c05621;
-$text-dark: #2d3748;
-$text-muted: #718096;
-$text-light: #a0aec0;
-$bg-body: #f7fafc;
-$bg-card: #ffffff;
-$border-color: #e2e8f0;
-$border-subtle: #edf2f7;
-$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-$radius: 12px;
-$radius-sm: 8px;
-$radius-lg: 16px;
+// ── Marque ────────────────────────────────────────────────────────────────
+$primary:          #ff2d37;  // action principale, une seule par écran
+$primary-dark:     #c2181f;  // argent dû, retard, texte d'alerte  (était #cc0a13)
+
+// ── Encre ─────────────────────────────────────────────────────────────────
+$text-dark:        #0c1e33;  // texte principal, filets forts      (était #2d3748)
+$text-secondary:   #41546e;  // texte secondaire
+$text-muted:       #4a5c75;  // libellés, sous-lignes (4,5:1)      (était #718096)
+$text-light:       #4a5c75;  // aligné sur $text-muted : #a0aec0 était sous 4,5:1
+
+// ── Surfaces ──────────────────────────────────────────────────────────────
+$bg-body:          #e6edf7;  // fond d'application                 (était #f7fafc)
+$bg-card:          #ffffff;  // surface de contenu
+$bg-subtle:        #f4f8fd;  // barre haute, en-têtes de colonne, volet latéral
+$rail-bg:          #081627;  // réservé à l'étape 3 (rail de navigation)
+
+// ── Filets ────────────────────────────────────────────────────────────────
+$border-color:     #adc2da;  // bords de champ et de bouton        (était #e2e8f0)
+$border-strong:    #cfdcec;  // séparation de blocs
+$border-subtle:    #e7eef8;  // filets de ligne, fonds de jauge    (était #edf2f7)
+
+// ── Sens (une couleur = un sens) ──────────────────────────────────────────
+$income-color:     #15616d;  // encaissé, payé, entrée d'argent    (était #48bb78)
+$expense-color:    #c2181f;  // argent dû, sortie                  (était #f56565)
+$invoice-color:    #2f4fb8;  // à facturer (Service Auto)
+$warning-color:    #8a5a00;  // seuil, attente, risque légal       (était #ed8936)
+$warning-dark:     #8a5a00;  // aligné sur $warning-color          (était #c05621)
+$warning-border:   #d4a017;  // bord d'alerte, jauge sous seuil
+$alert-ink:        #8f1218;  // texte d'alerte sur fond rosé
+
+// ── Fonds teintés ─────────────────────────────────────────────────────────
+$overdue-bg:       #fdeff1;  // ligne en retard
+$warning-bg:       #fdf6e6;  // avertissement
+$invoice-bg:       #e6ebfd;  // colonne « à facturer »
+
+// ── Géométrie (refonte 2b : rayon 0, aucune ombre) ────────────────────────
+$radius:           0;
+$radius-sm:        0;
+$radius-lg:        0;
+$shadow-sm:        none;
+$shadow-md:        none;

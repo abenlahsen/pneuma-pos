@@ -1,5 +1,6 @@
 import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, SimpleChanges, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { Purchase } from '../../../core/models/purchase.model';
 import { Product } from '../../../core/models/product.model';
 import { ProductDetailComponent } from '../../products/product-detail/product-detail.component';
@@ -15,7 +16,7 @@ import { isTypingTarget } from '../../../core/utils/detail-navigator';
 @Component({
   selector: 'app-purchase-detail',
   standalone: true,
-  imports: [CommonModule, ProductDetailComponent, DocumentPrintComponent],
+  imports: [CommonModule, ProductDetailComponent, DocumentPrintComponent, IconComponent],
   templateUrl: './purchase-detail.component.html',
   styleUrls: ['../../sales/sale-detail/sale-detail.component.scss', './purchase-detail.component.scss']
 })

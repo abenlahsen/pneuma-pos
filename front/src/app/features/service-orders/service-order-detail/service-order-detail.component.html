@@ -3,8 +3,8 @@
     <div class="modal-header">
       <h2>Détail de l'intervention</h2>
       <div>
-        <button class="btn btn-primary btn-sm mr-2" (click)="openPrint()">🖨️ Imprimer</button>
-        <button class="btn-close" (click)="close.emit()">✕</button>
+        <button class="btn btn-primary btn-sm mr-2" (click)="openPrint()"><app-icon name="print" [size]="14" /> Imprimer</button>
+        <button class="btn-close" (click)="close.emit()"><app-icon name="close" [size]="14" /></button>
       </div>
     </div>
 
@@ -55,8 +55,8 @@
             <tbody>
               <tr *ngFor="let item of serviceOrder.items">
                 <td>
-                  <span *ngIf="item.item_type !== 'part'" class="badge badge-type">🔧 Prestation</span>
-                  <span *ngIf="item.item_type === 'part'" class="badge badge-part-inline">🔩 Pièce</span>
+                  <span *ngIf="item.item_type !== 'part'" class="badge badge-type"><app-icon name="wrench" [size]="14" /> Prestation</span>
+                  <span *ngIf="item.item_type === 'part'" class="badge badge-part-inline"><app-icon name="wrench" [size]="14" /> Pièce</span>
                 </td>
                 <td class="description-cell">
                   <ng-container *ngIf="item.item_type !== 'part'">
@@ -150,7 +150,7 @@
 
     <div class="modal-footer">
       <button class="btn btn-primary mr-2" (click)="openPrint()">Imprimer</button>
-      <button *ngIf="canEdit" class="btn btn-secondary mr-2" (click)="edit.emit()">✏️ Modifier</button>
+      <button *ngIf="canEdit" class="btn btn-secondary mr-2" (click)="edit.emit()"><app-icon name="edit" [size]="14" /> Modifier</button>
       <button class="btn btn-secondary" (click)="close.emit()">Fermer</button>
     </div>
   </div>

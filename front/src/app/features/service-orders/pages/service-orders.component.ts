@@ -1,5 +1,6 @@
 import { Component, OnInit, signal, computed, inject, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -19,8 +20,7 @@ import { AuthService } from '../../../core/services/auth.service';
     FormsModule,
     ServiceOrderFormComponent,
     ServiceOrderDetailComponent,
-    ServicePaymentPanelComponent,
-  ],
+    ServicePaymentPanelComponent, IconComponent],
   templateUrl: './service-orders.component.html',
   styleUrls: ['./service-orders.component.scss'],
 })

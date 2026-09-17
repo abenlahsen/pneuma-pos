@@ -1,25 +1,10 @@
-:root {
-  --app-primary: #ff2d37;
-  --app-accent: #1e293b;
-  --app-surface: #ffffff;
-  --app-background: #f8fafc;
-  --app-text: #0f172a;
-  --app-text-muted: #475569;
-  --app-border: #e2e8f0;
-  --app-navbar-text: #ffffff;
-  --app-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
-  color-scheme: light;
-}
-
-:root[data-theme-resolved='dark'] {
-  --app-background: #0f172a;
-  --app-text: #f8fafc;
-  --app-text-muted: #cbd5e1;
-  --app-border: rgba(148, 163, 184, 0.24);
-  --app-navbar-text: #f8fafc;
-  --app-shadow: 0 16px 40px rgba(2, 6, 23, 0.45);
-  color-scheme: dark;
-}
+// Les jetons de couleur --app-* vivent dans styles.scss (feuille globale),
+// pas ici : un `:root { … }` écrit dans ce composant est réécrit par
+// l'encapsulation de vues Angular en `:root[_ngcontent-xxx]`, un sélecteur
+// qui ne correspond jamais à <html> — ce bloc était donc mort depuis
+// l'origine. Les sélecteurs `:root[data-…] .main-content…` plus bas
+// fonctionnent, eux, car l'attribut de scope se pose sur le dernier
+// sélecteur simple (`.main-content…`), pas sur l'ancêtre `:root[data-…]`.
 
 :host {
   display: block;

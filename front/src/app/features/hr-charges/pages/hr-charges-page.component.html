@@ -90,7 +90,7 @@
                 title="Modifier"
                 *ngIf="authService.hasPermission('edit hr-charges')"
                 (click)="openEdit(charge)"
-              >✏️</button>
+              ><app-icon name="edit" [size]="14" /></button>
               <button
                 type="button"
                 class="btn-icon primary"
@@ -104,7 +104,7 @@
                 title="Supprimer"
                 *ngIf="authService.hasPermission('delete hr-charges')"
                 (click)="deleteCharge(charge)"
-              >🗑️</button>
+              ><app-icon name="trash" [size]="14" /></button>
             </td>
           </tr>
         </tbody>

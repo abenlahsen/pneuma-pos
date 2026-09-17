@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { Sale } from '../../../../core/models/sale.model';
 import { Carrier } from '../../../carriers/models/carrier.model';
@@ -15,7 +16,7 @@ import {
 @Component({
   selector: 'app-shipment-change-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, IconComponent],
   templateUrl: './shipment-change-form.component.html',
   styleUrl: './shipment-change-form.component.scss',
 })

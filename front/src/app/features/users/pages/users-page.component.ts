@@ -1,5 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { UserService } from '../data-access/user.service';
@@ -11,7 +12,7 @@ import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-contro
 @Component({
   selector: 'app-users-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AutoRefreshControlComponent],
+  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent],
   templateUrl: './users-page.component.html',
   styleUrls: ['./users-page.component.scss'],
 })

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"><style>body{margin:0;background:#dfe7f2;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}a{color:#c2181f}a:hover{color:#8f1218}code{font:500 11.5px ui-monospace,Menlo,monospace;background:#f4f8fd;border:1px solid #cfdcec;padding:1px 5px}</style></helmet>
+
+<section style="padding:36px 40px 52px;display:flex;flex-direction:column;gap:22px;max-width:1340px">
+
+<div style="display:flex;align-items:baseline;gap:10px">
+<span style="font:700 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#0c1e33;color:#fff;border-radius:4px;letter-spacing:.06em">13</span>
+<span style="font:700 13px/1.2 'Inter',sans-serif;color:#0c1e33">SYSTÈME — les décisions des écrans 2a à 12b, prêtes à implémenter</span>
+</div>
+
+<p style="margin:0;max-width:900px;font:400 13px/1.65 'Inter',sans-serif;color:#41546e">Ce qui suit n'est pas une charte nouvelle : c'est l'inventaire de ce que les onze écrans utilisent déjà, écrit une fois pour qu'il soit appliqué partout de la même façon. Les valeurs remplacent celles de <code>_variables.scss</code> et <code>_page-layout.scss</code> ; le reste du code (composants Angular, structure des pages) ne change pas.</p>
+
+<div style="display:flex;flex-direction:column;gap:8px">
+<span style="font:700 10.5px 'Inter',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#4a5c75">1 · Couleurs</span>
+<div style="background:#fff;border:1px solid #adc2da">
+  <div style="display:grid;grid-template-columns:repeat(6,1fr)">
+    <span style="padding:0;border-right:1px solid #cfdcec"><span style="display:block;height:64px;background:#081627"></span><span style="display:block;padding:9px 12px;font:600 10.5px ui-monospace,Menlo,monospace;color:#0c1e33">#081627</span><span style="display:block;padding:0 12px 11px;font-size:11px;line-height:1.5;color:#4a5c75">Rail de navigation</span></span>
+    <span style="padding:0;border-right:1px solid #cfdcec"><span style="display:block;height:64px;background:#0c1e33"></span><span style="display:block;padding:9px 12px;font:600 10.5px ui-monospace,Menlo,monospace;color:#0c1e33">#0c1e33</span><span style="display:block;padding:0 12px 11px;font-size:11px;line-height:1.5;color:#4a5c75">Encre, filets forts, boutons neutres</span></span>
+    <span style="padding:0;border-right:1px solid #cfdcec"><span style="display:block;height:64px;background:#41546e"></span><span style="display:block;padding:9px 12px;font:600 10.5px ui-monospace,Menlo,monospace;color:#0c1e33">#41546e</span><span style="display:block;padding:0 12px 11px;font-size:11px;line-height:1.5;color:#4a5c75">Texte secondaire</span></span>
+    <span style="padding:0;border-right:1px solid #cfdcec"><span style="display:block;height:64px;background:#4a5c75"></span><span style="display:block;padding:9px 12px;font:600 10.5px ui-monospace,Menlo,monospace;color:#0c1e33">#4a5c75</span><span style="display:block;padding:0 12px 11px;font-size:11px;line-height:1.5;color:#4a5c75">Libellés, unités, gris minimal (4,5:1)</span></span>
+    <span style="padding:0;border-right:1px solid #cfdcec"><span style="display:block;height:64px;background:#adc2da"></span><span style="display:block;padding:9px 12px;font:600 10.5px ui-monospace,Menlo,monospace;color:#0c1e33">#adc2da</span><span style="display:block;padding:0 12px 11px;font-size:11px;line-height:1.5;color:#4a5c75">Bords de champ et de bouton</span></span>
+    <span style="padding:0"><span style="display:block;height:64px;background:#cfdcec"></span><span style="display:block;padding:9px 12px;font:600 10.5px ui-monospace,Menlo,monospace;color:#0c1e33">#cfdcec</span><span style="display:block;padding:0 12px 11px;font-size:11px;line-height:1.5;color:#4a5c75">Filets de séparation</span></span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid #cfdcec">
+    <span style="padding:0;border-right:1px solid #cfdcec"><span style="display:block;height:64px;background:#e7eef8"></span><span style="display:block;padding:9px 12px;font:600 10.5px ui-monospace,Menlo,monospace;color:#0c1e33">#e7eef8</span><span style="display:block;padding:0 12px 11px;font-size:11px;line-height:1.5;color:#4a5c75">Filets de ligne, jauges vides</span></span>
+    <span style="padding:0;border-right:1px solid #cfdcec"><span style="display:block;height:64px;background:#e6edf7"></span><span style="display:block;padding:9px 12px;font:600 10.5px ui-monospace,Menlo,monospace;color:#0c1e33">#e6edf7</span><span style="display:block;padding:0 12px 11px;font-size:11px;line-height:1.5;color:#4a5c75">Fond d'application</span></span>
+    <span style="padding:0;border-right:1px solid #cfdcec"><span style="display:block;height:64px;background:#f4f8fd"></span><span style="display:block;padding:9px 12px;font:600 10.5px ui-monospace,Menlo,monospace;color:#0c1e33">#f4f8fd</span><span style="display:block;padding:0 12px 11px;font-size:11px;line-height:1.5;color:#4a5c75">Barre haute, en-têtes, volet latéral</span></span>
+    <span style="padding:0;border-right:1px solid #cfdcec"><span style="display:block;height:64px;background:#fff;box-shadow:inset 0 0 0 1px #cfdcec"></span><span style="display:block;padding:9px 12px;font:600 10.5px ui-monospace,Menlo,monospace;color:#0c1e33">#ffffff</span><span style="display:block;padding:0 12px 11px;font-size:11px;line-height:1.5;color:#4a5c75">Surface de contenu</span></span>
+    <span style="padding:0;border-right:1px solid #cfdcec"><span style="display:block;height:64px;background:#ff2d37"></span><span style="display:block;padding:9px 12px;font:600 10.5px ui-monospace,Menlo,monospace;color:#0c1e33">#ff2d37</span><span style="display:block;padding:0 12px 11px;font-size:11px;line-height:1.5;color:#4a5c75">Marque · action principale, une par écran</span></span>
+    <span style="padding:0"><span style="display:block;height:64px;background:#c2181f"></span><span style="display:block;padding:9px 12px;font:600 10.5px ui-monospace,Menlo,monospace;color:#0c1e33">#c2181f</span><span style="display:block;padding:0 12px 11px;font-size:11px;line-height:1.5;color:#4a5c75">Argent dû, retard, texte d'alerte</span></span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid #cfdcec">
+    <span style="padding:0;border-right:1px solid #cfdcec"><span style="display:block;height:64px;background:#15616d"></span><span style="display:block;padding:9px 12px;font:600 10.5px ui-monospace,Menlo,monospace;color:#0c1e33">#15616d</span><span style="display:block;padding:0 12px 11px;font-size:11px;line-height:1.5;color:#4a5c75">Encaissé, payé, entrée d'argent</span></span>
+    <span style="padding:0;border-right:1px solid #cfdcec"><span style="display:block;height:64px;background:#2f4fb8"></span><span style="display:block;padding:9px 12px;font:600 10.5px ui-monospace,Menlo,monospace;color:#0c1e33">#2f4fb8</span><span style="display:block;padding:0 12px 11px;font-size:11px;line-height:1.5;color:#4a5c75">À facturer (Service Auto)</span></span>
+    <span style="padding:0;border-right:1px solid #cfdcec"><span style="display:block;height:64px;background:#8a5a00"></span><span style="display:block;padding:9px 12px;font:600 10.5px ui-monospace,Menlo,monospace;color:#0c1e33">#8a5a00</span><span style="display:block;padding:0 12px 11px;font-size:11px;line-height:1.5;color:#4a5c75">Seuil, attente, risque légal</span></span>
+    <span style="padding:0;border-right:1px solid #cfdcec"><span style="display:block;height:64px;background:#fdeff1"></span><span style="display:block;padding:9px 12px;font:600 10.5px ui-monospace,Menlo,monospace;color:#0c1e33">#fdeff1</span><span style="display:block;padding:0 12px 11px;font-size:11px;line-height:1.5;color:#4a5c75">Fond de ligne en retard</span></span>
+    <span style="padding:0;border-right:1px solid #cfdcec"><span style="display:block;height:64px;background:#fdf6e6"></span><span style="display:block;padding:9px 12px;font:600 10.5px ui-monospace,Menlo,monospace;color:#0c1e33">#fdf6e6</span><span style="display:block;padding:0 12px 11px;font-size:11px;line-height:1.5;color:#4a5c75">Fond d'avertissement</span></span>
+    <span style="padding:0"><span style="display:block;height:64px;background:#e6ebfd"></span><span style="display:block;padding:9px 12px;font:600 10.5px ui-monospace,Menlo,monospace;color:#0c1e33">#e6ebfd</span><span style="display:block;padding:0 12px 11px;font-size:11px;line-height:1.5;color:#4a5c75">Fond de colonne à facturer</span></span>
+  </div>
+  <div style="padding:13px 16px;border-top:1px solid #0c1e33;background:#f4f8fd">
+    <p style="margin:0;font-size:12px;line-height:1.65;color:#41546e"><strong style="font-weight:700;color:#0c1e33">La règle qui compte :</strong> une couleur = un sens. Le rouge ne dit que « argent dû » ou « action principale ». Les sept couleurs de badge actuelles (<code>badge-success</code>, <code>badge-warning</code>, <code>badge-info</code>, <code>badge-primary</code>, <code>badge-secondary</code>, <code>badge-danger</code>, <code>badge-method</code>) se réduisent à quatre sens : dû, encaissé, en attente, neutre. Les états de vente et d'achat s'écrivent en texte, pas en pastille colorée.</p>
+  </div>
+</div>
+</div>
+
+<div style="display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap">
+
+<div style="flex:1;min-width:440px;display:flex;flex-direction:column;gap:8px">
+<span style="font:700 10.5px 'Inter',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#4a5c75">2 · Typographie</span>
+<div style="background:#fff;border:1px solid #adc2da">
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) 128px;align-items:baseline;gap:12px;padding:12px 16px;border-bottom:1px solid #e7eef8">
+    <span style="font-size:30px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums">1 284 300</span>
+    <span style="font-size:11px;color:#4a5c75;text-align:right">30 / 700 / −.03em<br>Chiffre de tête</span>
+  </div>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) 128px;align-items:baseline;gap:12px;padding:12px 16px;border-bottom:1px solid #e7eef8">
+    <span style="font-size:25px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums">86 420</span>
+    <span style="font-size:11px;color:#4a5c75;text-align:right">25 / 700<br>Cadran de bande</span>
+  </div>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) 128px;align-items:baseline;gap:12px;padding:12px 16px;border-bottom:1px solid #e7eef8">
+    <span style="font-size:19px;font-weight:700;letter-spacing:-.02em">Titre d'écran</span>
+    <span style="font-size:11px;color:#4a5c75;text-align:right">19 / 700</span>
+  </div>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) 128px;align-items:baseline;gap:12px;padding:12px 16px;border-bottom:1px solid #e7eef8">
+    <span style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">44821-A-12</span>
+    <span style="font-size:11px;color:#4a5c75;text-align:right">15 / 700 · tabulaire<br>Plaque, identifiant</span>
+  </div>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) 128px;align-items:baseline;gap:12px;padding:12px 16px;border-bottom:1px solid #e7eef8">
+    <span style="font-size:14.5px;font-weight:600">Nom de client ou de référence</span>
+    <span style="font-size:11px;color:#4a5c75;text-align:right">14,5 / 600<br>Ligne principale</span>
+  </div>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) 128px;align-items:baseline;gap:12px;padding:12px 16px;border-bottom:1px solid #e7eef8">
+    <span style="font-size:13px;color:#41546e">Corps de texte et valeurs de tableau</span>
+    <span style="font-size:11px;color:#4a5c75;text-align:right">13 / 400</span>
+  </div>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) 128px;align-items:baseline;gap:12px;padding:12px 16px;border-bottom:1px solid #e7eef8">
+    <span style="font-size:11.5px;color:#4a5c75">Sous-ligne : ville, téléphone, commercial, mode de paiement</span>
+    <span style="font-size:11px;color:#4a5c75;text-align:right">11,5 / 400<br>Plancher de taille</span>
+  </div>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) 128px;align-items:baseline;gap:12px;padding:12px 16px">
+    <span style="font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#4a5c75">En-tête de colonne</span>
+    <span style="font-size:11px;color:#4a5c75;text-align:right">9,5 / 700 / .13em<br>Capitales seulement</span>
+  </div>
+  <div style="padding:12px 16px;border-top:1px solid #0c1e33;background:#f4f8fd">
+    <p style="margin:0;font-size:12px;line-height:1.6;color:#41546e">Inter conservé. <strong style="font-weight:700;color:#0c1e33">Tout montant et toute quantité portent <code>font-variant-numeric: tabular-nums</code></strong> — c'est ce qui rend une colonne de chiffres comparable d'un coup d'œil. Aucun texte sous 11,5 px, sauf les capitales d'en-tête à 9,5 px.</p>
+  </div>
+</div>
+</div>
+
+<div style="flex:1;min-width:420px;display:flex;flex-direction:column;gap:8px">
+<span style="font:700 10.5px 'Inter',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#4a5c75">3 · Contrôles</span>
+<div style="background:#fff;border:1px solid #adc2da">
+  <div style="padding:14px 16px;border-bottom:1px solid #e7eef8;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+    <button type="button" style="height:36px;padding:0 16px;border:1px solid #ff2d37;background:#ff2d37;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Action principale</button>
+    <button type="button" style="height:36px;padding:0 13px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Action de ligne</button>
+    <button type="button" style="height:36px;padding:0 13px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Secondaire</button>
+    <button type="button" style="height:36px;padding:0 13px;border:1px solid #c2181f;background:#c2181f;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Régler</button>
+    <button type="button" style="height:36px;padding:0 13px;border:1px solid #e7eef8;background:#f4f8fd;color:#adc2da;font-family:inherit;font-size:13px;font-weight:600;cursor:not-allowed">Indisponible</button>
+    <span style="width:100%;font-size:11px;color:#4a5c75">Hauteurs : 46 px formulaire · 36 px barre · 32 px filtre · 30 px pagination. Angles droits, jamais de rayon.</span>
+  </div>
+  <div style="padding:14px 16px;border-bottom:1px solid #e7eef8;display:flex;flex-direction:column;gap:9px">
+    <span style="font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#4a5c75">Champs</span>
+    <div style="display:flex;gap:9px;flex-wrap:wrap">
+      <input type="text" value="Champ actif" style="width:180px;height:44px;padding:0 13px;border:1px solid #0c1e33;background:#fff;font-family:inherit;font-size:14.5px;color:#0c1e33">
+      <input type="text" placeholder="Champ au repos" style="width:180px;height:44px;padding:0 13px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:14.5px;color:#0c1e33">
+      <input type="text" value="1 180,00" style="width:110px;height:38px;padding:0 10px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums;color:#0c1e33">
+    </div>
+    <span style="font-size:11px;color:#4a5c75">Le champ actif se marque par un bord encre, pas par une ombre ni un halo.</span>
+  </div>
+  <div style="padding:14px 16px;border-bottom:1px solid #e7eef8;display:flex;flex-direction:column;gap:9px">
+    <span style="font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#4a5c75">Segments et jetons</span>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      <span style="display:flex">
+        <button type="button" style="height:30px;padding:0 11px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer">TOUT 34</button>
+        <button type="button" style="height:30px;padding:0 11px;border:1px solid #cfdcec;border-left:0;background:#fff;color:#c2181f;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer">IMPAYÉS 14</button>
+        <button type="button" style="height:30px;padding:0 11px;border:1px solid #cfdcec;border-left:0;background:#fff;color:#41546e;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer">RÉGLÉS</button>
+      </span>
+      <span style="display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 10px;background:#fff;border:1px solid #0c1e33;font-size:12px;font-weight:600">Septembre 2026 <span style="color:#4a5c75;font-weight:400">✕</span></span>
+      <span style="display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 10px;background:#fdeff1;border:1px solid #c2181f;color:#c2181f;font-size:12px;font-weight:600">Non payé <span style="font-weight:400">✕</span></span>
+    </div>
+    <span style="font-size:11px;color:#4a5c75">Un filtre actif est un jeton retirable, pas un champ de formulaire déplié en permanence.</span>
+  </div>
+  <div style="padding:14px 16px;display:flex;flex-direction:column;gap:9px">
+    <span style="font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#4a5c75">États — texte, pas pastille</span>
+    <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:baseline">
+      <span style="font-size:11.5px;font-weight:700;letter-spacing:.04em;color:#15616d">PAYÉ</span>
+      <span style="font-size:11.5px;font-weight:700;letter-spacing:.04em;color:#8a5a00">PARTIEL</span>
+      <span style="font-size:11.5px;font-weight:700;letter-spacing:.04em;color:#c2181f">NON PAYÉ</span>
+      <span style="padding:1px 5px;border:1px solid #cfdcec;font-size:9.5px;font-weight:700;letter-spacing:.06em;color:#4a5c75">FACTURE</span>
+      <span style="padding:1px 5px;border:1px solid #d4a017;background:#fdf6e6;font-size:9.5px;font-weight:700;letter-spacing:.06em;color:#7a4f00">ATTENDU</span>
+    </div>
+    <span style="font-size:11px;color:#4a5c75">Les qualificatifs neutres (facture, reçu, terminé) sont des étiquettes à bord fin. Seul l'état de paiement prend une couleur.</span>
+  </div>
+</div>
+</div>
+
+</div>
+
+<div style="display:flex;flex-direction:column;gap:8px">
+<span style="font:700 10.5px 'Inter',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#4a5c75">4 · Le motif de ligne</span>
+<div style="background:#fff;border:1px solid #adc2da">
+  <div style="display:grid;grid-template-columns:52px 84px minmax(0,1fr) 118px 98px 112px;align-items:center;gap:12px;padding:7px 18px;border-bottom:1px solid #0c1e33;background:#f4f8fd;font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#4a5c75">
+    <span>N°</span><span>Date</span><span>Objet</span><span style="text-align:right">Montant</span><span>État</span><span style="text-align:right">Actions</span>
+  </div>
+  <div style="display:grid;grid-template-columns:52px 84px minmax(0,1fr) 118px 98px 112px;align-items:center;gap:12px;min-height:58px;padding:0 18px;border-bottom:1px solid #e7eef8">
+    <span style="font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">4251</span>
+    <span style="font-size:12.5px;font-variant-numeric:tabular-nums">17/09/26</span>
+    <span style="min-width:0"><span style="display:flex;align-items:center;gap:7px"><span style="font-size:14px;font-weight:600">Garage Atlas Pneus</span><span style="padding:1px 5px;border:1px solid #cfdcec;font-size:9.5px;font-weight:700;letter-spacing:.06em;color:#4a5c75">FACTURE</span></span><span style="display:block;font-size:11.5px;color:#4a5c75">Casablanca · 0661 24 88 03 · K. Amrani · espèce, chèque</span></span>
+    <span style="text-align:right;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">18 420</span>
+    <span style="font-size:11.5px;font-weight:700;letter-spacing:.04em;color:#15616d">PAYÉ</span>
+    <span style="display:flex;gap:5px;justify-content:flex-end">
+      <button type="button" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button>
+      <button type="button" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M2 7h20v11H2zM2 11h20"/></svg></button>
+      <button type="button" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M4 20h4L20 8l-4-4L4 16z"/></svg></button>
+    </span>
+  </div>
+  <div style="display:grid;grid-template-columns:52px 84px minmax(0,1fr) 118px 98px 112px;align-items:center;gap:12px;min-height:58px;padding:0 18px;border-bottom:1px solid #e7eef8;border-left:3px solid #c2181f;margin-left:-3px">
+    <span style="font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">4250</span>
+    <span style="font-size:12.5px;font-variant-numeric:tabular-nums">17/09/26</span>
+    <span style="min-width:0"><span style="font-size:14px;font-weight:600">Transports Saïss SARL</span><span style="display:block;font-size:11.5px;color:#4a5c75">Meknès · 0535 51 20 77 · S. Bennis · virement</span></span>
+    <span style="text-align:right;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">31 200</span>
+    <span style="font-size:11.5px;font-weight:700;letter-spacing:.04em;color:#c2181f">NON PAYÉ<span style="display:block;font-weight:600;font-size:10.5px;letter-spacing:0">68 j</span></span>
+    <span style="display:flex;gap:5px;justify-content:flex-end">
+      <button type="button" style="height:30px;padding:0 9px;border:1px solid #c2181f;background:#c2181f;color:#fff;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer">Régler</button>
+      <button type="button" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button>
+    </span>
+  </div>
+  <div style="display:grid;grid-template-columns:52px 84px minmax(0,1fr) 118px 98px 112px;align-items:center;gap:12px;min-height:44px;padding:0 18px;border-bottom:1px solid #cfdcec;background:#f4f8fd">
+    <span></span><span></span>
+    <span style="min-width:0;padding-left:14px;border-left:2px solid #cfdcec;font-size:12.5px;color:#41546e">Ligne enfant : lot, retour, paiement affecté</span>
+    <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums;color:#15616d">−6 200</span>
+    <span style="font-size:11.5px;color:#4a5c75">—</span>
+    <span></span>
+  </div>
+  <div style="padding:13px 18px;border-top:1px solid #0c1e33;background:#f4f8fd">
+    <p style="margin:0;font-size:12px;line-height:1.7;color:#41546e"><strong style="font-weight:700;color:#0c1e33">Cinq règles, valables sur les onze écrans.</strong><br>
+    <span style="color:#0c1e33;font-weight:600">a.</span> Une grille CSS, pas un <code>&lt;table&gt;</code> : les colonnes restent alignées et les lignes enfants s'insèrent sans casser la structure.<br>
+    <span style="color:#0c1e33;font-weight:600">b.</span> Hauteur de ligne 58 px (44 px pour une ligne enfant) — cible tactile tenue sur tablette.<br>
+    <span style="color:#0c1e33;font-weight:600">c.</span> Ce qui qualifie sans être triable descend en sous-ligne à 11,5 px. C'est ce qui fait passer 17 colonnes à 9.<br>
+    <span style="color:#0c1e33;font-weight:600">d.</span> Montants et quantités à droite, tabulaires. Dates et textes à gauche.<br>
+    <span style="color:#0c1e33;font-weight:600">e.</span> Un liseré gauche de 3 px marque la ligne qui demande une action. Une seule par ligne, jamais deux couleurs.</p>
+  </div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:8px">
+<span style="font:700 10.5px 'Inter',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#4a5c75">5 · Gabarits d'écran</span>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px">
+
+  <div style="background:#fff;border:1px solid #adc2da;display:flex;flex-direction:column">
+    <div style="padding:12px 15px;border-bottom:1px solid #0c1e33"><span style="font-size:13.5px;font-weight:700">Écran de liste</span><span style="display:block;margin-top:3px;font-size:11px;color:#4a5c75">Ventes, Achats, Stock, Clients</span></div>
+    <div style="padding:14px 15px;display:flex;flex-direction:column;gap:5px">
+      <span style="height:22px;background:#f4f8fd;border:1px solid #cfdcec;display:flex;align-items:center;padding:0 7px;font-size:9px;font-weight:700;letter-spacing:.09em;color:#4a5c75">BARRE HAUTE · RECHERCHE · ACTION</span>
+      <span style="height:34px;background:#fff;border:1px solid #0c1e33;display:grid;grid-template-columns:repeat(5,1fr)"><span style="border-right:1px solid #cfdcec;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:700;color:#4a5c75">4 À 5 CADRANS</span><span style="border-right:1px solid #cfdcec"></span><span style="border-right:1px solid #cfdcec"></span><span style="border-right:1px solid #cfdcec"></span><span style="background:#fdeff1"></span></span>
+      <span style="height:22px;background:#f4f8fd;border:1px solid #cfdcec;display:flex;align-items:center;padding:0 7px;font-size:9px;font-weight:700;letter-spacing:.09em;color:#4a5c75">FILTRES REPLIÉS · JETONS ACTIFS</span>
+      <span style="height:14px;background:#f4f8fd;border:1px solid #0c1e33"></span>
+      <span style="height:20px;border:1px solid #e7eef8"></span><span style="height:20px;border:1px solid #e7eef8"></span><span style="height:20px;border:1px solid #e7eef8;border-left:3px solid #c2181f"></span><span style="height:20px;border:1px solid #e7eef8"></span>
+      <span style="height:20px;background:#f4f8fd;border:1px solid #0c1e33;display:flex;align-items:center;padding:0 7px;font-size:9px;font-weight:700;letter-spacing:.09em;color:#4a5c75">TOTAUX · PAGINATION</span>
+    </div>
+    <p style="margin:0;padding:0 15px 14px;font-size:11.5px;line-height:1.6;color:#41546e">Le pied de liste porte le total de la sélection filtrée — pas seulement le compte d'entrées.</p>
+  </div>
+
+  <div style="background:#fff;border:1px solid #adc2da;display:flex;flex-direction:column">
+    <div style="padding:12px 15px;border-bottom:1px solid #0c1e33"><span style="font-size:13.5px;font-weight:700">Écran de travail</span><span style="display:block;margin-top:3px;font-size:11px;color:#4a5c75">Nouvelle vente, Fiche client, Cash Flow</span></div>
+    <div style="padding:14px 15px;display:flex;flex-direction:column;gap:5px">
+      <span style="height:22px;background:#f4f8fd;border:1px solid #cfdcec;display:flex;align-items:center;padding:0 7px;font-size:9px;font-weight:700;letter-spacing:.09em;color:#4a5c75">BARRE HAUTE</span>
+      <span style="display:grid;grid-template-columns:minmax(0,1fr) 84px;gap:5px">
+        <span style="display:flex;flex-direction:column;gap:5px">
+          <span style="height:30px;border:1px solid #0c1e33;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:700;color:#4a5c75">CONTEXTE / EN-TÊTE</span>
+          <span style="height:20px;border:1px solid #e7eef8"></span><span style="height:20px;border:1px solid #e7eef8"></span><span style="height:20px;border:1px solid #e7eef8"></span><span style="height:20px;border:1px solid #e7eef8"></span>
+        </span>
+        <span style="background:#f4f8fd;border:1px solid #cfdcec;display:flex;align-items:center;justify-content:center;text-align:center;font-size:8.5px;font-weight:700;color:#4a5c75;line-height:1.4">VOLET<br>SECON-<br>DAIRE</span>
+      </span>
+      <span style="height:20px;background:#0c1e33;display:flex;align-items:center;padding:0 7px;font-size:9px;font-weight:700;letter-spacing:.09em;color:#fff">TOTAL · ACTION PRINCIPALE</span>
+    </div>
+    <p style="margin:0;padding:0 15px 14px;font-size:11.5px;line-height:1.6;color:#41546e">Volet de droite fixe entre 300 et 520 px : ce qu'on consulte sans quitter ce qu'on fait.</p>
+  </div>
+
+  <div style="background:#fff;border:1px solid #adc2da;display:flex;flex-direction:column">
+    <div style="padding:12px 15px;border-bottom:1px solid #0c1e33"><span style="font-size:13.5px;font-weight:700">Écran de flux</span><span style="display:block;margin-top:3px;font-size:11px;color:#4a5c75">Accueil, Service Auto</span></div>
+    <div style="padding:14px 15px;display:flex;flex-direction:column;gap:5px">
+      <span style="height:22px;background:#f4f8fd;border:1px solid #cfdcec;display:flex;align-items:center;padding:0 7px;font-size:9px;font-weight:700;letter-spacing:.09em;color:#4a5c75">BARRE HAUTE</span>
+      <span style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px">
+        <span style="display:flex;flex-direction:column;gap:4px"><span style="height:16px;background:#f4f8fd;border:1px solid #0c1e33"></span><span style="height:26px;border:1px solid #e7eef8"></span><span style="height:26px;border:1px solid #e7eef8"></span><span style="height:26px;border:1px solid #e7eef8;border-left:3px solid #d4a017"></span></span>
+        <span style="display:flex;flex-direction:column;gap:4px"><span style="height:16px;background:#e6ebfd;border:1px solid #2f4fb8"></span><span style="height:26px;border:1px solid #e7eef8"></span><span style="height:26px;border:1px solid #e7eef8"></span></span>
+        <span style="display:flex;flex-direction:column;gap:4px"><span style="height:16px;background:#f4f8fd;border:1px solid #0c1e33"></span><span style="height:26px;border:1px solid #e7eef8;border-left:3px solid #c2181f"></span><span style="height:26px;border:1px solid #e7eef8"></span></span>
+      </span>
+    </div>
+    <p style="margin:0;padding:0 15px 14px;font-size:11.5px;line-height:1.6;color:#41546e">Chaque colonne porte son compte et son montant en jeu. Utilisable quand les statuts sont peu nombreux et ordonnés.</p>
+  </div>
+
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:8px">
+<span style="font:700 10.5px 'Inter',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#4a5c75">6 · Où poser tout cela dans le code</span>
+<div style="background:#fff;border:1px solid #adc2da">
+  <div style="display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;padding:12px 16px;border-bottom:1px solid #0c1e33;background:#f4f8fd;font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#4a5c75">
+    <span>Fichier</span><span>Ce qui change</span>
+  </div>
+  <div style="display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;padding:12px 16px;border-bottom:1px solid #e7eef8">
+    <code style="align-self:start">src/app/features/_variables.scss</code>
+    <span style="font-size:12.5px;line-height:1.6;color:#41546e">Les 18 valeurs de la section 1 remplacent <code>$primary</code>, <code>$income-color</code>, <code>$expense-color</code>, <code>$warning-color</code> et les gris. C'est le seul fichier à éditer pour changer la palette.</span>
+  </div>
+  <div style="display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;padding:12px 16px;border-bottom:1px solid #e7eef8">
+    <code style="align-self:start">src/app/features/_page-layout.scss</code>
+    <span style="font-size:12.5px;line-height:1.6;color:#41546e">Le motif de ligne (section 4) remplace le mixin de tableau : grille CSS au lieu de <code>&lt;table&gt;</code>, angles droits, plus d'ombres de carte. Les 25 écrans de liste qui incluent ce mixin suivent sans être touchés un par un.</span>
+  </div>
+  <div style="display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;padding:12px 16px;border-bottom:1px solid #e7eef8">
+    <code style="align-self:start">src/app/app.scss · app.html</code>
+    <span style="font-size:12.5px;line-height:1.6;color:#41546e">Barre haute 60 px et rail 72 px remplacent le menu vertical 280 px. <code>menuLayout</code> et la variante horizontale disparaissent : une seule disposition.</span>
+  </div>
+  <div style="display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;padding:12px 16px;border-bottom:1px solid #e7eef8">
+    <code style="align-self:start">shared/navbar/ → shared/rail/</code>
+    <span style="font-size:12.5px;line-height:1.6;color:#41546e">Neuf destinations, cinq accordéons : le rail garde les neuf mais les icônes remplacent les emoji, et les sous-menus s'ouvrent en survol au lieu de replier la page. Le dossier <code>design_handoff_rail_navigation/</code> contient déjà une base — ses tokens sont à remplacer par ceux de la section 1.</span>
+  </div>
+  <div style="display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;padding:12px 16px;border-bottom:1px solid #e7eef8">
+    <code style="align-self:start">shared/state-badge/</code>
+    <span style="font-size:12.5px;line-height:1.6;color:#41546e">Passe de sept tons à quatre sens (dû, encaissé, en attente, neutre) et de la pastille au texte. Une étiquette à bord fin reste pour les qualificatifs neutres.</span>
+  </div>
+  <div style="display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;padding:12px 16px">
+    <code style="align-self:start">shared/icon/icon.component.ts</code>
+    <span style="font-size:12.5px;line-height:1.6;color:#41546e">Les emoji des libellés de menu, de cadran et de bouton (🏠 🏷️ 🔧 📦 💰 🛞 👁️ ✏️ 🗑️ 💳) passent par ce composant, en Lucide à 1,6 px de trait. C'est le changement le plus visible à coût le plus faible.</span>
+  </div>
+</div>
+</div>
+
+<div style="max-width:900px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e">Ordre d'application suggéré, du moins risqué au plus structurant : <code>_variables.scss</code> et les icônes d'abord (effet immédiat, aucun changement de structure), puis <code>_page-layout.scss</code> qui refait les 25 listes d'un coup, puis le rail, puis les écrans qui changent de forme — Nouvelle vente, Service Auto, Cash Flow.</p>
+<p style="margin:0;font:400 12px/1.5 'Inter',sans-serif;color:#4a5c75">À dire ensuite : « chiffre l'effort par étape » · « la version tablette des trois gabarits » · « les états vides et de chargement » · « le pack pour un développeur ».</p>
+</div>
+
+</section>
+
+</x-dc>
+</body>
+</html>

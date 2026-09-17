@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"><style>body{margin:0;background:#dfe7f2;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}a{color:#c2181f}a:hover{color:#8f1218}</style></helmet>
+
+<section style="padding:36px 40px 44px;display:flex;flex-direction:column;gap:18px">
+
+<div style="display:flex;align-items:baseline;gap:10px">
+<span style="font:700 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#0c1e33;color:#fff;border-radius:4px;letter-spacing:.06em">7</span>
+<span style="font:700 13px/1.2 'Inter',sans-serif;color:#0c1e33">SERVICE AUTO — palette 2b</span>
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e">Les interventions n'ont que trois statuts (<code style="font:500 12px ui-monospace,Menlo,monospace;background:#fff;border:1px solid #cfdcec;padding:1px 5px">EN COURS</code>, <code style="font:500 12px ui-monospace,Menlo,monospace;background:#fff;border:1px solid #cfdcec;padding:1px 5px">TERMINE</code>, <code style="font:500 12px ui-monospace,Menlo,monospace;background:#fff;border:1px solid #cfdcec;padding:1px 5px">ANNULE</code>) mais l'écran les présente comme une liste de onze colonnes triée par date, avec neuf filtres au-dessus. Le chef d'atelier ne cherche pas une intervention par date : il regarde ce qui est sur les ponts, ce qui est fini et attend une facture, ce qui traîne.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Trois colonnes de travail au lieu d'une liste.</strong> Chaque colonne porte son compte et son montant ; une intervention se déplace d'une colonne à l'autre. La colonne « terminé, à facturer » est celle qui coûte de l'argent quand elle s'allonge — elle est chiffrée en tête.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">La plaque et le véhicule mènent la fiche.</strong> Dans l'atelier, c'est l'identifiant utilisé à l'oral. Le client, le kilométrage et le commercial suivent en second rang ; les horodatages de création et de modification sortent de la vue principale.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">La liste reste disponible.</strong> Un basculement rend la vue tableau pour les recherches et les exports — mêmes filtres, repliés comme sur Ventes.</p>
+</div>
+
+<div id="7a" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter',sans-serif;color:#41546e"><a href="#7a" style="font:700 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(12,30,51,.1);color:#0c1e33;border-radius:5px;text-decoration:none">7a</a>Service Auto — vue atelier</div>
+
+<div style="width:1440px;height:880px;display:grid;grid-template-columns:72px minmax(0,1fr);grid-template-rows:60px minmax(0,1fr);background:#e6edf7;color:#0c1e33;border:1px solid #adc2da;overflow:hidden;box-shadow:0 10px 25px rgba(12,30,51,.14)">
+
+  <div style="grid-column:1/-1;display:flex;align-items:center;gap:18px;padding:0 18px;background:#f4f8fd;border-bottom:1px solid #cfdcec">
+    <img src="assets/logo.png" alt="PNEU.MA" style="height:26px;width:auto">
+    <label style="flex:1;max-width:520px;display:flex;align-items:center;gap:10px;height:36px;padding:0 13px;background:#fff;border:1px solid #adc2da">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4a5c75" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+      <span style="font-size:13.5px;color:#4a5c75">Plaque, client, prestation…</span>
+      <span style="margin-left:auto;font:600 10px ui-monospace,Menlo,monospace;color:#4a5c75;border:1px solid #cfdcec;padding:2px 5px">⌘K</span>
+    </label>
+    <span style="margin-left:auto;font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">Jeu. 17 sept. · 11:52</span>
+    <div style="display:flex">
+      <button type="button" style="height:36px;padding:0 12px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer">Atelier</button>
+      <button type="button" style="height:36px;padding:0 12px;border:1px solid #adc2da;border-left:0;background:#fff;color:#41546e;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Liste</button>
+    </div>
+    <button type="button" style="height:36px;padding:0 16px;border:1px solid #ff2d37;background:#ff2d37;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Nouvelle intervention</button>
+    <span style="width:30px;height:30px;background:#ff2d37;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">MT</span>
+  </div>
+
+  <nav style="grid-row:2;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;background:#081627">
+    <a href="#7a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>ACCUEIL</a>
+    <a href="#7a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 3h7l11 11-7 7L3 10V3z"/></svg>VENTES</a>
+    <a href="#7a" style="width:56px;height:54px;background:#ff2d37;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M14.5 3.5a5 5 0 0 0-6.3 6.3L3 15v6h6l5.2-5.2a5 5 0 0 0 6.3-6.3l-3.2 3.2-3-3 3.2-3.2z"/></svg>SERVICE</a>
+    <a href="#7a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg>ACHATS</a>
+    <a href="#7a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 6h18v12H3z"/><circle cx="12" cy="12" r="2.5"/></svg>CAISSE</a>
+    <span style="width:34px;height:1px;background:rgba(230,237,247,.2);margin:7px 0"></span>
+    <a href="#7a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/></svg>STOCK</a>
+    <a href="#7a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><circle cx="12" cy="8" r="3.4"/><path d="M5 20v-1.6c0-2.3 3.1-3.6 7-3.6s7 1.3 7 3.6V20"/></svg>TIERS</a>
+    <a href="#7a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M4 20V9M10 20V4M16 20v-8M22 20H2"/></svg>CHIFFRES</a>
+    <a href="#7a" style="margin-top:auto;width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/></svg>RÉGLAGES</a>
+  </nav>
+
+  <main style="grid-column:2;grid-row:2;overflow:hidden;display:flex;flex-direction:column;background:#fff">
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid #0c1e33">
+      <div style="padding:14px 18px;border-right:1px solid #cfdcec">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#4a5c75">CA du mois</span>
+        <span style="display:block;margin-top:6px;font-size:25px;font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums">155 100</span>
+        <span style="display:block;margin-top:4px;font-size:10.5px;color:#4a5c75;font-variant-numeric:tabular-nums">105 interventions · DH</span>
+      </div>
+      <div style="padding:14px 18px;border-right:1px solid #cfdcec">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#4a5c75">Marge brute</span>
+        <span style="display:block;margin-top:6px;font-size:25px;font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums">50 300</span>
+        <span style="display:block;margin-top:4px;font-size:10.5px;color:#4a5c75;font-variant-numeric:tabular-nums">32,4 % du CA</span>
+      </div>
+      <div style="padding:14px 18px;border-right:1px solid #cfdcec">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#4a5c75">Encaissé</span>
+        <span style="display:block;margin-top:6px;font-size:25px;font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums">146 900</span>
+        <span style="display:block;margin-top:4px;font-size:10.5px;color:#4a5c75;font-variant-numeric:tabular-nums">94,7 % du facturé</span>
+      </div>
+      <div style="padding:14px 18px;background:#fdeff1">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#c2181f">Reste à payer</span>
+        <span style="display:block;margin-top:6px;font-size:25px;font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums;color:#c2181f">8 200</span>
+        <span style="display:block;margin-top:4px;font-size:10.5px;color:#8f1218;font-variant-numeric:tabular-nums">3 interventions · DH</span>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;padding:11px 18px;border-bottom:1px solid #cfdcec;background:#f4f8fd">
+      <span style="display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 10px;background:#fff;border:1px solid #0c1e33;font-size:12px;font-weight:600">Septembre 2026 <span style="color:#4a5c75;font-weight:400">✕</span></span>
+      <button type="button" style="display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 5h18M6 12h12M10 19h4"/></svg>Filtres<span style="padding:0 5px;background:#0c1e33;color:#fff;font-size:10.5px;font-weight:700">1</span></button>
+      <span style="font-size:11.5px;color:#4a5c75">Prestation, client, commercial, mode de paiement, période</span>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        <span style="font-size:11.5px;color:#4a5c75">Mécanicien</span>
+        <div style="display:flex">
+          <button type="button" style="height:30px;padding:0 11px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer">TOUS</button>
+          <button type="button" style="height:30px;padding:0 11px;border:1px solid #cfdcec;border-left:0;background:#fff;color:#41546e;font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer">M. Tazi</button>
+          <button type="button" style="height:30px;padding:0 11px;border:1px solid #cfdcec;border-left:0;background:#fff;color:#41546e;font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer">H. Chraibi</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex:1;min-height:0;overflow:hidden;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))">
+
+      <div style="min-height:0;overflow:hidden;display:flex;flex-direction:column;border-right:1px solid #cfdcec">
+        <div style="padding:11px 16px;border-bottom:1px solid #0c1e33;background:#f4f8fd">
+          <span style="display:flex;align-items:center;gap:8px"><span style="width:7px;height:7px;background:#0c1e33"></span><span style="font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase">Sur les ponts</span><span style="padding:0 6px;border:1px solid #adc2da;background:#fff;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums">4</span></span>
+          <span style="display:block;margin-top:5px;font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">12 400 DH engagés · 2 ponts libres</span>
+        </div>
+
+        <div style="padding:13px 16px;border-bottom:1px solid #e7eef8">
+          <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">44821-A-12</span><span style="font-size:12px;color:#41546e">Dacia Logan</span></span>
+          <span style="display:block;margin-top:3px;font-size:12px;color:#4a5c75">Garage Atlas Pneus · 148 200 km · M. Tazi</span>
+          <span style="display:block;margin-top:8px;font-size:12.5px;color:#0c1e33">Vidange + filtres · plaquettes avant</span>
+          <span style="display:flex;align-items:center;gap:8px;margin-top:9px"><span style="font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">Ouvert depuis 2 h</span><span style="margin-left:auto;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">3 240 DH</span></span>
+          <div style="margin-top:9px;display:flex;gap:6px">
+            <button type="button" style="flex:1;height:32px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Terminer</button>
+            <button type="button" style="height:32px;padding:0 11px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Ouvrir</button>
+          </div>
+        </div>
+
+        <div style="padding:13px 16px;border-bottom:1px solid #e7eef8">
+          <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">62104-B-19</span><span style="font-size:12px;color:#41546e">Peugeot 208</span></span>
+          <span style="display:block;margin-top:3px;font-size:12px;color:#4a5c75">Ahmed Belkacem · 62 800 km · H. Chraibi</span>
+          <span style="display:block;margin-top:8px;font-size:12.5px;color:#0c1e33">Géométrie · équilibrage 4 roues</span>
+          <span style="display:flex;align-items:center;gap:8px;margin-top:9px"><span style="font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">Ouvert depuis 45 min</span><span style="margin-left:auto;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">640 DH</span></span>
+          <div style="margin-top:9px;display:flex;gap:6px">
+            <button type="button" style="flex:1;height:32px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Terminer</button>
+            <button type="button" style="height:32px;padding:0 11px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Ouvrir</button>
+          </div>
+        </div>
+
+        <div style="padding:13px 16px;border-bottom:1px solid #e7eef8;border-left:3px solid #d4a017;margin-left:-3px;background:#fdf6e6">
+          <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">31578-A-07</span><span style="font-size:12px;color:#41546e">Toyota Hilux</span></span>
+          <span style="display:block;margin-top:3px;font-size:12px;color:#7a4f00">Transports Saïss · 214 500 km · M. Tazi</span>
+          <span style="display:block;margin-top:8px;font-size:12.5px;color:#0c1e33">Amortisseurs arrière · pièce en attente</span>
+          <span style="display:flex;align-items:center;gap:8px;margin-top:9px"><span style="font-size:11px;font-weight:600;color:#7a4f00;font-variant-numeric:tabular-nums">Ouvert depuis 3 jours</span><span style="margin-left:auto;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">5 820 DH</span></span>
+          <div style="margin-top:9px;display:flex;gap:6px">
+            <button type="button" style="flex:1;height:32px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Commander la pièce</button>
+            <button type="button" style="height:32px;padding:0 11px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Ouvrir</button>
+          </div>
+        </div>
+
+        <div style="padding:13px 16px">
+          <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">90233-C-12</span><span style="font-size:12px;color:#41546e">Renault Kangoo</span></span>
+          <span style="display:block;margin-top:3px;font-size:12px;color:#4a5c75">Pneus Express Rabat · 96 400 km · H. Chraibi</span>
+          <span style="display:block;margin-top:8px;font-size:12.5px;color:#0c1e33">Montage 4 pneus · valves</span>
+          <span style="display:flex;align-items:center;gap:8px;margin-top:9px"><span style="font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">Ouvert depuis 20 min</span><span style="margin-left:auto;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">2 700 DH</span></span>
+          <div style="margin-top:9px;display:flex;gap:6px">
+            <button type="button" style="flex:1;height:32px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Terminer</button>
+            <button type="button" style="height:32px;padding:0 11px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Ouvrir</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="min-height:0;overflow:hidden;display:flex;flex-direction:column;border-right:1px solid #cfdcec">
+        <div style="padding:11px 16px;border-bottom:1px solid #0c1e33;background:#e6ebfd">
+          <span style="display:flex;align-items:center;gap:8px"><span style="width:7px;height:7px;background:#2f4fb8"></span><span style="font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#2f4fb8">Terminé, à facturer</span><span style="padding:0 6px;border:1px solid #c2cdf5;background:#fff;font-size:11px;font-weight:700;color:#2f4fb8;font-variant-numeric:tabular-nums">5</span></span>
+          <span style="display:block;margin-top:5px;font-size:11.5px;font-weight:600;color:#2f4fb8;font-variant-numeric:tabular-nums">19 700 DH non facturés · le plus ancien 12 j</span>
+        </div>
+
+        <div style="padding:13px 16px;border-bottom:1px solid #e7eef8">
+          <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">44821-A-12</span><span style="font-size:12px;color:#41546e">Dacia Logan</span></span>
+          <span style="display:block;margin-top:3px;font-size:12px;color:#4a5c75">Garage Atlas Pneus · ordre 612 · M. Tazi</span>
+          <span style="display:block;margin-top:8px;font-size:12.5px;color:#0c1e33">4 prestations · 3 pièces</span>
+          <span style="display:flex;align-items:center;gap:8px;margin-top:9px"><span style="font-size:11px;font-weight:600;color:#2f4fb8;font-variant-numeric:tabular-nums">Terminé il y a 12 j</span><span style="margin-left:auto;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">4 850 DH</span></span>
+          <div style="margin-top:9px;display:flex;gap:6px">
+            <button type="button" style="flex:1;height:32px;border:1px solid #2f4fb8;background:#2f4fb8;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Facturer</button>
+            <button type="button" style="height:32px;padding:0 11px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Ouvrir</button>
+          </div>
+        </div>
+
+        <div style="padding:13px 16px;border-bottom:1px solid #e7eef8">
+          <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">10932-B-06</span><span style="font-size:12px;color:#41546e">Renault Master</span></span>
+          <span style="display:block;margin-top:3px;font-size:12px;color:#4a5c75">Garage Atlas Pneus · ordre 618 · H. Chraibi</span>
+          <span style="display:block;margin-top:8px;font-size:12.5px;color:#0c1e33">2 prestations</span>
+          <span style="display:flex;align-items:center;gap:8px;margin-top:9px"><span style="font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">Terminé il y a 2 j</span><span style="margin-left:auto;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">2 300 DH</span></span>
+          <div style="margin-top:9px;display:flex;gap:6px">
+            <button type="button" style="flex:1;height:32px;border:1px solid #2f4fb8;background:#2f4fb8;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Facturer</button>
+            <button type="button" style="height:32px;padding:0 11px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Ouvrir</button>
+          </div>
+        </div>
+
+        <div style="padding:13px 16px;border-bottom:1px solid #e7eef8">
+          <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">55710-D-05</span><span style="font-size:12px;color:#41546e">Ford Ranger</span></span>
+          <span style="display:block;margin-top:3px;font-size:12px;color:#4a5c75">Auto Souss Agadir · ordre 621 · M. Tazi</span>
+          <span style="display:block;margin-top:8px;font-size:12.5px;color:#0c1e33">Freins complets · 6 pièces</span>
+          <span style="display:flex;align-items:center;gap:8px;margin-top:9px"><span style="font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">Terminé hier</span><span style="margin-left:auto;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">7 420 DH</span></span>
+          <div style="margin-top:9px;display:flex;gap:6px">
+            <button type="button" style="flex:1;height:32px;border:1px solid #2f4fb8;background:#2f4fb8;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Facturer</button>
+            <button type="button" style="height:32px;padding:0 11px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Ouvrir</button>
+          </div>
+        </div>
+
+        <div style="padding:11px 16px;border-bottom:1px solid #e7eef8;display:flex;align-items:center;gap:8px">
+          <span style="font-size:12px;color:#41546e">2 autres · 5 130 DH</span>
+          <a href="#7a" style="margin-left:auto;font-size:12px;color:#2f4fb8;text-decoration:none;font-weight:600">Tout facturer →</a>
+        </div>
+      </div>
+
+      <div style="min-height:0;overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:11px 16px;border-bottom:1px solid #0c1e33;background:#f4f8fd">
+          <span style="display:flex;align-items:center;gap:8px"><span style="width:7px;height:7px;background:#15616d"></span><span style="font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#15616d">Facturé</span><span style="padding:0 6px;border:1px solid #adc2da;background:#fff;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums">96</span></span>
+          <span style="display:block;margin-top:5px;font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">146 900 DH encaissés · 8 200 DH dus</span>
+        </div>
+
+        <div style="padding:13px 16px;border-bottom:1px solid #e7eef8;border-left:3px solid #c2181f;margin-left:-3px;background:#fdeff1">
+          <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">78440-C-01</span><span style="font-size:12px;color:#41546e">Ford Transit</span></span>
+          <span style="display:block;margin-top:3px;font-size:12px;color:#8f1218">Garage Atlas Pneus · ordre 604 · facture F-2026-0498</span>
+          <span style="display:block;margin-top:8px;font-size:12.5px;color:#0c1e33">Embrayage complet</span>
+          <span style="display:flex;align-items:center;gap:8px;margin-top:9px"><span style="font-size:11px;font-weight:600;color:#c2181f;font-variant-numeric:tabular-nums">Non payé · 38 j</span><span style="margin-left:auto;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;color:#c2181f">8 200 DH</span></span>
+          <div style="margin-top:9px;display:flex;gap:6px">
+            <button type="button" style="flex:1;height:32px;border:1px solid #c2181f;background:#c2181f;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Encaisser</button>
+            <button type="button" style="height:32px;padding:0 11px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Relancer</button>
+          </div>
+        </div>
+
+        <div style="padding:13px 16px;border-bottom:1px solid #e7eef8">
+          <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">62104-B-19</span><span style="font-size:12px;color:#41546e">Peugeot 208</span></span>
+          <span style="display:block;margin-top:3px;font-size:12px;color:#4a5c75">Ahmed Belkacem · ordre 619 · F-2026-0521</span>
+          <span style="display:block;margin-top:8px;font-size:12.5px;color:#0c1e33">Distribution · pompe à eau</span>
+          <span style="display:flex;align-items:center;gap:8px;margin-top:9px"><span style="font-size:11px;font-weight:600;color:#15616d">Payé · espèce</span><span style="margin-left:auto;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">6 480 DH</span></span>
+        </div>
+
+        <div style="padding:13px 16px;border-bottom:1px solid #e7eef8">
+          <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">21095-A-15</span><span style="font-size:12px;color:#41546e">Dacia Duster</span></span>
+          <span style="display:block;margin-top:3px;font-size:12px;color:#4a5c75">Garage Nour Fès · ordre 617 · F-2026-0519</span>
+          <span style="display:block;margin-top:8px;font-size:12.5px;color:#0c1e33">Révision 60 000 km</span>
+          <span style="display:flex;align-items:center;gap:8px;margin-top:9px"><span style="font-size:11px;font-weight:600;color:#15616d">Payé · virement</span><span style="margin-left:auto;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">2 940 DH</span></span>
+        </div>
+
+        <div style="padding:11px 16px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:12px;color:#41546e">93 autres ce mois</span>
+          <a href="#7a" style="margin-left:auto;font-size:12px;color:#41546e;text-decoration:none;font-weight:600">Voir en liste →</a>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e">Deux états que la liste actuelle ne distingue pas : une intervention terminée mais non facturée (bleu, colonne du milieu — 19 700 DH en attente, le plus ancien depuis 12 jours) et une intervention ouverte bloquée par une pièce manquante (ocre, 3 jours sur un pont). Ce sont les deux situations qui coûtent, et aucune n'est visible dans un tri par date.</p>
+<p style="margin:0;font:400 12px/1.5 'Inter',sans-serif;color:#4a5c75">À dire ensuite : « montre la vue Liste » · « la fiche d'une intervention » · « le statut ANNULE, où va-t-il ? » · « enchaîne sur Achats ou Cash Flow ».</p>
+</div>
+
+</section>
+
+</x-dc>
+</body>
+</html>

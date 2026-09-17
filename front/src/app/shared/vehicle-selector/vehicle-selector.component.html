@@ -27,7 +27,7 @@
         <button type="button" class="btn-clear-vehicle"
                 *ngIf="selectedVehicle() && !required"
                 (click)="clearVehicle()"
-                title="Retirer">✕</button>
+                title="Retirer"><app-icon name="close" [size]="14" /></button>
       </div>
     </ng-container>
 
@@ -41,7 +41,7 @@
 
     <div class="vs-selected-info" *ngIf="selectedVehicle() && !showCreateForm()">
       <span class="vs-tag">
-        🚗 <strong>{{ selectedVehicle()!.plate }}</strong>
+        <app-icon name="car" [size]="14" /> <strong>{{ selectedVehicle()!.plate }}</strong>
         — {{ selectedVehicle()!.brand }} {{ selectedVehicle()!.model_name }}
         ({{ selectedVehicle()!.circulation_month < 10 ? '0' : '' }}{{ selectedVehicle()!.circulation_month }}/{{ selectedVehicle()!.circulation_year }})
       </span>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"><style>body{margin:0;background:#dfe7f2;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}a{color:#c2181f}a:hover{color:#8f1218}</style></helmet>
+
+<section style="padding:36px 40px 44px;display:flex;flex-direction:column;gap:18px">
+
+<div style="display:flex;align-items:baseline;gap:10px">
+<span style="font:700 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#0c1e33;color:#fff;border-radius:4px;letter-spacing:.06em">9</span>
+<span style="font:700 13px/1.2 'Inter',sans-serif;color:#0c1e33">CASH FLOW — palette 2b</span>
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e">L'écran actuel additionne trois cadrans (revenus, dépenses, solde), une table d'échéances et une table de transactions. Les deux tables se lisent séparément, et le solde affiché est celui du passé : rien ne dit si la trésorerie tient les trois prochaines semaines, alors que la donnée existe — 412 000 DH dus aux fournisseurs d'un côté, 268 400 DH d'impayés clients de l'autre.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Le solde projeté passe devant.</strong> Une projection par semaine, alimentée par les échéances connues (achats à régler, impayés attendus, charges récurrentes). C'est la question que pose un gérant en ouvrant cet écran.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Les comptes sont des lignes, pas un filtre.</strong> Caisse, banque et chèques en circulation ont chacun leur solde visible. Aujourd'hui « Compte » est une colonne de tableau, donc le solde par compte n'est jamais lisible.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Un seul registre.</strong> Échéances à venir et transactions passées dans le même fil, séparés par la ligne « aujourd'hui » — avec le solde progressif en colonne, comme sur le relevé client.</p>
+</div>
+
+<div id="9a" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter',sans-serif;color:#41546e"><a href="#9a" style="font:700 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(12,30,51,.1);color:#0c1e33;border-radius:5px;text-decoration:none">9a</a>Cash Flow — projection 6 semaines, registre unique</div>
+
+<div style="width:1440px;height:880px;display:grid;grid-template-columns:72px minmax(0,1fr);grid-template-rows:60px minmax(0,1fr);background:#e6edf7;color:#0c1e33;border:1px solid #adc2da;overflow:hidden;box-shadow:0 10px 25px rgba(12,30,51,.14)">
+
+  <div style="grid-column:1/-1;display:flex;align-items:center;gap:18px;padding:0 18px;background:#f4f8fd;border-bottom:1px solid #cfdcec">
+    <img src="assets/logo.png" alt="PNEU.MA" style="height:26px;width:auto">
+    <span style="font-size:15px;font-weight:700;letter-spacing:-.01em">Cash Flow</span>
+    <span style="font-size:12.5px;color:#4a5c75">Agence Casablanca · exercice 2026</span>
+    <span style="margin-left:auto;font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">Jeu. 17 sept. · 11:52</span>
+    <button type="button" style="height:36px;padding:0 13px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Exporter</button>
+    <button type="button" style="height:36px;padding:0 16px;border:1px solid #ff2d37;background:#ff2d37;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Nouvelle transaction</button>
+    <span style="width:30px;height:30px;background:#ff2d37;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">YB</span>
+  </div>
+
+  <nav style="grid-row:2;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;background:#081627">
+    <a href="#9a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>ACCUEIL</a>
+    <a href="#9a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 3h7l11 11-7 7L3 10V3z"/></svg>VENTES</a>
+    <a href="#9a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M14.5 3.5a5 5 0 0 0-6.3 6.3L3 15v6h6l5.2-5.2a5 5 0 0 0 6.3-6.3l-3.2 3.2-3-3 3.2-3.2z"/></svg>SERVICE</a>
+    <a href="#9a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg>ACHATS</a>
+    <a href="#9a" style="width:56px;height:54px;background:#ff2d37;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 6h18v12H3z"/><circle cx="12" cy="12" r="2.5"/></svg>CAISSE</a>
+    <span style="width:34px;height:1px;background:rgba(230,237,247,.2);margin:7px 0"></span>
+    <a href="#9a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/></svg>STOCK</a>
+    <a href="#9a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><circle cx="12" cy="8" r="3.4"/><path d="M5 20v-1.6c0-2.3 3.1-3.6 7-3.6s7 1.3 7 3.6V20"/></svg>TIERS</a>
+    <a href="#9a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M4 20V9M10 20V4M16 20v-8M22 20H2"/></svg>CHIFFRES</a>
+    <a href="#9a" style="margin-top:auto;width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/></svg>RÉGLAGES</a>
+  </nav>
+
+  <main style="grid-column:2;grid-row:2;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) 340px;background:#fff">
+
+    <div style="overflow:hidden;display:flex;flex-direction:column;border-right:1px solid #cfdcec">
+
+      <div style="padding:15px 20px 14px;border-bottom:1px solid #cfdcec">
+        <div style="display:flex;align-items:flex-end;gap:16px">
+          <span>
+            <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Trésorerie aujourd'hui</span>
+            <span style="display:block;margin-top:4px;font-size:32px;font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums">184 250,00 <span style="font-size:14px;font-weight:600;color:#4a5c75">DH</span></span>
+          </span>
+          <span style="margin-left:auto;text-align:right">
+            <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#8a5a00">Point bas projeté · semaine du 12/10</span>
+            <span style="display:block;margin-top:4px;font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums;color:#8a5a00">21 850,00 <span style="font-size:12px;font-weight:600;color:#7a4f00">DH</span></span>
+          </span>
+        </div>
+
+        <div style="margin-top:15px;display:grid;grid-template-columns:repeat(6,1fr);border:1px solid #cfdcec">
+          <span style="padding:8px 10px;border-right:1px solid #cfdcec;display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#4a5c75">S38 · 21/09</span>
+            <span style="height:44px;display:flex;align-items:flex-end"><span style="display:block;width:100%;height:82%;background:#0c1e33"></span></span>
+            <span style="font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums">142 700</span>
+            <span style="font-size:9.5px;color:#4a5c75;font-variant-numeric:tabular-nums">−41 550</span>
+          </span>
+          <span style="padding:8px 10px;border-right:1px solid #cfdcec;display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#4a5c75">S39 · 28/09</span>
+            <span style="height:44px;display:flex;align-items:flex-end"><span style="display:block;width:100%;height:96%;background:#0c1e33"></span></span>
+            <span style="font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums">166 400</span>
+            <span style="font-size:9.5px;color:#15616d;font-variant-numeric:tabular-nums">+23 700</span>
+          </span>
+          <span style="padding:8px 10px;border-right:1px solid #cfdcec;display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#4a5c75">S40 · 05/10</span>
+            <span style="height:44px;display:flex;align-items:flex-end"><span style="display:block;width:100%;height:48%;background:#0c1e33"></span></span>
+            <span style="font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums">83 200</span>
+            <span style="font-size:9.5px;color:#4a5c75;font-variant-numeric:tabular-nums">−83 200</span>
+          </span>
+          <span style="padding:8px 10px;border-right:1px solid #cfdcec;display:flex;flex-direction:column;gap:6px;background:#fdf6e6">
+            <span style="font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#7a4f00">S41 · 12/10</span>
+            <span style="height:44px;display:flex;align-items:flex-end"><span style="display:block;width:100%;height:13%;background:#d4a017"></span></span>
+            <span style="font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums;color:#7a4f00">21 850</span>
+            <span style="font-size:9.5px;color:#7a4f00;font-variant-numeric:tabular-nums">−61 350</span>
+          </span>
+          <span style="padding:8px 10px;border-right:1px solid #cfdcec;display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#4a5c75">S42 · 19/10</span>
+            <span style="height:44px;display:flex;align-items:flex-end"><span style="display:block;width:100%;height:39%;background:#adc2da"></span></span>
+            <span style="font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums">68 400</span>
+            <span style="font-size:9.5px;color:#15616d;font-variant-numeric:tabular-nums">+46 550</span>
+          </span>
+          <span style="padding:8px 10px;display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#4a5c75">S43 · 26/10</span>
+            <span style="height:44px;display:flex;align-items:flex-end"><span style="display:block;width:100%;height:66%;background:#adc2da"></span></span>
+            <span style="font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums">114 900</span>
+            <span style="font-size:9.5px;color:#15616d;font-variant-numeric:tabular-nums">+46 500</span>
+          </span>
+        </div>
+        <p style="margin:9px 0 0;font-size:11.5px;line-height:1.5;color:#41546e">Projection à partir des échéances connues : achats à régler, impayés clients attendus à leur délai réel, charges récurrentes. <span style="color:#7a4f00;font-weight:600">Le point bas du 12/10 suppose que Michelin (124 800 DH) soit réglé ce mois-ci.</span></p>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;padding:11px 20px;border-bottom:1px solid #cfdcec;background:#f4f8fd">
+        <span style="font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase">Registre</span>
+        <div style="display:flex;margin-left:6px">
+          <button type="button" style="height:30px;padding:0 11px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer">TOUT</button>
+          <button type="button" style="height:30px;padding:0 11px;border:1px solid #cfdcec;border-left:0;background:#fff;color:#41546e;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer">À VENIR 7</button>
+          <button type="button" style="height:30px;padding:0 11px;border:1px solid #cfdcec;border-left:0;background:#fff;color:#15616d;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer">ENTRÉES</button>
+          <button type="button" style="height:30px;padding:0 11px;border:1px solid #cfdcec;border-left:0;background:#fff;color:#c2181f;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer">SORTIES</button>
+        </div>
+        <button type="button" style="display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 11px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 5h18M6 12h12M10 19h4"/></svg>Compte, catégorie, méthode</button>
+        <span style="margin-left:auto;font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">Septembre 2026</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:78px minmax(0,1fr) 104px 116px 116px 120px;align-items:center;gap:12px;padding:7px 20px;border-bottom:1px solid #0c1e33;font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#4a5c75">
+        <span>Date</span><span>Mouvement</span><span>Compte</span><span style="text-align:right">Sortie</span><span style="text-align:right">Entrée</span><span style="text-align:right">Solde</span>
+      </div>
+
+      <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column">
+
+        <div style="display:grid;grid-template-columns:78px minmax(0,1fr) 104px 116px 116px 120px;align-items:center;gap:12px;min-height:50px;padding:0 20px;border-bottom:1px solid #e7eef8">
+          <span style="font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">22/09</span>
+          <span style="min-width:0"><span style="font-size:13.5px;font-weight:600;color:#41546e">Michelin Maroc · achat 981</span> <span style="padding:1px 5px;border:1px solid #cfdcec;font-size:9px;font-weight:700;letter-spacing:.06em;color:#4a5c75">PRÉVU</span><span style="display:block;font-size:11px;color:#8a5a00;font-weight:600">risque légal · 126 j</span></span>
+          <span style="font-size:12px;color:#4a5c75">Banque BMCE</span>
+          <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums;color:#c2181f">124 800,00</span>
+          <span style="text-align:right;font-size:12px;color:#4a5c75">—</span>
+          <span style="text-align:right;font-size:13px;color:#4a5c75;font-variant-numeric:tabular-nums">59 450,00</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:78px minmax(0,1fr) 104px 116px 116px 120px;align-items:center;gap:12px;min-height:50px;padding:0 20px;border-bottom:1px solid #e7eef8">
+          <span style="font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">25/09</span>
+          <span style="min-width:0"><span style="font-size:13.5px;font-weight:600;color:#41546e">Garage Atlas Pneus · vente 4182</span> <span style="padding:1px 5px;border:1px solid #cfdcec;font-size:9px;font-weight:700;letter-spacing:.06em;color:#4a5c75">ATTENDU</span><span style="display:block;font-size:11px;color:#4a5c75">délai réel du client : 54 j</span></span>
+          <span style="font-size:12px;color:#4a5c75">Banque BMCE</span>
+          <span style="text-align:right;font-size:12px;color:#4a5c75">—</span>
+          <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums;color:#15616d">48 600,00</span>
+          <span style="text-align:right;font-size:13px;color:#4a5c75;font-variant-numeric:tabular-nums">108 050,00</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:78px minmax(0,1fr) 104px 116px 116px 120px;align-items:center;gap:12px;min-height:50px;padding:0 20px;border-bottom:1px solid #e7eef8">
+          <span style="font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">30/09</span>
+          <span style="min-width:0"><span style="font-size:13.5px;font-weight:600;color:#41546e">Salaires et charges RH</span> <span style="padding:1px 5px;border:1px solid #cfdcec;font-size:9px;font-weight:700;letter-spacing:.06em;color:#4a5c75">RÉCURRENT</span><span style="display:block;font-size:11px;color:#4a5c75">11 employés</span></span>
+          <span style="font-size:12px;color:#4a5c75">Banque BMCE</span>
+          <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums;color:#c2181f">68 400,00</span>
+          <span style="text-align:right;font-size:12px;color:#4a5c75">—</span>
+          <span style="text-align:right;font-size:13px;color:#4a5c75;font-variant-numeric:tabular-nums">39 650,00</span>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;padding:8px 20px;background:#0c1e33;color:#fff">
+          <span style="font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase">Aujourd'hui · 17/09/2026</span>
+          <span style="margin-left:auto;font-size:12px;color:rgba(230,237,247,.8);font-variant-numeric:tabular-nums">Solde réel</span>
+          <span style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">184 250,00</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:78px minmax(0,1fr) 104px 116px 116px 120px;align-items:center;gap:12px;min-height:50px;padding:0 20px;border-bottom:1px solid #e7eef8">
+          <span style="font-size:12px;font-variant-numeric:tabular-nums">17/09</span>
+          <span style="min-width:0"><span style="font-size:13.5px;font-weight:600">Ventes du jour · espèce</span><span style="display:block;font-size:11px;color:#4a5c75">9 encaissements · K. Amrani, S. Bennis</span></span>
+          <span style="font-size:12px;color:#4a5c75">Caisse</span>
+          <span style="text-align:right;font-size:12px;color:#4a5c75">—</span>
+          <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums;color:#15616d">24 240,00</span>
+          <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">184 250,00</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:78px minmax(0,1fr) 104px 116px 116px 120px;align-items:center;gap:12px;min-height:50px;padding:0 20px;border-bottom:1px solid #e7eef8">
+          <span style="font-size:12px;font-variant-numeric:tabular-nums">16/09</span>
+          <span style="min-width:0"><span style="font-size:13.5px;font-weight:600">Pneus Express Rabat · vente 4248</span><span style="display:block;font-size:11px;color:#4a5c75">virement · réf VIR-90412</span></span>
+          <span style="font-size:12px;color:#4a5c75">Banque BMCE</span>
+          <span style="text-align:right;font-size:12px;color:#4a5c75">—</span>
+          <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums;color:#15616d">54 800,00</span>
+          <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">160 010,00</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:78px minmax(0,1fr) 104px 116px 116px 120px;align-items:center;gap:12px;min-height:50px;padding:0 20px;border-bottom:1px solid #e7eef8">
+          <span style="font-size:12px;font-variant-numeric:tabular-nums">15/09</span>
+          <span style="min-width:0"><span style="font-size:13.5px;font-weight:600">Loyer atelier · septembre</span><span style="display:block;font-size:11px;color:#4a5c75">catégorie Charges fixes</span></span>
+          <span style="font-size:12px;color:#4a5c75">Banque BMCE</span>
+          <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums;color:#c2181f">18 000,00</span>
+          <span style="text-align:right;font-size:12px;color:#4a5c75">—</span>
+          <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">105 210,00</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:78px minmax(0,1fr) 104px 116px 116px 120px;align-items:center;gap:12px;min-height:50px;padding:0 20px;border-bottom:1px solid #e7eef8">
+          <span style="font-size:12px;font-variant-numeric:tabular-nums">12/09</span>
+          <span style="min-width:0"><span style="font-size:13.5px;font-weight:600">Garage Atlas Pneus · acompte</span><span style="display:block;font-size:11px;color:#4a5c75">espèce · affecté à la vente 4182</span></span>
+          <span style="font-size:12px;color:#4a5c75">Caisse</span>
+          <span style="text-align:right;font-size:12px;color:#4a5c75">—</span>
+          <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums;color:#15616d">2 360,00</span>
+          <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">123 210,00</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:78px minmax(0,1fr) 104px 116px 116px 120px;align-items:center;gap:12px;min-height:50px;padding:0 20px">
+          <span style="font-size:12px;font-variant-numeric:tabular-nums">10/09</span>
+          <span style="min-width:0"><span style="font-size:13.5px;font-weight:600">Continental Distribution · achat 1024</span><span style="display:block;font-size:11px;color:#4a5c75">chèque 4471088 · encaissé</span></span>
+          <span style="font-size:12px;color:#4a5c75">Chèques</span>
+          <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums;color:#c2181f">42 600,00</span>
+          <span style="text-align:right;font-size:12px;color:#4a5c75">—</span>
+          <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">120 850,00</span>
+        </div>
+
+        <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center">
+          <span style="font-size:11.5px;color:#4a5c75">318 mouvements antérieurs · septembre 2026</span>
+        </div>
+      </div>
+    </div>
+
+    <aside style="overflow:hidden;display:flex;flex-direction:column;background:#f4f8fd">
+
+      <div style="padding:14px 17px;border-bottom:1px solid #cfdcec">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Comptes</span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;padding:8px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12.5px;color:#41546e">Caisse</span><span style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">38 420,00</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12.5px;color:#41546e">Banque BMCE</span><span style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">145 830,00</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12.5px;color:#41546e">Chèques en circulation</span><span style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;color:#4a5c75">−31 200,00</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0"><span style="font-size:12.5px;font-weight:600">Disponible</span><span style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">153 050,00</span></span>
+      </div>
+
+      <div style="padding:13px 17px;border-bottom:1px solid #cfdcec">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">En jeu</span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;margin-top:9px;padding:6px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12px;color:#41546e">Dû aux fournisseurs</span><span style="font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:#c2181f">412 000</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12px;color:#41546e">Impayés clients</span><span style="font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:#15616d">268 400</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0"><span style="font-size:12px;font-weight:600">Position nette</span><span style="font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:#c2181f">−143 600</span></span>
+        <p style="margin:9px 0 0;font-size:11px;line-height:1.55;color:#4a5c75">Le décalage vient des délais : 54 jours pour encaisser un client, 60 à 90 pour régler un fournisseur.</p>
+      </div>
+
+      <div style="padding:13px 17px;border-bottom:1px solid #cfdcec">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Dépenses du mois par poste</span>
+        <span style="display:flex;align-items:center;gap:8px;margin-top:10px"><span style="font-size:12px;color:#41546e;width:88px">Achats</span><span style="flex:1;height:7px;background:#e7eef8"><span style="display:block;height:100%;width:100%;background:#0c1e33"></span></span><span style="font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;width:52px;text-align:right">490 500</span></span>
+        <span style="display:flex;align-items:center;gap:8px;margin-top:7px"><span style="font-size:12px;color:#41546e;width:88px">Salaires</span><span style="flex:1;height:7px;background:#e7eef8"><span style="display:block;height:100%;width:14%;background:#0c1e33"></span></span><span style="font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;width:52px;text-align:right">68 400</span></span>
+        <span style="display:flex;align-items:center;gap:8px;margin-top:7px"><span style="font-size:12px;color:#41546e;width:88px">Loyer</span><span style="flex:1;height:7px;background:#e7eef8"><span style="display:block;height:100%;width:4%;background:#0c1e33"></span></span><span style="font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;width:52px;text-align:right">18 000</span></span>
+        <span style="display:flex;align-items:center;gap:8px;margin-top:7px"><span style="font-size:12px;color:#41546e;width:88px">Transport</span><span style="flex:1;height:7px;background:#e7eef8"><span style="display:block;height:100%;width:2%;background:#0c1e33"></span></span><span style="font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;width:52px;text-align:right">6 400</span></span>
+        <span style="display:flex;align-items:center;gap:8px;margin-top:7px"><span style="font-size:12px;color:#41546e;width:88px">Autres</span><span style="flex:1;height:7px;background:#e7eef8"><span style="display:block;height:100%;width:1%;background:#0c1e33"></span></span><span style="font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;width:52px;text-align:right">3 600</span></span>
+      </div>
+
+      <div style="padding:13px 17px;flex:1;min-height:0;display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Actions</span>
+        <button type="button" style="height:34px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Saisir une dépense</button>
+        <button type="button" style="height:34px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Transfert entre comptes</button>
+        <button type="button" style="height:34px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Rapprochement de caisse</button>
+      </div>
+    </aside>
+
+  </main>
+</div>
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e">La projection n'invente rien : elle reprend les achats à régler avec leur échéance, les impayés clients au délai réel observé (54 jours pour ce client, pas les 30 jours contractuels) et les charges récurrentes. Les échéances à venir apparaissent au-dessus de la ligne « aujourd'hui », en gris, avec la mention prévu ou attendu.</p>
+<p style="margin:0;font:400 12px/1.5 'Inter',sans-serif;color:#4a5c75">À dire ensuite : « un scénario : et si Michelin est décalé ? » · « le rapprochement de caisse » · « les chèques en circulation, écran à part ? » · « enchaîne sur Reporting ».</p>
+</div>
+
+</section>
+
+</x-dc>
+</body>
+</html>

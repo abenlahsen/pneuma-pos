@@ -73,11 +73,11 @@
             <th class="text-center">Actions</th>
             <th class="sortable" (click)="toggleSort('reference')">
               Référence
-              <span class="sort-icon">{{ sortBy() === 'reference' ? (sortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span>
+              <app-sort-icon [active]="sortBy() === 'reference'" [dir]="sortDirection()" />
             </th>
             <th class="sortable" (click)="toggleSort('type')">
               Type
-              <span class="sort-icon">{{ sortBy() === 'type' ? (sortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span>
+              <app-sort-icon [active]="sortBy() === 'type'" [dir]="sortDirection()" />
             </th>
             <th>Marque</th>
             <th>Profil</th>

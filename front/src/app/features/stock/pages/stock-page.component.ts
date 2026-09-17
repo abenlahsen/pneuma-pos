@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
@@ -6,11 +7,12 @@ import { AuthService } from '../../../core/services/auth.service';
 import { StockService } from '../data-access/stock.service';
 import { Stock, StockFilters, StockMovement, StockSummary } from '../models/stock.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
+import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 
 @Component({
   selector: 'app-stock-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AutoRefreshControlComponent],
+  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, SortIconComponent, IconComponent],
   templateUrl: './stock-page.component.html',
   styleUrl: './stock-page.component.scss',
 })

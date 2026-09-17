@@ -2,7 +2,7 @@
 
   <!-- ── En-tête ── -->
   <div class="page-header">
-    <a class="back-link" [routerLink]="['/clients']">← Retour aux clients</a>
+    <a class="back-link" [routerLink]="['/clients']"><app-icon name="chevron-left" [size]="14" /> Retour aux clients</a>
 
     @if (profile()?.client) {
       <div class="client-hero">
@@ -13,10 +13,10 @@
           <h1>{{ profile()!.client!.name }}</h1>
           <div class="client-meta">
             @if (profile()?.client?.phone) {
-              <span class="meta-item">📞 {{ profile()!.client!.phone }}</span>
+              <span class="meta-item"><app-icon name="phone" [size]="14" /> {{ profile()!.client!.phone }}</span>
             }
             @if (profile()?.client?.city) {
-              <span class="meta-item">📍 {{ profile()!.client!.city }}</span>
+              <span class="meta-item"><app-icon name="map-pin" [size]="14" /> {{ profile()!.client!.city }}</span>
             }
             @if (profile()?.client?.category) {
               <span class="tag">{{ profile()!.client!.category }}</span>
@@ -32,20 +32,20 @@
         <div class="header-actions">
           @if (authService.hasPermission('create sales')) {
             <button type="button" class="btn btn-primary" (click)="openNewSaleForm()">
-              🏷️ Nouvelle vente
+              <app-icon name="tag" [size]="14" /> Nouvelle vente
             </button>
           }
           @if (authService.hasPermission('manage sale-payments')) {
             <button type="button" class="btn btn-primary" (click)="openPaymentModal()">
-              💳 Régler des ventes
+              <app-icon name="credit-card" [size]="14" /> Régler des ventes
             </button>
           }
           <button type="button" class="btn btn-secondary" (click)="openEditModal()">
-            ✏️ Modifier
+            <app-icon name="edit" [size]="14" /> Modifier
           </button>
           @if (authService.hasPermission('delete clients')) {
             <button type="button" class="btn btn-danger" (click)="deleteClient()" [disabled]="deleting()">
-              🗑️ Supprimer
+              <app-icon name="trash" [size]="14" /> Supprimer
             </button>
           }
         </div>
@@ -63,7 +63,7 @@
     <!-- ── KPIs ── -->
     <section class="kpi-grid">
       <article class="kpi-card">
-        <span class="kpi-icon">🏷️</span>
+        <span class="kpi-icon"><app-icon name="tag" [size]="14" /></span>
         <div class="kpi-body">
           <p class="kpi-label">OPÉRATIONS</p>
           <p class="kpi-val">{{ profile()?.sales_count ?? 0 }}</p>
@@ -71,7 +71,7 @@
       </article>
 
       <article class="kpi-card">
-        <span class="kpi-icon">💰</span>
+        <span class="kpi-icon"><app-icon name="banknote" [size]="14" /></span>
         <div class="kpi-body">
           <p class="kpi-label">TOTAL ACHETÉ</p>
           <p class="kpi-val">{{ (profile()?.total_purchased ?? 0) | number:'1.2-2' }} <small>DH</small></p>
@@ -79,7 +79,7 @@
       </article>
 
       <article class="kpi-card" [class.kpi-card--danger]="(profile()?.outstanding_balance ?? 0) > 0">
-        <span class="kpi-icon">⏳</span>
+        <span class="kpi-icon"><app-icon name="clock" [size]="14" /></span>
         <div class="kpi-body">
           <p class="kpi-label">SOLDE IMPAYÉ</p>
           <p class="kpi-val">{{ (profile()?.outstanding_balance ?? 0) | number:'1.2-2' }} <small>DH</small></p>
@@ -87,7 +87,7 @@
       </article>
 
       <article class="kpi-card">
-        <span class="kpi-icon">📅</span>
+        <span class="kpi-icon"><app-icon name="calendar" [size]="14" /></span>
         <div class="kpi-body">
           <p class="kpi-label">DERNIÈRE OPÉRATION</p>
           <p class="kpi-val kpi-val--date">
@@ -192,8 +192,8 @@
                   {{ v.is_active ? 'Actif' : 'Inactif' }}
                 </span>
                 <div class="vehicle-card-actions">
-                  <button type="button" class="btn-icon" (click)="editVehicle(v)" title="Modifier">✏️</button>
-                  <button type="button" class="btn-icon btn-icon-danger" (click)="deleteVehicle(v)" title="Supprimer">🗑️</button>
+                  <button type="button" class="btn-icon" (click)="editVehicle(v)" title="Modifier"><app-icon name="edit" [size]="14" /></button>
+                  <button type="button" class="btn-icon btn-icon-danger" (click)="deleteVehicle(v)" title="Supprimer"><app-icon name="trash" [size]="14" /></button>
                 </div>
               </div>
               <div class="vehicle-card-body">
@@ -218,12 +218,12 @@
         <button type="button" class="tab-btn"
                 [class.active]="activeTab() === 'overview'"
                 (click)="setTab('overview')">
-          🏷️ Historique des opérations
+          <app-icon name="tag" [size]="14" /> Historique des opérations
         </button>
         <button type="button" class="tab-btn"
                 [class.active]="activeTab() === 'statement'"
                 (click)="setTab('statement')">
-          📋 Relevé de compte
+          <app-icon name="package" [size]="14" /> Relevé de compte
         </button>
       </div>
 
@@ -267,10 +267,10 @@
                     <td class="col-right actions-cell">
                       @if (sale.type === 'service_order') {
                         <a class="btn-icon" title="Voir l'ordre de service"
-                           [routerLink]="['/service-orders']" [queryParams]="{ id: sale.id }">🔗</a>
+                           [routerLink]="['/service-orders']" [queryParams]="{ id: sale.id }"><app-icon name="link" [size]="14" /></a>
                       } @else {
                         <a class="btn-icon" title="Voir la vente"
-                           [routerLink]="['/sales']" [queryParams]="{ id: sale.id }">🔗</a>
+                           [routerLink]="['/sales']" [queryParams]="{ id: sale.id }"><app-icon name="link" [size]="14" /></a>
                       }
                     </td>
                   </tr>
@@ -311,7 +311,7 @@
             <div class="subsection">
               <div class="subsection-header" (click)="toggleOpenInvoices()">
                 <h3 class="subsection-title">Factures en cours</h3>
-                <span class="collapse-icon">{{ openInvoicesCollapsed() ? '▶' : '▼' }}</span>
+                <app-icon class="collapse-icon" [name]="openInvoicesCollapsed() ? 'chevron-right' : 'chevron-down'" [size]="12" />
               </div>
               @if (!openInvoicesCollapsed()) {
                 <div class="table-wrapper">
@@ -343,7 +343,7 @@
           <div class="subsection">
             <div class="subsection-header" (click)="toggleEntries()">
               <h3 class="subsection-title">Écritures comptables</h3>
-              <span class="collapse-icon">{{ entriesCollapsed() ? '▶' : '▼' }}</span>
+              <app-icon class="collapse-icon" [name]="entriesCollapsed() ? 'chevron-right' : 'chevron-down'" [size]="12" />
             </div>
             @if (!entriesCollapsed()) {
               @if (!statementEntries().length) {
@@ -382,7 +382,7 @@
           <div class="subsection">
             <div class="subsection-header" (click)="togglePayments()">
               <h3 class="subsection-title">Paiements</h3>
-              <span class="collapse-icon">{{ paymentsCollapsed() ? '▶' : '▼' }}</span>
+              <app-icon class="collapse-icon" [name]="paymentsCollapsed() ? 'chevron-right' : 'chevron-down'" [size]="12" />
             </div>
             @if (!paymentsCollapsed()) {
               @if (!(statement()?.payments?.length ?? 0)) {
@@ -418,7 +418,7 @@
                                 class="btn-icon"
                                 title="Voir le détail du paiement"
                                 (click)="openPaymentView(payment)"
-                              >👁️</button>
+                              ><app-icon name="view" [size]="14" /></button>
                               @if (authService.hasPermission('manage sale-payments')) {
                                 <button
                                   type="button"
@@ -426,7 +426,7 @@
                                   title="Supprimer ce paiement"
                                   [disabled]="deletingPaymentId() === payment.id"
                                   (click)="deleteStatementPayment(payment)"
-                                >🗑️</button>
+                                ><app-icon name="trash" [size]="14" /></button>
                               }
                             }
                           </td>
@@ -449,7 +449,7 @@
     <div class="modal-container" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2>Modifier Client</h2>
-        <button class="btn-icon" type="button" (click)="closeEditModal()" [disabled]="saving()">✕</button>
+        <button class="btn-icon" type="button" (click)="closeEditModal()" [disabled]="saving()"><app-icon name="close" [size]="14" /></button>
       </div>
       <div class="modal-body">
         <app-client-form [client]="profile()?.client ?? null" (save)="saveClient($event)" (cancel)="closeEditModal()"></app-client-form>
@@ -463,7 +463,7 @@
     <div class="modal-container modal-container--wide" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2>Nouvelle vente — {{ profile()?.client?.name }}</h2>
-        <button class="btn-icon" type="button" (click)="closeSaleForm()">✕</button>
+        <button class="btn-icon" type="button" (click)="closeSaleForm()"><app-icon name="close" [size]="14" /></button>
       </div>
       <div class="modal-body">
         <app-sale-form

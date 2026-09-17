@@ -6,7 +6,7 @@
         <span class="badge" [class.badge-tyre]="isTyre" [class.badge-part]="isPart" [class.badge-service]="isService">{{ typeLabel() }}</span>
         <h2>{{ product.profile || product.reference || ('Produit #' + product.id) }}</h2>
       </div>
-      <button class="btn-icon" (click)="close.emit()" title="Fermer">✕</button>
+      <button class="btn-icon" (click)="close.emit()" title="Fermer"><app-icon name="close" [size]="14" /></button>
     </div>
 
     <div class="modal-body">
@@ -155,7 +155,7 @@
       <!-- Stock inventory -->
       <div class="detail-section" *ngIf="!isService">
         <h3 class="section-title">
-          📦 Inventaire
+          <app-icon name="package" [size]="14" /> Inventaire
           <span class="stock-total-badge" *ngIf="!stockLoading()">{{ totalStock }} en stock</span>
         </h3>
 
@@ -195,9 +195,9 @@
       <!-- Stock movements history -->
       <div class="detail-section" *ngIf="!isService && authService.hasPermission('view stock-movements')">
         <h3 class="section-title collapsible" (click)="toggleMovements()">
-          📜 Historique des mouvements
+          <app-icon name="receipt" [size]="14" /> Historique des mouvements
           <span class="mv-count" *ngIf="movements().length > 0">({{ movements().length }})</span>
-          <span class="collapse-icon">{{ showMovements() ? '▾' : '▸' }}</span>
+          <app-icon class="collapse-icon" [name]="showMovements() ? 'chevron-down' : 'chevron-right'" [size]="12" />
         </h3>
 
         <div *ngIf="showMovements()">
@@ -260,7 +260,7 @@
 
     <div class="modal-footer">
       <button class="btn btn-secondary" (click)="close.emit()">Fermer</button>
-      <button class="btn btn-primary" (click)="edit.emit(product)" *ngIf="authService.hasPermission('edit products')">✏️ Modifier</button>
+      <button class="btn btn-primary" (click)="edit.emit(product)" *ngIf="authService.hasPermission('edit products')"><app-icon name="edit" [size]="14" /> Modifier</button>
     </div>
 
   </div>

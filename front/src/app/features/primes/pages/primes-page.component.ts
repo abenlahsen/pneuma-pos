@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { PrimeService } from '../data-access/prime.service';
 import { PrimesResponse } from '../models/prime.model';
 
@@ -11,7 +12,7 @@ const MONTH_NAMES = [
 @Component({
   selector: 'app-primes-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   templateUrl: './primes-page.component.html',
   styleUrls: ['./primes-page.component.scss'],
 })

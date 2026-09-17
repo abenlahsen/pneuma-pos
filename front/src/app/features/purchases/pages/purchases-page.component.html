@@ -16,21 +16,21 @@
 
   <div class="summary-cards" *ngIf="summary()">
     <div class="card summary-card income">
-      <div class="card-icon">📦</div>
+      <div class="card-icon"><app-icon name="package" [size]="20" /></div>
       <div class="card-content">
         <p class="card-label">Total Achats</p>
         <h3 class="card-value">{{ summary()!.total_achats | number:'1.2-2' }} DH</h3>
       </div>
     </div>
     <div class="card summary-card balance">
-      <div class="card-icon">✅</div>
+      <div class="card-icon"><app-icon name="check-circle" [size]="20" /></div>
       <div class="card-content">
         <p class="card-label">Total Réglé</p>
         <h3 class="card-value">{{ summary()!.total_paye | number:'1.2-2' }} DH</h3>
       </div>
     </div>
     <div class="card summary-card expense" [class.negative]="summary()!.reste_a_payer > 0">
-      <div class="card-icon">⏳</div>
+      <div class="card-icon"><app-icon name="clock" [size]="20" /></div>
       <div class="card-content">
         <p class="card-label">Reste à Payer</p>
         <h3 class="card-value">{{ summary()!.reste_a_payer | number:'1.2-2' }} DH</h3>
@@ -38,7 +38,7 @@
     </div>
 
     <div class="card summary-card expense">
-      <div class="card-icon">🔄</div>
+      <div class="card-icon"><app-icon name="refresh" [size]="20" /></div>
       <div class="card-content">
         <p class="card-label">Impayé en cours</p>
         <h3 class="card-value">{{ summary()!.unpaid_en_cours | number:'1.2-2' }} DH</h3>
@@ -46,7 +46,7 @@
     </div>
 
     <div class="card summary-card expense">
-      <div class="card-icon">📥</div>
+      <div class="card-icon"><app-icon name="download" [size]="20" /></div>
       <div class="card-content">
         <p class="card-label">Impayé reçu/terminé</p>
         <h3 class="card-value">{{ summary()!.unpaid_recu_termine | number:'1.2-2' }} DH</h3>
@@ -54,7 +54,7 @@
     </div>
 
     <div class="card summary-card income">
-      <div class="card-icon">🧾</div>
+      <div class="card-icon"><app-icon name="receipt" [size]="20" /></div>
       <div class="card-content">
         <p class="card-label">CA avec facture</p>
         <h3 class="card-value">{{ summary()!.ca_avec_facture | number:'1.2-2' }} DH</h3>
@@ -62,7 +62,7 @@
     </div>
 
     <div class="card summary-card balance">
-      <div class="card-icon">🪙</div>
+      <div class="card-icon"><app-icon name="coins" [size]="20" /></div>
       <div class="card-content">
         <p class="card-label">CA sans facture</p>
         <h3 class="card-value">{{ summary()!.ca_sans_facture | number:'1.2-2' }} DH</h3>
@@ -147,8 +147,8 @@
           <input type="number" class="form-control" min="0" step="0.01" [ngModel]="filterAmountMax()" (ngModelChange)="filterAmountMax.set($event)" (change)="applyFilters()" placeholder="∞">
         </div>
         <div class="filter-actions">
-          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher">🔍</button>
-          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser">✕</button>
+          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher"><app-icon name="search" [size]="14" /></button>
+          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser"><app-icon name="close" [size]="14" /></button>
         </div>
       </div>
     </div>
@@ -161,17 +161,17 @@
           <tr>
             <th class="text-center">Actions</th>
             <th class="text-center col-id">#</th>
-            <th class="sortable" (click)="toggleSort('date')">Date <span class="sort-icon">{{ sortBy() === 'date' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th class="sortable" (click)="toggleSort('date')">Date <app-sort-icon [active]="sortBy() === 'date'" [dir]="sortDirection()" /></th>
             <th class="text-center">Facture</th>
             <th>Fournisseur / Commercial</th>
-            <th class="sortable" (click)="toggleSort('total_quantity')">Qté <span class="sort-icon">{{ sortBy() === 'total_quantity' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th class="sortable" (click)="toggleSort('total_quantity')">Qté <app-sort-icon [active]="sortBy() === 'total_quantity'" [dir]="sortDirection()" /></th>
             <th class="text-right">Total Achat</th>
-            <th class="sortable" (click)="toggleSort('payment_status')">Paiement <span class="sort-icon">{{ sortBy() === 'payment_status' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th class="sortable" (click)="toggleSort('payment_status')">Paiement <app-sort-icon [active]="sortBy() === 'payment_status'" [dir]="sortDirection()" /></th>
             <th>Mode(s) paiement</th>
-            <th class="sortable" (click)="toggleSort('status')">Statut <span class="sort-icon">{{ sortBy() === 'status' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th class="sortable" (click)="toggleSort('status')">Statut <app-sort-icon [active]="sortBy() === 'status'" [dir]="sortDirection()" /></th>
             <th>Créé par</th>
-            <th class="sortable" (click)="toggleSort('created_at')">Créé le <span class="sort-icon">{{ sortBy() === 'created_at' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
-            <th class="sortable" (click)="toggleSort('updated_at')">Modifié le <span class="sort-icon">{{ sortBy() === 'updated_at' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th class="sortable" (click)="toggleSort('created_at')">Créé le <app-sort-icon [active]="sortBy() === 'created_at'" [dir]="sortDirection()" /></th>
+            <th class="sortable" (click)="toggleSort('updated_at')">Modifié le <app-sort-icon [active]="sortBy() === 'updated_at'" [dir]="sortDirection()" /></th>
           </tr>
         </thead>
         <tbody>
@@ -189,11 +189,11 @@
 
           <tr *ngFor="let purchase of purchases()">
             <td class="text-center actions-cell">
-              <button class="btn-icon btn-sm" (click)="openDetail(purchase)" title="Visualiser">👁️</button>
-              <button class="btn-icon btn-sm" (click)="openPayments(purchase)" title="Paiements">💳</button>
-              <button class="btn-icon btn-sm text-primary" (click)="openForm(purchase)" title="Modifier" *ngIf="authService.hasPermission('edit purchases') && !isPurchaseLocked(purchase)">✏️</button>
-              <button class="btn-icon btn-sm" (click)="openReturn(purchase)" title="Retour fournisseur" *ngIf="canReturnPurchase(purchase)">🔄</button>
-              <button class="btn-icon btn-sm text-danger" (click)="deletePurchase(purchase)" title="Supprimer" *ngIf="authService.hasPermission('delete purchases') && !isPurchaseLocked(purchase)">🗑️</button>
+              <button class="btn-icon btn-sm" (click)="openDetail(purchase)" title="Visualiser"><app-icon name="view" [size]="14" /></button>
+              <button class="btn-icon btn-sm" (click)="openPayments(purchase)" title="Paiements"><app-icon name="credit-card" [size]="14" /></button>
+              <button class="btn-icon btn-sm text-primary" (click)="openForm(purchase)" title="Modifier" *ngIf="authService.hasPermission('edit purchases') && !isPurchaseLocked(purchase)"><app-icon name="edit" [size]="14" /></button>
+              <button class="btn-icon btn-sm" (click)="openReturn(purchase)" title="Retour fournisseur" *ngIf="canReturnPurchase(purchase)"><app-icon name="refresh" [size]="14" /></button>
+              <button class="btn-icon btn-sm text-danger" (click)="deletePurchase(purchase)" title="Supprimer" *ngIf="authService.hasPermission('delete purchases') && !isPurchaseLocked(purchase)"><app-icon name="trash" [size]="14" /></button>
             </td>
             <td class="text-center cell-id">{{ purchase.id }}</td>
             <td>
@@ -278,7 +278,7 @@
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>{{ selectedPurchase() ? 'Modifier Achat' : 'Nouvel Achat' }}</h2>
-      <button class="btn-icon" (click)="closeForm()">✕</button>
+      <button class="btn-icon" (click)="closeForm()"><app-icon name="close" [size]="14" /></button>
     </div>
     <div class="modal-body p-0">
       <app-purchase-form [purchase]="selectedPurchase()" (save)="onFormSaved()" (cancel)="closeForm()"></app-purchase-form>

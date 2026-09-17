@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"><style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{margin:0;background:#e2e8f0;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}a{color:#ff2d37}a:hover{color:#cc0a13}</style></helmet>
+
+<section style="padding:36px 40px 48px;display:flex;flex-direction:column;gap:16px">
+
+<div style="display:flex;align-items:baseline;gap:10px">
+<span style="font:700 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#0f172a;color:#fff;border-radius:4px;letter-spacing:.06em">REF</span>
+<span style="font:700 13px/1.2 'Inter',sans-serif;color:#0f172a;letter-spacing:.02em">ÉTAT ACTUEL — recréé depuis le code en production</span>
+</div>
+
+<div style="max-width:880px;display:flex;flex-direction:column;gap:10px">
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#475569">Écran <strong style="font-weight:600;color:#0f172a">Accueil</strong> tel qu'il tourne aujourd'hui. Reconstruit à partir de <code style="font:500 12px ui-monospace,Menlo,monospace;background:#fff;border:1px solid #e8edf3;padding:1px 5px;border-radius:4px">navbar.component.html/.scss</code>, <code style="font:500 12px ui-monospace,Menlo,monospace;background:#fff;border:1px solid #e8edf3;padding:1px 5px;border-radius:4px">app.scss</code>, <code style="font:500 12px ui-monospace,Menlo,monospace;background:#fff;border:1px solid #e8edf3;padding:1px 5px;border-radius:4px">dashboard.component.html/.scss</code> et <code style="font:500 12px ui-monospace,Menlo,monospace;background:#fff;border:1px solid #e8edf3;padding:1px 5px;border-radius:4px">_variables.scss</code>. Données d'exemple, tout le reste (couleurs, tailles, rayons, ombres, emoji, libellés) est repris à l'identique.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#475569">Le rail 64 px + palette <kbd style="font:600 11px ui-monospace,Menlo,monospace;background:#fff;border:1px solid #cbd5e1;border-bottom-width:2px;padding:1px 5px;border-radius:4px">Ctrl K</kbd> trouvé dans <code style="font:500 12px ui-monospace,Menlo,monospace;background:#fff;border:1px solid #e8edf3;padding:1px 5px;border-radius:4px">design_handoff_rail_navigation/</code> n'est <strong style="font-weight:600;color:#0f172a">pas</strong> en production : <code style="font:500 12px ui-monospace,Menlo,monospace;background:#fff;border:1px solid #e8edf3;padding:1px 5px;border-radius:4px">styles.scss</code> n'importe pas <code style="font:500 12px ui-monospace,Menlo,monospace;background:#fff;border:1px solid #e8edf3;padding:1px 5px;border-radius:4px">_tokens.scss</code> et <code style="font:500 12px ui-monospace,Menlo,monospace;background:#fff;border:1px solid #e8edf3;padding:1px 5px;border-radius:4px">app.html</code> monte <code style="font:500 12px ui-monospace,Menlo,monospace;background:#fff;border:1px solid #e8edf3;padding:1px 5px;border-radius:4px">app-navbar</code>. Je repars donc du thème réel : Inter, #ff2d37, menu vertical 280 px sombre.</p>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:9px;margin-top:6px">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter',sans-serif;color:#64748b"><span style="font:700 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(15,23,42,.08);color:#0f172a;border-radius:5px">A1</span>Accueil — rôle Administrateur, menu vertical (défaut)</div>
+
+<div style="width:1440px;display:grid;grid-template-columns:280px minmax(0,1fr);align-items:start;background:#f8fafc;color:#0f172a;border:1px solid #cbd5e1;overflow:hidden;box-shadow:0 10px 25px rgba(15,23,42,.08)">
+
+  <nav style="position:sticky;top:0;height:1180px;display:flex;flex-direction:column;align-items:stretch;gap:16px;padding:16px;background:#1f2937;border-right:1px solid rgba(255,255,255,.08);overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;padding-bottom:8px">
+      <img src="assets/logo.png" alt="PNEU.MA" style="height:32px;width:auto">
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:stretch;gap:5.6px;flex:1;overflow:hidden">
+      <a href="#A1" style="width:100%;text-align:left;color:#fff;background:#ff2d37;text-decoration:none;font-size:13.12px;font-weight:600;padding:6.4px 11.2px;border-radius:8px;white-space:nowrap">🏠 Accueil</a>
+      <a href="#A1" style="width:100%;text-align:left;color:rgba(248,250,252,.88);text-decoration:none;font-size:13.12px;font-weight:500;padding:6.4px 11.2px;border-radius:8px;white-space:nowrap">🏷️ Ventes</a>
+      <a href="#A1" style="width:100%;text-align:left;color:rgba(248,250,252,.88);text-decoration:none;font-size:13.12px;font-weight:500;padding:6.4px 11.2px;border-radius:8px;white-space:nowrap">🔧 Service Auto</a>
+      <a href="#A1" style="width:100%;text-align:left;color:rgba(248,250,252,.88);text-decoration:none;font-size:13.12px;font-weight:500;padding:6.4px 11.2px;border-radius:8px;white-space:nowrap">📦 Achats</a>
+      <a href="#A1" style="width:100%;text-align:left;color:rgba(248,250,252,.88);text-decoration:none;font-size:13.12px;font-weight:500;padding:6.4px 11.2px;border-radius:8px;white-space:nowrap">💰 Cash Flow</a>
+      <div style="width:100%;position:relative">
+        <button type="button" style="width:100%;text-align:left;background:none;border:none;color:rgba(248,250,252,.88);font-family:'Inter',sans-serif;font-size:13.12px;font-weight:500;padding:6.4px 11.2px;border-radius:8px;cursor:pointer;white-space:nowrap">🛞 Stock <span style="display:inline-block">▾</span></button>
+      </div>
+      <div style="width:100%;position:relative">
+        <button type="button" style="width:100%;text-align:left;background:none;border:none;color:rgba(248,250,252,.88);font-family:'Inter',sans-serif;font-size:13.12px;font-weight:500;padding:6.4px 11.2px;border-radius:8px;cursor:pointer;white-space:nowrap">🤝 Tiers <span style="display:inline-block">▾</span></button>
+      </div>
+      <div style="width:100%;position:relative">
+        <button type="button" style="width:100%;text-align:left;background:none;border:none;color:rgba(248,250,252,.88);font-family:'Inter',sans-serif;font-size:13.12px;font-weight:500;padding:6.4px 11.2px;border-radius:8px;cursor:pointer;white-space:nowrap">🏦 Finance <span style="display:inline-block;transform:rotate(180deg)">▾</span></button>
+        <div style="background:rgba(255,255,255,.04);border-radius:12px;min-width:0;padding:8px;margin-top:4px;display:flex;flex-direction:column">
+          <a href="#A1" style="display:block;padding:8px 12px;border-radius:4px;font-size:13.12px;font-weight:500;color:rgba(248,250,252,.88);text-decoration:none">🏦 Comptes</a>
+          <a href="#A1" style="display:block;padding:8px 12px;border-radius:4px;font-size:13.12px;font-weight:500;color:rgba(248,250,252,.88);text-decoration:none">🎯 Primes</a>
+          <a href="#A1" style="display:block;padding:8px 12px;border-radius:4px;font-size:13.12px;font-weight:500;color:rgba(248,250,252,.88);text-decoration:none">🧾 Charges RH</a>
+          <a href="#A1" style="display:block;padding:8px 12px;border-radius:4px;font-size:13.12px;font-weight:500;color:rgba(248,250,252,.88);text-decoration:none">📊 Reporting</a>
+        </div>
+      </div>
+      <div style="width:100%;position:relative">
+        <button type="button" style="width:100%;text-align:left;background:none;border:none;color:rgba(248,250,252,.88);font-family:'Inter',sans-serif;font-size:13.12px;font-weight:500;padding:6.4px 11.2px;border-radius:8px;cursor:pointer;white-space:nowrap">👤 Administration <span style="display:inline-block">▾</span></button>
+      </div>
+      <div style="width:100%;position:relative">
+        <button type="button" style="width:100%;text-align:left;background:none;border:none;color:rgba(248,250,252,.88);font-family:'Inter',sans-serif;font-size:13.12px;font-weight:500;padding:6.4px 11.2px;border-radius:8px;cursor:pointer;white-space:nowrap">⚙️ Paramètres <span style="display:inline-block">▾</span></button>
+      </div>
+    </div>
+    <div style="margin-top:auto;display:flex;flex-direction:column;align-items:stretch;gap:12px;white-space:nowrap;flex-shrink:0">
+      <span style="display:flex;flex-direction:column;align-items:center;line-height:1.2">
+        <span style="color:rgba(248,250,252,.88);font-size:13.6px;font-weight:500">Youssef Benali</span>
+        <span style="color:rgba(248,250,252,.7);font-size:11.2px">Administrator</span>
+      </span>
+      <button type="button" style="width:100%;background:transparent;color:#f8fafc;border:1px solid rgba(255,255,255,.18);padding:4.8px 12px;border-radius:6px;font-family:'Inter',sans-serif;font-size:12.8px;font-weight:500;cursor:pointer">Déconnexion</button>
+    </div>
+  </nav>
+
+  <div style="min-height:1180px;background:#f1f5f9;padding:24px">
+    <div style="max-width:1600px;margin:0 auto;padding:32px 32px 64px;display:flex;flex-direction:column">
+
+      <div style="background:#fff;border:1px solid #e8edf3;border-left:4px solid #ff2d37;border-radius:14px;padding:24px 32px;box-shadow:0 1px 4px rgba(15,23,42,.06),0 4px 16px rgba(15,23,42,.04)">
+        <h2 style="margin:0 0 4.8px;font-size:20.8px;font-weight:700;color:#0f172a;letter-spacing:-.02em">Bienvenue, Youssef Benali !</h2>
+        <p style="margin:0;color:#64748b;font-size:14px">Votre point de vente est prêt à être utilisé.</p>
+      </div>
+
+      <div style="margin-top:32px">
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap">
+          <h3 style="margin:0;font-size:12.48px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.1em;border-left:3px solid #ff2d37;padding-left:12px">Tableau de bord KPI</h3>
+          <span style="display:inline-flex;align-items:center;gap:8px;font-size:12.16px;color:#64748b;font-weight:600">
+            <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1px solid #d0d9e4;border-radius:999px;background:#fff">Auto-refresh · 60 s</span>
+          </span>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin:40px 0 20px;flex-wrap:wrap">
+          <h4 style="margin:0;font-size:10.88px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.14em;flex:1 1 220px;padding-bottom:9.6px;border-bottom:2px solid #e8edf3">📅 Aujourd'hui</h4>
+          <label style="display:inline-flex;align-items:center;gap:8px;justify-content:flex-end">
+            <span style="font-size:10.88px;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;font-weight:700">Date</span>
+            <input type="date" value="2026-09-17" style="min-width:132px;height:33.6px;padding:4.8px 10.4px;border:1px solid #d0d9e4;border-radius:8px;background:#fff;color:#0f172a;font-family:'Inter',sans-serif;font-size:13.12px;font-weight:600;box-shadow:0 1px 2px rgba(15,23,42,.04)">
+          </label>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:16px;margin-bottom:8px">
+          <div style="position:relative;overflow:hidden;background:linear-gradient(160deg,#fff5f5 0%,#fff 50%);border:1px solid #e8edf3;border-top:3px solid #ff2d37;border-radius:14px;padding:22.4px 24px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,23,42,.06),0 4px 12px rgba(15,23,42,.04)">
+            <div style="font-size:20px;margin-bottom:16px;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;background:#fff0f0;border:1px solid #fecaca;border-radius:11px">💰</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.12em">CA Aujourd'hui</span>
+              <span style="font-size:27.2px;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.1">86 420.00 <small style="font-size:13.6px;color:#94a3b8;font-weight:500;margin-left:.1em;letter-spacing:0">DH</small></span>
+            </div>
+            <div style="position:absolute;top:19.2px;right:19.2px;background:#fff0f0;color:#c53030;font-size:10.72px;font-weight:700;padding:3.2px 9.6px;border-radius:999px;border:1px solid #fecaca;white-space:nowrap;letter-spacing:.02em">42 Pneus vendus</div>
+          </div>
+          <div style="position:relative;overflow:hidden;background:#fff;border:1px solid #e8edf3;border-radius:14px;padding:22.4px 24px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,23,42,.06),0 4px 12px rgba(15,23,42,.04)">
+            <div style="font-size:20px;margin-bottom:16px;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;background:#f8fafc;border:1px solid #e8edf3;border-radius:11px">🛒</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.12em">Achats</span>
+              <span style="font-size:27.2px;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.1">54 100.00 <small style="font-size:13.6px;color:#94a3b8;font-weight:500;margin-left:.1em;letter-spacing:0">DH</small></span>
+            </div>
+            <div style="position:absolute;top:19.2px;right:19.2px;background:#f8fafc;color:#64748b;font-size:10.72px;font-weight:700;padding:3.2px 9.6px;border-radius:999px;border:1px solid #e8edf3;white-space:nowrap;letter-spacing:.02em">36 Pneus achetés</div>
+          </div>
+          <div style="position:relative;overflow:hidden;background:#fff;border:1px solid #e8edf3;border-radius:14px;padding:22.4px 24px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,23,42,.06),0 4px 12px rgba(15,23,42,.04)">
+            <div style="font-size:20px;margin-bottom:16px;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;background:#fffbeb;border:1px solid #fde68a;border-radius:11px">💸</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.12em">Dépenses</span>
+              <span style="font-size:27.2px;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.1">3 280.00 <small style="font-size:13.6px;color:#94a3b8;font-weight:500;margin-left:.1em;letter-spacing:0">DH</small></span>
+            </div>
+          </div>
+          <div style="position:relative;overflow:hidden;background:#fff;border:1px solid #e8edf3;border-radius:14px;padding:22.4px 24px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,23,42,.06),0 4px 12px rgba(15,23,42,.04)">
+            <div style="font-size:20px;margin-bottom:16px;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;background:#f8fafc;border:1px solid #e8edf3;border-radius:11px">🪙</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.12em">Autres revenus</span>
+              <span style="font-size:27.2px;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.1">450.00 <small style="font-size:13.6px;color:#94a3b8;font-weight:500;margin-left:.1em;letter-spacing:0">DH</small></span>
+            </div>
+          </div>
+          <div style="position:relative;overflow:hidden;background:#fff;border:1px solid #e8edf3;border-radius:14px;padding:22.4px 24px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,23,42,.06),0 4px 12px rgba(15,23,42,.04)">
+            <div style="font-size:20px;margin-bottom:16px;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;background:#f8fafc;border:1px solid #e8edf3;border-radius:11px">📈</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.12em">Marge Brute</span>
+              <span style="font-size:27.2px;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.1">17 660.00 <small style="font-size:13.6px;color:#94a3b8;font-weight:500;margin-left:.1em;letter-spacing:0">DH</small></span>
+            </div>
+          </div>
+          <div style="position:relative;overflow:hidden;background:#fff;border:1px solid #e8edf3;border-radius:14px;padding:22.4px 24px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,23,42,.06),0 4px 12px rgba(15,23,42,.04)">
+            <div style="font-size:20px;margin-bottom:16px;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;background:#f8fafc;border:1px solid #e8edf3;border-radius:11px">📉</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.12em">Marge Nette</span>
+              <span style="font-size:27.2px;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.1">14 380.00 <small style="font-size:13.6px;color:#94a3b8;font-weight:500;margin-left:.1em;letter-spacing:0">DH</small></span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin:40px 0 20px;flex-wrap:wrap">
+          <h4 style="margin:0;font-size:10.88px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.14em;flex:1 1 220px;padding-bottom:9.6px;border-bottom:2px solid #e8edf3">📊 Ce mois</h4>
+          <label style="display:inline-flex;align-items:center;gap:8px;justify-content:flex-end">
+            <span style="font-size:10.88px;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;font-weight:700">Mois</span>
+            <input type="month" value="2026-09" style="min-width:132px;height:33.6px;padding:4.8px 10.4px;border:1px solid #d0d9e4;border-radius:8px;background:#fff;color:#0f172a;font-family:'Inter',sans-serif;font-size:13.12px;font-weight:600;box-shadow:0 1px 2px rgba(15,23,42,.04)">
+          </label>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:16px;margin-bottom:8px">
+          <div style="position:relative;overflow:hidden;background:linear-gradient(160deg,#eff6ff 0%,#fff 50%);border:1px solid #e8edf3;border-top:3px solid #3b82f6;border-radius:14px;padding:22.4px 24px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,23,42,.06),0 4px 12px rgba(15,23,42,.04)">
+            <div style="font-size:20px;margin-bottom:16px;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;background:#dbeafe;border:1px solid #bfdbfe;border-radius:11px">💰</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.12em">CA Mois</span>
+              <span style="font-size:27.2px;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.1">1 284 300.00 <small style="font-size:13.6px;color:#94a3b8;font-weight:500;margin-left:.1em;letter-spacing:0">DH</small></span>
+              <span style="display:block;margin-top:6.4px;font-size:12.16px;color:#64748b;font-weight:500;font-variant-numeric:tabular-nums">≈ 1 842.10 DH / pneu</span>
+            </div>
+            <div style="position:absolute;top:19.2px;right:19.2px;display:flex;flex-direction:column;align-items:flex-end;gap:4.8px">
+              <div style="background:#dbeafe;color:#1d4ed8;font-size:10.72px;font-weight:700;padding:3.2px 9.6px;border-radius:999px;border:1px solid #bfdbfe;white-space:nowrap;letter-spacing:.02em">697 Pneus vendus</div>
+              <div style="background:#eff6ff;color:#1d4ed8;font-size:10.72px;font-weight:700;padding:3.2px 9.6px;border-radius:999px;border:1px solid #bfdbfe;white-space:nowrap;letter-spacing:.02em">118 Pièces vendues</div>
+            </div>
+          </div>
+          <div style="position:relative;overflow:hidden;background:#fff;border:1px solid #e8edf3;border-radius:14px;padding:22.4px 24px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,23,42,.06),0 4px 12px rgba(15,23,42,.04)">
+            <div style="font-size:20px;margin-bottom:16px;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;background:#f8fafc;border:1px solid #e8edf3;border-radius:11px">🛒</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.12em">Achats</span>
+              <span style="font-size:27.2px;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.1">902 500.00 <small style="font-size:13.6px;color:#94a3b8;font-weight:500;margin-left:.1em;letter-spacing:0">DH</small></span>
+              <span style="display:block;margin-top:6.4px;font-size:12.16px;color:#64748b;font-weight:500;font-variant-numeric:tabular-nums">≈ 1 341.20 DH / pneu</span>
+            </div>
+            <div style="position:absolute;top:19.2px;right:19.2px;display:flex;flex-direction:column;align-items:flex-end;gap:4.8px">
+              <div style="background:#f8fafc;color:#64748b;font-size:10.72px;font-weight:700;padding:3.2px 9.6px;border-radius:999px;border:1px solid #e8edf3;white-space:nowrap;letter-spacing:.02em">673 Pneus achetés</div>
+              <div style="background:#eff6ff;color:#1d4ed8;font-size:10.72px;font-weight:700;padding:3.2px 9.6px;border-radius:999px;border:1px solid #bfdbfe;white-space:nowrap;letter-spacing:.02em">96 Pièces achetées</div>
+            </div>
+          </div>
+          <div style="position:relative;overflow:hidden;background:#fff;border:1px solid #e8edf3;border-radius:14px;padding:22.4px 24px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,23,42,.06),0 4px 12px rgba(15,23,42,.04)">
+            <div style="font-size:20px;margin-bottom:16px;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;background:#fffbeb;border:1px solid #fde68a;border-radius:11px">💸</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.12em">Dépenses</span>
+              <span style="font-size:27.2px;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.1">96 400.00 <small style="font-size:13.6px;color:#94a3b8;font-weight:500;margin-left:.1em;letter-spacing:0">DH</small></span>
+              <span style="display:block;margin-top:6.4px;font-size:12.16px;color:#64748b;font-weight:500;font-variant-numeric:tabular-nums">≈ 138.30 DH / pneu</span>
+            </div>
+          </div>
+          <div style="position:relative;overflow:hidden;background:#fff;border:1px solid #e8edf3;border-radius:14px;padding:22.4px 24px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,23,42,.06),0 4px 12px rgba(15,23,42,.04)">
+            <div style="font-size:20px;margin-bottom:16px;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;background:#f8fafc;border:1px solid #e8edf3;border-radius:11px">🪙</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.12em">Autres revenus</span>
+              <span style="font-size:27.2px;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.1">12 750.00 <small style="font-size:13.6px;color:#94a3b8;font-weight:500;margin-left:.1em;letter-spacing:0">DH</small></span>
+            </div>
+          </div>
+          <div style="position:relative;overflow:hidden;background:#fff;border:1px solid #e8edf3;border-radius:14px;padding:22.4px 24px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,23,42,.06),0 4px 12px rgba(15,23,42,.04)">
+            <div style="font-size:20px;margin-bottom:16px;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;background:#f8fafc;border:1px solid #e8edf3;border-radius:11px">📈</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.12em">Marge Brute</span>
+              <span style="font-size:27.2px;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.1">218 900.00 <small style="font-size:13.6px;color:#94a3b8;font-weight:500;margin-left:.1em;letter-spacing:0">DH</small></span>
+              <span style="display:block;margin-top:6.4px;font-size:12.16px;color:#64748b;font-weight:500;font-variant-numeric:tabular-nums">≈ 314.10 DH / pneu</span>
+            </div>
+          </div>
+          <div style="position:relative;overflow:hidden;background:#fff;border:1px solid #e8edf3;border-radius:14px;padding:22.4px 24px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,23,42,.06),0 4px 12px rgba(15,23,42,.04)">
+            <div style="font-size:20px;margin-bottom:16px;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;background:#f8fafc;border:1px solid #e8edf3;border-radius:11px">📉</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.12em">Marge Nette</span>
+              <span style="font-size:27.2px;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.1">122 500.00 <small style="font-size:13.6px;color:#94a3b8;font-weight:500;margin-left:.1em;letter-spacing:0">DH</small></span>
+              <span style="display:block;margin-top:6.4px;font-size:12.16px;color:#64748b;font-weight:500;font-variant-numeric:tabular-nums">≈ 175.80 DH / pneu</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:48px">
+          <h3 style="margin:0 0 24px;font-size:12.48px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.1em;border-left:3px solid #ff2d37;padding-left:12px">🏷️ Ventes — Performances — 2026-09</h3>
+          <div style="background:#fff;border-radius:14px;border:1px solid #e8edf3;overflow:hidden;box-shadow:0 1px 3px rgba(15,23,42,.06),0 4px 12px rgba(15,23,42,.04)">
+            <table style="width:100%;border-collapse:collapse">
+              <thead>
+                <tr>
+                  <th style="background:#f8fafc;color:#94a3b8;text-transform:uppercase;font-size:10.4px;font-weight:700;letter-spacing:.12em;padding:14px 24px;text-align:left;border-bottom:2px solid #e8edf3;white-space:nowrap">Commercial</th>
+                  <th style="background:#f8fafc;color:#94a3b8;text-transform:uppercase;font-size:10.4px;font-weight:700;letter-spacing:.12em;padding:14px 24px;text-align:right;border-bottom:2px solid #e8edf3;white-space:nowrap">Pneus Vendus</th>
+                  <th style="background:#f8fafc;color:#94a3b8;text-transform:uppercase;font-size:10.4px;font-weight:700;letter-spacing:.12em;padding:14px 24px;text-align:right;border-bottom:2px solid #e8edf3;white-space:nowrap">Chiffre d'Affaires</th>
+                  <th style="background:#f8fafc;color:#94a3b8;text-transform:uppercase;font-size:10.4px;font-weight:700;letter-spacing:.12em;padding:14px 24px;text-align:right;border-bottom:2px solid #e8edf3;white-space:nowrap">Marge Brute</th>
+                  <th style="background:#f8fafc;color:#94a3b8;text-transform:uppercase;font-size:10.4px;font-weight:700;letter-spacing:.12em;padding:14px 24px;text-align:right;border-bottom:2px solid #e8edf3;white-space:nowrap">Marge / Pneu</th>
+                  <th style="background:#f8fafc;color:#94a3b8;text-transform:uppercase;font-size:10.4px;font-weight:700;letter-spacing:.12em;padding:14px 24px;text-align:right;border-bottom:2px solid #e8edf3;white-space:nowrap">% Marge</th>
+                  <th style="background:#f8fafc;color:#94a3b8;text-transform:uppercase;font-size:10.4px;font-weight:700;letter-spacing:.12em;padding:14px 24px;text-align:right;border-bottom:2px solid #e8edf3;white-space:nowrap">Impayés</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding:14px 24px;color:#0f172a;border-bottom:1px solid #e8edf3;font-size:13.68px;white-space:nowrap">
+                    <div style="display:flex;align-items:center;gap:12px">
+                      <div style="background:linear-gradient(135deg,#ff2d37 0%,#ff7070 100%);color:#fff;font-weight:700;height:34px;width:34px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12.8px;box-shadow:0 2px 8px rgba(255,45,55,.3)">K</div>
+                      <span style="font-weight:600;font-size:14.4px;color:#0f172a">Karim Amrani</span>
+                    </div>
+                  </td>
+                  <td style="padding:14px 24px;border-bottom:1px solid #e8edf3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">284</td>
+                  <td style="padding:14px 24px;border-bottom:1px solid #e8edf3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">512 400.00 <small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">DH</small></td>
+                  <td style="padding:14px 24px;border-bottom:1px solid #e8edf3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">89 200.00 <small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">DH</small></td>
+                  <td style="padding:14px 24px;border-bottom:1px solid #e8edf3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">314.08 <small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">DH</small></td>
+                  <td style="padding:14px 24px;border-bottom:1px solid #e8edf3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">17.4<small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">%</small></td>
+                  <td style="padding:14px 24px;border-bottom:1px solid #e8edf3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#dc2626">142 800.00 <small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">DH</small></td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 24px;color:#0f172a;border-bottom:1px solid #e8edf3;font-size:13.68px;white-space:nowrap">
+                    <div style="display:flex;align-items:center;gap:12px">
+                      <div style="background:linear-gradient(135deg,#ff2d37 0%,#ff7070 100%);color:#fff;font-weight:700;height:34px;width:34px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12.8px;box-shadow:0 2px 8px rgba(255,45,55,.3)">S</div>
+                      <span style="font-weight:600;font-size:14.4px;color:#0f172a">Samira Bennis</span>
+                    </div>
+                  </td>
+                  <td style="padding:14px 24px;border-bottom:1px solid #e8edf3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">231</td>
+                  <td style="padding:14px 24px;border-bottom:1px solid #e8edf3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">428 900.00 <small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">DH</small></td>
+                  <td style="padding:14px 24px;border-bottom:1px solid #e8edf3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">76 400.00 <small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">DH</small></td>
+                  <td style="padding:14px 24px;border-bottom:1px solid #e8edf3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">330.74 <small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">DH</small></td>
+                  <td style="padding:14px 24px;border-bottom:1px solid #e8edf3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">17.8<small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">%</small></td>
+                  <td style="padding:14px 24px;border-bottom:1px solid #e8edf3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#dc2626">68 300.00 <small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">DH</small></td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 24px;color:#0f172a;border-bottom:none;font-size:13.68px;white-space:nowrap">
+                    <div style="display:flex;align-items:center;gap:12px">
+                      <div style="background:linear-gradient(135deg,#ff2d37 0%,#ff7070 100%);color:#fff;font-weight:700;height:34px;width:34px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12.8px;box-shadow:0 2px 8px rgba(255,45,55,.3)">R</div>
+                      <span style="font-weight:600;font-size:14.4px;color:#0f172a">Rachid Ouali</span>
+                    </div>
+                  </td>
+                  <td style="padding:14px 24px;border-bottom:none;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">182</td>
+                  <td style="padding:14px 24px;border-bottom:none;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">343 000.00 <small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">DH</small></td>
+                  <td style="padding:14px 24px;border-bottom:none;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">53 300.00 <small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">DH</small></td>
+                  <td style="padding:14px 24px;border-bottom:none;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">292.86 <small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">DH</small></td>
+                  <td style="padding:14px 24px;border-bottom:none;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">15.5<small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">%</small></td>
+                  <td style="padding:14px 24px;border-bottom:none;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#dc2626">57 300.00 <small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">DH</small></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div style="margin-top:48px">
+          <h3 style="margin:0 0 24px;font-size:12.48px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.1em;border-left:3px solid #3b82f6;padding-left:12px">🔧 Service Auto — Performances — 2026-09</h3>
+          <div style="background:#fff;border-radius:14px;border:1px solid #e8edf3;overflow:hidden;box-shadow:0 1px 3px rgba(15,23,42,.06),0 4px 12px rgba(15,23,42,.04)">
+            <table style="width:100%;border-collapse:collapse">
+              <thead>
+                <tr>
+                  <th style="background:#f8fafc;color:#94a3b8;text-transform:uppercase;font-size:10.4px;font-weight:700;letter-spacing:.12em;padding:14px 24px;text-align:left;border-bottom:2px solid #e8edf3;white-space:nowrap">Commercial</th>
+                  <th style="background:#f8fafc;color:#94a3b8;text-transform:uppercase;font-size:10.4px;font-weight:700;letter-spacing:.12em;padding:14px 24px;text-align:right;border-bottom:2px solid #e8edf3;white-space:nowrap">Ordres</th>
+                  <th style="background:#f8fafc;color:#94a3b8;text-transform:uppercase;font-size:10.4px;font-weight:700;letter-spacing:.12em;padding:14px 24px;text-align:right;border-bottom:2px solid #e8edf3;white-space:nowrap">Chiffre d'Affaires</th>
+                  <th style="background:#f8fafc;color:#94a3b8;text-transform:uppercase;font-size:10.4px;font-weight:700;letter-spacing:.12em;padding:14px 24px;text-align:right;border-bottom:2px solid #e8edf3;white-space:nowrap">Marge Brute</th>
+                  <th style="background:#f8fafc;color:#94a3b8;text-transform:uppercase;font-size:10.4px;font-weight:700;letter-spacing:.12em;padding:14px 24px;text-align:right;border-bottom:2px solid #e8edf3;white-space:nowrap">% Marge</th>
+                  <th style="background:#f8fafc;color:#94a3b8;text-transform:uppercase;font-size:10.4px;font-weight:700;letter-spacing:.12em;padding:14px 24px;text-align:right;border-bottom:2px solid #e8edf3;white-space:nowrap">Impayés</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding:14px 24px;color:#0f172a;border-bottom:1px solid #e8edf3;font-size:13.68px;white-space:nowrap">
+                    <div style="display:flex;align-items:center;gap:12px">
+                      <div style="background:linear-gradient(135deg,#3b82f6 0%,#60a5fa 100%);color:#fff;font-weight:700;height:34px;width:34px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12.8px;box-shadow:0 2px 8px rgba(59,130,246,.3)">M</div>
+                      <span style="font-weight:600;font-size:14.4px;color:#0f172a">Mehdi Tazi</span>
+                    </div>
+                  </td>
+                  <td style="padding:14px 24px;border-bottom:1px solid #e8edf3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">64</td>
+                  <td style="padding:14px 24px;border-bottom:1px solid #e8edf3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">96 800.00 <small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">DH</small></td>
+                  <td style="padding:14px 24px;border-bottom:1px solid #e8edf3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">31 400.00 <small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">DH</small></td>
+                  <td style="padding:14px 24px;border-bottom:1px solid #e8edf3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">32.4<small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">%</small></td>
+                  <td style="padding:14px 24px;border-bottom:1px solid #e8edf3;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#dc2626">8 200.00 <small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">DH</small></td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 24px;color:#0f172a;border-bottom:none;font-size:13.68px;white-space:nowrap">
+                    <div style="display:flex;align-items:center;gap:12px">
+                      <div style="background:linear-gradient(135deg,#3b82f6 0%,#60a5fa 100%);color:#fff;font-weight:700;height:34px;width:34px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12.8px;box-shadow:0 2px 8px rgba(59,130,246,.3)">H</div>
+                      <span style="font-weight:600;font-size:14.4px;color:#0f172a">Hamid Chraibi</span>
+                    </div>
+                  </td>
+                  <td style="padding:14px 24px;border-bottom:none;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">41</td>
+                  <td style="padding:14px 24px;border-bottom:none;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">58 300.00 <small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">DH</small></td>
+                  <td style="padding:14px 24px;border-bottom:none;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">18 900.00 <small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">DH</small></td>
+                  <td style="padding:14px 24px;border-bottom:none;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">32.4<small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">%</small></td>
+                  <td style="padding:14px 24px;border-bottom:none;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:#0f172a">0.00 <small style="color:#94a3b8;font-size:11.52px;font-weight:500;margin-left:.12em">DH</small></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <p style="margin:40px 0 0;padding:12px 16px;background:#fff;border:1px dashed #cbd5e1;border-radius:12px;font:400 12.5px/1.6 'Inter',sans-serif;color:#64748b">Suivent, à l'identique dans le code : le bloc <strong style="font-weight:600;color:#0f172a">📈 Cette année</strong> (6 cadrans) et ses deux tableaux de performances, puis <strong style="font-weight:600;color:#0f172a">🏦 Général</strong> (4 cadrans). Même gabarit que ci-dessus, seul le libellé de période change.</p>
+
+        <div style="margin-top:32px">
+          <h4 style="margin:0 0 20px;font-size:10.88px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.14em;padding-bottom:9.6px;border-bottom:2px solid #e8edf3">🏦 Général</h4>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:16px">
+            <div style="position:relative;overflow:hidden;background:#fff;border:1px solid #e8edf3;border-radius:14px;padding:22.4px 24px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,23,42,.06),0 4px 12px rgba(15,23,42,.04)">
+              <div style="font-size:20px;margin-bottom:16px;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;background:#f8fafc;border:1px solid #e8edf3;border-radius:11px">📦</div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <span style="font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.12em">Valeur du Stock</span>
+                <span style="font-size:27.2px;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.1">2 418 700.00 <small style="font-size:13.6px;color:#94a3b8;font-weight:500;margin-left:.1em;letter-spacing:0">DH</small></span>
+              </div>
+              <div style="position:absolute;top:19.2px;right:19.2px;background:#f8fafc;color:#64748b;font-size:10.72px;font-weight:700;padding:3.2px 9.6px;border-radius:999px;border:1px solid #e8edf3;white-space:nowrap;letter-spacing:.02em">1 842 Qté en stock</div>
+            </div>
+            <div style="position:relative;overflow:hidden;background:#fff;border:1px solid #e8edf3;border-radius:14px;padding:22.4px 24px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,23,42,.06),0 4px 12px rgba(15,23,42,.04)">
+              <div style="font-size:20px;margin-bottom:16px;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;background:#f8fafc;border:1px solid #e8edf3;border-radius:11px">💵</div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <span style="font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.12em">Solde de Caisse</span>
+                <span style="font-size:27.2px;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.1">184 250.00 <small style="font-size:13.6px;color:#94a3b8;font-weight:500;margin-left:.1em;letter-spacing:0">DH</small></span>
+              </div>
+            </div>
+            <div style="position:relative;overflow:hidden;background:#fff;border:1px solid #e8edf3;border-radius:14px;padding:22.4px 24px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,23,42,.06),0 4px 12px rgba(15,23,42,.04)">
+              <div style="font-size:20px;margin-bottom:16px;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;background:#fffbeb;border:1px solid #fde68a;border-radius:11px">⏳</div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <span style="font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.12em">Impayés Clients</span>
+                <span style="font-size:27.2px;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.1">268 400.00 <small style="font-size:13.6px;color:#94a3b8;font-weight:500;margin-left:.1em;letter-spacing:0">DH</small></span>
+              </div>
+            </div>
+            <div style="position:relative;overflow:hidden;background:#fff;border:1px solid #e8edf3;border-radius:14px;padding:22.4px 24px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,23,42,.06),0 4px 12px rgba(15,23,42,.04)">
+              <div style="font-size:20px;margin-bottom:16px;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;background:#fffbeb;border:1px solid #fde68a;border-radius:11px">⚠️</div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <span style="font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.12em">Reste à payer (Frs)</span>
+                <span style="font-size:27.2px;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.1">412 000.00 <small style="font-size:13.6px;color:#94a3b8;font-weight:500;margin-left:.1em;letter-spacing:0">DH</small></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:24px">
+        <a href="#A1" style="display:flex;align-items:center;gap:16px;padding:16px 20px;background:#fff;border-radius:12px;text-decoration:none;color:#0f172a;border:1px solid #e8edf3;box-shadow:0 1px 3px rgba(15,23,42,.05)"><span style="font-size:20.8px;line-height:1;width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#f8fafc;border:1px solid #e8edf3;border-radius:10px">🏷️</span><span style="display:flex;flex-direction:column;flex:1;min-width:0"><span style="font-weight:600;font-size:14px;color:#0f172a">Ventes</span><span style="font-size:11.36px;color:#94a3b8;margin-top:2.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Gérer les ventes et marges</span></span><span style="font-size:16px;color:#94a3b8;flex-shrink:0">→</span></a>
+        <a href="#A1" style="display:flex;align-items:center;gap:16px;padding:16px 20px;background:#fff;border-radius:12px;text-decoration:none;color:#0f172a;border:1px solid #e8edf3;box-shadow:0 1px 3px rgba(15,23,42,.05)"><span style="font-size:20.8px;line-height:1;width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#f8fafc;border:1px solid #e8edf3;border-radius:10px">🏢</span><span style="display:flex;flex-direction:column;flex:1;min-width:0"><span style="font-weight:600;font-size:14px;color:#0f172a">Fournisseurs</span><span style="font-size:11.36px;color:#94a3b8;margin-top:2.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Gérer les fournisseurs</span></span><span style="font-size:16px;color:#94a3b8;flex-shrink:0">→</span></a>
+        <a href="#A1" style="display:flex;align-items:center;gap:16px;padding:16px 20px;background:#fff;border-radius:12px;text-decoration:none;color:#0f172a;border:1px solid #e8edf3;box-shadow:0 1px 3px rgba(15,23,42,.05)"><span style="font-size:20.8px;line-height:1;width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#f8fafc;border:1px solid #e8edf3;border-radius:10px">👥</span><span style="display:flex;flex-direction:column;flex:1;min-width:0"><span style="font-weight:600;font-size:14px;color:#0f172a">Utilisateurs</span><span style="font-size:11.36px;color:#94a3b8;margin-top:2.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Gérer les utilisateurs</span></span><span style="font-size:16px;color:#94a3b8;flex-shrink:0">→</span></a>
+        <a href="#A1" style="display:flex;align-items:center;gap:16px;padding:16px 20px;background:#fff;border-radius:12px;text-decoration:none;color:#0f172a;border:1px solid #e8edf3;box-shadow:0 1px 3px rgba(15,23,42,.05)"><span style="font-size:20.8px;line-height:1;width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#f8fafc;border:1px solid #e8edf3;border-radius:10px">📦</span><span style="display:flex;flex-direction:column;flex:1;min-width:0"><span style="font-weight:600;font-size:14px;color:#0f172a">Achats</span><span style="font-size:11.36px;color:#94a3b8;margin-top:2.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Gérer les achats</span></span><span style="font-size:16px;color:#94a3b8;flex-shrink:0">→</span></a>
+        <a href="#A1" style="display:flex;align-items:center;gap:16px;padding:16px 20px;background:#fff;border-radius:12px;text-decoration:none;color:#0f172a;border:1px solid #e8edf3;box-shadow:0 1px 3px rgba(15,23,42,.05)"><span style="font-size:20.8px;line-height:1;width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#f8fafc;border:1px solid #e8edf3;border-radius:10px">💰</span><span style="display:flex;flex-direction:column;flex:1;min-width:0"><span style="font-weight:600;font-size:14px;color:#0f172a">Cash Flow</span><span style="font-size:11.36px;color:#94a3b8;margin-top:2.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Revenus, dépenses et solde</span></span><span style="font-size:16px;color:#94a3b8;flex-shrink:0">→</span></a>
+        <a href="#A1" style="display:flex;align-items:center;gap:16px;padding:16px 20px;background:#fff;border-radius:12px;text-decoration:none;color:#0f172a;border:1px solid #e8edf3;box-shadow:0 1px 3px rgba(15,23,42,.05)"><span style="font-size:20.8px;line-height:1;width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#f8fafc;border:1px solid #e8edf3;border-radius:10px">🛞</span><span style="display:flex;flex-direction:column;flex:1;min-width:0"><span style="font-weight:600;font-size:14px;color:#0f172a">Produits</span><span style="font-size:11.36px;color:#94a3b8;margin-top:2.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Catalogue des pneus</span></span><span style="font-size:16px;color:#94a3b8;flex-shrink:0">→</span></a>
+        <a href="#A1" style="display:flex;align-items:center;gap:16px;padding:16px 20px;background:#fff;border-radius:12px;text-decoration:none;color:#0f172a;border:1px solid #e8edf3;box-shadow:0 1px 3px rgba(15,23,42,.05)"><span style="font-size:20.8px;line-height:1;width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#f8fafc;border:1px solid #e8edf3;border-radius:10px">📋</span><span style="display:flex;flex-direction:column;flex:1;min-width:0"><span style="font-weight:600;font-size:14px;color:#0f172a">Inventaire</span><span style="font-size:11.36px;color:#94a3b8;margin-top:2.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Stock des pneus</span></span><span style="font-size:16px;color:#94a3b8;flex-shrink:0">→</span></a>
+        <a href="#A1" style="display:flex;align-items:center;gap:16px;padding:16px 20px;background:#fff;border-radius:12px;text-decoration:none;color:#0f172a;border:1px solid #e8edf3;box-shadow:0 1px 3px rgba(15,23,42,.05)"><span style="font-size:20.8px;line-height:1;width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#f8fafc;border:1px solid #e8edf3;border-radius:10px">🏭</span><span style="display:flex;flex-direction:column;flex:1;min-width:0"><span style="font-weight:600;font-size:14px;color:#0f172a">Marques</span><span style="font-size:11.36px;color:#94a3b8;margin-top:2.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Gérer les marques de pneus</span></span><span style="font-size:16px;color:#94a3b8;flex-shrink:0">→</span></a>
+        <a href="#A1" style="display:flex;align-items:center;gap:16px;padding:16px 20px;background:#fff;border-radius:12px;text-decoration:none;color:#0f172a;border:1px solid #e8edf3;box-shadow:0 1px 3px rgba(15,23,42,.05)"><span style="font-size:20.8px;line-height:1;width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#f8fafc;border:1px solid #e8edf3;border-radius:10px">🔐</span><span style="display:flex;flex-direction:column;flex:1;min-width:0"><span style="font-weight:600;font-size:14px;color:#0f172a">Rôles</span><span style="font-size:11.36px;color:#94a3b8;margin-top:2.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Gérer les rôles et permissions</span></span><span style="font-size:16px;color:#94a3b8;flex-shrink:0">→</span></a>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:9px;margin-top:28px">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter',sans-serif;color:#64748b"><span style="font:700 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(15,23,42,.08);color:#0f172a;border-radius:5px">A2</span>Ventes — liste, 8 cadrans, 15 filtres, tableau 17 colonnes</div>
+
+<div style="width:1440px;display:grid;grid-template-columns:280px minmax(0,1fr);align-items:start;background:#f8fafc;color:#0f172a;border:1px solid #cbd5e1;overflow:hidden;box-shadow:0 10px 25px rgba(15,23,42,.08)">
+
+  <nav style="position:sticky;top:0;height:1020px;display:flex;flex-direction:column;align-items:stretch;gap:16px;padding:16px;background:#1f2937;border-right:1px solid rgba(255,255,255,.08);overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;padding-bottom:8px">
+      <img src="assets/logo.png" alt="PNEU.MA" style="height:32px;width:auto">
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:stretch;gap:5.6px;flex:1;overflow:hidden">
+      <a href="#A2" style="width:100%;text-align:left;color:rgba(248,250,252,.88);text-decoration:none;font-size:13.12px;font-weight:500;padding:6.4px 11.2px;border-radius:8px;white-space:nowrap">🏠 Accueil</a>
+      <a href="#A2" style="width:100%;text-align:left;color:#fff;background:#ff2d37;text-decoration:none;font-size:13.12px;font-weight:600;padding:6.4px 11.2px;border-radius:8px;white-space:nowrap">🏷️ Ventes</a>
+      <a href="#A2" style="width:100%;text-align:left;color:rgba(248,250,252,.88);text-decoration:none;font-size:13.12px;font-weight:500;padding:6.4px 11.2px;border-radius:8px;white-space:nowrap">🔧 Service Auto</a>
+      <a href="#A2" style="width:100%;text-align:left;color:rgba(248,250,252,.88);text-decoration:none;font-size:13.12px;font-weight:500;padding:6.4px 11.2px;border-radius:8px;white-space:nowrap">📦 Achats</a>
+      <a href="#A2" style="width:100%;text-align:left;color:rgba(248,250,252,.88);text-decoration:none;font-size:13.12px;font-weight:500;padding:6.4px 11.2px;border-radius:8px;white-space:nowrap">💰 Cash Flow</a>
+      <button type="button" style="width:100%;text-align:left;background:none;border:none;color:rgba(248,250,252,.88);font-family:'Inter',sans-serif;font-size:13.12px;font-weight:500;padding:6.4px 11.2px;border-radius:8px;cursor:pointer;white-space:nowrap">🛞 Stock <span style="display:inline-block">▾</span></button>
+      <button type="button" style="width:100%;text-align:left;background:none;border:none;color:rgba(248,250,252,.88);font-family:'Inter',sans-serif;font-size:13.12px;font-weight:500;padding:6.4px 11.2px;border-radius:8px;cursor:pointer;white-space:nowrap">🤝 Tiers <span style="display:inline-block">▾</span></button>
+      <button type="button" style="width:100%;text-align:left;background:none;border:none;color:rgba(248,250,252,.88);font-family:'Inter',sans-serif;font-size:13.12px;font-weight:500;padding:6.4px 11.2px;border-radius:8px;cursor:pointer;white-space:nowrap">🏦 Finance <span style="display:inline-block">▾</span></button>
+      <button type="button" style="width:100%;text-align:left;background:none;border:none;color:rgba(248,250,252,.88);font-family:'Inter',sans-serif;font-size:13.12px;font-weight:500;padding:6.4px 11.2px;border-radius:8px;cursor:pointer;white-space:nowrap">👤 Administration <span style="display:inline-block">▾</span></button>
+      <button type="button" style="width:100%;text-align:left;background:none;border:none;color:rgba(248,250,252,.88);font-family:'Inter',sans-serif;font-size:13.12px;font-weight:500;padding:6.4px 11.2px;border-radius:8px;cursor:pointer;white-space:nowrap">⚙️ Paramètres <span style="display:inline-block">▾</span></button>
+    </div>
+    <div style="margin-top:auto;display:flex;flex-direction:column;align-items:stretch;gap:12px;white-space:nowrap;flex-shrink:0">
+      <span style="display:flex;flex-direction:column;align-items:center;line-height:1.2">
+        <span style="color:rgba(248,250,252,.88);font-size:13.6px;font-weight:500">Youssef Benali</span>
+        <span style="color:rgba(248,250,252,.7);font-size:11.2px">Administrator</span>
+      </span>
+      <button type="button" style="width:100%;background:transparent;color:#f8fafc;border:1px solid rgba(255,255,255,.18);padding:4.8px 12px;border-radius:6px;font-family:'Inter',sans-serif;font-size:12.8px;font-weight:500;cursor:pointer">Déconnexion</button>
+    </div>
+  </nav>
+
+  <div style="min-height:1020px;background:#f8fafc;padding:24px">
+    <div style="max-width:100%;margin:24px auto;padding:0 20px">
+
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:32px;flex-wrap:wrap">
+        <div>
+          <h1 style="margin:0;color:#0f172a;font-size:25.6px;font-weight:800;letter-spacing:-.02em;line-height:1.2">Ventes</h1>
+          <p style="margin:4px 0 0;color:#64748b;font-size:14px">Gérez vos ventes et marges</p>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <button type="button" style="display:inline-flex;align-items:center;gap:6.4px;padding:8px 16px;border-radius:8px;background:#fff;color:#0f172a;border:1px solid #d0d9e4;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap">Exporter Excel</button>
+          <button type="button" style="display:inline-flex;align-items:center;gap:6.4px;padding:8px 16px;border-radius:8px;background:#ff2d37;color:#fff;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;box-shadow:0 1px 3px rgba(255,45,55,.22)">Nouvelle Vente</button>
+          <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1px solid #d0d9e4;border-radius:999px;background:#fff;font-size:12.16px;color:#64748b;font-weight:600">Auto-refresh · off</span>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px">
+        <div style="padding:17.6px 20px;display:flex;align-items:center;gap:14.4px;border-radius:14px;border:1px solid #e8edf3;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.05),0 4px 12px rgba(15,23,42,.04)"><div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18.4px;flex-shrink:0;background:rgba(59,130,246,.1);color:#3b82f6">📅</div><div><p style="margin:0;font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.1em">Pneus vendus aujourd'hui</p><h3 style="margin:0;font-size:20px;font-weight:700;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.02em">42</h3></div></div>
+        <div style="padding:17.6px 20px;display:flex;align-items:center;gap:14.4px;border-radius:14px;border:1px solid #e8edf3;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.05),0 4px 12px rgba(15,23,42,.04)"><div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18.4px;flex-shrink:0;background:rgba(59,130,246,.1);color:#3b82f6">🛞</div><div><p style="margin:0;font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.1em">Pneus vendus ce mois</p><h3 style="margin:0;font-size:20px;font-weight:700;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.02em">697</h3></div></div>
+        <div style="padding:17.6px 20px;display:flex;align-items:center;gap:14.4px;border-radius:14px;border:1px solid #e8edf3;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.05),0 4px 12px rgba(15,23,42,.04)"><div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18.4px;flex-shrink:0;background:rgba(59,130,246,.1);color:#3b82f6">⏳</div><div><p style="margin:0;font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.1em">Pneus en cours</p><h3 style="margin:0;font-size:20px;font-weight:700;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.02em">128</h3></div></div>
+        <div style="padding:17.6px 20px;display:flex;align-items:center;gap:14.4px;border-radius:14px;border:1px solid #e8edf3;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.05),0 4px 12px rgba(15,23,42,.04)"><div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18.4px;flex-shrink:0;background:rgba(59,130,246,.1);color:#3b82f6">📋</div><div><p style="margin:0;font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.1em">Ventes en cours</p><h3 style="margin:0;font-size:20px;font-weight:700;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.02em">31</h3></div></div>
+        <div style="padding:17.6px 20px;display:flex;align-items:center;gap:14.4px;border-radius:14px;border:1px solid #e8edf3;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.05),0 4px 12px rgba(15,23,42,.04)"><div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18.4px;flex-shrink:0;background:rgba(239,68,68,.08);color:#dc2626">⏳</div><div><p style="margin:0;font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.1em">Impayé en cours</p><h3 style="margin:0;font-size:20px;font-weight:700;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.02em">96 200.00 DH</h3></div></div>
+        <div style="padding:17.6px 20px;display:flex;align-items:center;gap:14.4px;border-radius:14px;border:1px solid #e8edf3;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.05),0 4px 12px rgba(15,23,42,.04)"><div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18.4px;flex-shrink:0;background:rgba(239,68,68,.08);color:#dc2626">🚚</div><div><p style="margin:0;font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.1em">Impayé livré/monté</p><h3 style="margin:0;font-size:20px;font-weight:700;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.02em">172 200.00 DH</h3></div></div>
+        <div style="padding:17.6px 20px;display:flex;align-items:center;gap:14.4px;border-radius:14px;border:1px solid #e8edf3;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.05),0 4px 12px rgba(15,23,42,.04)"><div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18.4px;flex-shrink:0;background:rgba(255,45,55,.08);color:#ff2d37">🧾</div><div><p style="margin:0;font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.1em">CA avec facture</p><h3 style="margin:0;font-size:20px;font-weight:700;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.02em">62 180.00 DH</h3></div></div>
+        <div style="padding:17.6px 20px;display:flex;align-items:center;gap:14.4px;border-radius:14px;border:1px solid #e8edf3;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.05),0 4px 12px rgba(15,23,42,.04)"><div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18.4px;flex-shrink:0;background:rgba(16,185,129,.1);color:#059669">🪙</div><div><p style="margin:0;font-size:10.88px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:.1em">CA sans facture</p><h3 style="margin:0;font-size:20px;font-weight:700;color:#0f172a;font-variant-numeric:tabular-nums;letter-spacing:-.02em">24 240.00 DH</h3></div></div>
+      </div>
+
+      <div style="margin-bottom:28px;background:#fff;border:1px solid #e8edf3;border-radius:14px;box-shadow:0 1px 3px rgba(15,23,42,.05);overflow:hidden">
+        <div style="padding:16px 20px">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px">
+            <div style="display:flex;flex-direction:column;gap:5.6px"><label style="font-size:11.52px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Recherche globale</label><input type="text" placeholder="Client, produit, marque..." style="padding:7.2px 11.2px;border:1px solid #d0d9e4;border-radius:8px;font-size:14px;color:#0f172a;background:#fff;font-family:'Inter',sans-serif"></div>
+            <div style="display:flex;flex-direction:column;gap:5.6px"><label style="font-size:11.52px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Client</label><input type="text" placeholder="Nom du client..." style="padding:7.2px 11.2px;border:1px solid #d0d9e4;border-radius:8px;font-size:14px;color:#0f172a;background:#fff;font-family:'Inter',sans-serif"></div>
+            <div style="display:flex;flex-direction:column;gap:5.6px"><label style="font-size:11.52px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Ville</label><select style="padding:7.2px 11.2px;border:1px solid #d0d9e4;border-radius:8px;font-size:14px;color:#0f172a;background:#fff;font-family:'Inter',sans-serif"><option>Toutes les villes</option></select></div>
+            <div style="display:flex;flex-direction:column;gap:5.6px"><label style="font-size:11.52px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Commercial</label><select style="padding:7.2px 11.2px;border:1px solid #d0d9e4;border-radius:8px;font-size:14px;color:#0f172a;background:#fff;font-family:'Inter',sans-serif"><option>Tous</option></select></div>
+            <div style="display:flex;flex-direction:column;gap:5.6px"><label style="font-size:11.52px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Statut</label><select style="padding:7.2px 11.2px;border:1px solid #d0d9e4;border-radius:8px;font-size:14px;color:#0f172a;background:#fff;font-family:'Inter',sans-serif"><option>Tous</option></select></div>
+            <div style="display:flex;flex-direction:column;gap:5.6px"><label style="font-size:11.52px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Paiement</label><select style="padding:7.2px 11.2px;border:1px solid #d0d9e4;border-radius:8px;font-size:14px;color:#0f172a;background:#fff;font-family:'Inter',sans-serif"><option>Tous</option></select></div>
+            <div style="display:flex;flex-direction:column;gap:5.6px"><label style="font-size:11.52px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Mode paiement</label><select style="padding:7.2px 11.2px;border:1px solid #d0d9e4;border-radius:8px;font-size:14px;color:#0f172a;background:#fff;font-family:'Inter',sans-serif"><option>Tous</option></select></div>
+            <div style="display:flex;flex-direction:column;gap:5.6px"><label style="font-size:11.52px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Transporteur</label><select style="padding:7.2px 11.2px;border:1px solid #d0d9e4;border-radius:8px;font-size:14px;color:#0f172a;background:#fff;font-family:'Inter',sans-serif"><option>Tous</option></select></div>
+            <div style="display:flex;flex-direction:column;gap:5.6px"><label style="font-size:11.52px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Partenaire</label><select style="padding:7.2px 11.2px;border:1px solid #d0d9e4;border-radius:8px;font-size:14px;color:#0f172a;background:#fff;font-family:'Inter',sans-serif"><option>Tous</option></select></div>
+            <div style="display:flex;flex-direction:column;gap:5.6px"><label style="font-size:11.52px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Du</label><input type="date" style="padding:7.2px 11.2px;border:1px solid #d0d9e4;border-radius:8px;font-size:14px;color:#0f172a;background:#fff;font-family:'Inter',sans-serif"></div>
+            <div style="display:flex;flex-direction:column;gap:5.6px"><label style="font-size:11.52px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Au</label><input type="date" style="padding:7.2px 11.2px;border:1px solid #d0d9e4;border-radius:8px;font-size:14px;color:#0f172a;background:#fff;font-family:'Inter',sans-serif"></div>
+            <div style="display:flex;flex-direction:column;gap:5.6px"><label style="font-size:11.52px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Facture</label><div style="display:flex;border:1px solid #d0d9e4;border-radius:8px;overflow:hidden"><button type="button" style="flex:1;padding:6.4px 4px;font-size:12.48px;font-weight:600;background:#ff2d37;color:#fff;border:none;border-right:1px solid #d0d9e4;cursor:pointer;white-space:nowrap;font-family:'Inter',sans-serif">Toutes</button><button type="button" style="flex:1;padding:6.4px 4px;font-size:12.48px;font-weight:600;background:transparent;color:#64748b;border:none;border-right:1px solid #d0d9e4;cursor:pointer;white-space:nowrap;font-family:'Inter',sans-serif">Avec</button><button type="button" style="flex:1;padding:6.4px 4px;font-size:12.48px;font-weight:600;background:transparent;color:#64748b;border:none;cursor:pointer;white-space:nowrap;font-family:'Inter',sans-serif">Sans</button></div></div>
+            <div style="display:flex;flex-direction:column;gap:5.6px"><label style="font-size:11.52px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Montant min (DH)</label><input type="number" placeholder="0.00" style="padding:7.2px 11.2px;border:1px solid #d0d9e4;border-radius:8px;font-size:14px;color:#0f172a;background:#fff;font-family:'Inter',sans-serif"></div>
+            <div style="display:flex;flex-direction:column;gap:5.6px"><label style="font-size:11.52px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Montant max (DH)</label><input type="number" placeholder="∞" style="padding:7.2px 11.2px;border:1px solid #d0d9e4;border-radius:8px;font-size:14px;color:#0f172a;background:#fff;font-family:'Inter',sans-serif"></div>
+            <div style="display:flex;gap:6.4px;align-self:flex-end"><button type="button" style="background:#ff2d37;color:#fff;padding:7.2px 14.4px;border-radius:8px;border:none;font-weight:600;font-size:14px;cursor:pointer;box-shadow:0 1px 3px rgba(255,45,55,.2);font-family:'Inter',sans-serif">🔍</button><button type="button" style="background:#fff;color:#64748b;border:1px solid #d0d9e4;padding:7.2px 11.2px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif">✕</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="overflow:hidden;border:1px solid #e8edf3;border-radius:14px;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.05),0 4px 12px rgba(15,23,42,.04)">
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;min-width:1900px">
+            <thead>
+              <tr>
+                <th style="padding:9.6px 14px;text-align:center;border-bottom:2px solid #e8edf3;white-space:nowrap;background:#f8fafc;font-weight:700;font-size:10.4px;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em">Actions</th>
+                <th style="padding:9.6px 14px;text-align:center;border-bottom:2px solid #e8edf3;white-space:nowrap;background:#f8fafc;font-weight:700;font-size:10.4px;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;width:56px">#</th>
+                <th style="padding:9.6px 14px;text-align:left;border-bottom:2px solid #e8edf3;white-space:nowrap;background:#f8fafc;font-weight:700;font-size:10.4px;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em">Date <span style="font-size:10.4px;margin-left:3.2px;opacity:.4">▼</span></th>
+                <th style="padding:9.6px 14px;text-align:center;border-bottom:2px solid #e8edf3;white-space:nowrap;background:#f8fafc;font-weight:700;font-size:10.4px;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em">Facture</th>
+                <th style="padding:9.6px 14px;text-align:left;border-bottom:2px solid #e8edf3;white-space:nowrap;background:#f8fafc;font-weight:700;font-size:10.4px;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;width:160px">Client <span style="font-size:10.4px;margin-left:3.2px;opacity:.4">⇅</span></th>
+                <th style="padding:9.6px 14px;text-align:left;border-bottom:2px solid #e8edf3;white-space:nowrap;background:#f8fafc;font-weight:700;font-size:10.4px;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em">Ville</th>
+                <th style="padding:9.6px 14px;text-align:left;border-bottom:2px solid #e8edf3;white-space:nowrap;background:#f8fafc;font-weight:700;font-size:10.4px;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em">Commercial</th>
+                <th style="padding:9.6px 14px;text-align:left;border-bottom:2px solid #e8edf3;white-space:nowrap;background:#f8fafc;font-weight:700;font-size:10.4px;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em">Qte <span style="font-size:10.4px;margin-left:3.2px;opacity:.4">⇅</span></th>
+                <th style="padding:9.6px 14px;text-align:left;border-bottom:2px solid #e8edf3;white-space:nowrap;background:#f8fafc;font-weight:700;font-size:10.4px;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em">Partenaire</th>
+                <th style="padding:9.6px 14px;text-align:left;border-bottom:2px solid #e8edf3;white-space:nowrap;background:#f8fafc;font-weight:700;font-size:10.4px;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em">Mode(s) paiement</th>
+                <th style="padding:9.6px 14px;text-align:right;border-bottom:2px solid #e8edf3;white-space:nowrap;background:#f8fafc;font-weight:700;font-size:10.4px;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em">Total Vente <span style="font-size:10.4px;margin-left:3.2px;opacity:.4">⇅</span></th>
+                <th style="padding:9.6px 14px;text-align:right;border-bottom:2px solid #e8edf3;white-space:nowrap;background:#f8fafc;font-weight:700;font-size:10.4px;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em">Marge <span style="font-size:10.4px;margin-left:3.2px;opacity:.4">⇅</span></th>
+                <th style="padding:9.6px 14px;text-align:left;border-bottom:2px solid #e8edf3;white-space:nowrap;background:#f8fafc;font-weight:700;font-size:10.4px;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em">Paiement <span style="font-size:10.4px;margin-left:3.2px;opacity:.4">⇅</span></th>
+                <th style="padding:9.6px 14px;text-align:left;border-bottom:2px solid #e8edf3;white-space:nowrap;background:#f8fafc;font-weight:700;font-size:10.4px;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em">Statut <span style="font-size:10.4px;margin-left:3.2px;opacity:.4">⇅</span></th>
+                <th style="padding:9.6px 14px;text-align:left;border-bottom:2px solid #e8edf3;white-space:nowrap;background:#f8fafc;font-weight:700;font-size:10.4px;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em">Créé par</th>
+                <th style="padding:9.6px 14px;text-align:left;border-bottom:2px solid #e8edf3;white-space:nowrap;background:#f8fafc;font-weight:700;font-size:10.4px;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em">Créé le <span style="font-size:10.4px;margin-left:3.2px;opacity:.4">⇅</span></th>
+                <th style="padding:9.6px 14px;text-align:left;border-bottom:2px solid #e8edf3;white-space:nowrap;background:#f8fafc;font-weight:700;font-size:10.4px;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em">Modifié le <span style="font-size:10.4px;margin-left:3.2px;opacity:.4">⇅</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;font-size:13px;text-align:center;vertical-align:middle;color:#0f172a"><button type="button" style="border:1px solid #e8edf3;background:#fff;border-radius:8px;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px">👁️</button> <button type="button" style="border:1px solid #e8edf3;background:#fff;border-radius:8px;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px">💳</button> <button type="button" style="border:1px solid #e8edf3;background:#fff;border-radius:8px;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px">✏️</button> <button type="button" style="border:1px solid #e8edf3;background:#fff;border-radius:8px;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px">🗑️</button></td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;text-align:center;font-size:12.48px;font-variant-numeric:tabular-nums;color:#64748b;font-weight:500">4251</td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;font-size:13px;color:#0f172a">17/09/2026</td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;text-align:center"><span style="display:inline-flex;align-items:center;padding:3.2px 9.6px;border-radius:999px;font-size:11.2px;font-weight:700;letter-spacing:.02em;background:rgba(16,185,129,.1);color:#065f46">Oui</span></td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;font-size:13px;width:160px;max-width:160px;overflow:hidden;text-overflow:ellipsis"><a href="#A2" style="color:#ff2d37;font-weight:600;text-decoration:none;font-size:13px">Garage Atlas Pneus</a><div style="display:block;margin-top:2.4px;color:#94a3b8;font-weight:400;font-size:11.84px">0661 24 88 03</div></td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;font-size:13px;color:#0f172a">Casablanca</td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;font-size:13px;color:#0f172a">Karim Amrani</td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;font-size:13px;color:#0f172a">12</td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;font-size:13px;color:#0f172a">Zenith</td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;font-size:13px"><span style="display:inline-flex;flex-wrap:wrap;gap:4px;white-space:normal;max-width:208px"><span style="display:inline-flex;align-items:center;padding:3.2px 9.6px;border-radius:999px;font-size:11.2px;font-weight:700;background:rgba(100,116,139,.1);color:#475569">ESPECE</span><span style="display:inline-flex;align-items:center;padding:3.2px 9.6px;border-radius:999px;font-size:11.2px;font-weight:700;background:rgba(100,116,139,.1);color:#475569">CHEQUE</span></span></td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;font-size:13px;color:#0f172a">18 420.00</td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;font-size:13px;color:#0f172a">3 210.00<span style="display:block;font-size:11.52px;font-weight:600;letter-spacing:0;color:#059669">17.4%</span></td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap"><span style="display:inline-flex;align-items:center;padding:3.2px 9.6px;border-radius:999px;font-size:11.2px;font-weight:700;background:rgba(16,185,129,.1);color:#065f46">PAYE</span></td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap"><select style="padding:3.2px 11.2px;border-radius:999px;font-size:11.2px;font-weight:700;border:1px solid transparent;cursor:pointer;appearance:none;background:rgba(16,185,129,.18);color:#047857;font-family:'Inter',sans-serif"><option>Monté</option></select></td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;font-size:13px;color:#0f172a">Karim Amrani</td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;font-size:13px;color:#0f172a">17/09/2026 09:12</td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;font-size:13px;color:#0f172a">17/09/2026 11:48</td>
+              </tr>
+              <tr>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;font-size:13px;text-align:center;vertical-align:middle;color:#0f172a"><button type="button" style="border:1px solid #e8edf3;background:#fff;border-radius:8px;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px">👁️</button> <button type="button" style="border:1px solid #e8edf3;background:#fff;border-radius:8px;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px">💳</button> <button type="button" style="border:1px solid #e8edf3;background:#fff;border-radius:8px;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px">✏️</button> <button type="button" style="border:1px solid #e8edf3;background:#fff;border-radius:8px;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px">🗑️</button></td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;text-align:center;font-size:12.48px;font-variant-numeric:tabular-nums;color:#64748b;font-weight:500">4250</td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;font-size:13px;color:#0f172a">17/09/2026</td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;text-align:center"><span style="display:inline-flex;align-items:center;padding:3.2px 9.6px;border-radius:999px;font-size:11.2px;font-weight:700;letter-spacing:.02em;background:rgba(100,116,139,.1);color:#475569">Non</span></td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;font-size:13px;width:160px;max-width:160px;overflow:hidden;text-overflow:ellipsis"><a href="#A2" style="color:#ff2d37;font-weight:600;text-decoration:none;font-size:13px">Transports Saïss SARL</a><div style="display:block;margin-top:2.4px;color:#94a3b8;font-weight:400;font-size:11.84px">0535 51 20 77</div></td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;font-size:13px;color:#0f172a">Meknès</td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;font-size:13px;color:#0f172a">Samira Bennis</td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;font-size:13px;color:#0f172a">24</td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;font-size:13px;color:#0f172a">-</td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;font-size:13px"><span style="display:inline-flex;align-items:center;padding:3.2px 9.6px;border-radius:999px;font-size:11.2px;font-weight:700;background:rgba(100,116,139,.1);color:#475569">VIREMENT</span></td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;font-size:13px;color:#0f172a">31 200.00</td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;font-size:13px;color:#0f172a">4 180.00<span style="display:block;font-size:11.52px;font-weight:600;letter-spacing:0;color:#92400e">13.4%</span></td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap"><span style="display:inline-flex;align-items:center;padding:3.2px 9.6px;border-radius:999px;font-size:11.2px;font-weight:700;background:rgba(239,68,68,.1);color:#b91c1c">NON PAYE</span></td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap"><select style="padding:3.2px 11.2px;border-radius:999px;font-size:11.2px;font-weight:700;border:1px solid transparent;cursor:pointer;appearance:none;background:rgba(245,158,11,.1);color:#92400e;font-family:'Inter',sans-serif"><option>En cours</option></select></td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;font-size:13px;color:#0f172a">Samira Bennis</td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;font-size:13px;color:#0f172a">17/09/2026 08:40</td>
+                <td style="padding:9.6px 14px;border-bottom:1px solid #e8edf3;white-space:nowrap;font-size:13px;color:#0f172a">17/09/2026 08:40</td>
+              </tr>
+              <tr>
+                <td style="padding:9.6px 14px;border-bottom:none;white-space:nowrap;font-size:13px;text-align:center;vertical-align:middle;color:#0f172a"><button type="button" style="border:1px solid #e8edf3;background:#fff;border-radius:8px;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px">👁️</button> <button type="button" style="border:1px solid #e8edf3;background:#fff;border-radius:8px;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px">💳</button> <button type="button" style="border:1px solid #e8edf3;background:#fff;border-radius:8px;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px">✏️</button> <button type="button" style="border:1px solid #e8edf3;background:#fff;border-radius:8px;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px">🗑️</button></td>
+                <td style="padding:9.6px 14px;border-bottom:none;white-space:nowrap;text-align:center;font-size:12.48px;font-variant-numeric:tabular-nums;color:#64748b;font-weight:500">4249</td>
+                <td style="padding:9.6px 14px;border-bottom:none;white-space:nowrap;font-size:13px;color:#0f172a">16/09/2026</td>
+                <td style="padding:9.6px 14px;border-bottom:none;white-space:nowrap;text-align:center"><span style="display:inline-flex;align-items:center;padding:3.2px 9.6px;border-radius:999px;font-size:11.2px;font-weight:700;letter-spacing:.02em;background:rgba(16,185,129,.1);color:#065f46">Oui</span></td>
+                <td style="padding:9.6px 14px;border-bottom:none;white-space:nowrap;font-size:13px;width:160px;max-width:160px;overflow:hidden;text-overflow:ellipsis"><a href="#A2" style="color:#ff2d37;font-weight:600;text-decoration:none;font-size:13px">Auto Souss Agadir</a><div style="display:block;margin-top:2.4px;color:#94a3b8;font-weight:400;font-size:11.84px">0528 84 11 90</div></td>
+                <td style="padding:9.6px 14px;border-bottom:none;white-space:nowrap;font-size:13px;color:#0f172a">Agadir</td>
+                <td style="padding:9.6px 14px;border-bottom:none;white-space:nowrap;font-size:13px;color:#0f172a">Rachid Ouali</td>
+                <td style="padding:9.6px 14px;border-bottom:none;white-space:nowrap;font-size:13px;color:#0f172a">8</td>
+                <td style="padding:9.6px 14px;border-bottom:none;white-space:nowrap;font-size:13px;color:#0f172a">-</td>
+                <td style="padding:9.6px 14px;border-bottom:none;font-size:13px"><span style="display:inline-flex;align-items:center;padding:3.2px 9.6px;border-radius:999px;font-size:11.2px;font-weight:700;background:rgba(100,116,139,.1);color:#475569">ESPECE</span></td>
+                <td style="padding:9.6px 14px;border-bottom:none;white-space:nowrap;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;font-size:13px;color:#0f172a">12 950.00</td>
+                <td style="padding:9.6px 14px;border-bottom:none;white-space:nowrap;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;font-size:13px;color:#0f172a">1 120.00<span style="display:block;font-size:11.52px;font-weight:600;letter-spacing:0;color:#dc2626">8.6%</span></td>
+                <td style="padding:9.6px 14px;border-bottom:none;white-space:nowrap"><span style="display:inline-flex;align-items:center;padding:3.2px 9.6px;border-radius:999px;font-size:11.2px;font-weight:700;background:rgba(245,158,11,.12);color:#92400e">PARTIEL</span></td>
+                <td style="padding:9.6px 14px;border-bottom:none;white-space:nowrap"><select style="padding:3.2px 11.2px;border-radius:999px;font-size:11.2px;font-weight:700;border:1px solid transparent;cursor:pointer;appearance:none;background:rgba(16,185,129,.12);color:#065f46;font-family:'Inter',sans-serif"><option>Livré</option></select></td>
+                <td style="padding:9.6px 14px;border-bottom:none;white-space:nowrap;font-size:13px;color:#0f172a">Rachid Ouali</td>
+                <td style="padding:9.6px 14px;border-bottom:none;white-space:nowrap;font-size:13px;color:#0f172a">16/09/2026 16:05</td>
+                <td style="padding:9.6px 14px;border-bottom:none;white-space:nowrap;font-size:13px;color:#0f172a">16/09/2026 17:22</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="padding:14px 20px;border-top:1px solid #e8edf3;display:flex;justify-content:space-between;align-items:center;background:#f8fafc">
+          <div style="color:#64748b;font-size:12.8px;font-weight:500">Affichage de 1 à 25 sur 1 284 entrées</div>
+          <div style="display:flex;gap:4px">
+            <button type="button" style="padding:5.6px 10.4px;border:1px solid #e8edf3;background:#fff;color:#0f172a;border-radius:8px;font-size:13.12px;font-weight:500;cursor:pointer;opacity:.4;font-family:'Inter',sans-serif">«</button>
+            <button type="button" style="padding:5.6px 10.4px;border:1px solid #ff2d37;background:#ff2d37;color:#fff;border-radius:8px;font-size:13.12px;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(255,45,55,.3);font-family:'Inter',sans-serif">1</button>
+            <button type="button" style="padding:5.6px 10.4px;border:1px solid #e8edf3;background:#fff;color:#0f172a;border-radius:8px;font-size:13.12px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif">2</button>
+            <button type="button" style="padding:5.6px 10.4px;border:1px solid #e8edf3;background:#fff;color:#0f172a;border-radius:8px;font-size:13.12px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif">3</button>
+            <button type="button" style="padding:5.6px 10.4px;border:1px solid #e8edf3;background:#fff;color:#0f172a;border-radius:8px;font-size:13.12px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif">4</button>
+            <button type="button" style="padding:5.6px 10.4px;border:1px solid #e8edf3;background:#fff;color:#0f172a;border-radius:8px;font-size:13.12px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif">5</button>
+            <button type="button" style="padding:5.6px 10.4px;border:1px solid #e8edf3;background:#fff;color:#0f172a;border-radius:8px;font-size:13.12px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif">»</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</div>
+
+<p style="margin:24px 0 0;max-width:880px;font:400 12.5px/1.6 'Inter',sans-serif;color:#64748b">Ce que la recréation met en évidence, et qui recoupe vos réponses : neuf destinations de menu dont cinq accordéons fermés, un Accueil de 24 cadrans sans hiérarchie ni action, huit cadrans de plus sur Ventes, quinze filtres toujours dépliés, dix-sept colonnes en défilement horizontal, sept couleurs de badge pour trois sens. Prochaine étape : les directions de refonte.</p>
+
+</section>
+
+</x-dc>
+</body>
+</html>

@@ -49,8 +49,8 @@
               </div>
             </td>
             <td class="text-center actions-cell">
-              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(role)" title="Modifier" *ngIf="authService.hasPermission('edit roles')">✏️</button>
-              <button class="btn-icon btn-sm text-danger" (click)="deleteRole(role)" title="Supprimer" *ngIf="authService.hasPermission('delete roles')">🗑️</button>
+              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(role)" title="Modifier" *ngIf="authService.hasPermission('edit roles')"><app-icon name="edit" [size]="14" /></button>
+              <button class="btn-icon btn-sm text-danger" (click)="deleteRole(role)" title="Supprimer" *ngIf="authService.hasPermission('delete roles')"><app-icon name="trash" [size]="14" /></button>
             </td>
           </tr>
         </tbody>
@@ -69,7 +69,7 @@
           <div class="group-perms">
             <div class="perm-item" *ngFor="let perm of entry.value">
               <span class="perm-name">{{ perm.name }}</span>
-              <button class="btn-icon btn-xs text-danger" (click)="deletePermission(perm)" title="Supprimer" *ngIf="authService.hasPermission('delete roles')">🗑️</button>
+              <button class="btn-icon btn-xs text-danger" (click)="deletePermission(perm)" title="Supprimer" *ngIf="authService.hasPermission('delete roles')"><app-icon name="trash" [size]="14" /></button>
             </div>
           </div>
         </div>

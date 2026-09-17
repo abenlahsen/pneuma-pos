@@ -2,7 +2,7 @@
   <div class="section-header">
     <h3 class="section-title">Demandes de modification d'expédition</h3>
     <button type="button" class="btn btn-secondary btn-sm" *ngIf="canCreate" (click)="add.emit()">
-      📦 Nouvelle demande
+      <app-icon name="package" [size]="14" /> Nouvelle demande
     </button>
   </div>
 
@@ -34,8 +34,8 @@
             <span class="badge" [ngClass]="statusClass(r.status)">{{ statusLabels[r.status] }}</span>
           </td>
           <td class="text-right actions-cell">
-            <button type="button" class="btn-icon" title="Imprimer" (click)="print.emit(r)">🖨️</button>
-            <button type="button" class="btn-icon" title="Modifier" *ngIf="canEdit && !isClosed(r)" (click)="edit.emit(r)">✏️</button>
+            <button type="button" class="btn-icon" title="Imprimer" (click)="print.emit(r)"><app-icon name="print" [size]="14" /></button>
+            <button type="button" class="btn-icon" title="Modifier" *ngIf="canEdit && !isClosed(r)" (click)="edit.emit(r)"><app-icon name="edit" [size]="14" /></button>
             <select
               class="status-select"
               *ngIf="canEdit && !isClosed(r)"
@@ -44,7 +44,7 @@
               title="Changer le statut">
               <option *ngFor="let s of allStatuses" [value]="s">{{ statusLabels[s] }}</option>
             </select>
-            <button type="button" class="btn-icon danger" title="Supprimer" *ngIf="canDelete && !isClosed(r)" (click)="delete.emit(r)">🗑️</button>
+            <button type="button" class="btn-icon danger" title="Supprimer" *ngIf="canDelete && !isClosed(r)" (click)="delete.emit(r)"><app-icon name="trash" [size]="14" /></button>
           </td>
         </tr>
       </tbody>

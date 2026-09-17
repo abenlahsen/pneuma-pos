@@ -3,6 +3,7 @@ import {
   OnInit, signal, inject, ElementRef, ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../../shared/icon/icon.component';
 import { PrintService } from '../../../../core/services/print.service';
 import { CompanySettings } from '../../../settings/models/company-settings.model';
 import { ShipmentChangeItem, ShipmentChangeRequest, SHIPMENT_CHANGE_FIELD_LABELS } from '../../models/shipment-change.model';
@@ -10,7 +11,7 @@ import { ShipmentChangeItem, ShipmentChangeRequest, SHIPMENT_CHANGE_FIELD_LABELS
 @Component({
   selector: 'app-shipment-change-print',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   templateUrl: './shipment-change-print.component.html',
   styleUrl: './shipment-change-print.component.scss',
 })

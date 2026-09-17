@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { AccountService } from '../data-access/account.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -15,7 +16,7 @@ import { SalePaymentDetailComponent } from '../../sales/components/sale-payment-
 @Component({
   selector: 'app-accounts-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AccountFormComponent, TransferFormComponent, AutoRefreshControlComponent, PurchasePaymentDetailComponent, SalePaymentDetailComponent],
+  imports: [CommonModule, FormsModule, AccountFormComponent, TransferFormComponent, AutoRefreshControlComponent, PurchasePaymentDetailComponent, SalePaymentDetailComponent, IconComponent],
   templateUrl: './accounts-page.component.html',
   styleUrls: ['./accounts-page.component.scss']
 })
@@ -79,13 +80,13 @@ export class AccountsPageComponent implements OnInit {
   getIcon(type: string): string {
     switch (type) {
       case 'cash':
-        return '💵';
+        return 'banknote';
       case 'bank':
-        return '🏦';
+        return 'banknote';
       case 'person':
-        return '👤';
+        return 'user';
       default:
-        return '💼';
+        return 'package';
     }
   }
 

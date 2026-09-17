@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { Product, ProductPayload } from '../models/product.model';
 import { Stock, StockPayload } from '../../../core/models/stock.model';
@@ -11,7 +12,7 @@ import { AuthService } from '../../../core/services/auth.service';
 @Component({
   selector: 'app-product-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, IconComponent],
   templateUrl: './product-form.component.html',
   styleUrls: ['../../sales/sale-form/sale-form.component.scss', './product-form.component.scss']
 })

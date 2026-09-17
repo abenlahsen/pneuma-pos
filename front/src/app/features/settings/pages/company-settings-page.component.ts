@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { SettingsService } from '../data-access/settings.service';
@@ -19,7 +20,7 @@ type ContentWidthOption = 'full' | 'boxed' | 'compact';
 @Component({
   selector: 'app-company-settings-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, IconComponent],
   templateUrl: './company-settings-page.component.html',
   styleUrls: ['./company-settings-page.component.scss'],
 })

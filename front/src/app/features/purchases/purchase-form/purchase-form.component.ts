@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { Purchase, PurchasePayload } from '../../../core/models/purchase.model';
@@ -16,7 +17,7 @@ import { StockService } from '../../../core/services/stock.service';
 @Component({
   selector: 'app-purchase-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductDetailComponent],
+  imports: [CommonModule, FormsModule, ProductDetailComponent, IconComponent],
   templateUrl: './purchase-form.component.html',
   styleUrls: ['./purchase-form.component.scss']
 })

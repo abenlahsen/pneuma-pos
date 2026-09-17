@@ -2,7 +2,7 @@
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>Détail du paiement<ng-container *ngIf="detail() as d"> #{{ d.id }}</ng-container></h2>
-      <button class="btn-icon" type="button" (click)="close()">✕</button>
+      <button class="btn-icon" type="button" (click)="close()"><app-icon name="close" [size]="14" /></button>
     </div>
 
     <div class="modal-body">
@@ -71,7 +71,7 @@
                   </span>
                 </td>
                 <td class="col-right">
-                  <button type="button" class="btn-icon" title="Voir l'achat" (click)="goToPurchase(p.id)">🔗</button>
+                  <button type="button" class="btn-icon" title="Voir l'achat" (click)="goToPurchase(p.id)"><app-icon name="link" [size]="14" /></button>
                 </td>
               </tr>
             </tbody>

@@ -37,7 +37,7 @@
 
   <div class="summary-cards">
     <div class="card summary-card">
-      <div class="card-icon">📦</div>
+      <div class="card-icon"><app-icon name="package" [size]="20" /></div>
       <div>
         <p class="card-label">Articles</p>
         <h3 class="card-value">
@@ -59,7 +59,7 @@
     </div>
 
     <div class="card summary-card">
-      <div class="card-icon">💰</div>
+      <div class="card-icon"><app-icon name="banknote" [size]="20" /></div>
       <div>
         <p class="card-label">Valeur d'achat</p>
         <h3 class="card-value">
@@ -134,18 +134,18 @@
             <th>Marquage</th>
             <th class="sortable" (click)="toggleSort('depot')">
               Dépôt
-              <span class="sort-icon">{{ sortBy() === 'depot' ? (sortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span>
+              <app-sort-icon [active]="sortBy() === 'depot'" [dir]="sortDirection()" />
             </th>
             <th>Zone</th>
             <th>Pays</th>
             <th>DOT</th>
             <th class="sortable text-right" (click)="toggleSort('quantity')">
               Quantité
-              <span class="sort-icon">{{ sortBy() === 'quantity' ? (sortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span>
+              <app-sort-icon [active]="sortBy() === 'quantity'" [dir]="sortDirection()" />
             </th>
             <th class="sortable text-right" (click)="toggleSort('purchase_price')">
               Prix achat
-              <span class="sort-icon">{{ sortBy() === 'purchase_price' ? (sortDirection() === 'asc' ? '&#9650;' : '&#9660;') : '&#8693;' }}</span>
+              <app-sort-icon [active]="sortBy() === 'purchase_price'" [dir]="sortDirection()" />
             </th>
             <th class="text-right">Valeur</th>
           </tr>
@@ -166,7 +166,7 @@
 
           <tr *ngFor="let stock of stocks()">
             <td *ngIf="authService.hasPermission('edit stock')" class="text-center actions-cell">
-              <button class="btn-icon btn-sm" type="button" (click)="openEditModal(stock)" title="Corriger le stock">✏️</button>
+              <button class="btn-icon btn-sm" type="button" (click)="openEditModal(stock)" title="Corriger le stock"><app-icon name="edit" [size]="14" /></button>
             </td>
             <td>
               <button class="reference-link" type="button" (click)="openMovementsModal(stock)" [disabled]="!stock.product_id">
@@ -244,7 +244,7 @@
           <span *ngIf="editingStock()?.product?.brand?.name">— {{ editingStock()?.product?.brand?.name }}</span>
         </p>
       </div>
-      <button class="btn-icon" type="button" (click)="closeEditModal()">✕</button>
+      <button class="btn-icon" type="button" (click)="closeEditModal()"><app-icon name="close" [size]="14" /></button>
     </div>
 
     <div class="modal-body">
@@ -342,7 +342,7 @@
           <span *ngIf="selectedStock()?.product?.profile">— {{ selectedStock()?.product?.profile }}</span>
         </p>
       </div>
-      <button class="btn-icon" type="button" (click)="closeMovementsModal()">✕</button>
+      <button class="btn-icon" type="button" (click)="closeMovementsModal()"><app-icon name="close" [size]="14" /></button>
     </div>
 
     <div class="modal-body">

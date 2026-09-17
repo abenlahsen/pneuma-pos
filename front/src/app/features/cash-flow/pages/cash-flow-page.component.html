@@ -14,21 +14,21 @@
 
   <div class="summary-cards">
     <div class="card summary-card income">
-      <div class="card-icon">📈</div>
+      <div class="card-icon"><app-icon name="trending-up" [size]="20" /></div>
       <div class="card-content">
         <p class="card-label">Revenus</p>
         <h3 class="card-value">{{ summary().income | number:'1.2-2' }} DH</h3>
       </div>
     </div>
     <div class="card summary-card expense">
-      <div class="card-icon">📉</div>
+      <div class="card-icon"><app-icon name="trending-down" [size]="20" /></div>
       <div class="card-content">
         <p class="card-label">Dépenses</p>
         <h3 class="card-value">{{ summary().expenses | number:'1.2-2' }} DH</h3>
       </div>
     </div>
     <div class="card summary-card balance" [class.negative]="summary().balance < 0">
-      <div class="card-icon">💎</div>
+      <div class="card-icon"><app-icon name="target" [size]="20" /></div>
       <div class="card-content">
         <p class="card-label">Solde</p>
         <h3 class="card-value">{{ summary().balance | number:'1.2-2' }} DH</h3>
@@ -126,8 +126,8 @@
             (change)="applyFilters()" placeholder="∞" />
         </div>
         <div class="filter-actions">
-          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher">🔍</button>
-          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser">✕</button>
+          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher"><app-icon name="search" [size]="14" /></button>
+          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser"><app-icon name="close" [size]="14" /></button>
         </div>
       </div>
     </div>
@@ -137,7 +137,7 @@
     <div class="card pending-section">
       <div class="pending-header" (click)="pendingCollapsed.set(!pendingCollapsed())">
         <div class="pending-title">
-          <span class="pending-icon">⏳</span>
+          <span class="pending-icon"><app-icon name="clock" [size]="14" /></span>
           <span>Transactions à venir</span>
           @if (loadingPending()) {
             <span class="inline-spinner pending-spinner"></span>
@@ -152,7 +152,7 @@
           @if (summary().pending_expense > 0) {
             <span class="amount-expense">-{{ summary().pending_expense | number:'1.2-2' }} DH</span>
           }
-          <span class="collapse-icon">{{ pendingCollapsed() ? '▶' : '▼' }}</span>
+          <app-icon class="collapse-icon" [name]="pendingCollapsed() ? 'chevron-right' : 'chevron-down'" [size]="12" />
         </div>
       </div>
       @if (!pendingCollapsed()) {
@@ -187,20 +187,20 @@
                         (click)="openPaymentView(t)"
                         class="btn-icon btn-view"
                         title="Voir le détail du paiement"
-                      >👁️</button>
+                      ><app-icon name="view" [size]="14" /></button>
                       <button
                         *ngIf="t.sale_payment_id"
                         (click)="openSalePaymentView(t)"
                         class="btn-icon btn-view"
                         title="Voir le détail du paiement"
-                      >👁️</button>
+                      ><app-icon name="view" [size]="14" /></button>
                       <button
                         (click)="openEditForm(t)"
                         class="btn-icon btn-edit"
                         title="Modifier"
                         *ngIf="authService.hasPermission('edit cash-flow')"
                         [disabled]="deletingTransactionId() === t.id"
-                      >✏️</button>
+                      ><app-icon name="edit" [size]="14" /></button>
                       <button
                         (click)="deleteTransaction(t)"
                         class="btn-icon btn-delete"
@@ -208,7 +208,7 @@
                         *ngIf="authService.hasPermission('delete cash-flow')"
                         [disabled]="deletingTransactionId() === t.id"
                       >
-                        <span *ngIf="deletingTransactionId() !== t.id">🗑️</span>
+                        <span *ngIf="deletingTransactionId() !== t.id"><app-icon name="trash" [size]="14" /></span>
                         <span *ngIf="deletingTransactionId() === t.id" class="inline-spinner"></span>
                       </button>
                     </td>
@@ -251,13 +251,13 @@
         <thead>
           <tr>
             <th>Actions</th>
-            <th class="sortable" (click)="toggleSort('date')">Date <span class="sort-icon">{{ sortBy() === 'date' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
-            <th class="sortable" (click)="toggleSort('amount')">Montant <span class="sort-icon">{{ sortBy() === 'amount' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
-            <th class="sortable" (click)="toggleSort('type')">Type <span class="sort-icon">{{ sortBy() === 'type' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th class="sortable" (click)="toggleSort('date')">Date <app-sort-icon [active]="sortBy() === 'date'" [dir]="sortDirection()" /></th>
+            <th class="sortable" (click)="toggleSort('amount')">Montant <app-sort-icon [active]="sortBy() === 'amount'" [dir]="sortDirection()" /></th>
+            <th class="sortable" (click)="toggleSort('type')">Type <app-sort-icon [active]="sortBy() === 'type'" [dir]="sortDirection()" /></th>
             <th>Compte</th>
-            <th class="sortable" (click)="toggleSort('category')">Catégorie <span class="sort-icon">{{ sortBy() === 'category' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
-            <th class="sortable desc-col" (click)="toggleSort('description')">Description <span class="sort-icon">{{ sortBy() === 'description' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
-            <th class="sortable" (click)="toggleSort('created_at')">Créé le <span class="sort-icon">{{ sortBy() === 'created_at' ? (sortDirection() === 'asc' ? '▲' : '▼') : '⇅' }}</span></th>
+            <th class="sortable" (click)="toggleSort('category')">Catégorie <app-sort-icon [active]="sortBy() === 'category'" [dir]="sortDirection()" /></th>
+            <th class="sortable desc-col" (click)="toggleSort('description')">Description <app-sort-icon [active]="sortBy() === 'description'" [dir]="sortDirection()" /></th>
+            <th class="sortable" (click)="toggleSort('created_at')">Créé le <app-sort-icon [active]="sortBy() === 'created_at'" [dir]="sortDirection()" /></th>
           </tr>
         </thead>
         <tbody>
@@ -276,7 +276,7 @@
                   class="btn-icon btn-view"
                   title="Voir le détail du paiement"
                 >
-                  👁️
+                  <app-icon name="view" [size]="14" />
                 </button>
                 <button
                   *ngIf="t.sale_payment_id"
@@ -284,7 +284,7 @@
                   class="btn-icon btn-view"
                   title="Voir le détail du paiement"
                 >
-                  👁️
+                  <app-icon name="view" [size]="14" />
                 </button>
                 <button
                   (click)="openEditForm(t)"
@@ -293,7 +293,7 @@
                   *ngIf="authService.hasPermission('edit cash-flow')"
                   [disabled]="deletingTransactionId() === t.id"
                 >
-                  ✏️
+                  <app-icon name="edit" [size]="14" />
                 </button>
                 <button
                   (click)="deleteTransaction(t)"
@@ -302,7 +302,7 @@
                   *ngIf="authService.hasPermission('delete cash-flow')"
                   [disabled]="deletingTransactionId() === t.id"
                 >
-                  <span *ngIf="deletingTransactionId() !== t.id">🗑️</span>
+                  <span *ngIf="deletingTransactionId() !== t.id"><app-icon name="trash" [size]="14" /></span>
                   <span *ngIf="deletingTransactionId() === t.id" class="inline-spinner"></span>
                 </button>
               </td>

@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { catchError, of } from 'rxjs';
@@ -31,7 +32,7 @@ import { SaleFormComponent } from '../../sales/sale-form/sale-form.component';
 @Component({
   selector: 'app-client-detail-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, ClientFormComponent, VehicleFormComponent, SaleFormComponent, ClientPaymentComponent, SalePaymentDetailComponent],
+  imports: [CommonModule, RouterLink, ClientFormComponent, VehicleFormComponent, SaleFormComponent, ClientPaymentComponent, SalePaymentDetailComponent, IconComponent],
   templateUrl: './client-detail-page.component.html',
   styleUrl: './client-detail-page.component.scss',
 })

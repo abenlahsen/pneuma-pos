@@ -1,8 +1,8 @@
 <div class="modal-overlay" (click)="onCancel()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>{{ isEdit() ? '✏️ Modifier' : '➕ Nouvelle' }} Transaction</h2>
-      <button (click)="onCancel()" class="btn-close">✕</button>
+      <h2><app-icon [name]="isEdit() ? 'edit' : 'plus'" [size]="16" /> {{ isEdit() ? 'Modifier' : 'Nouvelle' }} Transaction</h2>
+      <button (click)="onCancel()" class="btn-close"><app-icon name="close" [size]="14" /></button>
     </div>
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-body">
@@ -13,7 +13,7 @@
           [class.active]="form.get('type')?.value === 'income'"
           (click)="form.get('type')?.setValue('income')"
         >
-          📈 Revenu
+          <app-icon name="trending-up" [size]="14" /> Revenu
         </button>
         <button
           type="button"
@@ -21,7 +21,7 @@
           [class.active]="form.get('type')?.value === 'expense'"
           (click)="form.get('type')?.setValue('expense')"
         >
-          📉 Dépense
+          <app-icon name="trending-down" [size]="14" /> Dépense
         </button>
       </div>
 

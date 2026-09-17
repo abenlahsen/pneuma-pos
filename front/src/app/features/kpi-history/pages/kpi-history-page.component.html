@@ -1,7 +1,7 @@
 <div class="page-wrapper">
   <div class="page-header">
     <div class="header-left">
-      <h1 class="page-title">📈 Historique KPIs</h1>
+      <h1 class="page-title"><app-icon name="trending-up" [size]="14" /> Historique KPIs</h1>
       <span class="total-badge">{{ totalItems() }} snapshot{{ totalItems() > 1 ? 's' : '' }}</span>
     </div>
     <app-auto-refresh-control pageKey="kpi-history" [defaultIntervalMs]="300000" (refresh)="load()" />
@@ -19,7 +19,7 @@
         <input type="date" class="form-control" [ngModel]="filterTo()" (ngModelChange)="filterTo.set($event)" />
       </div>
       <div class="filter-actions">
-        <button class="btn-primary" (click)="applyFilters()">🔍 Filtrer</button>
+        <button class="btn-primary" (click)="applyFilters()"><app-icon name="search" [size]="14" /> Filtrer</button>
         <button class="btn-secondary" (click)="resetFilters()">Réinitialiser</button>
       </div>
     </div>
@@ -65,7 +65,7 @@
                   {{ fmt(snap.data.cash_balance) }} DH
                 </td>
                 <td class="text-center">
-                  <button class="btn-icon" (click)="openDetail(snap)" title="Détail">👁️</button>
+                  <button class="btn-icon" (click)="openDetail(snap)" title="Détail"><app-icon name="view" [size]="14" /></button>
                 </td>
               </tr>
             }
@@ -76,11 +76,11 @@
       <!-- Pagination -->
       @if (totalPages() > 1) {
         <div class="pagination">
-          <button class="page-btn" [disabled]="page() === 1" (click)="goPage(page() - 1)">‹</button>
+          <button class="page-btn" [disabled]="page() === 1" (click)="goPage(page() - 1)"><app-icon name="chevron-left" [size]="14" /></button>
           @for (p of pages; track p) {
             <button class="page-btn" [class.active]="p === page()" (click)="goPage(p)">{{ p }}</button>
           }
-          <button class="page-btn" [disabled]="page() === totalPages()" (click)="goPage(page() + 1)">›</button>
+          <button class="page-btn" [disabled]="page() === totalPages()" (click)="goPage(page() + 1)"><app-icon name="chevron-right" [size]="14" /></button>
         </div>
       }
     }
@@ -93,9 +93,9 @@
     <div class="modal-container" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div class="modal-title-group">
-          <h2 class="modal-title">📈 Snapshot du {{ fmtDate(selectedSnapshot()!.snapshot_date) }}</h2>
+          <h2 class="modal-title"><app-icon name="trending-up" [size]="14" /> Snapshot du {{ fmtDate(selectedSnapshot()!.snapshot_date) }}</h2>
         </div>
-        <button class="btn-icon" (click)="closeDetail()">✕</button>
+        <button class="btn-icon" (click)="closeDetail()"><app-icon name="close" [size]="14" /></button>
       </div>
 
       <div class="modal-tabs">

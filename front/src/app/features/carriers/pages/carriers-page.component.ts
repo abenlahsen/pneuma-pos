@@ -1,16 +1,18 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { CarrierService } from '../data-access/carrier.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Carrier, CarrierPayload, PaginatedResponse } from '../models/carrier.model';
 import { CarrierFormComponent } from '../components/carrier-form/carrier-form.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
+import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 
 @Component({
   selector: 'app-carriers-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, CarrierFormComponent, AutoRefreshControlComponent],
+  imports: [CommonModule, FormsModule, CarrierFormComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent],
   templateUrl: './carriers-page.component.html',
   styleUrls: ['./carriers-page.component.scss'],
 })

@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../../shared/icon/icon.component';
 import { Router } from '@angular/router';
 import { PurchaseService } from '../../../../core/services/purchase.service';
 import { PurchasePaymentDetail } from '../../../../core/models/purchase.model';
@@ -7,7 +8,7 @@ import { PurchasePaymentDetail } from '../../../../core/models/purchase.model';
 @Component({
   selector: 'app-purchase-payment-detail',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   templateUrl: './purchase-payment-detail.component.html',
   styleUrl: './purchase-payment-detail.component.scss',
 })

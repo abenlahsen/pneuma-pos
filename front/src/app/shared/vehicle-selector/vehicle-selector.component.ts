@@ -3,6 +3,7 @@ import {
   OnChanges, SimpleChanges, signal, inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { VehicleService } from '../../features/vehicles/data-access/vehicle.service';
 import { Vehicle } from '../../features/vehicles/models/vehicle.model';
@@ -11,7 +12,7 @@ import { VehicleFormComponent } from '../vehicle-form/vehicle-form.component';
 @Component({
   selector: 'app-vehicle-selector',
   standalone: true,
-  imports: [CommonModule, FormsModule, VehicleFormComponent],
+  imports: [CommonModule, FormsModule, VehicleFormComponent, IconComponent],
   templateUrl: './vehicle-selector.component.html',
   styleUrl: './vehicle-selector.component.scss',
 })

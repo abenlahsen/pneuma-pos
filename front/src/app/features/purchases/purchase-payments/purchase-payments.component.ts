@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { PurchaseService } from '../../../core/services/purchase.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -13,7 +14,7 @@ const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Effet', 'Carte banc
 @Component({
   selector: 'app-purchase-payments',
   standalone: true,
-  imports: [CommonModule, FormsModule, PurchasePaymentDetailComponent],
+  imports: [CommonModule, FormsModule, PurchasePaymentDetailComponent, IconComponent],
   templateUrl: './purchase-payments.component.html',
   styleUrl: './purchase-payments.component.scss',
 })

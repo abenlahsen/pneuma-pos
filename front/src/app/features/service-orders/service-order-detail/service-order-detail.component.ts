@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { ServiceOrder } from '../../../core/models/service-order.model';
 import { PaymentStatus, ServiceOrderStatus } from '../../../core/constants/status.constants';
 import { DocumentPrintComponent, PrintDocument, PrintLine } from '../../../shared/document-print/document-print.component';
@@ -7,7 +8,7 @@ import { DocumentPrintComponent, PrintDocument, PrintLine } from '../../../share
 @Component({
   selector: 'app-service-order-detail',
   standalone: true,
-  imports: [CommonModule, DocumentPrintComponent],
+  imports: [CommonModule, DocumentPrintComponent, IconComponent],
   templateUrl: './service-order-detail.component.html',
   styleUrl: './service-order-detail.component.scss',
 })

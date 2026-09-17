@@ -21,7 +21,7 @@
   </div>
 
   <div *ngIf="!loading() && error()" class="error-banner">
-    ⚠️ {{ error() }}
+    <app-icon name="alert-triangle" [size]="14" /> {{ error() }}
     <button class="btn btn-secondary btn-sm" (click)="loadData()">Réessayer</button>
   </div>
 
@@ -42,7 +42,7 @@
           [class.warning-card]="card.variant === 'warning'"
           [class.negative-card]="card.kind === 'money' && card.value < 0"
         >
-          <div class="kpi-icon">{{ card.icon }}</div>
+          <div class="kpi-icon"><app-icon [name]="card.icon" [size]="20" /></div>
           <div class="kpi-info">
             <span class="kpi-label">{{ card.label }}</span>
             <span class="kpi-val">

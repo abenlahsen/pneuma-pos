@@ -20,8 +20,8 @@
           <input type="text" class="form-control" [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event)" placeholder="Nom ou email..." (keyup.enter)="applyFilters()" autocomplete="off">
         </div>
         <div class="filter-actions">
-          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher">🔍</button>
-          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser">✕</button>
+          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher"><app-icon name="search" [size]="14" /></button>
+          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser"><app-icon name="close" [size]="14" /></button>
         </div>
       </div>
     </div>
@@ -67,8 +67,8 @@
             </td>
             <td>{{ user.created_at | date:'dd/MM/yyyy' }}</td>
             <td class="text-center actions-cell">
-              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(user)" title="Modifier" *ngIf="authService.hasPermission('edit users')">✏️</button>
-              <button class="btn-icon btn-sm text-danger" (click)="deleteUser(user)" title="Supprimer" *ngIf="authService.hasPermission('delete users')">🗑️</button>
+              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(user)" title="Modifier" *ngIf="authService.hasPermission('edit users')"><app-icon name="edit" [size]="14" /></button>
+              <button class="btn-icon btn-sm text-danger" (click)="deleteUser(user)" title="Supprimer" *ngIf="authService.hasPermission('delete users')"><app-icon name="trash" [size]="14" /></button>
             </td>
           </tr>
         </tbody>

@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
@@ -12,6 +13,7 @@ import {
   TransactionSummary,
 } from '../models/transaction.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
+import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 import { AccountService } from '../../accounts/data-access/account.service';
 import { Account } from '../../accounts/models/account.model';
 import { PurchasePaymentDetailComponent } from '../../purchases/components/purchase-payment-detail/purchase-payment-detail.component';
@@ -22,7 +24,7 @@ import { TransactionCategory } from '../../transaction-categories/models/transac
 @Component({
   selector: 'app-cash-flow-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TransactionFormComponent, AutoRefreshControlComponent, PurchasePaymentDetailComponent, SalePaymentDetailComponent],
+  imports: [CommonModule, FormsModule, TransactionFormComponent, AutoRefreshControlComponent, SortIconComponent, PurchasePaymentDetailComponent, SalePaymentDetailComponent, IconComponent],
   templateUrl: './cash-flow-page.component.html',
   styleUrls: ['./cash-flow-page.component.scss'],
 })

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"><style>body{margin:0;background:#dfe7f2;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}a{color:#c2181f}a:hover{color:#8f1218}</style></helmet>
+
+<section style="padding:36px 40px 44px;display:flex;flex-direction:column;gap:18px">
+
+<div style="display:flex;align-items:baseline;gap:10px">
+<span style="font:700 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#0c1e33;color:#fff;border-radius:4px;letter-spacing:.06em">10</span>
+<span style="font:700 13px/1.2 'Inter',sans-serif;color:#0c1e33">REPORTING MENSUEL — palette 2b</span>
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e">Cet écran est déjà le mieux construit de l'application : il compare au mois précédent, ce que l'Accueil ne fait jamais. Son défaut est d'être présenté comme une page web — groupes de cadrans puis cinq tableaux empilés — alors que c'est <strong style="font-weight:600;color:#0c1e33">un document</strong> : on le lit en fin de mois, on l'imprime, on l'envoie.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Une page de bilan, pas une suite de cartes.</strong> Les chiffres clés forment un tableau à trois colonnes — mois, mois précédent, variation — au lieu de cadrans dont l'écart se lit en petit. Les tableaux détaillés suivent dans la même grille, en deux colonnes pour tenir sur une hauteur d'écran.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">La variation est une colonne, pas une couleur.</strong> Le signe et le pourcentage suffisent ; la couleur ne sert qu'aux écarts qui demandent une explication (marge en baisse, impayés en hausse).</p>
+</div>
+
+<div id="10a" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter',sans-serif;color:#41546e"><a href="#10a" style="font:700 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(12,30,51,.1);color:#0c1e33;border-radius:5px;text-decoration:none">10a</a>Reporting — septembre 2026 comparé à août</div>
+
+<div style="width:1440px;height:880px;display:grid;grid-template-columns:72px minmax(0,1fr);grid-template-rows:60px minmax(0,1fr);background:#e6edf7;color:#0c1e33;border:1px solid #adc2da;overflow:hidden;box-shadow:0 10px 25px rgba(12,30,51,.14)">
+
+  <div style="grid-column:1/-1;display:flex;align-items:center;gap:18px;padding:0 18px;background:#f4f8fd;border-bottom:1px solid #cfdcec">
+    <img src="assets/logo.png" alt="PNEU.MA" style="height:26px;width:auto">
+    <span style="font-size:15px;font-weight:700;letter-spacing:-.01em">Reporting mensuel</span>
+    <div style="display:flex;align-items:center;gap:0">
+      <button type="button" title="Mois précédent" style="width:32px;height:32px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13px;cursor:pointer">←</button>
+      <span style="height:32px;padding:0 14px;display:flex;align-items:center;border:1px solid #adc2da;border-left:0;border-right:0;background:#fff;font-size:13px;font-weight:700">Septembre 2026</span>
+      <button type="button" title="Mois suivant" style="width:32px;height:32px;border:1px solid #adc2da;background:#f4f8fd;color:#adc2da;font-family:inherit;font-size:13px;cursor:not-allowed">→</button>
+    </div>
+    <span style="font-size:11.5px;color:#4a5c75">Variations vs août 2026</span>
+    <span style="margin-left:auto;font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">Arrêté au 17/09 · mois en cours</span>
+    <button type="button" style="height:36px;padding:0 13px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Imprimer</button>
+    <button type="button" style="height:36px;padding:0 13px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Excel</button>
+    <span style="width:30px;height:30px;background:#ff2d37;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">YB</span>
+  </div>
+
+  <nav style="grid-row:2;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;background:#081627">
+    <a href="#10a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>ACCUEIL</a>
+    <a href="#10a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 3h7l11 11-7 7L3 10V3z"/></svg>VENTES</a>
+    <a href="#10a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M14.5 3.5a5 5 0 0 0-6.3 6.3L3 15v6h6l5.2-5.2a5 5 0 0 0 6.3-6.3l-3.2 3.2-3-3 3.2-3.2z"/></svg>SERVICE</a>
+    <a href="#10a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg>ACHATS</a>
+    <a href="#10a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 6h18v12H3z"/><circle cx="12" cy="12" r="2.5"/></svg>CAISSE</a>
+    <span style="width:34px;height:1px;background:rgba(230,237,247,.2);margin:7px 0"></span>
+    <a href="#10a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/></svg>STOCK</a>
+    <a href="#10a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><circle cx="12" cy="8" r="3.4"/><path d="M5 20v-1.6c0-2.3 3.1-3.6 7-3.6s7 1.3 7 3.6V20"/></svg>TIERS</a>
+    <a href="#10a" style="width:56px;height:54px;background:#ff2d37;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M4 20V9M10 20V4M16 20v-8M22 20H2"/></svg>CHIFFRES</a>
+    <a href="#10a" style="margin-top:auto;width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/></svg>RÉGLAGES</a>
+  </nav>
+
+  <main style="grid-column:2;grid-row:2;overflow:hidden;background:#fff;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+
+    <div style="overflow:hidden;display:flex;flex-direction:column;border-right:1px solid #cfdcec">
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 116px 116px 96px;align-items:center;gap:12px;padding:7px 20px;border-bottom:1px solid #0c1e33;background:#f4f8fd;font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#4a5c75">
+        <span>Exploitation</span><span style="text-align:right">Septembre</span><span style="text-align:right">Août</span><span style="text-align:right">Variation</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 116px 116px 96px;align-items:baseline;gap:12px;padding:13px 20px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13.5px;font-weight:600">Chiffre d'affaires</span>
+        <span style="text-align:right;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums">1 284 300</span>
+        <span style="text-align:right;font-size:13px;color:#4a5c75;font-variant-numeric:tabular-nums">1 196 800</span>
+        <span style="text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:#15616d">+7,3 %</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 116px 116px 96px;align-items:baseline;gap:12px;padding:11px 20px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13px;color:#41546e;padding-left:12px">dont ventes de pneus</span>
+        <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">1 129 200</span>
+        <span style="text-align:right;font-size:12.5px;color:#4a5c75;font-variant-numeric:tabular-nums">1 058 400</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums;color:#41546e">+6,7 %</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 116px 116px 96px;align-items:baseline;gap:12px;padding:11px 20px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13px;color:#41546e;padding-left:12px">dont service auto</span>
+        <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">155 100</span>
+        <span style="text-align:right;font-size:12.5px;color:#4a5c75;font-variant-numeric:tabular-nums">138 400</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums;color:#41546e">+12,1 %</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 116px 116px 96px;align-items:baseline;gap:12px;padding:13px 20px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13.5px;font-weight:600">Achats</span>
+        <span style="text-align:right;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums">902 500</span>
+        <span style="text-align:right;font-size:13px;color:#4a5c75;font-variant-numeric:tabular-nums">812 300</span>
+        <span style="text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:#41546e">+11,1 %</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 116px 116px 96px;align-items:baseline;gap:12px;padding:13px 20px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13.5px;font-weight:600">Marge brute</span>
+        <span style="text-align:right;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums">218 900</span>
+        <span style="text-align:right;font-size:13px;color:#4a5c75;font-variant-numeric:tabular-nums">224 100</span>
+        <span style="text-align:right;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:#c2181f">−2,3 %</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 116px 116px 96px;align-items:baseline;gap:12px;padding:11px 20px;border-bottom:1px solid #e7eef8;background:#fdeff1">
+        <span style="font-size:13px;font-weight:600;color:#8f1218;padding-left:12px">taux de marge</span>
+        <span style="text-align:right;font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums;color:#8f1218">17,0 %</span>
+        <span style="text-align:right;font-size:12.5px;color:#8f1218;font-variant-numeric:tabular-nums">18,7 %</span>
+        <span style="text-align:right;font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;color:#c2181f">−1,7 pt</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 116px 116px 96px;align-items:baseline;gap:12px;padding:13px 20px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13.5px;font-weight:600">Charges d'exploitation</span>
+        <span style="text-align:right;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums">96 400</span>
+        <span style="text-align:right;font-size:13px;color:#4a5c75;font-variant-numeric:tabular-nums">94 100</span>
+        <span style="text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:#41546e">+2,4 %</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 116px 116px 96px;align-items:baseline;gap:12px;padding:13px 20px;border-bottom:1px solid #0c1e33;background:#f4f8fd">
+        <span style="font-size:13.5px;font-weight:700">Marge nette</span>
+        <span style="text-align:right;font-size:19px;font-weight:700;font-variant-numeric:tabular-nums">122 500</span>
+        <span style="text-align:right;font-size:13px;color:#4a5c75;font-variant-numeric:tabular-nums">130 000</span>
+        <span style="text-align:right;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:#c2181f">−5,8 %</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 116px 116px 96px;align-items:center;gap:12px;padding:7px 20px;border-bottom:1px solid #0c1e33;background:#f4f8fd;font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#4a5c75">
+        <span>Volumes et encours</span><span style="text-align:right">Septembre</span><span style="text-align:right">Août</span><span style="text-align:right">Variation</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 116px 116px 96px;align-items:baseline;gap:12px;padding:11px 20px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13px;font-weight:600">Pneus vendus</span>
+        <span style="text-align:right;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">697</span>
+        <span style="text-align:right;font-size:12.5px;color:#4a5c75;font-variant-numeric:tabular-nums">661</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums;color:#41546e">+5,4 %</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 116px 116px 96px;align-items:baseline;gap:12px;padding:11px 20px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13px;font-weight:600">CA moyen par pneu</span>
+        <span style="text-align:right;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">1 620</span>
+        <span style="text-align:right;font-size:12.5px;color:#4a5c75;font-variant-numeric:tabular-nums">1 601</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums;color:#41546e">+1,2 %</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 116px 116px 96px;align-items:baseline;gap:12px;padding:11px 20px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13px;font-weight:600">Marge par pneu</span>
+        <span style="text-align:right;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">314</span>
+        <span style="text-align:right;font-size:12.5px;color:#4a5c75;font-variant-numeric:tabular-nums">339</span>
+        <span style="text-align:right;font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;color:#c2181f">−7,4 %</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 116px 116px 96px;align-items:baseline;gap:12px;padding:11px 20px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13px;font-weight:600">Impayés clients</span>
+        <span style="text-align:right;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;color:#c2181f">268 400</span>
+        <span style="text-align:right;font-size:12.5px;color:#4a5c75;font-variant-numeric:tabular-nums">214 600</span>
+        <span style="text-align:right;font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;color:#c2181f">+25,1 %</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 116px 116px 96px;align-items:baseline;gap:12px;padding:11px 20px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13px;font-weight:600">Dû aux fournisseurs</span>
+        <span style="text-align:right;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">412 000</span>
+        <span style="text-align:right;font-size:12.5px;color:#4a5c75;font-variant-numeric:tabular-nums">368 200</span>
+        <span style="text-align:right;font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;color:#41546e">+11,9 %</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 116px 116px 96px;align-items:baseline;gap:12px;padding:11px 20px">
+        <span style="font-size:13px;font-weight:600">Valeur du stock</span>
+        <span style="text-align:right;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">2 418 700</span>
+        <span style="text-align:right;font-size:12.5px;color:#4a5c75;font-variant-numeric:tabular-nums">2 302 400</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums;color:#41546e">+5,1 %</span>
+      </div>
+
+      <div style="flex:1;min-height:0;display:flex;align-items:flex-end;padding:14px 20px;background:#f4f8fd;border-top:1px solid #cfdcec">
+        <p style="margin:0;font-size:11.5px;line-height:1.6;color:#41546e"><strong style="font-weight:700;color:#0c1e33">À expliquer ce mois :</strong> le CA progresse de 7,3 % mais la marge nette recule de 5,8 %. La marge par pneu perd 25 DH, et les impayés gagnent 53 800 DH. Les deux tableaux de droite situent l'origine.</p>
+      </div>
+    </div>
+
+    <div style="overflow:hidden;display:flex;flex-direction:column">
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 62px 96px 92px 76px;align-items:center;gap:10px;padding:7px 20px;border-bottom:1px solid #0c1e33;background:#f4f8fd;font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#4a5c75">
+        <span>Commercial</span><span style="text-align:right">Pneus</span><span style="text-align:right">CA</span><span style="text-align:right">Marge</span><span style="text-align:right">Taux</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 62px 96px 92px 76px;align-items:baseline;gap:10px;padding:12px 20px;border-bottom:1px solid #e7eef8">
+        <span style="min-width:0"><span style="display:block;font-size:13.5px;font-weight:600">Karim Amrani</span><span style="display:block;font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">impayés 142 800 DH</span></span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">284</span>
+        <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">512 400</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">89 200</span>
+        <span style="text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">17,4 %</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 62px 96px 92px 76px;align-items:baseline;gap:10px;padding:12px 20px;border-bottom:1px solid #e7eef8">
+        <span style="min-width:0"><span style="display:block;font-size:13.5px;font-weight:600">Samira Bennis</span><span style="display:block;font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">impayés 68 300 DH</span></span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">231</span>
+        <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">428 900</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">76 400</span>
+        <span style="text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">17,8 %</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 62px 96px 92px 76px;align-items:baseline;gap:10px;padding:12px 20px;border-bottom:1px solid #e7eef8;background:#fdeff1">
+        <span style="min-width:0"><span style="display:block;font-size:13.5px;font-weight:600">Rachid Ouali</span><span style="display:block;font-size:11px;font-weight:600;color:#8f1218;font-variant-numeric:tabular-nums">impayés 57 300 DH · taux le plus bas</span></span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">182</span>
+        <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">343 000</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">53 300</span>
+        <span style="text-align:right;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:#c2181f">15,5 %</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 62px 96px 92px 76px;align-items:center;gap:10px;padding:7px 20px;border-top:1px solid #cfdcec;border-bottom:1px solid #0c1e33;background:#f4f8fd;font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#4a5c75">
+        <span>Marque</span><span style="text-align:right">Pneus</span><span style="text-align:right">CA</span><span style="text-align:right">Marge</span><span style="text-align:right">Part</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 62px 96px 92px 76px;align-items:baseline;gap:10px;padding:10px 20px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13px;font-weight:600">Michelin</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">218</span>
+        <span style="text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">392 400</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">62 800</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">31,3 %</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 62px 96px 92px 76px;align-items:baseline;gap:10px;padding:10px 20px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13px;font-weight:600">Bridgestone</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">164</span>
+        <span style="text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">293 600</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">51 400</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">23,5 %</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 62px 96px 92px 76px;align-items:baseline;gap:10px;padding:10px 20px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13px;font-weight:600">Hankook</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">142</span>
+        <span style="text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">186 300</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">39 100</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">20,4 %</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 62px 96px 92px 76px;align-items:baseline;gap:10px;padding:10px 20px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13px;font-weight:600">Continental</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">98</span>
+        <span style="text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">148 200</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">28 400</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">14,1 %</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 62px 96px 92px 76px;align-items:baseline;gap:10px;padding:10px 20px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13px;color:#41546e">Autres marques</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">75</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">108 700</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">37 200</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">10,7 %</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 116px 96px 92px;align-items:center;gap:10px;padding:7px 20px;border-top:1px solid #cfdcec;border-bottom:1px solid #0c1e33;background:#f4f8fd;font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#4a5c75">
+        <span>Charges par catégorie</span><span style="text-align:right">Montant</span><span style="text-align:right">Part</span><span style="text-align:right">vs août</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 116px 96px 92px;align-items:baseline;gap:10px;padding:10px 20px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13px;font-weight:600">Masse salariale</span>
+        <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">68 400</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">71,0 %</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums;color:#41546e">+1,8 %</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 116px 96px 92px;align-items:baseline;gap:10px;padding:10px 20px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13px;font-weight:600">Loyer et charges fixes</span>
+        <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">18 000</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">18,7 %</span>
+        <span style="text-align:right;font-size:12.5px;color:#4a5c75;font-variant-numeric:tabular-nums">—</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 116px 96px 92px;align-items:baseline;gap:10px;padding:10px 20px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13px;font-weight:600">Transport et livraison</span>
+        <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">6 400</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">6,6 %</span>
+        <span style="text-align:right;font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;color:#41546e">+18,5 %</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 116px 96px 92px;align-items:baseline;gap:10px;padding:10px 20px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:13px;color:#41546e">Autres charges</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">3 600</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">3,7 %</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums;color:#41546e">−9,1 %</span>
+      </div>
+
+      <div style="flex:1;min-height:0;display:flex;align-items:flex-end;padding:14px 20px;background:#f4f8fd;border-top:1px solid #cfdcec">
+        <p style="margin:0;font-size:11.5px;line-height:1.6;color:#41546e">Deux pistes lisibles dans ces tableaux : Hankook pèse 20,4 % des volumes pour la marge unitaire la plus faible, et un commercial vend 15,5 % de marge contre 17,8 % pour sa collègue. Les 25 DH perdus par pneu se répartissent entre ces deux effets.</p>
+      </div>
+    </div>
+
+  </main>
+</div>
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e">La page tient sur une hauteur d'écran et s'imprime telle quelle : deux colonnes, chiffres alignés à droite, un seul niveau de couleur pour les écarts à expliquer. Les deux encadrés de bas de colonne sont le seul texte rédigé — ils nomment l'écart, sans l'interpréter à votre place.</p>
+<p style="margin:0;font:400 12px/1.5 'Inter',sans-serif;color:#4a5c75">À dire ensuite : « ajoute la comparaison à N-1 » · « la version PDF à envoyer » · « détail de la masse salariale » · « le portail client B2B ».</p>
+</div>
+
+</section>
+
+</x-dc>
+</body>
+</html>

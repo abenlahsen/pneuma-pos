@@ -30,7 +30,7 @@ describe('NavbarComponent', () => {
   describe('toggleGroup', () => {
     it('opens a closed group and closes it again on a second toggle', () => {
       comp = createComponent();
-      const item = { label: '🏦 Finance', children: [] };
+      const item = { label: 'Finance', icon: 'banknote', children: [] };
       const event = { preventDefault: vi.fn() } as unknown as Event;
 
       comp.toggleGroup(item, event);
@@ -42,8 +42,8 @@ describe('NavbarComponent', () => {
 
     it('leaves other groups untouched when toggling one (additive accordion)', () => {
       comp = createComponent();
-      const finance = { label: '🏦 Finance', children: [] };
-      const tiers = { label: '🤝 Tiers', children: [] };
+      const finance = { label: 'Finance', icon: 'banknote', children: [] };
+      const tiers = { label: 'Tiers', icon: 'handshake', children: [] };
       const event = { preventDefault: vi.fn() } as unknown as Event;
 
       comp.toggleGroup(finance, event);
@@ -58,7 +58,7 @@ describe('NavbarComponent', () => {
     it('expands the group containing the initial route on construction', () => {
       comp = createComponent('/primes');
 
-      const finance = comp.allNavItems.find((i) => i.label === '🏦 Finance')!;
+      const finance = comp.allNavItems.find((i) => i.label === 'Finance')!;
       expect(comp.isGroupExpanded(finance)).toBe(true);
     });
 
@@ -71,8 +71,8 @@ describe('NavbarComponent', () => {
 
     it('expands the newly active group on navigation without collapsing a manually-opened one', () => {
       comp = createComponent('/dashboard');
-      const tiers = comp.allNavItems.find((i) => i.label === '🤝 Tiers')!;
-      const finance = comp.allNavItems.find((i) => i.label === '🏦 Finance')!;
+      const tiers = comp.allNavItems.find((i) => i.label === 'Tiers')!;
+      const finance = comp.allNavItems.find((i) => i.label === 'Finance')!;
       comp.toggleGroup(tiers, { preventDefault: vi.fn() } as unknown as Event);
 
       mockRouter.url = '/primes';
@@ -89,17 +89,17 @@ describe('NavbarComponent', () => {
       comp = createComponent();
 
       const labels = comp.visibleNavItems().map((i) => i.label);
-      expect(labels).not.toContain('🏦 Finance');
+      expect(labels).not.toContain('Finance');
     });
 
     it('keeps a group with only some children filtered out, showing just the visible ones', () => {
       mockAuthService.hasPermission.mockImplementation((perm: string) => perm !== 'view primes');
       comp = createComponent();
 
-      const finance = comp.visibleNavItems().find((i) => i.label === '🏦 Finance');
+      const finance = comp.visibleNavItems().find((i) => i.label === 'Finance');
       expect(finance).toBeTruthy();
-      expect(finance!.children!.map((c) => c.label)).not.toContain('🎯 Primes');
-      expect(finance!.children!.map((c) => c.label)).toContain('🏦 Comptes');
+      expect(finance!.children!.map((c) => c.label)).not.toContain('Primes');
+      expect(finance!.children!.map((c) => c.label)).toContain('Comptes');
     });
   });
 });

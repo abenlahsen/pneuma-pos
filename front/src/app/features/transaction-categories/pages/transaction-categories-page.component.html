@@ -4,17 +4,17 @@
       <h1>Catégories de transactions</h1>
       <p class="subtitle">Gérez les catégories et sous-catégories utilisées dans le module Cash Flow.</p>
     </div>
-    <a routerLink="/settings" class="btn btn-secondary btn-sm">← Retour aux paramètres</a>
+    <a routerLink="/settings" class="btn btn-secondary btn-sm"><app-icon name="chevron-left" [size]="14" /> Retour aux paramètres</a>
   </div>
 
   <div class="alert alert-danger" *ngIf="errorMessage()">{{ errorMessage() }}</div>
 
   <div class="type-toggle">
     <button type="button" class="toggle-btn" [class.active]="activeType() === 'income'" (click)="switchType('income')">
-      📈 Revenus
+      <app-icon name="trending-up" [size]="14" /> Revenus
     </button>
     <button type="button" class="toggle-btn" [class.active]="activeType() === 'expense'" (click)="switchType('expense')">
-      📉 Dépenses
+      <app-icon name="trending-down" [size]="14" /> Dépenses
     </button>
   </div>
 
@@ -48,8 +48,8 @@
             <div class="category-name">
               <ng-container *ngIf="editingId() !== category.id; else editParentTpl">
                 <span>{{ category.name }}</span>
-                <span class="badge badge-system" *ngIf="category.is_system" title="Catégorie système, générée automatiquement par l'application">🔒 système</span>
-                <span class="badge badge-confidential" *ngIf="category.is_confidential" title="Catégorie confidentielle — visible uniquement par les utilisateurs disposant du droit « Charges RH »">🔒 confidentiel</span>
+                <span class="badge badge-system" *ngIf="category.is_system" title="Catégorie système, générée automatiquement par l'application"><app-icon name="lock" [size]="14" /> système</span>
+                <span class="badge badge-confidential" *ngIf="category.is_confidential" title="Catégorie confidentielle — visible uniquement par les utilisateurs disposant du droit « Charges RH »"><app-icon name="lock" [size]="14" /> confidentiel</span>
               </ng-container>
               <ng-template #editParentTpl>
                 <input type="text" [(ngModel)]="editingName" (keyup.enter)="submitEdit(category)" (keyup.escape)="cancelEdit()">
@@ -84,18 +84,18 @@
                   [disabled]="!authService.hasPermission('edit transaction-categories')"
                   (change)="toggleIsConfidential(category)"
                 >
-                🔒 Confidentiel (RH)
+                <app-icon name="lock" [size]="14" /> Confidentiel (RH)
               </label>
 
               <div class="category-actions" *ngIf="!category.is_system">
                 <ng-container *ngIf="editingId() === category.id; else defaultParentActions">
-                  <button type="button" class="btn-icon" title="Enregistrer" (click)="submitEdit(category)">✓</button>
-                  <button type="button" class="btn-icon" title="Annuler" (click)="cancelEdit()">✕</button>
+                  <button type="button" class="btn-icon" title="Enregistrer" (click)="submitEdit(category)"><app-icon name="check" [size]="14" /></button>
+                  <button type="button" class="btn-icon" title="Annuler" (click)="cancelEdit()"><app-icon name="close" [size]="14" /></button>
                 </ng-container>
                 <ng-template #defaultParentActions>
-                  <button type="button" class="btn-icon" title="Ajouter une sous-catégorie" *ngIf="authService.hasPermission('create transaction-categories')" (click)="openAddChild(category.id)">➕</button>
-                  <button type="button" class="btn-icon" title="Modifier" *ngIf="authService.hasPermission('edit transaction-categories')" (click)="startEdit(category)">✏️</button>
-                  <button type="button" class="btn-icon danger" title="Supprimer" *ngIf="authService.hasPermission('delete transaction-categories')" (click)="deleteCategory(category)">🗑️</button>
+                  <button type="button" class="btn-icon" title="Ajouter une sous-catégorie" *ngIf="authService.hasPermission('create transaction-categories')" (click)="openAddChild(category.id)"><app-icon name="plus" [size]="14" /></button>
+                  <button type="button" class="btn-icon" title="Modifier" *ngIf="authService.hasPermission('edit transaction-categories')" (click)="startEdit(category)"><app-icon name="edit" [size]="14" /></button>
+                  <button type="button" class="btn-icon danger" title="Supprimer" *ngIf="authService.hasPermission('delete transaction-categories')" (click)="deleteCategory(category)"><app-icon name="trash" [size]="14" /></button>
                 </ng-template>
               </div>
             </div>
@@ -106,7 +106,7 @@
               <div class="child-name">
                 <ng-container *ngIf="editingId() !== child.id; else editChildTpl">
                   <span>{{ child.name }}</span>
-                  <span class="badge badge-system" *ngIf="child.is_system">🔒 système</span>
+                  <span class="badge badge-system" *ngIf="child.is_system"><app-icon name="lock" [size]="14" /> système</span>
                 </ng-container>
                 <ng-template #editChildTpl>
                   <input type="text" [(ngModel)]="editingName" (keyup.enter)="submitEdit(child)" (keyup.escape)="cancelEdit()">
@@ -114,12 +114,12 @@
               </div>
               <div class="category-actions" *ngIf="!child.is_system">
                 <ng-container *ngIf="editingId() === child.id; else defaultChildActions">
-                  <button type="button" class="btn-icon" title="Enregistrer" (click)="submitEdit(child)">✓</button>
-                  <button type="button" class="btn-icon" title="Annuler" (click)="cancelEdit()">✕</button>
+                  <button type="button" class="btn-icon" title="Enregistrer" (click)="submitEdit(child)"><app-icon name="check" [size]="14" /></button>
+                  <button type="button" class="btn-icon" title="Annuler" (click)="cancelEdit()"><app-icon name="close" [size]="14" /></button>
                 </ng-container>
                 <ng-template #defaultChildActions>
-                  <button type="button" class="btn-icon" title="Modifier" *ngIf="authService.hasPermission('edit transaction-categories')" (click)="startEdit(child)">✏️</button>
-                  <button type="button" class="btn-icon danger" title="Supprimer" *ngIf="authService.hasPermission('delete transaction-categories')" (click)="deleteCategory(child, category)">🗑️</button>
+                  <button type="button" class="btn-icon" title="Modifier" *ngIf="authService.hasPermission('edit transaction-categories')" (click)="startEdit(child)"><app-icon name="edit" [size]="14" /></button>
+                  <button type="button" class="btn-icon danger" title="Supprimer" *ngIf="authService.hasPermission('delete transaction-categories')" (click)="deleteCategory(child, category)"><app-icon name="trash" [size]="14" /></button>
                 </ng-template>
               </div>
             </div>

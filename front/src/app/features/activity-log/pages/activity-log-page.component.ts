@@ -1,5 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { ActivityLogService } from '../data-access/activity-log.service';
 import { ActivityLog, ActivityLogFilters, ActivityLogParams, ActivityLogSnapshot } from '../models/activity-log.model';
@@ -52,7 +53,7 @@ export interface FieldRow {
 @Component({
   selector: 'app-activity-log-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AutoRefreshControlComponent],
+  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent],
   templateUrl: './activity-log-page.component.html',
   styleUrls: ['./activity-log-page.component.scss'],
 })

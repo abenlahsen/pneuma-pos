@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"><style>body{margin:0;background:#dfe7f2;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}a{color:#c2181f}a:hover{color:#8f1218}</style></helmet>
+
+<section style="padding:36px 40px 44px;display:flex;flex-direction:column;gap:18px">
+
+<div style="display:flex;align-items:baseline;gap:10px">
+<span style="font:700 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#0c1e33;color:#fff;border-radius:4px;letter-spacing:.06em">4</span>
+<span style="font:700 13px/1.2 'Inter',sans-serif;color:#0c1e33">NOUVELLE VENTE — saisie, palette 2b</span>
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e">Aujourd'hui la saisie est une modale qui empile cinq sections (client, produits, totaux, logistique, actions) et un ajout d'article à huit champs côte à côte : chercher, produit, stock, qté, PU achat, PU vente, remise, bouton. Le vendeur ne voit jamais le ticket et le catalogue en même temps.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Écran plein, deux volets.</strong> À gauche on cherche et on ajoute ; à droite le ticket se construit, toujours visible, avec les totaux calculés en bas. La recherche produit accepte la dimension telle qu'elle est frappée au comptoir (2055516), et chaque résultat porte son stock, son prix et sa marge — donc plus de champ « stock » séparé : on choisit une ligne de stock, pas un produit puis un lot.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Les huit champs deviennent trois.</strong> Qté, PU vente et remise sont modifiables directement sur la ligne du ticket ; le PU d'achat vient du lot et s'affiche en lecture seule, ce qui laisse la marge se calculer sans saisie. La logistique (transport, suivi, partenaire, livraison, commentaires) reste replieée, dépliée seulement si la vente en a besoin.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Le contexte crédit remonte.</strong> Les quatre cadrans du compte client (solde, projeté, limite, dernière vente) et les avertissements de dépassement sont dans le bandeau client, au-dessus du ticket — pas enterrés dans la première section.</p>
+</div>
+
+<div id="4a" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter',sans-serif;color:#41546e"><a href="#4a" style="font:700 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(12,30,51,.1);color:#0c1e33;border-radius:5px;text-decoration:none">4a</a>Nouvelle vente — client lié, trois articles au ticket, proche de la limite de crédit</div>
+
+<div style="width:1440px;height:880px;display:grid;grid-template-columns:72px minmax(0,1fr);grid-template-rows:60px minmax(0,1fr);background:#e6edf7;color:#0c1e33;border:1px solid #adc2da;overflow:hidden;box-shadow:0 10px 25px rgba(12,30,51,.14)">
+
+  <div style="grid-column:1/-1;display:flex;align-items:center;gap:18px;padding:0 18px;background:#f4f8fd;border-bottom:1px solid #cfdcec">
+    <img src="assets/logo.png" alt="PNEU.MA" style="height:26px;width:auto">
+    <span style="display:flex;align-items:center;gap:10px"><span style="font-size:15px;font-weight:700;letter-spacing:-.01em">Nouvelle vente</span><span style="padding:2px 7px;border:1px solid #cfdcec;background:#fff;font-size:10.5px;font-weight:700;letter-spacing:.08em;color:#4a5c75">BROUILLON</span></span>
+    <span style="margin-left:auto;font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">Enregistré à 11:52 · K. Amrani</span>
+    <button type="button" style="height:36px;padding:0 13px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Annuler</button>
+    <button type="button" style="height:36px;padding:0 16px;border:1px solid #ff2d37;background:#ff2d37;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Enregistrer la vente</button>
+  </div>
+
+  <nav style="grid-row:2;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;background:#081627">
+    <a href="#4a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>ACCUEIL</a>
+    <a href="#4a" style="width:56px;height:54px;background:#ff2d37;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 3h7l11 11-7 7L3 10V3z"/></svg>VENTES</a>
+    <a href="#4a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M14.5 3.5a5 5 0 0 0-6.3 6.3L3 15v6h6l5.2-5.2a5 5 0 0 0 6.3-6.3l-3.2 3.2-3-3 3.2-3.2z"/></svg>SERVICE</a>
+    <a href="#4a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg>ACHATS</a>
+    <a href="#4a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 6h18v12H3z"/><circle cx="12" cy="12" r="2.5"/></svg>CAISSE</a>
+    <span style="width:34px;height:1px;background:rgba(230,237,247,.2);margin:7px 0"></span>
+    <a href="#4a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/></svg>STOCK</a>
+    <a href="#4a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><circle cx="12" cy="8" r="3.4"/><path d="M5 20v-1.6c0-2.3 3.1-3.6 7-3.6s7 1.3 7 3.6V20"/></svg>TIERS</a>
+    <a href="#4a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M4 20V9M10 20V4M16 20v-8M22 20H2"/></svg>CHIFFRES</a>
+    <a href="#4a" style="margin-top:auto;width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/></svg>RÉGLAGES</a>
+  </nav>
+
+  <main style="grid-column:2;grid-row:2;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) 520px;background:#fff">
+
+    <div style="overflow:hidden;display:flex;flex-direction:column;border-right:1px solid #cfdcec">
+
+      <div style="padding:14px 20px;border-bottom:1px solid #cfdcec">
+        <label style="display:flex;align-items:center;gap:11px;height:46px;padding:0 14px;background:#fff;border:2px solid #0c1e33">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+          <span style="font-size:15px;font-weight:600;color:#0c1e33">2055516</span>
+          <span style="width:1px;height:20px;background:#0c1e33;opacity:.2"></span>
+          <span style="font-size:13.5px;color:#4a5c75">205/55R16 · 6 références en stock</span>
+          <span style="margin-left:auto;font-size:11.5px;color:#4a5c75">Marque, dimension, indice, référence</span>
+        </label>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 92px 106px 92px 84px 96px;align-items:center;gap:12px;padding:7px 20px;border-bottom:1px solid #0c1e33;font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#4a5c75;background:#f4f8fd">
+        <span>Référence · lot</span>
+        <span style="text-align:right">Stock</span>
+        <span style="text-align:right">PU achat</span>
+        <span style="text-align:right">PU vente</span>
+        <span style="text-align:right">Marge</span>
+        <span></span>
+      </div>
+
+      <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column">
+
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 92px 106px 92px 84px 96px;align-items:center;gap:12px;min-height:62px;padding:0 20px;border-bottom:1px solid #e7eef8;background:#f4f8fd">
+          <span style="min-width:0"><span style="display:block;font-size:14.5px;font-weight:600">MICHELIN PRIMACY 4 · 205/55R16 91V</span><span style="display:block;font-size:11.5px;color:#4a5c75">Lot 2026-07 · entrepôt Casa · déjà au ticket ×4</span></span>
+          <span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;color:#8a5a00">4</span>
+          <span style="text-align:right;font-size:13px;color:#4a5c75;font-variant-numeric:tabular-nums">980,00</span>
+          <span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">1 180,00</span>
+          <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">17,0 %</span>
+          <button type="button" style="height:34px;border:1px solid #adc2da;background:#e6edf7;color:#4a5c75;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Au ticket</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 92px 106px 92px 84px 96px;align-items:center;gap:12px;min-height:62px;padding:0 20px;border-bottom:1px solid #e7eef8">
+          <span style="min-width:0"><span style="display:block;font-size:14.5px;font-weight:600">BRIDGESTONE TURANZA T005 · 205/55R16 91W</span><span style="display:block;font-size:11.5px;color:#4a5c75">Lot 2026-08 · entrepôt Casa</span></span>
+          <span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">32</span>
+          <span style="text-align:right;font-size:13px;color:#4a5c75;font-variant-numeric:tabular-nums">1 040,00</span>
+          <span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">1 260,00</span>
+          <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">17,5 %</span>
+          <button type="button" style="height:34px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer">Ajouter</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 92px 106px 92px 84px 96px;align-items:center;gap:12px;min-height:62px;padding:0 20px;border-bottom:1px solid #e7eef8">
+          <span style="min-width:0"><span style="display:block;font-size:14.5px;font-weight:600">CONTINENTAL ECOCONTACT 6 · 205/55R16 91H</span><span style="display:block;font-size:11.5px;color:#4a5c75">Lot 2026-06 · entrepôt Casa</span></span>
+          <span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">18</span>
+          <span style="text-align:right;font-size:13px;color:#4a5c75;font-variant-numeric:tabular-nums">920,00</span>
+          <span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">1 120,00</span>
+          <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">17,9 %</span>
+          <button type="button" style="height:34px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer">Ajouter</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 92px 106px 92px 84px 96px;align-items:center;gap:12px;min-height:62px;padding:0 20px;border-bottom:1px solid #e7eef8">
+          <span style="min-width:0"><span style="display:block;font-size:14.5px;font-weight:600">HANKOOK VENTUS PRIME 4 · 205/55R16 91V</span><span style="display:block;font-size:11.5px;color:#4a5c75">Lot 2026-09 · entrepôt Rabat · transfert 1 j</span></span>
+          <span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">46</span>
+          <span style="text-align:right;font-size:13px;color:#4a5c75;font-variant-numeric:tabular-nums">760,00</span>
+          <span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">940,00</span>
+          <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">19,1 %</span>
+          <button type="button" style="height:34px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer">Ajouter</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 92px 106px 92px 84px 96px;align-items:center;gap:12px;min-height:62px;padding:0 20px;border-bottom:1px solid #e7eef8">
+          <span style="min-width:0"><span style="display:block;font-size:14.5px;font-weight:600">PIRELLI CINTURATO P7 · 205/55R16 91V</span><span style="display:block;font-size:11.5px;color:#4a5c75">Lot 2026-05 · entrepôt Casa</span></span>
+          <span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">11</span>
+          <span style="text-align:right;font-size:13px;color:#4a5c75;font-variant-numeric:tabular-nums">1 010,00</span>
+          <span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">1 150,00</span>
+          <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums;color:#c2181f;font-weight:600">12,2 %</span>
+          <button type="button" style="height:34px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer">Ajouter</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 92px 106px 92px 84px 96px;align-items:center;gap:12px;min-height:62px;padding:0 20px;border-bottom:1px solid #e7eef8">
+          <span style="min-width:0"><span style="display:block;font-size:14.5px;font-weight:600">GOODYEAR EFFICIENTGRIP · 205/55R16 91V</span><span style="display:block;font-size:11.5px;color:#4a5c75">Lot 2026-04 · entrepôt Casa</span></span>
+          <span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">7</span>
+          <span style="text-align:right;font-size:13px;color:#4a5c75;font-variant-numeric:tabular-nums">890,00</span>
+          <span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">1 080,00</span>
+          <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">17,6 %</span>
+          <button type="button" style="height:34px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer">Ajouter</button>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;padding:13px 20px;border-bottom:1px solid #cfdcec;background:#f4f8fd">
+          <span style="font-size:12px;color:#4a5c75">Pas de pneu ? Ajoutez une prestation ou une pièce sans lot de stock.</span>
+          <button type="button" style="margin-left:auto;height:32px;padding:0 12px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Ligne libre</button>
+          <button type="button" style="height:32px;padding:0 12px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Prestation</button>
+        </div>
+
+        <div style="flex:1;min-height:0;padding:16px 20px;display:flex;flex-direction:column;gap:11px">
+          <span style="font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#4a5c75">Logistique &amp; suivi</span>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <span style="display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 11px;background:#fff;border:1px solid #0c1e33;font-size:12px;font-weight:600">Commercial · K. Amrani</span>
+            <span style="display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 11px;background:#fff;border:1px solid #0c1e33;font-size:12px;font-weight:600">Partenaire · Zenith</span>
+            <span style="display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 11px;background:#fff;border:1px solid #cfdcec;font-size:12px;color:#4a5c75">Transport · non défini</span>
+            <span style="display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 11px;background:#fff;border:1px solid #cfdcec;font-size:12px;color:#4a5c75">Livraison · non datée</span>
+            <button type="button" style="display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Déplier les 6 champs <span style="color:#4a5c75;font-weight:400">▾</span></button>
+          </div>
+          <p style="margin:0;font-size:11.5px;line-height:1.55;color:#4a5c75">Les deux champs obligatoires (commercial, partenaire) sont préremplis et visibles ; transport, n° de suivi, service, statut, date de livraison et commentaires restent repliés.</p>
+        </div>
+      </div>
+    </div>
+
+    <aside style="overflow:hidden;display:flex;flex-direction:column;background:#f4f8fd">
+
+      <div style="padding:14px 18px;border-bottom:1px solid #cfdcec;background:#fff">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="min-width:0;flex:1"><span style="display:block;font-size:15px;font-weight:700">Garage Atlas Pneus</span><span style="display:block;font-size:11.5px;color:#4a5c75">Casablanca · 0661 24 88 03 · client depuis 2021</span></span>
+          <span style="padding:2px 7px;border:1px solid #15616d;color:#15616d;font-size:10px;font-weight:700;letter-spacing:.06em">LIÉ</span>
+          <button type="button" style="height:30px;padding:0 10px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Changer</button>
+        </div>
+        <div style="margin-top:12px;display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #cfdcec">
+          <span style="padding:8px 10px;border-right:1px solid #cfdcec"><span style="display:block;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4a5c75">Impayé</span><span style="display:block;margin-top:3px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;color:#c2181f">48 600</span></span>
+          <span style="padding:8px 10px;border-right:1px solid #cfdcec"><span style="display:block;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4a5c75">Projeté</span><span style="display:block;margin-top:3px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">72 340</span></span>
+          <span style="padding:8px 10px;border-right:1px solid #cfdcec"><span style="display:block;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4a5c75">Limite</span><span style="display:block;margin-top:3px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">80 000</span></span>
+          <span style="padding:8px 10px"><span style="display:block;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4a5c75">Dern. vente</span><span style="display:block;margin-top:3px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">02/07</span></span>
+        </div>
+        <div style="margin-top:9px;padding:9px 11px;border:1px solid #d4a017;background:#fdf6e6;display:flex;align-items:flex-start;gap:9px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a5a00" stroke-width="1.8" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><path d="M12 4 2.5 20h19L12 4z"/><path d="M12 10v4.5M12 17.2v.3"/></svg>
+          <span style="font-size:11.5px;line-height:1.5;color:#7a4f00"><strong style="font-weight:700;color:#5f3e00">Proche de la limite.</strong> Cette vente porterait le solde à 72 340 DH sur 80 000 — il resterait 7 660 DH de marge de crédit.</span>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid #0c1e33">
+        <span style="font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase">Ticket</span>
+        <span style="font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">3 lignes · 20 pneus</span>
+        <label style="margin-left:auto;display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;cursor:pointer"><input type="checkbox" checked style="width:15px;height:15px;accent-color:#0c1e33">Avec facture</label>
+      </div>
+
+      <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;background:#fff">
+
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 58px 84px 60px 84px 30px;align-items:center;gap:8px;padding:6px 18px;border-bottom:1px solid #cfdcec;font-size:8.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">
+          <span>Article</span><span style="text-align:center">Qté</span><span style="text-align:right">PU vente</span><span style="text-align:center">Rem.</span><span style="text-align:right">Total</span><span></span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 58px 84px 60px 84px 30px;align-items:center;gap:8px;min-height:60px;padding:0 18px;border-bottom:1px solid #e7eef8">
+          <span style="min-width:0"><span style="display:block;font-size:13px;font-weight:600;line-height:1.3">MICHELIN PRIMACY 4</span><span style="display:block;font-size:10.5px;color:#4a5c75">205/55R16 · achat 980 · marge 15,3 %</span></span>
+          <input type="text" value="4" style="width:100%;height:32px;padding:0 6px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13px;font-weight:600;text-align:center;color:#0c1e33">
+          <input type="text" value="1 180,00" style="width:100%;height:32px;padding:0 7px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13px;font-weight:600;text-align:right;color:#0c1e33">
+          <input type="text" value="2 %" style="width:100%;height:32px;padding:0 6px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:12.5px;text-align:center;color:#0c1e33">
+          <span style="text-align:right;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">4 626,40</span>
+          <button type="button" title="Retirer" style="width:28px;height:28px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8f1218" stroke-width="2" stroke-linecap="round"><path d="M5 5l14 14M19 5 5 19"/></svg></button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 58px 84px 60px 84px 30px;align-items:center;gap:8px;min-height:60px;padding:0 18px;border-bottom:1px solid #e7eef8">
+          <span style="min-width:0"><span style="display:block;font-size:13px;font-weight:600;line-height:1.3">BRIDGESTONE TURANZA T005</span><span style="display:block;font-size:10.5px;color:#4a5c75">205/55R16 · achat 1 040 · marge 17,5 %</span></span>
+          <input type="text" value="12" style="width:100%;height:32px;padding:0 6px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13px;font-weight:600;text-align:center;color:#0c1e33">
+          <input type="text" value="1 260,00" style="width:100%;height:32px;padding:0 7px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13px;font-weight:600;text-align:right;color:#0c1e33">
+          <input type="text" value="—" style="width:100%;height:32px;padding:0 6px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:12.5px;text-align:center;color:#4a5c75">
+          <span style="text-align:right;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">15 120,00</span>
+          <button type="button" title="Retirer" style="width:28px;height:28px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8f1218" stroke-width="2" stroke-linecap="round"><path d="M5 5l14 14M19 5 5 19"/></svg></button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 58px 84px 60px 84px 30px;align-items:center;gap:8px;min-height:60px;padding:0 18px;border-bottom:1px solid #e7eef8">
+          <span style="min-width:0"><span style="display:block;font-size:13px;font-weight:600;line-height:1.3">Montage + équilibrage</span><span style="display:block;font-size:10.5px;color:#4a5c75">Prestation · sans lot de stock</span></span>
+          <input type="text" value="4" style="width:100%;height:32px;padding:0 6px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13px;font-weight:600;text-align:center;color:#0c1e33">
+          <input type="text" value="60,00" style="width:100%;height:32px;padding:0 7px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13px;font-weight:600;text-align:right;color:#0c1e33">
+          <input type="text" value="—" style="width:100%;height:32px;padding:0 6px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:12.5px;text-align:center;color:#4a5c75">
+          <span style="text-align:right;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">240,00</span>
+          <button type="button" title="Retirer" style="width:28px;height:28px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8f1218" stroke-width="2" stroke-linecap="round"><path d="M5 5l14 14M19 5 5 19"/></svg></button>
+        </div>
+
+        <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:18px">
+          <span style="font-size:11.5px;color:#4a5c75;text-align:center;max-width:280px;line-height:1.55">Les lignes ajoutées depuis la recherche apparaissent ici. Qté, prix et remise se modifient sur place.</span>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid #0c1e33;background:#fff">
+        <div style="padding:13px 18px;display:flex;flex-direction:column;gap:7px">
+          <span style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:12.5px;color:#41546e">Total achat</span><span style="font-size:13px;font-variant-numeric:tabular-nums">16 400,00</span></span>
+          <span style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:12.5px;color:#41546e">Remises accordées</span><span style="font-size:13px;font-variant-numeric:tabular-nums;color:#8a5a00">− 93,60</span></span>
+          <span style="display:flex;justify-content:space-between;align-items:baseline;padding-top:7px;border-top:1px solid #cfdcec"><span style="font-size:13px;font-weight:600">Marge nette</span><span style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">3 586,40 <span style="font-size:11.5px;font-weight:600;color:#4a5c75">17,9 %</span></span></span>
+        </div>
+        <div style="padding:14px 18px;background:#0c1e33;color:#fff;display:flex;align-items:baseline;justify-content:space-between">
+          <span style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(230,237,247,.8)">Total vente</span>
+          <span style="font-size:27px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums">19 986,40 <span style="font-size:14px;font-weight:600;color:rgba(230,237,247,.8)">DH</span></span>
+        </div>
+        <div style="padding:13px 18px;display:flex;gap:9px">
+          <button type="button" style="flex:1;height:42px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer">Enregistrer en brouillon</button>
+          <button type="button" style="flex:1.4;height:42px;border:1px solid #ff2d37;background:#ff2d37;color:#fff;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer">Valider et encaisser</button>
+        </div>
+      </div>
+    </aside>
+
+  </main>
+</div>
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e">Le bouton « Valider et encaisser » enchaîne sur le paiement au lieu de renvoyer à la liste puis d'y rouvrir la modale des paiements — c'est le geste qui suit dans neuf ventes sur dix au comptoir. « Enregistrer en brouillon » garde le cas de la vente préparée à l'avance.</p>
+<p style="margin:0;font:400 12px/1.5 'Inter',sans-serif;color:#4a5c75">À dire ensuite : « montre l'écran de paiement qui suit » · « déplie le panneau logistique » · « le cas sans client enregistré » · « la même saisie en tablette ».</p>
+</div>
+
+</section>
+
+</x-dc>
+</body>
+</html>

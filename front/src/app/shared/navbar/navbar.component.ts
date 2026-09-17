@@ -5,9 +5,11 @@ import { filter } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { SettingsService } from '../../features/settings/data-access/settings.service';
 import { CompanySettings, MenuLayout } from '../../features/settings/models/company-settings.model';
+import { IconComponent } from '../icon/icon.component';
 
 interface NavItem {
   label: string;
+  icon: string;
   route?: string;
   permission?: string;
   exact?: boolean;
@@ -17,7 +19,7 @@ interface NavItem {
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink, RouterLinkActive, IconComponent],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss'
 })
@@ -43,51 +45,56 @@ export class NavbarComponent {
   // list ~25 rows at once — see navbar.component.scss for the accordion
   // collapse behind `.expanded`.
   allNavItems: NavItem[] = [
-    { label: '🏠 Accueil', route: '/dashboard', exact: true },
-    { label: '🏷️ Ventes', route: '/sales', permission: 'view sales' },
-    { label: '🔧 Service Auto', route: '/service-orders', permission: 'view service-orders' },
-    { label: '📦 Achats', route: '/achats', permission: 'view purchases' },
-    { label: '💰 Cash Flow', route: '/cash-flow', permission: 'view cash-flow' },
+    { label: 'Accueil', icon: 'home', route: '/dashboard', exact: true },
+    { label: 'Ventes', icon: 'tag', route: '/sales', permission: 'view sales' },
+    { label: 'Service Auto', icon: 'wrench', route: '/service-orders', permission: 'view service-orders' },
+    { label: 'Achats', icon: 'package', route: '/achats', permission: 'view purchases' },
+    { label: 'Cash Flow', icon: 'banknote', route: '/cash-flow', permission: 'view cash-flow' },
     {
-      label: '🛞 Stock',
+      label: 'Stock',
+      icon: 'package',
       children: [
-        { label: '🛞 Produits', route: '/products', permission: 'view products' },
-        { label: '📋 Inventaire', route: '/stock', permission: 'view stock' },
-        { label: '🏭 Marques', route: '/brands', permission: 'view brands' },
+        { label: 'Produits', icon: 'package', route: '/products', permission: 'view products' },
+        { label: 'Inventaire', icon: 'package', route: '/stock', permission: 'view stock' },
+        { label: 'Marques', icon: 'building-2', route: '/brands', permission: 'view brands' },
       ]
     },
     {
-      label: '🤝 Tiers',
+      label: 'Tiers',
+      icon: 'handshake',
       children: [
-        { label: '🧑‍💼 Clients', route: '/clients', permission: 'view clients' },
-        { label: '🏢 Fournisseurs', route: '/suppliers', permission: 'view suppliers' },
-        { label: '🚚 Transporteurs', route: '/carriers', permission: 'view carriers' },
-        { label: '🤝 Partenaires', route: '/partners', permission: 'view partners' },
+        { label: 'Clients', icon: 'user', route: '/clients', permission: 'view clients' },
+        { label: 'Fournisseurs', icon: 'building', route: '/suppliers', permission: 'view suppliers' },
+        { label: 'Transporteurs', icon: 'truck', route: '/carriers', permission: 'view carriers' },
+        { label: 'Partenaires', icon: 'handshake', route: '/partners', permission: 'view partners' },
       ]
     },
     {
-      label: '🏦 Finance',
+      label: 'Finance',
+      icon: 'banknote',
       children: [
-        { label: '🏦 Comptes', route: '/accounts', permission: 'view accounts' },
-        { label: '🎯 Primes', route: '/primes', permission: 'view primes' },
-        { label: '🧾 Charges RH', route: '/charges-rh', permission: 'view hr-charges' },
-        { label: '📊 Reporting', route: '/reporting', permission: 'view reporting' },
+        { label: 'Comptes', icon: 'banknote', route: '/accounts', permission: 'view accounts' },
+        { label: 'Primes', icon: 'target', route: '/primes', permission: 'view primes' },
+        { label: 'Charges RH', icon: 'receipt', route: '/charges-rh', permission: 'view hr-charges' },
+        { label: 'Reporting', icon: 'bar-chart', route: '/reporting', permission: 'view reporting' },
       ]
     },
     {
-      label: '👤 Administration',
+      label: 'Administration',
+      icon: 'user',
       children: [
-        { label: '👥 Utilisateurs', route: '/users', permission: 'view users' },
-        { label: '🔐 Rôles', route: '/roles', permission: 'view roles' },
-        { label: '📋 Activité', route: '/activity-log', permission: 'view activity-log' },
-        { label: '📈 KPI', route: '/kpi-history', permission: 'view activity-log' },
+        { label: 'Utilisateurs', icon: 'users', route: '/users', permission: 'view users' },
+        { label: 'Rôles', icon: 'lock', route: '/roles', permission: 'view roles' },
+        { label: 'Activité', icon: 'package', route: '/activity-log', permission: 'view activity-log' },
+        { label: 'KPI', icon: 'trending-up', route: '/kpi-history', permission: 'view activity-log' },
       ]
     },
     {
-      label: '⚙️ Paramètres',
+      label: 'Paramètres',
+      icon: 'settings',
       children: [
-        { label: '🏢 Entreprise', route: '/settings', permission: 'view settings' },
-        { label: '🏷️ Catégories', route: '/settings/transaction-categories', permission: 'view transaction-categories' },
+        { label: 'Entreprise', icon: 'building', route: '/settings', permission: 'view settings' },
+        { label: 'Catégories', icon: 'tag', route: '/settings/transaction-categories', permission: 'view transaction-categories' },
       ]
     },
   ];

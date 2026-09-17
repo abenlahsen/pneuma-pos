@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { PurchaseService } from '../data-access/purchase.service';
@@ -19,7 +20,7 @@ interface ReturnLine {
 @Component({
   selector: 'app-purchase-return',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, IconComponent],
   templateUrl: './purchase-return.component.html',
   styleUrl: './purchase-return.component.scss',
 })

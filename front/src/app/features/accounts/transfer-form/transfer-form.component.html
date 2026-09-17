@@ -1,8 +1,8 @@
 <div class="modal-overlay" (click)="onCancel()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>🔄 Nouveau Transfert</h2>
-      <button (click)="onCancel()" class="btn-close">✕</button>
+      <h2><app-icon name="refresh" [size]="14" /> Nouveau Transfert</h2>
+      <button (click)="onCancel()" class="btn-close"><app-icon name="close" [size]="14" /></button>
     </div>
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-body">

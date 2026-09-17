@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, finalize, switchMap, takeUntil } from 'rxjs/operators';
@@ -55,7 +56,7 @@ type AnyLineForm = ServiceLineForm | PartLineForm;
 @Component({
   selector: 'app-service-order-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, VehicleSelectorComponent, QuickClientFormComponent],
+  imports: [CommonModule, FormsModule, VehicleSelectorComponent, QuickClientFormComponent, IconComponent],
   templateUrl: './service-order-form.component.html',
   styleUrls: ['./service-order-form.component.scss'],
 })
