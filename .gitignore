@@ -12,3 +12,5 @@ deploy/deploy2.env
 env.production
 .semgrep/
 graphify-out/
+/Application gestion commercial.zip
+/front/read_excel.js
