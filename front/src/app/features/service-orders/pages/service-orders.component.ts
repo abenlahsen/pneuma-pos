@@ -60,6 +60,138 @@ export class ServiceOrdersComponent implements OnInit {
   paymentOrder = signal<ServiceOrder | null>(null);
   deletingId = signal<number | null>(null);
 
+  /** Refonte 2b — vue atelier (gabarit C). */
+  readonly viewMode = signal<'board' | 'list'>('board');
+  readonly boardOrders = signal<ServiceOrder[]>([]);
+  readonly loadingBoard = signal(false);
+
+  private static readonly BOARD_COLUMN_LIMIT = 5;
+
+  readonly marginPctOfRevenue = computed(() => {
+    const revenue = Number(this.summary().total_revenue);
+    return revenue > 0 ? (Number(this.summary().total_margin) / revenue) * 100 : 0;
+  });
+
+  readonly paidPctOfRevenue = computed(() => {
+    const revenue = Number(this.summary().total_revenue);
+    return revenue > 0 ? (Number(this.summary().total_paid) / revenue) * 100 : 0;
+  });
+
+  readonly unpaidOrdersCount = computed(() =>
+    this.boardOrders().filter(o => (o.remaining ?? 0) > 0.004).length
+  );
+
+  readonly boardEnCours = computed(() =>
+    this.boardOrders()
+      .filter(o => o.status === 'EN COURS')
+      .sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''))
+  );
+
+  readonly boardEnCoursSum = computed(() =>
+    this.boardEnCours().reduce((sum, o) => sum + Number(o.net_amount || 0), 0)
+  );
+
+  /**
+   * `Date.now()` doit être lu UNE FOIS par recalcul du computed, jamais depuis le
+   * template : un appel direct type `elapsedLabel(order.created_at)` dans le HTML
+   * est réévalué à chaque passage de détection de changement (y compris la passe
+   * de vérification d'Angular en dev), ce qui déclenche
+   * ExpressionChangedAfterItHasBeenCheckedError dès que la minute change entre les
+   * deux passes. En le figeant ici, la vue ne change que quand boardOrders() est
+   * rechargé.
+   */
+  readonly boardEnCoursView = computed(() => {
+    const now = Date.now();
+    return this.boardEnCours().map(order => ({
+      order,
+      elapsed: this.formatElapsed(now - new Date(order.created_at ?? now).getTime()),
+    }));
+  });
+
+  readonly boardAFacturer = computed(() =>
+    this.boardOrders()
+      .filter(o => o.status === 'TERMINE' && o.payment_status === 'NON PAYE')
+      .sort((a, b) => (a.updated_at ?? '').localeCompare(b.updated_at ?? ''))
+  );
+
+  readonly boardAFacturerVisible = computed(() =>
+    this.boardAFacturer().slice(0, ServiceOrdersComponent.BOARD_COLUMN_LIMIT)
+  );
+
+  readonly boardAFacturerOverflowCount = computed(() =>
+    Math.max(0, this.boardAFacturer().length - ServiceOrdersComponent.BOARD_COLUMN_LIMIT)
+  );
+
+  readonly boardAFacturerOverflowSum = computed(() =>
+    this.boardAFacturer().slice(ServiceOrdersComponent.BOARD_COLUMN_LIMIT)
+      .reduce((sum, o) => sum + Number(o.remaining ?? o.net_amount ?? 0), 0)
+  );
+
+  readonly boardAFacturerSum = computed(() =>
+    this.boardAFacturer().reduce((sum, o) => sum + Number(o.remaining ?? o.net_amount ?? 0), 0)
+  );
+
+  readonly boardAFacturerOldestDays = computed(() => {
+    const list = this.boardAFacturer();
+    if (!list.length) return 0;
+    return this.formatDays(Date.now() - new Date(list[0].updated_at ?? Date.now()).getTime());
+  });
+
+  readonly boardAFacturerView = computed(() => {
+    const now = Date.now();
+    return this.boardAFacturerVisible().map(order => ({
+      order,
+      elapsed: this.formatElapsed(now - new Date(order.updated_at ?? now).getTime()),
+    }));
+  });
+
+  readonly boardFacture = computed(() =>
+    this.boardOrders()
+      .filter(o => o.status === 'TERMINE' && o.payment_status !== 'NON PAYE')
+      .sort((a, b) => {
+        const aOwed = (a.remaining ?? 0) > 0.004 ? 0 : 1;
+        const bOwed = (b.remaining ?? 0) > 0.004 ? 0 : 1;
+        if (aOwed !== bOwed) return aOwed - bOwed;
+        return (b.updated_at ?? '').localeCompare(a.updated_at ?? '');
+      })
+  );
+
+  readonly boardFactureVisible = computed(() =>
+    this.boardFacture().slice(0, ServiceOrdersComponent.BOARD_COLUMN_LIMIT)
+  );
+
+  readonly boardFactureOverflowCount = computed(() =>
+    Math.max(0, this.boardFacture().length - ServiceOrdersComponent.BOARD_COLUMN_LIMIT)
+  );
+
+  readonly boardFactureOverflowSum = computed(() =>
+    this.boardFacture().slice(ServiceOrdersComponent.BOARD_COLUMN_LIMIT)
+      .reduce((sum, o) => sum + Number(o.total_paid ?? 0), 0)
+  );
+
+  readonly boardFactureEncaisseSum = computed(() =>
+    this.boardFacture().reduce((sum, o) => sum + Number(o.total_paid ?? 0), 0)
+  );
+
+  readonly boardFactureDueSum = computed(() =>
+    this.boardFacture().reduce((sum, o) => sum + Number(o.remaining ?? 0), 0)
+  );
+
+  readonly boardFactureView = computed(() => {
+    const now = Date.now();
+    return this.boardFactureVisible().map(order => {
+      const due = (order.remaining ?? 0) > 0.004;
+      return {
+        order,
+        due,
+        statusLabel: due
+          ? `Non payé · ${this.formatDays(now - new Date(order.updated_at ?? now).getTime())} j`
+          : 'Payé',
+        amount: due ? (order.remaining ?? 0) : Number(order.net_amount ?? 0),
+      };
+    });
+  });
+
   private route = inject(ActivatedRoute);
   private destroyRef = inject(DestroyRef);
 
@@ -72,6 +204,7 @@ export class ServiceOrdersComponent implements OnInit {
     this.loadFilters();
     this.loadData();
     this.loadSummary();
+    this.loadBoard();
 
     this.route.queryParamMap
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -106,6 +239,21 @@ export class ServiceOrdersComponent implements OnInit {
     });
   }
 
+  /** Vue atelier : jeu complet (non paginé) des interventions filtrées, réparti en trois colonnes côté client. */
+  loadBoard(): void {
+    this.loadingBoard.set(true);
+    const filters = this.buildFilters();
+    delete filters['page'];
+    filters['per_page'] = '500';
+    this.serviceOrderService.getServiceOrders(filters).subscribe({
+      next: (res) => {
+        this.boardOrders.set(res.data);
+        this.loadingBoard.set(false);
+      },
+      error: () => this.loadingBoard.set(false),
+    });
+  }
+
   loadFilters(): void {
     this.serviceOrderService.getFilters().subscribe({
       next: (f) => this.filterOptions.set(f),
@@ -116,6 +264,7 @@ export class ServiceOrdersComponent implements OnInit {
     this.currentPage.set(1);
     this.loadData();
     this.loadSummary();
+    this.loadBoard();
   }
 
   resetFilters(): void {
@@ -129,6 +278,47 @@ export class ServiceOrdersComponent implements OnInit {
     this.filterDateFrom.set('');
     this.filterDateTo.set('');
     this.applyFilters();
+  }
+
+  isMechanicActive(id: number): boolean {
+    return this.filterCommercial() === String(id);
+  }
+
+  selectMechanic(id: number | null): void {
+    this.filterCommercial.set(id === null ? '' : String(id));
+    this.applyFilters();
+  }
+
+  /** Lien « Voir en liste » des colonnes tronquées : bascule en liste avec les filtres du seau. */
+  viewBucketInList(bucket: 'a-facturer' | 'facture'): void {
+    this.filterStatus.set('TERMINE');
+    this.filterPaymentStatus.set(bucket === 'a-facturer' ? 'NON PAYE' : '');
+    this.viewMode.set('list');
+    this.applyFilters();
+  }
+
+  /**
+   * Proxy honnête de « depuis quand » : aucun horodatage de changement de
+   * statut n'existe côté back (service_orders n'a que created_at/updated_at).
+   * created_at pour une intervention en cours (l'ouverture), updated_at pour
+   * une intervention terminée (la dernière modification — se décale si la
+   * fiche est rouverte/éditée après coup, faute de mieux).
+   *
+   * Pures (pas de Date.now() lu à l'appel) : appelées uniquement depuis les
+   * computed() board*View ci-dessus, jamais depuis le template — un appel
+   * direct depuis le HTML relit l'horloge à chaque passage de détection de
+   * changement et déclenche ExpressionChangedAfterItHasBeenCheckedError.
+   */
+  private formatElapsed(ms: number): string {
+    const minutes = Math.max(0, Math.round(ms / 60000));
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.round(minutes / 60);
+    if (hours < 24) return `${hours} h`;
+    return `${Math.round(hours / 24)} j`;
+  }
+
+  private formatDays(ms: number): number {
+    return Math.max(0, Math.round(ms / 86400000));
   }
 
   goToPage(page: number): void {
@@ -215,6 +405,7 @@ export class ServiceOrdersComponent implements OnInit {
           this.closeForm();
           this.loadData();
           this.loadSummary();
+          this.loadBoard();
         },
       });
     } else {
@@ -223,6 +414,7 @@ export class ServiceOrdersComponent implements OnInit {
           this.closeForm();
           this.loadData();
           this.loadSummary();
+          this.loadBoard();
         },
       });
     }
@@ -236,6 +428,7 @@ export class ServiceOrdersComponent implements OnInit {
         this.deletingId.set(null);
         this.loadData();
         this.loadSummary();
+        this.loadBoard();
       },
       error: () => this.deletingId.set(null),
     });
@@ -249,6 +442,7 @@ export class ServiceOrdersComponent implements OnInit {
     this.paymentOrder.set(null);
     this.loadData();
     this.loadSummary();
+    this.loadBoard();
   }
 
   buildFilters(): Record<string, string> {
@@ -302,14 +496,20 @@ export class ServiceOrdersComponent implements OnInit {
   }
 
   updateOrderStatus(order: ServiceOrder, target: any): void {
-    const newStatus = target.value;
+    this.changeStatus(order, target.value);
+  }
+
+  changeStatus(order: ServiceOrder, newStatus: ServiceOrderStatus): void {
     if (order.status === newStatus) return;
 
     const oldStatus = order.status;
-    order.status = newStatus as ServiceOrder['status'];
+    order.status = newStatus;
 
     this.serviceOrderService.updateServiceOrder(order.id, { status: newStatus } as any).subscribe({
-      next: () => this.loadData(),
+      next: () => {
+        this.loadData();
+        this.loadBoard();
+      },
       error: () => {
         order.status = oldStatus;
         alert('Erreur lors de la mise à jour du statut');

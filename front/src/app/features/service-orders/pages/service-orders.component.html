@@ -7,6 +7,10 @@
       <p class="subtitle">{{ total() }} intervention(s) trouvée(s)</p>
     </div>
     <div class="actions">
+      <div class="view-toggle">
+        <button type="button" [class.active]="viewMode() === 'board'" (click)="viewMode.set('board')">Atelier</button>
+        <button type="button" [class.active]="viewMode() === 'list'" (click)="viewMode.set('list')">Liste</button>
+      </div>
       <button class="btn btn-secondary" type="button" (click)="exportOrders()" [disabled]="isExporting()">
         {{ isExporting() ? 'Export en cours...' : 'Exporter Excel' }}
       </button>
@@ -24,8 +28,9 @@
     <div class="card summary-card income">
       <div class="card-icon"><app-icon name="wrench" [size]="20" /></div>
       <div class="card-content">
-        <p class="card-label">CA Total</p>
+        <p class="card-label">CA du mois</p>
         <h3 class="card-value">{{ summary().total_revenue | number:'1.2-2' }} DH</h3>
+        <p class="card-hint">{{ total() }} intervention(s)</p>
       </div>
     </div>
     <div class="card summary-card margin">
@@ -33,20 +38,23 @@
       <div class="card-content">
         <p class="card-label">Marge brute</p>
         <h3 class="card-value">{{ summary().total_margin | number:'1.2-2' }} DH</h3>
+        <p class="card-hint">{{ marginPctOfRevenue() | number:'1.1-1' }} % du CA</p>
       </div>
     </div>
     <div class="card summary-card balance">
       <div class="card-icon"><app-icon name="check-circle" [size]="20" /></div>
       <div class="card-content">
-        <p class="card-label">Payé</p>
+        <p class="card-label">Encaissé</p>
         <h3 class="card-value">{{ summary().total_paid | number:'1.2-2' }} DH</h3>
+        <p class="card-hint">{{ paidPctOfRevenue() | number:'1.1-1' }} % du CA</p>
       </div>
     </div>
     <div class="card summary-card expense">
       <div class="card-icon"><app-icon name="clock" [size]="20" /></div>
       <div class="card-content">
-        <p class="card-label">Reste à Payer</p>
+        <p class="card-label">Reste à payer</p>
         <h3 class="card-value">{{ summary().remaining | number:'1.2-2' }} DH</h3>
+        <p class="card-hint">{{ unpaidOrdersCount() }} intervention(s)</p>
       </div>
     </div>
   </div>
@@ -58,7 +66,7 @@
         <label>Rechercher</label>
         <input type="text" class="form-control"
           [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event)"
-          placeholder="Client, véhicule, prestation..." (keyup.enter)="applyFilters()">
+          placeholder="Plaque, client, véhicule, prestation..." (keyup.enter)="applyFilters()">
       </div>
       <div class="filter-group">
         <label>Prestation</label>
@@ -70,7 +78,7 @@
           </option>
         </select>
       </div>
-      <div class="filter-group">
+      <div class="filter-group" *ngIf="viewMode() === 'list'">
         <label>Statut</label>
         <select class="form-control"
           [ngModel]="filterStatus()" (ngModelChange)="filterStatus.set($event); applyFilters()">
@@ -106,14 +114,6 @@
         </select>
       </div>
       <div class="filter-group">
-        <label>Commercial</label>
-        <select class="form-control"
-          [ngModel]="filterCommercial()" (ngModelChange)="filterCommercial.set($event); applyFilters()">
-          <option value="">Tous</option>
-          <option *ngFor="let c of filterOptions().commercials" [value]="c.id">{{ c.name }}</option>
-        </select>
-      </div>
-      <div class="filter-group">
         <label>Date du</label>
         <input type="date" class="form-control"
           [ngModel]="filterDateFrom()" (ngModelChange)="filterDateFrom.set($event)" />
@@ -125,13 +125,132 @@
       </div>
     </div>
     <div class="filter-actions">
+      <div class="segmented" *ngIf="viewMode() === 'board'">
+        <span class="segmented-label">Mécanicien</span>
+        <button type="button" [class.active]="!filterCommercial()" (click)="selectMechanic(null)">TOUS</button>
+        <button type="button" *ngFor="let c of filterOptions().commercials"
+          [class.active]="isMechanicActive(c.id)" (click)="selectMechanic(c.id)">{{ c.name }}</button>
+      </div>
       <button class="btn btn-primary" (click)="applyFilters()"><app-icon name="search" [size]="14" /> Rechercher</button>
       <button class="btn btn-secondary" (click)="resetFilters()"><app-icon name="close" [size]="14" /> Réinitialiser</button>
     </div>
   </div>
 
+  <!-- Vue atelier (gabarit C) -->
+  <div class="board" *ngIf="viewMode() === 'board'">
+
+    <div class="board-col">
+      <div class="board-col-header">
+        <span class="board-col-title">
+          <span class="board-dot"></span>
+          Sur les ponts
+          <span class="board-count">{{ boardEnCours().length }}</span>
+        </span>
+        <span class="board-col-sub">{{ boardEnCoursSum() | number:'1.0-0' }} DH engagés</span>
+      </div>
+      <div class="board-col-body">
+        <div class="board-empty" *ngIf="!loadingBoard() && boardEnCours().length === 0">Aucune intervention en cours.</div>
+        <div class="board-card" *ngFor="let row of boardEnCoursView()">
+          <div class="board-card-title">
+            <span class="board-card-plate">{{ row.order.vehicle_data?.plate || row.order.vehicle }}</span>
+            <span class="board-card-model" *ngIf="row.order.vehicle_data?.plate">{{ row.order.vehicle_data?.brand }} {{ row.order.vehicle_data?.model_name }}</span>
+          </div>
+          <div class="board-card-sub">
+            {{ row.order.client_record?.name || 'Client de passage' }}<ng-container *ngIf="row.order.mileage"> · {{ row.order.mileage | number }} km</ng-container><ng-container *ngIf="row.order.commercial"> · {{ row.order.commercial!.name }}</ng-container>
+          </div>
+          <div class="board-card-desc">{{ orderProductLabels(row.order).slice(0, 3).join(' · ') || '—' }}</div>
+          <div class="board-card-footer">
+            <span class="board-card-elapsed">Ouvert depuis {{ row.elapsed }}</span>
+            <span class="board-card-amount">{{ row.order.net_amount | number:'1.0-0' }} DH</span>
+          </div>
+          <div class="board-card-actions">
+            <button type="button" class="btn-board btn-board--primary"
+              *ngIf="authService.hasPermission('edit service-orders')"
+              (click)="changeStatus(row.order, 'TERMINE')">Terminer</button>
+            <button type="button" class="btn-board btn-board--secondary" (click)="openDetail(row.order)">Ouvrir</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="board-col">
+      <div class="board-col-header board-col-header--info">
+        <span class="board-col-title">
+          <span class="board-dot" style="background:#2f4fb8"></span>
+          Terminé, à facturer
+          <span class="board-count" style="border-color:#c2cdf5;color:#2f4fb8">{{ boardAFacturer().length }}</span>
+        </span>
+        <span class="board-col-sub" style="font-weight:600;color:#2f4fb8">
+          {{ boardAFacturerSum() | number:'1.0-0' }} DH non facturés<ng-container *ngIf="boardAFacturer().length"> · le plus ancien {{ boardAFacturerOldestDays() }} j</ng-container>
+        </span>
+      </div>
+      <div class="board-col-body">
+        <div class="board-empty" *ngIf="!loadingBoard() && boardAFacturer().length === 0">Rien à facturer.</div>
+        <div class="board-card" *ngFor="let row of boardAFacturerView()">
+          <div class="board-card-title">
+            <span class="board-card-plate">{{ row.order.vehicle_data?.plate || row.order.vehicle }}</span>
+            <span class="board-card-model" *ngIf="row.order.vehicle_data?.plate">{{ row.order.vehicle_data?.brand }} {{ row.order.vehicle_data?.model_name }}</span>
+          </div>
+          <div class="board-card-sub">
+            {{ row.order.client_record?.name || 'Client de passage' }} · ordre {{ row.order.id }}<ng-container *ngIf="row.order.commercial"> · {{ row.order.commercial!.name }}</ng-container>
+          </div>
+          <div class="board-card-desc">{{ orderProductLabels(row.order).slice(0, 3).join(' · ') || '—' }}</div>
+          <div class="board-card-footer">
+            <span class="board-card-elapsed" style="font-weight:600;color:#2f4fb8">Terminé il y a {{ row.elapsed }}</span>
+            <span class="board-card-amount">{{ row.order.net_amount | number:'1.0-0' }} DH</span>
+          </div>
+          <div class="board-card-actions">
+            <button type="button" class="btn-board btn-board--info" (click)="openPayments(row.order)">Facturer</button>
+            <button type="button" class="btn-board btn-board--secondary" (click)="openDetail(row.order)">Ouvrir</button>
+          </div>
+        </div>
+        <div class="board-overflow" *ngIf="boardAFacturerOverflowCount() > 0">
+          <span>{{ boardAFacturerOverflowCount() }} autre(s) · {{ boardAFacturerOverflowSum() | number:'1.0-0' }} DH</span>
+          <a (click)="viewBucketInList('a-facturer')">Voir en liste →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="board-col">
+      <div class="board-col-header">
+        <span class="board-col-title">
+          <span class="board-dot" style="background:#15616d"></span>
+          Facturé
+          <span class="board-count">{{ boardFacture().length }}</span>
+        </span>
+        <span class="board-col-sub">{{ boardFactureEncaisseSum() | number:'1.0-0' }} DH encaissés · {{ boardFactureDueSum() | number:'1.0-0' }} DH dus</span>
+      </div>
+      <div class="board-col-body">
+        <div class="board-empty" *ngIf="!loadingBoard() && boardFacture().length === 0">Aucune intervention facturée.</div>
+        <div class="board-card" *ngFor="let row of boardFactureView()" [class.board-card--due]="row.due">
+          <div class="board-card-title">
+            <span class="board-card-plate">{{ row.order.vehicle_data?.plate || row.order.vehicle }}</span>
+            <span class="board-card-model" *ngIf="row.order.vehicle_data?.plate">{{ row.order.vehicle_data?.brand }} {{ row.order.vehicle_data?.model_name }}</span>
+          </div>
+          <div class="board-card-sub">
+            {{ row.order.client_record?.name || 'Client de passage' }} · ordre {{ row.order.id }}
+          </div>
+          <div class="board-card-desc">{{ orderProductLabels(row.order).slice(0, 3).join(' · ') || '—' }}</div>
+          <div class="board-card-footer">
+            <span class="board-card-elapsed" [class.board-card-elapsed--due]="row.due">{{ row.statusLabel }}</span>
+            <span class="board-card-amount" [class.board-card-amount--due]="row.due">{{ row.amount | number:'1.0-0' }} DH</span>
+          </div>
+          <div class="board-card-actions" *ngIf="row.due">
+            <button type="button" class="btn-board btn-board--danger" (click)="openPayments(row.order)">Encaisser</button>
+            <button type="button" class="btn-board btn-board--secondary" (click)="openDetail(row.order)">Ouvrir</button>
+          </div>
+        </div>
+        <div class="board-overflow" *ngIf="boardFactureOverflowCount() > 0">
+          <span>{{ boardFactureOverflowCount() }} autre(s) ce mois</span>
+          <a (click)="viewBucketInList('facture')">Voir en liste →</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
   <!-- Tableau -->
-  <div class="table-card card">
+  <div class="table-card card" *ngIf="viewMode() === 'list'">
     <div *ngIf="loading()" class="loading-state">Chargement…</div>
 
     <div *ngIf="!loading() && serviceOrders().length === 0" class="empty-state">

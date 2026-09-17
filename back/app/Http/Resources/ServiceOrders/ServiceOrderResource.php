@@ -82,6 +82,11 @@ class ServiceOrderResource extends JsonResource
                 ] : null
             ),
             'payments' => $this->whenLoaded('payments'),
+            // array_key_exists (pas payments_sum_amount !== null) : withSum met bien l'attribut à
+            // 0 (pas null) quand l'intervention n'a aucun paiement — un !== null aurait exclu
+            // total_paid/remaining pour toute intervention jamais payée.
+            'total_paid' => $this->when(array_key_exists('payments_sum_amount', $this->getAttributes()), fn () => round((float) ($this->payments_sum_amount ?? 0), 2)),
+            'remaining' => $this->when(array_key_exists('payments_sum_amount', $this->getAttributes()), fn () => round((float) $this->net_amount - (float) ($this->payments_sum_amount ?? 0), 2)),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];

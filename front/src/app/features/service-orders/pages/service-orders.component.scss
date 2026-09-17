@@ -207,3 +207,230 @@ $_border2:  #d0d9e4;
   flex: 1;
   min-width: 0;
 }
+
+.card-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: #4a5c75;
+}
+
+// ── Bascule Atelier / Liste + Mécanicien (refonte 2b, étape « Service Auto ») ──
+// Pas dans le mixin partagé : voir le commentaire équivalent de
+// sales-page.component.scss — tout ajout à _page-layout.scss est dupliqué
+// dans les 24 autres écrans qui l'incluent et fait sauter leur budget de style.
+.view-toggle, .segmented {
+  display: flex;
+  border: 1px solid #adc2da;
+  border-right: none;
+
+  button {
+    height: 32px;
+    padding: 0 12px;
+    border: none;
+    border-right: 1px solid #adc2da;
+    background: #fff;
+    color: #41546e;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &.active { background: #0c1e33; color: #fff; font-weight: 700; }
+  }
+}
+
+.segmented {
+  margin-right: auto;
+  align-items: center;
+  gap: 0 8px;
+  border: none;
+
+  .segmented-label {
+    margin-right: 2px;
+    font-size: 11.5px;
+    color: #4a5c75;
+  }
+}
+
+// ── Vue atelier : trois colonnes de travail (gabarit C, README « Gabarits d'écran ») ──
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+}
+
+.board-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid #cfdcec;
+  &:last-child { border-right: none; }
+}
+
+.board-col-header {
+  padding: 11px 16px;
+  border-bottom: 1px solid #0c1e33;
+  background: #f4f8fd;
+
+  &--info { background: #e6ebfd; }
+}
+
+.board-col-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #0c1e33;
+}
+
+.board-dot {
+  width: 7px;
+  height: 7px;
+  background: #0c1e33;
+}
+
+.board-count {
+  padding: 0 6px;
+  border: 1px solid #adc2da;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #0c1e33;
+}
+
+.board-col-sub {
+  display: block;
+  margin-top: 5px;
+  font-size: 11.5px;
+  color: #4a5c75;
+  font-variant-numeric: tabular-nums;
+}
+
+.board-col-body {
+  flex: 1;
+  min-height: 0;
+  max-height: 640px;
+  overflow-y: auto;
+}
+
+.board-empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.board-card {
+  padding: 13px 16px;
+  border-bottom: 1px solid #e7eef8;
+
+  &--due {
+    border-left: 3px solid #c2181f;
+    margin-left: -3px;
+    background: #fdeff1;
+  }
+}
+
+.board-card-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.board-card-plate {
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #0c1e33;
+}
+
+.board-card-model {
+  font-size: 12px;
+  color: #41546e;
+}
+
+.board-card-sub {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  color: #4a5c75;
+}
+
+.board-card-desc {
+  display: block;
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: #0c1e33;
+}
+
+.board-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.board-card-elapsed {
+  font-size: 11px;
+  color: #4a5c75;
+  font-variant-numeric: tabular-nums;
+
+  &--info { font-weight: 600; color: #2f4fb8; }
+  &--due  { font-weight: 600; color: #c2181f; }
+}
+
+.board-card-amount {
+  margin-left: auto;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #0c1e33;
+
+  &--due { color: #c2181f; }
+}
+
+.board-card-actions {
+  margin-top: 9px;
+  display: flex;
+  gap: 6px;
+}
+
+.btn-board {
+  height: 32px;
+  padding: 0 11px;
+  border: 1px solid #adc2da;
+  background: #fff;
+  color: #0c1e33;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &--primary, &--info, &--danger { flex: 1; color: #fff; font-weight: 700; }
+  &--primary { border-color: #0c1e33; background: #0c1e33; }
+  &--info    { border-color: #2f4fb8; background: #2f4fb8; }
+  &--danger  { border-color: #c2181f; background: #c2181f; }
+}
+
+.board-overflow {
+  padding: 11px 16px;
+  border-bottom: 1px solid #e7eef8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #41546e;
+
+  a {
+    margin-left: auto;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    color: #2f4fb8;
+    &:hover { text-decoration: underline; }
+  }
+}

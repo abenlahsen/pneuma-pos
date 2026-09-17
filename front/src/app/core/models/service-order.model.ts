@@ -44,6 +44,8 @@ export interface ServiceOrder {
   commercial_id?: number | null;
   commercial?: { id: number; name: string } | null;
   creator?: { id: number; name: string } | null;
+  total_paid?: number;
+  remaining?: number;
   created_at?: string | null;
   updated_at?: string | null;
 }

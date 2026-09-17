@@ -25,7 +25,9 @@ class ServiceOrderController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = ServiceOrder::query()->with(['commercial', 'creator', 'items.product', 'clientRecord']);
+        $query = ServiceOrder::query()
+            ->with(['commercial', 'creator', 'items.product', 'clientRecord', 'vehicle'])
+            ->withSum('payments', 'amount');
 
         $this->applyFilters($query, $request);
 
