@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/dashboard-kpi', [DashboardController::class, 'kpi'])
     ->middleware('role:Administrator');
 
+// Accueil — liste « à traiter » (refonte 2b). Pas de permission dédiée : chaque
+// bloc n'est rendu que si l'utilisateur peut déjà voir les données concernées.
+Route::get('/dashboard-todo', [DashboardController::class, 'todo']);
+
 // Primes commerciaux
 Route::get('/primes-commerciaux', [PrimesController::class, 'index'])
     ->middleware('permission:view primes');

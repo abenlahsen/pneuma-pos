@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { DashboardKpi } from '../models/dashboard-kpi.model';
+import { DashboardTodo } from '../models/dashboard-todo.model';
 import { environment } from '../../../environments/environment';
 
 export interface DashboardKpiFilters {
@@ -34,5 +35,9 @@ export class DashboardService {
     return this.http.get<DashboardKpi>(`${environment.apiUrl}/dashboard-kpi`, {
       params,
     });
+  }
+
+  getTodo(): Observable<DashboardTodo> {
+    return this.http.get<DashboardTodo>(`${environment.apiUrl}/dashboard-todo`);
   }
 }

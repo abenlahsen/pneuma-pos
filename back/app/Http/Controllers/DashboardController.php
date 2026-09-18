@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Dashboard\DashboardTodoService;
 use App\Domain\Suppliers\SupplierService;
 use App\Enums\PurchaseStatus;
 use App\Enums\SalePaymentStatus;
@@ -21,6 +22,16 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    /**
+     * Refonte 2b — la liste « à traiter » de l'Accueil : impayés clients,
+     * achats à régler, ordres à facturer, références sous seuil de vente.
+     * Chaque bloc est filtré par les droits de l'utilisateur.
+     */
+    public function todo(Request $request, DashboardTodoService $todoService): JsonResponse
+    {
+        return response()->json($todoService->build($request->user()));
+    }
+
     /**
      * Aggregated KPI snapshot for the admin dashboard.
      */

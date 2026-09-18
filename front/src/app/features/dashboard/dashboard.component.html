@@ -1,546 +1,226 @@
-<div class="dashboard-container">
+<div class="home">
 
-  <main class="dashboard-main">
-    <div class="welcome-card">
-      <h2>Bienvenue{{ user() ? ', ' + user()?.name : '' }} !</h2>
-      <p>Votre point de vente est prêt à être utilisé.</p>
+  <div class="home-head">
+    <div>
+      <h1>Bonjour {{ user()?.name }}</h1>
+      <!-- Format numérique : aucune locale n'est enregistrée dans l'application
+           (les noms de mois sortiraient en anglais), comme partout ailleurs. -->
+      <p class="home-sub">{{ today | date:'dd/MM/yyyy' }}</p>
+    </div>
+    <div class="home-actions">
+      <a class="btn btn-secondary" routerLink="/service-orders" *ngIf="authService.hasPermission('create service-orders')">Ordre de service</a>
+      <a class="btn btn-primary" routerLink="/sales/new" *ngIf="authService.hasPermission('create sales')">+ Nouvelle vente</a>
+      <app-auto-refresh-control pageKey="dashboard" (refresh)="refreshTodo(); refreshKpi()" />
+    </div>
+  </div>
 
+  <div class="home-panes">
+    <div class="home-main">
 
+      <!-- Quatre chiffres qui décident -->
+      <div class="kpi-band" *ngIf="kpi() as k">
+        <div class="kpi-cell">
+          <span class="kpi-label">Chiffre d'affaires</span>
+          <span class="kpi-value">{{ k.sales_today_amount | number:'1.0-0' }}</span>
+          <span class="kpi-hint">DH · aujourd'hui · {{ k.tyres_today }} pneus</span>
+        </div>
+        <div class="kpi-cell">
+          <span class="kpi-label">Marge nette</span>
+          <span class="kpi-value">{{ k.net_margin_today | number:'1.0-0' }}</span>
+          <span class="kpi-hint">
+            DH<ng-container *ngIf="k.sales_today_amount > 0"> · {{ (k.net_margin_today / k.sales_today_amount) * 100 | number:'1.1-1' }} % du CA</ng-container>
+          </span>
+        </div>
+        <div class="kpi-cell">
+          <span class="kpi-label">Encaissé</span>
+          <span class="kpi-value">{{ todo()?.collected_today ?? 0 | number:'1.0-0' }}</span>
+          <span class="kpi-hint">DH · aujourd'hui · caisse {{ k.cash_balance | number:'1.0-0' }}</span>
+        </div>
+        <div class="kpi-cell kpi-cell--alert">
+          <span class="kpi-label">Impayés clients</span>
+          <span class="kpi-value">{{ todo()?.unpaid_sales?.total ?? k.unpaid_sales | number:'1.0-0' }}</span>
+          <span class="kpi-hint">
+            DH<ng-container *ngIf="todo()?.unpaid_sales as g"> · {{ g.count }} vente(s) non soldée(s)</ng-container>
+          </span>
+        </div>
+      </div>
+
+      <!-- À traiter -->
+      <div class="todo-head">
+        <h2>À traiter</h2>
+        <span class="todo-count">{{ todoCount() }} ligne(s) · {{ todoTotal() | number:'1.0-0' }} DH en jeu</span>
+        <div class="segmented">
+          <button type="button" [class.active]="todoTab() === 'tout'" (click)="todoTab.set('tout')">TOUT {{ todoCount() }}</button>
+          <button type="button" *ngIf="todo()?.unpaid_sales as g" style="color:#c2181f"
+            [class.active]="todoTab() === 'impayes'" (click)="todoTab.set('impayes')">IMPAYÉS {{ g.count }}</button>
+          <button type="button" *ngIf="todo()?.unpaid_purchases as g" style="color:#0e6e8c"
+            [class.active]="todoTab() === 'achats'" (click)="todoTab.set('achats')">ACHATS {{ g.count }}</button>
+          <button type="button" *ngIf="todo()?.to_invoice as g" style="color:#2f4fb8"
+            [class.active]="todoTab() === 'facturer'" (click)="todoTab.set('facturer')">À FACTURER {{ g.count }}</button>
+          <button type="button" *ngIf="todo()?.low_stock as g" style="color:#4a5c75"
+            [class.active]="todoTab() === 'stock'" (click)="todoTab.set('stock')">STOCK {{ g.count }}</button>
+        </div>
+      </div>
+
+      <div class="todo-grid-head">
+        <span></span><span>Objet</span><span class="num">Retard</span><span class="num">Montant DH</span><span></span>
+      </div>
+
+      <div class="todo-loading" *ngIf="loadingTodo() && !todo()">Chargement…</div>
+
+      <ng-container *ngIf="todo() as t">
+
+        <!-- Impayés clients -->
+        <ng-container *ngIf="t.unpaid_sales as g">
+          <ng-container *ngIf="showsGroup().impayes && g.count > 0">
+            <div class="todo-band" style="background:#fdeff1;border-color:#f2d1d4">
+              <span class="todo-dot" style="background:#c2181f"></span>
+              <span class="todo-band-label" style="color:#c2181f">Impayés clients</span>
+              <span class="todo-band-figure" style="color:#c2181f">{{ g.count }} · {{ g.total | number:'1.0-0' }}</span>
+            </div>
+            <div class="todo-row" *ngFor="let row of g.rows; let i = index">
+              <span class="todo-index">{{ i + 1 }}</span>
+              <span class="todo-object">
+                <a class="todo-title" [routerLink]="row.client_id ? ['/clients', row.client_id] : ['/sales']">{{ row.client_name }}</a>
+                <span class="todo-sub">
+                  Vente {{ row.id }} · {{ row.date | date:'dd/MM' }}<ng-container *ngIf="row.city"> · {{ row.city }}</ng-container><ng-container *ngIf="row.commercial"> · {{ row.commercial }}</ng-container>
+                </span>
+              </span>
+              <span class="num todo-days" [class.todo-days--late]="row.days > 60">{{ row.days }} j</span>
+              <span class="num todo-amount">{{ row.amount | number:'1.0-0' }}</span>
+              <a class="todo-action" [routerLink]="['/sales']" [queryParams]="{ pay: row.id }">Encaisser</a>
+            </div>
+            <div class="todo-more" *ngIf="g.count > g.rows.length">
+              <span>{{ g.count - g.rows.length }} autre(s) impayé(s)</span>
+              <a routerLink="/sales" [queryParams]="{ payment_status: 'NON PAYE' }">Voir les ventes →</a>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <!-- Achats à régler -->
+        <ng-container *ngIf="t.unpaid_purchases as g">
+          <ng-container *ngIf="showsGroup().achats && g.count > 0">
+            <div class="todo-band" style="background:#e2effa;border-color:#b5d4e8">
+              <span class="todo-dot" style="background:#0e6e8c"></span>
+              <span class="todo-band-label" style="color:#0e6e8c">Achats à régler</span>
+              <span class="todo-band-figure" style="color:#0e6e8c">
+                {{ g.count }} · {{ g.total | number:'1.0-0' }}<ng-container *ngIf="g.old_debt_count > 0"> · dont {{ g.old_debt_count }} au-delà de {{ g.old_debt_days }} j</ng-container>
+              </span>
+            </div>
+            <div class="todo-row" *ngFor="let row of g.rows; let i = index">
+              <span class="todo-index">{{ i + 1 }}</span>
+              <span class="todo-object">
+                <a class="todo-title" [routerLink]="row.supplier_id ? ['/suppliers', row.supplier_id] : ['/achats']">{{ row.supplier_name }}</a>
+                <span class="todo-sub">
+                  Achat {{ row.id }} · {{ row.date | date:'dd/MM' }}<ng-container *ngIf="row.with_invoice"> · facturé</ng-container>
+                </span>
+              </span>
+              <span class="num todo-days" [class.todo-days--old]="row.days > g.old_debt_days">{{ row.days }} j</span>
+              <span class="num todo-amount">{{ row.amount | number:'1.0-0' }}</span>
+              <a class="todo-action" [routerLink]="row.supplier_id ? ['/suppliers', row.supplier_id] : ['/achats']">Régler</a>
+            </div>
+            <div class="todo-more" *ngIf="g.count > g.rows.length">
+              <span>{{ g.count - g.rows.length }} autre(s) achat(s) à régler</span>
+              <a routerLink="/achats">Voir les achats →</a>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <!-- Ordres à facturer -->
+        <ng-container *ngIf="t.to_invoice as g">
+          <ng-container *ngIf="showsGroup().facturer && g.count > 0">
+            <div class="todo-band" style="background:#e6ebfd;border-color:#c2cdf5">
+              <span class="todo-dot" style="background:#2f4fb8"></span>
+              <span class="todo-band-label" style="color:#2f4fb8">Ordres à facturer</span>
+              <span class="todo-band-figure" style="color:#2f4fb8">{{ g.count }} · {{ g.total | number:'1.0-0' }}</span>
+            </div>
+            <div class="todo-row" *ngFor="let row of g.rows; let i = index">
+              <span class="todo-index">{{ i + 1 }}</span>
+              <span class="todo-object">
+                <a class="todo-title" routerLink="/service-orders" [queryParams]="{ id: row.id }">
+                  Ordre {{ row.id }}<ng-container *ngIf="row.plate"> · {{ row.plate }}</ng-container><ng-container *ngIf="!row.plate && row.vehicle"> · {{ row.vehicle }}</ng-container>
+                </a>
+                <span class="todo-sub">
+                  {{ row.items_count }} ligne(s)<ng-container *ngIf="row.client_name"> · {{ row.client_name }}</ng-container><ng-container *ngIf="row.commercial"> · {{ row.commercial }}</ng-container>
+                </span>
+              </span>
+              <span class="num todo-days">{{ row.days }} j</span>
+              <span class="num todo-amount">{{ row.amount | number:'1.0-0' }}</span>
+              <a class="todo-action todo-action--info" routerLink="/service-orders" [queryParams]="{ id: row.id }">Facturer</a>
+            </div>
+            <div class="todo-more" *ngIf="g.count > g.rows.length">
+              <span>{{ g.count - g.rows.length }} autre(s) ordre(s)</span>
+              <a routerLink="/service-orders">Voir l'atelier →</a>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <!-- Références sous le rythme des ventes -->
+        <ng-container *ngIf="t.low_stock as g">
+          <ng-container *ngIf="showsGroup().stock && g.count > 0">
+            <div class="todo-band" style="background:#ecf1fa;border-color:#cfdcec">
+              <span class="todo-dot" style="background:#4a5c75"></span>
+              <span class="todo-band-label" style="color:#4a5c75">Moins d'un mois de ventes en stock</span>
+              <span class="todo-band-figure" style="color:#4a5c75">{{ g.count }} référence(s)</span>
+            </div>
+            <div class="todo-row" *ngFor="let row of g.rows; let i = index">
+              <span class="todo-index">{{ i + 1 }}</span>
+              <span class="todo-object">
+                <a class="todo-title" routerLink="/stock" [queryParams]="{ search: row.dimension || row.reference }">
+                  {{ row.name || row.reference }}<ng-container *ngIf="row.dimension"> · {{ row.dimension }}</ng-container>
+                </a>
+                <span class="todo-sub">{{ row.sold_30d }} vendus sur 30 jours</span>
+              </span>
+              <span class="num todo-days">—</span>
+              <span class="num todo-amount" style="color:#0e6e8c">{{ row.remaining }} rest.</span>
+              <a class="todo-action" routerLink="/achats">Commander</a>
+            </div>
+            <div class="todo-more" *ngIf="g.count > g.rows.length">
+              <span>{{ g.count - g.rows.length }} autre(s) référence(s)</span>
+              <a routerLink="/stock">Voir le stock →</a>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <div class="todo-empty" *ngIf="todoCount() === 0 && !loadingTodo()">
+          Rien à traiter : aucun impayé, aucun achat à régler, aucun ordre en attente.
+        </div>
+      </ng-container>
     </div>
 
-    <div class="kpi-dashboard" *ngIf="authService.hasRole('Administrator') && kpi() as k">
-      <div class="section-title-row">
-        <h3 class="section-title">Tableau de bord KPI</h3>
-        <div class="kpi-loading-indicator" *ngIf="loadingKpi()">
-          <span class="kpi-loading-spinner" aria-hidden="true"></span>
-          <span>Chargement...</span>
-        </div>
-        <app-auto-refresh-control pageKey="dashboard" [defaultIntervalMs]="60000" (refresh)="refreshKpi()" />
+    <!-- Volet droit -->
+    <aside class="home-aside">
+      <div class="aside-block" *ngIf="kpi() as k">
+        <span class="aside-title">Le mois</span>
+        <span class="aside-line"><span>CA</span><span class="aside-amount">{{ k.sales_month_amount | number:'1.0-0' }}</span></span>
+        <span class="aside-line"><span>Marge nette</span><span class="aside-amount">{{ k.net_margin_month | number:'1.0-0' }}</span></span>
+        <span class="aside-line"><span>Pneus vendus</span><span class="aside-amount">{{ k.tyres_month | number:'1.0-0' }}</span></span>
+        <span class="aside-line" *ngIf="todo()?.unpaid_purchases as g">
+          <span>Reste à payer (frs)</span><span class="aside-amount" style="color:#c2181f">{{ g.total | number:'1.0-0' }}</span>
+        </span>
       </div>
 
-      <!-- Aujourd'hui -->
-      <div class="kpi-group-header">
-        <h4 class="kpi-group-title"><app-icon name="calendar" [size]="14" /> Aujourd'hui</h4>
-        <label class="kpi-filter" for="dashboard-day-filter">
-          <span class="kpi-filter-label">Date</span>
-          <input
-            id="dashboard-day-filter"
-            class="kpi-filter-control"
-            type="date"
-            [value]="selectedDay()"
-            (change)="onDayChange($any($event.target).value)"
-          />
-        </label>
-      </div>
-      <div class="kpi-grid">
-        <div class="kpi-card highlight-red">
-          <div class="kpi-icon"><app-icon name="banknote" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">CA Aujourd'hui</span>
-            <span class="kpi-val">{{ k.sales_today_amount | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-          <div class="kpi-badge">{{ k.tyres_today }} Pneus vendus</div>
+      <div class="aside-block" *ngIf="salesChart().bars.length">
+        <span class="aside-title">30 jours</span>
+        <div class="spark">
+          <span class="spark-bar" *ngFor="let bar of salesChart().bars"
+            [style.height.%]="bar.height"
+            [style.background]="bar.isToday ? '#ff2d37' : '#0c1e33'"
+            [title]="(bar.date | date:'dd/MM') + ' · ' + (bar.amount | number:'1.0-0') + ' DH'"></span>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-icon"><app-icon name="shopping-cart" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Achats</span>
-            <span class="kpi-val">{{ k.purchases_today_amount | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-          <div class="kpi-badge">{{ k.tyres_purchased_today }} Pneus achetés</div>
-        </div>
-        <div class="kpi-card warning-card">
-          <div class="kpi-icon"><app-icon name="banknote" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Dépenses</span>
-            <span class="kpi-val">{{ k.expenses_today | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon"><app-icon name="coins" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Autres revenus</span>
-            <span class="kpi-val">{{ k.other_revenue_today | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-        </div>
-        <div class="kpi-card" [class.negative-card]="k.margin_today < 0">
-          <div class="kpi-icon"><app-icon name="trending-up" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Marge Brute</span>
-            <span class="kpi-val">{{ k.margin_today | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-        </div>
-        <div class="kpi-card" [class.negative-card]="k.net_margin_today < 0">
-          <div class="kpi-icon"><app-icon name="trending-down" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Marge Nette</span>
-            <span class="kpi-val">{{ k.net_margin_today | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-        </div>
+        <span class="aside-caption">
+          Moyenne {{ salesChart().average | number:'1.0-0' }} DH<ng-container *ngIf="salesChart().todayDelta !== null"> · aujourd'hui {{ salesChart().todayDelta! > 0 ? '+' : '' }}{{ salesChart().todayDelta | number:'1.0-0' }} %</ng-container>
+        </span>
       </div>
 
-      <!-- Ce mois -->
-      <div class="kpi-group-header">
-        <h4 class="kpi-group-title"><app-icon name="bar-chart" [size]="14" /> Ce mois</h4>
-        <label class="kpi-filter" for="dashboard-month-filter">
-          <span class="kpi-filter-label">Mois</span>
-          <input
-            id="dashboard-month-filter"
-            class="kpi-filter-control"
-            type="month"
-            [value]="selectedMonth()"
-            (change)="onMonthChange($any($event.target).value)"
-          />
-        </label>
-      </div>
-      <div class="kpi-grid">
-        <div class="kpi-card highlight-blue">
-          <div class="kpi-icon"><app-icon name="banknote" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">CA Mois</span>
-            <span class="kpi-val">{{ k.sales_month_amount | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_month > 0">
-              ≈ {{ (k.sales_month_amount / k.tyres_month) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-          <div class="kpi-badges">
-            <div class="kpi-badge">{{ k.tyres_month }} Pneus vendus</div>
-            <div class="kpi-badge kpi-badge--parts" *ngIf="k.parts_month > 0">{{ k.parts_month }} Pièces vendues</div>
-          </div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon"><app-icon name="shopping-cart" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Achats</span>
-            <span class="kpi-val">{{ k.purchases_month_amount | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_purchased_month > 0">
-              ≈ {{ (k.purchases_month_amount / k.tyres_purchased_month) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-          <div class="kpi-badges">
-            <div class="kpi-badge">{{ k.tyres_purchased_month }} Pneus achetés</div>
-            <div class="kpi-badge kpi-badge--parts" *ngIf="k.parts_purchased_month > 0">{{ k.parts_purchased_month }} Pièces achetées</div>
-          </div>
-        </div>
-        <div class="kpi-card warning-card">
-          <div class="kpi-icon"><app-icon name="banknote" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Dépenses</span>
-            <span class="kpi-val">{{ k.expenses_month | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_month > 0">
-              ≈ {{ (k.expenses_month / k.tyres_month) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon"><app-icon name="coins" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Autres revenus</span>
-            <span class="kpi-val">{{ k.other_revenue_month | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-        </div>
-        <div class="kpi-card" [class.negative-card]="k.margin_month < 0">
-          <div class="kpi-icon"><app-icon name="trending-up" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Marge Brute</span>
-            <span class="kpi-val">{{ k.margin_month | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_month > 0">
-              ≈ {{ (k.margin_month / k.tyres_month) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-        </div>
-        <div class="kpi-card" [class.negative-card]="k.net_margin_month < 0">
-          <div class="kpi-icon"><app-icon name="trending-down" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Marge Nette</span>
-            <span class="kpi-val">{{ k.net_margin_month | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_month > 0">
-              ≈ {{ (k.net_margin_month / k.tyres_month) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
+      <div class="aside-block" *ngIf="kpi()?.sales_by_commercial?.length">
+        <span class="aside-title">Classement du mois</span>
+        <div class="rank-line" *ngFor="let c of kpi()!.sales_by_commercial.slice(0, 5); let i = index">
+          <span class="rank-pos">{{ i + 1 }}</span>
+          <span class="rank-name">{{ c.commercial_name }}</span>
+          <span class="rank-amount">{{ c.total_sales | number:'1.0-0' }}</span>
         </div>
       </div>
-
-      <!-- Performances Ventes par mois -->
-      <div class="commercials-section">
-        <h3 class="section-title"><app-icon name="tag" [size]="14" /> Ventes — Performances — {{ selectedMonth() }}</h3>
-        <div class="modern-table-container">
-          <table class="modern-table">
-            <thead>
-              <tr>
-                <th>Commercial</th>
-                <th>Pneus Vendus</th>
-                <th>Chiffre d'Affaires</th>
-                <th>Marge Brute</th>
-                <th>Marge / Pneu</th>
-                <th>% Marge</th>
-                <th>Impayés</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let com of k.sales_by_commercial">
-                <td>
-                  <div class="user-cell">
-                    <div class="avatar">{{ com.commercial_name.charAt(0) | uppercase }}</div>
-                    <span class="user-name">{{ com.commercial_name }}</span>
-                  </div>
-                </td>
-                <td class="font-numeric">{{ com.total_tyres }}</td>
-                <td class="font-numeric">{{ com.total_sales | number:'1.2-2' }} <small>DH</small></td>
-                <td class="font-numeric" [class.negative]="com.total_margin < 0">
-                  {{ com.total_margin | number:'1.2-2' }} <small>DH</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.avg_margin_per_tyre < 0">
-                  {{ com.avg_margin_per_tyre | number:'1.2-2' }} <small>DH</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.margin_rate < 0">
-                  {{ com.margin_rate | number:'1.1-1' }}<small>%</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.total_unpaid > 0">
-                  {{ com.total_unpaid | number:'1.2-2' }} <small>DH</small>
-                </td>
-              </tr>
-              <tr *ngIf="k.sales_by_commercial.length === 0">
-                <td colspan="7" class="empty-row">Aucune vente ce mois-ci</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Performances Service Auto par mois -->
-      <div class="commercials-section">
-        <h3 class="section-title section-title--service"><app-icon name="wrench" [size]="14" /> Service Auto — Performances — {{ selectedMonth() }}</h3>
-        <div class="modern-table-container">
-          <table class="modern-table">
-            <thead>
-              <tr>
-                <th>Commercial</th>
-                <th>Ordres</th>
-                <th>Chiffre d'Affaires</th>
-                <th>Marge Brute</th>
-                <th>% Marge</th>
-                <th>Impayés</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let com of k.service_by_commercial">
-                <td>
-                  <div class="user-cell">
-                    <div class="avatar avatar--service">{{ com.commercial_name.charAt(0) | uppercase }}</div>
-                    <span class="user-name">{{ com.commercial_name }}</span>
-                  </div>
-                </td>
-                <td class="font-numeric">{{ com.total_orders }}</td>
-                <td class="font-numeric">{{ com.total_ca | number:'1.2-2' }} <small>DH</small></td>
-                <td class="font-numeric" [class.negative]="com.total_margin < 0">
-                  {{ com.total_margin | number:'1.2-2' }} <small>DH</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.margin_rate < 0">
-                  {{ com.margin_rate | number:'1.1-1' }}<small>%</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.total_unpaid > 0">
-                  {{ com.total_unpaid | number:'1.2-2' }} <small>DH</small>
-                </td>
-              </tr>
-              <tr *ngIf="k.service_by_commercial.length === 0">
-                <td colspan="6" class="empty-row">Aucun ordre de service ce mois-ci</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Cette année -->
-      <div class="kpi-group-header">
-        <h4 class="kpi-group-title"><app-icon name="trending-up" [size]="14" /> Cette année</h4>
-        <label class="kpi-filter" for="dashboard-year-filter">
-          <span class="kpi-filter-label">Année</span>
-          <select
-            id="dashboard-year-filter"
-            class="kpi-filter-control"
-            [value]="selectedYear()"
-            (change)="onYearChange($any($event.target).value)"
-          >
-            <option *ngFor="let year of yearOptions()" [value]="year">{{ year }}</option>
-          </select>
-        </label>
-      </div>
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-icon"><app-icon name="banknote" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">CA Année</span>
-            <span class="kpi-val">{{ k.total_sale_year | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_year > 0">
-              ≈ {{ (k.total_sale_year / k.tyres_year) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-          <div class="kpi-badges">
-            <div class="kpi-badge">{{ k.tyres_year }} Pneus vendus</div>
-            <div class="kpi-badge kpi-badge--parts" *ngIf="k.parts_year > 0">{{ k.parts_year }} Pièces vendues</div>
-          </div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon"><app-icon name="shopping-cart" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Achats</span>
-            <span class="kpi-val">{{ k.total_purchase_year | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_purchased_year > 0">
-              ≈ {{ (k.total_purchase_year / k.tyres_purchased_year) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-          <div class="kpi-badges">
-            <div class="kpi-badge">{{ k.tyres_purchased_year }} Pneus achetés</div>
-            <div class="kpi-badge kpi-badge--parts" *ngIf="k.parts_purchased_year > 0">{{ k.parts_purchased_year }} Pièces achetées</div>
-          </div>
-        </div>
-        <div class="kpi-card warning-card">
-          <div class="kpi-icon"><app-icon name="banknote" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Dépenses</span>
-            <span class="kpi-val">{{ k.expenses_year | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_year > 0">
-              ≈ {{ (k.expenses_year / k.tyres_year) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon"><app-icon name="coins" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Autres revenus</span>
-            <span class="kpi-val">{{ k.other_revenue_year | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-        </div>
-        <div class="kpi-card" [class.negative-card]="k.margin_year < 0">
-          <div class="kpi-icon"><app-icon name="trending-up" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Marge Brute</span>
-            <span class="kpi-val">{{ k.margin_year | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_year > 0">
-              ≈ {{ (k.margin_year / k.tyres_year) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-        </div>
-        <div class="kpi-card" [class.negative-card]="k.net_margin_year < 0">
-          <div class="kpi-icon"><app-icon name="trending-down" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Marge Nette</span>
-            <span class="kpi-val">{{ k.net_margin_year | number:'1.2-2' }} <small>DH</small></span>
-            <span class="kpi-sub" *ngIf="k.tyres_year > 0">
-              ≈ {{ (k.net_margin_year / k.tyres_year) | number:'1.2-2' }} DH / pneu
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Performances Ventes par année -->
-      <div class="commercials-section">
-        <h3 class="section-title"><app-icon name="tag" [size]="14" /> Ventes — Performances — {{ selectedYear() }}</h3>
-        <div class="modern-table-container">
-          <table class="modern-table">
-            <thead>
-              <tr>
-                <th>Commercial</th>
-                <th>Pneus Vendus</th>
-                <th>Chiffre d'Affaires</th>
-                <th>Marge Brute</th>
-                <th>Marge / Pneu</th>
-                <th>% Marge</th>
-                <th>Impayés</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let com of k.sales_by_commercial_year">
-                <td>
-                  <div class="user-cell">
-                    <div class="avatar">{{ com.commercial_name.charAt(0) | uppercase }}</div>
-                    <span class="user-name">{{ com.commercial_name }}</span>
-                  </div>
-                </td>
-                <td class="font-numeric">{{ com.total_tyres }}</td>
-                <td class="font-numeric">{{ com.total_sales | number:'1.2-2' }} <small>DH</small></td>
-                <td class="font-numeric" [class.negative]="com.total_margin < 0">
-                  {{ com.total_margin | number:'1.2-2' }} <small>DH</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.avg_margin_per_tyre < 0">
-                  {{ com.avg_margin_per_tyre | number:'1.2-2' }} <small>DH</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.margin_rate < 0">
-                  {{ com.margin_rate | number:'1.1-1' }}<small>%</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.total_unpaid > 0">
-                  {{ com.total_unpaid | number:'1.2-2' }} <small>DH</small>
-                </td>
-              </tr>
-              <tr *ngIf="k.sales_by_commercial_year.length === 0">
-                <td colspan="7" class="empty-row">Aucune vente cette année</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Performances Service Auto par année -->
-      <div class="commercials-section">
-        <h3 class="section-title section-title--service"><app-icon name="wrench" [size]="14" /> Service Auto — Performances — {{ selectedYear() }}</h3>
-        <div class="modern-table-container">
-          <table class="modern-table">
-            <thead>
-              <tr>
-                <th>Commercial</th>
-                <th>Ordres</th>
-                <th>Chiffre d'Affaires</th>
-                <th>Marge Brute</th>
-                <th>% Marge</th>
-                <th>Impayés</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let com of k.service_by_commercial_year">
-                <td>
-                  <div class="user-cell">
-                    <div class="avatar avatar--service">{{ com.commercial_name.charAt(0) | uppercase }}</div>
-                    <span class="user-name">{{ com.commercial_name }}</span>
-                  </div>
-                </td>
-                <td class="font-numeric">{{ com.total_orders }}</td>
-                <td class="font-numeric">{{ com.total_ca | number:'1.2-2' }} <small>DH</small></td>
-                <td class="font-numeric" [class.negative]="com.total_margin < 0">
-                  {{ com.total_margin | number:'1.2-2' }} <small>DH</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.margin_rate < 0">
-                  {{ com.margin_rate | number:'1.1-1' }}<small>%</small>
-                </td>
-                <td class="font-numeric" [class.negative]="com.total_unpaid > 0">
-                  {{ com.total_unpaid | number:'1.2-2' }} <small>DH</small>
-                </td>
-              </tr>
-              <tr *ngIf="k.service_by_commercial_year.length === 0">
-                <td colspan="6" class="empty-row">Aucun ordre de service cette année</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Général -->
-      <h4 class="kpi-group-title"><app-icon name="banknote" [size]="14" /> Général</h4>
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-icon"><app-icon name="package" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Valeur du Stock</span>
-            <span class="kpi-val">{{ k.stock_value | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-          <div class="kpi-badge">{{ k.stock_quantity }} Qté en stock</div>
-        </div>
-        <div class="kpi-card" [class.negative-card]="k.cash_balance < 0">
-          <div class="kpi-icon"><app-icon name="banknote" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Solde de Caisse</span>
-            <span class="kpi-val">{{ k.cash_balance | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-        </div>
-        <div class="kpi-card warning-card">
-          <div class="kpi-icon"><app-icon name="clock" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Impayés Clients</span>
-            <span class="kpi-val">{{ k.unpaid_sales | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-        </div>
-        <div class="kpi-card warning-card">
-          <div class="kpi-icon"><app-icon name="alert-triangle" [size]="14" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">Reste à payer (Frs)</span>
-            <span class="kpi-val">{{ k.unpaid_purchases | number:'1.2-2' }} <small>DH</small></span>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="quick-links">
-      <a routerLink="/sales" class="quick-link-card" id="link-sales" *ngIf="authService.hasPermission('view sales')">
-        <span class="ql-icon"><app-icon name="tag" [size]="14" /></span>
-        <div class="ql-text">
-          <span class="ql-title">Ventes</span>
-          <span class="ql-desc">Gérer les ventes et marges</span>
-        </div>
-        <span class="ql-arrow"><app-icon name="chevron-right" [size]="14" /></span>
-      </a>
-
-      <a routerLink="/suppliers" class="quick-link-card" id="link-suppliers" *ngIf="authService.hasPermission('view suppliers')">
-        <span class="ql-icon"><app-icon name="building" [size]="14" /></span>
-        <div class="ql-text">
-          <span class="ql-title">Fournisseurs</span>
-          <span class="ql-desc">Gérer les fournisseurs</span>
-        </div>
-        <span class="ql-arrow"><app-icon name="chevron-right" [size]="14" /></span>
-      </a>
-
-      <a routerLink="/users" class="quick-link-card" id="link-users" *ngIf="authService.hasPermission('view users')">
-        <span class="ql-icon"><app-icon name="users" [size]="14" /></span>
-        <div class="ql-text">
-          <span class="ql-title">Utilisateurs</span>
-          <span class="ql-desc">Gérer les utilisateurs</span>
-        </div>
-        <span class="ql-arrow"><app-icon name="chevron-right" [size]="14" /></span>
-      </a>
-
-      <a routerLink="/achats" class="quick-link-card" id="link-purchases" *ngIf="authService.hasPermission('view purchases')">
-        <span class="ql-icon"><app-icon name="package" [size]="14" /></span>
-        <div class="ql-text">
-          <span class="ql-title">Achats</span>
-          <span class="ql-desc">Gérer les achats</span>
-        </div>
-        <span class="ql-arrow"><app-icon name="chevron-right" [size]="14" /></span>
-      </a>
-
-      <a routerLink="/cash-flow" class="quick-link-card" id="link-cash-flow" *ngIf="authService.hasPermission('view cash-flow')">
-        <span class="ql-icon"><app-icon name="banknote" [size]="14" /></span>
-        <div class="ql-text">
-          <span class="ql-title">Cash Flow</span>
-          <span class="ql-desc">Revenus, dépenses et solde</span>
-        </div>
-        <span class="ql-arrow"><app-icon name="chevron-right" [size]="14" /></span>
-      </a>
-
-      <a routerLink="/products" class="quick-link-card" id="link-products" *ngIf="authService.hasPermission('view products')">
-        <span class="ql-icon"><app-icon name="package" [size]="14" /></span>
-        <div class="ql-text">
-          <span class="ql-title">Produits</span>
-          <span class="ql-desc">Catalogue des pneus</span>
-        </div>
-        <span class="ql-arrow"><app-icon name="chevron-right" [size]="14" /></span>
-      </a>
-
-      <a routerLink="/stock" class="quick-link-card" id="link-stock" *ngIf="authService.hasPermission('view stock')">
-        <span class="ql-icon"><app-icon name="package" [size]="14" /></span>
-        <div class="ql-text">
-          <span class="ql-title">Inventaire</span>
-          <span class="ql-desc">Stock des pneus</span>
-        </div>
-        <span class="ql-arrow"><app-icon name="chevron-right" [size]="14" /></span>
-      </a>
-
-      <a routerLink="/brands" class="quick-link-card" id="link-brands" *ngIf="authService.hasPermission('view brands')">
-        <span class="ql-icon"><app-icon name="building-2" [size]="14" /></span>
-        <div class="ql-text">
-          <span class="ql-title">Marques</span>
-          <span class="ql-desc">Gérer les marques de pneus</span>
-        </div>
-        <span class="ql-arrow"><app-icon name="chevron-right" [size]="14" /></span>
-      </a>
-
-      <a routerLink="/roles" class="quick-link-card" id="link-roles" *ngIf="authService.hasPermission('view roles')">
-        <span class="ql-icon"><app-icon name="lock" [size]="14" /></span>
-        <div class="ql-text">
-          <span class="ql-title">Rôles</span>
-          <span class="ql-desc">Gérer les rôles et permissions</span>
-        </div>
-        <span class="ql-arrow"><app-icon name="chevron-right" [size]="14" /></span>
-      </a>
-    </div>
-  </main>
+    </aside>
+  </div>
 </div>
