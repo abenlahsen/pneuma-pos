@@ -1,0 +1,70 @@
+@if (isOpen()) {
+  <div class="cp-overlay" (click)="close()">
+    <div class="cp-panel" role="dialog" aria-label="Recherche" (click)="$event.stopPropagation()">
+
+      <label class="cp-field">
+        <app-icon name="search" [size]="16" />
+        <input
+          #queryInput
+          type="text"
+          class="cp-input"
+          placeholder="Client, plaque, dimension (2055516), n° de vente…"
+          autocomplete="off"
+          spellcheck="false"
+          [value]="query()"
+          (input)="onInput($any($event.target).value)"
+          (keydown)="onKeydown($event)"
+        />
+        <button type="button" class="cp-close" (click)="close()" aria-label="Fermer">Échap</button>
+      </label>
+
+      <div class="cp-body">
+        @if (loading()) {
+          <p class="cp-note">Recherche…</p>
+        }
+
+        @for (group of groups(); track group.kind) {
+          <section class="cp-group">
+            <p class="cp-group-title">{{ group.title }}</p>
+
+            @if (group.failed) {
+              <p class="cp-note cp-note--failed">{{ group.title }} : source indisponible.</p>
+            }
+
+            @for (result of group.results; track result.route + result.label) {
+              <button
+                type="button"
+                class="cp-row"
+                [class.cp-row--active]="indexOf(result) === activeIndex()"
+                (mouseenter)="activeIndex.set(indexOf(result))"
+                (click)="go(result)"
+              >
+                <app-icon [name]="result.icon" [size]="15" />
+                <span class="cp-row-text">
+                  <span class="cp-row-label">{{ result.label }}</span>
+                  <span class="cp-row-sub">{{ result.sub }}</span>
+                </span>
+              </button>
+            }
+          </section>
+        }
+
+        @if (!loading() && flatResults().length === 0) {
+          <p class="cp-note">
+            @if (query().trim().length > 0) {
+              Rien ne correspond à « {{ query().trim() }} ».
+            } @else {
+              Tapez pour chercher un client, une plaque, une dimension ou un n° de vente.
+            }
+          </p>
+        }
+      </div>
+
+      <p class="cp-hint">
+        <span>&#8593;&#8595; parcourir</span>
+        <span>&#8629; ouvrir</span>
+        <span>Échap fermer</span>
+      </p>
+    </div>
+  </div>
+}

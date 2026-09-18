@@ -1,11 +1,13 @@
 <header class="topbar">
   <img [src]="brandLogoUrl()" (error)="onLogoError()" alt="PNEU.MA" class="topbar-logo">
 
-  <label class="topbar-search" title="Recherche — pas encore branchée">
+  <!-- Un bouton, pas un champ : la saisie se fait dans la palette, qui doit
+       s'ouvrir de la même façon depuis ici et depuis le raccourci clavier. -->
+  <button type="button" class="topbar-search" (click)="openSearch()">
     <app-icon name="search" [size]="16" />
-    <input type="text" placeholder="Client, dimension (2055516), n° de vente…" disabled>
-    <span class="topbar-search-hint">⌘K</span>
-  </label>
+    <span class="topbar-search-label">Client, plaque, dimension (2055516), n° de vente…</span>
+    <span class="topbar-search-hint">{{ shortcutLabel }}</span>
+  </button>
 
   <span class="topbar-clock">{{ now() | date:'EEE d MMM · HH:mm' }}</span>
 

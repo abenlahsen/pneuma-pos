@@ -3,6 +3,7 @@ import { Title } from '@angular/platform-browser';
 import { RouterOutlet } from '@angular/router';
 import { RailComponent } from './shared/rail/rail.component';
 import { TopbarComponent } from './shared/topbar/topbar.component';
+import { CommandPaletteComponent } from './shared/command-palette/command-palette.component';
 import { AuthService } from './core/services/auth.service';
 import { environment } from '../environments/environment';
 import { SettingsService } from './features/settings/data-access/settings.service';
@@ -10,7 +11,7 @@ import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RailComponent, TopbarComponent],
+  imports: [RouterOutlet, RailComponent, TopbarComponent, CommandPaletteComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

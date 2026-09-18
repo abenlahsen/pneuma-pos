@@ -253,4 +253,41 @@ class StockParseSearchQueryTest extends TestCase
         $this->assertNull($result['brand_prefix']);
         $this->assertSame([], $result['text']);
     }
+
+    /**
+     * Un nombre de quatre chiffres n'est aucune forme de dimension. Il tombait
+     * auparavant entre les branches sans rien renseigner : la recherche
+     * n'appliquait donc aucun filtre et rendait le catalogue entier, alors que
+     * l'utilisateur attendait une référence — ou rien.
+     */
+    public function test_four_digit_number_is_treated_as_text_not_as_a_silent_no_op(): void
+    {
+        $result = Stock::parseSearchQuery('1108');
+
+        $this->assertNull($result['width']);
+        $this->assertNull($result['height']);
+        $this->assertNull($result['diameter']);
+        $this->assertSame(['1108'], $result['text']);
+    }
+
+    public function test_single_digit_is_also_text_rather_than_nothing(): void
+    {
+        $this->assertSame(['7'], Stock::parseSearchQuery('7')['text']);
+    }
+
+    public function test_the_shorthand_lengths_still_parse_as_dimensions(): void
+    {
+        $this->assertSame(16, Stock::parseSearchQuery('16')['diameter']);
+        $this->assertSame(205, Stock::parseSearchQuery('205')['width']);
+        $this->assertSame([], Stock::parseSearchQuery('205')['text']);
+
+        $five = Stock::parseSearchQuery('20555');
+        $this->assertSame(205, $five['width']);
+        $this->assertSame(55, $five['height']);
+
+        $seven = Stock::parseSearchQuery('2055516');
+        $this->assertSame(205, $seven['width']);
+        $this->assertSame(55, $seven['height']);
+        $this->assertSame(16, $seven['diameter']);
+    }
 }

@@ -30,18 +30,22 @@
   background: #fff;
   border: 1px solid #adc2da;
   color: #4a5c75;
-  cursor: not-allowed;
+  cursor: text;
+  text-align: left;
+  font: inherit;
 
-  input {
+  &:hover {
+    border-color: #0c1e33;
+  }
+
+  .topbar-search-label {
     flex: 1;
     min-width: 0;
-    border: none;
-    outline: none;
-    background: transparent;
     font-size: 13.5px;
     color: #4a5c75;
-    cursor: not-allowed;
-    &::placeholder { color: #4a5c75; }
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .topbar-search-hint {

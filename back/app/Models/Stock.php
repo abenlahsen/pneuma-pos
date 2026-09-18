@@ -92,16 +92,31 @@ class Stock extends Model
                     $result['width'] = (int) substr($token, 0, 3);
                     $result['height'] = (int) substr($token, 3, 2);
                     $result['diameter'] = (int) substr($token, 5);
-                } elseif ($len >= 5) {
+
+                    continue;
+                }
+                if ($len >= 5) {
                     $result['width'] = (int) substr($token, 0, 3);
                     $result['height'] = (int) substr($token, 3, 2);
-                } elseif ($len === 3) {
+
+                    continue;
+                }
+                if ($len === 3) {
                     $result['width'] = (int) $token;
-                } elseif ($len === 2) {
+
+                    continue;
+                }
+                if ($len === 2) {
                     $result['diameter'] = (int) $token;
+
+                    continue;
                 }
 
-                continue;
+                // Longueur 1 ou 4 : aucune dimension ne s'écrit ainsi. Le token
+                // tombait ici sans rien renseigner, si bien que la recherche
+                // n'appliquait aucun filtre et rendait le catalogue entier —
+                // taper « 1108 » répondait « tout », pas « rien ». On le traite
+                // désormais comme du texte : il ira chercher une référence.
             }
 
             $result['text'][] = $token;

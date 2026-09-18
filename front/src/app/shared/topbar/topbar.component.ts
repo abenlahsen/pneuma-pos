@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
 import { SettingsService } from '../../features/settings/data-access/settings.service';
 import { IconComponent } from '../icon/icon.component';
+import { CommandPaletteService } from '../command-palette/command-palette.service';
 
 /**
  * Barre haute de 60px (refonte 2b, étape 3) — remplace le haut de
@@ -38,11 +39,19 @@ export class TopbarComponent implements OnInit, OnDestroy {
 
   private clockHandle?: ReturnType<typeof setInterval>;
 
+  /** ⌘ sur Mac, Ctrl ailleurs : afficher l'autre raccourci ne sert personne. */
+  readonly shortcutLabel = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘K' : 'Ctrl K';
+
   constructor(
     public authService: AuthService,
     private settingsService: SettingsService,
     private elementRef: ElementRef<HTMLElement>,
+    private commandPalette: CommandPaletteService,
   ) {}
+
+  openSearch(): void {
+    this.commandPalette.open();
+  }
 
   ngOnInit(): void {
     this.settingsService.getCompanySettings().subscribe({

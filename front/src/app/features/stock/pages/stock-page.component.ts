@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -26,6 +26,7 @@ import {
 })
 export class StockPageComponent implements OnInit {
   private readonly stockService = inject(StockService);
+  private readonly route = inject(ActivatedRoute);
   readonly authService = inject(AuthService);
 
   stocks = signal<Stock[]>([]);
@@ -168,6 +169,18 @@ export class StockPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadFilters();
+
+    // Permet d'arriver ici depuis un lien portant la recherche — la palette de
+    // commandes s'en sert pour ouvrir une dimension. Même motif que
+    // products-page, qui acceptait déjà ?search=.
+    const search = this.route.snapshot.queryParamMap.get('search');
+    if (search) {
+      this.searchQuery.set(search);
+      // Une dimension cherchée depuis ailleurs doit se trouver même si le lot
+      // est à zéro : on ne présume pas qu'elle est en stock.
+      this.filterInStock.set(false);
+    }
+
     this.loadData();
   }
 
