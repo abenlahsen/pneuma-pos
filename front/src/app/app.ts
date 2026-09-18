@@ -53,7 +53,20 @@ export class App implements OnInit {
     });
   }
 
+  /**
+   * Le favicon réglé ne remplace celui livré qu'une fois réellement chargé.
+   * Un chemin enregistré dont le fichier a disparu — cas vu quand la base
+   * survit à un reset du volume de stockage — remplaçait sinon une icône
+   * valide par une icône cassée, sans que rien ne le signale. Un `<link>` ne
+   * permettant pas de rattraper l'échec, on charge l'image d'abord.
+   */
   private updateFavicon(url: string): void {
+    const probe = new Image();
+    probe.onload = () => this.setFaviconHref(url);
+    probe.src = url;
+  }
+
+  private setFaviconHref(url: string): void {
     let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
 
     if (!link) {

@@ -1,5 +1,5 @@
 <header class="topbar">
-  <img [src]="brandLogoUrl()" alt="PNEU.MA" class="topbar-logo">
+  <img [src]="brandLogoUrl()" (error)="onLogoError()" alt="PNEU.MA" class="topbar-logo">
 
   <label class="topbar-search" title="Recherche — pas encore branchée">
     <app-icon name="search" [size]="16" />

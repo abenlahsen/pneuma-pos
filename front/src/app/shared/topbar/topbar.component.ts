@@ -22,7 +22,10 @@ import { IconComponent } from '../icon/icon.component';
   styleUrl: './topbar.component.scss',
 })
 export class TopbarComponent implements OnInit, OnDestroy {
-  brandLogoUrl = signal('logo.png');
+  /** Logo livré avec l'application, servi depuis public/. */
+  private readonly defaultLogo = 'logo.png';
+
+  brandLogoUrl = signal(this.defaultLogo);
   userMenuOpen = signal(false);
   now = signal(new Date());
 
@@ -43,7 +46,9 @@ export class TopbarComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.settingsService.getCompanySettings().subscribe({
-      next: (settings) => this.brandLogoUrl.set(settings.logo_url || 'logo.png'),
+      next: (settings) => this.brandLogoUrl.set(settings.logo_url || this.defaultLogo),
+      // Réglages illisibles : on garde le logo livré plutôt qu'un espace vide.
+      error: () => this.brandLogoUrl.set(this.defaultLogo),
     });
 
     this.clockHandle = setInterval(() => this.now.set(new Date()), 30_000);
@@ -51,6 +56,21 @@ export class TopbarComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.clockHandle) clearInterval(this.clockHandle);
+  }
+
+  /**
+   * Le repli `settings.logo_url || 'logo.png'` ne couvrait que l'absence de
+   * réglage. Un chemin bel et bien enregistré mais dont le fichier a disparu
+   * du disque — cas vu en environnement de développement, la base gardant le
+   * chemin après un reset du volume — répond 404 et ne laissait qu'un espace
+   * vide dans la barre haute, sans rien dire.
+   *
+   * La garde évite la boucle si le logo livré lui-même venait à manquer.
+   */
+  onLogoError(): void {
+    if (this.brandLogoUrl() !== this.defaultLogo) {
+      this.brandLogoUrl.set(this.defaultLogo);
+    }
   }
 
   toggleUserMenu(): void {
