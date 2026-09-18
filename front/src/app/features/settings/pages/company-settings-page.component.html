@@ -284,37 +284,13 @@
                   </select>
                 </div>
 
+                <!-- « Disposition du menu » et « Style de la barre supérieure »
+                     ont disparu d'ici : depuis que le rail a remplacé l'ancienne
+                     navbar (refonte 2b, étape 3), ces deux réglages ne pilotent
+                     plus rien. Les proposer revenait à promettre un effet qui ne
+                     se produit pas. La colonne et le champ d'API restent en
+                     place, eux, pour ne rien casser. -->
                 <div class="layout-grid">
-                  <div class="form-group">
-                    <label for="menu_layout">Disposition du menu</label>
-                    <select
-                      id="menu_layout"
-                      class="form-control"
-                      [ngModel]="form().menu_layout"
-                      (ngModelChange)="updateField('menu_layout', $event)"
-                      name="menu_layout"
-                    >
-                      <option *ngFor="let option of menuLayoutOptions" [ngValue]="option.value">
-                        {{ option.label }}
-                      </option>
-                    </select>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="navbar_variant">Style de la barre supérieure</label>
-                    <select
-                      id="navbar_variant"
-                      class="form-control"
-                      [ngModel]="form().navbar_variant"
-                      (ngModelChange)="updateField('navbar_variant', $event)"
-                      name="navbar_variant"
-                    >
-                      <option *ngFor="let option of navbarVariantOptions" [ngValue]="option.value">
-                        {{ option.label }}
-                      </option>
-                    </select>
-                  </div>
-
                   <div class="form-group form-group-wide">
                     <label for="content_width">Largeur du contenu</label>
                     <select

@@ -31,16 +31,8 @@ export class CompanySettingsPageComponent implements OnInit {
     { value: 'dark', label: 'Sombre' },
   ];
 
-  readonly menuLayoutOptions: Array<{ value: MenuLayoutOption; label: string }> = [
-    { value: 'vertical', label: 'Vertical' },
-    { value: 'horizontal', label: 'Horizontal' },
-  ];
-
-  readonly navbarVariantOptions: Array<{ value: NavbarVariantOption; label: string }> = [
-    { value: 'default', label: 'Standard' },
-    { value: 'compact', label: 'Compacte' },
-    { value: 'flat', label: 'Plate' },
-  ];
+  // menuLayoutOptions / navbarVariantOptions retirés avec leurs deux menus :
+  // le rail de l'étape 3 ne lit plus ces réglages. Voir le gabarit.
 
   readonly contentWidthOptions: Array<{ value: ContentWidthOption; label: string }> = [
     { value: 'full', label: 'Pleine largeur' },

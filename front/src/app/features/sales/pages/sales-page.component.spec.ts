@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { EMPTY, of, throwError } from 'rxjs';
 
 import { SalesPageComponent } from './sales-page.component';
@@ -105,6 +105,80 @@ describe('SalesPageComponent', () => {
       component.loadData();
 
       expect(component.loadError()).toBeNull();
+    });
+  });
+
+  /**
+   * Refonte 2b, §14c état 4. Le grief du handoff n'est pas que les boutons
+   * soient masqués — c'est que la colonne Actions change alors de largeur d'une
+   * ligne à l'autre, sans jamais dire pourquoi. Le cadenas occupe la place du
+   * bouton absent et porte la raison dans son infobulle.
+   */
+  describe('colonne Actions verrouillée', () => {
+    const sale = {
+      id: 1,
+      date: '2026-09-18',
+      status: 'EN COURS',
+      payment_status: 'PAYE',
+      total_sale: 1000,
+      total_quantity: 2,
+      margin: 100,
+    } as Sale;
+
+    function render(canDo: boolean) {
+      // Le test de largeur constante rend les deux variantes coup sur coup ;
+      // TestBed n'accepte qu'une configuration par module instancié.
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          provideZonelessChangeDetection(),
+          provideRouter([]),
+          {
+            provide: SaleService,
+            useValue: {
+              getSales: () => of({ data: [sale], current_page: 1, last_page: 1, total: 1 }),
+              getSummary: () => EMPTY,
+              getFilters: () => EMPTY,
+            },
+          },
+          { provide: AuthService, useValue: { hasPermission: () => canDo, hasRole: () => true } },
+          { provide: CityService, useValue: { getCities: () => EMPTY } },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(SalesPageComponent);
+      fixture.detectChanges();
+      return fixture.nativeElement.querySelector('.actions-cell') as HTMLElement;
+    }
+
+    it('shows a padlock in place of each action the role cannot perform', () => {
+      const cell = render(false);
+
+      expect(cell.querySelectorAll('app-row-lock')).toHaveLength(2);
+      expect(cell.querySelector('a[title="Modifier"]')).toBeNull();
+    });
+
+    it('says which action is refused, so the two causes stay distinguishable', () => {
+      const reasons = [...render(false).querySelectorAll('app-row-lock .rl')].map((el) =>
+        el.getAttribute('title'),
+      );
+
+      expect(reasons[0]).toContain('modifier');
+      expect(reasons[1]).toContain('supprimer');
+    });
+
+    it('keeps the same number of controls either way, so the column keeps its width', () => {
+      const allowed = render(true).children.length;
+      const refused = render(false).children.length;
+
+      expect(refused).toBe(allowed);
+    });
+
+    it('shows the real buttons and no padlock when the role is allowed', () => {
+      const cell = render(true);
+
+      expect(cell.querySelectorAll('app-row-lock')).toHaveLength(0);
+      expect(cell.querySelector('a[title="Modifier"]')).not.toBeNull();
     });
   });
 });
