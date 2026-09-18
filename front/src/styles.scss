@@ -10,15 +10,13 @@
   padding: 0;
 }
 
-/* Refonte 2b — géométrie : rayon 0 partout, sans exception (handoff § Géométrie).
-   Bloc transitoire : les border-radius en dur des SCSS d'écran seront
-   supprimés aux étapes 2 et 4 (_page-layout.scss puis les écrans un par un),
-   après quoi ce bloc disparaît. */
-*,
-*::before,
-*::after {
-  border-radius: 0 !important;
-}
+/* Refonte 2b — géométrie : le rayon 0 se déclare là où la forme est décrite,
+   pas au-dessus de tout le monde. Un `* { border-radius: 0 !important }`
+   vivait ici : il donnait le bon rendu mais rendait le vrai travail
+   invisible — impossible de voir quel écran restait à reprendre, et impossible
+   d'arrondir quoi que ce soit plus tard sans lutter contre un !important.
+   Le mixin _page-layout.scss pose désormais 0 pour les 25 écrans de liste ;
+   les rayons en dur restants sont à reprendre écran par écran. */
 
 /* Refonte 2b — géométrie : les box-shadow d'élévation en dur (ex. `.kpi-card`
    dans dashboard.component.scss) ne sont PAS neutralisées globalement ici,
