@@ -67,6 +67,14 @@ describe('ListEmptyComponent', () => {
     expect(buttons[2].textContent).toContain('Tout effacer');
   });
 
+  it('does not nest quotes around a label that already carries its own', () => {
+    const fixture = render([{ label: 'recherche « michelin »', clear: vi.fn() }]);
+    const chip = fixture.nativeElement.querySelector('.le-chip').textContent.trim();
+
+    expect(chip).toBe('Retirer recherche « michelin »');
+    expect(chip).not.toContain('« recherche');
+  });
+
   it('calls that filter\'s own clear callback, not the others', () => {
     const first = vi.fn();
     const second = vi.fn();

@@ -25,8 +25,11 @@ import type { ActiveFilter } from './active-filter.model';
         </p>
         <div class="le-actions">
           @for (filter of filters(); track filter.label) {
+            <!-- Pas de guillemets ajoutés ici : certains libellés portent déjà
+                 les leurs (« recherche « michelin » ») et on obtenait des
+                 guillemets imbriqués, illisibles. -->
             <button type="button" class="le-chip" (click)="filter.clear()">
-              Retirer «&nbsp;{{ filter.label }}&nbsp;»
+              Retirer {{ filter.label }}
             </button>
           }
           <button type="button" class="le-chip le-chip--all" (click)="clearAll.emit()">Tout effacer</button>
