@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Stock, StockPayload, StockSummary, StockFilters, StockMovement } from '../models/stock.model';
+import { Stock, StockGroup, StockPayload, StockSummary, StockFilters, StockMovement } from '../models/stock.model';
 import { PaginatedResponse } from '../../sales/models/sale.model';
 import { environment } from '../../../../environments/environment';
 
@@ -16,6 +16,12 @@ export class StockService {
   getStocks(filters: Record<string, string> = {}): Observable<PaginatedResponse<Stock>> {
     const params = new HttpParams({ fromObject: filters });
     return this.http.get<PaginatedResponse<Stock>>(this.apiUrl, { params });
+  }
+
+  /** Refonte 2b : le stock groupé par référence (lots imbriqués). */
+  getGrouped(filters: Record<string, string> = {}): Observable<PaginatedResponse<StockGroup>> {
+    const params = new HttpParams({ fromObject: filters });
+    return this.http.get<PaginatedResponse<StockGroup>>(`${environment.apiUrl}/stocks-grouped`, { params });
   }
 
   getSummary(filters: Record<string, string> = {}): Observable<StockSummary> {

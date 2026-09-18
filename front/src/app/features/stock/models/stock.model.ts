@@ -30,6 +30,53 @@ export interface StockSummary {
   total_articles: number;
   total_quantity: number;
   total_purchase_value: number;
+  /** Repères ajoutés par la refonte 2b (voir StockService::summary côté back). */
+  references_count?: number;
+  depots_count?: number;
+  low_stock_count?: number;
+  zero_count?: number;
+  dormant_days?: number;
+  dormant_count?: number;
+  dormant_value?: number;
+  coverage_days?: number | null;
+}
+
+/** Refonte 2b — une ligne par référence, ses lots dépliables en dessous. */
+export interface StockLot {
+  id: number;
+  dot: string | null;
+  made_in: string | null;
+  depot: string | null;
+  zone: string | null;
+  quantity: number;
+  purchase_price: number;
+  value: number;
+}
+
+export interface StockDepotSplit {
+  depot: string;
+  quantity: number;
+}
+
+export interface StockGroup {
+  product_id: number;
+  dimension: string | null;
+  brand: string | null;
+  profile: string | null;
+  reference: string | null;
+  load_index: string | null;
+  speed_index: string | null;
+  season: string | null;
+  runflat: boolean;
+  marking: string | null;
+  quantity: number;
+  value: number;
+  unit_price: number | null;
+  lots_count: number;
+  by_depot: StockDepotSplit[];
+  sold_30d: number;
+  sold_180d: number;
+  lots: StockLot[];
 }
 
 export interface StockMovement {

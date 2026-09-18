@@ -17,7 +17,7 @@
 
   <div class="search-hero">
     <div class="search-box">
-      <span class="search-icon">&#128269;</span>
+      <span class="search-icon"><app-icon name="search" [size]="16" /></span>
       <input
         type="text"
         class="search-input"
@@ -28,201 +28,169 @@
         autocomplete="off"
       >
       <button class="search-btn" type="button" (click)="search()">Rechercher</button>
-      <button class="reset-btn" type="button" (click)="resetFilters()" title="Réinitialiser">&#10005;</button>
+      <button class="reset-btn" type="button" (click)="resetFilters()" title="Réinitialiser"><app-icon name="close" [size]="14" /></button>
     </div>
     <div class="search-hint" *ngIf="searchHint()">
       {{ searchHint() }}
     </div>
   </div>
 
-  <div class="summary-cards">
-    <div class="card summary-card">
-      <div class="card-icon"><app-icon name="package" [size]="20" /></div>
-      <div>
-        <p class="card-label">Articles</p>
-        <h3 class="card-value">
-          <span *ngIf="!loadingSummary()">{{ summary().total_articles }}</span>
-          <span *ngIf="loadingSummary()">...</span>
-        </h3>
-      </div>
+  <div class="kpi-band">
+    <div class="kpi-cell">
+      <span class="kpi-label">Valeur du stock</span>
+      <span class="kpi-value">{{ summary().total_purchase_value | number:'1.0-0' }}</span>
+      <span class="kpi-hint">au prix d&apos;achat &middot; DH</span>
     </div>
-
-    <div class="card summary-card">
-      <div class="card-icon">#️⃣</div>
-      <div>
-        <p class="card-label">Quantité totale</p>
-        <h3 class="card-value">
-          <span *ngIf="!loadingSummary()">{{ summary().total_quantity }}</span>
-          <span *ngIf="loadingSummary()">...</span>
-        </h3>
-      </div>
+    <div class="kpi-cell">
+      <span class="kpi-label">Quantit&eacute;</span>
+      <span class="kpi-value">{{ summary().total_quantity | number:'1.0-0' }}</span>
+      <span class="kpi-hint">{{ summary().references_count ?? 0 }} r&eacute;f&eacute;rences &middot; {{ summary().depots_count ?? 0 }} d&eacute;p&ocirc;ts</span>
     </div>
+    <div class="kpi-cell">
+      <span class="kpi-label">Sous seuil</span>
+      <span class="kpi-value">{{ summary().low_stock_count ?? 0 }}</span>
+      <span class="kpi-hint">moins d&apos;un mois de ventes &middot; dont {{ summary().zero_count ?? 0 }} &agrave; z&eacute;ro</span>
+    </div>
+    <div class="kpi-cell">
+      <span class="kpi-label">Rotation</span>
+      <span class="kpi-value">{{ summary().coverage_days ?? '&mdash;' }}<small *ngIf="summary().coverage_days"> j</small></span>
+      <span class="kpi-hint">couverture au rythme des 30 derniers jours</span>
+    </div>
+    <div class="kpi-cell">
+      <span class="kpi-label">Dormant &gt; {{ summary().dormant_days ?? 180 }} j</span>
+      <span class="kpi-value">{{ summary().dormant_value ?? 0 | number:'1.0-0' }}</span>
+      <span class="kpi-hint">{{ summary().dormant_count ?? 0 }} r&eacute;f&eacute;rences &middot; DH</span>
+    </div>
+  </div>
 
-    <div class="card summary-card">
-      <div class="card-icon"><app-icon name="banknote" [size]="20" /></div>
-      <div>
-        <p class="card-label">Valeur d'achat</p>
-        <h3 class="card-value">
-          <span *ngIf="!loadingSummary()">{{ totalPurchaseValueFormatted() }}</span>
-          <span *ngIf="loadingSummary()">...</span>
-        </h3>
+  <div class="stock-bar">
+    <button type="button" class="chip-toggle" (click)="showFilters.set(!showFilters())">
+      <app-icon name="filter" [size]="14" /> Marque, d&eacute;p&ocirc;t, pays
+    </button>
+    <button type="button" class="chip-quick" [class.active]="filterLowStock()" (click)="toggleLowStockFilter()">
+      Sous seuil {{ summary().low_stock_count ?? 0 }}
+    </button>
+    <button type="button" class="chip-quick" [class.active]="filterDormant()" (click)="toggleDormantFilter()">
+      Dormant {{ summary().dormant_count ?? 0 }}
+    </button>
+    <span class="stock-count">
+      {{ total() | number:'1.0-0' }} r&eacute;f&eacute;rence(s) &middot; {{ summary().total_quantity | number:'1.0-0' }} pneus &middot; {{ summary().total_purchase_value | number:'1.0-0' }} DH
+    </span>
+  </div>
+
+  <div class="card filters-section" *ngIf="showFilters()">
+    <div class="filters-grid">
+      <div class="form-group">
+        <label>Marque</label>
+        <select class="form-control" [ngModel]="filterBrand()" (ngModelChange)="filterBrand.set($event); applyFilters()">
+          <option value="">Toutes</option>
+          <option *ngFor="let brand of filterOptions().brands" [value]="brand">{{ brand }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>D&eacute;p&ocirc;t</label>
+        <select class="form-control" [ngModel]="filterDepot()" (ngModelChange)="filterDepot.set($event); applyFilters()">
+          <option value="">Tous</option>
+          <option *ngFor="let depot of filterOptions().depots" [value]="depot">{{ depot }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Pays</label>
+        <select class="form-control" [ngModel]="filterCountry()" (ngModelChange)="filterCountry.set($event); applyFilters()">
+          <option value="">Tous</option>
+          <option *ngFor="let country of filterOptions().countries" [value]="country">{{ country }}</option>
+        </select>
+      </div>
+      <div class="form-group form-group--checks">
+        <label class="checkbox-label">
+          <input type="checkbox" [ngModel]="filterInStock()" (ngModelChange)="filterInStock.set($event); applyFilters()" />
+          Seulement les articles disponibles
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" [ngModel]="filterRunFlat()" (ngModelChange)="filterRunFlat.set($event); applyFilters()" />
+          Run Flat uniquement
+        </label>
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-filter" type="button" (click)="search()" title="Rechercher"><app-icon name="search" [size]="14" /></button>
+        <button class="btn btn-reset" type="button" (click)="resetFilters()" title="R&eacute;initialiser"><app-icon name="close" [size]="14" /></button>
       </div>
     </div>
   </div>
 
-  <div class="card filters-section">
-    <div class="card-body">
-      <div class="filters-grid">
-        <div class="form-group">
-          <label>Marque</label>
-          <select class="form-control" [ngModel]="filterBrand()" (ngModelChange)="filterBrand.set($event); applyFilters()">
-            <option value="">Toutes</option>
-            <option *ngFor="let brand of filterOptions().brands" [value]="brand">{{ brand }}</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Dépôt</label>
-          <select class="form-control" [ngModel]="filterDepot()" (ngModelChange)="filterDepot.set($event); applyFilters()">
-            <option value="">Tous</option>
-            <option *ngFor="let depot of filterOptions().depots" [value]="depot">{{ depot }}</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Pays</label>
-          <select class="form-control" [ngModel]="filterCountry()" (ngModelChange)="filterCountry.set($event); applyFilters()">
-            <option value="">Tous</option>
-            <option *ngFor="let country of filterOptions().countries" [value]="country">{{ country }}</option>
-          </select>
-        </div>
-
-        <div class="checkbox-group">
-          <label class="checkbox-label">
-            <input type="checkbox" [ngModel]="filterInStock()" (ngModelChange)="filterInStock.set($event); applyFilters()" />
-            Seulement les articles disponibles
-          </label>
-
-          <label class="checkbox-label">
-            <input type="checkbox" [ngModel]="filterRunFlat()" (ngModelChange)="filterRunFlat.set($event); applyFilters()" />
-            Run Flat uniquement
-          </label>
-        </div>
-
-        <div class="filter-actions">
-          <button class="btn btn-filter" type="button" (click)="search()" title="Rechercher">&#128269;</button>
-          <button class="btn btn-reset" type="button" (click)="resetFilters()" title="Réinitialiser">&#10005;</button>
-        </div>
-      </div>
+  <!-- Une ligne par r&eacute;f&eacute;rence, lots d&eacute;pliables (refonte 2b) -->
+  <div class="ref-grid">
+    <div class="ref-head">
+      <span></span>
+      <span>Dimension</span>
+      <span>R&eacute;f&eacute;rence</span>
+      <span>R&eacute;partition</span>
+      <button type="button" class="sortable num" (click)="toggleSort('quantity')">
+        Qt&eacute; <app-sort-icon [active]="sortBy() === 'quantity'" [dir]="sortDirection()" />
+      </button>
+      <span class="num">PU achat</span>
+      <button type="button" class="sortable num" (click)="toggleSort('value')">
+        Valeur <app-sort-icon [active]="sortBy() === 'value'" [dir]="sortDirection()" />
+      </button>
+      <span class="num">Actions</span>
     </div>
-  </div>
 
-  <div class="card table-card">
-    <div class="table-responsive">
-      <table class="table">
-        <thead>
-          <tr>
-            <th *ngIf="authService.hasPermission('edit stock')" class="text-center">Actions</th>
-            <th>Référence</th>
-            <th>Marque</th>
-            <th>Profil</th>
-            <th>Dimension</th>
-            <th>IC</th>
-            <th>IV</th>
-            <th>RunFlat</th>
-            <th>Saison</th>
-            <th>Marquage</th>
-            <th class="sortable" (click)="toggleSort('depot')">
-              Dépôt
-              <app-sort-icon [active]="sortBy() === 'depot'" [dir]="sortDirection()" />
-            </th>
-            <th>Zone</th>
-            <th>Pays</th>
-            <th>DOT</th>
-            <th class="sortable text-right" (click)="toggleSort('quantity')">
-              Quantité
-              <app-sort-icon [active]="sortBy() === 'quantity'" [dir]="sortDirection()" />
-            </th>
-            <th class="sortable text-right" (click)="toggleSort('purchase_price')">
-              Prix achat
-              <app-sort-icon [active]="sortBy() === 'purchase_price'" [dir]="sortDirection()" />
-            </th>
-            <th class="text-right">Valeur</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngIf="loading()">
-            <td [attr.colspan]="authService.hasPermission('edit stock') ? 17 : 16" class="text-center py-4">
-              <div class="spinner"></div>
-              Chargement...
-            </td>
-          </tr>
+    <div class="ref-loading" *ngIf="loading()">Chargement&hellip;</div>
 
-          <tr *ngIf="!loading() && stocks().length === 0">
-            <td [attr.colspan]="authService.hasPermission('edit stock') ? 17 : 16" class="text-center py-4 text-muted">
-              Aucun article en stock trouvé.
-            </td>
-          </tr>
+    <ng-container *ngIf="!loading()">
+      <ng-container *ngFor="let group of groups()">
+        <div class="ref-row" [class.ref-row--low]="isLowStock(group)">
+          <button type="button" class="ref-toggle" (click)="toggleGroup(group.product_id)"
+            [attr.aria-label]="isExpanded(group.product_id) ? 'Replier les lots' : 'Deplier les lots'">
+            <app-icon [name]="isExpanded(group.product_id) ? 'chevron-down' : 'chevron-right'" [size]="14" />
+          </button>
+          <span class="ref-dimension">{{ group.dimension || '&mdash;' }}</span>
+          <span class="ref-object">
+            <span class="ref-title">{{ group.brand }} {{ group.profile }}</span>
+            <span class="ref-sub"><ng-container *ngIf="group.load_index || group.speed_index">{{ group.load_index }}{{ group.speed_index }} &middot; </ng-container><ng-container *ngIf="group.season">{{ group.season }} &middot; </ng-container><ng-container *ngIf="group.runflat">RFT &middot; </ng-container><ng-container *ngIf="group.marking">{{ group.marking }} &middot; </ng-container>{{ group.reference }} &middot; {{ group.lots_count }} lot(s)</span>
+          </span>
+          <span class="ref-split">
+            <span class="split-line"><ng-container *ngFor="let d of group.by_depot; let last = last">{{ d.depot }} {{ d.quantity }}<ng-container *ngIf="!last"> &middot; </ng-container></ng-container></span>
+            <span class="split-gauge">
+              <span class="split-fill" [style.width.%]="depotShare(group, group.by_depot[0]?.quantity ?? 0)"
+                [style.background]="isLowStock(group) ? '#c2181f' : '#0c1e33'"></span>
+            </span>
+            <span class="split-note" [class.split-note--low]="isLowStock(group)"><ng-container *ngIf="group.sold_30d > 0">{{ group.sold_30d }} vendus / 30 j<ng-container *ngIf="isLowStock(group)"> &middot; {{ group.sold_30d - group.quantity }} manquants</ng-container></ng-container><ng-container *ngIf="group.sold_30d === 0 && isDormant(group)">dormant &middot; rien vendu depuis 6 mois</ng-container><ng-container *ngIf="group.sold_30d === 0 && !isDormant(group)">aucune vente sur 30 j</ng-container></span>
+          </span>
+          <span class="num ref-qty">{{ group.quantity | number:'1.0-0' }}</span>
+          <span class="num ref-price">{{ group.unit_price !== null ? (group.unit_price | number:'1.2-2') : '&mdash;' }}</span>
+          <span class="num ref-value">{{ group.value | number:'1.2-2' }}</span>
+          <span class="num ref-actions">
+            <a class="ref-order" *ngIf="isLowStock(group)" routerLink="/achats">Commander</a>
+          </span>
+        </div>
 
-          <tr *ngFor="let stock of stocks()">
-            <td *ngIf="authService.hasPermission('edit stock')" class="text-center actions-cell">
-              <button class="btn-icon btn-sm" type="button" (click)="openEditModal(stock)" title="Corriger le stock"><app-icon name="edit" [size]="14" /></button>
-            </td>
-            <td>
-              <button class="reference-link" type="button" (click)="openMovementsModal(stock)" [disabled]="!stock.product_id">
-                {{ stock.product?.reference || '-' }}
-              </button>
-            </td>
-            <td>{{ stock.product?.brand?.name || '-' }}</td>
-            <td>{{ stock.product?.profile || '-' }}</td>
-            <td>{{ dimensionsLabel(stock) }}</td>
-            <td>{{ stock.product?.tyre?.tire_load_index || '-' }}</td>
-            <td>{{ stock.product?.tyre?.tire_speed_index || '-' }}</td>
-            <td>
-              <span *ngIf="stock.product?.tyre?.tire_runflat" class="tag tag-rft" title="Run Flat">RFT</span>
-              <span *ngIf="!stock.product?.tyre?.tire_runflat">-</span>
-            </td>
-            <td>
-              <span *ngIf="stock.product?.tyre?.tire_season" class="tag tag-season">
-                {{
-                  stock.product?.tyre?.tire_season === 'summer'
-                    ? 'Été'
-                    : stock.product?.tyre?.tire_season === 'winter'
-                      ? 'Hiver'
-                      : stock.product?.tyre?.tire_season === 'all_season'
-                        ? '4 saisons'
-                        : stock.product?.tyre?.tire_season
-                }}
-              </span>
-              <span *ngIf="!stock.product?.tyre?.tire_season">-</span>
-            </td>
-            <td>
-              {{ stock.product?.tyre?.tire_marking || '' }}
-              <span *ngIf="stock.product?.tyre?.tire_runflat" class="tag tag-rft" title="Run Flat">RFT</span>
-              <span *ngIf="stock.product?.tyre?.tire_reinforced" class="tag tag-xl" title="Renforcé">XL</span>
-              <span *ngIf="!stock.product?.tyre?.tire_marking && !stock.product?.tyre?.tire_runflat && !stock.product?.tyre?.tire_reinforced">-</span>
-            </td>
-            <td>{{ stock.depot || '-' }}</td>
-            <td>{{ stock.zone || '-' }}</td>
-            <td>{{ stock.made_in || '-' }}</td>
-            <td>{{ stock.dot || '-' }}</td>
-            <td class="text-right">
-              <span class="qty-badge" [class.qty-zero]="stock.quantity <= 0">{{ stock.quantity }}</span>
-            </td>
-            <td class="text-right">{{ formatMoney(stock.purchase_price) }}</td>
-            <td class="text-right">{{ formatMoney((stock.purchase_price || 0) * stock.quantity) }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+        <ng-container *ngIf="isExpanded(group.product_id)">
+        <div class="lot-row" *ngFor="let lot of group.lots">
+          <span></span>
+          <span></span>
+          <span class="lot-object">Lot {{ lot.id }}<ng-container *ngIf="lot.dot"> &middot; DOT {{ lot.dot }}</ng-container><ng-container *ngIf="lot.made_in"> &middot; {{ lot.made_in }}</ng-container><span class="lot-tag" *ngIf="lot.quantity <= 0">&Eacute;PUIS&Eacute;</span></span>
+          <span class="lot-place">{{ lot.depot || '&mdash;' }}<ng-container *ngIf="lot.zone"> &middot; zone {{ lot.zone }}</ng-container></span>
+          <span class="num">{{ lot.quantity | number:'1.0-0' }}</span>
+          <span class="num">{{ lot.purchase_price | number:'1.2-2' }}</span>
+          <span class="num">{{ lot.quantity > 0 ? (lot.value | number:'1.2-2') : '&mdash;' }}</span>
+          <span class="num lot-actions">
+            <button type="button" class="btn-icon" title="Ajuster" (click)="openEditModal(lot)"><app-icon name="edit" [size]="14" /></button>
+            <button type="button" class="btn-icon" title="Historique" (click)="openMovementsModal(lot, group.product_id, group.reference + ' — ' + group.brand + ' ' + group.profile)"><app-icon name="clock" [size]="14" /></button>
+          </span>
+        </div>
+        </ng-container>
+      </ng-container>
+
+      <div class="ref-empty" *ngIf="groups().length === 0">Aucune r&eacute;f&eacute;rence sur cette s&eacute;lection.</div>
+    </ng-container>
 
     <div class="pagination-wrapper" *ngIf="total() > 0">
       <div class="pagination-info">
-        Affichage de {{ (currentPage() - 1) * perPage() + 1 }} à
+        {{ (currentPage() - 1) * perPage() + 1 }} &agrave;
         {{ currentPage() * perPage() > total() ? total() : currentPage() * perPage() }}
-        sur {{ total() }} entrées
+        sur {{ total() }} r&eacute;f&eacute;rences
       </div>
-
       <div class="pagination">
         <button class="btn-page" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">&laquo;</button>
         <button class="btn-page" *ngFor="let page of pages" [class.active]="page === currentPage()" (click)="goToPage(page)">
@@ -233,6 +201,7 @@
     </div>
   </div>
 </div>
+
 
 <div class="modal-overlay" *ngIf="showEditModal()" (click)="closeEditModal()">
   <div class="modal-container correction-modal" (click)="$event.stopPropagation()">
@@ -337,9 +306,7 @@
       <div>
         <h2>Mouvements du produit</h2>
         <p class="modal-subtitle">
-          {{ selectedStock()?.product?.reference || '-' }}
-          <span *ngIf="selectedStock()?.product?.brand?.name">— {{ selectedStock()?.product?.brand?.name }}</span>
-          <span *ngIf="selectedStock()?.product?.profile">— {{ selectedStock()?.product?.profile }}</span>
+          {{ selectedStockLabel() || '-' }}
         </p>
       </div>
       <button class="btn-icon" type="button" (click)="closeMovementsModal()"><app-icon name="close" [size]="14" /></button>

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 // Stock
 Route::middleware('permission:view stock')->group(function () {
     Route::get('stocks-summary', [StockController::class, 'summary']);
+    Route::get('stocks-grouped', [StockController::class, 'grouped']);
     Route::get('stocks-filters', [StockController::class, 'filters']);
     Route::get('stocks', [StockController::class, 'index']);
     Route::get('stocks/export', [StockController::class, 'export']);

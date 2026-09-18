@@ -1,18 +1,19 @@
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { StockService } from '../data-access/stock.service';
-import { Stock, StockFilters, StockMovement, StockSummary } from '../models/stock.model';
+import { Stock, StockFilters, StockGroup, StockLot, StockMovement, StockSummary } from '../models/stock.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 
 @Component({
   selector: 'app-stock-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, SortIconComponent, IconComponent],
+  imports: [CommonModule, FormsModule, RouterLink, AutoRefreshControlComponent, SortIconComponent, IconComponent],
   templateUrl: './stock-page.component.html',
   styleUrl: './stock-page.component.scss',
 })
@@ -21,6 +22,15 @@ export class StockPageComponent implements OnInit {
   readonly authService = inject(AuthService);
 
   stocks = signal<Stock[]>([]);
+
+  // ── Refonte 2b : une ligne par référence, lots dépliables ──────────────────
+  readonly groups = signal<StockGroup[]>([]);
+  readonly expandedProducts = signal<Set<number>>(new Set());
+  /** Libellé de la référence affiché dans l'entête de l'historique. */
+  readonly selectedStockLabel = signal('');
+  readonly showFilters = signal(false);
+  readonly filterLowStock = signal(false);
+  readonly filterDormant = signal(false);
   movements = signal<StockMovement[]>([]);
   filterOptions = signal<StockFilters>({
     brands: [],
@@ -46,7 +56,7 @@ export class StockPageComponent implements OnInit {
   filterInStock = signal(true);
   filterRunFlat = signal(false);
 
-  sortBy = signal<'quantity' | 'purchase_price' | 'depot' | 'created_at'>('quantity');
+  sortBy = signal<'quantity' | 'value'>('value');
   sortDirection = signal<'asc' | 'desc'>('desc');
 
   loading = signal(false);
@@ -105,16 +115,16 @@ export class StockPageComponent implements OnInit {
     this.loadingSummary.set(true);
     const filters = this.buildFilters();
 
-    this.stockService.getStocks(filters).subscribe({
+    this.stockService.getGrouped(filters).subscribe({
       next: (response) => {
-        this.stocks.set(response.data ?? []);
+        this.groups.set(response.data ?? []);
         this.currentPage.set(Number(response.current_page ?? 1) || 1);
         this.lastPage.set(Number(response.last_page ?? 1) || 1);
         this.total.set(Number(response.total ?? 0) || 0);
         this.loading.set(false);
       },
       error: () => {
-        this.stocks.set([]);
+        this.groups.set([]);
         this.loading.set(false);
       },
     });
@@ -173,6 +183,14 @@ export class StockPageComponent implements OnInit {
       filters['rft'] = '1';
     }
 
+    if (this.filterLowStock()) {
+      filters['low_stock'] = '1';
+    }
+
+    if (this.filterDormant()) {
+      filters['dormant'] = '1';
+    }
+
     return filters;
   }
 
@@ -193,20 +211,69 @@ export class StockPageComponent implements OnInit {
     this.filterCountry.set('');
     this.filterInStock.set(true);
     this.filterRunFlat.set(false);
-    this.sortBy.set('quantity');
+    this.filterLowStock.set(false);
+    this.filterDormant.set(false);
+    this.sortBy.set('value');
     this.sortDirection.set('desc');
     this.currentPage.set(1);
     this.loadData();
   }
 
-  toggleSort(column: 'quantity' | 'purchase_price' | 'depot' | 'created_at'): void {
+  toggleSort(column: 'quantity' | 'value'): void {
     if (this.sortBy() === column) {
       this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
     } else {
       this.sortBy.set(column);
-      this.sortDirection.set(column === 'quantity' ? 'desc' : 'asc');
+      this.sortDirection.set('desc');
     }
 
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
+  private stockLabel(stock: Stock): string {
+    return [stock.product?.reference, stock.product?.brand?.name, stock.product?.profile]
+      .filter(Boolean)
+      .join(' — ');
+  }
+
+  toggleGroup(productId: number): void {
+    this.expandedProducts.update((set) => {
+      const next = new Set(set);
+      next.has(productId) ? next.delete(productId) : next.add(productId);
+      return next;
+    });
+  }
+
+  isExpanded(productId: number): boolean {
+    return this.expandedProducts().has(productId);
+  }
+
+  /** « Sous seuil » se lit sur les ventes réelles : il reste moins que ce qui part en un mois. */
+  isLowStock(group: StockGroup): boolean {
+    return group.sold_30d > 0 && group.quantity < group.sold_30d;
+  }
+
+  /** Dormant : rien de vendu depuis six mois alors qu'il reste du stock. */
+  isDormant(group: StockGroup): boolean {
+    return group.sold_180d === 0 && group.quantity > 0;
+  }
+
+  /** Part du stock détenue par le dépôt le mieux pourvu, pour la jauge de répartition. */
+  depotShare(group: StockGroup, quantity: number): number {
+    return group.quantity > 0 ? (quantity / group.quantity) * 100 : 0;
+  }
+
+  toggleLowStockFilter(): void {
+    this.filterLowStock.update((v) => !v);
+    if (this.filterLowStock()) this.filterDormant.set(false);
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
+  toggleDormantFilter(): void {
+    this.filterDormant.update((v) => !v);
+    if (this.filterDormant()) this.filterLowStock.set(false);
     this.currentPage.set(1);
     this.loadData();
   }
@@ -246,8 +313,8 @@ export class StockPageComponent implements OnInit {
       });
   }
 
-  openEditModal(stock: Stock): void {
-    this.editingStock.set(stock);
+  openEditModal(stock: Stock | StockLot): void {
+    this.editingStock.set(stock as Stock);
     this.editQuantity.set(stock.quantity);
     this.editPurchasePrice.set(stock.purchase_price);
     this.editDepot.set(stock.depot ?? '');
@@ -294,7 +361,6 @@ export class StockPageComponent implements OnInit {
 
     this.stockService.updateStock(stock.id, payload).subscribe({
       next: (updated) => {
-        this.stocks.update((list) => list.map((s) => (s.id === updated.id ? updated : s)));
         this.editLoading.set(false);
         this.closeEditModal();
         this.loadData();
@@ -312,12 +378,18 @@ export class StockPageComponent implements OnInit {
     });
   }
 
-  openMovementsModal(stock: Stock): void {
-    if (!stock.product_id) {
+  /**
+   * L'historique porte sur la référence : un lot seul n'a pas de product_id
+   * (il est imbriqué sous sa référence), on le reçoit donc du groupe.
+   */
+  openMovementsModal(stock: Stock | StockLot, productId?: number, label?: string): void {
+    const resolvedProductId = productId ?? (stock as Stock).product_id;
+    if (!resolvedProductId) {
       return;
     }
 
-    this.selectedStock.set(stock);
+    this.selectedStock.set(stock as Stock);
+    this.selectedStockLabel.set(label ?? this.stockLabel(stock as Stock));
     this.showMovementsModal.set(true);
     this.movementsLoading.set(true);
     this.movementsError.set('');
@@ -325,7 +397,7 @@ export class StockPageComponent implements OnInit {
 
     this.stockService
       .getStockMovements({
-        product_id: stock.product_id.toString(),
+        product_id: resolvedProductId.toString(),
         per_page: '10',
       })
       .subscribe({

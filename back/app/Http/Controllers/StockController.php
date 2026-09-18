@@ -107,6 +107,12 @@ class StockController extends Controller
         return response()->json(null, 204);
     }
 
+    /** Refonte 2b : le stock groupé par référence, lots imbriqués. */
+    public function grouped(Request $request): JsonResponse
+    {
+        return response()->json($this->stockService->grouped($request->all()));
+    }
+
     public function summary(Request $request): JsonResponse
     {
         return response()->json($this->stockService->summary($request->all()));
