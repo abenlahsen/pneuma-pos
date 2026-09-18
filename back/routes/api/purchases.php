@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 // Purchases (Achats)
 Route::middleware('permission:view purchases')->group(function () {
     Route::get('purchases-summary', [PurchaseController::class, 'summary']);
+    Route::get('purchases-grouped', [PurchaseController::class, 'grouped']);
     Route::get('purchases-filters', [PurchaseController::class, 'filters']);
     Route::get('purchases/export', [PurchaseController::class, 'export']);
     Route::get('purchases', [PurchaseController::class, 'index']);

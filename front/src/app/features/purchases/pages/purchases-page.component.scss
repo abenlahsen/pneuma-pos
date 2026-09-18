@@ -26,3 +26,268 @@
   &.method-effet    { background: rgba(245, 158, 11, 0.12); color: #92400e; }
   &.method-carte    { background: rgba(236, 72, 153, 0.10); color: #9d174d; }
 }
+
+// ── Refonte 2b : achats groupés par fournisseur ──────────────────────────────
+// Styles locaux à l'écran (mêmes raisons que les autres écrans refaits).
+.pur-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 11px 18px;
+  border: 1px solid #cfdcec;
+  border-bottom: none;
+  background: #f4f8fd;
+}
+
+.pur-bar-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #4a5c75;
+}
+
+.segmented {
+  display: flex;
+
+  button {
+    height: 30px;
+    padding: 0 11px;
+    border: 1px solid #cfdcec;
+    border-left: none;
+    background: #fff;
+    color: #41546e;
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:first-child { border-left: 1px solid #cfdcec; }
+    &.active { border-color: #0c1e33; background: #0c1e33; color: #fff; }
+  }
+}
+
+.chip-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 11px;
+  border: 1px solid #adc2da;
+  background: #fff;
+  color: #0c1e33;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pur-count {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: #4a5c75;
+  font-variant-numeric: tabular-nums;
+}
+
+.pur-grid {
+  border: 1px solid #cfdcec;
+  background: #fff;
+}
+
+.pur-head,
+.pur-row,
+.ret-row {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) 84px 112px 118px 120px 142px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px;
+}
+
+.pur-head {
+  padding-top: 7px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid #0c1e33;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #4a5c75;
+}
+
+.num { text-align: right; }
+
+.pur-band {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 18px;
+  border-top: 1px solid #cfdcec;
+  border-bottom: 1px solid #cfdcec;
+  background: #f4f8fd;
+}
+
+.pur-supplier {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0c1e33;
+}
+
+.pur-band-sub {
+  font-size: 11.5px;
+  color: #4a5c75;
+  font-variant-numeric: tabular-nums;
+}
+
+.pur-band-due {
+  margin-left: auto;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #c2181f;
+}
+
+.pur-band-action {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 11px;
+  border: 1px solid #0c1e33;
+  background: #0c1e33;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.pur-row {
+  min-height: 56px;
+  border-bottom: 1px solid #e7eef8;
+  &:hover { background: #f8fafc; }
+
+  &--old {
+    border-left: 3px solid #8a5a00;
+    margin-left: -3px;
+  }
+}
+
+.pur-date {
+  font-size: 12px;
+  color: #4a5c75;
+  font-variant-numeric: tabular-nums;
+}
+
+.pur-object { min-width: 0; }
+
+.pur-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #0c1e33;
+}
+
+.pur-tag {
+  padding: 1px 5px;
+  border: 1px solid #cfdcec;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #4a5c75;
+}
+
+.pur-sub {
+  display: block;
+  font-size: 11.5px;
+  color: #4a5c75;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pur-returns-toggle {
+  margin-left: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #2f4fb8;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.pur-net,
+.pur-due {
+  font-size: 13.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #0c1e33;
+}
+
+.pur-due {
+  color: #c2181f;
+  &--zero { color: #15616d; }
+}
+
+.pur-age {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0c1e33;
+  font-variant-numeric: tabular-nums;
+}
+
+.pur-age-note {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #4a5c75;
+
+  &--old { color: #8a5a00; }
+}
+
+.pur-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.pur-settle {
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid #adc2da;
+  background: #fff;
+  color: #0c1e33;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ret-row {
+  min-height: 44px;
+  border-bottom: 1px solid #e7eef8;
+  background: #f8fafc;
+  font-size: 12px;
+  color: #41546e;
+  font-variant-numeric: tabular-nums;
+
+  &--hidden { display: none; }
+}
+
+.ret-object {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pur-loading,
+.pur-empty {
+  padding: 2rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #4a5c75;
+}

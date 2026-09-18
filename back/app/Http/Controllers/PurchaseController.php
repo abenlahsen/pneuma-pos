@@ -138,6 +138,12 @@ class PurchaseController extends Controller
         return response()->json(null, 204);
     }
 
+    /** Refonte 2b : les achats groupés par fournisseur, retours imbriqués. */
+    public function grouped(Request $request): JsonResponse
+    {
+        return response()->json($this->purchaseService->groupedBySupplier($request->all()));
+    }
+
     public function summary(Request $request): JsonResponse
     {
         return response()->json($this->purchaseService->summary($request->all()));

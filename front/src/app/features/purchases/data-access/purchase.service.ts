@@ -10,6 +10,7 @@ import {
   PurchasePaymentDetail,
   PurchaseReturn,
   PurchaseReturnPayload,
+  PurchaseSupplierGroup,
 } from '../models/purchase.model';
 import { PurchaseStatus } from '../../../core/constants/status.constants';
 
@@ -40,6 +41,28 @@ export class PurchaseService {
       last_page: number;
       total: number;
     }>(this.apiUrl, { params });
+  }
+
+  /** Refonte 2b : les achats groupés par fournisseur. */
+  getGrouped(filters: Record<string, string> = {}): Observable<{
+    data: PurchaseSupplierGroup[];
+    total: number;
+    current_page: number;
+    last_page: number;
+    per_page: number;
+  }> {
+    let params = new HttpParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) params = params.set(key, value);
+    });
+
+    return this.http.get<{
+      data: PurchaseSupplierGroup[];
+      total: number;
+      current_page: number;
+      last_page: number;
+      per_page: number;
+    }>(`${this.apiUrl}-grouped`, { params });
   }
 
   getSummary(filters: Record<string, string> = {}): Observable<PurchaseSummary> {

@@ -27,6 +27,13 @@ class PurchaseService
 
     protected PurchasePaymentService $purchasePayments;
 
+    /**
+     * Au-delà de ce nombre de jours, une dette fournisseur est signalée comme
+     * ancienne. Le README laisse ouverte la question du seuil légal exact :
+     * l'écran montre l'âge, il ne qualifie pas juridiquement le retard.
+     */
+    public const OLD_DEBT_DAYS = 90;
+
     public function __construct(StockMovementService $movements, ActivityLogService $activityLog, PurchasePaymentService $purchasePayments)
     {
         $this->movements = $movements;
@@ -267,6 +274,135 @@ class PurchaseService
      * @param  array<string, mixed>  $filters
      * @return array<string, float>
      */
+    /**
+     * Refonte 2b — Achats groupés par fournisseur.
+     *
+     * L'écran alignait des achats indépendants alors qu'on règle un
+     * fournisseur, pas un achat : les lignes sont donc regroupées sous leur
+     * fournisseur, avec le délai contractuel et le total dû en tête de groupe,
+     * et les retours en ligne enfant sous leur achat.
+     *
+     * L'âge d'un achat est compté depuis sa date ; le délai restant n'existe que
+     * si le fournisseur a un délai contractuel renseigné.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
+    public function groupedBySupplier(array $filters = []): array
+    {
+        $perPage = max(1, (int) ($filters['per_page'] ?? 15));
+        $page = max(1, (int) ($filters['page'] ?? 1));
+
+        $query = $this->buildFilteredQuery($filters)
+            ->with(['supplier', 'returns'])
+            ->withSum('allocations', 'amount')
+            ->withSum('returns', 'refund_amount');
+
+        // Même convention que les cadrans : sans filtre de statut explicite, un
+        // achat annulé ne compte pas — sinon cet écran annoncerait un dû
+        // différent de l'Accueil et du Cash Flow.
+        if (empty($filters['status'])) {
+            $query->where('status', '!=', 'ANNULE');
+        }
+
+        $purchases = $query->get();
+
+        $rows = $purchases->map(function (Purchase $purchase) {
+            $netPaid = (float) ($purchase->allocations_sum_amount ?? 0)
+                - (float) ($purchase->returns_sum_refund_amount ?? 0);
+            $effective = $purchase->effectiveNetAmount();
+            $remaining = round(max($effective - $netPaid, 0), 2);
+            // Un achat marqué PAYÉ est soldé, même si un arrondi ou un retour
+            // laisse un résidu calculé : sans cela, cet écran annoncerait un dû
+            // différent de l'Accueil et du Cash Flow, qui suivent le statut.
+            $isDue = $purchase->payment_status !== 'PAYE' && $remaining > 0.004;
+            $terms = $purchase->supplier?->payment_terms_days;
+            $days = $purchase->date ? (int) $purchase->date->diffInDays(now()) : 0;
+
+            return [
+                'id' => $purchase->id,
+                'supplier_id' => $purchase->supplier_id,
+                'supplier_name' => $purchase->supplier?->name ?? 'Sans fournisseur',
+                'supplier_terms_days' => $terms !== null ? (int) $terms : null,
+                'date' => $purchase->date?->toDateString(),
+                'status' => $purchase->status,
+                'payment_status' => $purchase->payment_status,
+                'with_invoice' => (bool) $purchase->with_invoice,
+                'bl_number' => $purchase->bl_number,
+                'invoice_number' => $purchase->invoice_number,
+                'quantity' => (int) ($purchase->total_quantity ?? 0),
+                'net_amount' => round($effective, 2),
+                'paid_amount' => round($netPaid, 2),
+                'remaining' => $isDue ? $remaining : 0.0,
+                'is_due' => $isDue,
+                'days' => $days,
+                // Jours restants avant échéance contractuelle : null quand aucun
+                // délai n'est renseigné côté fournisseur, plutôt qu'un zéro
+                // qui se lirait comme « à régler aujourd'hui ».
+                'days_left' => $terms !== null ? (int) $terms - $days : null,
+                'payment_methods' => $purchase->payment_methods,
+                'returns' => $purchase->returns->map(fn ($return) => [
+                    'id' => $return->id,
+                    'date' => $return->date?->toDateString(),
+                    'quantity' => (int) ($return->total_quantity ?? 0),
+                    'amount' => round((float) ($return->total_amount ?? 0), 2),
+                    'refund_amount' => round((float) ($return->refund_amount ?? 0), 2),
+                    'reason' => $return->reason,
+                ])->values()->all(),
+            ];
+        });
+
+        // Règlement et réception sont deux jeux de filtres distincts (README) ;
+        // ils portent sur des valeurs calculées (reste dû, âge), d'où un filtre
+        // sur les lignes plutôt que dans la requête.
+        $settlement = $filters['settlement'] ?? null;
+        if ($settlement === 'due') {
+            $rows = $rows->where('is_due', true);
+        } elseif ($settlement === 'legal_risk') {
+            $rows = $rows->filter(fn ($row) => $row['is_due'] && $row['days'] > self::OLD_DEBT_DAYS);
+        } elseif ($settlement === 'paid') {
+            $rows = $rows->where('is_due', false);
+        }
+
+        $reception = $filters['reception'] ?? null;
+        if ($reception === 'expected') {
+            $rows = $rows->where('status', 'EN COURS');
+        } elseif ($reception === 'received') {
+            $rows = $rows->whereIn('status', ['RECU', 'TERMINE']);
+        }
+
+        $groups = $rows
+            ->groupBy('supplier_id')
+            ->map(function ($supplierRows) {
+                $first = $supplierRows->first();
+                $due = round((float) $supplierRows->sum('remaining'), 2);
+
+                return [
+                    'supplier_id' => $first['supplier_id'],
+                    'supplier_name' => $first['supplier_name'],
+                    'terms_days' => $first['supplier_terms_days'],
+                    'purchases_count' => $supplierRows->count(),
+                    'due_count' => $supplierRows->where('is_due', true)->count(),
+                    'due_total' => $due,
+                    'total' => round((float) $supplierRows->sum('net_amount'), 2),
+                    'oldest_days' => (int) ($supplierRows->where('is_due', true)->max('days') ?? 0),
+                    'purchases' => $supplierRows->sortByDesc('date')->values()->all(),
+                ];
+            })
+            ->sortByDesc('due_total')
+            ->values();
+
+        $total = $groups->count();
+
+        return [
+            'data' => $groups->forPage($page, $perPage)->values()->all(),
+            'total' => $total,
+            'current_page' => $page,
+            'last_page' => max(1, (int) ceil($total / $perPage)),
+            'per_page' => $perPage,
+        ];
+    }
+
     public function summary(array $filters = [])
     {
         $query = Purchase::query();

@@ -2,11 +2,11 @@ import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angula
 import { CommonModule } from '@angular/common';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PurchaseService } from '../data-access/purchase.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Purchase, PurchaseSummary } from '../models/purchase.model';
+import { Purchase, PurchaseGroupRow, PurchaseSummary, PurchaseSupplierGroup } from '../models/purchase.model';
 import { PURCHASE_STATUSES, PURCHASE_STATUS_LABELS, PURCHASE_STATUS_TRANSITIONS, PAYMENT_STATUSES, PAYMENT_STATUS_LABELS, PurchaseStatus } from '../../../core/constants/status.constants';
 import { PAYMENT_METHODS, paymentMethodClass } from '../../../core/constants/payment-method.constants';
 import { PurchaseFormComponent } from '../purchase-form/purchase-form.component';
@@ -20,7 +20,7 @@ import { DetailNavigator } from '../../../core/utils/detail-navigator';
 @Component({
   selector: 'app-purchases-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, PurchaseFormComponent, PurchaseDetailComponent, PurchasePaymentsComponent, PurchaseReturnComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent],
+  imports: [CommonModule, FormsModule, RouterLink, PurchaseFormComponent, PurchaseDetailComponent, PurchasePaymentsComponent, PurchaseReturnComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent],
   templateUrl: './purchases-page.component.html',
   styleUrls: ['./purchases-page.component.scss']
 })
@@ -38,6 +38,65 @@ export class PurchasesPageComponent implements OnInit {
   public authService = inject(AuthService);
 
   purchases = signal<Purchase[]>([]);
+
+  // ── Refonte 2b : groupés par fournisseur, deux jeux de filtres ─────────────
+  readonly groups = signal<PurchaseSupplierGroup[]>([]);
+  readonly settlementTab = signal<'' | 'due' | 'legal_risk' | 'paid'>('due');
+  readonly receptionTab = signal<'' | 'expected' | 'received'>('');
+  readonly showFilters = signal(false);
+  readonly expandedPurchases = signal<Set<number>>(new Set());
+
+  /** Seuil d'ancienneté affiché ligne par ligne. Voir PurchaseService::OLD_DEBT_DAYS. */
+  readonly oldDebtDays = 90;
+
+  readonly groupsDueTotal = computed(() =>
+    this.groups().reduce((sum, group) => sum + group.due_total, 0)
+  );
+
+  readonly groupsPurchaseCount = computed(() =>
+    this.groups().reduce((sum, group) => sum + group.purchases.length, 0)
+  );
+
+  setSettlementTab(tab: '' | 'due' | 'legal_risk' | 'paid'): void {
+    this.settlementTab.set(tab);
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
+  setReceptionTab(tab: '' | 'expected' | 'received'): void {
+    this.receptionTab.set(tab);
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
+  toggleReturns(purchaseId: number): void {
+    this.expandedPurchases.update((set) => {
+      const next = new Set(set);
+      next.has(purchaseId) ? next.delete(purchaseId) : next.add(purchaseId);
+      return next;
+    });
+  }
+
+  returnsVisible(purchaseId: number): boolean {
+    return this.expandedPurchases().has(purchaseId);
+  }
+
+  isOldDebt(row: PurchaseGroupRow): boolean {
+    return row.remaining > 0.004 && row.days > this.oldDebtDays;
+  }
+
+  /** Une ligne de groupe suffit pour ouvrir la fiche ou le règlement existants. */
+  openRowDetail(row: PurchaseGroupRow): void {
+    this.purchaseService.getPurchase(row.id).subscribe({
+      next: (purchase) => this.openDetail(purchase),
+    });
+  }
+
+  openRowPayments(row: PurchaseGroupRow): void {
+    this.purchaseService.getPurchase(row.id).subscribe({
+      next: (purchase) => this.openPayments(purchase),
+    });
+  }
   summary = signal<PurchaseSummary | null>(null);
   filterOptions = signal<{ suppliers: { id: number; name: string }[]; commercials: { id: number; name: string }[] }>({ suppliers: [], commercials: [] });
   loading = signal<boolean>(false);
@@ -130,13 +189,30 @@ export class PurchasesPageComponent implements OnInit {
     this.loading.set(true);
     const filters = this.buildFilters();
 
-    this.purchaseService.getPurchases(filters).subscribe({
+    this.purchaseService.getGrouped({
+      ...filters,
+      settlement: this.settlementTab(),
+      reception: this.receptionTab(),
+      per_page: '15',
+    }).subscribe({
       next: (response) => {
-        this.purchases.set(response.data);
+        this.groups.set(response.data);
         this.currentPage.set(response.current_page);
         this.lastPage.set(response.last_page);
         this.total.set(response.total);
         this.loading.set(false);
+      },
+      error: () => {
+        this.groups.set([]);
+        this.loading.set(false);
+      },
+    });
+
+    this.purchaseService.getPurchases(filters).subscribe({
+      next: (response) => {
+        // La liste plate reste chargée pour la navigation Précédent / Suivant
+        // dans la fiche ; c'est la vue groupée qui pilote la pagination.
+        this.purchases.set(response.data);
         this.detailNav.onListLoaded();
       },
       error: (err) => {

@@ -70,7 +70,7 @@
     </div>
   </div>
 
-  <div class="card filters-section">
+  <div class="card filters-section" *ngIf="showFilters()">
     <div class="card-body">
       <div class="filters-grid">
         <div class="form-group">
@@ -154,121 +154,104 @@
     </div>
   </div>
 
-  <div class="card table-card">
-    <div class="table-responsive">
-      <table class="table">
-        <thead>
-          <tr>
-            <th class="text-center">Actions</th>
-            <th class="text-center col-id">#</th>
-            <th class="sortable" (click)="toggleSort('date')">Date <app-sort-icon [active]="sortBy() === 'date'" [dir]="sortDirection()" /></th>
-            <th class="text-center">Facture</th>
-            <th>Fournisseur / Commercial</th>
-            <th class="sortable" (click)="toggleSort('total_quantity')">Qté <app-sort-icon [active]="sortBy() === 'total_quantity'" [dir]="sortDirection()" /></th>
-            <th class="text-right">Total Achat</th>
-            <th class="sortable" (click)="toggleSort('payment_status')">Paiement <app-sort-icon [active]="sortBy() === 'payment_status'" [dir]="sortDirection()" /></th>
-            <th>Mode(s) paiement</th>
-            <th class="sortable" (click)="toggleSort('status')">Statut <app-sort-icon [active]="sortBy() === 'status'" [dir]="sortDirection()" /></th>
-            <th>Créé par</th>
-            <th class="sortable" (click)="toggleSort('created_at')">Créé le <app-sort-icon [active]="sortBy() === 'created_at'" [dir]="sortDirection()" /></th>
-            <th class="sortable" (click)="toggleSort('updated_at')">Modifié le <app-sort-icon [active]="sortBy() === 'updated_at'" [dir]="sortDirection()" /></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngIf="loading()">
-            <td colspan="13" class="text-center py-4">
-              <div class="spinner"></div> Chargement...
-            </td>
-          </tr>
-
-          <tr *ngIf="!loading() && purchases().length === 0">
-            <td colspan="13" class="text-center py-4 text-muted">
-              Aucun achat trouvé.
-            </td>
-          </tr>
-
-          <tr *ngFor="let purchase of purchases()">
-            <td class="text-center actions-cell">
-              <button class="btn-icon btn-sm" (click)="openDetail(purchase)" title="Visualiser"><app-icon name="view" [size]="14" /></button>
-              <button class="btn-icon btn-sm" (click)="openPayments(purchase)" title="Paiements"><app-icon name="credit-card" [size]="14" /></button>
-              <button class="btn-icon btn-sm text-primary" (click)="openForm(purchase)" title="Modifier" *ngIf="authService.hasPermission('edit purchases') && !isPurchaseLocked(purchase)"><app-icon name="edit" [size]="14" /></button>
-              <button class="btn-icon btn-sm" (click)="openReturn(purchase)" title="Retour fournisseur" *ngIf="canReturnPurchase(purchase)"><app-icon name="refresh" [size]="14" /></button>
-              <button class="btn-icon btn-sm text-danger" (click)="deletePurchase(purchase)" title="Supprimer" *ngIf="authService.hasPermission('delete purchases') && !isPurchaseLocked(purchase)"><app-icon name="trash" [size]="14" /></button>
-            </td>
-            <td class="text-center cell-id">{{ purchase.id }}</td>
-            <td>
-              {{ purchase.date | date:'dd/MM/yyyy' }}
-              <div class="text-small text-muted" *ngIf="purchase.bl_number">BL: {{ purchase.bl_number }}</div>
-            </td>
-            <td class="text-center">
-              <span class="badge" [class.badge-success]="purchase.with_invoice" [class.badge-secondary]="!purchase.with_invoice">
-                {{ purchase.with_invoice ? 'Oui' : 'Non' }}
-              </span>
-              <div class="text-small text-muted" *ngIf="purchase.with_invoice && purchase.invoice_number">{{ purchase.invoice_number }}</div>
-            </td>
-            <td class="clickable-cell" (click)="openDetail(purchase)">
-              <div class="fw-medium">{{ purchase.supplier?.name || '-' }}</div>
-              <div class="text-small text-muted">{{ purchase.commercial?.name || '-' }}</div>
-            </td>
-            <td>{{ purchase.total_quantity }}</td>
-            <td class="text-right fw-semibold">
-              {{ (purchase.net_amount ?? purchase.total_price) | number:'1.2-2' }}
-            </td>
-            <td>
-              <span class="badge"
-                    [class.badge-success]="purchase.payment_status === 'PAYE'"
-                    [class.badge-warning]="purchase.payment_status === 'PARTIEL'"
-                    [class.badge-danger]="purchase.payment_status === 'NON PAYE'">
-                {{ purchase.payment_status }}
-              </span>
-            </td>
-            <td>
-              <span class="method-badges" *ngIf="purchase.payment_methods?.length; else noPurchaseMethod">
-                <span class="badge badge-method" *ngFor="let m of purchase.payment_methods" [ngClass]="paymentMethodClass(m)">{{ m }}</span>
-              </span>
-              <ng-template #noPurchaseMethod>-</ng-template>
-            </td>
-            <td class="status-cell">
-              <select class="status-select"
-                      [class.bg-en-cours]="purchase.status === 'EN COURS'"
-                      [class.bg-recu]="purchase.status === 'RECU'"
-                      [class.bg-termine]="purchase.status === 'TERMINE'"
-                      [class.bg-annule]="purchase.status === 'ANNULE'"
-                      [ngModel]="purchase.status"
-                      [disabled]="isPurchaseLocked(purchase)"
-                      (change)="updatePurchaseStatus(purchase, $event.target)">
-                <option *ngFor="let s of statusOptionsFor(purchase)" [value]="s">{{ PURCHASE_STATUS_LABELS[s] }}</option>
-              </select>
-            </td>
-            <td>{{ purchase.creator?.name || '-' }}</td>
-            <td>{{ purchase.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
-            <td>{{ purchase.updated_at | date:'dd/MM/yyyy HH:mm' }}</td>
-          </tr>
-        </tbody>
-      </table>
+  <!-- Deux jeux de filtres distincts : r&egrave;glement et r&eacute;ception (refonte 2b) -->
+  <div class="pur-bar">
+    <span class="pur-bar-label">R&egrave;glement</span>
+    <div class="segmented">
+      <button type="button" [class.active]="settlementTab() === ''" (click)="setSettlementTab('')">TOUS</button>
+      <button type="button" [class.active]="settlementTab() === 'due'" (click)="setSettlementTab('due')">RESTE &Agrave; PAYER</button>
+      <button type="button" [class.active]="settlementTab() === 'legal_risk'" (click)="setSettlementTab('legal_risk')">&gt; {{ oldDebtDays }} J</button>
+      <button type="button" [class.active]="settlementTab() === 'paid'" (click)="setSettlementTab('paid')">R&Eacute;GL&Eacute;S</button>
     </div>
 
+    <span class="pur-bar-label">R&eacute;ception</span>
+    <div class="segmented">
+      <button type="button" [class.active]="receptionTab() === ''" (click)="setReceptionTab('')">TOUTES</button>
+      <button type="button" [class.active]="receptionTab() === 'expected'" (click)="setReceptionTab('expected')">ATTENDUES</button>
+      <button type="button" [class.active]="receptionTab() === 'received'" (click)="setReceptionTab('received')">RE&Ccedil;UES</button>
+    </div>
+
+    <button type="button" class="chip-toggle" (click)="showFilters.set(!showFilters())">
+      <app-icon name="filter" [size]="14" /> Filtres
+    </button>
+
+    <span class="pur-count">
+      {{ total() }} fournisseur(s) &middot; {{ groupsPurchaseCount() }} achat(s) &middot; {{ groupsDueTotal() | number:'1.0-0' }} DH dus
+    </span>
+  </div>
+
+  <!-- Achats group&eacute;s par fournisseur -->
+  <div class="pur-grid">
+    <div class="pur-head">
+      <span>Date</span>
+      <span>Achat</span>
+      <span class="num">Qt&eacute;</span>
+      <span class="num">Net</span>
+      <span class="num">Reste d&ucirc;</span>
+      <span class="num">&Acirc;ge</span>
+      <span class="num">Actions</span>
+    </div>
+
+    <div class="pur-loading" *ngIf="loading()">Chargement&hellip;</div>
+
+    <ng-container *ngIf="!loading()">
+      <ng-container *ngFor="let group of groups()">
+        <div class="pur-band">
+          <span class="pur-supplier">{{ group.supplier_name }}</span>
+          <span class="pur-band-sub">
+            {{ group.due_count }} achat(s) d&ucirc;(s) sur {{ group.purchases_count }}<ng-container *ngIf="group.terms_days !== null"> &middot; d&eacute;lai contractuel {{ group.terms_days }} j</ng-container><ng-container *ngIf="group.terms_days === null"> &middot; aucun d&eacute;lai contractuel renseign&eacute;</ng-container><ng-container *ngIf="group.oldest_days > 0"> &middot; plus ancien {{ group.oldest_days }} j</ng-container>
+          </span>
+          <span class="pur-band-due">{{ group.due_total | number:'1.0-0' }} DH</span>
+          <a class="pur-band-action" *ngIf="group.supplier_id && group.due_total > 0"
+            [routerLink]="['/suppliers', group.supplier_id]">R&eacute;gler le fournisseur</a>
+        </div>
+
+        <ng-container *ngFor="let row of group.purchases">
+          <div class="pur-row" [class.pur-row--old]="isOldDebt(row)">
+            <span class="pur-date">{{ row.date | date:'dd/MM/yy' }}</span>
+            <span class="pur-object">
+              <span class="pur-title">
+                Achat {{ row.id }}
+                <span class="pur-tag" *ngIf="row.with_invoice">FACTUR&Eacute;</span>
+                <span class="pur-tag">{{ row.status }}</span>
+              </span>
+              <span class="pur-sub"><ng-container *ngIf="row.bl_number">{{ row.bl_number }} &middot; </ng-container><ng-container *ngIf="row.invoice_number">{{ row.invoice_number }} &middot; </ng-container>{{ row.quantity }} article(s)<ng-container *ngFor="let m of row.payment_methods"> &middot; {{ m }}</ng-container><button type="button" class="pur-returns-toggle" *ngIf="row.returns.length" (click)="toggleReturns(row.id)">{{ row.returns.length }} retour(s)</button></span>
+            </span>
+            <span class="num">{{ row.quantity | number:'1.0-0' }}</span>
+            <span class="num pur-net">{{ row.net_amount | number:'1.0-0' }}</span>
+            <span class="num pur-due" [class.pur-due--zero]="row.remaining <= 0.004">{{ row.remaining | number:'1.0-0' }}</span>
+            <span class="num pur-age">
+              {{ row.days }} j
+              <span class="pur-age-note pur-age-note--old" *ngIf="isOldDebt(row)">&gt; {{ oldDebtDays }} j</span>
+              <span class="pur-age-note" *ngIf="!isOldDebt(row) && row.days_left !== null && row.remaining > 0.004">{{ row.days_left >= 0 ? row.days_left + ' j restants' : 'd&eacute;lai d&eacute;pass&eacute;' }}</span>
+            </span>
+            <span class="num pur-actions">
+              <button type="button" class="pur-settle" *ngIf="row.remaining > 0.004 && authService.hasPermission('manage purchase-payments')" (click)="openRowPayments(row)">R&eacute;gler</button>
+              <button type="button" class="btn-icon" title="Ouvrir" (click)="openRowDetail(row)"><app-icon name="view" [size]="14" /></button>
+            </span>
+          </div>
+
+          <div class="ret-row" *ngFor="let ret of row.returns" [class.ret-row--hidden]="!returnsVisible(row.id)">
+            <span></span>
+            <span class="ret-object">Retour {{ ret.id }}<ng-container *ngIf="ret.reason"> &middot; {{ ret.reason }}</ng-container><ng-container *ngIf="ret.refund_amount > 0"> &middot; rembours&eacute;</ng-container></span>
+            <span class="num">&minus;{{ ret.quantity | number:'1.0-0' }}</span>
+            <span class="num">&minus;{{ ret.amount | number:'1.0-0' }}</span>
+            <span class="num">{{ ret.refund_amount > 0 ? ('&minus;' + (ret.refund_amount | number:'1.0-0')) : '&mdash;' }}</span>
+            <span class="num">{{ ret.date | date:'dd/MM/yy' }}</span>
+            <span></span>
+          </div>
+        </ng-container>
+      </ng-container>
+
+      <div class="pur-empty" *ngIf="groups().length === 0">Aucun achat sur cette s&eacute;lection.</div>
+    </ng-container>
+
     <div class="pagination-wrapper" *ngIf="total() > 0">
-      <div class="pagination-info">
-        Affichage de {{ (currentPage() - 1) * perPage() + 1 }} à
-        {{ (currentPage() * perPage()) > total() ? total() : (currentPage() * perPage()) }}
-        sur {{ total() }} entrées
-      </div>
+      <div class="pagination-info">{{ total() }} fournisseur(s) &middot; page {{ currentPage() }} / {{ lastPage() }}</div>
       <div class="pagination">
-        <button class="btn-page" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">
-          &laquo;
-        </button>
-
-        <button class="btn-page"
-                *ngFor="let page of pages()"
-                [class.active]="page === currentPage()"
-                (click)="goToPage(page)">
-          {{ page }}
-        </button>
-
-        <button class="btn-page" [disabled]="currentPage() === lastPage()" (click)="goToPage(currentPage() + 1)">
-          &raquo;
-        </button>
+        <button class="btn-page" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">&laquo;</button>
+        <button class="btn-page" *ngFor="let page of pages()" [class.active]="page === currentPage()" (click)="goToPage(page)">{{ page }}</button>
+        <button class="btn-page" [disabled]="currentPage() === lastPage()" (click)="goToPage(currentPage() + 1)">&raquo;</button>
       </div>
     </div>
   </div>

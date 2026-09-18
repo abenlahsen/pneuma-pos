@@ -55,6 +55,50 @@ export interface PurchasePayload {
   items: PurchaseItem[];
 }
 
+/** Refonte 2b — achats groupés par fournisseur (voir PurchaseService::groupedBySupplier). */
+export interface PurchaseReturnRow {
+  id: number;
+  date: string | null;
+  quantity: number;
+  amount: number;
+  refund_amount: number;
+  reason: string | null;
+}
+
+export interface PurchaseGroupRow {
+  id: number;
+  supplier_id: number | null;
+  supplier_name: string;
+  supplier_terms_days: number | null;
+  date: string | null;
+  status: string;
+  payment_status: string;
+  with_invoice: boolean;
+  bl_number: string | null;
+  invoice_number: string | null;
+  quantity: number;
+  net_amount: number;
+  paid_amount: number;
+  remaining: number;
+  days: number;
+  /** null quand le fournisseur n'a pas de délai contractuel renseigné. */
+  days_left: number | null;
+  payment_methods: string[];
+  returns: PurchaseReturnRow[];
+}
+
+export interface PurchaseSupplierGroup {
+  supplier_id: number | null;
+  supplier_name: string;
+  terms_days: number | null;
+  purchases_count: number;
+  due_count: number;
+  due_total: number;
+  total: number;
+  oldest_days: number;
+  purchases: PurchaseGroupRow[];
+}
+
 export interface PurchaseSummary {
   total_achats: number;
   total_paye: number;
