@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, IconComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
@@ -15,6 +16,9 @@ export class LoginComponent {
   loginForm: FormGroup;
   error = signal<string | null>(null);
   loading = signal(false);
+
+  /** Poste de comptoir partagé : le mot de passe reste masqué par défaut. */
+  readonly passwordVisible = signal(false);
 
   constructor(
     private fb: FormBuilder,

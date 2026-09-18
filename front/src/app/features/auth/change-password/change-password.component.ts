@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-change-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, IconComponent],
   templateUrl: './change-password.component.html',
   styleUrl: '../login/login.component.scss',
 })
@@ -15,6 +16,9 @@ export class ChangePasswordComponent {
   form: FormGroup;
   error = signal<string | null>(null);
   loading = signal(false);
+
+  /** Un seul interrupteur : on saisit trois fois le même secret, autant le voir. */
+  readonly passwordsVisible = signal(false);
 
   constructor(
     private fb: FormBuilder,

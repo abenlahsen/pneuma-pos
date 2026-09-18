@@ -1,53 +1,74 @@
-<div class="auth-container">
-  <div class="auth-card">
-    <div class="auth-header">
-      <img src="logo.png" alt="PNEU.MA" class="auth-logo">
-      <p>Connectez-vous à votre compte</p>
+<div class="auth-split">
+
+  <!-- Volet d'ancrage (refonte 2b, variante 11a) -->
+  <aside class="auth-anchor">
+    <img src="logo.png" alt="PNEU.MA" class="auth-logo">
+    <div class="auth-pitch">
+      <span class="auth-pitch-title">Gestion commerciale</span>
+      <span class="auth-pitch-sub">Ventes, stock, atelier et trésorerie au même endroit.</span>
     </div>
+    <span class="auth-places">PNEU.MA</span>
+  </aside>
 
-    @if (error()) {
-      <div class="alert alert-error">
-        {{ error() }}
-      </div>
-    }
+  <main class="auth-pane">
+    <div class="auth-form-wrap">
+      <span class="auth-eyebrow">Connexion</span>
+      <h1 class="auth-title">Accès équipe</h1>
+      <p class="auth-help">Utilisez l'adresse fournie par votre administrateur.</p>
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input
-          id="email"
-          type="email"
-          formControlName="email"
-          placeholder="votre@email.com"
-          [class.invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
-        />
-        @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
-          <span class="error-text">Veuillez entrer un email valide</span>
-        }
-      </div>
+      @if (error()) {
+        <div class="alert alert-error">{{ error() }}</div>
+      }
 
-      <div class="form-group">
-        <label for="password">Mot de passe</label>
-        <input
-          id="password"
-          type="password"
-          formControlName="password"
-          placeholder="••••••••"
-          [class.invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
-        />
-        @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
-          <span class="error-text">Le mot de passe est requis</span>
-        }
-      </div>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            autocomplete="username"
+            placeholder="votre@email.com"
+            [class.invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+          />
+          @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
+            <span class="error-text">Veuillez entrer un email valide</span>
+          }
+        </div>
 
-      <button type="submit" [disabled]="loginForm.invalid || loading()" class="btn btn-primary">
-        @if (loading()) {
-          <span>Connexion...</span>
-        } @else {
-          <span>Se connecter</span>
-        }
-      </button>
-    </form>
-  </div>
+        <div class="form-group">
+          <label for="password">Mot de passe</label>
+          <div class="password-field">
+            <input
+              id="password"
+              [type]="passwordVisible() ? 'text' : 'password'"
+              formControlName="password"
+              autocomplete="current-password"
+              placeholder="••••••••"
+              [class.invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              [class.password-toggle--on]="passwordVisible()"
+              (click)="passwordVisible.set(!passwordVisible())"
+              [attr.aria-label]="passwordVisible() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'">
+              <app-icon name="view" [size]="16" />
+            </button>
+          </div>
+          @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+            <span class="error-text">Le mot de passe est requis</span>
+          }
+        </div>
+
+        <button type="submit" [disabled]="loginForm.invalid || loading()" class="btn btn-primary">
+          @if (loading()) {
+            <span>Connexion...</span>
+          } @else {
+            <span>Se connecter</span>
+          }
+        </button>
+      </form>
+    </div>
+  </main>
 </div>
-

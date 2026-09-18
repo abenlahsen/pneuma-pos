@@ -1,44 +1,126 @@
-.auth-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+@use '../../_variables' as *;
+
+/* Refonte 2b, gabarit 11a : deux volets — ancre de marque à gauche, formulaire
+   à droite. Sous 900 px l'ancre passe en bandeau haut et le formulaire occupe
+   toute la largeur (tablette d'atelier). */
+.auth-split {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
   min-height: 100vh;
-  background: linear-gradient(135deg, #282828 0%, #3a3a3a 100%);
-  padding: 1rem;
+  background: $bg-card;
 }
 
-.auth-card {
-  background: white;
-  border-radius: 12px;
+/* ── Volet d'ancrage ─────────────────────────────────────────────────────── */
+.auth-anchor {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 3rem;
+  padding: 3rem 3.5rem;
+  background: $rail-bg;
+  color: #ffffff;
+}
+
+/* Le logo est un rectangle 246×100 : sans align-self il serait étiré par
+   l'align-items: stretch du conteneur en colonne. */
+.auth-logo {
+  align-self: flex-start;
+  height: 44px;
+  width: auto;
+}
+
+.auth-pitch {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 26rem;
+}
+
+.auth-pitch-title {
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.auth-pitch-sub {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #a9bdd6;
+}
+
+.auth-places {
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6f89a8;
+}
+
+/* ── Gabarit 11b : bloc centré (change-password, tablette d'atelier) ─────── */
+.auth-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem 1.5rem;
+  background: $bg-body;
+}
+
+/* Double classe : ce bloc est déclaré avant `.auth-form-wrap`, il lui faut donc
+   une spécificité supérieure pour élargir la colonne à 560 px. */
+.auth-form-wrap.auth-form-wrap--wide {
+  max-width: 560px;
   padding: 2.5rem;
-  width: 100%;
-  max-width: 420px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  border: 1px solid $border-strong;
+  background: $bg-card;
 }
 
-.auth-header {
-  text-align: center;
+.auth-logo--ink {
+  height: 36px;
   margin-bottom: 2rem;
+}
 
-  .auth-logo {
-    height: 48px;
-    width: auto;
-    margin-bottom: 0.5rem;
-  }
+/* ── Volet formulaire ────────────────────────────────────────────────────── */
+.auth-pane {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+}
 
-  p {
-    color: #718096;
-    margin: 0;
-    font-size: 0.95rem;
-  }
+.auth-form-wrap {
+  width: 100%;
+  max-width: 24rem;
+}
+
+.auth-eyebrow {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: $primary;
+}
+
+.auth-title {
+  margin: 0.4rem 0 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: $text-dark;
+}
+
+.auth-help {
+  margin: 0.4rem 0 2rem;
+  font-size: 0.875rem;
+  color: $text-muted;
 }
 
 .alert-error {
-  background: #fed7d7;
-  color: #c53030;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 0.7rem 0.9rem;
+  border-left: 3px solid $expense-color;
+  background: $overdue-bg;
+  color: $alert-ink;
   font-size: 0.875rem;
 }
 
@@ -47,82 +129,126 @@
 
   label {
     display: block;
-    font-weight: 600;
-    color: #4a5568;
     margin-bottom: 0.4rem;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: $text-secondary;
   }
 
   input {
-    width: 100%;
-    padding: 0.7rem 1rem;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: border-color 0.2s;
     box-sizing: border-box;
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid $border-color;
+    background: $bg-card;
+    font-size: 0.95rem;
+    color: $text-dark;
+    transition: border-color 0.15s;
 
     &:focus {
       outline: none;
-      border-color: #ff2d37;
+      border-color: $text-dark;
+      box-shadow: inset 0 -2px 0 0 $primary;
     }
 
     &.invalid {
-      border-color: #e53e3e;
+      border-color: $expense-color;
     }
   }
 
   .error-text {
-    color: #e53e3e;
-    font-size: 0.8rem;
-    margin-top: 0.25rem;
     display: block;
+    margin-top: 0.3rem;
+    font-size: 0.8rem;
+    color: $expense-color;
+  }
+}
+
+/* Révéler le mot de passe : utile sur un clavier de comptoir, où la frappe
+   est souvent fausse et le champ le seul retour possible. */
+.password-field {
+  position: relative;
+
+  input {
+    padding-right: 2.6rem;
+  }
+}
+
+.password-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: $text-muted;
+  cursor: pointer;
+
+  &:hover {
+    color: $text-dark;
+  }
+
+  &.password-toggle--on {
+    color: $primary;
   }
 }
 
 .btn {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.7rem;
   border: none;
-  border-radius: 8px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #ff2d37 0%, #cc0a13 100%);
-  color: white;
+  margin-top: 0.5rem;
+  background: $primary;
+  color: #ffffff;
 
   &:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(255, 45, 55, 0.4);
+    background: $primary-dark;
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 }
 
-.auth-footer {
-  text-align: center;
-  margin-top: 1.5rem;
-
-  p {
-    color: #718096;
-    font-size: 0.875rem;
+@media (max-width: 900px) {
+  .auth-split {
+    grid-template-columns: 1fr;
+    min-height: 100vh;
   }
 
-  a {
-    color: #ff2d37;
-    text-decoration: none;
-    font-weight: 600;
+  .auth-anchor {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.25rem 1.5rem;
+  }
 
-    &:hover {
-      text-decoration: underline;
-    }
+  .auth-logo {
+    align-self: center;
+    height: 32px;
+  }
+
+  .auth-pitch,
+  .auth-places {
+    display: none;
+  }
+
+  .auth-pane {
+    padding: 2.5rem 1.5rem;
   }
 }
-
