@@ -27,37 +27,49 @@
 
   <ng-container *ngIf="!loading() && !error() && cur() as c">
 
-    <!-- KPI sections -->
-    <ng-container *ngFor="let section of sections(); trackBy: trackSection">
-      <div class="kpi-group-header">
-        <h2 class="kpi-group-title">{{ section.title }}</h2>
-      </div>
+    <!-- Refonte 2b : mois / mois pr&eacute;c&eacute;dent / variation, en deux colonnes -->
+    <div class="rep-cols">
+      <section class="rep-block" *ngFor="let section of sections(); trackBy: trackSection">
+        <h2 class="rep-title">{{ section.title }}</h2>
+        <table class="rep-table">
+          <thead>
+            <tr>
+              <th>Poste</th>
+              <th class="num">{{ monthLabel() }}</th>
+              <th class="num">{{ previousLabel() }}</th>
+              <th class="num">Variation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let card of section.cards; trackBy: trackCard">
+              <td>
+                <span class="rep-label">{{ card.label }}</span>
+                <span class="rep-sub" *ngIf="card.sub">{{ card.sub }}</span>
+              </td>
+              <td class="num rep-value">{{ formatValue(card) }}</td>
+              <td class="num rep-prev">{{ formatValue({ label: card.label, value: card.prev, kind: card.kind, prev: card.prev, icon: card.icon, tone: card.tone }) }}</td>
+              <td class="num rep-delta" [ngClass]="'rep-delta--' + toneClass(card.value, card.prev, card.tone)">
+                {{ deltaLabel(card.value, card.prev) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
 
-      <div class="kpi-grid">
-        <div
-          *ngFor="let card of section.cards; trackBy: trackCard"
-          class="kpi-card"
-          [class.highlight-red]="card.variant === 'red'"
-          [class.highlight-blue]="card.variant === 'blue'"
-          [class.warning-card]="card.variant === 'warning'"
-          [class.negative-card]="card.kind === 'money' && card.value < 0"
-        >
-          <div class="kpi-icon"><app-icon [name]="card.icon" [size]="20" /></div>
-          <div class="kpi-info">
-            <span class="kpi-label">{{ card.label }}</span>
-            <span class="kpi-val">
-              {{ formatValue(card) }}
-              <small *ngIf="card.kind === 'money'">DH</small>
-              <small *ngIf="card.kind === 'percent'">%</small>
-            </span>
-            <span class="kpi-sub" *ngIf="card.sub">{{ card.sub }}</span>
-          </div>
-          <span class="kpi-delta" [ngClass]="deltaClass(card.value, card.prev, card.tone)" [title]="'Mois précédent : ' + (card.kind === 'money' ? formatMoney(card.prev) + ' DH' : formatInt(card.prev))">
-            {{ deltaLabel(card.value, card.prev) }}
-          </span>
-        </div>
-      </div>
+    <!-- Les &eacute;carts &agrave; expliquer, nomm&eacute;s sans &ecirc;tre interpr&eacute;t&eacute;s -->
+    <div class="rep-gaps" *ngIf="notableGaps().length">
+      <article class="rep-gap" *ngFor="let gap of notableGaps()">
+        <span class="rep-gap-label">{{ gap.direction }} &middot; {{ gap.label }}</span>
+        <span class="rep-gap-delta">{{ gap.delta }}</span>
+        <span class="rep-gap-note">&Eacute;cart &agrave; expliquer par rapport &agrave; {{ previousLabel() }}.</span>
+      </article>
+    </div>
 
+    <!-- D&eacute;tails : les tableaux d&eacute;j&agrave; en place, en deux colonnes -->
+    <div class="rep-cols rep-cols--tables">
+
+      <ng-container *ngFor="let section of sections(); trackBy: trackSection">
       <!-- Section-specific tables -->
       <ng-container [ngSwitch]="section.key">
 
@@ -218,6 +230,7 @@
 
       </ng-container>
     </ng-container>
+    </div>
 
   </ng-container>
 </div>

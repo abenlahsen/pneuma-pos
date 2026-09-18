@@ -291,6 +291,51 @@ export class ReportingPageComponent implements OnInit {
     return `${d > 0 ? '+' : '−'}${this.formatPercent(Math.abs(d))} %`;
   }
 
+  /**
+   * Refonte 2b : « la couleur ne marque que les écarts à expliquer ». Un mois
+   * à +1 % n'est pas une information ; en colorer la variation dilue celles
+   * qui comptent. Seuls les écarts d'au moins ce pourcentage sont teintés.
+   */
+  readonly notableDeltaThreshold = 5;
+
+  isNotable(value: number, prev: number): boolean {
+    const d = this.delta(value, prev);
+    return d !== null && Math.abs(d) >= this.notableDeltaThreshold;
+  }
+
+  /** Teinte à appliquer dans le tableau : rien tant que l'écart reste ordinaire. */
+  toneClass(value: number, prev: number, tone: KpiTone = 'up-good'): string {
+    if (!this.isNotable(value, prev)) return 'flat';
+    return this.deltaClass(value, prev, tone);
+  }
+
+  /**
+   * Les écarts à nommer en bas de colonne : les plus gros mouvements
+   * défavorables du mois, sans les interpréter.
+   */
+  readonly notableGaps = computed<{ label: string; delta: string; direction: string }[]>(() => {
+    const rows: { label: string; delta: string; direction: string; magnitude: number }[] = [];
+
+    for (const section of this.sections()) {
+      for (const card of section.cards) {
+        if (!this.isNotable(card.value, card.prev)) continue;
+        if (this.deltaClass(card.value, card.prev, card.tone) !== 'bad') continue;
+
+        rows.push({
+          label: card.label,
+          delta: this.deltaLabel(card.value, card.prev),
+          direction: section.title,
+          magnitude: Math.abs(this.delta(card.value, card.prev) ?? 0),
+        });
+      }
+    }
+
+    return rows
+      .sort((a, b) => b.magnitude - a.magnitude)
+      .slice(0, 2)
+      .map(({ label, delta, direction }) => ({ label, delta, direction }));
+  });
+
   /** CSS modifier for the delta badge: 'good' | 'bad' | 'neutral' | 'none'. */
   deltaClass(value: number, prev: number, tone: KpiTone = 'up-good'): string {
     const d = this.delta(value, prev);

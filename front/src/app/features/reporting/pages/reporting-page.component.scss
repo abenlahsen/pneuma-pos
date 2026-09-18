@@ -69,127 +69,7 @@ $_border-hover: #d0d9e4;
 }
 
 // ── Section header ───────────────────────────────────────────────────────────
-.kpi-group-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin: 2.25rem 0 1.25rem;
-
-  &:first-of-type { margin-top: 0.5rem; }
-}
-
-.kpi-group-title {
-  margin: 0;
-  flex: 1;
-  font-size: 0.72rem;
-  color: $_dim;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  padding-bottom: 0.6rem;
-  border-bottom: 2px solid $_border;
-}
-
 // ── KPI grid & cards (dashboard vocabulary) ──────────────────────────────────
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.25rem;
-}
-
-.kpi-card {
-  background: $_surface;
-  border: 1px solid $_border;
-  border-radius: 14px;
-  padding: 1.4rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-  transition: border-color 0.22s, transform 0.22s, box-shadow 0.22s;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.04);
-
-  &:hover {
-    border-color: $_border-hover;
-    transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1), 0 2px 6px rgba(15, 23, 42, 0.06);
-  }
-
-  .kpi-icon {
-    font-size: 1.25rem;
-    margin-bottom: 1rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 42px;
-    height: 42px;
-    background: $_surface-2;
-    border: 1px solid $_border;
-    border-radius: 11px;
-  }
-
-  .kpi-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .kpi-label {
-    font-size: 0.68rem;
-    color: $_dim;
-    text-transform: uppercase;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-  }
-
-  .kpi-val {
-    font-size: 1.55rem;
-    font-weight: 800;
-    color: $_text;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.03em;
-    line-height: 1.1;
-
-    small {
-      font-size: 0.85rem;
-      color: $_dim;
-      font-weight: 500;
-      margin-left: 0.1em;
-      letter-spacing: 0;
-    }
-  }
-
-  .kpi-sub {
-    display: block;
-    margin-top: 0.4rem;
-    font-size: 0.76rem;
-    color: $_muted;
-    font-weight: 500;
-    font-variant-numeric: tabular-nums;
-  }
-
-  &.highlight-red {
-    border-top: 3px solid $_red;
-    background: linear-gradient(160deg, #fff5f5 0%, $_surface 50%);
-    .kpi-icon { background: #fff0f0; border-color: #fecaca; }
-  }
-
-  &.highlight-blue {
-    border-top: 3px solid $_blue;
-    background: linear-gradient(160deg, #eff6ff 0%, $_surface 50%);
-    .kpi-icon { background: #dbeafe; border-color: #bfdbfe; }
-  }
-
-  &.warning-card .kpi-icon {
-    background: #fffbeb;
-    border-color: #fde68a;
-  }
-
-  &.negative-card .kpi-val { color: $_danger; }
-}
-
 // ── M-1 delta badge ──────────────────────────────────────────────────────────
 .kpi-delta {
   position: absolute;
@@ -278,4 +158,141 @@ $_border-hover: #d0d9e4;
 
 @media (max-width: 480px) {
   .kpi-grid { grid-template-columns: 1fr; }
+}
+
+// ── Refonte 2b : tableau mois / mois précédent / variation, deux colonnes ────
+.rep-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+  margin-bottom: 14px;
+
+  &--tables { display: block; }
+}
+
+.rep-block {
+  border: 1px solid #cfdcec;
+  background: #fff;
+}
+
+.rep-title {
+  margin: 0;
+  padding: 10px 16px;
+  border-bottom: 1px solid #0c1e33;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #0c1e33;
+}
+
+.rep-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    padding: 7px 16px;
+    border-bottom: 1px solid #cfdcec;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #4a5c75;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 9px 16px;
+    border-bottom: 1px solid #e7eef8;
+    font-size: 13px;
+    color: #0c1e33;
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  .num { text-align: right; }
+}
+
+.rep-label {
+  display: block;
+  font-weight: 600;
+}
+
+.rep-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: #4a5c75;
+}
+
+.rep-value {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rep-prev {
+  color: #4a5c75;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rep-delta {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+
+  // La couleur ne marque que les écarts à expliquer : en deçà du seuil, la
+  // variation reste lisible mais neutre.
+  &--flat { color: #4a5c75; font-weight: 400; }
+  &--neutral { color: #4a5c75; font-weight: 400; }
+  &--none { color: #adc2da; font-weight: 400; }
+  &--good { color: #15616d; }
+  &--bad { color: #c2181f; }
+}
+
+.rep-gaps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.rep-gap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  border: 1px solid #cfdcec;
+  border-left: 3px solid #c2181f;
+  background: #fff;
+}
+
+.rep-gap-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #4a5c75;
+}
+
+.rep-gap-delta {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: #c2181f;
+}
+
+.rep-gap-note {
+  font-size: 11.5px;
+  color: #41546e;
+}
+
+@media (max-width: 1100px) {
+  .rep-cols,
+  .rep-gaps { grid-template-columns: 1fr; }
 }
