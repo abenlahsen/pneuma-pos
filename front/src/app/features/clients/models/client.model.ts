@@ -90,6 +90,21 @@ export interface ClientPaymentRow {
   multi?: boolean;
 }
 
+/** Refonte 2b — l'âge de la dette et le délai réellement observé (ClientDebtService). */
+export interface ClientAging {
+  buckets: { '0-30': number; '31-60': number; '61-90': number; '90+': number };
+  total: number;
+  credit_limit: number;
+  /** null quand aucune limite n'est fixée : ce n'est pas la même chose que zéro. */
+  credit_left: number | null;
+}
+
+export interface ClientPaymentDelay {
+  contractual_days: number | null;
+  observed_days: number | null;
+  observed_sample: number;
+}
+
 export interface ClientStatementSummary {
   total_purchased?: number | null;
   total_paid?: number | null;
@@ -97,6 +112,8 @@ export interface ClientStatementSummary {
   opening_balance?: number | null;
   credit_limit?: number | null;
   last_sale_date?: string | null;
+  aging?: ClientAging;
+  payment_delay?: ClientPaymentDelay;
 }
 
 export interface ClientStatementEntry {

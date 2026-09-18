@@ -3,6 +3,7 @@
 namespace App\Domain\CashFlow;
 
 use App\Domain\Accounts\AccountService;
+use App\Domain\Clients\ClientDebtService;
 use App\Models\Purchase;
 use App\Models\Sale;
 use App\Models\Transaction;
@@ -25,8 +26,8 @@ use Illuminate\Support\Facades\DB;
  *   calculé sur l'historique de ses ventes déjà soldées (moyenne
  *   MAX(date de paiement) − date de vente). Sans historique suffisant,
  *   repli sur Client::payment_terms_days, puis sur la moyenne globale
- *   observée tous clients confondus, puis sur DEFAULT_CLIENT_DELAY_DAYS
- *   si le système n'a lui-même aucun historique de paiement.
+ *   observée. Cette règle est portée par ClientDebtService, que la fiche
+ *   client utilise aussi : les deux écrans ne peuvent pas diverger.
  * - Charges récurrentes : moyenne hebdomadaire des dépenses réelles des
  *   trois derniers mois pleins (hors catégorie Transfert) — pas de liste
  *   figée de catégories « récurrentes », qui n'existe pas dans le modèle.
@@ -35,7 +36,6 @@ class CashFlowProjectionService
 {
     private const WEEKS_AHEAD = 6;
     private const DEFAULT_SUPPLIER_TERMS_DAYS = 30;
-    private const DEFAULT_CLIENT_DELAY_DAYS = 30;
     private const TRANSFER_CATEGORY = 'Transfert';
 
     /**
@@ -52,7 +52,10 @@ class CashFlowProjectionService
         'Achat marchandise',
     ];
 
-    public function __construct(private AccountService $accountService) {}
+    public function __construct(
+        private AccountService $accountService,
+        private ClientDebtService $clientDebt,
+    ) {}
 
     public function build(): array
     {
@@ -99,7 +102,6 @@ class CashFlowProjectionService
             });
 
         $clientDelayCache = [];
-        $globalDelay = null;
 
         Sale::query()
             ->whereIn('payment_status', ['NON PAYE', 'PARTIEL'])
@@ -107,7 +109,7 @@ class CashFlowProjectionService
             ->whereNotNull('client_id')
             ->with('linkedClient')
             ->withSum('allocations', 'amount')
-            ->chunkById(200, function ($sales) use (&$weeks, &$clientDue, &$clientDelayCache, &$globalDelay, $weekStart) {
+            ->chunkById(200, function ($sales) use (&$weeks, &$clientDue, &$clientDelayCache, $weekStart) {
                 foreach ($sales as $sale) {
                     $remaining = round(max((float) $sale->total_sale - (float) ($sale->allocations_sum_amount ?? 0), 0), 2);
                     if ($remaining <= 0.004) {
@@ -118,7 +120,7 @@ class CashFlowProjectionService
 
                     $clientId = $sale->client_id;
                     if (! array_key_exists($clientId, $clientDelayCache)) {
-                        $clientDelayCache[$clientId] = $this->clientRealDelay($clientId, $sale->linkedClient, $globalDelay);
+                        $clientDelayCache[$clientId] = $this->clientDebt->projectionDelayDays($clientId, $sale->linkedClient);
                     }
 
                     $due = Carbon::parse($sale->date)->addDays($clientDelayCache[$clientId]);
@@ -189,58 +191,6 @@ class CashFlowProjectionService
         $index = (int) floor($weekStart->diffInDays($due, false) / 7);
         $index = max(0, min(count($weeks) - 1, $index));
         $weeks[$index][$direction] = round($weeks[$index][$direction] + $amount, 2);
-    }
-
-    private function clientRealDelay(int $clientId, $client, ?int &$globalDelay): int
-    {
-        $row = $this->lastPaymentPerSaleQuery()
-            ->where('sales.client_id', $clientId)
-            ->where('sales.payment_status', 'PAYE')
-            ->selectRaw('COUNT(*) as n, AVG(DATEDIFF(lp.last_payment_date, sales.date)) as avg_days')
-            ->first();
-
-        if ($row && (int) $row->n >= 2 && $row->avg_days !== null) {
-            return max(0, (int) round((float) $row->avg_days));
-        }
-
-        if ($client?->payment_terms_days) {
-            return (int) $client->payment_terms_days;
-        }
-
-        if ($globalDelay === null) {
-            $globalDelay = $this->globalAverageDelay();
-        }
-
-        return $globalDelay;
-    }
-
-    private function globalAverageDelay(): int
-    {
-        $row = $this->lastPaymentPerSaleQuery()
-            ->where('sales.payment_status', 'PAYE')
-            ->selectRaw('AVG(DATEDIFF(lp.last_payment_date, sales.date)) as avg_days')
-            ->first();
-
-        return $row && $row->avg_days !== null
-            ? max(0, (int) round((float) $row->avg_days))
-            : self::DEFAULT_CLIENT_DELAY_DAYS;
-    }
-
-    /**
-     * « Date de paiement » d'une vente = la plus récente parmi les paiements
-     * qui lui sont réellement affectés (sale_payment_allocations), pas
-     * payments.sale_id — un paiement multi-ventes laisse sale_id à NULL et
-     * n'existe qu'à travers ses allocations (même convention que côté achats).
-     */
-    private function lastPaymentPerSaleQuery()
-    {
-        $lastPaymentSub = DB::table('sale_payment_allocations as spa')
-            ->join('payments', 'payments.id', '=', 'spa.payment_id')
-            ->selectRaw('spa.sale_id, MAX(payments.date) as last_payment_date')
-            ->groupBy('spa.sale_id');
-
-        return DB::table('sales')
-            ->joinSub($lastPaymentSub, 'lp', 'lp.sale_id', '=', 'sales.id');
     }
 
     private function averageRecurringWeeklyExpense(): float

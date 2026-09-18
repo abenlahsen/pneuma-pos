@@ -97,6 +97,45 @@
       </article>
     </section>
 
+    <!-- Refonte 2b : l'age de la dette remplace le seul total impaye -->
+    <section class="aging" *ngIf="aging() as ag">
+      <div class="aging-head">
+        <span class="aging-title">&Acirc;ge de la dette</span>
+        <span class="aging-total">{{ ag.total | number:'1.2-2' }} DH</span>
+        <span class="aging-credit" *ngIf="ag.credit_left !== null">
+          Cr&eacute;dit restant
+          <strong [class.aging-over]="ag.credit_left < 0">{{ ag.credit_left | number:'1.0-0' }} DH</strong>
+          sur {{ ag.credit_limit | number:'1.0-0' }}
+        </span>
+        <span class="aging-credit" *ngIf="ag.credit_left === null">Aucune limite de cr&eacute;dit fix&eacute;e</span>
+      </div>
+
+      <div class="aging-bar" *ngIf="ag.total > 0">
+        <span class="aging-seg aging-seg--1" [style.width.%]="agingShare(ag.buckets['0-30'])"></span>
+        <span class="aging-seg aging-seg--2" [style.width.%]="agingShare(ag.buckets['31-60'])"></span>
+        <span class="aging-seg aging-seg--3" [style.width.%]="agingShare(ag.buckets['61-90'])"></span>
+        <span class="aging-seg aging-seg--4" [style.width.%]="agingShare(ag.buckets['90+'])"></span>
+      </div>
+
+      <div class="aging-grid">
+        <span class="aging-cell"><span class="aging-label">0-30 j</span><span class="aging-amount">{{ ag.buckets['0-30'] | number:'1.0-0' }}</span></span>
+        <span class="aging-cell"><span class="aging-label">31-60 j</span><span class="aging-amount">{{ ag.buckets['31-60'] | number:'1.0-0' }}</span></span>
+        <span class="aging-cell"><span class="aging-label">61-90 j</span><span class="aging-amount">{{ ag.buckets['61-90'] | number:'1.0-0' }}</span></span>
+        <span class="aging-cell aging-cell--late"><span class="aging-label">+90 j</span><span class="aging-amount">{{ ag.buckets['90+'] | number:'1.0-0' }}</span></span>
+      </div>
+
+      <p class="aging-delay" *ngIf="paymentDelay() as d">
+        <ng-container *ngIf="d.observed_days !== null">
+          D&eacute;lai de paiement r&eacute;el <strong>{{ d.observed_days }} j</strong>
+          <ng-container *ngIf="d.contractual_days !== null"> face au contractuel {{ d.contractual_days }} j</ng-container>
+          <span class="aging-sample"> &middot; observ&eacute; sur {{ d.observed_sample }} ventes sold&eacute;es</span>
+        </ng-container>
+        <ng-container *ngIf="d.observed_days === null">
+          Pas encore assez de ventes sold&eacute;es pour mesurer un d&eacute;lai r&eacute;el<ng-container *ngIf="d.contractual_days !== null"> &middot; contractuel {{ d.contractual_days }} j</ng-container>
+        </ng-container>
+      </p>
+    </section>
+
     <!-- ── Infos + Finances ── -->
     <section class="details-grid">
       <article class="panel">

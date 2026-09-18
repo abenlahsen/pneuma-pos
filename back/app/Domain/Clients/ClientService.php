@@ -15,6 +15,8 @@ use Illuminate\Support\Str;
 
 class ClientService
 {
+    public function __construct(private ClientDebtService $debt) {}
+
     public function paginate(array $filters = []): LengthAwarePaginator
     {
         $perPage = (int) ($filters['per_page'] ?? 15);
@@ -208,6 +210,11 @@ class ClientService
             'outstanding_balance' => $this->calculateOutstandingBalanceAll($client, $sales, $serviceOrders),
             'last_sale_date' => $this->formatDate($lastDate),
         ];
+
+        // Refonte 2b : l'âge de la dette par tranche remplace le seul total
+        // impayé, et le délai réellement observé se lit face au contractuel.
+        $summary['aging'] = $this->debt->aging($client);
+        $summary['payment_delay'] = $this->debt->paymentDelay($client);
 
         return [
             'client' => $client,

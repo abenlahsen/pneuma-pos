@@ -45,7 +45,7 @@ export class ClientDetailPageComponent implements OnInit {
   readonly statementLoading = signal(false);
   readonly errorMessage = signal('');
   readonly statementErrorMessage = signal('');
-  readonly activeTab = signal<'overview' | 'statement'>('overview');
+  readonly activeTab = signal<'overview' | 'statement'>('statement');
 
   readonly profile = signal<ClientProfileResponse | null>(null);
   readonly statement = signal<ClientStatementResponse | null>(null);
@@ -56,9 +56,9 @@ export class ClientDetailPageComponent implements OnInit {
   readonly deletingPaymentId = signal<number | null>(null);
   readonly saving = signal(false);
 
-  readonly openInvoicesCollapsed = signal(false);
+  readonly openInvoicesCollapsed = signal(true);
   readonly entriesCollapsed = signal(false);
-  readonly paymentsCollapsed = signal(false);
+  readonly paymentsCollapsed = signal(true);
   readonly deleting = signal(false);
 
   readonly vehicles = signal<Vehicle[]>([]);
@@ -75,6 +75,16 @@ export class ClientDetailPageComponent implements OnInit {
   readonly statementEntries = computed<ClientStatementEntry[]>(() => {
     return this.statement()?.entries ?? [];
   });
+
+  /** Refonte 2b : l'âge de la dette et le délai réel viennent du relevé. */
+  readonly aging = computed(() => this.statement()?.summary?.aging ?? null);
+  readonly paymentDelay = computed(() => this.statement()?.summary?.payment_delay ?? null);
+
+  /** Part de chaque tranche dans la dette, pour la largeur des segments. */
+  agingShare(amount: number): number {
+    const total = this.aging()?.total ?? 0;
+    return total > 0 ? (amount / total) * 100 : 0;
+  }
 
   readonly openInvoices = computed<ClientSalesHistoryRow[]>(() => {
     return (this.statement()?.sales ?? []).filter((sale) => (sale.balance_due ?? 0) > 0);
@@ -257,10 +267,10 @@ export class ClientDetailPageComponent implements OnInit {
     this.vehicles.set([]);
     this.showVehicleForm.set(false);
     this.editingVehicle.set(null);
-    this.activeTab.set('overview');
-    this.openInvoicesCollapsed.set(false);
+    this.activeTab.set('statement');
+    this.openInvoicesCollapsed.set(true);
     this.entriesCollapsed.set(false);
-    this.paymentsCollapsed.set(false);
+    this.paymentsCollapsed.set(true);
 
     this.vehicleService.getVehiclesForClient(clientId)
       .pipe(takeUntilDestroyed(this.destroyRef))
