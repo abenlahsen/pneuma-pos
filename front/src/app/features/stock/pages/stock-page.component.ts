@@ -61,6 +61,7 @@ export class StockPageComponent implements OnInit {
   filterDepot = signal('');
   filterCountry = signal('');
   filterInStock = signal(true);
+
   filterRunFlat = signal(false);
 
   // ── Refonte 2b, §14c : les quatre états manquants ─────────────────────────
@@ -68,6 +69,13 @@ export class StockPageComponent implements OnInit {
   readonly loadError = signal<string | null>(null);
   readonly loadErrorDetail = signal<string | null>(null);
   readonly lastLoadedAt = signal<Date | null>(null);
+
+  /**
+   * Refonte 2b : tant que le résumé n'est pas revenu, les cadrans affichent
+   * « — » et non 0. Un 0 affirme un chiffre — « CA du jour : 0,00 DH » — que
+   * l'on n'a pas encore, et qui restait affiché si la requête échouait.
+   */
+  readonly summaryLoaded = signal(false);
 
   /**
    * « En stock » est coché par défaut : c'est le filtre qui surprend le plus
@@ -189,14 +197,13 @@ export class StockPageComponent implements OnInit {
     this.stockService.getSummary(filters).subscribe({
       next: (summary) => {
         this.summary.set(summary);
+        this.summaryLoaded.set(true);
         this.loadingSummary.set(false);
       },
+      // On ne remet plus de zéros : c'était affirmer un stock vide alors que
+      // la requête a seulement échoué.
       error: () => {
-        this.summary.set({
-          total_articles: 0,
-          total_quantity: 0,
-          total_purchase_value: 0,
-        });
+        this.summaryLoaded.set(false);
         this.loadingSummary.set(false);
       },
     });

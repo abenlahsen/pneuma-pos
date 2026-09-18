@@ -22,8 +22,8 @@
       <div class="card-icon"><app-icon name="package" [size]="20" /></div>
       <div class="card-content">
         <p class="card-label">{{ hasDateFilter() ? 'Pneus vendus (période)' : 'Pneus vendus aujourd\'hui' }}</p>
-        <h3 class="card-value">{{ hasDateFilter() ? summary().tyres_period : summary().tyres_today }}</h3>
-        <p class="card-hint" *ngIf="!hasDateFilter()">{{ summary().tyres_this_month }} ce mois</p>
+        <h3 class="card-value">{{ summaryLoaded() ? (hasDateFilter() ? summary().tyres_period : summary().tyres_today) : '—' }}</h3>
+        <p class="card-hint" *ngIf="!hasDateFilter()">{{ summaryLoaded() ? (summary().tyres_this_month) : '—' }} ce mois</p>
       </div>
     </div>
 
@@ -31,8 +31,8 @@
       <div class="card-icon"><app-icon name="clock" [size]="20" /></div>
       <div class="card-content">
         <p class="card-label">Ventes en cours</p>
-        <h3 class="card-value">{{ summary().sales_en_cours }}</h3>
-        <p class="card-hint">{{ summary().tyres_en_cours }} pneus engagés</p>
+        <h3 class="card-value">{{ summaryLoaded() ? (summary().sales_en_cours) : '—' }}</h3>
+        <p class="card-hint">{{ summaryLoaded() ? (summary().tyres_en_cours) : '—' }} pneus engagés</p>
       </div>
     </div>
 
@@ -40,8 +40,8 @@
       <div class="card-icon"><app-icon name="banknote" [size]="20" /></div>
       <div class="card-content">
         <p class="card-label">CA {{ hasDateFilter() ? '(période)' : 'du jour' }}</p>
-        <h3 class="card-value">{{ (summary().ca_avec_facture + summary().ca_sans_facture) | number:'1.2-2' }} DH</h3>
-        <p class="card-hint">{{ summary().ca_avec_facture | number:'1.0-0' }} facturé · {{ summary().ca_sans_facture | number:'1.0-0' }} non</p>
+        <h3 class="card-value">{{ summaryLoaded() ? ((summary().ca_avec_facture + summary().ca_sans_facture) | number:'1.2-2') : '—' }} DH</h3>
+        <p class="card-hint">{{ summaryLoaded() ? (summary().ca_avec_facture | number:'1.0-0') : '—' }} facturé · {{ summaryLoaded() ? (summary().ca_sans_facture | number:'1.0-0') : '—' }} non</p>
       </div>
     </div>
 
@@ -49,8 +49,8 @@
       <div class="card-icon"><app-icon name="clock" [size]="20" /></div>
       <div class="card-content">
         <p class="card-label">Impayé</p>
-        <h3 class="card-value">{{ (summary().unpaid_en_cours + summary().unpaid_livre_monte) | number:'1.2-2' }} DH</h3>
-        <p class="card-hint">{{ summary().unpaid_en_cours | number:'1.0-0' }} en cours · {{ summary().unpaid_livre_monte | number:'1.0-0' }} livré/monté</p>
+        <h3 class="card-value">{{ summaryLoaded() ? ((summary().unpaid_en_cours + summary().unpaid_livre_monte) | number:'1.2-2') : '—' }} DH</h3>
+        <p class="card-hint">{{ summaryLoaded() ? (summary().unpaid_en_cours | number:'1.0-0') : '—' }} en cours · {{ summaryLoaded() ? (summary().unpaid_livre_monte | number:'1.0-0') : '—' }} livré/monté</p>
       </div>
     </div>
 
@@ -58,9 +58,9 @@
       <div class="card-icon"><app-icon name="target" [size]="20" /></div>
       <div class="card-content">
         <p class="card-label">Sélection filtrée</p>
-        <h3 class="card-value">{{ summary().filtered_total | number:'1.2-2' }} DH</h3>
+        <h3 class="card-value">{{ summaryLoaded() ? (summary().filtered_total | number:'1.2-2') : '—' }} DH</h3>
         <p class="card-hint">
-          {{ summary().filtered_count }} vente(s) · marge {{ summary().filtered_total ? (summary().filtered_margin / summary().filtered_total * 100 | number:'1.1-1') : '0' }}%
+          {{ summaryLoaded() ? (summary().filtered_count) : '—' }} vente(s) · marge {{ summaryLoaded() ? (summary().filtered_total ? (summary().filtered_margin / summary().filtered_total * 100 | number:'1.1-1') : '0') : '—' }}%
         </p>
       </div>
     </div>

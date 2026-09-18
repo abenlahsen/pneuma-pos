@@ -65,6 +65,13 @@ export class ServiceOrdersComponent implements OnInit {
   readonly loadErrorDetail = signal<string | null>(null);
   readonly lastLoadedAt = signal<Date | null>(null);
 
+  /**
+   * Refonte 2b : tant que le résumé n'est pas revenu, les cadrans affichent
+   * « — » et non 0. Un 0 affirme un chiffre — « CA du jour : 0,00 DH » — que
+   * l'on n'a pas encore, et qui restait affiché si la requête échouait.
+   */
+  readonly summaryLoaded = signal(false);
+
   readonly activeFilters = computed<ActiveFilter[]>(() => {
     const applied: ActiveFilter[] = [];
     const drop = (label: string, apply: () => void) => {
@@ -104,6 +111,7 @@ export class ServiceOrdersComponent implements OnInit {
   });
 
   isExporting = signal(false);
+
   exportError = signal('');
   showForm = signal(false);
   loadingEdit = signal(false);
@@ -295,7 +303,11 @@ export class ServiceOrdersComponent implements OnInit {
 
   loadSummary(): void {
     this.serviceOrderService.getSummary(this.buildFilters()).subscribe({
-      next: (s) => this.summary.set(s),
+      next: (s) => {
+        this.summary.set(s);
+        this.summaryLoaded.set(true);
+      },
+      error: () => this.summaryLoaded.set(false),
     });
   }
 

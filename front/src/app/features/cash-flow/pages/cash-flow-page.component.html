@@ -270,8 +270,8 @@
                pas le type ni la recherche : le libellé ne promet donc que la période. -->
           <span class="register-foot-totals">
             Sur la période :
-            <span class="foot-in">encaissé +{{ summary().income | number:'1.2-2' }}</span>
-            <span class="foot-out">décaissé −{{ summary().expenses | number:'1.2-2' }} DH</span>
+            <span class="foot-in">encaissé +{{ summaryLoaded() ? (summary().income | number:'1.2-2') : '—' }}</span>
+            <span class="foot-out">décaissé −{{ summaryLoaded() ? (summary().expenses | number:'1.2-2') : '—' }} DH</span>
           </span>
           <span style="font-size:11px;color:#8a5a00" *ngIf="!balanceColumnAvailable()">Solde progressif affiché uniquement sur le flux complet, première page</span>
           <div class="pagination" *ngIf="lastPage() > 1">

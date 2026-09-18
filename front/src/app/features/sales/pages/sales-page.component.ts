@@ -124,6 +124,13 @@ export class SalesPageComponent implements OnInit {
   readonly lastLoadedAt = signal<Date | null>(null);
 
   /**
+   * Refonte 2b : tant que le résumé n'est pas revenu, les cadrans affichent
+   * « — » et non 0. Un 0 affirme un chiffre — « CA du jour : 0,00 DH » — que
+   * l'on n'a pas encore, et qui restait affiché si la requête échouait.
+   */
+  readonly summaryLoaded = signal(false);
+
+  /**
    * Les filtres actifs, nommés et retirables un par un. Sert au message de
    * liste vide : sans cela il dit « Aucune vente trouvée » sans jamais dire
    * que trois filtres écartent tout le reste.
@@ -171,6 +178,7 @@ export class SalesPageComponent implements OnInit {
   }
 
   isExporting = signal(false);
+
   exportError = signal('');
   deletingSaleId = signal<number | null>(null);
   detailSale = signal<Sale | null>(null);
@@ -255,7 +263,11 @@ export class SalesPageComponent implements OnInit {
     });
 
     this.saleService.getSummary(filters).subscribe({
-      next: (summary) => this.summary.set(summary),
+      next: (summary) => {
+        this.summary.set(summary);
+        this.summaryLoaded.set(true);
+      },
+      error: () => this.summaryLoaded.set(false),
     });
   }
 

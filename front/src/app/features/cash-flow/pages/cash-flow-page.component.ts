@@ -68,6 +68,7 @@ export class CashFlowPageComponent implements OnInit {
   filterSearch = signal('');
   filterPartner = signal('');
   filterAmountMin = signal('');
+
   filterAmountMax = signal('');
 
   // ── Refonte 2b, §14c : les quatre états manquants ─────────────────────────
@@ -75,6 +76,13 @@ export class CashFlowPageComponent implements OnInit {
   readonly loadError = signal<string | null>(null);
   readonly loadErrorDetail = signal<string | null>(null);
   readonly lastLoadedAt = signal<Date | null>(null);
+
+  /**
+   * Refonte 2b : tant que le résumé n'est pas revenu, les cadrans affichent
+   * « — » et non 0. Un 0 affirme un chiffre — « CA du jour : 0,00 DH » — que
+   * l'on n'a pas encore, et qui restait affiché si la requête échouait.
+   */
+  readonly summaryLoaded = signal(false);
 
   readonly activeFilters = computed<ActiveFilter[]>(() => {
     const applied: ActiveFilter[] = [];
@@ -336,7 +344,11 @@ export class CashFlowPageComponent implements OnInit {
     });
 
     this.cashFlowService.getSummary(filters).subscribe({
-      next: (summary) => this.summary.set(summary),
+      next: (summary) => {
+        this.summary.set(summary);
+        this.summaryLoaded.set(true);
+      },
+      error: () => this.summaryLoaded.set(false),
     });
   }
 

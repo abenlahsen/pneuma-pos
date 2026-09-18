@@ -38,28 +38,28 @@
   <div class="kpi-band">
     <div class="kpi-cell">
       <span class="kpi-label">Valeur du stock</span>
-      <span class="kpi-value">{{ summary().total_purchase_value | number:'1.0-0' }}</span>
+      <span class="kpi-value">{{ summaryLoaded() ? (summary().total_purchase_value | number:'1.0-0') : '—' }}</span>
       <span class="kpi-hint">au prix d&apos;achat &middot; DH</span>
     </div>
     <div class="kpi-cell">
       <span class="kpi-label">Quantit&eacute;</span>
-      <span class="kpi-value">{{ summary().total_quantity | number:'1.0-0' }}</span>
-      <span class="kpi-hint">{{ summary().references_count ?? 0 }} r&eacute;f&eacute;rences &middot; {{ summary().depots_count ?? 0 }} d&eacute;p&ocirc;ts</span>
+      <span class="kpi-value">{{ summaryLoaded() ? (summary().total_quantity | number:'1.0-0') : '—' }}</span>
+      <span class="kpi-hint">{{ summaryLoaded() ? (summary().references_count ?? 0) : '—' }} r&eacute;f&eacute;rences &middot; {{ summaryLoaded() ? (summary().depots_count ?? 0) : '—' }} d&eacute;p&ocirc;ts</span>
     </div>
     <div class="kpi-cell">
       <span class="kpi-label">Sous seuil</span>
-      <span class="kpi-value">{{ summary().low_stock_count ?? 0 }}</span>
-      <span class="kpi-hint">moins d&apos;un mois de ventes &middot; dont {{ summary().zero_count ?? 0 }} &agrave; z&eacute;ro</span>
+      <span class="kpi-value">{{ summaryLoaded() ? (summary().low_stock_count ?? 0) : '—' }}</span>
+      <span class="kpi-hint">moins d&apos;un mois de ventes &middot; dont {{ summaryLoaded() ? (summary().zero_count ?? 0) : '—' }} &agrave; z&eacute;ro</span>
     </div>
     <div class="kpi-cell">
       <span class="kpi-label">Rotation</span>
-      <span class="kpi-value">{{ summary().coverage_days ?? '&mdash;' }}<small *ngIf="summary().coverage_days"> j</small></span>
+      <span class="kpi-value">{{ summaryLoaded() ? (summary().coverage_days ?? '&mdash;') : '—' }}<small *ngIf="summaryLoaded() && summary().coverage_days"> j</small></span>
       <span class="kpi-hint">couverture au rythme des 30 derniers jours</span>
     </div>
     <div class="kpi-cell">
       <span class="kpi-label">Dormant &gt; {{ summary().dormant_days ?? 180 }} j</span>
-      <span class="kpi-value">{{ summary().dormant_value ?? 0 | number:'1.0-0' }}</span>
-      <span class="kpi-hint">{{ summary().dormant_count ?? 0 }} r&eacute;f&eacute;rences &middot; DH</span>
+      <span class="kpi-value">{{ summaryLoaded() ? (summary().dormant_value ?? 0 | number:'1.0-0') : '—' }}</span>
+      <span class="kpi-hint">{{ summaryLoaded() ? (summary().dormant_count ?? 0) : '—' }} r&eacute;f&eacute;rences &middot; DH</span>
     </div>
   </div>
 
@@ -68,13 +68,13 @@
       <app-icon name="filter" [size]="14" /> Marque, d&eacute;p&ocirc;t, pays
     </button>
     <button type="button" class="chip-quick" [class.active]="filterLowStock()" (click)="toggleLowStockFilter()">
-      Sous seuil {{ summary().low_stock_count ?? 0 }}
+      Sous seuil {{ summaryLoaded() ? (summary().low_stock_count ?? 0) : '—' }}
     </button>
     <button type="button" class="chip-quick" [class.active]="filterDormant()" (click)="toggleDormantFilter()">
-      Dormant {{ summary().dormant_count ?? 0 }}
+      Dormant {{ summaryLoaded() ? (summary().dormant_count ?? 0) : '—' }}
     </button>
     <span class="stock-count">
-      {{ total() | number:'1.0-0' }} r&eacute;f&eacute;rence(s) &middot; {{ summary().total_quantity | number:'1.0-0' }} pneus &middot; {{ summary().total_purchase_value | number:'1.0-0' }} DH
+      {{ total() | number:'1.0-0' }} r&eacute;f&eacute;rence(s) &middot; {{ summaryLoaded() ? (summary().total_quantity | number:'1.0-0') : '—' }} pneus &middot; {{ summaryLoaded() ? (summary().total_purchase_value | number:'1.0-0') : '—' }} DH
     </span>
   </div>
 
