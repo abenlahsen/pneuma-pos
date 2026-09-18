@@ -53,6 +53,15 @@
   color: #dc2626;
 }
 
+.hint-text {
+  display: block;
+  margin-top: 0.45rem;
+  padding-left: 0.1rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: #6b7280;
+}
+
 @media (max-width: 768px) {
   .form-control {
     input[name='email'] {

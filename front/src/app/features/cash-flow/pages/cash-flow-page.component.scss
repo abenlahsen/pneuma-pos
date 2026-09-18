@@ -1,163 +1,397 @@
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
-$_red:      #ff2d37;
-$_text:     #0f172a;
-$_strong:   #1e293b;
-$_muted:    #64748b;
-$_dim:      #94a3b8;
-$_surface:  #ffffff;
-$_surface2: #f8fafc;
-$_border:   #e8edf3;
-$_border2:  #d0d9e4;
+// ── Refonte 2b, Cash Flow (gabarit B : contenu + volet droit) ─────────────────
+// Tout ce qui suit est local à cet écran : ajouter ces classes au mixin partagé
+// _page-layout.scss les dupliquerait dans les 24 autres écrans qui l'incluent et
+// ferait sauter leur budget de style (même convention qu'étape 2 / Service Auto).
 
-// ── Utility shims ─────────────────────────────────────────────────────────────
-.py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+.cash-panes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  align-items: start;
+  border: 1px solid #cfdcec;
+  background: #fff;
+}
 
-// ── Summary card content wrapper (not in mixin) ───────────────────────────────
-.card-content {
-  flex: 1;
+.cash-main {
+  min-width: 0;
+  border-right: 1px solid #cfdcec;
+}
+
+.cash-aside {
+  background: #f4f8fd;
+}
+
+// ── Projection ───────────────────────────────────────────────────────────────
+.projection-block {
+  padding: 15px 20px 14px;
+  border-bottom: 1px solid #cfdcec;
+}
+
+.projection-heads {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.projection-head--low {
+  margin-left: auto;
+  text-align: right;
+}
+
+.projection-label {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #4a5c75;
+}
+
+.projection-value {
+  display: block;
+  margin-top: 4px;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #0c1e33;
+
+  small { font-size: 14px; font-weight: 600; color: #4a5c75; }
+}
+
+.week-grid {
+  margin-top: 15px;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  border: 1px solid #cfdcec;
+}
+
+.week-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border-right: 1px solid #cfdcec;
+  &:last-child { border-right: none; }
+
+  &--low {
+    background: #fdf6e6;
+    .week-label, .week-balance, .week-net { color: #7a4f00; }
+    .week-bar { background: #d4a017; }
+  }
+}
+
+.week-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #4a5c75;
+}
+
+.week-bar-slot {
+  height: 44px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.week-bar {
+  display: block;
+  width: 100%;
+  background: #0c1e33;
+}
+
+.week-balance {
+  font-size: 11.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #0c1e33;
+}
+
+.week-net {
+  font-size: 9.5px;
+  color: #4a5c75;
+  font-variant-numeric: tabular-nums;
+  &--up { color: #15616d; }
+}
+
+
+// ── Barre du registre ────────────────────────────────────────────────────────
+.register-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 11px 20px;
+  border-bottom: 1px solid #cfdcec;
+  background: #f4f8fd;
+}
+
+
+.segmented {
+  display: flex;
+
+  button {
+    height: 30px;
+    padding: 0 11px;
+    border: 1px solid #cfdcec;
+    border-left: none;
+    background: #fff;
+    color: #41546e;
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:first-child { border-left: 1px solid #cfdcec; }
+    &.active { border-color: #0c1e33; background: #0c1e33; color: #fff; }
+  }
+
+  .seg-count {
+    margin-left: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 11px;
+  border: 1px solid #adc2da;
+  background: #fff;
+  color: #0c1e33;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.register-count {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: #4a5c75;
+  font-variant-numeric: tabular-nums;
+}
+
+// ── Registre : motif de ligne en grille CSS ──────────────────────────────────
+.register-head,
+.register-row {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr) 104px 112px 112px 116px 96px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
+}
+
+.register-head {
+  padding-top: 7px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid #0c1e33;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #4a5c75;
+}
+
+.num { text-align: right; }
+
+.register-row {
+  min-height: 50px;
+  border-bottom: 1px solid #e7eef8;
+  &:hover { background: #f8fafc; }
+  &--pending { background: #f4f8fd; }
+}
+
+.cell-date {
+  font-size: 12px;
+  color: #4a5c75;
+  font-variant-numeric: tabular-nums;
+}
+
+.cell-move { min-width: 0; }
+
+.move-main {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #0c1e33;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+.move-sub {
+  display: block;
+  font-size: 11px;
+  color: #4a5c75;
+}
+
+.cell-account {
+  font-size: 12px;
+  color: #4a5c75;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cell-out, .cell-in, .cell-balance {
+  font-variant-numeric: tabular-nums;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.cell-out { color: #c2181f; }
+.cell-in { color: #15616d; }
+.cell-balance { color: #0c1e33; font-weight: 500; }
+.dash { color: #adc2da; font-weight: 400; }
+
+.cell-actions {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+}
+
+.register-today {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 20px;
+  background: #0c1e33;
+  color: #fff;
+}
+
+
+
+
+.register-loading,
+.register-empty {
+  padding: 2rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #4a5c75;
+}
+
+.register-foot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 20px;
+  border-top: 1px solid #0c1e33;
+  background: #f4f8fd;
+  font-size: 12px;
+  color: #41546e;
+}
+
+.register-foot-totals {
+  font-variant-numeric: tabular-nums;
+  .foot-in { margin-left: 6px; color: #15616d; font-weight: 700; }
+  .foot-out { margin-left: 6px; color: #c2181f; font-weight: 700; }
+  .foot-net { margin-left: 6px; color: #0c1e33; font-weight: 700; }
+}
+
+
+.register-foot .pagination { margin-left: auto; }
+
+// ── Volet droit ──────────────────────────────────────────────────────────────
+.aside-block {
+  padding: 13px 17px;
+  border-bottom: 1px solid #cfdcec;
+  &--actions { display: flex; flex-direction: column; gap: 8px; border-bottom: none; }
+}
+
+.aside-title {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #4a5c75;
+  margin-bottom: 6px;
+}
+
+.aside-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid #cfdcec;
+  &:last-child { border-bottom: none; }
+
+  &--total {
+    .aside-name { font-weight: 600; color: #0c1e33; }
+    .aside-amount { font-size: 15px; }
+  }
+}
+
+.aside-name {
+  font-size: 12.5px;
+  color: #41546e;
   min-width: 0;
 }
 
-.summary-card.balance.negative {
-  border-top: 3px solid #ef4444;
-  .card-icon { background: rgba(239, 68, 68, 0.08); color: #dc2626; }
-  .card-value { color: #dc2626; }
-}
-
-// ── Pending section ───────────────────────────────────────────────────────────
-.pending-section {
-  margin-bottom: 1.25rem;
-  overflow: hidden;
-  border-left: 4px solid #f59e0b;
-}
-
-.pending-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.875rem 1.25rem;
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.06) 0%, $_surface2 100%);
-  border-bottom: 1px solid rgba(245, 158, 11, 0.15);
-  cursor: pointer;
-  user-select: none;
-  transition: background 0.15s;
-
-  &:hover { background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, #f1f5f9 100%); }
-}
-
-.pending-title {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #a16207;
-  letter-spacing: -0.01em;
-}
-
-.pending-icon { font-size: 1rem; }
-
-.badge-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.4rem;
-  height: 1.4rem;
-  padding: 0 0.35rem;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  background: rgba(245, 158, 11, 0.15);
-  color: #a16207;
-  border: 1px solid rgba(245, 158, 11, 0.25);
-}
-
-.pending-amounts {
-  display: flex;
-  align-items: center;
-  gap: 0.875rem;
-}
-
-.collapse-icon {
-  font-size: 0.7rem;
-  color: $_muted;
-  margin-left: 0.25rem;
-}
-
-.pending-spinner {
-  margin-left: 0.25rem;
-}
-
-.pending-row td { background: rgba(245, 158, 11, 0.03); }
-
-// ── Settled section header ────────────────────────────────────────────────────
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.875rem 1.25rem;
-  border-bottom: 1px solid $_border;
-  background: $_surface2;
-}
-
-.section-title {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: $_text;
-  letter-spacing: -0.01em;
-}
-
-.section-count {
-  font-size: 0.8rem;
-  color: $_muted;
-  font-weight: 500;
-}
-
-// ── Amount colors ─────────────────────────────────────────────────────────────
-.amount-income {
-  color: #15803d;
+.aside-amount {
+  font-size: 14px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
+  color: #0c1e33;
+  white-space: nowrap;
+
+  &--due { color: #c2181f; }
 }
 
-.amount-expense {
-  color: #dc2626;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-}
-
-// ── Badge variants for transactions ───────────────────────────────────────────
-.badge-income  { background: rgba(34, 197, 94, 0.10);  color: #15803d; }
-.badge-expense { background: rgba(239, 68, 68, 0.10);  color: #dc2626; }
-
-// ── Method badge ──────────────────────────────────────────────────────────────
-.method-badge {
-  display: inline-flex;
+.aside-bar-line {
+  display: flex;
   align-items: center;
-  padding: 0.15rem 0.5rem;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  background: $_surface2;
-  color: $_muted;
-  border: 1px solid $_border2;
-  white-space: nowrap;
+  gap: 8px;
+  margin-top: 7px;
 }
 
-// ── Description column ────────────────────────────────────────────────────────
-.desc-col {
-  min-width: 280px;
-  max-width: 420px;
-  white-space: nowrap;
+.aside-bar-name {
+  width: 88px;
+  font-size: 12px;
+  color: #41546e;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-// ── Row tints ─────────────────────────────────────────────────────────────────
-.income-row  td { border-left: 2px solid rgba(34, 197, 94, 0.25); }
-.expense-row td { border-left: 2px solid rgba(239, 68, 68, 0.2); }
+.aside-bar-track {
+  flex: 1;
+  height: 7px;
+  background: #e7eef8;
+}
+
+.aside-bar-fill {
+  display: block;
+  height: 100%;
+  background: #0c1e33;
+}
+
+.aside-bar-amount {
+  width: 56px;
+  text-align: right;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #0c1e33;
+}
+
+.aside-action {
+  height: 34px;
+  border: 1px solid #adc2da;
+  background: #fff;
+  color: #0c1e33;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}

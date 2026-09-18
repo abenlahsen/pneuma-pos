@@ -4,16 +4,26 @@ import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { TransactionFormComponent } from '../components/transaction-form/transaction-form.component';
+import { TransferFormComponent } from '../../accounts/transfer-form/transfer-form.component';
 import { CashFlowService } from '../data-access/cash-flow.service';
 import {
+  CashFlowProjection,
   PaginatedResponse,
   Transaction,
   TransactionFilters,
   TransactionPayload,
   TransactionSummary,
 } from '../models/transaction.model';
+import { TransferPayload } from '../../accounts/models/account.model';
+
+/** Une ligne du registre unique : échéance à venir, marqueur « aujourd'hui », ou mouvement passé. */
+export interface RegisterRow {
+  kind: 'pending' | 'today' | 'settled';
+  transaction?: Transaction;
+  /** Solde progressif à cette date. null quand il n'est pas calculable (pages suivantes). */
+  balance: number | null;
+}
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
-import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 import { AccountService } from '../../accounts/data-access/account.service';
 import { Account } from '../../accounts/models/account.model';
 import { PurchasePaymentDetailComponent } from '../../purchases/components/purchase-payment-detail/purchase-payment-detail.component';
@@ -24,7 +34,7 @@ import { TransactionCategory } from '../../transaction-categories/models/transac
 @Component({
   selector: 'app-cash-flow-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TransactionFormComponent, AutoRefreshControlComponent, SortIconComponent, PurchasePaymentDetailComponent, SalePaymentDetailComponent, IconComponent],
+  imports: [CommonModule, FormsModule, TransactionFormComponent, TransferFormComponent, AutoRefreshControlComponent, PurchasePaymentDetailComponent, SalePaymentDetailComponent, IconComponent],
   templateUrl: './cash-flow-page.component.html',
   styleUrls: ['./cash-flow-page.component.scss'],
 })
@@ -51,8 +61,9 @@ export class CashFlowPageComponent implements OnInit {
   filterPartner = signal('');
   filterAmountMin = signal('');
   filterAmountMax = signal('');
-  sortBy = signal('');
-  sortDirection = signal<'asc' | 'desc'>('asc');
+
+  /** Date du jour, pour le marqueur « Aujourd'hui » du registre. */
+  readonly today = new Date();
 
   pendingTransactions = signal<Transaction[]>([]);
   loadingPending = signal(false);
@@ -66,6 +77,103 @@ export class CashFlowPageComponent implements OnInit {
 
   incomeCategoryTree = signal<TransactionCategory[]>([]);
   expenseCategoryTree = signal<TransactionCategory[]>([]);
+
+  // ── Refonte 2b : projection, registre unique, volet droit ──────────────────
+  readonly projection = signal<CashFlowProjection | null>(null);
+  readonly loadingProjection = signal(false);
+  readonly filtersExpanded = signal(false);
+  readonly registerTab = signal<'tout' | 'a_venir' | 'entrees' | 'sorties'>('tout');
+  readonly showTransferForm = signal(false);
+
+  /** Trésorerie réelle du jour : somme des soldes courants des comptes actifs. */
+  readonly todayBalance = computed(() =>
+    this.projection()?.today_balance
+      ?? this.accounts().reduce((sum, a) => sum + Number(a.current_balance || 0), 0)
+  );
+
+  /** Chèques/effets émis ou reçus mais pas encore encaissés (solde attendu − solde courant). */
+  readonly pendingNet = computed(() =>
+    this.accounts().reduce(
+      (sum, a) => sum + (Number(a.expected_balance || 0) - Number(a.current_balance || 0)),
+      0,
+    )
+  );
+
+  readonly availableBalance = computed(() =>
+    this.accounts().reduce((sum, a) => sum + Number(a.expected_balance || 0), 0)
+  );
+
+  /** Échelle des barres : la plus haute semaine fait 100 %. */
+  readonly maxWeekBalance = computed(() => {
+    const weeks = this.projection()?.weeks ?? [];
+    return Math.max(1, ...weeks.map((w) => Math.abs(w.balance)));
+  });
+
+  readonly maxExpenseCategory = computed(() => {
+    const rows = this.projection()?.expenses_by_category ?? [];
+    return Math.max(1, ...rows.map((r) => Math.abs(r.amount)));
+  });
+
+  /**
+   * Un solde progressif n'a de sens que sur le flux complet des mouvements :
+   * dès qu'un filtre retire des lignes (ou qu'on quitte la première page, dont
+   * le point d'ancrage est la trésorerie réelle du jour), la colonne afficherait
+   * une somme partielle qui ressemble à un solde sans en être un. Dans ces cas
+   * elle reste vide.
+   */
+  readonly balanceColumnAvailable = computed(() =>
+    this.currentPage() === 1
+    && !this.filterType()
+    && !this.filterAccount()
+    && !this.filterCategory()
+    && !this.filterSubcategory()
+    && !this.filterPerson()
+    && !this.filterPartner()
+    && !this.filterSearch()
+    && !this.filterDateFrom()
+    && !this.filterDateTo()
+    && !this.filterAmountMin()
+    && !this.filterAmountMax()
+  );
+
+  /**
+   * Registre unique : échéances à venir (ascendant) → marqueur « aujourd'hui »
+   * → mouvements passés (descendant), avec le solde progressif en colonne.
+   */
+  readonly registerRows = computed<RegisterRow[]>(() => {
+    const rows: RegisterRow[] = [];
+    const anchor = this.todayBalance();
+    const withBalance = this.balanceColumnAvailable();
+
+    let running = anchor;
+    const pending = [...this.pendingTransactions()].sort((a, b) => a.date.localeCompare(b.date));
+    for (const t of pending) {
+      running = this.round2(running + this.signedAmount(t));
+      rows.push({ kind: 'pending', transaction: t, balance: withBalance ? running : null });
+    }
+
+    if (this.registerTab() === 'a_venir') {
+      return rows;
+    }
+
+    rows.push({ kind: 'today', balance: anchor });
+
+    running = anchor;
+    for (const t of this.transactions()) {
+      rows.push({ kind: 'settled', transaction: t, balance: withBalance ? running : null });
+      running = this.round2(running - this.signedAmount(t));
+    }
+
+    return rows;
+  });
+
+  private signedAmount(t: Transaction): number {
+    return t.type === 'income' ? Number(t.amount) : -Number(t.amount);
+  }
+
+  private round2(value: number): number {
+    return Math.round(value * 100) / 100;
+  }
 
   filterCategoryOptions = computed<TransactionCategory[]>(() => {
     if (this.filterType() === 'income') return this.incomeCategoryTree();
@@ -90,6 +198,51 @@ export class CashFlowPageComponent implements OnInit {
     this.loadFilters();
     this.loadCategoryTrees();
     this.loadData();
+    this.loadProjection();
+  }
+
+  loadProjection(): void {
+    this.loadingProjection.set(true);
+    this.cashFlowService.getProjection().subscribe({
+      next: (projection) => {
+        this.projection.set(projection);
+        this.loadingProjection.set(false);
+      },
+      error: () => this.loadingProjection.set(false),
+    });
+  }
+
+  /** Onglets rapides du registre. Entrées/Sorties passent par le filtre type existant. */
+  selectRegisterTab(tab: 'tout' | 'a_venir' | 'entrees' | 'sorties'): void {
+    this.registerTab.set(tab);
+
+    const nextType = tab === 'entrees' ? 'income' : tab === 'sorties' ? 'expense' : '';
+    if (this.filterType() !== nextType) {
+      this.filterType.set(nextType);
+      this.filterCategory.set('');
+      this.filterSubcategory.set('');
+      this.applyFilters();
+    }
+  }
+
+  openTransferForm(): void {
+    this.showTransferForm.set(true);
+  }
+
+  closeTransferForm(): void {
+    this.showTransferForm.set(false);
+  }
+
+  onTransferSubmit(payload: TransferPayload): void {
+    this.accountService.transfer(payload).subscribe({
+      next: () => {
+        this.closeTransferForm();
+        this.loadAccounts();
+        this.loadData();
+        this.loadProjection();
+      },
+      error: (err) => alert(err?.error?.message || 'Le transfert a échoué.'),
+    });
   }
 
   loadCategoryTrees(): void {
@@ -159,23 +312,10 @@ export class CashFlowPageComponent implements OnInit {
       partner_id: this.filterPartner(),
       amount_min: this.filterAmountMin(),
       amount_max: this.filterAmountMax(),
-      sort_by: this.sortBy(),
-      sort_direction: this.sortDirection(),
     };
   }
 
   applyFilters(): void {
-    this.currentPage.set(1);
-    this.loadData();
-  }
-
-  toggleSort(column: string): void {
-    if (this.sortBy() === column) {
-      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
-    } else {
-      this.sortBy.set(column);
-      this.sortDirection.set('asc');
-    }
     this.currentPage.set(1);
     this.loadData();
   }
@@ -192,8 +332,6 @@ export class CashFlowPageComponent implements OnInit {
     this.filterPartner.set('');
     this.filterAmountMin.set('');
     this.filterAmountMax.set('');
-    this.sortBy.set('');
-    this.sortDirection.set('asc');
     this.currentPage.set(1);
     this.loadData();
   }
@@ -245,6 +383,8 @@ export class CashFlowPageComponent implements OnInit {
           this.closeForm();
           this.loadData();
           this.loadFilters();
+          this.loadAccounts();
+          this.loadProjection();
         },
         error: (err) => {
           const msg = err?.error?.message || 'Erreur lors de la modification.';
@@ -257,6 +397,8 @@ export class CashFlowPageComponent implements OnInit {
           this.closeForm();
           this.loadData();
           this.loadFilters();
+          this.loadAccounts();
+          this.loadProjection();
         },
       });
     }
@@ -274,6 +416,8 @@ export class CashFlowPageComponent implements OnInit {
         this.deletingTransactionId.set(null);
         this.loadData();
         this.loadFilters();
+        this.loadAccounts();
+        this.loadProjection();
       },
       error: (err) => {
         this.deletingTransactionId.set(null);

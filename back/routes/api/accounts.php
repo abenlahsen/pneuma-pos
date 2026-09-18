@@ -18,6 +18,7 @@ Route::post('accounts/transfer', [AccountController::class, 'transfer'])->middle
 Route::middleware('permission:view cash-flow')->group(function () {
     Route::get('/transactions-summary', [TransactionController::class, 'summary']);
     Route::get('/transactions-filters', [TransactionController::class, 'filters']);
+    Route::get('/transactions-projection', [TransactionController::class, 'projection']);
     Route::get('transactions', [TransactionController::class, 'index']);
     Route::get('transactions/{transaction}', [TransactionController::class, 'show']);
 });

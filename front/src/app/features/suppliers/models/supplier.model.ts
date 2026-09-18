@@ -5,6 +5,8 @@ export interface Supplier {
   phone?: string;
   email?: string;
   address?: string;
+  /** Délai contractuel de règlement, en jours — alimente la projection de trésorerie. */
+  payment_terms_days?: number | null;
   created_at?: string;
   updated_at?: string;
 }

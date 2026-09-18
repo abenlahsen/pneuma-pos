@@ -20,7 +20,8 @@ export class SupplierFormComponent implements OnInit, OnChanges {
     contact_person: '',
     phone: '',
     email: '',
-    address: ''
+    address: '',
+    payment_terms_days: null,
   };
 
   ngOnInit() {
@@ -41,6 +42,7 @@ export class SupplierFormComponent implements OnInit, OnChanges {
         phone: this.supplier.phone ?? '',
         email: this.supplier.email ?? '',
         address: this.supplier.address ?? '',
+        payment_terms_days: this.supplier.payment_terms_days ?? null,
       };
       return;
     }
@@ -50,7 +52,8 @@ export class SupplierFormComponent implements OnInit, OnChanges {
       contact_person: '',
       phone: '',
       email: '',
-      address: ''
+      address: '',
+      payment_terms_days: null,
     };
   }
 

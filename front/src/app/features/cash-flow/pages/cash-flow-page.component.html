@@ -2,351 +2,333 @@
   <div class="header">
     <div class="title-section">
       <h1>Cash Flow</h1>
-      <p class="subtitle">Gérez vos revenus et dépenses</p>
+      <p class="subtitle">Trésorerie, échéances et projection</p>
     </div>
     <div class="actions">
       <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create cash-flow')">
         + Nouvelle Transaction
       </button>
-      <app-auto-refresh-control pageKey="cash-flow" (refresh)="loadData()" />
+      <app-auto-refresh-control pageKey="cash-flow" (refresh)="loadData(); loadProjection(); loadAccounts()" />
     </div>
   </div>
 
-  <div class="summary-cards">
-    <div class="card summary-card income">
-      <div class="card-icon"><app-icon name="trending-up" [size]="20" /></div>
-      <div class="card-content">
-        <p class="card-label">Revenus</p>
-        <h3 class="card-value">{{ summary().income | number:'1.2-2' }} DH</h3>
-      </div>
-    </div>
-    <div class="card summary-card expense">
-      <div class="card-icon"><app-icon name="trending-down" [size]="20" /></div>
-      <div class="card-content">
-        <p class="card-label">Dépenses</p>
-        <h3 class="card-value">{{ summary().expenses | number:'1.2-2' }} DH</h3>
-      </div>
-    </div>
-    <div class="card summary-card balance" [class.negative]="summary().balance < 0">
-      <div class="card-icon"><app-icon name="target" [size]="20" /></div>
-      <div class="card-content">
-        <p class="card-label">Solde</p>
-        <h3 class="card-value">{{ summary().balance | number:'1.2-2' }} DH</h3>
-      </div>
-    </div>
-  </div>
+  <!-- Gabarit B : contenu principal + volet droit (refonte 2b) -->
+  <div class="cash-panes">
 
-  <div class="card filters-section">
-    <div class="card-body">
-      <div class="filters-grid">
-        <div class="form-group">
-          <label>Rechercher</label>
-          <input
-            type="text"
-            class="form-control"
-            [ngModel]="filterSearch()"
-            (ngModelChange)="filterSearch.set($event)"
-            placeholder="Description..."
-            (keyup.enter)="applyFilters()"
-          />
+    <div class="cash-main">
+
+      <!-- Projection 6 semaines -->
+      <div class="projection-block">
+        <div class="projection-heads">
+          <span class="projection-head">
+            <span class="projection-label">Trésorerie aujourd'hui</span>
+            <span class="projection-value">{{ todayBalance() | number:'1.2-2' }} <small>DH</small></span>
+          </span>
+          <span class="projection-head projection-head--low" *ngIf="projection()?.low_point as low">
+            <span class="projection-label" style="color:#8a5a00">Point bas projeté · {{ low.label }}</span>
+            <span class="projection-value" style="font-size:22px;color:#8a5a00">{{ low.balance | number:'1.2-2' }} <small style="color:#7a4f00">DH</small></span>
+          </span>
         </div>
-        <div class="form-group">
-          <label>Type</label>
-          <select class="form-control" [ngModel]="filterType()" (ngModelChange)="filterType.set($event); filterCategory.set(''); filterSubcategory.set(''); applyFilters()">
-            <option value="">Tous</option>
-            <option value="income">Revenus</option>
-            <option value="expense">Dépenses</option>
-          </select>
+
+        <div class="week-grid" *ngIf="projection() as proj">
+          <span class="week-cell" *ngFor="let week of proj.weeks"
+            [class.week-cell--low]="proj.low_point && week.start === proj.low_point.start">
+            <span class="week-label">{{ week.label }}</span>
+            <span class="week-bar-slot">
+              <span class="week-bar"
+                [style.height.%]="maxWeekBalance() ? (week.balance < 0 ? 100 : (week.balance / maxWeekBalance()) * 100) : 2"
+                [style.background]="week.balance < 0 ? '#c2181f' : null"></span>
+            </span>
+            <span class="week-balance">{{ week.balance | number:'1.0-0' }}</span>
+            <span class="week-net" [class.week-net--up]="week.net > 0">{{ week.net > 0 ? '+' : '' }}{{ week.net | number:'1.0-0' }}</span>
+          </span>
         </div>
-        <div class="form-group">
-          <label>Compte</label>
-          <select class="form-control" [ngModel]="filterAccount()" (ngModelChange)="filterAccount.set($event); applyFilters()">
-            <option value="">Tous</option>
-            @for (acc of filterOptions().accounts; track acc.id) {
-              <option [value]="acc.id">{{ acc.name }}</option>
-            }
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Catégorie</label>
-          <select class="form-control" [ngModel]="filterCategory()" (ngModelChange)="filterCategory.set($event); filterSubcategory.set(''); applyFilters()">
-            <option value="">Toutes</option>
-            @for (cat of filterCategoryOptions(); track cat.id) {
-              <option [value]="cat.name">{{ cat.name }}</option>
-            }
-          </select>
-        </div>
-        @if (filterSubcategoryOptions().length > 0) {
-          <div class="form-group">
-            <label>Sous-catégorie</label>
-            <select class="form-control" [ngModel]="filterSubcategory()" (ngModelChange)="filterSubcategory.set($event); applyFilters()">
-              <option value="">Toutes</option>
-              @for (sub of filterSubcategoryOptions(); track sub.id) {
-                <option [value]="sub.name">{{ sub.name }}</option>
-              }
-            </select>
-          </div>
-        }
-        <div class="form-group">
-          <label>Personne</label>
-          <select class="form-control" [ngModel]="filterPerson()" (ngModelChange)="filterPerson.set($event); applyFilters()">
-            <option value="">Toutes</option>
-            @for (person of filterOptions().persons; track person) {
-              <option [value]="person">{{ person }}</option>
-            }
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Partenaire</label>
-          <select class="form-control" [ngModel]="filterPartner()" (ngModelChange)="filterPartner.set($event); applyFilters()">
-            <option value="">Tous</option>
-            @for (p of filterOptions().partners; track p.id) {
-              <option [value]="p.id">{{ p.name }}</option>
-            }
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Du</label>
-          <input type="date" class="form-control" [ngModel]="filterDateFrom()" (ngModelChange)="filterDateFrom.set($event); applyFilters()" />
-        </div>
-        <div class="form-group">
-          <label>Au</label>
-          <input type="date" class="form-control" [ngModel]="filterDateTo()" (ngModelChange)="filterDateTo.set($event); applyFilters()" />
-        </div>
-        <div class="form-group">
-          <label>Montant min (DH)</label>
-          <input type="number" class="form-control" min="0" step="0.01"
-            [ngModel]="filterAmountMin()" (ngModelChange)="filterAmountMin.set($event)"
-            (change)="applyFilters()" placeholder="0.00" />
-        </div>
-        <div class="form-group">
-          <label>Montant max (DH)</label>
-          <input type="number" class="form-control" min="0" step="0.01"
-            [ngModel]="filterAmountMax()" (ngModelChange)="filterAmountMax.set($event)"
-            (change)="applyFilters()" placeholder="∞" />
-        </div>
-        <div class="filter-actions">
-          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher"><app-icon name="search" [size]="14" /></button>
-          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser"><app-icon name="close" [size]="14" /></button>
-        </div>
+
+        <p style="margin:9px 0 0;font-size:11.5px;line-height:1.5;color:#41546e">
+          Projection à partir des échéances connues : achats à régler au délai contractuel du fournisseur,
+          impayés clients au délai réellement observé, charges récurrentes lissées
+          (≈ {{ projection()?.recurring_weekly_estimate ?? 0 | number:'1.0-0' }} DH / semaine).
+        </p>
       </div>
-    </div>
-  </div>
 
-  @if (loadingPending() || pendingTransactions().length > 0) {
-    <div class="card pending-section">
-      <div class="pending-header" (click)="pendingCollapsed.set(!pendingCollapsed())">
-        <div class="pending-title">
-          <span class="pending-icon"><app-icon name="clock" [size]="14" /></span>
-          <span>Transactions à venir</span>
-          @if (loadingPending()) {
-            <span class="inline-spinner pending-spinner"></span>
-          } @else {
-            <span class="badge-count">{{ pendingTransactions().length }}</span>
-          }
-        </div>
-        <div class="pending-amounts">
-          @if (summary().pending_income > 0) {
-            <span class="amount-income">+{{ summary().pending_income | number:'1.2-2' }} DH</span>
-          }
-          @if (summary().pending_expense > 0) {
-            <span class="amount-expense">-{{ summary().pending_expense | number:'1.2-2' }} DH</span>
-          }
-          <app-icon class="collapse-icon" [name]="pendingCollapsed() ? 'chevron-right' : 'chevron-down'" [size]="12" />
-        </div>
-      </div>
-      @if (!pendingCollapsed()) {
-        <div class="table-responsive">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Actions</th>
-                <th>Échéance</th>
-                <th>Montant</th>
-                <th>Type</th>
-                <th>Compte</th>
-                <th>Méthode</th>
-                <th>Catégorie</th>
-                <th class="desc-col">Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              @if (loadingPending()) {
-                <tr>
-                  <td colspan="8" class="text-center py-4">
-                    <div class="spinner"></div>
-                    Chargement...
-                  </td>
-                </tr>
-              } @else {
-                @for (t of pendingTransactions(); track t.id) {
-                  <tr [class.income-row]="t.type === 'income'" [class.expense-row]="t.type === 'expense'" class="pending-row">
-                    <td class="actions-cell">
-                      <button
-                        *ngIf="t.purchase_payment_id"
-                        (click)="openPaymentView(t)"
-                        class="btn-icon btn-view"
-                        title="Voir le détail du paiement"
-                      ><app-icon name="view" [size]="14" /></button>
-                      <button
-                        *ngIf="t.sale_payment_id"
-                        (click)="openSalePaymentView(t)"
-                        class="btn-icon btn-view"
-                        title="Voir le détail du paiement"
-                      ><app-icon name="view" [size]="14" /></button>
-                      <button
-                        (click)="openEditForm(t)"
-                        class="btn-icon btn-edit"
-                        title="Modifier"
-                        *ngIf="authService.hasPermission('edit cash-flow')"
-                        [disabled]="deletingTransactionId() === t.id"
-                      ><app-icon name="edit" [size]="14" /></button>
-                      <button
-                        (click)="deleteTransaction(t)"
-                        class="btn-icon btn-delete"
-                        title="Supprimer"
-                        *ngIf="authService.hasPermission('delete cash-flow')"
-                        [disabled]="deletingTransactionId() === t.id"
-                      >
-                        <span *ngIf="deletingTransactionId() !== t.id"><app-icon name="trash" [size]="14" /></span>
-                        <span *ngIf="deletingTransactionId() === t.id" class="inline-spinner"></span>
-                      </button>
-                    </td>
-                    <td class="date-cell">{{ t.date | date:'dd/MM/yyyy' }}</td>
-                    <td class="amount-cell">
-                      <span [class.amount-income]="t.type === 'income'" [class.amount-expense]="t.type === 'expense'">
-                        {{ t.type === 'expense' ? '-' : '+' }}{{ t.amount | number:'1.2-2' }} DH
-                      </span>
-                    </td>
-                    <td>
-                      <span class="badge" [class.badge-income]="t.type === 'income'" [class.badge-expense]="t.type === 'expense'">
-                        {{ t.type === 'income' ? 'Revenu' : 'Dépense' }}
-                      </span>
-                    </td>
-                    <td>{{ t.account?.name || '—' }}</td>
-                    <td><span class="method-badge">{{ t.method }}</span></td>
-                    <td>{{ t.category || '—' }}</td>
-                    <td class="desc-col" [title]="t.description">{{ t.description }}</td>
-                  </tr>
-                } @empty {
-                  <tr>
-                    <td colspan="8" class="empty-state">Aucune transaction à venir.</td>
-                  </tr>
-                }
-              }
-            </tbody>
-          </table>
-        </div>
-      }
-    </div>
-  }
-
-  <div class="card table-card">
-    <div class="section-header">
-      <span class="section-title">Transactions réalisées</span>
-      <span class="section-count">{{ total() }} résultat(s)</span>
-    </div>
-    <div class="table-responsive">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Actions</th>
-            <th class="sortable" (click)="toggleSort('date')">Date <app-sort-icon [active]="sortBy() === 'date'" [dir]="sortDirection()" /></th>
-            <th class="sortable" (click)="toggleSort('amount')">Montant <app-sort-icon [active]="sortBy() === 'amount'" [dir]="sortDirection()" /></th>
-            <th class="sortable" (click)="toggleSort('type')">Type <app-sort-icon [active]="sortBy() === 'type'" [dir]="sortDirection()" /></th>
-            <th>Compte</th>
-            <th class="sortable" (click)="toggleSort('category')">Catégorie <app-sort-icon [active]="sortBy() === 'category'" [dir]="sortDirection()" /></th>
-            <th class="sortable desc-col" (click)="toggleSort('description')">Description <app-sort-icon [active]="sortBy() === 'description'" [dir]="sortDirection()" /></th>
-            <th class="sortable" (click)="toggleSort('created_at')">Créé le <app-sort-icon [active]="sortBy() === 'created_at'" [dir]="sortDirection()" /></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngIf="loading()">
-            <td colspan="7" class="text-center py-4">
-              <div class="spinner"></div>
-              Chargement...
-            </td>
-          </tr>
-          @for (t of transactions(); track t.id) {
-            <tr [class.income-row]="t.type === 'income'" [class.expense-row]="t.type === 'expense'">
-              <td class="actions-cell">
-                <button
-                  *ngIf="t.purchase_payment_id"
-                  (click)="openPaymentView(t)"
-                  class="btn-icon btn-view"
-                  title="Voir le détail du paiement"
-                >
-                  <app-icon name="view" [size]="14" />
-                </button>
-                <button
-                  *ngIf="t.sale_payment_id"
-                  (click)="openSalePaymentView(t)"
-                  class="btn-icon btn-view"
-                  title="Voir le détail du paiement"
-                >
-                  <app-icon name="view" [size]="14" />
-                </button>
-                <button
-                  (click)="openEditForm(t)"
-                  class="btn-icon btn-edit"
-                  title="Modifier"
-                  *ngIf="authService.hasPermission('edit cash-flow')"
-                  [disabled]="deletingTransactionId() === t.id"
-                >
-                  <app-icon name="edit" [size]="14" />
-                </button>
-                <button
-                  (click)="deleteTransaction(t)"
-                  class="btn-icon btn-delete"
-                  title="Supprimer"
-                  *ngIf="authService.hasPermission('delete cash-flow')"
-                  [disabled]="deletingTransactionId() === t.id"
-                >
-                  <span *ngIf="deletingTransactionId() !== t.id"><app-icon name="trash" [size]="14" /></span>
-                  <span *ngIf="deletingTransactionId() === t.id" class="inline-spinner"></span>
-                </button>
-              </td>
-              <td class="date-cell">{{ t.date | date:'dd/MM/yyyy' }}</td>
-              <td class="amount-cell">
-                <span [class.amount-income]="t.type === 'income'" [class.amount-expense]="t.type === 'expense'">
-                  {{ t.type === 'expense' ? '-' : '+' }}{{ t.amount | number:'1.2-2' }} DH
-                </span>
-              </td>
-              <td>
-                <span class="badge" [class.badge-income]="t.type === 'income'" [class.badge-expense]="t.type === 'expense'">
-                  {{ t.type === 'income' ? 'Revenu' : 'Dépense' }}
-                </span>
-              </td>
-              <td>{{ t.account?.name || '—' }}</td>
-              <td>{{ t.category || '—' }}</td>
-              <td class="desc-col" [title]="t.description">{{ t.description }}</td>
-              <td>{{ t.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
-            </tr>
-          } @empty {
-            <tr *ngIf="transactions().length === 0">
-              <td colspan="7" class="empty-state">
-                @if (!loading()) {
-                  <span>Aucune transaction trouvée.</span>
-                }
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-
-    <div class="pagination-wrapper" *ngIf="lastPage() > 1">
-      <div class="pagination-info">{{ total() }} résultats</div>
-      <div class="pagination">
-        <button class="btn-page" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">&laquo;</button>
-        @for (page of pages; track page) {
-          <button class="btn-page" [class.active]="page === currentPage()" (click)="goToPage(page)">
-            {{ page }}
+      <!-- Barre du registre -->
+      <div class="register-bar">
+        <span style="font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#0c1e33">Registre</span>
+        <div class="segmented">
+          <button type="button" [class.active]="registerTab() === 'tout'" (click)="selectRegisterTab('tout')">TOUT</button>
+          <button type="button" [class.active]="registerTab() === 'a_venir'" (click)="selectRegisterTab('a_venir')">
+            À VENIR <span class="seg-count">{{ pendingTransactions().length }}</span>
           </button>
-        }
-        <button class="btn-page" [disabled]="currentPage() === lastPage()" (click)="goToPage(currentPage() + 1)">&raquo;</button>
+          <button type="button" style="color:#15616d" [class.active]="registerTab() === 'entrees'" (click)="selectRegisterTab('entrees')">ENTRÉES</button>
+          <button type="button" style="color:#c2181f" [class.active]="registerTab() === 'sorties'" (click)="selectRegisterTab('sorties')">SORTIES</button>
+        </div>
+        <button type="button" class="filter-toggle" (click)="filtersExpanded.set(!filtersExpanded())">
+          <app-icon name="filter" [size]="14" /> Compte, catégorie, méthode
+        </button>
+        <span class="register-count">{{ total() }} mouvement(s)</span>
+      </div>
+
+      <!-- Filtres (repliés par défaut) -->
+      <div class="filters-section card" *ngIf="filtersExpanded()">
+        <div class="card-body">
+          <div class="filters-grid">
+            <div class="form-group">
+              <label>Rechercher</label>
+              <input
+                type="text"
+                class="form-control"
+                [ngModel]="filterSearch()"
+                (ngModelChange)="filterSearch.set($event)"
+                placeholder="Description..."
+                (keyup.enter)="applyFilters()"
+              />
+            </div>
+            <div class="form-group">
+              <label>Type</label>
+              <select class="form-control" [ngModel]="filterType()" (ngModelChange)="filterType.set($event); filterCategory.set(''); filterSubcategory.set(''); applyFilters()">
+                <option value="">Tous</option>
+                <option value="income">Revenus</option>
+                <option value="expense">Dépenses</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Compte</label>
+              <select class="form-control" [ngModel]="filterAccount()" (ngModelChange)="filterAccount.set($event); applyFilters()">
+                <option value="">Tous</option>
+                @for (acc of filterOptions().accounts; track acc.id) {
+                  <option [value]="acc.id">{{ acc.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Catégorie</label>
+              <select class="form-control" [ngModel]="filterCategory()" (ngModelChange)="filterCategory.set($event); filterSubcategory.set(''); applyFilters()">
+                <option value="">Toutes</option>
+                @for (cat of filterCategoryOptions(); track cat.id) {
+                  <option [value]="cat.name">{{ cat.name }}</option>
+                }
+              </select>
+            </div>
+            @if (filterSubcategoryOptions().length > 0) {
+              <div class="form-group">
+                <label>Sous-catégorie</label>
+                <select class="form-control" [ngModel]="filterSubcategory()" (ngModelChange)="filterSubcategory.set($event); applyFilters()">
+                  <option value="">Toutes</option>
+                  @for (sub of filterSubcategoryOptions(); track sub.id) {
+                    <option [value]="sub.name">{{ sub.name }}</option>
+                  }
+                </select>
+              </div>
+            }
+            <div class="form-group">
+              <label>Personne</label>
+              <select class="form-control" [ngModel]="filterPerson()" (ngModelChange)="filterPerson.set($event); applyFilters()">
+                <option value="">Toutes</option>
+                @for (person of filterOptions().persons; track person) {
+                  <option [value]="person">{{ person }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Partenaire</label>
+              <select class="form-control" [ngModel]="filterPartner()" (ngModelChange)="filterPartner.set($event); applyFilters()">
+                <option value="">Tous</option>
+                @for (p of filterOptions().partners; track p.id) {
+                  <option [value]="p.id">{{ p.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Du</label>
+              <input type="date" class="form-control" [ngModel]="filterDateFrom()" (ngModelChange)="filterDateFrom.set($event); applyFilters()" />
+            </div>
+            <div class="form-group">
+              <label>Au</label>
+              <input type="date" class="form-control" [ngModel]="filterDateTo()" (ngModelChange)="filterDateTo.set($event); applyFilters()" />
+            </div>
+            <div class="form-group">
+              <label>Montant min (DH)</label>
+              <input type="number" class="form-control" min="0" step="0.01"
+                [ngModel]="filterAmountMin()" (ngModelChange)="filterAmountMin.set($event)"
+                (change)="applyFilters()" placeholder="0.00" />
+            </div>
+            <div class="form-group">
+              <label>Montant max (DH)</label>
+              <input type="number" class="form-control" min="0" step="0.01"
+                [ngModel]="filterAmountMax()" (ngModelChange)="filterAmountMax.set($event)"
+                (change)="applyFilters()" placeholder="∞" />
+            </div>
+            <div class="filter-actions">
+              <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher"><app-icon name="search" [size]="14" /></button>
+              <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser"><app-icon name="close" [size]="14" /></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Registre unique : à venir → aujourd'hui → passé -->
+      <div class="register">
+        <div class="register-head">
+          <span>Date</span>
+          <span>Mouvement</span>
+          <span>Compte</span>
+          <span class="num">Sortie</span>
+          <span class="num">Entrée</span>
+          <span class="num">Solde</span>
+        </div>
+
+        <div class="register-loading" *ngIf="loading() && transactions().length === 0">Chargement…</div>
+
+        <ng-container *ngFor="let row of registerRows()">
+
+          <div class="register-today" *ngIf="row.kind === 'today'">
+            <span style="font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase">Aujourd'hui · {{ today | date:'dd/MM/yyyy' }}</span>
+            <span style="margin-left:auto;font-size:12px;color:rgba(230,237,247,.8)">Solde réel</span>
+            <span style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">{{ row.balance | number:'1.2-2' }}</span>
+          </div>
+
+          <div class="register-row" *ngIf="row.transaction as t" [class.register-row--pending]="row.kind === 'pending'">
+            <span class="cell-date">{{ t.date | date:'dd/MM' }}</span>
+            <span class="cell-move">
+              <span class="move-main">
+                {{ t.description }}
+                <span style="margin-left:6px;padding:1px 5px;border:1px solid #cfdcec;font-size:9px;font-weight:700;letter-spacing:.06em;color:#4a5c75" *ngIf="row.kind === 'pending'">{{ t.type === 'income' ? 'ATTENDU' : 'PRÉVU' }}</span>
+              </span>
+              <span class="move-sub">
+                {{ t.category || 'Sans catégorie' }}<ng-container *ngIf="t.method"> · {{ t.method }}</ng-container><ng-container *ngIf="t.person"> · {{ t.person }}</ng-container>
+              </span>
+            </span>
+            <span class="cell-account">{{ t.account?.name || '—' }}</span>
+            <span class="cell-out num">
+              <ng-container *ngIf="t.type === 'expense'">{{ t.amount | number:'1.2-2' }}</ng-container>
+              <span class="dash" *ngIf="t.type !== 'expense'">—</span>
+            </span>
+            <span class="cell-in num">
+              <ng-container *ngIf="t.type === 'income'">{{ t.amount | number:'1.2-2' }}</ng-container>
+              <span class="dash" *ngIf="t.type !== 'income'">—</span>
+            </span>
+            <span class="cell-balance num">
+              <ng-container *ngIf="row.balance !== null">{{ row.balance | number:'1.2-2' }}</ng-container>
+              <span class="dash" *ngIf="row.balance === null">—</span>
+            </span>
+            <span class="cell-actions">
+              <button
+                *ngIf="t.purchase_payment_id"
+                (click)="openPaymentView(t)"
+                class="btn-icon btn-view"
+                title="Voir le détail du paiement"
+              ><app-icon name="view" [size]="14" /></button>
+              <button
+                *ngIf="t.sale_payment_id"
+                (click)="openSalePaymentView(t)"
+                class="btn-icon btn-view"
+                title="Voir le détail du paiement"
+              ><app-icon name="view" [size]="14" /></button>
+              <button
+                (click)="openEditForm(t)"
+                class="btn-icon btn-edit"
+                title="Modifier"
+                *ngIf="authService.hasPermission('edit cash-flow')"
+                [disabled]="deletingTransactionId() === t.id"
+              ><app-icon name="edit" [size]="14" /></button>
+              <button
+                (click)="deleteTransaction(t)"
+                class="btn-icon btn-delete"
+                title="Supprimer"
+                *ngIf="authService.hasPermission('delete cash-flow')"
+                [disabled]="deletingTransactionId() === t.id"
+              >
+                <span *ngIf="deletingTransactionId() !== t.id"><app-icon name="trash" [size]="14" /></span>
+                <span *ngIf="deletingTransactionId() === t.id" class="inline-spinner"></span>
+              </button>
+            </span>
+          </div>
+
+        </ng-container>
+
+        <div class="register-empty" *ngIf="!loading() && registerRows().length === 0">
+          Aucun mouvement sur cette sélection.
+        </div>
+
+        <div class="register-foot">
+          <!-- summary() suit les filtres période / catégorie / personne / compte, mais
+               pas le type ni la recherche : le libellé ne promet donc que la période. -->
+          <span class="register-foot-totals">
+            Sur la période :
+            <span class="foot-in">encaissé +{{ summary().income | number:'1.2-2' }}</span>
+            <span class="foot-out">décaissé −{{ summary().expenses | number:'1.2-2' }} DH</span>
+          </span>
+          <span style="font-size:11px;color:#8a5a00" *ngIf="!balanceColumnAvailable()">Solde progressif affiché uniquement sur le flux complet, première page</span>
+          <div class="pagination" *ngIf="lastPage() > 1">
+            <button class="btn-page" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">&laquo;</button>
+            @for (page of pages; track page) {
+              <button class="btn-page" [class.active]="page === currentPage()" (click)="goToPage(page)">
+                {{ page }}
+              </button>
+            }
+            <button class="btn-page" [disabled]="currentPage() === lastPage()" (click)="goToPage(currentPage() + 1)">&raquo;</button>
+          </div>
+        </div>
       </div>
     </div>
+
+    <!-- Volet droit -->
+    <aside class="cash-aside">
+      <div class="aside-block">
+        <span class="aside-title">Comptes</span>
+        <span class="aside-line" *ngFor="let account of accounts()">
+          <span class="aside-name">{{ account.name }}</span>
+          <span class="aside-amount">{{ account.current_balance | number:'1.2-2' }}</span>
+        </span>
+        <span class="aside-line" *ngIf="pendingNet() !== 0">
+          <span class="aside-name">Chèques / effets en circulation</span>
+          <span class="aside-amount" style="color:#4a5c75">{{ pendingNet() | number:'1.2-2' }}</span>
+        </span>
+        <span class="aside-line aside-line--total">
+          <span class="aside-name">Disponible</span>
+          <span class="aside-amount">{{ availableBalance() | number:'1.2-2' }}</span>
+        </span>
+      </div>
+
+      <div class="aside-block" *ngIf="projection() as proj">
+        <span class="aside-title">En jeu</span>
+        <span class="aside-line">
+          <span class="aside-name">Dû aux fournisseurs</span>
+          <span class="aside-amount aside-amount--due">{{ proj.in_play.supplier_due | number:'1.0-0' }}</span>
+        </span>
+        <span class="aside-line">
+          <span class="aside-name">Impayés clients</span>
+          <span class="aside-amount" style="color:#15616d">{{ proj.in_play.client_due | number:'1.0-0' }}</span>
+        </span>
+        <span class="aside-line aside-line--total">
+          <span class="aside-name">Position nette</span>
+          <span class="aside-amount" [class.aside-amount--due]="proj.in_play.net_position < 0">
+            {{ proj.in_play.net_position | number:'1.0-0' }}
+          </span>
+        </span>
+      </div>
+
+      <div class="aside-block" *ngIf="projection()?.expenses_by_category?.length">
+        <span class="aside-title">Dépenses du mois par poste</span>
+        <span class="aside-bar-line" *ngFor="let row of projection()!.expenses_by_category">
+          <span class="aside-bar-name">{{ row.category }}</span>
+          <span class="aside-bar-track">
+            <span class="aside-bar-fill" [style.width.%]="(row.amount / maxExpenseCategory()) * 100"></span>
+          </span>
+          <span class="aside-bar-amount">{{ row.amount | number:'1.0-0' }}</span>
+        </span>
+      </div>
+
+      <div class="aside-block aside-block--actions">
+        <span class="aside-title">Actions</span>
+        <button type="button" class="aside-action" (click)="openAddForm()" *ngIf="authService.hasPermission('create cash-flow')">
+          Saisir une transaction
+        </button>
+        <button type="button" class="aside-action" (click)="openTransferForm()" *ngIf="authService.hasPermission('transfer accounts')">
+          Transfert entre comptes
+        </button>
+      </div>
+    </aside>
   </div>
 
   @if (showForm()) {
@@ -358,6 +340,14 @@
       [expenseCategories]="expenseCategoryTree()"
       (submitted)="onFormSubmit($event)"
       (cancelled)="closeForm()"
+    />
+  }
+
+  @if (showTransferForm()) {
+    <app-transfer-form
+      [accounts]="accounts()"
+      (submitted)="onTransferSubmit($event)"
+      (cancelled)="closeTransferForm()"
     />
   }
 

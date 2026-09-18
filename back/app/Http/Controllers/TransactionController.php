@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\CashFlow\CashFlowProjectionService;
 use App\Domain\Transactions\TransactionService;
 use App\Http\Requests\Transactions\StoreTransactionRequest;
 use App\Http\Requests\Transactions\UpdateTransactionRequest;
@@ -105,6 +106,14 @@ class TransactionController extends Controller
     public function filters(Request $request): JsonResponse
     {
         return response()->json($this->transactionService->filters($this->canViewHr($request)));
+    }
+
+    /**
+     * Weekly cash-flow projection (refonte 2b) — see CashFlowProjectionService.
+     */
+    public function projection(CashFlowProjectionService $projectionService): JsonResponse
+    {
+        return response()->json($projectionService->build());
     }
 
     /**

@@ -39,6 +39,12 @@
         <label>Adresse physique</label>
         <textarea name="address" [(ngModel)]="formData.address" rows="3" placeholder="Adresse complète..."></textarea>
       </div>
+
+      <div class="form-control">
+        <label>Délai de paiement contractuel (jours)</label>
+        <input type="number" name="payment_terms_days" [(ngModel)]="formData.payment_terms_days" min="0" max="365" placeholder="Ex: 60">
+        <small class="hint-text">Utilisé pour projeter les échéances de règlement en Cash Flow. Laissez vide si non défini.</small>
+      </div>
     </div>
   </div>
 

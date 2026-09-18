@@ -57,3 +57,40 @@ export interface PaginatedResponse<T> {
   per_page: number;
   total: number;
 }
+
+/** Refonte 2b — projection de trésorerie à 6 semaines. Voir CashFlowProjectionService (back). */
+export interface CashFlowProjectionWeek {
+  start: string;
+  end: string;
+  label: string;
+  inflow: number;
+  outflow: number;
+  net: number;
+  balance: number;
+}
+
+export interface CashFlowProjectionLowPoint {
+  label: string;
+  start: string;
+  balance: number;
+}
+
+export interface CashFlowInPlay {
+  supplier_due: number;
+  client_due: number;
+  net_position: number;
+}
+
+export interface CashFlowExpenseByCategory {
+  category: string;
+  amount: number;
+}
+
+export interface CashFlowProjection {
+  today_balance: number;
+  weeks: CashFlowProjectionWeek[];
+  low_point: CashFlowProjectionLowPoint | null;
+  in_play: CashFlowInPlay;
+  expenses_by_category: CashFlowExpenseByCategory[];
+  recurring_weekly_estimate: number;
+}

@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
+  CashFlowProjection,
   PaginatedResponse,
   Transaction,
   TransactionFilters,
@@ -60,5 +61,9 @@ export class CashFlowService {
 
   getFilters(): Observable<TransactionFilters> {
     return this.http.get<TransactionFilters>(`${this.apiUrl}/transactions-filters`);
+  }
+
+  getProjection(): Observable<CashFlowProjection> {
+    return this.http.get<CashFlowProjection>(`${this.apiUrl}/transactions-projection`);
   }
 }

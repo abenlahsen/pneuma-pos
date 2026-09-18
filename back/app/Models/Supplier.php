@@ -15,7 +15,12 @@ class Supplier extends Model
         'phone',
         'email',
         'address',
+        'payment_terms_days',
         'user_id'
+    ];
+
+    protected $casts = [
+        'payment_terms_days' => 'integer',
     ];
 
     public function user()
