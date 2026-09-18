@@ -201,8 +201,28 @@
       <span class="text-right">Actions</span>
     </div>
 
-    <div *ngIf="loading()" class="text-center py-4"><div class="spinner"></div> Chargement...</div>
-    <div *ngIf="!loading() && sales().length === 0" class="text-center py-4 text-muted">Aucune vente trouvée.</div>
+    <!-- Refonte 2b, §14c : chargement, erreur, liste vide — dans cet ordre. -->
+    <app-list-error
+      *ngIf="loadError()"
+      title="Les ventes n'ont pas pu être chargées."
+      [cause]="loadError()!"
+      [detail]="loadErrorDetail()"
+      [lastLoadedAt]="lastLoadedAt()"
+      (retry)="loadData()" />
+
+    <!-- `*ngIf` et non `[hidden]` : `.list-grid-row` pose `display: grid`, qui
+         l'emporte sur le `display: none` de l'attribut. -->
+    <ng-container *ngIf="loading() && sales().length === 0">
+      <div class="list-grid-row sales-grid" appSkeletonRow [cells]="9" [seed]="i"
+           *ngFor="let row of skeletonRows; let i = index"></div>
+    </ng-container>
+
+    <app-list-empty
+      *ngIf="!loading() && !loadError() && sales().length === 0"
+      blankTitle="Aucune vente enregistrée pour le moment."
+      noMatchTitle="Aucune vente ne correspond"
+      [filters]="activeFilters()"
+      (clearAll)="resetFilters()" />
 
     <div class="list-grid-row sales-grid"
          *ngFor="let sale of sales()"
@@ -245,15 +265,22 @@
       <span class="actions-cell" style="display: flex; gap: 5px; justify-content: flex-end">
         <button class="btn-icon" (click)="openDetail(sale)" title="Voir" [disabled]="deletingSaleId() === sale.id"><app-icon name="view" [size]="15" /></button>
         <button class="btn-icon" (click)="openPayments(sale)" title="Paiements" [disabled]="deletingSaleId() === sale.id"><app-icon name="credit-card" [size]="15" /></button>
+        <!-- Refonte 2b, §14c état 4 : deux causes, même cadenas, l'infobulle dit
+             laquelle. La colonne garde ainsi la même largeur d'une ligne à
+             l'autre, au lieu de se rétrécir quand les boutons sont masqués. -->
         <ng-container *ngIf="!isSaleLocked(sale); else lockedActions">
           <a class="btn-icon text-primary" [routerLink]="['/sales', sale.id, 'edit']" title="Modifier" *ngIf="authService.hasPermission('edit sales')"><app-icon name="edit" [size]="15" /></a>
+          <app-row-lock *ngIf="!authService.hasPermission('edit sales')"
+            reason="Votre rôle ne permet pas de modifier une vente. Demandez à un administrateur." />
           <button class="btn-icon text-danger" (click)="deleteSale(sale)" title="Supprimer" *ngIf="authService.hasPermission('delete sales')" [disabled]="deletingSaleId() === sale.id">
             <span *ngIf="deletingSaleId() !== sale.id"><app-icon name="trash" [size]="15" /></span>
             <span *ngIf="deletingSaleId() === sale.id" class="inline-spinner"></span>
           </button>
+          <app-row-lock *ngIf="!authService.hasPermission('delete sales')"
+            reason="Votre rôle ne permet pas de supprimer une vente. Demandez à un administrateur." />
         </ng-container>
         <ng-template #lockedActions>
-          <span class="list-grid-lock" title="Vente clôturée — non modifiable"><app-icon name="lock" [size]="14" /></span>
+          <span class="list-grid-lock" title="Vente clôturée par son statut — non modifiable"><app-icon name="lock" [size]="14" /></span>
         </ng-template>
       </span>
     </div>

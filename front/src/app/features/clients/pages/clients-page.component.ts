@@ -8,11 +8,18 @@ import { ClientService } from '../data-access/client.service';
 import { Client, ClientFilters, ClientPayload } from '../models/client.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { CityService } from '../../../core/services/city.service';
+import {
+  ActiveFilter,
+  ListEmptyComponent,
+  ListErrorComponent,
+  SkeletonCellsComponent,
+  describeLoadError,
+} from '../../../shared/list-state';
 
 @Component({
   selector: 'app-clients-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ClientFormComponent, AutoRefreshControlComponent, IconComponent],
+  imports: [CommonModule, FormsModule, ClientFormComponent, AutoRefreshControlComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent],
   templateUrl: './clients-page.component.html',
   styleUrl: './clients-page.component.scss',
 })
@@ -28,6 +35,40 @@ export class ClientsPageComponent implements OnInit {
   readonly perPage = signal(100);
   readonly loading = signal(false);
   readonly saving = signal(false);
+
+  // ── Refonte 2b, §14c : les quatre états manquants ─────────────────────────
+  readonly skeletonRows = [0, 1, 2, 3, 4, 5, 6, 7];
+  readonly loadError = signal<string | null>(null);
+  readonly loadErrorDetail = signal<string | null>(null);
+  readonly lastLoadedAt = signal<Date | null>(null);
+
+  /**
+   * Méthode et non `computed()` : sur cet écran les filtres vivent dans un
+   * objet simple (`this.filters`), muté par `[(ngModel)]`. Un `computed()` qui
+   * ne lit aucun signal ne se recalculerait jamais.
+   */
+  activeFilters(): ActiveFilter[] {
+    const applied: ActiveFilter[] = [];
+    const drop = (label: string, apply: () => void) => {
+      applied.push({
+        label,
+        clear: () => {
+          apply();
+          this.currentPage.set(1);
+          this.loadClients();
+        },
+      });
+    };
+
+    if (this.filters.search) drop(`recherche « ${this.filters.search} »`, () => (this.filters.search = ''));
+    if (this.filters.city) drop(`ville ${this.filters.city}`, () => (this.filters.city = ''));
+    if (this.filters.category) drop(`catégorie ${this.filters.category}`, () => (this.filters.category = ''));
+    if (this.filters.status && this.filters.status !== 'all') {
+      drop(this.filters.status === 'active' ? 'actifs uniquement' : 'inactifs uniquement', () => (this.filters.status = 'all'));
+    }
+
+    return applied;
+  }
   readonly deletingClientId = signal<number | null>(null);
   readonly errorMessage = signal('');
   readonly cities = signal<string[]>([]);
@@ -80,9 +121,13 @@ export class ClientsPageComponent implements OnInit {
           this.total.set(Number(response.total ?? 0) || 0);
           this.perPage.set(Number(response.per_page ?? perPage) || perPage);
           this.loading.set(false);
+          this.loadError.set(null);
+          this.lastLoadedAt.set(new Date());
         },
-        error: () => {
-          this.errorMessage.set('Impossible de charger les clients pour le moment.');
+        error: (err) => {
+          const { cause, detail } = describeLoadError(err);
+          this.loadError.set(cause);
+          this.loadErrorDetail.set(detail);
           this.loading.set(false);
         },
       });

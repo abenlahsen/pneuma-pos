@@ -16,11 +16,20 @@ import { PurchaseReturnComponent } from '../purchase-return/purchase-return.comp
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 import { DetailNavigator } from '../../../core/utils/detail-navigator';
+import {
+  ActiveFilter,
+  ListEmptyComponent,
+  ListErrorComponent,
+  RowLockComponent,
+  SkeletonRowComponent,
+  describeLoadError,
+  frenchDate,
+} from '../../../shared/list-state';
 
 @Component({
   selector: 'app-purchases-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, PurchaseFormComponent, PurchaseDetailComponent, PurchasePaymentsComponent, PurchaseReturnComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent],
+  imports: [CommonModule, FormsModule, RouterLink, PurchaseFormComponent, PurchaseDetailComponent, PurchasePaymentsComponent, PurchaseReturnComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent],
   templateUrl: './purchases-page.component.html',
   styleUrls: ['./purchases-page.component.scss']
 })
@@ -117,6 +126,74 @@ export class PurchasesPageComponent implements OnInit {
   filterWithInvoice = signal('');
   filterAmountMin = signal('');
   filterAmountMax = signal('');
+
+  // ── Refonte 2b, §14c : les quatre états manquants ─────────────────────────
+  readonly skeletonRows = [0, 1, 2, 3, 4, 5, 6, 7];
+  readonly loadError = signal<string | null>(null);
+  readonly loadErrorDetail = signal<string | null>(null);
+  readonly lastLoadedAt = signal<Date | null>(null);
+
+  /**
+   * Les deux onglets comptent parmi les filtres : « Reste à payer » est actif
+   * par défaut et écarte les achats réglés. Sans le nommer ici, une liste vide
+   * laisserait chercher longtemps.
+   */
+  readonly activeFilters = computed<ActiveFilter[]>(() => {
+    const applied: ActiveFilter[] = [];
+    const drop = (label: string, apply: () => void) => {
+      applied.push({
+        label,
+        clear: () => {
+          apply();
+          this.currentPage.set(1);
+          this.loadData();
+        },
+      });
+    };
+
+    const settlementLabels: Record<string, string> = {
+      due: 'reste à payer',
+      legal_risk: `plus de ${this.oldDebtDays} jours`,
+      paid: 'réglés',
+    };
+    const settlement = this.settlementTab();
+    if (settlement) drop(settlementLabels[settlement], () => this.settlementTab.set(''));
+
+    const reception = this.receptionTab();
+    if (reception) drop(reception === 'expected' ? 'attendues' : 'reçues', () => this.receptionTab.set(''));
+
+    if (this.filterSearch()) drop(`recherche « ${this.filterSearch()} »`, () => this.filterSearch.set(''));
+    if (this.filterStatus()) {
+      const label = PURCHASE_STATUS_LABELS[this.filterStatus() as PurchaseStatus] ?? this.filterStatus();
+      drop(`statut ${label.toLowerCase()}`, () => this.filterStatus.set(''));
+    }
+    if (this.filterPaymentStatus()) drop(this.filterPaymentStatus().toLowerCase(), () => this.filterPaymentStatus.set(''));
+    if (this.filterPaymentMethod()) drop(`règlement ${this.filterPaymentMethod().toLowerCase()}`, () => this.filterPaymentMethod.set(''));
+    if (this.filterSupplier()) {
+      const supplier = this.filterOptions().suppliers.find((s) => String(s.id) === this.filterSupplier());
+      drop(`fournisseur ${supplier?.name ?? this.filterSupplier()}`, () => this.filterSupplier.set(''));
+    }
+    if (this.filterCommercial()) {
+      const commercial = this.filterOptions().commercials.find((c) => String(c.id) === this.filterCommercial());
+      drop(`commercial ${commercial?.name ?? this.filterCommercial()}`, () => this.filterCommercial.set(''));
+    }
+    if (this.filterDateFrom()) drop(`à partir du ${frenchDate(this.filterDateFrom())}`, () => this.filterDateFrom.set(''));
+    if (this.filterDateTo()) drop(`jusqu'au ${frenchDate(this.filterDateTo())}`, () => this.filterDateTo.set(''));
+    if (this.filterWithInvoice()) {
+      drop(this.filterWithInvoice() === 'true' ? 'avec facture' : 'sans facture', () => this.filterWithInvoice.set(''));
+    }
+    if (this.filterAmountMin()) drop(`montant ≥ ${this.filterAmountMin()}`, () => this.filterAmountMin.set(''));
+    if (this.filterAmountMax()) drop(`montant ≤ ${this.filterAmountMax()}`, () => this.filterAmountMax.set(''));
+
+    return applied;
+  });
+
+  /** « Tout effacer » depuis la liste vide : remet aussi les deux onglets à zéro. */
+  clearAllFilters(): void {
+    this.settlementTab.set('');
+    this.receptionTab.set('');
+    this.resetFilters();
+  }
   sortBy = signal('');
   sortDirection = signal<'asc' | 'desc'>('asc');
 
@@ -201,9 +278,15 @@ export class PurchasesPageComponent implements OnInit {
         this.lastPage.set(response.last_page);
         this.total.set(response.total);
         this.loading.set(false);
+        this.loadError.set(null);
+        this.lastLoadedAt.set(new Date());
       },
-      error: () => {
-        this.groups.set([]);
+      error: (err) => {
+        // Les groupes déjà affichés restent : l'écran d'erreur dit de quand
+        // ils datent plutôt que de vider la page.
+        const { cause, detail } = describeLoadError(err);
+        this.loadError.set(cause);
+        this.loadErrorDetail.set(detail);
         this.loading.set(false);
       },
     });

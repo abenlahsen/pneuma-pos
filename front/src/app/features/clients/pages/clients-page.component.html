@@ -83,15 +83,31 @@
         </thead>
 
         <tbody>
-          <tr *ngIf="loading()">
-            <td colspan="8" class="text-center">
-              <div class="spinner"></div>
-              Chargement...
+          <!-- Refonte 2b, §14c : chargement, erreur, liste vide. -->
+          <tr *ngIf="loadError()">
+            <td colspan="8" class="state-cell">
+              <app-list-error
+                title="Les clients n'ont pas pu être chargés."
+                [cause]="loadError()!"
+                [detail]="loadErrorDetail()"
+                [lastLoadedAt]="lastLoadedAt()"
+                (retry)="loadClients()" />
             </td>
           </tr>
 
-          <tr *ngIf="!loading() && clients().length === 0">
-            <td colspan="8" class="text-center text-muted">Aucun client trouvé.</td>
+          <ng-container *ngIf="loading() && clients().length === 0">
+            <tr appSkeletonCells [cells]="8" [seed]="i"
+                *ngFor="let row of skeletonRows; let i = index"></tr>
+          </ng-container>
+
+          <tr *ngIf="!loading() && !loadError() && clients().length === 0">
+            <td colspan="8" class="state-cell">
+              <app-list-empty
+                blankTitle="Aucun client enregistré pour le moment."
+                noMatchTitle="Aucun client ne correspond"
+                [filters]="activeFilters()"
+                (clearAll)="clearFilters()" />
+            </td>
           </tr>
 
           <tr *ngFor="let client of clients(); trackBy: trackByClientId">

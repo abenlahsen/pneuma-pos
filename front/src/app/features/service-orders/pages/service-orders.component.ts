@@ -11,6 +11,14 @@ import { ServiceOrderFormComponent } from '../service-order-form/service-order-f
 import { ServiceOrderDetailComponent } from '../service-order-detail/service-order-detail.component';
 import { ServicePaymentPanelComponent } from '../service-payment-panel/service-payment-panel.component';
 import { AuthService } from '../../../core/services/auth.service';
+import {
+  ActiveFilter,
+  ListEmptyComponent,
+  ListErrorComponent,
+  SkeletonCellsComponent,
+  describeLoadError,
+  frenchDate,
+} from '../../../shared/list-state';
 
 @Component({
   selector: 'app-service-orders',
@@ -20,7 +28,7 @@ import { AuthService } from '../../../core/services/auth.service';
     FormsModule,
     ServiceOrderFormComponent,
     ServiceOrderDetailComponent,
-    ServicePaymentPanelComponent, IconComponent],
+    ServicePaymentPanelComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent],
   templateUrl: './service-orders.component.html',
   styleUrls: ['./service-orders.component.scss'],
 })
@@ -50,6 +58,51 @@ export class ServiceOrdersComponent implements OnInit {
   filterDateTo = signal('');
 
   loading = signal(false);
+
+  // ── Refonte 2b, §14c : les quatre états manquants ─────────────────────────
+  readonly skeletonRows = [0, 1, 2, 3, 4, 5, 6, 7];
+  readonly loadError = signal<string | null>(null);
+  readonly loadErrorDetail = signal<string | null>(null);
+  readonly lastLoadedAt = signal<Date | null>(null);
+
+  readonly activeFilters = computed<ActiveFilter[]>(() => {
+    const applied: ActiveFilter[] = [];
+    const drop = (label: string, apply: () => void) => {
+      applied.push({
+        label,
+        clear: () => {
+          apply();
+          this.currentPage.set(1);
+          this.loadData();
+          this.loadSummary();
+          this.loadBoard();
+        },
+      });
+    };
+
+    if (this.filterSearch()) drop(`recherche « ${this.filterSearch()} »`, () => this.filterSearch.set(''));
+    if (this.filterClientId() !== null) {
+      const client = this.filterOptions().clients.find((c) => c.id === this.filterClientId());
+      drop(`client ${client?.name ?? this.filterClientId()}`, () => this.filterClientId.set(null));
+    }
+    if (this.filterProductId() !== null) {
+      const product = this.filterOptions().service_products.find((p) => p.id === this.filterProductId());
+      const label = product?.profile || product?.reference || String(this.filterProductId());
+      drop(`prestation ${label}`, () => this.filterProductId.set(null));
+    }
+    if (this.filterStatus()) {
+      const label = SERVICE_ORDER_STATUS_LABELS[this.filterStatus() as ServiceOrderStatus] ?? this.filterStatus();
+      drop(`statut ${label.toLowerCase()}`, () => this.filterStatus.set(''));
+    }
+    if (this.filterPaymentStatus()) drop(this.filterPaymentStatus().toLowerCase(), () => this.filterPaymentStatus.set(''));
+    if (this.filterPaymentMethod()) drop(`règlement ${this.filterPaymentMethod().toLowerCase()}`, () => this.filterPaymentMethod.set(''));
+    if (this.filterCommercial()) drop(`commercial ${this.filterCommercial()}`, () => this.filterCommercial.set(''));
+    if (this.filterDateFrom()) drop(`à partir du ${frenchDate(this.filterDateFrom())}`, () => this.filterDateFrom.set(''));
+    if (this.filterDateTo()) drop(`jusqu'au ${frenchDate(this.filterDateTo())}`, () => this.filterDateTo.set(''));
+
+    return applied;
+  });
+
   isExporting = signal(false);
   exportError = signal('');
   showForm = signal(false);
@@ -228,8 +281,15 @@ export class ServiceOrdersComponent implements OnInit {
         this.lastPage.set(res.last_page);
         this.perPage.set(res.per_page);
         this.loading.set(false);
+        this.loadError.set(null);
+        this.lastLoadedAt.set(new Date());
       },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        const { cause, detail } = describeLoadError(err);
+        this.loadError.set(cause);
+        this.loadErrorDetail.set(detail);
+        this.loading.set(false);
+      },
     });
   }
 

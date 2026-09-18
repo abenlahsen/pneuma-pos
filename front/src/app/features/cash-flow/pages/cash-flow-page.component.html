@@ -177,7 +177,19 @@
           <span class="num">Solde</span>
         </div>
 
-        <div class="register-loading" *ngIf="loading() && transactions().length === 0">Chargement…</div>
+        <!-- Refonte 2b, §14c : chargement, erreur, liste vide. -->
+        <app-list-error
+          *ngIf="loadError()"
+          title="Les mouvements n'ont pas pu être chargés."
+          [cause]="loadError()!"
+          [detail]="loadErrorDetail()"
+          [lastLoadedAt]="lastLoadedAt()"
+          (retry)="loadData()" />
+
+        <ng-container *ngIf="loading() && transactions().length === 0">
+          <div class="register-row" appSkeletonRow [cells]="7" [seed]="i"
+               *ngFor="let row of skeletonRows; let i = index"></div>
+        </ng-container>
 
         <ng-container *ngFor="let row of registerRows()">
 
@@ -246,9 +258,12 @@
 
         </ng-container>
 
-        <div class="register-empty" *ngIf="!loading() && registerRows().length === 0">
-          Aucun mouvement sur cette sélection.
-        </div>
+        <app-list-empty
+          *ngIf="!loading() && !loadError() && registerRows().length === 0"
+          blankTitle="Aucun mouvement enregistré pour le moment."
+          noMatchTitle="Aucun mouvement ne correspond"
+          [filters]="activeFilters()"
+          (clearAll)="resetFilters()" />
 
         <div class="register-foot">
           <!-- summary() suit les filtres période / catégorie / personne / compte, mais

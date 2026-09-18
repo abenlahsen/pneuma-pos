@@ -15,6 +15,14 @@ import {
   TransactionSummary,
 } from '../models/transaction.model';
 import { TransferPayload } from '../../accounts/models/account.model';
+import {
+  ActiveFilter,
+  ListEmptyComponent,
+  ListErrorComponent,
+  SkeletonRowComponent,
+  describeLoadError,
+  frenchDate,
+} from '../../../shared/list-state';
 
 /** Une ligne du registre unique : échéance à venir, marqueur « aujourd'hui », ou mouvement passé. */
 export interface RegisterRow {
@@ -34,7 +42,7 @@ import { TransactionCategory } from '../../transaction-categories/models/transac
 @Component({
   selector: 'app-cash-flow-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TransactionFormComponent, TransferFormComponent, AutoRefreshControlComponent, PurchasePaymentDetailComponent, SalePaymentDetailComponent, IconComponent],
+  imports: [CommonModule, FormsModule, TransactionFormComponent, TransferFormComponent, AutoRefreshControlComponent, PurchasePaymentDetailComponent, SalePaymentDetailComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent],
   templateUrl: './cash-flow-page.component.html',
   styleUrls: ['./cash-flow-page.component.scss'],
 })
@@ -61,6 +69,46 @@ export class CashFlowPageComponent implements OnInit {
   filterPartner = signal('');
   filterAmountMin = signal('');
   filterAmountMax = signal('');
+
+  // ── Refonte 2b, §14c : les quatre états manquants ─────────────────────────
+  readonly skeletonRows = [0, 1, 2, 3, 4, 5, 6, 7];
+  readonly loadError = signal<string | null>(null);
+  readonly loadErrorDetail = signal<string | null>(null);
+  readonly lastLoadedAt = signal<Date | null>(null);
+
+  readonly activeFilters = computed<ActiveFilter[]>(() => {
+    const applied: ActiveFilter[] = [];
+    const drop = (label: string, apply: () => void) => {
+      applied.push({
+        label,
+        clear: () => {
+          apply();
+          this.currentPage.set(1);
+          this.loadData();
+        },
+      });
+    };
+
+    if (this.filterSearch()) drop(`recherche « ${this.filterSearch()} »`, () => this.filterSearch.set(''));
+    if (this.filterType()) drop(this.filterType() === 'income' ? 'entrées' : 'sorties', () => this.filterType.set(''));
+    if (this.filterCategory()) drop(`catégorie ${this.filterCategory()}`, () => this.filterCategory.set(''));
+    if (this.filterSubcategory()) drop(`sous-catégorie ${this.filterSubcategory()}`, () => this.filterSubcategory.set(''));
+    if (this.filterAccount()) {
+      const account = this.filterOptions().accounts.find((a) => String(a.id) === this.filterAccount());
+      drop(`compte ${account?.name ?? this.filterAccount()}`, () => this.filterAccount.set(''));
+    }
+    if (this.filterPerson()) drop(`personne ${this.filterPerson()}`, () => this.filterPerson.set(''));
+    if (this.filterPartner()) {
+      const partner = this.filterOptions().partners.find((p) => String(p.id) === this.filterPartner());
+      drop(`partenaire ${partner?.name ?? this.filterPartner()}`, () => this.filterPartner.set(''));
+    }
+    if (this.filterDateFrom()) drop(`à partir du ${frenchDate(this.filterDateFrom())}`, () => this.filterDateFrom.set(''));
+    if (this.filterDateTo()) drop(`jusqu'au ${frenchDate(this.filterDateTo())}`, () => this.filterDateTo.set(''));
+    if (this.filterAmountMin()) drop(`montant ≥ ${this.filterAmountMin()}`, () => this.filterAmountMin.set(''));
+    if (this.filterAmountMax()) drop(`montant ≤ ${this.filterAmountMax()}`, () => this.filterAmountMax.set(''));
+
+    return applied;
+  });
 
   /** Date du jour, pour le marqueur « Aujourd'hui » du registre. */
   readonly today = new Date();
@@ -268,8 +316,15 @@ export class CashFlowPageComponent implements OnInit {
         this.lastPage.set(response.last_page);
         this.total.set(response.total);
         this.loading.set(false);
+        this.loadError.set(null);
+        this.lastLoadedAt.set(new Date());
       },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        const { cause, detail } = describeLoadError(err);
+        this.loadError.set(cause);
+        this.loadErrorDetail.set(detail);
+        this.loading.set(false);
+      },
     });
 
     this.cashFlowService.getTransactions({ ...filters, status: 'pending', page: '1', per_page: '500' }).subscribe({

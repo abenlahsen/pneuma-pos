@@ -192,9 +192,23 @@
       <span class="num">Actions</span>
     </div>
 
-    <div class="pur-loading" *ngIf="loading()">Chargement&hellip;</div>
+    <!-- Refonte 2b, §14c : chargement, erreur, liste vide. -->
+    <app-list-error
+      *ngIf="loadError()"
+      title="Les achats n'ont pas pu &ecirc;tre charg&eacute;s."
+      [cause]="loadError()!"
+      [detail]="loadErrorDetail()"
+      [lastLoadedAt]="lastLoadedAt()"
+      (retry)="loadData()" />
 
-    <ng-container *ngIf="!loading()">
+    <ng-container *ngIf="loading() && groups().length === 0">
+      <div class="pur-row" appSkeletonRow [cells]="7" [seed]="i"
+           *ngFor="let row of skeletonRows; let i = index"></div>
+    </ng-container>
+
+    <!-- Les groupes déjà chargés restent visibles pendant un rechargement :
+         le squelette ne remplace que la toute première attente. -->
+    <ng-container>
       <ng-container *ngFor="let group of groups()">
         <div class="pur-band">
           <span class="pur-supplier">{{ group.supplier_name }}</span>
@@ -227,6 +241,10 @@
             </span>
             <span class="num pur-actions">
               <button type="button" class="pur-settle" *ngIf="row.remaining > 0.004 && authService.hasPermission('manage purchase-payments')" (click)="openRowPayments(row)">R&eacute;gler</button>
+              <!-- Refonte 2b, §14c état 4 : il reste à payer mais le rôle ne le
+                   permet pas — un cadenas le dit, au lieu d'une case vide. -->
+              <app-row-lock *ngIf="row.remaining > 0.004 && !authService.hasPermission('manage purchase-payments')"
+                reason="Votre r&ocirc;le ne permet pas d'enregistrer un r&egrave;glement fournisseur. Demandez &agrave; un administrateur." />
               <button type="button" class="btn-icon" title="Ouvrir" (click)="openRowDetail(row)"><app-icon name="view" [size]="14" /></button>
             </span>
           </div>
@@ -243,7 +261,12 @@
         </ng-container>
       </ng-container>
 
-      <div class="pur-empty" *ngIf="groups().length === 0">Aucun achat sur cette s&eacute;lection.</div>
+      <app-list-empty
+        *ngIf="!loading() && !loadError() && groups().length === 0"
+        blankTitle="Aucun achat enregistr&eacute; pour le moment."
+        noMatchTitle="Aucun achat ne correspond"
+        [filters]="activeFilters()"
+        (clearAll)="clearAllFilters()" />
     </ng-container>
 
     <div class="pagination-wrapper" *ngIf="total() > 0">

@@ -9,11 +9,18 @@ import { StockService } from '../data-access/stock.service';
 import { Stock, StockFilters, StockGroup, StockLot, StockMovement, StockSummary } from '../models/stock.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
+import {
+  ActiveFilter,
+  ListEmptyComponent,
+  ListErrorComponent,
+  SkeletonRowComponent,
+  describeLoadError,
+} from '../../../shared/list-state';
 
 @Component({
   selector: 'app-stock-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, AutoRefreshControlComponent, SortIconComponent, IconComponent],
+  imports: [CommonModule, FormsModule, RouterLink, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent],
   templateUrl: './stock-page.component.html',
   styleUrl: './stock-page.component.scss',
 })
@@ -55,6 +62,52 @@ export class StockPageComponent implements OnInit {
   filterCountry = signal('');
   filterInStock = signal(true);
   filterRunFlat = signal(false);
+
+  // ── Refonte 2b, §14c : les quatre états manquants ─────────────────────────
+  readonly skeletonRows = [0, 1, 2, 3, 4, 5, 6, 7];
+  readonly loadError = signal<string | null>(null);
+  readonly loadErrorDetail = signal<string | null>(null);
+  readonly lastLoadedAt = signal<Date | null>(null);
+
+  /**
+   * « En stock » est coché par défaut : c'est le filtre qui surprend le plus
+   * quand une référence connue n'apparaît pas. Il figure donc dans la liste au
+   * même titre que les autres.
+   */
+  readonly activeFilters = computed<ActiveFilter[]>(() => {
+    const applied: ActiveFilter[] = [];
+    const drop = (label: string, apply: () => void) => {
+      applied.push({
+        label,
+        clear: () => {
+          apply();
+          this.currentPage.set(1);
+          this.loadData();
+        },
+      });
+    };
+
+    if (this.searchQuery()) drop(`recherche « ${this.searchQuery()} »`, () => this.searchQuery.set(''));
+    if (this.filterBrand()) drop(`marque ${this.filterBrand()}`, () => this.filterBrand.set(''));
+    if (this.filterDepot()) drop(`dépôt ${this.filterDepot()}`, () => this.filterDepot.set(''));
+    if (this.filterCountry()) drop(`origine ${this.filterCountry()}`, () => this.filterCountry.set(''));
+    if (this.filterInStock()) drop('en stock uniquement', () => this.filterInStock.set(false));
+    if (this.filterRunFlat()) drop('run-flat', () => this.filterRunFlat.set(false));
+    if (this.filterLowStock()) drop('sous seuil', () => this.filterLowStock.set(false));
+    if (this.filterDormant()) drop('dormant', () => this.filterDormant.set(false));
+
+    return applied;
+  });
+
+  /**
+   * « Tout effacer » depuis la liste vide. Distinct de `resetFilters()`, qui
+   * remet « en stock » à coché : ici on a promis de tout retirer.
+   */
+  clearAllFilters(): void {
+    this.resetFilters();
+    this.filterInStock.set(false);
+    this.loadData();
+  }
 
   sortBy = signal<'quantity' | 'value'>('value');
   sortDirection = signal<'asc' | 'desc'>('desc');
@@ -122,9 +175,13 @@ export class StockPageComponent implements OnInit {
         this.lastPage.set(Number(response.last_page ?? 1) || 1);
         this.total.set(Number(response.total ?? 0) || 0);
         this.loading.set(false);
+        this.loadError.set(null);
+        this.lastLoadedAt.set(new Date());
       },
-      error: () => {
-        this.groups.set([]);
+      error: (err) => {
+        const { cause, detail } = describeLoadError(err);
+        this.loadError.set(cause);
+        this.loadErrorDetail.set(detail);
         this.loading.set(false);
       },
     });

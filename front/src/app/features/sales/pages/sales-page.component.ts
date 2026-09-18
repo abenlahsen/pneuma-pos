@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, WritableSignal, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
@@ -15,11 +15,20 @@ import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-contro
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 import { CityService } from '../../../core/services/city.service';
 import { DetailNavigator } from '../../../core/utils/detail-navigator';
+import {
+  ActiveFilter,
+  ListEmptyComponent,
+  ListErrorComponent,
+  RowLockComponent,
+  SkeletonRowComponent,
+  describeLoadError,
+  frenchDate,
+} from '../../../shared/list-state';
 
 @Component({
   selector: 'app-sales-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, SaleDetailComponent, PaymentPanelComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent],
+  imports: [CommonModule, FormsModule, RouterLink, SaleDetailComponent, PaymentPanelComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent],
   templateUrl: './sales-page.component.html',
   styleUrl: './sales-page.component.scss',
 })
@@ -106,6 +115,61 @@ export class SalesPageComponent implements OnInit {
   filtersExpanded = signal(false);
 
   loading = signal(false);
+
+  // ── Refonte 2b, §14c : les quatre états manquants ─────────────────────────
+  /** Nombre de lignes du squelette : la hauteur habituelle d'une page pleine. */
+  readonly skeletonRows = [0, 1, 2, 3, 4, 5, 6, 7];
+  readonly loadError = signal<string | null>(null);
+  readonly loadErrorDetail = signal<string | null>(null);
+  readonly lastLoadedAt = signal<Date | null>(null);
+
+  /**
+   * Les filtres actifs, nommés et retirables un par un. Sert au message de
+   * liste vide : sans cela il dit « Aucune vente trouvée » sans jamais dire
+   * que trois filtres écartent tout le reste.
+   */
+  readonly activeFilters = computed<ActiveFilter[]>(() =>
+    [
+      this.filterEntry(this.filterSearch(), `recherche « ${this.filterSearch()} »`, this.filterSearch),
+      this.filterEntry(this.filterBrand(), `marque ${this.filterBrand()}`, this.filterBrand),
+      this.filterEntry(this.filterClient(), `client ${this.filterClient()}`, this.filterClient),
+      this.filterEntry(this.filterCity(), `ville ${this.filterCity()}`, this.filterCity),
+      this.filterEntry(
+        this.filterStatus(),
+        `statut ${(SALE_STATUS_LABELS[this.filterStatus() as SaleStatus] ?? this.filterStatus()).toLowerCase()}`,
+        this.filterStatus,
+      ),
+      this.filterEntry(this.filterPaymentStatus(), this.filterPaymentStatus().toLowerCase(), this.filterPaymentStatus),
+      this.filterEntry(this.filterPaymentMethod(), `règlement ${this.filterPaymentMethod().toLowerCase()}`, this.filterPaymentMethod),
+      this.filterEntry(this.filterCarrier(), `transporteur ${this.filterCarrier()}`, this.filterCarrier),
+      this.filterEntry(this.filterPartner(), `partenaire ${this.filterPartner()}`, this.filterPartner),
+      this.filterEntry(this.filterCommercial(), `commercial ${this.filterCommercial()}`, this.filterCommercial),
+      this.filterEntry(this.filterDateFrom(), `à partir du ${frenchDate(this.filterDateFrom())}`, this.filterDateFrom),
+      this.filterEntry(this.filterDateTo(), `jusqu'au ${frenchDate(this.filterDateTo())}`, this.filterDateTo),
+      this.filterEntry(
+        this.filterWithInvoice(),
+        this.filterWithInvoice() === 'true' ? 'avec facture' : 'sans facture',
+        this.filterWithInvoice,
+      ),
+      this.filterEntry(this.filterAmountMin(), `montant ≥ ${this.filterAmountMin()}`, this.filterAmountMin),
+      this.filterEntry(this.filterAmountMax(), `montant ≤ ${this.filterAmountMax()}`, this.filterAmountMax),
+    ].filter((entry): entry is ActiveFilter => entry !== null),
+  );
+
+  /** Un filtre vide n'est pas un filtre : il ne figure pas dans la liste. */
+  private filterEntry(value: string, label: string, target: WritableSignal<string>): ActiveFilter | null {
+    if (!value) return null;
+
+    return {
+      label,
+      clear: () => {
+        target.set('');
+        this.currentPage.set(1);
+        this.loadData();
+      },
+    };
+  }
+
   isExporting = signal(false);
   exportError = signal('');
   deletingSaleId = signal<number | null>(null);
@@ -174,9 +238,17 @@ export class SalesPageComponent implements OnInit {
         this.lastPage.set(response.last_page);
         this.total.set(response.total);
         this.loading.set(false);
+        this.loadError.set(null);
+        this.lastLoadedAt.set(new Date());
         this.detailNav.onListLoaded();
       },
-      error: () => {
+      error: (err) => {
+        // On garde les lignes déjà affichées : l'écran d'erreur dit ce qui a
+        // échoué et de quand datent les données encore à l'écran, plutôt que
+        // de tout effacer sous les yeux de l'utilisateur.
+        const { cause, detail } = describeLoadError(err);
+        this.loadError.set(cause);
+        this.loadErrorDetail.set(detail);
         this.loading.set(false);
         this.detailNav.reset();
       },

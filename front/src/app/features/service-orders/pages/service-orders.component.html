@@ -251,13 +251,25 @@
 
   <!-- Tableau -->
   <div class="table-card card" *ngIf="viewMode() === 'list'">
-    <div *ngIf="loading()" class="loading-state">Chargement…</div>
+    <!-- Refonte 2b, §14c : chargement, erreur, liste vide. -->
+    <app-list-error
+      *ngIf="loadError()"
+      title="Les interventions n'ont pas pu être chargées."
+      [cause]="loadError()!"
+      [detail]="loadErrorDetail()"
+      [lastLoadedAt]="lastLoadedAt()"
+      (retry)="loadData()" />
 
-    <div *ngIf="!loading() && serviceOrders().length === 0" class="empty-state">
-      Aucune intervention trouvée.
-    </div>
+    <app-list-empty
+      *ngIf="!loading() && !loadError() && serviceOrders().length === 0"
+      blankTitle="Aucune intervention enregistrée pour le moment."
+      noMatchTitle="Aucune intervention ne correspond"
+      [filters]="activeFilters()"
+      (clearAll)="resetFilters()" />
 
-    <table *ngIf="!loading() && serviceOrders().length > 0" class="data-table">
+    <!-- La table reste montée pendant le premier chargement : c'est son
+         en-tête qui donne au squelette ses largeurs de colonne. -->
+    <table *ngIf="serviceOrders().length > 0 || loading()" class="data-table">
       <thead>
         <tr>
           <th class="text-center">ACTIONS</th>
@@ -274,6 +286,11 @@
         </tr>
       </thead>
       <tbody>
+        <ng-container *ngIf="loading() && serviceOrders().length === 0">
+          <tr appSkeletonCells [cells]="11" [seed]="i"
+              *ngFor="let row of skeletonRows; let i = index"></tr>
+        </ng-container>
+
         <tr *ngFor="let order of serviceOrders()">
           <td class="text-center actions-cell">
             <div class="action-buttons">
