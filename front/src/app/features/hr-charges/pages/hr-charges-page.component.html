@@ -51,6 +51,15 @@
   </div>
 
   <!-- Loading -->
+  <!-- Refonte 2b, §14c état 3 : sans cela, un serveur muet passe pour une absence de données. -->
+  <app-list-error
+    *ngIf="loadError()"
+    title="Les charges RH n'ont pas pu être chargées."
+    [cause]="loadError()!"
+    [detail]="loadErrorDetail()"
+    [lastLoadedAt]="lastLoadedAt()"
+    (retry)="loadData()" />
+
   <div *ngIf="loading()" class="loading-state">
     <div class="spinner"></div>
     Chargement...

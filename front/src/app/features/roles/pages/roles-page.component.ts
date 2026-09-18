@@ -6,11 +6,17 @@ import { RoleService } from '../data-access/role.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Permission, Role } from '../models/role.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
+import {
+  ListEmptyComponent,
+  ListErrorComponent,
+  SkeletonCellsComponent,
+  describeLoadError,
+} from '../../../shared/list-state';
 
 @Component({
   selector: 'app-roles-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent],
+  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent],
   templateUrl: './roles-page.component.html',
   styleUrls: ['./roles-page.component.scss'],
 })
@@ -18,6 +24,13 @@ export class RolesPageComponent implements OnInit {
   roles = signal<Role[]>([]);
   permissions = signal<Permission[]>([]);
   loading = signal(false);
+
+  // ── Refonte 2b, §14c : les quatre états manquants ─────────────────────────
+  // Pas de filtres sur cet écran : la liste vide ne peut être qu'un vrai vide.
+  readonly skeletonRows = [0, 1, 2, 3, 4, 5, 6, 7];
+  readonly loadError = signal<string | null>(null);
+  readonly loadErrorDetail = signal<string | null>(null);
+  readonly lastLoadedAt = signal<Date | null>(null);
 
   showForm = signal(false);
   editingRole = signal<Role | null>(null);
@@ -44,8 +57,15 @@ export class RolesPageComponent implements OnInit {
       next: (roles) => {
         this.roles.set(roles as Role[]);
         this.loading.set(false);
+        this.loadError.set(null);
+        this.lastLoadedAt.set(new Date());
       },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        const { cause, detail } = describeLoadError(err);
+        this.loadError.set(cause);
+        this.loadErrorDetail.set(detail);
+        this.loading.set(false);
+      },
     });
 
     this.roleService.getPermissions({ all: true }).subscribe({

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { computed, Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
@@ -9,10 +9,18 @@ import { Role } from '../../roles/models/role.model';
 import { RoleService } from '../../roles/data-access/role.service';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 
+import {
+  ActiveFilter,
+  ListEmptyComponent,
+  ListErrorComponent,
+  SkeletonCellsComponent,
+  describeLoadError,
+} from '../../../shared/list-state';
+
 @Component({
   selector: 'app-users-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent],
+  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent],
   templateUrl: './users-page.component.html',
   styleUrls: ['./users-page.component.scss'],
 })
@@ -20,6 +28,30 @@ export class UsersPageComponent implements OnInit {
   users = signal<ManagedUser[]>([]);
   roles = signal<Role[]>([]);
   loading = signal(false);
+
+  // ── Refonte 2b, §14c : les quatre états manquants ─────────────────────────
+  readonly skeletonRows = [0, 1, 2, 3, 4, 5, 6, 7];
+  readonly loadError = signal<string | null>(null);
+  readonly loadErrorDetail = signal<string | null>(null);
+  readonly lastLoadedAt = signal<Date | null>(null);
+
+  readonly activeFilters = computed<ActiveFilter[]>(() => {
+    const applied: ActiveFilter[] = [];
+    const drop = (label: string, apply: () => void) => {
+      applied.push({
+        label,
+        clear: () => {
+          apply();
+          this.currentPage.set(1);
+          this.loadData();
+        },
+      });
+    };
+
+    if (this.filterSearch()) drop(`recherche « ${this.filterSearch()} »`, () => this.filterSearch.set(''));
+
+    return applied;
+  });
 
   currentPage = signal(1);
   lastPage = signal(1);
@@ -68,8 +100,15 @@ export class UsersPageComponent implements OnInit {
         this.lastPage.set(paginated.last_page);
         this.total.set(paginated.total);
         this.loading.set(false);
+        this.loadError.set(null);
+        this.lastLoadedAt.set(new Date());
       },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        const { cause, detail } = describeLoadError(err);
+        this.loadError.set(cause);
+        this.loadErrorDetail.set(detail);
+        this.loading.set(false);
+      },
     });
   }
 

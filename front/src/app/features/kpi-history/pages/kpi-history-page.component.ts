@@ -6,16 +6,28 @@ import { KpiHistoryService } from '../data-access/kpi-history.service';
 import { KpiSnapshot, DashboardKpi, CommercialKpi } from '../models/kpi-history.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 
+import {
+  ListErrorComponent,
+  describeLoadError,
+} from '../../../shared/list-state';
+
 @Component({
   selector: 'app-kpi-history-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent],
+  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent, ListErrorComponent],
   templateUrl: './kpi-history-page.component.html',
   styleUrl: './kpi-history-page.component.scss',
 })
 export class KpiHistoryPageComponent implements OnInit {
   snapshots = signal<KpiSnapshot[]>([]);
   loading   = signal(false);
+
+  // ── Refonte 2b, §14c état 3 : un chargement qui échoue ne doit pas passer
+  // pour une absence de données. Cet écran n'est pas une liste filtrée : il ne
+  // reçoit que cet état-là, les trois autres n'y auraient rien à dire.
+  readonly loadError = signal<string | null>(null);
+  readonly loadErrorDetail = signal<string | null>(null);
+  readonly lastLoadedAt = signal<Date | null>(null);
   totalPages = signal(0);
   totalItems = signal(0);
 
@@ -44,8 +56,15 @@ export class KpiHistoryPageComponent implements OnInit {
         this.totalPages.set(res.meta.last_page);
         this.totalItems.set(res.meta.total);
         this.loading.set(false);
+        this.loadError.set(null);
+        this.lastLoadedAt.set(new Date());
       },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        const { cause, detail } = describeLoadError(err);
+        this.loadError.set(cause);
+        this.loadErrorDetail.set(detail);
+        this.loading.set(false);
+      },
     });
   }
 

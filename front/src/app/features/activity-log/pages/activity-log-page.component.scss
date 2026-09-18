@@ -75,13 +75,6 @@ $_bg:      #f7fafc;
   position: relative;
 }
 
-.loading-overlay {
-  padding: 3rem;
-  text-align: center;
-  color: $_muted;
-  font-size: 0.9rem;
-}
-
 .table-scroll {
   overflow-x: auto;
 }
@@ -383,4 +376,9 @@ $_bg:      #f7fafc;
   font-size: 0.9rem;
   color: $_text;
   font-weight: 500;
+}
+
+/* Refonte 2b, §14c : la cellule qui porte un état occupe toute la ligne. */
+.state-cell {
+  padding: 0;
 }

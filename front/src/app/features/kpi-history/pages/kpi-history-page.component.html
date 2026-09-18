@@ -27,11 +27,21 @@
 
   <!-- Table -->
   <div class="table-card">
+    <!-- Refonte 2b, §14c état 3 : sans cela, un serveur muet passe pour une absence de données. -->
+    @if (loadError()) {
+      <app-list-error
+        title="L'historique n'a pas pu être chargé."
+        [cause]="loadError()!"
+        [detail]="loadErrorDetail()"
+        [lastLoadedAt]="lastLoadedAt()"
+        (retry)="load()" />
+    }
+
     @if (loading()) {
       <div class="loading-state">Chargement…</div>
-    } @else if (snapshots().length === 0) {
+    } @else if (snapshots().length === 0 && !loadError()) {
       <div class="empty-state">Aucun snapshot disponible</div>
-    } @else {
+    } @else if (snapshots().length > 0) {
       <div class="table-scroll">
         <table class="table">
           <thead>

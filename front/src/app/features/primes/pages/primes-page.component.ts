@@ -9,16 +9,28 @@ const MONTH_NAMES = [
   'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
 ];
 
+import {
+  ListErrorComponent,
+  describeLoadError,
+} from '../../../shared/list-state';
+
 @Component({
   selector: 'app-primes-page',
   standalone: true,
-  imports: [CommonModule, IconComponent],
+  imports: [CommonModule, IconComponent, ListErrorComponent],
   templateUrl: './primes-page.component.html',
   styleUrls: ['./primes-page.component.scss'],
 })
 export class PrimesPageComponent implements OnInit {
   response = signal<PrimesResponse | null>(null);
   loading = signal(false);
+
+  // ── Refonte 2b, §14c état 3 : un chargement qui échoue ne doit pas passer
+  // pour une absence de données. Cet écran n'est pas une liste filtrée : il ne
+  // reçoit que cet état-là, les trois autres n'y auraient rien à dire.
+  readonly loadError = signal<string | null>(null);
+  readonly loadErrorDetail = signal<string | null>(null);
+  readonly lastLoadedAt = signal<Date | null>(null);
 
   selectedYear = signal(new Date().getFullYear());
   selectedMonth = signal(new Date().getMonth() + 1);
@@ -45,8 +57,15 @@ export class PrimesPageComponent implements OnInit {
       next: (res) => {
         this.response.set(res);
         this.loading.set(false);
+        this.loadError.set(null);
+        this.lastLoadedAt.set(new Date());
       },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        const { cause, detail } = describeLoadError(err);
+        this.loadError.set(cause);
+        this.loadErrorDetail.set(detail);
+        this.loading.set(false);
+      },
     });
   }
 

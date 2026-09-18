@@ -55,15 +55,30 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngIf="loading()">
-            <td colspan="4" class="text-center">
-              <div class="spinner"></div>
-              Chargement...
+          <!-- Refonte 2b, §14c : chargement, erreur, liste vide. -->
+          <tr *ngIf="loadError()">
+            <td colspan="4" class="state-cell">
+              <app-list-error
+                title="Les transporteurs n'ont pas pu être chargés."
+                [cause]="loadError()!"
+                [detail]="loadErrorDetail()"
+                [lastLoadedAt]="lastLoadedAt()"
+                (retry)="loadData()" />
             </td>
           </tr>
-          <tr *ngIf="!loading() && carriers().length === 0">
-            <td colspan="4" class="text-center text-muted">
-              Aucun transporteur trouvé.
+
+          <ng-container *ngIf="loading() && carriers().length === 0">
+            <tr appSkeletonCells [cells]="4" [seed]="i"
+                *ngFor="let row of skeletonRows; let i = index"></tr>
+          </ng-container>
+
+          <tr *ngIf="!loading() && !loadError() && carriers().length === 0">
+            <td colspan="4" class="state-cell">
+              <app-list-empty
+                blankTitle="Aucun transporteur enregistré pour le moment."
+                noMatchTitle="Aucun transporteur ne correspond"
+                [filters]="activeFilters()"
+                (clearAll)="resetFilters()" />
             </td>
           </tr>
           <tr *ngFor="let c of carriers()">

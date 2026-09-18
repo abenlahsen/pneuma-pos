@@ -26,14 +26,26 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngIf="loading()">
-            <td colspan="3" class="text-center py-4">
-              <div class="spinner"></div> Chargement...
+          <!-- Refonte 2b, §14c : chargement, erreur, liste vide. -->
+          <tr *ngIf="loadError()">
+            <td colspan="3" class="state-cell">
+              <app-list-error
+                title="Les rôles n'ont pas pu être chargés."
+                [cause]="loadError()!"
+                [detail]="loadErrorDetail()"
+                [lastLoadedAt]="lastLoadedAt()"
+                (retry)="loadData()" />
             </td>
           </tr>
-          <tr *ngIf="!loading() && roles().length === 0">
-            <td colspan="3" class="text-center py-4 text-muted">
-              Aucun rôle trouvé.
+
+          <ng-container *ngIf="loading() && roles().length === 0">
+            <tr appSkeletonCells [cells]="3" [seed]="i"
+                *ngFor="let row of skeletonRows; let i = index"></tr>
+          </ng-container>
+
+          <tr *ngIf="!loading() && !loadError() && roles().length === 0">
+            <td colspan="3" class="state-cell">
+              <app-list-empty blankTitle="Aucun rôle enregistré pour le moment." />
             </td>
           </tr>
           <tr *ngFor="let role of roles()">

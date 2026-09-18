@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { computed, Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
@@ -10,10 +10,18 @@ import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-contro
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 import { CityService } from '../../../core/services/city.service';
 
+import {
+  ActiveFilter,
+  ListEmptyComponent,
+  ListErrorComponent,
+  SkeletonCellsComponent,
+  describeLoadError,
+} from '../../../shared/list-state';
+
 @Component({
   selector: 'app-partners-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, PartnerFormComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent],
+  imports: [CommonModule, FormsModule, PartnerFormComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent],
   templateUrl: './partners-page.component.html',
   styleUrls: ['./partners-page.component.scss'],
 })
@@ -29,6 +37,31 @@ export class PartnersPageComponent implements OnInit {
   sortBy = signal('');
   sortDirection = signal<'asc' | 'desc'>('asc');
   loading = signal(false);
+
+  // ── Refonte 2b, §14c : les quatre états manquants ─────────────────────
+  readonly skeletonRows = [0, 1, 2, 3, 4, 5, 6, 7];
+  readonly loadError = signal<string | null>(null);
+  readonly loadErrorDetail = signal<string | null>(null);
+  readonly lastLoadedAt = signal<Date | null>(null);
+
+  readonly activeFilters = computed<ActiveFilter[]>(() => {
+    const applied: ActiveFilter[] = [];
+    const drop = (label: string, apply: () => void) => {
+      applied.push({
+        label,
+        clear: () => {
+          apply();
+          this.currentPage.set(1);
+          this.loadData();
+        },
+      });
+    };
+
+    if (this.filterSearch()) drop(`recherche « ${this.filterSearch()} »`, () => this.filterSearch.set(''));
+    if (this.filterCity()) drop(`ville ${this.filterCity()}`, () => this.filterCity.set(''));
+
+    return applied;
+  });
   deletingPartnerId = signal<number | null>(null);
   showForm = signal(false);
   editingPartner = signal<Partner | null>(null);
@@ -62,8 +95,15 @@ export class PartnersPageComponent implements OnInit {
           this.lastPage.set(Number(p.last_page ?? 1) || 1);
           this.total.set(Number(p.total ?? 0) || 0);
           this.loading.set(false);
+          this.loadError.set(null);
+          this.lastLoadedAt.set(new Date());
         },
-        error: () => this.loading.set(false),
+        error: (err) => {
+          const { cause, detail } = describeLoadError(err);
+          this.loadError.set(cause);
+          this.loadErrorDetail.set(detail);
+          this.loading.set(false);
+        },
       });
   }
 

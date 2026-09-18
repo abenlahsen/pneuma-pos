@@ -20,3 +20,9 @@
   border-top: 2px solid #e8edf3;
   border-bottom: none !important;
 }
+
+/* Refonte 2b, §14c : la cellule qui porte un état occupe toute la ligne et
+   laisse le composant gérer son propre espacement. */
+.state-cell {
+  padding: 0;
+}

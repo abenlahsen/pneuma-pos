@@ -22,6 +22,15 @@
   </div>
 
   <ng-container *ngIf="!selectedAccount()">
+    <!-- Refonte 2b, §14c état 3 : sans cela, un serveur muet passe pour une absence de données. -->
+    <app-list-error
+      *ngIf="loadError()"
+      title="Les comptes n'ont pas pu être chargés."
+      [cause]="loadError()!"
+      [detail]="loadErrorDetail()"
+      [lastLoadedAt]="lastLoadedAt()"
+      (retry)="loadAccounts()" />
+
     <div class="loading-state" *ngIf="loading()">Chargement des comptes...</div>
 
     <div class="accounts-grid" *ngIf="!loading()">

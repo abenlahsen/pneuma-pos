@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { computed, Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BrandService } from '../data-access/brand.service';
@@ -8,10 +8,18 @@ import { BrandFormComponent } from '../components/brand-form/brand-form.componen
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 
+import {
+  ActiveFilter,
+  ListEmptyComponent,
+  ListErrorComponent,
+  SkeletonCellsComponent,
+  describeLoadError,
+} from '../../../shared/list-state';
+
 @Component({
   selector: 'app-brands-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, BrandFormComponent, AutoRefreshControlComponent, SortIconComponent],
+  imports: [CommonModule, FormsModule, BrandFormComponent, AutoRefreshControlComponent, SortIconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent],
   templateUrl: './brands-page.component.html',
   styleUrls: ['./brands-page.component.scss'],
 })
@@ -28,6 +36,30 @@ export class BrandsPageComponent implements OnInit {
   sortDirection = signal<'asc' | 'desc'>('asc');
 
   loading = signal(false);
+
+  // ── Refonte 2b, §14c : les quatre états manquants ─────────────────────────
+  readonly skeletonRows = [0, 1, 2, 3, 4, 5, 6, 7];
+  readonly loadError = signal<string | null>(null);
+  readonly loadErrorDetail = signal<string | null>(null);
+  readonly lastLoadedAt = signal<Date | null>(null);
+
+  readonly activeFilters = computed<ActiveFilter[]>(() => {
+    const applied: ActiveFilter[] = [];
+    const drop = (label: string, apply: () => void) => {
+      applied.push({
+        label,
+        clear: () => {
+          apply();
+          this.currentPage.set(1);
+          this.loadData();
+        },
+      });
+    };
+
+    if (this.filterSearch()) drop(`recherche « ${this.filterSearch()} »`, () => this.filterSearch.set(''));
+
+    return applied;
+  });
   deletingBrandId = signal<number | null>(null);
   showForm = signal(false);
   editingBrand = signal<Brand | null>(null);
@@ -64,8 +96,15 @@ export class BrandsPageComponent implements OnInit {
         this.lastPage.set(Number(response.last_page ?? 1) || 1);
         this.total.set(Number(response.total ?? 0) || 0);
         this.loading.set(false);
+        this.loadError.set(null);
+        this.lastLoadedAt.set(new Date());
       },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        const { cause, detail } = describeLoadError(err);
+        this.loadError.set(cause);
+        this.loadErrorDetail.set(detail);
+        this.loading.set(false);
+      },
     });
   }
 

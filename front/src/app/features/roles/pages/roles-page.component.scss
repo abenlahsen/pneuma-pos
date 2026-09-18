@@ -277,3 +277,8 @@ $_border-2: #d0d9e4;
     align-items: flex-start;
   }
 }
+
+/* Refonte 2b, §14c : la cellule qui porte un état occupe toute la ligne. */
+.state-cell {
+  padding: 0;
+}

@@ -53,18 +53,33 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngIf="loading()">
-            <td colspan="5" class="text-center py-4">
-              <div class="spinner"></div>
-              Chargement...
+          <!-- Refonte 2b, §14c : chargement, erreur, liste vide. -->
+          <tr *ngIf="loadError()">
+            <td colspan="5" class="state-cell">
+              <app-list-error
+                title="Les marques n'ont pas pu être chargées."
+                [cause]="loadError()!"
+                [detail]="loadErrorDetail()"
+                [lastLoadedAt]="lastLoadedAt()"
+                (retry)="loadData()" />
             </td>
           </tr>
 
-          <tr *ngIf="!loading() && brands().length === 0">
-            <td colspan="5" class="text-center py-4 text-muted">
-              Aucune marque trouvée.
+          <ng-container *ngIf="loading() && brands().length === 0">
+            <tr appSkeletonCells [cells]="5" [seed]="i"
+                *ngFor="let row of skeletonRows; let i = index"></tr>
+          </ng-container>
+
+          <tr *ngIf="!loading() && !loadError() && brands().length === 0">
+            <td colspan="5" class="state-cell">
+              <app-list-empty
+                blankTitle="Aucune marque enregistrée pour le moment."
+                noMatchTitle="Aucune marque ne correspond"
+                [filters]="activeFilters()"
+                (clearAll)="resetFilters()" />
             </td>
           </tr>
+
 
           <tr *ngFor="let brand of brands()" [class.inactive-row]="!brand.is_active">
             <td>

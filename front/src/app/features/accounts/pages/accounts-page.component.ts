@@ -13,10 +13,15 @@ import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-contro
 import { PurchasePaymentDetailComponent } from '../../purchases/components/purchase-payment-detail/purchase-payment-detail.component';
 import { SalePaymentDetailComponent } from '../../sales/components/sale-payment-detail/sale-payment-detail.component';
 
+import {
+  ListErrorComponent,
+  describeLoadError,
+} from '../../../shared/list-state';
+
 @Component({
   selector: 'app-accounts-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AccountFormComponent, TransferFormComponent, AutoRefreshControlComponent, PurchasePaymentDetailComponent, SalePaymentDetailComponent, IconComponent],
+  imports: [CommonModule, FormsModule, AccountFormComponent, TransferFormComponent, AutoRefreshControlComponent, PurchasePaymentDetailComponent, SalePaymentDetailComponent, IconComponent, ListErrorComponent],
   templateUrl: './accounts-page.component.html',
   styleUrls: ['./accounts-page.component.scss']
 })
@@ -25,6 +30,13 @@ export class AccountsPageComponent implements OnInit {
   viewingSalePaymentId = signal<number | null>(null);
   accounts = signal<Account[]>([]);
   loading = signal(false);
+
+  // ── Refonte 2b, §14c état 3 : un chargement qui échoue ne doit pas passer
+  // pour une absence de données. Cet écran n'est pas une liste filtrée : il ne
+  // reçoit que cet état-là, les trois autres n'y auraient rien à dire.
+  readonly loadError = signal<string | null>(null);
+  readonly loadErrorDetail = signal<string | null>(null);
+  readonly lastLoadedAt = signal<Date | null>(null);
 
   showAccountForm = signal(false);
   showTransferForm = signal(false);
@@ -66,6 +78,8 @@ export class AccountsPageComponent implements OnInit {
         const accounts = Array.isArray(response) ? response : (response.data ?? []);
         this.accounts.set(accounts);
         this.loading.set(false);
+        this.loadError.set(null);
+        this.lastLoadedAt.set(new Date());
         if (this.selectedAccount()) {
           const updated = accounts.find((a: Account) => a.id === this.selectedAccount()?.id);
           if (updated) {
@@ -73,7 +87,12 @@ export class AccountsPageComponent implements OnInit {
           }
         }
       },
-      error: () => this.loading.set(false)
+      error: (err) => {
+        const { cause, detail } = describeLoadError(err);
+        this.loadError.set(cause);
+        this.loadErrorDetail.set(detail);
+        this.loading.set(false);
+      }
     });
   }
 

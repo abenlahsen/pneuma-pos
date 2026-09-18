@@ -1,10 +1,18 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { ActivityLogService } from '../data-access/activity-log.service';
 import { ActivityLog, ActivityLogFilters, ActivityLogParams, ActivityLogSnapshot } from '../models/activity-log.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
+import {
+  ActiveFilter,
+  ListEmptyComponent,
+  ListErrorComponent,
+  SkeletonCellsComponent,
+  describeLoadError,
+  frenchDate,
+} from '../../../shared/list-state';
 
 const FIELD_LABELS: Record<string, string> = {
   date: 'Date',
@@ -53,7 +61,7 @@ export interface FieldRow {
 @Component({
   selector: 'app-activity-log-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent],
+  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent],
   templateUrl: './activity-log-page.component.html',
   styleUrls: ['./activity-log-page.component.scss'],
 })
@@ -62,6 +70,45 @@ export class ActivityLogPageComponent implements OnInit {
   filters = signal<ActivityLogFilters>({ entityTypes: [], actions: [], users: [] });
 
   loading = signal(false);
+
+  // ── Refonte 2b, §14c : les quatre états manquants ─────────────────────────
+  readonly skeletonRows = [0, 1, 2, 3, 4, 5, 6, 7];
+  readonly loadError = signal<string | null>(null);
+  readonly loadErrorDetail = signal<string | null>(null);
+  readonly lastLoadedAt = signal<Date | null>(null);
+
+  /**
+   * Six filtres sur un journal d'audit : « Aucune entrée trouvée » y est
+   * particulièrement trompeur, puisqu'il peut aussi bien vouloir dire « rien ne
+   * s'est passé » que « vous cherchez au mauvais endroit ».
+   */
+  readonly activeFilters = computed<ActiveFilter[]>(() => {
+    const applied: ActiveFilter[] = [];
+    const drop = (label: string, apply: () => void) => {
+      applied.push({
+        label,
+        clear: () => {
+          apply();
+          this.currentPage.set(1);
+          this.loadData();
+        },
+      });
+    };
+
+    if (this.filterSearch()) drop(`recherche « ${this.filterSearch()} »`, () => this.filterSearch.set(''));
+    if (this.filterEntityType()) {
+      drop(this.entityTypeLabel(this.filterEntityType()).toLowerCase(), () => this.filterEntityType.set(''));
+    }
+    if (this.filterAction()) drop(this.actionLabel(this.filterAction()).toLowerCase(), () => this.filterAction.set(''));
+    if (this.filterUserId()) {
+      const user = this.filters().users.find((u) => String(u.id) === this.filterUserId());
+      drop(`utilisateur ${user?.name ?? this.filterUserId()}`, () => this.filterUserId.set(''));
+    }
+    if (this.filterDateFrom()) drop(`à partir du ${frenchDate(this.filterDateFrom())}`, () => this.filterDateFrom.set(''));
+    if (this.filterDateTo()) drop(`jusqu'au ${frenchDate(this.filterDateTo())}`, () => this.filterDateTo.set(''));
+
+    return applied;
+  });
 
   currentPage = signal(1);
   lastPage = signal(1);
@@ -104,8 +151,15 @@ export class ActivityLogPageComponent implements OnInit {
         this.lastPage.set(res.last_page);
         this.total.set(res.total);
         this.loading.set(false);
+        this.loadError.set(null);
+        this.lastLoadedAt.set(new Date());
       },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        const { cause, detail } = describeLoadError(err);
+        this.loadError.set(cause);
+        this.loadErrorDetail.set(detail);
+        this.loading.set(false);
+      },
     });
   }
 

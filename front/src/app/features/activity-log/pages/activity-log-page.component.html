@@ -73,9 +73,18 @@
 
   <!-- Tableau -->
   <div class="table-card">
-    @if (loading()) {
-      <div class="loading-overlay">Chargement…</div>
-    } @else {
+    <!-- Refonte 2b, §14c : la table reste montée pendant le chargement, c'est
+         son en-tête qui donne au squelette ses largeurs de colonne. -->
+    @if (loadError()) {
+      <app-list-error
+        title="Le journal n'a pas pu être chargé."
+        [cause]="loadError()!"
+        [detail]="loadErrorDetail()"
+        [lastLoadedAt]="lastLoadedAt()"
+        (retry)="loadData()" />
+    }
+
+    <ng-container>
       <div class="table-scroll">
         <table class="data-table">
           <thead>
@@ -89,6 +98,12 @@
             </tr>
           </thead>
           <tbody>
+            @if (loading() && logs().length === 0) {
+              @for (row of skeletonRows; track $index) {
+                <tr appSkeletonCells [cells]="6" [seed]="$index"></tr>
+              }
+            }
+
             @for (log of logs(); track log.id) {
               <tr>
                 <td class="cell-date">{{ log.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
@@ -113,9 +128,17 @@
                 </td>
               </tr>
             } @empty {
-              <tr>
-                <td colspan="6" class="empty-state">Aucune entrée trouvée</td>
-              </tr>
+              @if (!loading() && !loadError()) {
+                <tr>
+                  <td colspan="6" class="state-cell">
+                    <app-list-empty
+                      blankTitle="Aucune activité enregistrée pour le moment."
+                      noMatchTitle="Aucune entrée ne correspond"
+                      [filters]="activeFilters()"
+                      (clearAll)="resetFilters()" />
+                  </td>
+                </tr>
+              }
             }
           </tbody>
         </table>
@@ -136,7 +159,7 @@
           <span class="page-info">Page {{ currentPage() }} / {{ lastPage() }}</span>
         </div>
       }
-    }
+    </ng-container>
   </div>
 </div>
 

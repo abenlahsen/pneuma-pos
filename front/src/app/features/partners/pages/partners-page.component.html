@@ -70,15 +70,30 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngIf="loading()">
-            <td colspan="6" class="text-center">
-              <div class="spinner"></div>
-              Chargement...
+          <!-- Refonte 2b, §14c : chargement, erreur, liste vide. -->
+          <tr *ngIf="loadError()">
+            <td colspan="6" class="state-cell">
+              <app-list-error
+                title="Les partenaires n'ont pas pu être chargés."
+                [cause]="loadError()!"
+                [detail]="loadErrorDetail()"
+                [lastLoadedAt]="lastLoadedAt()"
+                (retry)="loadData()" />
             </td>
           </tr>
-          <tr *ngIf="!loading() && partners().length === 0">
-            <td colspan="6" class="text-center text-muted">
-              Aucun partenaire trouvé.
+
+          <ng-container *ngIf="loading() && partners().length === 0">
+            <tr appSkeletonCells [cells]="6" [seed]="i"
+                *ngFor="let row of skeletonRows; let i = index"></tr>
+          </ng-container>
+
+          <tr *ngIf="!loading() && !loadError() && partners().length === 0">
+            <td colspan="6" class="state-cell">
+              <app-list-empty
+                blankTitle="Aucun partenaire enregistré pour le moment."
+                noMatchTitle="Aucun partenaire ne correspond"
+                [filters]="activeFilters()"
+                (clearAll)="resetFilters()" />
             </td>
           </tr>
           <tr *ngFor="let p of partners()">

@@ -91,18 +91,33 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngIf="loading()">
-            <td colspan="12" class="text-center py-4">
-              <div class="spinner"></div>
-              Chargement...
+          <!-- Refonte 2b, §14c : chargement, erreur, liste vide. -->
+          <tr *ngIf="loadError()">
+            <td colspan="12" class="state-cell">
+              <app-list-error
+                title="Les produits n'ont pas pu être chargés."
+                [cause]="loadError()!"
+                [detail]="loadErrorDetail()"
+                [lastLoadedAt]="lastLoadedAt()"
+                (retry)="loadData()" />
             </td>
           </tr>
 
-          <tr *ngIf="!loading() && products().length === 0">
-            <td colspan="12" class="text-center py-4 text-muted">
-              Aucun produit trouvé.
+          <ng-container *ngIf="loading() && products().length === 0">
+            <tr appSkeletonCells [cells]="12" [seed]="i"
+                *ngFor="let row of skeletonRows; let i = index"></tr>
+          </ng-container>
+
+          <tr *ngIf="!loading() && !loadError() && products().length === 0">
+            <td colspan="12" class="state-cell">
+              <app-list-empty
+                blankTitle="Aucun produit enregistré pour le moment."
+                noMatchTitle="Aucun produit ne correspond"
+                [filters]="activeFilters()"
+                (clearAll)="resetFilters()" />
             </td>
           </tr>
+
 
           <tr *ngFor="let product of products()" [class.inactive-row]="!product.is_active">
             <td class="text-center actions-cell">

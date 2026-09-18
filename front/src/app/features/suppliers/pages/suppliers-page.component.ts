@@ -10,10 +10,18 @@ import { SupplierFormComponent } from '../components/supplier-form/supplier-form
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 
+import {
+  ActiveFilter,
+  ListEmptyComponent,
+  ListErrorComponent,
+  SkeletonCellsComponent,
+  describeLoadError,
+} from '../../../shared/list-state';
+
 @Component({
   selector: 'app-suppliers-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, SupplierFormComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent],
+  imports: [CommonModule, FormsModule, SupplierFormComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent],
   templateUrl: './suppliers-page.component.html',
   styleUrls: ['./suppliers-page.component.scss'],
 })
@@ -30,6 +38,30 @@ export class SuppliersPageComponent implements OnInit {
   sortDirection = signal<'asc' | 'desc'>('asc');
 
   loading = signal(false);
+
+  // ── Refonte 2b, §14c : les quatre états manquants ─────────────────────────
+  readonly skeletonRows = [0, 1, 2, 3, 4, 5, 6, 7];
+  readonly loadError = signal<string | null>(null);
+  readonly loadErrorDetail = signal<string | null>(null);
+  readonly lastLoadedAt = signal<Date | null>(null);
+
+  readonly activeFilters = computed<ActiveFilter[]>(() => {
+    const applied: ActiveFilter[] = [];
+    const drop = (label: string, apply: () => void) => {
+      applied.push({
+        label,
+        clear: () => {
+          apply();
+          this.currentPage.set(1);
+          this.loadData();
+        },
+      });
+    };
+
+    if (this.filterSearch()) drop(`recherche « ${this.filterSearch()} »`, () => this.filterSearch.set(''));
+
+    return applied;
+  });
   showForm = signal(false);
   editingSupplier = signal<Supplier | null>(null);
 
@@ -104,8 +136,15 @@ export class SuppliersPageComponent implements OnInit {
         this.lastPage.set(Number(paginated.last_page ?? 1) || 1);
         this.total.set(Number(paginated.total ?? 0) || 0);
         this.loading.set(false);
+        this.loadError.set(null);
+        this.lastLoadedAt.set(new Date());
       },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        const { cause, detail } = describeLoadError(err);
+        this.loadError.set(cause);
+        this.loadErrorDetail.set(detail);
+        this.loading.set(false);
+      },
     });
   }
 

@@ -36,6 +36,15 @@
         <button type="button" class="btn btn-secondary btn-sm" (click)="cancelAddParent()">Annuler</button>
       </div>
 
+      <!-- Refonte 2b, §14c état 3 : sans cela, un serveur muet passe pour une absence de données. -->
+      <app-list-error
+        *ngIf="loadError()"
+        title="Les catégories n'ont pas pu être chargées."
+        [cause]="loadError()!"
+        [detail]="loadErrorDetail()"
+        [lastLoadedAt]="lastLoadedAt()"
+        (retry)="loadCategories()" />
+
       <div *ngIf="loading()" class="text-center py-4"><div class="spinner"></div> Chargement...</div>
 
       <div class="empty-state" *ngIf="!loading() && categories().length === 0">

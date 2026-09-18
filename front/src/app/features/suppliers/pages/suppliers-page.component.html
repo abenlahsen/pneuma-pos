@@ -110,18 +110,33 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngIf="loading()">
-            <td colspan="6" class="text-center py-4">
-              <div class="spinner"></div>
-              Chargement...
+          <!-- Refonte 2b, §14c : chargement, erreur, liste vide. -->
+          <tr *ngIf="loadError()">
+            <td colspan="6" class="state-cell">
+              <app-list-error
+                title="Les fournisseurs n'ont pas pu être chargés."
+                [cause]="loadError()!"
+                [detail]="loadErrorDetail()"
+                [lastLoadedAt]="lastLoadedAt()"
+                (retry)="loadData()" />
             </td>
           </tr>
 
-          <tr *ngIf="!loading() && suppliers().length === 0">
-            <td colspan="6" class="text-center py-4 text-muted">
-              Aucun fournisseur trouvé.
+          <ng-container *ngIf="loading() && suppliers().length === 0">
+            <tr appSkeletonCells [cells]="6" [seed]="i"
+                *ngFor="let row of skeletonRows; let i = index"></tr>
+          </ng-container>
+
+          <tr *ngIf="!loading() && !loadError() && suppliers().length === 0">
+            <td colspan="6" class="state-cell">
+              <app-list-empty
+                blankTitle="Aucun fournisseur enregistré pour le moment."
+                noMatchTitle="Aucun fournisseur ne correspond"
+                [filters]="activeFilters()"
+                (clearAll)="resetFilters()" />
             </td>
           </tr>
+
 
           <tr *ngFor="let supplier of suppliers()">
             <td class="text-center actions-cell">

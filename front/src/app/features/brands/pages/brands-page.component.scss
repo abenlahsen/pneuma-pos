@@ -1,2 +1,8 @@
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
+
+/* Refonte 2b, §14c : la cellule qui porte un état occupe toute la ligne et
+   laisse le composant gérer son propre espacement. */
+.state-cell {
+  padding: 0;
+}

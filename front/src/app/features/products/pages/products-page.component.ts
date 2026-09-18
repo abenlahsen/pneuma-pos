@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { computed, Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -10,10 +10,18 @@ import { ProductDetailComponent } from '../product-detail/product-detail.compone
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 
+import {
+  ActiveFilter,
+  ListEmptyComponent,
+  ListErrorComponent,
+  SkeletonCellsComponent,
+  describeLoadError,
+} from '../../../shared/list-state';
+
 @Component({
   selector: 'app-products-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductFormComponent, ProductDetailComponent, AutoRefreshControlComponent, SortIconComponent],
+  imports: [CommonModule, FormsModule, ProductFormComponent, ProductDetailComponent, AutoRefreshControlComponent, SortIconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent],
   templateUrl: './products-page.component.html',
   styleUrls: ['./products-page.component.scss'],
 })
@@ -42,6 +50,33 @@ export class ProductsPageComponent implements OnInit {
   sortDirection = signal<'asc' | 'desc'>('asc');
 
   loading = signal(false);
+
+  // ── Refonte 2b, §14c : les quatre états manquants ─────────────────────────
+  readonly skeletonRows = [0, 1, 2, 3, 4, 5, 6, 7];
+  readonly loadError = signal<string | null>(null);
+  readonly loadErrorDetail = signal<string | null>(null);
+  readonly lastLoadedAt = signal<Date | null>(null);
+
+  readonly activeFilters = computed<ActiveFilter[]>(() => {
+    const applied: ActiveFilter[] = [];
+    const drop = (label: string, apply: () => void) => {
+      applied.push({
+        label,
+        clear: () => {
+          apply();
+          this.currentPage.set(1);
+          this.loadData();
+        },
+      });
+    };
+
+    if (this.searchQuery()) drop(`recherche « ${this.searchQuery()} »`, () => this.searchQuery.set(''));
+    if (this.filterType()) drop(`type ${this.filterType()}`, () => this.filterType.set(''));
+    if (this.filterBrand()) drop(`marque ${this.filterBrand()}`, () => this.filterBrand.set(''));
+    if (this.filterProfile()) drop(`profil ${this.filterProfile()}`, () => this.filterProfile.set(''));
+
+    return applied;
+  });
   showForm = signal(false);
   editingProduct = signal<Product | null>(null);
   viewingProduct = signal<Product | null>(null);
@@ -82,8 +117,15 @@ export class ProductsPageComponent implements OnInit {
         this.lastPage.set(Number(response.last_page ?? 1) || 1);
         this.total.set(Number(response.total ?? 0) || 0);
         this.loading.set(false);
+        this.loadError.set(null);
+        this.lastLoadedAt.set(new Date());
       },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        const { cause, detail } = describeLoadError(err);
+        this.loadError.set(cause);
+        this.loadErrorDetail.set(detail);
+        this.loading.set(false);
+      },
     });
   }
 

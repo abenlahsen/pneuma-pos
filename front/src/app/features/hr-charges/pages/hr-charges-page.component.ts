@@ -19,10 +19,15 @@ const MONTH_NAMES = [
   'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
 ];
 
+import {
+  ListErrorComponent,
+  describeLoadError,
+} from '../../../shared/list-state';
+
 @Component({
   selector: 'app-hr-charges-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, HrChargeFormComponent, IconComponent],
+  imports: [CommonModule, FormsModule, HrChargeFormComponent, IconComponent, ListErrorComponent],
   templateUrl: './hr-charges-page.component.html',
   styleUrl: './hr-charges-page.component.scss',
 })
@@ -31,6 +36,13 @@ export class HrChargesPageComponent implements OnInit {
   summary = signal<HrChargeSummary | null>(null);
   filters = signal<HrChargeFilters>({ employees: [], subcategories: [], accounts: [] });
   loading = signal(false);
+
+  // ── Refonte 2b, §14c état 3 : un chargement qui échoue ne doit pas passer
+  // pour une absence de données. Cet écran n'est pas une liste filtrée : il ne
+  // reçoit que cet état-là, les trois autres n'y auraient rien à dire.
+  readonly loadError = signal<string | null>(null);
+  readonly loadErrorDetail = signal<string | null>(null);
+  readonly lastLoadedAt = signal<Date | null>(null);
   errorMessage = signal('');
 
   showForm = signal(false);
@@ -86,8 +98,15 @@ export class HrChargesPageComponent implements OnInit {
       next: (res) => {
         this.charges.set(res.data);
         this.loading.set(false);
+        this.loadError.set(null);
+        this.lastLoadedAt.set(new Date());
       },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        const { cause, detail } = describeLoadError(err);
+        this.loadError.set(cause);
+        this.loadErrorDetail.set(detail);
+        this.loading.set(false);
+      },
     });
 
     this.hrChargeService.summary(year, month, employeeId, subcategory).subscribe({

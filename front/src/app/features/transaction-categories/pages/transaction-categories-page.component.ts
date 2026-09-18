@@ -7,10 +7,15 @@ import { TransactionCategoryService } from '../data-access/transaction-category.
 import { TransactionCategory, TransactionCategoryType } from '../models/transaction-category.model';
 import { AuthService } from '../../../core/services/auth.service';
 
+import {
+  ListErrorComponent,
+  describeLoadError,
+} from '../../../shared/list-state';
+
 @Component({
   selector: 'app-transaction-categories-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, IconComponent],
+  imports: [CommonModule, FormsModule, RouterLink, IconComponent, ListErrorComponent],
   templateUrl: './transaction-categories-page.component.html',
   styleUrl: './transaction-categories-page.component.scss',
 })
@@ -18,6 +23,13 @@ export class TransactionCategoriesPageComponent implements OnInit {
   activeType = signal<TransactionCategoryType>('expense');
   categories = signal<TransactionCategory[]>([]);
   loading = signal(false);
+
+  // ── Refonte 2b, §14c état 3 : un chargement qui échoue ne doit pas passer
+  // pour une absence de données. Cet écran n'est pas une liste filtrée : il ne
+  // reçoit que cet état-là, les trois autres n'y auraient rien à dire.
+  readonly loadError = signal<string | null>(null);
+  readonly loadErrorDetail = signal<string | null>(null);
+  readonly lastLoadedAt = signal<Date | null>(null);
   errorMessage = signal('');
 
   addingParent = signal(false);
@@ -44,8 +56,15 @@ export class TransactionCategoriesPageComponent implements OnInit {
       next: (categories) => {
         this.categories.set(categories);
         this.loading.set(false);
+        this.loadError.set(null);
+        this.lastLoadedAt.set(new Date());
       },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        const { cause, detail } = describeLoadError(err);
+        this.loadError.set(cause);
+        this.loadErrorDetail.set(detail);
+        this.loading.set(false);
+      },
     });
   }
 
