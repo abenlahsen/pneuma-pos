@@ -132,6 +132,20 @@ export const routes: Routes = [
       import('./features/products/pages/products-page.component').then((m) => m.ProductsPageComponent),
   },
   {
+    path: 'products/new',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'create products' },
+    loadComponent: () =>
+      import('./features/products/product-form-page/product-form-page.component').then((m) => m.ProductFormPageComponent),
+  },
+  {
+    path: 'products/:id/edit',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'edit products' },
+    loadComponent: () =>
+      import('./features/products/product-form-page/product-form-page.component').then((m) => m.ProductFormPageComponent),
+  },
+  {
     path: 'brands',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view brands' },

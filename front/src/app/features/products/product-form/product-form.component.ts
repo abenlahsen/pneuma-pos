@@ -8,18 +8,31 @@ import { StockService } from '../../../core/services/stock.service';
 import { StockMovementService } from '../../../core/services/stock-movement.service';
 import { StockMovement, StockMovementType } from '../../../core/models/stock-movement.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { formatTyreDimension, parseTyreDimension } from './tyre-dimension';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 
 @Component({
   selector: 'app-product-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent],
+  imports: [CommonModule, FormsModule, IconComponent, ConfirmDeleteComponent],
   templateUrl: './product-form.component.html',
-  styleUrls: ['../../sales/sale-form/sale-form.component.scss', './product-form.component.scss']
+  styleUrl: './product-form.component.scss'
 })
 export class ProductFormComponent implements OnInit {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   @Input() product: Product | null = null;
   @Input() brands: { id: number; name: string }[] = [];
   @Output() save = new EventEmitter<ProductPayload>();
+  @Output() saveAndNew = new EventEmitter<ProductPayload>();
   @Output() cancel = new EventEmitter<void>();
 
   formData: ProductPayload = {
@@ -70,6 +83,83 @@ export class ProductFormComponent implements OnInit {
     return this.editingStockQuantity() !== orig;
   });
 
+
+  // ── Dimension : un seul champ, analysé à la frappe (gabarit 15a) ──────────
+  readonly dimensionInput = signal('');
+  /** Ouvre les cinq champs d'origine quand l'analyse n'aboutit pas. */
+  readonly dimensionManual = signal(false);
+
+  readonly parsedDimension = computed(() => parseTyreDimension(this.dimensionInput()));
+
+  /** Vide : ni reconnue ni fautive, on n'affiche rien. */
+  readonly dimensionUnreadable = computed(
+    () => this.dimensionInput().trim().length > 0 && this.parsedDimension() === null,
+  );
+
+  onDimensionInput(value: string): void {
+    this.dimensionInput.set(value);
+
+    const parsed = this.parsedDimension();
+    if (!parsed) return;
+
+    // L'analyse n'écrit que lorsqu'elle aboutit : une saisie en cours ne doit
+    // pas effacer une dimension déjà enregistrée.
+    this.formData.tire_width = parsed.width;
+    this.formData.tire_height = parsed.height;
+    this.formData.tire_diameter = parsed.diameter;
+    if (parsed.loadIndex) this.formData.tire_load_index = parsed.loadIndex;
+    if (parsed.speedIndex) this.formData.tire_speed_index = parsed.speedIndex;
+  }
+
+  /** Après une saisie champ par champ, le champ unique se resynchronise. */
+  syncDimensionFromFields(): void {
+    this.dimensionInput.set(
+      formatTyreDimension(
+        this.formData.tire_width ?? null,
+        this.formData.tire_height ?? null,
+        this.formData.tire_diameter ?? null,
+        this.formData.tire_load_index,
+        this.formData.tire_speed_index,
+      ),
+    );
+  }
+
+  // ── Type en choix segmenté (gabarit 15a) ─────────────────────────────────
+  /**
+   * Le changement de type ne vide aucun champ : les valeurs de l'autre type
+   * restent dans le formulaire et le serveur ignore celles qui ne concernent
+   * pas le type retenu. Un aller-retour par erreur entre « Pneu » et
+   * « Service » ne doit pas coûter une dimension ressaisie.
+   */
+  selectType(type: 'tyre' | 'part' | 'service'): void {
+    this.formData.type = type;
+  }
+
+  // ── Motif de changement de quantité : quatre boutons + une précision ──────
+  readonly REASON_PRESETS = ['Inventaire', 'Casse', 'Transfert', 'Retour'];
+  readonly reasonPreset = signal('');
+  readonly reasonDetail = signal('');
+
+  selectReasonPreset(preset: string): void {
+    this.reasonPreset.set(preset);
+    this.composeReason();
+  }
+
+  onReasonDetail(value: string): void {
+    this.reasonDetail.set(value);
+    this.composeReason();
+  }
+
+  /**
+   * Le serveur attend une chaîne d'au moins trois caractères. Un bouton seul
+   * la fournit ; la précision libre s'y ajoute quand elle existe.
+   */
+  private composeReason(): void {
+    const preset = this.reasonPreset();
+    const detail = this.reasonDetail().trim();
+    this.stockReason.set([preset, detail].filter(Boolean).join(' · '));
+  }
+
   // ── Stock Movements History ──
   movements = signal<StockMovement[]>([]);
   movementsLoading = signal(false);
@@ -119,6 +209,8 @@ export class ProductFormComponent implements OnInit {
         selling_price: service?.selling_price ?? null,
       };
 
+      this.syncDimensionFromFields();
+
       // Services have no stock
       if (this.product.type !== 'service') {
         this.loadStock();
@@ -148,6 +240,27 @@ export class ProductFormComponent implements OnInit {
 
   onSubmit() {
     this.save.emit(this.formData);
+  }
+
+  onSubmitAndNew() {
+    this.saveAndNew.emit(this.formData);
+  }
+
+  /**
+   * Le pied annonce les champs réellement exigés, qui dépendent du type. Le
+   * gabarit listait « type, marque, dimension » ; la marque n'est pas requise
+   * par le serveur et l'annoncer serait une promesse fausse.
+   */
+  get requiredHint(): string {
+    if (this.isPart) return 'Champs requis : type, catégorie.';
+    if (this.isService) return 'Champs requis : type, nom du service, catégorie.';
+
+    return 'Champ requis : type. La dimension reste vivement conseillée.';
+  }
+
+  /** Dernière modification connue du serveur, pour la barre haute. */
+  get lastModified(): string | null {
+    return this.product?.updated_at ?? null;
   }
 
   // ── Stock Management ──
@@ -198,6 +311,8 @@ export class ProductFormComponent implements OnInit {
   }
 
   cancelStockEdit(): void {
+    this.reasonPreset.set('');
+    this.reasonDetail.set('');
     this.showStockRow.set(false);
     this.editingStockId.set(null);
     this.editingStockOriginalQty.set(null);
@@ -240,11 +355,16 @@ export class ProductFormComponent implements OnInit {
   }
 
   deleteStock(stock: Stock): void {
-    if (confirm(`Supprimer cette entrée stock (Qté: ${stock.quantity}, Dépôt: ${stock.depot || '-'}) ?`)) {
-      this.stockService.deleteStock(stock.id).subscribe({
-        next: () => { this.loadStock(); this.loadMovementsIfOpen(); },
-      });
-    }
+    this.pendingDelete.set({
+      title: `Supprimer le lot ${stock.depot || 'sans dépôt'}${stock.zone ? ' · ' + stock.zone : ''} ?`,
+      consequence: `${stock.quantity} ${stock.quantity > 1 ? 'articles sortiront' : 'article sortira'} du stock.`,
+      detail: 'Un mouvement de type Suppression sera écrit dans l\'historique, avec votre nom.',
+      run: () => {
+        this.stockService.deleteStock(stock.id).subscribe({
+          next: () => { this.loadStock(); this.loadMovementsIfOpen(); },
+        });
+      },
+    });
   }
 
   // ── Stock Movements ──

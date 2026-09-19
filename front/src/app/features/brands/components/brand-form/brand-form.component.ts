@@ -2,11 +2,12 @@ import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChange
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Brand, BrandPayload } from '../../models/brand.model';
+import { ReferentialModalComponent } from '../../../../shared/referential-modal/referential-modal.component';
 
 @Component({
   selector: 'app-brand-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReferentialModalComponent],
   templateUrl: './brand-form.component.html',
   styleUrls: ['../../../sales/sale-form/sale-form.component.scss', './brand-form.component.scss']
 })

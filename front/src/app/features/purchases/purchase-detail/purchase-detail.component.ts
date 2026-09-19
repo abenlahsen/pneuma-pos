@@ -12,15 +12,26 @@ import { AuthService } from '../../../core/services/auth.service';
 import { PurchaseService as PurchaseReturnsService } from '../data-access/purchase.service';
 import { PurchaseReturn } from '../models/purchase.model';
 import { isTypingTarget } from '../../../core/utils/detail-navigator';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 
 @Component({
   selector: 'app-purchase-detail',
   standalone: true,
-  imports: [CommonModule, ProductDetailComponent, DocumentPrintComponent, IconComponent],
+  imports: [CommonModule, ProductDetailComponent, DocumentPrintComponent, IconComponent, ConfirmDeleteComponent],
   templateUrl: './purchase-detail.component.html',
   styleUrls: ['../../sales/sale-detail/sale-detail.component.scss', './purchase-detail.component.scss']
 })
 export class PurchaseDetailComponent implements OnInit, OnChanges {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   @Input({ required: true }) purchase!: Purchase;
   @Input() canEdit = false;
   @Input() canReturn = false;
@@ -102,7 +113,14 @@ export class PurchaseDetailComponent implements OnInit, OnChanges {
   }
 
   deleteReturn(purchaseReturn: PurchaseReturn): void {
-    if (!confirm('Supprimer ce retour ? Le stock sera restauré.')) return;
+    this.pendingDelete.set({
+      title: `Supprimer le retour ${purchaseReturn.id} ?`,
+      consequence: `${purchaseReturn.total_quantity} article(s) reviendront en stock et ${purchaseReturn.total_amount} DH au dû de l'achat.`,
+      run: () => this.performDeleteReturn(purchaseReturn),
+    });
+  }
+
+  private performDeleteReturn(purchaseReturn: PurchaseReturn): void {
     this.returnsService.deleteReturn(purchaseReturn.id).subscribe({
       next: () => {
         this.loadReturns();

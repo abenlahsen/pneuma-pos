@@ -1,0 +1,20 @@
+<div class="pfp-shell">
+  <p class="pfp-loading" *ngIf="loading()">Chargement de la fiche…</p>
+
+  <app-list-error
+    *ngIf="loadError()"
+    title="La fiche produit n'a pas pu être chargée."
+    [cause]="loadError()!"
+    [detail]="loadErrorDetail()"
+    (retry)="retry()" />
+
+  <p class="pfp-save-error" *ngIf="saveError()">{{ saveError() }}</p>
+
+  <app-product-form
+    *ngIf="!loading() && !loadError()"
+    [product]="product()"
+    [brands]="brands()"
+    (save)="onSave($event)"
+    (saveAndNew)="onSaveAndNew($event)"
+    (cancel)="cancel()" />
+</div>

@@ -3,12 +3,6 @@
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
 
-$_red:     #ff2d37;
-$_text:    #0f172a;
-$_muted:   #64748b;
-$_surface: #ffffff;
-$_border:  #e8edf3;
-$_bg:      #f7fafc;
 
 // ── Page header ───────────────────────────────────────────────────────────────
 .page-header {
@@ -29,14 +23,14 @@ $_bg:      #f7fafc;
   .filter-select {
     height: 2.1rem;
     padding: 0 0.65rem;
-    border: 1px solid $_border;
+    border: 1px solid $border-subtle;
     border-radius: 0;
     font-size: 0.875rem;
-    background: $_surface;
-    color: $_text;
+    background: $bg-card;
+    color: $text-dark;
     outline: none;
 
-    &:focus { border-color: $_red; box-shadow: 0 0 0 2px rgba(255, 45, 55, 0.12); }
+    &:focus { border-color: $primary; box-shadow: 0 0 0 2px rgba(255, 45, 55, 0.12); }
   }
 
   .filter-search { min-width: 200px; }
@@ -56,22 +50,22 @@ $_bg:      #f7fafc;
 }
 
 .btn-apply {
-  background: $_red;
+  background: $primary;
   color: #fff;
   &:hover { background: #cc0a13; }
 }
 
 .btn-reset {
-  background: $_bg;
-  color: $_muted;
-  border: 1px solid $_border;
+  background: $bg-subtle;
+  color: $text-muted;
+  border: 1px solid $border-subtle;
   &:hover { background: #edf2f7; }
 }
 
 // ── Table ─────────────────────────────────────────────────────────────────────
 .table-card {
-  background: $_surface;
-  border: 1px solid $_border;
+  background: $bg-card;
+  border: 1px solid $border-subtle;
   border-radius: 0;
   overflow: hidden;
   position: relative;
@@ -87,8 +81,8 @@ $_bg:      #f7fafc;
   font-size: 0.875rem;
 
   thead tr {
-    background: $_bg;
-    border-bottom: 2px solid $_border;
+    background: $bg-subtle;
+    border-bottom: 2px solid $border-subtle;
   }
 
   th {
@@ -97,14 +91,14 @@ $_bg:      #f7fafc;
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.05em;
-    color: $_muted;
+    color: $text-muted;
     white-space: nowrap;
   }
 
   td {
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid $_border;
-    color: $_text;
+    border-bottom: 1px solid $border-subtle;
+    color: $text-dark;
     vertical-align: middle;
   }
 
@@ -114,7 +108,7 @@ $_bg:      #f7fafc;
 
 .cell-date {
   white-space: nowrap;
-  color: $_muted;
+  color: $text-muted;
   font-size: 0.8rem;
 }
 
@@ -129,17 +123,17 @@ $_bg:      #f7fafc;
 
 .btn-detail {
   background: none;
-  border: 1px solid $_border;
+  border: 1px solid $border-subtle;
   border-radius: 0;
   padding: 0.2rem 0.5rem;
   font-size: 0.85rem;
   cursor: pointer;
-  color: $_muted;
+  color: $text-muted;
   transition: background 0.12s, color 0.12s;
 
   &:hover {
-    background: $_bg;
-    color: $_text;
+    background: $bg-subtle;
+    color: $text-dark;
   }
 }
 
@@ -176,7 +170,7 @@ $_bg:      #f7fafc;
 .empty-state {
   text-align: center;
   padding: 3rem 1rem;
-  color: $_muted;
+  color: $text-muted;
   font-size: 0.9rem;
 }
 
@@ -186,7 +180,7 @@ $_bg:      #f7fafc;
   align-items: center;
   gap: 0.375rem;
   padding: 0.875rem 1rem;
-  border-top: 1px solid $_border;
+  border-top: 1px solid $border-subtle;
   flex-wrap: wrap;
 }
 
@@ -194,24 +188,24 @@ $_bg:      #f7fafc;
   min-width: 2rem;
   height: 2rem;
   padding: 0 0.5rem;
-  border: 1px solid $_border;
+  border: 1px solid $border-subtle;
   border-radius: 0;
-  background: $_surface;
-  color: $_text;
+  background: $bg-card;
+  color: $text-dark;
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.12s, border-color 0.12s;
 
-  &:hover:not([disabled]):not(.active) { background: $_bg; }
-  &.active { background: $_red; border-color: $_red; color: #fff; }
+  &:hover:not([disabled]):not(.active) { background: $bg-subtle; }
+  &.active { background: $primary; border-color: $primary; color: #fff; }
   &[disabled] { opacity: 0.4; cursor: not-allowed; }
 }
 
 .page-info {
   margin-left: auto;
   font-size: 0.8rem;
-  color: $_muted;
+  color: $text-muted;
 }
 
 // ── Detail modal ──────────────────────────────────────────────────────────────
@@ -227,7 +221,7 @@ $_bg:      #f7fafc;
 }
 
 .detail-modal {
-  background: $_surface;
+  background: $bg-card;
   border-radius: 0;
   box-shadow: none;
   width: 100%;
@@ -243,7 +237,7 @@ $_bg:      #f7fafc;
   align-items: center;
   gap: 0.75rem;
   padding: 1rem 1.25rem;
-  border-bottom: 1px solid $_border;
+  border-bottom: 1px solid $border-subtle;
   flex-shrink: 0;
 
   .detail-modal-title {
@@ -260,14 +254,14 @@ $_bg:      #f7fafc;
   background: none;
   border: none;
   font-size: 1rem;
-  color: $_muted;
+  color: $text-muted;
   cursor: pointer;
   padding: 0.25rem 0.4rem;
   border-radius: 0;
   line-height: 1;
   flex-shrink: 0;
 
-  &:hover { background: $_bg; color: $_text; }
+  &:hover { background: $bg-subtle; color: $text-dark; }
 }
 
 .detail-modal-meta {
@@ -276,17 +270,17 @@ $_bg:      #f7fafc;
   gap: 0.4rem;
   flex-wrap: wrap;
   padding: 0.6rem 1.25rem;
-  background: $_bg;
-  border-bottom: 1px solid $_border;
+  background: $bg-subtle;
+  border-bottom: 1px solid $border-subtle;
   font-size: 0.8rem;
-  color: $_muted;
+  color: $text-muted;
   flex-shrink: 0;
 }
 
-.meta-sep { color: $_border; }
+.meta-sep { color: $border-subtle; }
 
 .detail-description {
-  color: $_text;
+  color: $text-dark;
   font-style: italic;
 }
 
@@ -299,7 +293,7 @@ $_bg:      #f7fafc;
 .snapshot-title {
   font-size: 0.8rem;
   font-weight: 600;
-  color: $_muted;
+  color: $text-muted;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0 0 0.75rem;
@@ -316,28 +310,28 @@ $_bg:      #f7fafc;
     font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 0.05em;
-    color: $_muted;
-    background: $_bg;
-    border-bottom: 2px solid $_border;
+    color: $text-muted;
+    background: $bg-subtle;
+    border-bottom: 2px solid $border-subtle;
   }
 
   td {
     padding: 0.55rem 0.75rem;
-    border-bottom: 1px solid $_border;
+    border-bottom: 1px solid $border-subtle;
     vertical-align: middle;
   }
 
   tbody tr:last-child td { border-bottom: none; }
 
   .col-field {
-    color: $_muted;
+    color: $text-muted;
     font-size: 0.8rem;
     width: 35%;
     font-weight: 500;
   }
 
   .col-value {
-    color: $_text;
+    color: $text-dark;
     word-break: break-word;
   }
 
@@ -347,7 +341,7 @@ $_bg:      #f7fafc;
   .row-changed {
     background: rgba(251, 191, 36, 0.08);
 
-    .col-field { font-weight: 700; color: $_text; }
+    .col-field { font-weight: 700; color: $text-dark; }
   }
 }
 
@@ -363,20 +357,20 @@ $_bg:      #f7fafc;
   gap: 1rem;
   align-items: baseline;
   padding: 0.6rem 0.75rem;
-  background: $_bg;
+  background: $bg-subtle;
   border-radius: 0;
 }
 
 .payment-label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: $_muted;
+  color: $text-muted;
   min-width: 100px;
 }
 
 .payment-value {
   font-size: 0.9rem;
-  color: $_text;
+  color: $text-dark;
   font-weight: 500;
 }
 

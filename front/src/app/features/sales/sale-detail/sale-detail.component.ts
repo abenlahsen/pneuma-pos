@@ -14,6 +14,8 @@ import { ShipmentChangePrintComponent } from '../../shipment-changes/components/
 import { ShipmentChangeRequest, ShipmentChangeRequestPayload } from '../../shipment-changes/models/shipment-change.model';
 import { ShipmentChangeStatus } from '../../../core/constants/status.constants';
 import { isTypingTarget } from '../../../core/utils/detail-navigator';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 
 @Component({
   selector: 'app-sale-detail',
@@ -25,12 +27,20 @@ import { isTypingTarget } from '../../../core/utils/detail-navigator';
     ShipmentChangeListComponent,
     ShipmentChangeFormComponent,
     ShipmentChangePrintComponent,
-    IconComponent,
-  ],
+    IconComponent, ConfirmDeleteComponent],
   templateUrl: './sale-detail.component.html',
   styleUrl: './sale-detail.component.scss'
 })
 export class SaleDetailComponent implements OnInit, OnChanges {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   @Input({ required: true }) sale!: Sale;
   @Input() canEdit = false;
   /** Précédent / Suivant navigation, driven by the parent list page. */
@@ -149,8 +159,14 @@ export class SaleDetailComponent implements OnInit, OnChanges {
   }
 
   deleteShipmentRequest(request: ShipmentChangeRequest): void {
-    if (!confirm(`Supprimer la demande de modification DM-${request.id} ?`)) return;
+    this.pendingDelete.set({
+      title: `Supprimer la demande DM-${request.id} ?`,
+      consequence: 'La demande disparaît ; la vente elle-même n\'est pas modifiée.',
+      run: () => this.performDeleteShipmentRequest(request),
+    });
+  }
 
+  private performDeleteShipmentRequest(request: ShipmentChangeRequest): void {
     this.shipmentChangeService.delete(request.id).subscribe({
       next: () => this.loadShipmentRequests(),
     });

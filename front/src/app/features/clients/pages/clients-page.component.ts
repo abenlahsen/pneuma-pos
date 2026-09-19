@@ -8,6 +8,8 @@ import { ClientService } from '../data-access/client.service';
 import { Client, ClientFilters, ClientPayload } from '../models/client.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { CityService } from '../../../core/services/city.service';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 import {
   ActiveFilter,
   ListEmptyComponent,
@@ -19,11 +21,20 @@ import {
 @Component({
   selector: 'app-clients-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ClientFormComponent, AutoRefreshControlComponent, IconComponent, RouterLink, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent],
+  imports: [CommonModule, FormsModule, ClientFormComponent, AutoRefreshControlComponent, IconComponent, RouterLink, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, ConfirmDeleteComponent],
   templateUrl: './clients-page.component.html',
   styleUrl: './clients-page.component.scss',
 })
 export class ClientsPageComponent implements OnInit {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   private readonly clientService = inject(ClientService);
   private readonly router = inject(Router);
   private readonly cityService = inject(CityService);
@@ -215,12 +226,15 @@ export class ClientsPageComponent implements OnInit {
   }
 
   deleteClient(client: Client): void {
-    const confirmed = window.confirm(`Supprimer le client "${client.name}" ?`);
+    this.pendingDelete.set({
+      title: `Supprimer le client « ${client.name} » ?`,
+      consequence: 'Son relevé et son historique disparaissent avec lui.',
+      detail: "La suppression échouera s'il reste des ventes ou des paiements rattachés.",
+      run: () => this.performDeleteClient(client),
+    });
+  }
 
-    if (!confirmed) {
-      return;
-    }
-
+  private performDeleteClient(client: Client): void {
     this.deletingClientId.set(client.id);
     this.errorMessage.set('');
 

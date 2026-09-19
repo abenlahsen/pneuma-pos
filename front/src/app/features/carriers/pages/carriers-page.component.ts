@@ -8,6 +8,8 @@ import { Carrier, CarrierPayload, PaginatedResponse } from '../models/carrier.mo
 import { CarrierFormComponent } from '../components/carrier-form/carrier-form.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 
 import {
   ActiveFilter,
@@ -20,11 +22,20 @@ import {
 @Component({
   selector: 'app-carriers-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, CarrierFormComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent],
+  imports: [CommonModule, FormsModule, CarrierFormComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent, ConfirmDeleteComponent],
   templateUrl: './carriers-page.component.html',
   styleUrls: ['./carriers-page.component.scss'],
 })
 export class CarriersPageComponent implements OnInit {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   carriers = signal<Carrier[]>([]);
   currentPage = signal(1);
   lastPage = signal(1);
@@ -159,10 +170,14 @@ export class CarriersPageComponent implements OnInit {
   }
 
   deleteCarrier(c: Carrier): void {
-    if (!confirm(`Supprimer le transporteur "${c.name}" ?`)) {
-      return;
-    }
+    this.pendingDelete.set({
+      title: `Supprimer le transporteur « ${c.name} » ?`,
+      consequence: 'Les ventes déjà livrées par ce transporteur gardent leur historique.',
+      run: () => this.performDeleteCarrier(c),
+    });
+  }
 
+  private performDeleteCarrier(c: Carrier): void {
     this.deletingCarrierId.set(c.id);
 
     this.service.deleteCarrier(c.id).subscribe({

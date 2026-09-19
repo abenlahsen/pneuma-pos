@@ -1,22 +1,29 @@
-<form (ngSubmit)="onSubmit()" #form="ngForm" class="form-container">
-  <div class="form-section">
-    <div class="form-grid">
-      <div class="form-control full-width">
-        <label>Nom de la Société *</label>
-        <input type="text" name="name" [(ngModel)]="formData.name" required placeholder="Ex: SDTM, M.T.R, GHAZALA...">
-      </div>
-      <div class="form-control">
-        <label>Téléphone</label>
-        <input type="text" name="phone" [(ngModel)]="formData.phone" placeholder="Numéro de téléphone">
-      </div>
-      <div class="form-control">
-        <label>Email</label>
-        <input type="email" name="email" [(ngModel)]="formData.email" placeholder="Adresse email">
-      </div>
-    </div>
-  </div>
-  <div class="form-actions">
-    <button type="button" class="btn btn-secondary" (click)="cancel.emit()">Annuler</button>
-    <button type="submit" class="btn btn-primary" [disabled]="!form.valid">Enregistrer</button>
-  </div>
-</form>
+<!-- Refonte 2b, gabarit 15b : coque de modale partagee. Le formulaire
+     porte lui-meme sa coque, comme product-form porte la sienne. -->
+<app-referential-modal
+  referential="transporteur"
+  [title]="carrier ? 'Modifier ' + carrier.name : 'Nouveau transporteur'"
+  (dismiss)="cancel.emit()">
+
+  <form (ngSubmit)="onSubmit()" #form="ngForm" class="rf-form" id="transporteur-form">
+    <label class="rf-field">
+      <span>Nom de la société *</span>
+      <input type="text" name="name" [(ngModel)]="formData.name" required placeholder="Ex: SDTM, M.T.R, GHAZALA...">
+    </label>
+
+    <label class="rf-field">
+      <span>Téléphone</span>
+      <input type="text" name="phone" [(ngModel)]="formData.phone" placeholder="Numéro de téléphone">
+    </label>
+
+    <label class="rf-field">
+      <span>Email</span>
+      <input type="email" name="email" [(ngModel)]="formData.email" placeholder="Adresse email">
+    </label>
+  </form>
+
+  <ng-container actions>
+    <button type="button" class="rf-btn" (click)="cancel.emit()">Annuler</button>
+    <button type="submit" form="transporteur-form" class="rf-btn rf-btn--solid" [disabled]="!form.valid">Enregistrer</button>
+  </ng-container>
+</app-referential-modal>

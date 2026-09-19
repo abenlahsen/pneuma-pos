@@ -12,6 +12,8 @@ import { Transaction, TransactionSummary } from '../../../core/models/transactio
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { PurchasePaymentDetailComponent } from '../../purchases/components/purchase-payment-detail/purchase-payment-detail.component';
 import { SalePaymentDetailComponent } from '../../sales/components/sale-payment-detail/sale-payment-detail.component';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 
 import {
   ListErrorComponent,
@@ -21,11 +23,20 @@ import {
 @Component({
   selector: 'app-accounts-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AccountFormComponent, TransferFormComponent, AutoRefreshControlComponent, PurchasePaymentDetailComponent, SalePaymentDetailComponent, IconComponent, ListErrorComponent],
+  imports: [CommonModule, FormsModule, AccountFormComponent, TransferFormComponent, AutoRefreshControlComponent, PurchasePaymentDetailComponent, SalePaymentDetailComponent, IconComponent, ListErrorComponent, ConfirmDeleteComponent],
   templateUrl: './accounts-page.component.html',
   styleUrls: ['./accounts-page.component.scss']
 })
 export class AccountsPageComponent implements OnInit {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   viewingPaymentId = signal<number | null>(null);
   viewingSalePaymentId = signal<number | null>(null);
   accounts = signal<Account[]>([]);
@@ -150,14 +161,19 @@ export class AccountsPageComponent implements OnInit {
 
   deleteAccount(account: Account, event: Event) {
     event.stopPropagation();
-    if (confirm(`Supprimer le compte ${account.name} ?`)) {
-      this.accountService.deleteAccount(account.id).subscribe(() => {
-        if (this.selectedAccount()?.id === account.id) {
-          this.selectedAccount.set(null);
-        }
-        this.loadAccounts();
-      });
-    }
+    this.pendingDelete.set({
+      title: `Supprimer le compte ${account.name} ?`,
+      consequence: `Son solde de ${account.current_balance ?? 0} DH quittera le total de trésorerie.`,
+      detail: 'Les transactions déjà rattachées à ce compte ne sont pas supprimées.',
+      run: () => {
+        this.accountService.deleteAccount(account.id).subscribe(() => {
+          if (this.selectedAccount()?.id === account.id) {
+            this.selectedAccount.set(null);
+          }
+          this.loadAccounts();
+        });
+      },
+    });
   }
 
   openTransferForm() {

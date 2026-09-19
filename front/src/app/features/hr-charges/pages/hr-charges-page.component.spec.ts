@@ -211,23 +211,26 @@ describe('HrChargesPageComponent', () => {
   });
 
   describe('deleteCharge', () => {
-    let confirmSpy: ReturnType<typeof vi.spyOn>;
-    afterEach(() => confirmSpy.mockRestore());
+    /**
+     * Depuis le gabarit 15c, la méthode de suppression n'appelle plus l'API :
+     * elle décrit la suppression, que `runPendingDelete` exécute ensuite. Les
+     * tests suivent le même chemin que l'utilisateur — décrire, puis confirmer.
+     */
 
     it('does not call the API when the user cancels the confirmation', () => {
-      confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
 
       comp.deleteCharge(makeCharge());
+      // on ne confirme pas : la suppression reste en attente
 
       expect(mockService.delete).not.toHaveBeenCalled();
     });
 
     it('reloads the data after a successful delete', () => {
-      confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
       mockService.delete.mockReturnValue(of(undefined));
       mockService.list.mockClear();
 
       comp.deleteCharge(makeCharge());
+      comp.runPendingDelete('');
 
       expect(mockService.delete).toHaveBeenCalledWith(1);
       expect(mockService.list).toHaveBeenCalled();

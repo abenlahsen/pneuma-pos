@@ -9,6 +9,8 @@ import { SupplierFormComponent } from '../components/supplier-form/supplier-form
 import { SupplierPaymentComponent } from '../components/supplier-payment/supplier-payment.component';
 import { PurchasePaymentDetailComponent } from '../../purchases/components/purchase-payment-detail/purchase-payment-detail.component';
 import { AuthService } from '../../../core/services/auth.service';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 import {
   Supplier,
   SupplierPayload,
@@ -22,11 +24,20 @@ import {
 @Component({
   selector: 'app-supplier-detail-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, SupplierFormComponent, SupplierPaymentComponent, PurchasePaymentDetailComponent, IconComponent],
+  imports: [CommonModule, RouterLink, SupplierFormComponent, SupplierPaymentComponent, PurchasePaymentDetailComponent, IconComponent, ConfirmDeleteComponent],
   templateUrl: './supplier-detail-page.component.html',
   styleUrl: './supplier-detail-page.component.scss',
 })
 export class SupplierDetailPageComponent implements OnInit {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly supplierService = inject(SupplierService);
@@ -115,11 +126,17 @@ export class SupplierDetailPageComponent implements OnInit {
   deleteStatementPayment(payment: SupplierStatementPayment): void {
     const id = this.activeId;
     if (!id) return;
-    const warning = payment.multi
-      ? 'Ce paiement couvre plusieurs achats. Le supprimer annulera le paiement sur TOUS ces achats. Continuer ?'
-      : 'Supprimer ce paiement ?';
-    if (!confirm(warning)) return;
+    this.pendingDelete.set({
+      title: 'Supprimer ce paiement ?',
+      consequence: payment.multi
+        ? `${payment.amount} DH reviendront au dû de tous les achats que ce paiement couvrait.`
+        : `${payment.amount} DH reviendront au dû de cet achat.`,
+      detail: 'Le mouvement de trésorerie correspondant est supprimé avec lui.',
+      run: () => this.performDeleteStatementPayment(id, payment),
+    });
+  }
 
+  private performDeleteStatementPayment(id: number, payment: SupplierStatementPayment): void {
     this.deletingPaymentId.set(payment.id);
     this.supplierService.deleteSupplierPayment(id, payment.id).subscribe({
       next: () => {
@@ -149,9 +166,18 @@ export class SupplierDetailPageComponent implements OnInit {
 
   deleteSupplier(): void {
     const name = this.profile()?.supplier?.name ?? 'ce fournisseur';
-    if (!confirm(`Supprimer définitivement "${name}" ? Cette action est irréversible.`)) return;
     const id = this.activeId;
     if (!id) return;
+
+    this.pendingDelete.set({
+      title: `Supprimer définitivement ${name} ?`,
+      consequence: 'Son relevé et son historique disparaissent avec lui.',
+      detail: "La suppression échouera s'il reste des achats rattachés.",
+      run: () => this.performDeleteSupplier(id),
+    });
+  }
+
+  private performDeleteSupplier(id: number): void {
     this.deleting.set(true);
     this.supplierService.deleteSupplier(id).subscribe({
       next: () => this.router.navigate(['/suppliers']),

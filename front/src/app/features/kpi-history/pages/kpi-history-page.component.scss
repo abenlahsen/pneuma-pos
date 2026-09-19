@@ -1,13 +1,5 @@
-// Design tokens — mirror _variables.scss
-$_red:     #ff2d37;
-$_text:    #0f172a;
-$_muted:   #64748b;
-$_dim:     #94a3b8;
-$_bg:      #f1f5f9;
-$_surface: #ffffff;
-$_border:  #e8edf3;
-$_green:   #10b981;
-$_danger:  #ef4444;
+@use '../../_variables' as *;
+
 
 .page-wrapper {
   padding: 1.5rem;
@@ -23,10 +15,10 @@ $_danger:  #ef4444;
   margin-bottom: 1.5rem;
 }
 .header-left { display: flex; align-items: center; gap: 0.75rem; }
-.page-title  { font-size: 1.5rem; font-weight: 700; color: $_text; margin: 0; }
+.page-title  { font-size: 1.5rem; font-weight: 700; color: $text-dark; margin: 0; }
 .total-badge {
-  background: rgba($_red, 0.10);
-  color: $_red;
+  background: rgba($primary, 0.10);
+  color: $primary;
   font-size: 0.75rem;
   font-weight: 600;
   padding: 0.2rem 0.6rem;
@@ -35,8 +27,8 @@ $_danger:  #ef4444;
 
 // Filters
 .filters-card {
-  background: $_surface;
-  border: 1px solid $_border;
+  background: $bg-card;
+  border: 1px solid $border-subtle;
   border-radius: 0;
   box-shadow: none;
   padding: 1rem 1.25rem;
@@ -49,42 +41,42 @@ $_danger:  #ef4444;
   align-items: flex-end;
 }
 .filter-group  { display: flex; flex-direction: column; gap: 0.25rem; }
-.filter-label  { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: $_muted; }
+.filter-label  { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: $text-muted; }
 .filter-actions { display: flex; gap: 0.5rem; align-items: flex-end; margin-left: auto; }
 
 .form-control {
   padding: 0.5rem 0.75rem;
-  border: 1px solid $_border;
+  border: 1px solid $border-subtle;
   border-radius: 0;
   font-size: 0.875rem;
-  color: $_text;
+  color: $text-dark;
   background: white;
-  &:focus { outline: none; border-color: $_red; box-shadow: 0 0 0 3px rgba($_red, 0.10); }
+  &:focus { outline: none; border-color: $primary; box-shadow: 0 0 0 3px rgba($primary, 0.10); }
 }
 
 .btn-primary {
-  background: $_red; color: white; border: none;
+  background: $primary; color: white; border: none;
   padding: 0.5rem 1rem; border-radius: 0; font-weight: 500; font-size: 0.875rem;
   cursor: pointer; white-space: nowrap;
   &:hover { filter: brightness(0.95); }
 }
 .btn-secondary {
-  background: white; border: 1px solid $_border; color: #4a5568;
+  background: white; border: 1px solid $border-subtle; color: #4a5568;
   padding: 0.5rem 1rem; border-radius: 0; font-weight: 500; font-size: 0.875rem;
   cursor: pointer; white-space: nowrap;
-  &:hover { background: $_bg; }
+  &:hover { background: $bg-subtle; }
 }
 .btn-icon {
-  width: 2rem; height: 2rem; border: 1px solid $_border; background: white;
+  width: 2rem; height: 2rem; border: 1px solid $border-subtle; background: white;
   border-radius: 0; display: inline-flex; align-items: center; justify-content: center;
   cursor: pointer; font-size: 0.9rem;
-  &:hover { background: $_bg; }
+  &:hover { background: $bg-subtle; }
 }
 
 // Table card
 .table-card {
-  background: $_surface;
-  border: 1px solid $_border;
+  background: $bg-card;
+  border: 1px solid $border-subtle;
   border-radius: 0;
   box-shadow: none;
   overflow: hidden;
@@ -94,23 +86,23 @@ $_danger:  #ef4444;
 .table {
   width: 100%; border-collapse: collapse;
   th {
-    background: $_bg;
-    color: $_muted;
+    background: $bg-subtle;
+    color: $text-muted;
     text-transform: uppercase;
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.05em;
     padding: 0.6rem 0.75rem;
-    border-bottom: 2px solid $_border;
+    border-bottom: 2px solid $border-subtle;
     white-space: nowrap;
     text-align: left;
   }
   td {
     padding: 0.5rem 0.75rem;
     font-size: 0.8125rem;
-    border-bottom: 1px solid $_border;
+    border-bottom: 1px solid $border-subtle;
     white-space: nowrap;
-    color: $_text;
+    color: $text-dark;
   }
   tbody tr:hover td { background: rgba(241,245,249,0.5); }
   tbody tr:last-child td { border-bottom: none; }
@@ -128,7 +120,7 @@ $_danger:  #ef4444;
 .loading-state, .empty-state {
   padding: 3rem;
   text-align: center;
-  color: $_muted;
+  color: $text-muted;
   font-size: 0.875rem;
 }
 
@@ -136,13 +128,13 @@ $_danger:  #ef4444;
 .pagination {
   display: flex; align-items: center; gap: 0.25rem;
   padding: 0.75rem 1rem;
-  border-top: 1px solid $_border;
+  border-top: 1px solid $border-subtle;
 }
 .page-btn {
-  min-width: 2rem; height: 2rem; border: 1px solid $_border; background: white;
+  min-width: 2rem; height: 2rem; border: 1px solid $border-subtle; background: white;
   border-radius: 0; font-size: 0.8rem; cursor: pointer; padding: 0 0.4rem;
-  &.active { background: $_red; color: white; border-color: $_red; font-weight: 600; }
-  &:hover:not(.active):not(:disabled) { background: $_bg; }
+  &.active { background: $primary; color: white; border-color: $primary; font-weight: 600; }
+  &:hover:not(.active):not(:disabled) { background: $bg-subtle; }
   &:disabled { opacity: 0.4; cursor: default; }
 }
 
@@ -160,21 +152,21 @@ $_danger:  #ef4444;
 .modal-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid $_border;
+  border-bottom: 1px solid $border-subtle;
   flex-shrink: 0;
 }
-.modal-title { font-size: 1.1rem; font-weight: 700; color: $_text; margin: 0; }
+.modal-title { font-size: 1.1rem; font-weight: 700; color: $text-dark; margin: 0; }
 
 .modal-tabs {
-  display: flex; border-bottom: 1px solid $_border;
+  display: flex; border-bottom: 1px solid $border-subtle;
   flex-shrink: 0;
 }
 .tab-btn {
   padding: 0.65rem 1.25rem; border: none; background: transparent;
-  font-size: 0.875rem; font-weight: 500; cursor: pointer; color: $_muted;
+  font-size: 0.875rem; font-weight: 500; cursor: pointer; color: $text-muted;
   border-bottom: 2px solid transparent; margin-bottom: -1px;
-  &.active { color: $_red; border-bottom-color: $_red; font-weight: 600; }
-  &:hover:not(.active) { color: $_text; }
+  &.active { color: $primary; border-bottom-color: $primary; font-weight: 600; }
+  &:hover:not(.active) { color: $text-dark; }
 }
 
 .modal-body {
@@ -185,21 +177,21 @@ $_danger:  #ef4444;
 .detail-section { display: flex; flex-direction: column; gap: 0.75rem; }
 .section-title {
   font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.05em; color: $_muted;
-  border-left: 3px solid $_red; padding-left: 0.6rem; margin: 0;
+  letter-spacing: 0.05em; color: $text-muted;
+  border-left: 3px solid $primary; padding-left: 0.6rem; margin: 0;
 }
 
 .detail-table {
   width: 100%; border-collapse: collapse;
   th {
-    background: $_bg; color: $_muted; text-transform: uppercase;
+    background: $bg-subtle; color: $text-muted; text-transform: uppercase;
     font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;
-    padding: 0.5rem 0.75rem; border-bottom: 1px solid $_border;
+    padding: 0.5rem 0.75rem; border-bottom: 1px solid $border-subtle;
     text-align: left;
   }
   td {
-    padding: 0.45rem 0.75rem; font-size: 0.8125rem; border-bottom: 1px solid $_border;
-    color: $_text; font-variant-numeric: tabular-nums;
+    padding: 0.45rem 0.75rem; font-size: 0.8125rem; border-bottom: 1px solid $border-subtle;
+    color: $text-dark; font-variant-numeric: tabular-nums;
   }
   tbody tr:hover td { background: rgba(241,245,249,0.6); }
   tbody tr:last-child td { border-bottom: none; }
@@ -211,11 +203,11 @@ $_danger:  #ef4444;
   display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.75rem;
 }
 .stock-card {
-  background: $_bg; border: 1px solid $_border; border-radius: 0;
+  background: $bg-subtle; border: 1px solid $border-subtle; border-radius: 0;
   padding: 0.75rem 1rem; display: flex; flex-direction: column; gap: 0.25rem;
 }
-.stock-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: $_muted; }
-.stock-value { font-size: 1rem; font-weight: 700; color: $_text; font-variant-numeric: tabular-nums; }
+.stock-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: $text-muted; }
+.stock-value { font-size: 1rem; font-weight: 700; color: $text-dark; font-variant-numeric: tabular-nums; }
 
 @media (max-width: 768px) {
   .page-wrapper { padding: 1rem 0.75rem; }

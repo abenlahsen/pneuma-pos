@@ -1,3 +1,5 @@
+@use '../../../_variables' as *;
+
 .form-control {
   label[for='supplier-email'] {
     display: block;
@@ -24,16 +26,16 @@
 
   input[name='email']:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: $primary;
     background: #fff;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16);
+    box-shadow: 0 0 0 3px rgba(255, 45, 55, 0.1);
   }
 
   input[name='email'].ng-invalid.ng-touched,
   input[name='email'].ng-invalid.ng-dirty {
-    border-color: #ef4444;
+    border-color: $expense-color;
     background: #fff;
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+    box-shadow: 0 0 0 3px rgba(194, 24, 31, 0.12);
   }
 
   input[name='email'].ng-valid.ng-dirty,
@@ -50,7 +52,7 @@
   padding-left: 0.1rem;
   font-size: 0.82rem;
   line-height: 1.35;
-  color: #dc2626;
+  color: $expense-color;
 }
 
 .hint-text {

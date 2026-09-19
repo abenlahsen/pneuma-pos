@@ -127,14 +127,16 @@
   </div>
 </div>
 
-<div class="modal-overlay" *ngIf="showForm()" (click)="closeForm()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>{{ editingCarrier() ? 'Modifier Transporteur' : 'Nouveau Transporteur' }}</h2>
-      <button class="btn-icon" (click)="closeForm()">X</button>
-    </div>
-    <div class="modal-body">
-      <app-carrier-form [carrier]="editingCarrier()" (save)="onFormSubmit($event)" (cancel)="closeForm()"></app-carrier-form>
-    </div>
-  </div>
-</div>
+<app-carrier-form
+  *ngIf="showForm()" [carrier]="editingCarrier()" (save)="onFormSubmit($event)" (cancel)="closeForm()"></app-carrier-form>
+
+<!-- Refonte 2b, gabarit 15c : la confirmation remplace le confirm() natif. -->
+<app-confirm-delete
+  *ngIf="pendingDelete() as pending"
+  [title]="pending.title"
+  [consequence]="pending.consequence ?? ''"
+  [detail]="pending.detail ?? ''"
+  [confirmLabel]="pending.confirmLabel ?? 'Supprimer'"
+  [reasonRequired]="pending.reasonRequired ?? false"
+  (confirm)="runPendingDelete($event)"
+  (cancel)="pendingDelete.set(null)" />

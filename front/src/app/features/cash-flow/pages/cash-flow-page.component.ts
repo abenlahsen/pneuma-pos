@@ -38,15 +38,26 @@ import { PurchasePaymentDetailComponent } from '../../purchases/components/purch
 import { SalePaymentDetailComponent } from '../../sales/components/sale-payment-detail/sale-payment-detail.component';
 import { TransactionCategoryService } from '../../transaction-categories/data-access/transaction-category.service';
 import { TransactionCategory } from '../../transaction-categories/models/transaction-category.model';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 
 @Component({
   selector: 'app-cash-flow-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TransactionFormComponent, TransferFormComponent, AutoRefreshControlComponent, PurchasePaymentDetailComponent, SalePaymentDetailComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent],
+  imports: [CommonModule, FormsModule, TransactionFormComponent, TransferFormComponent, AutoRefreshControlComponent, PurchasePaymentDetailComponent, SalePaymentDetailComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, ConfirmDeleteComponent],
   templateUrl: './cash-flow-page.component.html',
   styleUrls: ['./cash-flow-page.component.scss'],
 })
 export class CashFlowPageComponent implements OnInit {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   viewingPaymentId = signal<number | null>(null);
   viewingSalePaymentId = signal<number | null>(null);
   transactions = signal<Transaction[]>([]);
@@ -472,10 +483,14 @@ export class CashFlowPageComponent implements OnInit {
   }
 
   deleteTransaction(transaction: Transaction): void {
-    if (!confirm(`Supprimer cette transaction ?\n"${transaction.description}"`)) {
-      return;
-    }
+    this.pendingDelete.set({
+      title: `Supprimer la transaction « ${transaction.description} » ?`,
+      consequence: `${transaction.amount} DH ${transaction.type === 'income' ? 'quitteront' : 'reviendront'} au solde du compte.`,
+      run: () => this.performDeleteTransaction(transaction),
+    });
+  }
 
+  private performDeleteTransaction(transaction: Transaction): void {
     this.deletingTransactionId.set(transaction.id);
 
     this.cashFlowService.deleteTransaction(transaction.id).subscribe({

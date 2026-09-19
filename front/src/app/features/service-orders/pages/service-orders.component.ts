@@ -11,6 +11,8 @@ import { ServiceOrderFormComponent } from '../service-order-form/service-order-f
 import { ServiceOrderDetailComponent } from '../service-order-detail/service-order-detail.component';
 import { ServicePaymentPanelComponent } from '../service-payment-panel/service-payment-panel.component';
 import { AuthService } from '../../../core/services/auth.service';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 import {
   ActiveFilter,
   ListEmptyComponent,
@@ -28,11 +30,20 @@ import {
     FormsModule,
     ServiceOrderFormComponent,
     ServiceOrderDetailComponent,
-    ServicePaymentPanelComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent],
+    ServicePaymentPanelComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent, ConfirmDeleteComponent],
   templateUrl: './service-orders.component.html',
   styleUrls: ['./service-orders.component.scss'],
 })
 export class ServiceOrdersComponent implements OnInit {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   readonly SERVICE_ORDER_STATUSES = SERVICE_ORDER_STATUSES;
   readonly SERVICE_ORDER_STATUS_LABELS = SERVICE_ORDER_STATUS_LABELS;
   readonly PAYMENT_STATUSES = PAYMENT_STATUSES;
@@ -493,7 +504,15 @@ export class ServiceOrdersComponent implements OnInit {
   }
 
   deleteOrder(order: ServiceOrder): void {
-    if (!confirm(`Supprimer l'intervention de ${order.client_record?.name || order.vehicle} ?`)) return;
+    this.pendingDelete.set({
+      title: `Supprimer l'intervention ${order.id} ?`,
+      consequence: `${order.net_amount} DH quitteront le chiffre d'affaires atelier ; les pièces posées reviennent en stock.`,
+      detail: `Client : ${order.client_record?.name || order.vehicle}.`,
+      run: () => this.performDeleteOrder(order),
+    });
+  }
+
+  private performDeleteOrder(order: ServiceOrder): void {
     this.deletingId.set(order.id);
     this.serviceOrderService.deleteServiceOrder(order.id).subscribe({
       next: () => {

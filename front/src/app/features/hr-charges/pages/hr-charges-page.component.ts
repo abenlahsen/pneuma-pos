@@ -13,6 +13,8 @@ import {
   HrChargeUpdatePayload,
 } from '../models/hr-charge.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 
 const MONTH_NAMES = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -27,11 +29,20 @@ import {
 @Component({
   selector: 'app-hr-charges-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, HrChargeFormComponent, IconComponent, ListErrorComponent],
+  imports: [CommonModule, FormsModule, HrChargeFormComponent, IconComponent, ListErrorComponent, ConfirmDeleteComponent],
   templateUrl: './hr-charges-page.component.html',
   styleUrl: './hr-charges-page.component.scss',
 })
 export class HrChargesPageComponent implements OnInit {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   charges = signal<HrCharge[]>([]);
   summary = signal<HrChargeSummary | null>(null);
   filters = signal<HrChargeFilters>({ employees: [], subcategories: [], accounts: [] });
@@ -195,8 +206,14 @@ export class HrChargesPageComponent implements OnInit {
   }
 
   deleteCharge(charge: HrCharge): void {
-    if (!confirm(`Supprimer la ligne « ${charge.subcategory} — ${charge.employee_name} » ?`)) return;
+    this.pendingDelete.set({
+      title: `Supprimer la ligne « ${charge.subcategory} — ${charge.employee_name} » ?`,
+      consequence: `${charge.amount} DH quitteront les charges du mois et le reporting.`,
+      run: () => this.performDeleteCharge(charge),
+    });
+  }
 
+  private performDeleteCharge(charge: HrCharge): void {
     this.hrChargeService.delete(charge.id).subscribe({
       next: () => this.loadData(),
       error: (err) => this.showError(err),

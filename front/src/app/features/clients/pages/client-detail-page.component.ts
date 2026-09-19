@@ -21,15 +21,26 @@ import { Vehicle } from '../../vehicles/models/vehicle.model';
 import { VehicleFormComponent } from '../../../shared/vehicle-form/vehicle-form.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { SaleService } from '../../sales/data-access/sale.service';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 
 @Component({
   selector: 'app-client-detail-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, ClientFormComponent, VehicleFormComponent, ClientPaymentComponent, SalePaymentDetailComponent, IconComponent],
+  imports: [CommonModule, RouterLink, ClientFormComponent, VehicleFormComponent, ClientPaymentComponent, SalePaymentDetailComponent, IconComponent, ConfirmDeleteComponent],
   templateUrl: './client-detail-page.component.html',
   styleUrl: './client-detail-page.component.scss',
 })
 export class ClientDetailPageComponent implements OnInit {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly clientService = inject(ClientService);
@@ -134,11 +145,18 @@ export class ClientDetailPageComponent implements OnInit {
 
   deleteClient(): void {
     const name = this.profile()?.client?.name ?? 'ce client';
-    if (!confirm(`Supprimer définitivement "${name}" ? Cette action est irréversible.`)) return;
-
     const id = this.activeClientId;
     if (!id) return;
 
+    this.pendingDelete.set({
+      title: `Supprimer définitivement ${name} ?`,
+      consequence: 'Son relevé, ses véhicules et son historique disparaissent avec lui.',
+      detail: "La suppression échouera s'il reste des ventes ou des paiements rattachés.",
+      run: () => this.performDeleteClient(id),
+    });
+  }
+
+  private performDeleteClient(id: number): void {
     this.deleting.set(true);
     this.clientService.deleteClient(id).subscribe({
       next: () => this.router.navigate(['/clients']),
@@ -180,11 +198,17 @@ export class ClientDetailPageComponent implements OnInit {
   deleteStatementPayment(payment: ClientPaymentRow): void {
     const id = this.activeClientId;
     if (!id || typeof payment.id !== 'number') return;
-    const warning = payment.multi
-      ? 'Ce paiement couvre plusieurs ventes. Le supprimer annulera le paiement sur TOUTES ces ventes. Continuer ?'
-      : 'Supprimer ce paiement ?';
-    if (!confirm(warning)) return;
+    this.pendingDelete.set({
+      title: 'Supprimer ce paiement ?',
+      consequence: payment.multi
+        ? `${payment.amount} DH seront retirés de toutes les ventes que ce paiement couvrait.`
+        : `${payment.amount} DH seront retirés du règlement de la vente.`,
+      detail: 'Le mouvement de trésorerie correspondant est supprimé avec lui.',
+      run: () => this.performDeleteStatementPayment(id, payment),
+    });
+  }
 
+  private performDeleteStatementPayment(id: number, payment: ClientPaymentRow): void {
     this.deletingPaymentId.set(payment.id);
     this.clientService.deleteClientPayment(id, payment.id).subscribe({
       next: () => {
@@ -219,7 +243,14 @@ export class ClientDetailPageComponent implements OnInit {
   }
 
   deleteVehicle(v: Vehicle): void {
-    if (!confirm(`Supprimer le véhicule ${v.plate} ?`)) return;
+    this.pendingDelete.set({
+      title: `Supprimer le véhicule ${v.plate} ?`,
+      consequence: "S'il a déjà une intervention, il sera désactivé plutôt que supprimé.",
+      run: () => this.performDeleteVehicle(v),
+    });
+  }
+
+  private performDeleteVehicle(v: Vehicle): void {
     this.vehicleService.deleteVehicle(v.id).subscribe(result => {
       if ((result as any)?.deactivated) {
         this.vehicles.update(list => list.map(x => x.id === v.id ? { ...x, is_active: false } : x));

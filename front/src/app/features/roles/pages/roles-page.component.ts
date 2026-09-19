@@ -6,6 +6,8 @@ import { RoleService } from '../data-access/role.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Permission, Role } from '../models/role.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 import {
   ListEmptyComponent,
   ListErrorComponent,
@@ -16,11 +18,20 @@ import {
 @Component({
   selector: 'app-roles-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent],
+  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent, ConfirmDeleteComponent],
   templateUrl: './roles-page.component.html',
   styleUrls: ['./roles-page.component.scss'],
 })
 export class RolesPageComponent implements OnInit {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   roles = signal<Role[]>([]);
   permissions = signal<Permission[]>([]);
   loading = signal(false);
@@ -212,11 +223,15 @@ export class RolesPageComponent implements OnInit {
   }
 
   deleteRole(role: Role): void {
-    if (confirm(`Voulez-vous vraiment supprimer le rôle "${role.name}" ?`)) {
-      this.roleService.deleteRole(role.id).subscribe({
-        next: () => this.loadData(),
-      });
-    }
+    this.pendingDelete.set({
+      title: `Supprimer le rôle « ${role.name} » ?`,
+      consequence: `Ses ${role.permissions.length} permission(s) seront retirées aux utilisateurs qui le portent.`,
+      run: () => {
+        this.roleService.deleteRole(role.id).subscribe({
+          next: () => this.loadData(),
+        });
+      },
+    });
   }
 
   openPermissionForm(): void {
@@ -244,10 +259,14 @@ export class RolesPageComponent implements OnInit {
   }
 
   deletePermission(perm: Permission): void {
-    if (confirm(`Voulez-vous vraiment supprimer la permission "${perm.name}" ?`)) {
-      this.roleService.deletePermission(perm.id).subscribe({
-        next: () => this.loadData(),
-      });
-    }
+    this.pendingDelete.set({
+      title: `Supprimer la permission « ${perm.name} » ?`,
+      consequence: 'Elle disparaît de tous les rôles qui la portent, et les écrans correspondants deviennent inaccessibles.',
+      run: () => {
+        this.roleService.deletePermission(perm.id).subscribe({
+          next: () => this.loadData(),
+        });
+      },
+    });
   }
 }

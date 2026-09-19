@@ -5,9 +5,7 @@
       <p class="subtitle">Catalogue des pneus</p>
     </div>
     <div class="actions">
-      <button class="btn btn-primary" (click)="openAddForm()" *ngIf="authService.hasPermission('create products')">
-        Nouveau Produit
-      </button>
+      <a class="btn btn-primary" routerLink="/products/new" *ngIf="authService.hasPermission('create products')">Nouveau produit</a>
       <app-auto-refresh-control pageKey="products" (refresh)="loadData()" />
     </div>
   </div>
@@ -127,9 +125,9 @@
             [title]="product.is_active ? 'Désactiver' : 'Activer'">
             <app-icon [name]="product.is_active ? 'check-circle' : 'circle'" [size]="15" />
           </button>
-          <button class="btn-icon text-primary" (click)="openEditForm(product)" title="Modifier">
+          <a class="btn-icon text-primary" [routerLink]="['/products', product.id, 'edit']" title="Modifier">
             <app-icon name="edit" [size]="15" />
-          </button>
+          </a>
         </ng-container>
         <app-row-lock *ngIf="!authService.hasPermission('edit products')"
           reason="Votre rôle ne permet pas de modifier un produit. Demandez à un administrateur." />
@@ -163,22 +161,16 @@
   *ngIf="viewingProduct()"
   [product]="viewingProduct()!"
   (close)="closeViewModal()"
-  (edit)="closeViewModal(); openEditForm($event)"
+  (edit)="closeViewModal(); goToEdit($event)"
 />
 
-<div class="modal-overlay" *ngIf="showForm()" (click)="closeForm()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>{{ editingProduct() ? 'Modifier le produit' : 'Nouveau produit' }}</h2>
-      <button class="btn-icon" (click)="closeForm()">&#10005;</button>
-    </div>
-    <div class="modal-body">
-      <app-product-form
-        [product]="editingProduct()"
-        [brands]="filterOptions().brands"
-        (save)="onFormSubmit($event)"
-        (cancel)="closeForm()">
-      </app-product-form>
-    </div>
-  </div>
-</div>
+<!-- Refonte 2b, gabarit 15c : la confirmation remplace le confirm() natif. -->
+<app-confirm-delete
+  *ngIf="pendingDelete() as pending"
+  [title]="pending.title"
+  [consequence]="pending.consequence ?? ''"
+  [detail]="pending.detail ?? ''"
+  [confirmLabel]="pending.confirmLabel ?? 'Supprimer'"
+  [reasonRequired]="pending.reasonRequired ?? false"
+  (confirm)="runPendingDelete($event)"
+  (cancel)="pendingDelete.set(null)" />

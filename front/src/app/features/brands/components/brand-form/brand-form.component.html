@@ -1,30 +1,31 @@
-<form (ngSubmit)="onSubmit()" #form="ngForm" class="form-container">
+<!-- Refonte 2b, gabarit 15b : coque de modale partagee. Le formulaire
+     porte lui-meme sa coque, comme product-form porte la sienne. -->
+<app-referential-modal
+  referential="marque"
+  [title]="brand ? 'Modifier ' + brand.name : 'Nouvelle marque'"
+  (dismiss)="cancel.emit()">
 
-  <div class="form-section">
-    <h3>Informations</h3>
-    <div class="form-grid">
-      <div class="form-control">
-        <label>Nom *</label>
-        <input type="text" name="name" [(ngModel)]="formData.name" required placeholder="Ex: MICHELIN">
-      </div>
+  <form (ngSubmit)="onSubmit()" #form="ngForm" class="rf-form" id="marque-form">
+    <label class="rf-field">
+      <span>Nom *</span>
+      <input type="text" name="name" [(ngModel)]="formData.name" required placeholder="Ex: MICHELIN">
+    </label>
 
-      <div class="form-control">
-        <label>Logo</label>
-        <input type="file" accept="image/*" (change)="onFileChange($event)">
-        <img *ngIf="logoPreview" [src]="logoPreview" alt="Aperçu" class="logo-preview">
-      </div>
+    <label class="rf-field">
+      <span>Logo</span>
+      <input type="file" accept="image/*" (change)="onFileChange($event)">
+      <img *ngIf="logoPreview" [src]="logoPreview" alt="Aperçu" class="rf-logo">
+      <em class="rf-hint">PNG ou SVG · fond transparent · 200 px min.</em>
+    </label>
 
-      <div class="form-control checkbox-inline">
-        <label>
-          <input type="checkbox" name="is_active" [(ngModel)]="formData.is_active">
-          Actif
-        </label>
-      </div>
-    </div>
-  </div>
+    <label class="rf-check">
+      <input type="checkbox" name="is_active" [(ngModel)]="formData.is_active">
+      Actif — proposé à la saisie de vente et d'achat
+    </label>
+  </form>
 
-  <div class="form-actions">
-    <button type="button" class="btn btn-secondary" (click)="cancel.emit()">Annuler</button>
-    <button type="submit" class="btn btn-primary" [disabled]="!form.valid">Enregistrer</button>
-  </div>
-</form>
+  <ng-container actions>
+    <button type="button" class="rf-btn" (click)="cancel.emit()">Annuler</button>
+    <button type="submit" form="marque-form" class="rf-btn rf-btn--solid" [disabled]="!form.valid">Enregistrer</button>
+  </ng-container>
+</app-referential-modal>

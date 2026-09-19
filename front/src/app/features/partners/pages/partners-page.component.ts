@@ -9,6 +9,8 @@ import { PartnerFormComponent } from '../components/partner-form/partner-form.co
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 import { CityService } from '../../../core/services/city.service';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 
 import {
   ActiveFilter,
@@ -21,11 +23,20 @@ import {
 @Component({
   selector: 'app-partners-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, PartnerFormComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent],
+  imports: [CommonModule, FormsModule, PartnerFormComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent, ConfirmDeleteComponent],
   templateUrl: './partners-page.component.html',
   styleUrls: ['./partners-page.component.scss'],
 })
 export class PartnersPageComponent implements OnInit {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   partners = signal<Partner[]>([]);
   currentPage = signal(1);
   lastPage = signal(1);
@@ -166,10 +177,14 @@ export class PartnersPageComponent implements OnInit {
   }
 
   deletePartner(p: Partner): void {
-    if (!confirm(`Supprimer le partenaire "${p.name}" ?`)) {
-      return;
-    }
+    this.pendingDelete.set({
+      title: `Supprimer le partenaire « ${p.name} » ?`,
+      consequence: 'Les ventes et transactions déjà rattachées gardent leur historique.',
+      run: () => this.performDeletePartner(p),
+    });
+  }
 
+  private performDeletePartner(p: Partner): void {
     this.deletingPartnerId.set(p.id);
 
     this.service.deletePartner(p.id).subscribe({

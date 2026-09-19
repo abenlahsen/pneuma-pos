@@ -15,6 +15,8 @@ import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-contro
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 import { CityService } from '../../../core/services/city.service';
 import { DetailNavigator } from '../../../core/utils/detail-navigator';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 import {
   ActiveFilter,
   ListEmptyComponent,
@@ -28,11 +30,20 @@ import {
 @Component({
   selector: 'app-sales-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, SaleDetailComponent, PaymentPanelComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent],
+  imports: [CommonModule, FormsModule, RouterLink, SaleDetailComponent, PaymentPanelComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ConfirmDeleteComponent],
   templateUrl: './sales-page.component.html',
   styleUrl: './sales-page.component.scss',
 })
 export class SalesPageComponent implements OnInit {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   readonly SALE_STATUSES = SALE_STATUSES;
   readonly SALE_STATUS_LABELS = SALE_STATUS_LABELS;
   readonly PAYMENT_METHODS = PAYMENT_METHODS;
@@ -388,8 +399,16 @@ export class SalesPageComponent implements OnInit {
   }
 
   deleteSale(sale: Sale): void {
-    const productLabel = `${sale.total_quantity} article(s)`;
-    if (confirm(`Voulez-vous vraiment supprimer cette vente ?\nClient: ${this.getClientName(sale)} - Produit: ${productLabel}`)) {
+    this.pendingDelete.set({
+      title: `Supprimer la vente ${sale.id} ?`,
+      consequence: `${sale.total_quantity} article(s) reviendront en stock et ${sale.total_sale} DH quitteront le chiffre d'affaires.`,
+      detail: `Client : ${this.getClientName(sale)}.`,
+      run: () => this.performDeleteSale(sale),
+    });
+  }
+
+  private performDeleteSale(sale: Sale): void {
+    {
       this.deletingSaleId.set(sale.id);
       this.saleService.deleteSale(sale.id).subscribe({
         next: () => {

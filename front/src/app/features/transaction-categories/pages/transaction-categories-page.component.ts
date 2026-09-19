@@ -6,6 +6,8 @@ import { RouterLink } from '@angular/router';
 import { TransactionCategoryService } from '../data-access/transaction-category.service';
 import { TransactionCategory, TransactionCategoryType } from '../models/transaction-category.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 
 import {
   ListErrorComponent,
@@ -15,11 +17,20 @@ import {
 @Component({
   selector: 'app-transaction-categories-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, IconComponent, ListErrorComponent],
+  imports: [CommonModule, FormsModule, RouterLink, IconComponent, ListErrorComponent, ConfirmDeleteComponent],
   templateUrl: './transaction-categories-page.component.html',
   styleUrl: './transaction-categories-page.component.scss',
 })
 export class TransactionCategoriesPageComponent implements OnInit {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   activeType = signal<TransactionCategoryType>('expense');
   categories = signal<TransactionCategory[]>([]);
   loading = signal(false);
@@ -194,8 +205,16 @@ export class TransactionCategoriesPageComponent implements OnInit {
 
   deleteCategory(category: TransactionCategory, parent?: TransactionCategory): void {
     const label = parent ? `la sous-catégorie « ${category.name} »` : `la catégorie « ${category.name} »`;
-    if (!confirm(`Supprimer ${label} ?`)) return;
+    this.pendingDelete.set({
+      title: `Supprimer ${label} ?`,
+      consequence: (category.children?.length ?? 0) > 0
+        ? `Ses ${category.children!.length} sous-catégorie(s) disparaissent avec elle.`
+        : 'Les transactions déjà classées ici gardent leur libellé.',
+      run: () => this.performDeleteCategory(category, parent),
+    });
+  }
 
+  private performDeleteCategory(category: TransactionCategory, parent?: TransactionCategory): void {
     this.transactionCategoryService.delete(category.id).subscribe({
       next: () => {
         if (parent) {

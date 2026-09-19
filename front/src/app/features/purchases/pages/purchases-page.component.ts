@@ -16,6 +16,8 @@ import { PurchaseReturnComponent } from '../purchase-return/purchase-return.comp
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 import { DetailNavigator } from '../../../core/utils/detail-navigator';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 import {
   ActiveFilter,
   ListEmptyComponent,
@@ -29,11 +31,20 @@ import {
 @Component({
   selector: 'app-purchases-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, PurchaseFormComponent, PurchaseDetailComponent, PurchasePaymentsComponent, PurchaseReturnComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent],
+  imports: [CommonModule, FormsModule, RouterLink, PurchaseFormComponent, PurchaseDetailComponent, PurchasePaymentsComponent, PurchaseReturnComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ConfirmDeleteComponent],
   templateUrl: './purchases-page.component.html',
   styleUrls: ['./purchases-page.component.scss']
 })
 export class PurchasesPageComponent implements OnInit {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   readonly PURCHASE_STATUSES = PURCHASE_STATUSES;
   readonly PURCHASE_STATUS_LABELS = PURCHASE_STATUS_LABELS;
   readonly PAYMENT_STATUSES = PAYMENT_STATUSES;
@@ -486,14 +497,18 @@ export class PurchasesPageComponent implements OnInit {
   }
 
   deletePurchase(purchase: Purchase): void {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer l'achat (${purchase.total_quantity} articles) ?`)) {
-      this.purchaseService.deletePurchase(purchase.id).subscribe({
-        next: () => this.loadData(),
-        error: (err) => {
-          console.error('Error deleting purchase', err);
-          alert('Erreur lors de la suppression.');
-        }
-      });
-    }
+    this.pendingDelete.set({
+      title: `Supprimer l'achat ${purchase.id} ?`,
+      consequence: `${purchase.total_quantity} article(s) sortiront du stock et ${purchase.net_amount} DH quitteront le dû fournisseur.`,
+      run: () => {
+        this.purchaseService.deletePurchase(purchase.id).subscribe({
+          next: () => this.loadData(),
+          error: (err) => {
+            console.error('Error deleting purchase', err);
+            alert('Erreur lors de la suppression.');
+          }
+        });
+      },
+    });
   }
 }

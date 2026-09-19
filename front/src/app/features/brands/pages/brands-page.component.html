@@ -147,18 +147,20 @@
   </div>
 </div>
 
-<div class="modal-overlay" *ngIf="showForm()" (click)="closeForm()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>{{ editingBrand() ? 'Modifier la marque' : 'Nouvelle marque' }}</h2>
-      <button class="btn-icon" (click)="closeForm()">&#10005;</button>
-    </div>
-    <div class="modal-body">
-      <app-brand-form
+<app-brand-form
+  *ngIf="showForm()"
         [brand]="editingBrand()"
         (save)="onFormSubmit($event)"
         (cancel)="closeForm()">
       </app-brand-form>
-    </div>
-  </div>
-</div>
+
+<!-- Refonte 2b, gabarit 15c : la confirmation remplace le confirm() natif. -->
+<app-confirm-delete
+  *ngIf="pendingDelete() as pending"
+  [title]="pending.title"
+  [consequence]="pending.consequence ?? ''"
+  [detail]="pending.detail ?? ''"
+  [confirmLabel]="pending.confirmLabel ?? 'Supprimer'"
+  [reasonRequired]="pending.reasonRequired ?? false"
+  (confirm)="runPendingDelete($event)"
+  (cancel)="pendingDelete.set(null)" />

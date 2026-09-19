@@ -5,6 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { ServiceOrder, ServicePayment, ServicePaymentPayload } from '../../../core/models/service-order.model';
 import { ServiceOrderService } from '../data-access/service-order.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 
 const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Carte bancaire'];
 
@@ -17,11 +19,20 @@ interface AccountOption {
 @Component({
   selector: 'app-service-payment-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent],
+  imports: [CommonModule, FormsModule, IconComponent, ConfirmDeleteComponent],
   templateUrl: './service-payment-panel.component.html',
   styleUrls: ['./service-payment-panel.component.scss'],
 })
 export class ServicePaymentPanelComponent implements OnInit {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   @Input() serviceOrder!: ServiceOrder;
   @Output() closed = new EventEmitter<void>();
 
@@ -100,7 +111,15 @@ export class ServicePaymentPanelComponent implements OnInit {
   }
 
   deletePayment(payment: ServicePayment): void {
-    if (!confirm('Supprimer ce paiement ?')) return;
+    this.pendingDelete.set({
+      title: 'Supprimer ce paiement ?',
+      consequence: `${payment.amount} DH reviendront au reste dû de cette intervention.`,
+      detail: 'Le mouvement de trésorerie correspondant est supprimé avec lui.',
+      run: () => this.performDeletePayment(payment),
+    });
+  }
+
+  private performDeletePayment(payment: ServicePayment): void {
     this.serviceOrderService.deletePayment(this.serviceOrder.id, payment.id).subscribe({
       next: () => this.loadPayments(),
     });

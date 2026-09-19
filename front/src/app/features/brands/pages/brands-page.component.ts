@@ -7,6 +7,8 @@ import { Brand, BrandPayload } from '../models/brand.model';
 import { BrandFormComponent } from '../components/brand-form/brand-form.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 
 import {
   ActiveFilter,
@@ -19,11 +21,20 @@ import {
 @Component({
   selector: 'app-brands-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, BrandFormComponent, AutoRefreshControlComponent, SortIconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent],
+  imports: [CommonModule, FormsModule, BrandFormComponent, AutoRefreshControlComponent, SortIconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent, ConfirmDeleteComponent],
   templateUrl: './brands-page.component.html',
   styleUrls: ['./brands-page.component.scss'],
 })
 export class BrandsPageComponent implements OnInit {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   brands = signal<Brand[]>([]);
 
   currentPage = signal(1);
@@ -180,10 +191,14 @@ export class BrandsPageComponent implements OnInit {
   }
 
   deleteBrand(brand: Brand): void {
-    if (!confirm(`Supprimer la marque "${brand.name}" ?`)) {
-      return;
-    }
+    this.pendingDelete.set({
+      title: `Supprimer la marque « ${brand.name} » ?`,
+      consequence: 'Les produits de cette marque la perdront ; ils ne sont pas supprimés.',
+      run: () => this.performDeleteBrand(brand),
+    });
+  }
 
+  private performDeleteBrand(brand: Brand): void {
     this.deletingBrandId.set(brand.id);
 
     this.brandService.deleteBrand(brand.id).subscribe({

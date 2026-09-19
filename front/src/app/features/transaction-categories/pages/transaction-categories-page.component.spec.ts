@@ -210,39 +210,41 @@ describe('TransactionCategoriesPageComponent', () => {
   });
 
   describe('deleteCategory', () => {
-    let confirmSpy: ReturnType<typeof vi.spyOn>;
-    afterEach(() => confirmSpy.mockRestore());
+    /**
+     * Depuis le gabarit 15c, la méthode de suppression n'appelle plus l'API :
+     * elle décrit la suppression, que `runPendingDelete` exécute ensuite. Les
+     * tests suivent le même chemin que l'utilisateur — décrire, puis confirmer.
+     */
 
     it('does not call the API when the user cancels the confirmation', () => {
-      confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
       comp.deleteCategory(makeCategory());
+      // on ne confirme pas : la suppression reste en attente
       expect(mockService.delete).not.toHaveBeenCalled();
     });
 
     it('removes a top-level category from the list on success', () => {
-      confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
       mockService.delete.mockReturnValue(of(undefined));
       comp.categories.set([makeCategory({ id: 1 }), makeCategory({ id: 2 })]);
 
       comp.deleteCategory(comp.categories()[0]);
+      comp.runPendingDelete('');
 
       expect(comp.categories().map((c) => c.id)).toEqual([2]);
     });
 
     it('removes a child from its parent on success', () => {
-      confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
       mockService.delete.mockReturnValue(of(undefined));
       const child = makeCategory({ id: 2, parent_id: 1 });
       const parent = makeCategory({ id: 1, children: [child] });
       comp.categories.set([parent]);
 
       comp.deleteCategory(child, parent);
+      comp.runPendingDelete('');
 
       expect(comp.categories()[0].children).toEqual([]);
     });
 
     it('surfaces the "used by transactions" error and keeps the category', () => {
-      confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
       mockService.delete.mockReturnValue(throwError(() => ({
         error: { errors: { category: ['Impossible de supprimer cette catégorie car elle est utilisée par des transactions.'] } },
       })));
@@ -250,6 +252,7 @@ describe('TransactionCategoriesPageComponent', () => {
       comp.categories.set([category]);
 
       comp.deleteCategory(category);
+      comp.runPendingDelete('');
 
       expect(comp.errorMessage()).toContain('utilisée par des transactions');
       expect(comp.categories()).toHaveLength(1);

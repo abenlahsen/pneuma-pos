@@ -8,6 +8,8 @@ import { ManagedUser, PaginatedResponse, UserPayload } from '../models/user.mode
 import { Role } from '../../roles/models/role.model';
 import { RoleService } from '../../roles/data-access/role.service';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 
 import {
   ActiveFilter,
@@ -20,11 +22,20 @@ import {
 @Component({
   selector: 'app-users-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent],
+  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent, ConfirmDeleteComponent],
   templateUrl: './users-page.component.html',
   styleUrls: ['./users-page.component.scss'],
 })
 export class UsersPageComponent implements OnInit {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   users = signal<ManagedUser[]>([]);
   roles = signal<Role[]>([]);
   loading = signal(false);
@@ -207,11 +218,15 @@ export class UsersPageComponent implements OnInit {
   }
 
   deleteUser(user: ManagedUser): void {
-    if (confirm(`Voulez-vous vraiment supprimer l'utilisateur "${user.name}" ?`)) {
-      this.userService.deleteUser(user.id).subscribe({
-        next: () => this.loadData(),
-      });
-    }
+    this.pendingDelete.set({
+      title: `Supprimer l'utilisateur « ${user.name} » ?`,
+      consequence: 'Les ventes et mouvements qu\'il a saisis gardent son nom : la traçabilité est préservée.',
+      run: () => {
+        this.userService.deleteUser(user.id).subscribe({
+          next: () => this.loadData(),
+        });
+      },
+    });
   }
 
   get pages(): number[] {

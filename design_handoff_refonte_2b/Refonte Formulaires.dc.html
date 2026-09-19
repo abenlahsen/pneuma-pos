@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"><style>body{margin:0;background:#dfe7f2;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}a{color:#c2181f}a:hover{color:#8f1218}code{font:500 11.5px ui-monospace,Menlo,monospace;background:#f4f8fd;border:1px solid #cfdcec;padding:1px 5px}</style></helmet>
+
+<section style="padding:36px 40px 52px;display:flex;flex-direction:column;gap:20px">
+
+<div style="display:flex;align-items:baseline;gap:10px">
+<span style="font:700 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#0c1e33;color:#fff;border-radius:4px;letter-spacing:.06em">15</span>
+<span style="font:700 13px/1.2 'Inter',sans-serif;color:#0c1e33">FORMULAIRES — le lot jamais dessiné</span>
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e">Les onze écrans livrés couvraient les listes et les vues de travail. Les formulaires de référentiel et les modales n'ont jamais été dessinés — d'où l'état mi-converti de <code>product-form</code>. Deux gabarits suffisent pour tout le lot : un éditeur pour les objets à forte structure, une modale pour les objets à trois champs.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Le critère de choix est le nombre de champs, pas le type d'objet.</strong> Au-delà de dix champs ou d'une section dépendante, on sort de la modale : une boîte de dialogue qui défile fait perdre de vue ses propres boutons. En dessous, la modale est le bon outil — elle garde le contexte de la liste derrière.</p>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:8px">
+<span style="font:700 10.5px 'Inter',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#4a5c75">1 · Produit — l'éditeur</span>
+<p style="margin:0;max-width:940px;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e">Aujourd'hui : une modale de six sections et plus de trente champs, avec un tableau de stock éditable imbriqué dedans. Trois problèmes que le dessin résout.</p>
+<div style="max-width:940px;display:flex;flex-direction:column;gap:7px">
+<p style="margin:0;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">La dimension est un seul champ.</strong> Largeur, hauteur, diamètre, indice de charge et indice de vitesse sont cinq saisies numériques distinctes pour ce que le métier dit d'un trait : <code>205/55R16 91V</code>. Un champ unique qui accepte <code>2055516</code> ou la forme complète, et qui éclate la valeur en dessous pour relecture. Les cinq champs restent atteignables si la saisie ne s'analyse pas.</p>
+<p style="margin:0;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Le stock n'est pas le produit.</strong> Le tableau de stock imbriqué édite un autre objet, avec son propre enregistrement et son motif obligatoire. Il passe à droite, dans un panneau qui dit explicitement que ses lignes s'enregistrent seules — le bouton du bas ne concerne que la fiche produit.</p>
+<p style="margin:0;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Les sections conditionnelles ne clignotent plus.</strong> Caractéristiques pneu et étiquetage européen n'existent que pour <code>type = tyre</code>. Le type devient un choix segmenté en tête, et la colonne de gauche se recompose sous lui au lieu de faire apparaître deux blocs au milieu d'une modale déjà longue.</p>
+</div>
+</div>
+
+<div id="15a" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter',sans-serif;color:#41546e"><a href="#15a" style="font:700 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(12,30,51,.1);color:#0c1e33;border-radius:5px;text-decoration:none">15a</a>Produit — éditeur plein écran, type « pneu »</div>
+
+<div style="width:1440px;height:880px;display:grid;grid-template-rows:60px minmax(0,1fr) 64px;background:#e6edf7;color:#0c1e33;border:1px solid #adc2da;overflow:hidden;box-shadow:0 10px 25px rgba(12,30,51,.14)">
+
+  <div style="display:flex;align-items:center;gap:16px;padding:0 20px;background:#f4f8fd;border-bottom:1px solid #cfdcec">
+    <a href="#15a" style="display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-size:12.5px;font-weight:600;text-decoration:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>Stock</a>
+    <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+      <span style="font-size:15.5px;font-weight:700;letter-spacing:-.01em">MICHELIN PRIMACY 4</span>
+      <span style="font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">MIC-PR4-2055516 · 205/55R16 91V · créé le 14/03/2026</span>
+    </span>
+    <span style="display:flex;align-items:center;gap:7px;margin-left:14px">
+      <span style="padding:3px 8px;border:1px solid #cfdcec;background:#fff;font-size:10px;font-weight:700;letter-spacing:.08em;color:#4a5c75">ACTIF</span>
+      <span style="padding:3px 8px;border:1px solid #cfdcec;background:#fff;font-size:10px;font-weight:700;letter-spacing:.08em;color:#4a5c75;font-variant-numeric:tabular-nums">42 EN STOCK</span>
+    </span>
+    <span style="margin-left:auto;display:flex;align-items:center;gap:9px">
+      <span style="font-size:11.5px;color:#4a5c75">Modifié il y a 2 min · non enregistré</span>
+      <button type="button" style="height:36px;padding:0 13px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Dupliquer</button>
+      <span style="width:30px;height:30px;background:#ff2d37;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">YB</span>
+    </span>
+  </div>
+
+  <div style="min-height:0;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) 520px;background:#fff">
+
+    <div style="min-height:0;overflow:hidden;display:flex;flex-direction:column;border-right:1px solid #cfdcec">
+
+      <div style="padding:16px 22px 15px;border-bottom:1px solid #cfdcec">
+        <span style="display:block;font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Type de produit</span>
+        <div style="margin-top:9px;display:flex">
+          <button type="button" style="height:40px;padding:0 20px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer">Pneu</button>
+          <button type="button" style="height:40px;padding:0 20px;border:1px solid #cfdcec;border-left:0;background:#fff;color:#41546e;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer">Pièce</button>
+          <button type="button" style="height:40px;padding:0 20px;border:1px solid #cfdcec;border-left:0;background:#fff;color:#41546e;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer">Service</button>
+        </div>
+        <span style="display:block;margin-top:8px;font-size:11.5px;color:#4a5c75">Le type détermine les sections affichées ci-dessous. « Service » retire la dimension et le stock.</span>
+      </div>
+
+      <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column">
+
+        <div style="padding:15px 22px 16px;border-bottom:1px solid #e7eef8">
+          <span style="display:block;font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Dimension</span>
+          <div style="margin-top:9px;display:flex;align-items:stretch;gap:10px">
+            <label style="flex:1;display:flex;align-items:center;gap:11px;height:52px;padding:0 15px;border:2px solid #0c1e33;background:#fff">
+              <span style="font-size:22px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums">205/55R16 91V</span>
+              <span style="margin-left:auto;display:flex;align-items:center;gap:7px">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#15616d" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+                <span style="font-size:11.5px;font-weight:600;color:#15616d">Reconnue</span>
+              </span>
+            </label>
+            <button type="button" style="height:52px;padding:0 14px;border:1px solid #adc2da;background:#f4f8fd;color:#41546e;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Saisir champ<br>par champ</button>
+          </div>
+          <div style="margin-top:10px;display:grid;grid-template-columns:repeat(5,1fr);border:1px solid #cfdcec">
+            <span style="padding:8px 10px;border-right:1px solid #cfdcec"><span style="display:block;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4a5c75">Largeur</span><span style="display:block;margin-top:3px;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">205 mm</span></span>
+            <span style="padding:8px 10px;border-right:1px solid #cfdcec"><span style="display:block;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4a5c75">Hauteur</span><span style="display:block;margin-top:3px;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">55 %</span></span>
+            <span style="padding:8px 10px;border-right:1px solid #cfdcec"><span style="display:block;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4a5c75">Jante</span><span style="display:block;margin-top:3px;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">16 ″</span></span>
+            <span style="padding:8px 10px;border-right:1px solid #cfdcec"><span style="display:block;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4a5c75">Charge</span><span style="display:block;margin-top:3px;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">91</span></span>
+            <span style="padding:8px 10px"><span style="display:block;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4a5c75">Vitesse</span><span style="display:block;margin-top:3px;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">V</span></span>
+          </div>
+        </div>
+
+        <div style="padding:15px 22px 16px;border-bottom:1px solid #e7eef8">
+          <span style="display:block;font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Identité</span>
+          <div style="margin-top:10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+            <label style="display:flex;flex-direction:column;gap:5px">
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Marque</span>
+              <select style="height:40px;padding:0 11px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13.5px;color:#0c1e33;cursor:pointer"><option>MICHELIN</option><option>BRIDGESTONE</option><option>HANKOOK</option></select>
+            </label>
+            <label style="display:flex;flex-direction:column;gap:5px">
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Profil</span>
+              <input type="text" value="PRIMACY 4" style="height:40px;padding:0 11px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13.5px;color:#0c1e33">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:5px">
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Référence / SKU</span>
+              <input type="text" value="MIC-PR4-2055516" style="height:40px;padding:0 11px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13.5px;color:#0c1e33">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:5px">
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Saison</span>
+              <select style="height:40px;padding:0 11px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13.5px;color:#0c1e33;cursor:pointer"><option>Été</option><option>Hiver</option><option>4 saisons</option></select>
+            </label>
+          </div>
+          <div style="margin-top:12px;display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" style="width:16px;height:16px;accent-color:#0c1e33"><span style="font-size:13px;color:#41546e">Run Flat (RFT)</span></label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" defaultChecked="{{ true }}" style="width:16px;height:16px;accent-color:#0c1e33"><span style="font-size:13px;color:#41546e">Renforcé (XL)</span></label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" defaultChecked="{{ true }}" style="width:16px;height:16px;accent-color:#0c1e33"><span style="font-size:13px;color:#41546e">Actif</span></label>
+            <label style="display:flex;align-items:center;gap:9px;margin-left:auto">
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Marquage</span>
+              <input type="text" placeholder="MO, AO, ★, PNCS…" style="width:150px;height:36px;padding:0 10px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13px;color:#0c1e33">
+            </label>
+          </div>
+        </div>
+
+        <div style="padding:15px 22px 16px;border-bottom:1px solid #e7eef8">
+          <div style="display:flex;align-items:baseline;gap:10px">
+            <span style="font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Étiquetage européen</span>
+            <span style="font-size:11.5px;color:#4a5c75">obligatoire à la vente en UE</span>
+          </div>
+          <div style="margin-top:10px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
+            <label style="display:flex;flex-direction:column;gap:5px">
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Carburant</span>
+              <select style="height:40px;padding:0 11px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13.5px;color:#0c1e33;cursor:pointer"><option>B</option><option>C</option></select>
+            </label>
+            <label style="display:flex;flex-direction:column;gap:5px">
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Adhérence</span>
+              <select style="height:40px;padding:0 11px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13.5px;color:#0c1e33;cursor:pointer"><option>A</option><option>B</option></select>
+            </label>
+            <label style="display:flex;flex-direction:column;gap:5px">
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Bruit dB</span>
+              <input type="number" value="69" style="height:40px;padding:0 11px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13.5px;color:#0c1e33;font-variant-numeric:tabular-nums">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:5px">
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Unité</span>
+              <select style="height:40px;padding:0 11px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13.5px;color:#0c1e33;cursor:pointer"><option>Pièce</option><option>Jeu</option><option>Paire</option></select>
+            </label>
+          </div>
+        </div>
+
+        <div style="padding:15px 22px 18px">
+          <span style="display:block;font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Description</span>
+          <textarea rows="2" placeholder="Visible sur le devis et le portail client." style="margin-top:9px;width:100%;box-sizing:border-box;padding:10px 11px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13.5px;line-height:1.55;color:#0c1e33;resize:none"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <aside style="min-height:0;overflow:hidden;display:flex;flex-direction:column;background:#f4f8fd">
+
+      <div style="padding:13px 18px;border-bottom:1px solid #0c1e33;display:flex;align-items:center;gap:9px">
+        <span style="font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase">Stock par dépôt</span>
+        <span style="font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">3 lots · 42 pneus</span>
+        <button type="button" style="margin-left:auto;height:30px;padding:0 11px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">+ Ajouter un lot</button>
+      </div>
+
+      <div style="padding:9px 18px;background:#e6edf7;border-bottom:1px solid #cfdcec;display:flex;align-items:flex-start;gap:9px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4a5c75" stroke-width="1.7" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="9"/><path d="M12 8v.3M12 11v5"/></svg>
+        <span style="font-size:11px;line-height:1.55;color:#41546e">Les lots s'enregistrent indépendamment de la fiche : chaque ligne est validée seule, avec son motif. Le bouton du bas n'enregistre que le produit.</span>
+      </div>
+
+      <div style="background:#fff;border-bottom:1px solid #cfdcec">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 62px 92px 76px;align-items:center;gap:10px;padding:7px 18px;border-bottom:1px solid #cfdcec;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#4a5c75">
+          <span>Dépôt · zone · DOT</span><span style="text-align:right">Qté</span><span style="text-align:right">P. achat</span><span style="text-align:right">Actions</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 62px 92px 76px;align-items:center;gap:10px;min-height:54px;padding:0 18px;border-bottom:1px solid #e7eef8">
+          <span style="min-width:0"><span style="display:block;font-size:13.5px;font-weight:600">Casablanca · A-12</span><span style="display:block;font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">DOT 2425 · origine Espagne</span></span>
+          <span style="text-align:right;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">24</span>
+          <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">842,00</span>
+          <span style="display:flex;gap:5px;justify-content:flex-end">
+            <button type="button" title="Modifier" style="width:32px;height:32px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M4 20h4L20 8l-4-4L4 16z"/></svg></button>
+            <button type="button" title="Supprimer" style="width:32px;height:32px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8f1218" stroke-width="1.6"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
+          </span>
+        </div>
+
+        <div style="border-bottom:1px solid #cfdcec;border-left:3px solid #0c1e33;background:#f4f8fd">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 62px 92px 76px;align-items:center;gap:10px;padding:10px 18px 0">
+            <span style="display:flex;gap:6px;min-width:0">
+              <input type="text" value="Rabat" style="flex:1;min-width:0;height:36px;padding:0 9px;border:1px solid #0c1e33;background:#fff;font-family:inherit;font-size:13px;color:#0c1e33">
+              <input type="text" value="B-04" style="width:62px;height:36px;padding:0 9px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13px;color:#0c1e33">
+            </span>
+            <input type="text" value="14" style="height:36px;padding:0 6px;border:1px solid #c2181f;background:#fff;font-family:inherit;font-size:14px;font-weight:700;text-align:right;color:#0c1e33;font-variant-numeric:tabular-nums">
+            <input type="text" value="842,00" style="height:36px;padding:0 8px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13px;text-align:right;color:#0c1e33;font-variant-numeric:tabular-nums">
+            <span style="display:flex;gap:5px;justify-content:flex-end">
+              <button type="button" title="Enregistrer ce lot" style="width:32px;height:32px;border:1px solid #cfdcec;background:#f4f8fd;cursor:not-allowed;display:flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#adc2da" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></button>
+              <button type="button" title="Annuler" style="width:32px;height:32px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+            </span>
+          </div>
+          <div style="padding:10px 18px 12px">
+            <span style="display:flex;align-items:baseline;gap:7px"><span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#c2181f">Motif du changement de quantité</span><span style="font-size:11px;font-weight:600;color:#c2181f">requis · 18 → 14</span></span>
+            <div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap">
+              <button type="button" style="height:30px;padding:0 10px;border:1px solid #adc2da;background:#fff;color:#41546e;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Inventaire</button>
+              <button type="button" style="height:30px;padding:0 10px;border:1px solid #adc2da;background:#fff;color:#41546e;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Casse</button>
+              <button type="button" style="height:30px;padding:0 10px;border:1px solid #adc2da;background:#fff;color:#41546e;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Transfert</button>
+              <button type="button" style="height:30px;padding:0 10px;border:1px solid #adc2da;background:#fff;color:#41546e;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Retour</button>
+            </div>
+            <input type="text" placeholder="Précision libre (optionnel)" style="margin-top:7px;width:100%;box-sizing:border-box;height:36px;padding:0 10px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13px;color:#0c1e33">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 62px 92px 76px;align-items:center;gap:10px;min-height:54px;padding:0 18px">
+          <span style="min-width:0"><span style="display:block;font-size:13.5px;font-weight:600">Tanger · C-01</span><span style="display:block;font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">DOT 1225 · origine France</span></span>
+          <span style="text-align:right;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;color:#4a5c75">4</span>
+          <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">868,00</span>
+          <span style="display:flex;gap:5px;justify-content:flex-end">
+            <button type="button" title="Modifier" style="width:32px;height:32px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M4 20h4L20 8l-4-4L4 16z"/></svg></button>
+            <button type="button" title="Supprimer" style="width:32px;height:32px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8f1218" stroke-width="1.6"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
+          </span>
+        </div>
+      </div>
+
+      <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:11px 18px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #cfdcec;cursor:pointer">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+          <span style="font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase">Mouvements</span>
+          <span style="font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">18 · 90 derniers jours</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:92px minmax(0,1fr) 54px 54px;align-items:center;gap:10px;padding:6px 18px;border-bottom:1px solid #cfdcec;background:#fff;font-size:9px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">
+          <span>Date</span><span>Type · motif</span><span style="text-align:right">Δ</span><span style="text-align:right">Après</span>
+        </div>
+        <div style="background:#fff;flex:1;min-height:0;overflow:hidden">
+          <div style="display:grid;grid-template-columns:92px minmax(0,1fr) 54px 54px;align-items:center;gap:10px;min-height:46px;padding:0 18px;border-bottom:1px solid #e7eef8">
+            <span style="font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">16/09 14:22</span>
+            <span style="min-width:0"><span style="font-size:12.5px;font-weight:600">Vente</span> <span style="font-size:11.5px;color:#4a5c75">· vente 4248 · K. Amrani</span></span>
+            <span style="text-align:right;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:#c2181f">−4</span>
+            <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">42</span>
+          </div>
+          <div style="display:grid;grid-template-columns:92px minmax(0,1fr) 54px 54px;align-items:center;gap:10px;min-height:46px;padding:0 18px;border-bottom:1px solid #e7eef8">
+            <span style="font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">12/09 09:05</span>
+            <span style="min-width:0"><span style="font-size:12.5px;font-weight:600">Réception</span> <span style="font-size:11.5px;color:#4a5c75">· achat 1031 · Michelin Maroc</span></span>
+            <span style="text-align:right;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:#15616d">+24</span>
+            <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">46</span>
+          </div>
+          <div style="display:grid;grid-template-columns:92px minmax(0,1fr) 54px 54px;align-items:center;gap:10px;min-height:46px;padding:0 18px;border-bottom:1px solid #e7eef8">
+            <span style="font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">05/09 17:41</span>
+            <span style="min-width:0"><span style="font-size:12.5px;font-weight:600">Inventaire</span> <span style="font-size:11.5px;color:#4a5c75">· écart constaté · S. Bennis</span></span>
+            <span style="text-align:right;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:#c2181f">−2</span>
+            <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">22</span>
+          </div>
+          <div style="padding:10px 18px"><a href="#15a" style="font-size:11.5px;color:#41546e;text-decoration:none;font-weight:600">Voir les 15 autres →</a></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:14px;padding:0 20px;background:#f4f8fd;border-top:1px solid #0c1e33">
+    <span style="font-size:11.5px;color:#4a5c75">Champs requis : type, marque, dimension.</span>
+    <span style="display:flex;align-items:center;gap:7px;margin-left:auto">
+      <button type="button" style="height:40px;padding:0 16px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer">Annuler</button>
+      <button type="button" style="height:40px;padding:0 16px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer">Enregistrer et nouveau</button>
+      <button type="button" style="height:40px;padding:0 22px;border:1px solid #ff2d37;background:#ff2d37;color:#fff;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer">Enregistrer le produit</button>
+    </span>
+  </div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+<span style="font:700 10.5px 'Inter',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#4a5c75">2 · Référentiel — la modale</span>
+<p style="margin:0;max-width:940px;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e">Marque, transporteur, zone, catégorie, rôle : trois à cinq champs. La modale reste le bon outil — le gabarit ci-dessous vaut pour les cinq. Largeur fixe de 480 px, pas de défilement interne, boutons toujours visibles.</p>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start">
+
+<div id="15b" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter',sans-serif;color:#41546e"><a href="#15b" style="font:700 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(12,30,51,.1);color:#0c1e33;border-radius:5px;text-decoration:none">15b</a>Marque — le gabarit de modale</div>
+
+<div style="width:760px;height:460px;background:rgba(12,30,51,.42);border:1px solid #adc2da;overflow:hidden;box-shadow:0 10px 25px rgba(12,30,51,.14);display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box">
+  <div style="width:480px;background:#fff;border:1px solid #0c1e33;display:flex;flex-direction:column;box-shadow:0 18px 40px rgba(12,30,51,.28)">
+    <div style="display:flex;align-items:center;gap:12px;padding:15px 20px;border-bottom:1px solid #0c1e33;background:#f4f8fd">
+      <span style="display:flex;flex-direction:column;gap:2px">
+        <span style="font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Référentiel · marque</span>
+        <span style="font-size:16px;font-weight:700;letter-spacing:-.01em">Modifier MICHELIN</span>
+      </span>
+      <button type="button" title="Fermer" style="margin-left:auto;width:32px;height:32px;border:1px solid #adc2da;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+
+    <div style="padding:18px 20px;display:flex;flex-direction:column;gap:14px">
+      <label style="display:flex;flex-direction:column;gap:6px">
+        <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Nom *</span>
+        <input type="text" value="MICHELIN" style="height:42px;padding:0 12px;border:1px solid #0c1e33;background:#fff;font-family:inherit;font-size:14.5px;font-weight:600;color:#0c1e33">
+      </label>
+
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Logo</span>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="width:64px;height:64px;border:1px solid #cfdcec;background:#f4f8fd;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;font-weight:700;letter-spacing:.06em;color:#adc2da">MIC</span>
+          <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+            <span style="display:flex;gap:7px">
+              <button type="button" style="height:36px;padding:0 12px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Remplacer</button>
+              <button type="button" style="height:36px;padding:0 12px;border:1px solid #adc2da;background:#fff;color:#8f1218;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Retirer</button>
+            </span>
+            <span style="font-size:11px;color:#4a5c75">PNG ou SVG · fond transparent · 200 px min.</span>
+          </span>
+        </div>
+      </div>
+
+      <label style="display:flex;align-items:center;gap:9px;cursor:pointer;padding-top:2px">
+        <input type="checkbox" defaultChecked="{{ true }}" style="width:16px;height:16px;accent-color:#0c1e33">
+        <span style="font-size:13.5px;color:#41546e">Actif — proposé à la saisie de vente et d'achat</span>
+      </label>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:9px;padding:14px 20px;border-top:1px solid #cfdcec;background:#f4f8fd">
+      <span style="font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">412 produits liés</span>
+      <span style="margin-left:auto;display:flex;gap:8px">
+        <button type="button" style="height:40px;padding:0 15px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer">Annuler</button>
+        <button type="button" style="height:40px;padding:0 18px;border:1px solid #ff2d37;background:#ff2d37;color:#fff;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer">Enregistrer</button>
+      </span>
+    </div>
+  </div>
+</div>
+<p style="margin:2px 0 0;max-width:760px;font:400 12px/1.6 'Inter',sans-serif;color:#4a5c75">Le sur-titre dit de quel référentiel il s'agit, le pied indique ce qui dépend de l'objet — 412 produits liés, ce qui prévient une désactivation à l'aveugle. Aucun rayon, aucune ombre portée sauf celle de la modale elle-même, qui est la seule élévation légitime du système.</p>
+</div>
+
+<div id="15c" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter',sans-serif;color:#41546e"><a href="#15c" style="font:700 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(12,30,51,.1);color:#0c1e33;border-radius:5px;text-decoration:none">15c</a>Confirmation de suppression</div>
+
+<div style="width:560px;height:460px;background:rgba(12,30,51,.42);border:1px solid #adc2da;overflow:hidden;box-shadow:0 10px 25px rgba(12,30,51,.14);display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box">
+  <div style="width:440px;background:#fff;border:1px solid #c2181f;display:flex;flex-direction:column;box-shadow:0 18px 40px rgba(12,30,51,.28)">
+    <div style="padding:15px 20px;border-bottom:1px solid #c2181f;background:#fdeff1">
+      <span style="display:block;font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#c2181f">Suppression définitive</span>
+      <span style="display:block;margin-top:3px;font-size:16px;font-weight:700;letter-spacing:-.01em">Supprimer le lot Tanger · C-01 ?</span>
+    </div>
+    <div style="padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+      <p style="margin:0;font-size:13.5px;line-height:1.6;color:#41546e">4 pneus sortiront du stock. Un mouvement de type <strong style="font-weight:600;color:#0c1e33">Suppression</strong> sera écrit dans l'historique, avec votre nom.</p>
+      <label style="display:flex;flex-direction:column;gap:6px">
+        <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#c2181f">Motif *</span>
+        <input type="text" placeholder="Obligatoire" style="height:40px;padding:0 11px;border:1px solid #c2181f;background:#fff;font-family:inherit;font-size:13.5px;color:#0c1e33">
+      </label>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;padding:14px 20px;border-top:1px solid #cfdcec;background:#f4f8fd">
+      <span style="margin-left:auto;display:flex;gap:8px">
+        <button type="button" style="height:40px;padding:0 15px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer">Annuler</button>
+        <button type="button" style="height:40px;padding:0 16px;border:1px solid #c2181f;background:#fff;color:#8f1218;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer">Supprimer</button>
+      </span>
+    </div>
+  </div>
+</div>
+<p style="margin:2px 0 0;max-width:560px;font:400 12px/1.6 'Inter',sans-serif;color:#4a5c75">Deux inversions par rapport à l'usage courant : « Annuler » est l'action solide, « Supprimer » est l'action bordée. Et la conséquence est chiffrée avant le bouton, pas après.</p>
+</div>
+
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e">Ces trois gabarits couvrent le reste du lot. <a href="#15a">15a</a> vaut pour les objets structurés — produit, client, fournisseur, ordre de service. <a href="#15b">15b</a> pour les cinq référentiels. <a href="#15c">15c</a> pour toute suppression, partout dans l'application : c'est aujourd'hui un <code>confirm()</code> natif à plusieurs endroits.</p>
+<p style="margin:0;font:400 12px/1.5 'Inter',sans-serif;color:#4a5c75">À dire ensuite : « le formulaire client sur le modèle 15a » · « les écrans de détail, pas les formulaires » · « ajoute ce lot au handoff » · « le panneau de paiement ».</p>
+</div>
+
+</section>
+
+</x-dc>
+</body>
+</html>

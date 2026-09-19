@@ -20,43 +20,53 @@ function makeProductService(getProductReturn: Observable<Product | never> = EMPT
 
 const mockAuthService = { hasPermission: vi.fn().mockReturnValue(false) };
 
+/** Depuis l'étape 5a, ?id=&edit=1 ne remplit plus une modale : il navigue. */
+function makeRouter() {
+  return { navigate: vi.fn() };
+}
+
+function build(svc: unknown, route: unknown, router = makeRouter()) {
+  const comp = new ProductsPageComponent(svc as any, mockAuthService as any, route as any, router as any);
+  return { comp, router };
+}
+
 describe('ProductsPageComponent', () => {
   describe('ngOnInit', () => {
     it('sets searchQuery when ?search= param is present', () => {
       const svc = makeProductService();
-      const comp = new ProductsPageComponent(svc as any, mockAuthService as any, makeRoute({ search: 'michelin' }) as any);
+      const { comp } = build(svc, makeRoute({ search: 'michelin' }));
       comp.ngOnInit();
       expect(comp.searchQuery()).toBe('michelin');
     });
 
     it('leaves searchQuery empty when ?search= param is absent', () => {
       const svc = makeProductService();
-      const comp = new ProductsPageComponent(svc as any, mockAuthService as any, makeRoute({}) as any);
+      const { comp } = build(svc, makeRoute({}));
       comp.ngOnInit();
       expect(comp.searchQuery()).toBe('');
     });
 
     it('calls getProduct(42) and opens view modal when ?id=42 with no ?edit=1', () => {
       const svc = makeProductService(of(fakeProduct));
-      const comp = new ProductsPageComponent(svc as any, mockAuthService as any, makeRoute({ id: '42' }) as any);
+      const { comp, router } = build(svc, makeRoute({ id: '42' }));
       comp.ngOnInit();
       expect(svc.getProduct).toHaveBeenCalledWith(42);
       expect(comp.viewingProduct()).toEqual(fakeProduct);
-      expect(comp.showForm()).toBe(false);
+      expect(router.navigate).not.toHaveBeenCalled();
     });
 
-    it('calls getProduct(42) and opens edit form when ?id=42&edit=1', () => {
+    it('routes to the editor when ?id=42&edit=1, instead of opening a modal', () => {
       const svc = makeProductService(of(fakeProduct));
-      const comp = new ProductsPageComponent(svc as any, mockAuthService as any, makeRoute({ id: '42', edit: '1' }) as any);
+      const { comp, router } = build(svc, makeRoute({ id: '42', edit: '1' }));
       comp.ngOnInit();
       expect(svc.getProduct).toHaveBeenCalledWith(42);
-      expect(comp.editingProduct()).toEqual(fakeProduct);
-      expect(comp.showForm()).toBe(true);
+      expect(router.navigate).toHaveBeenCalledWith(['/products', 42, 'edit']);
+      expect(comp.viewingProduct()).toBeNull();
     });
 
     it('does NOT call getProduct when ?id= param is absent', () => {
       const svc = makeProductService();
-      const comp = new ProductsPageComponent(svc as any, mockAuthService as any, makeRoute({ search: 'foo' }) as any);
+      const { comp } = build(svc, makeRoute({ search: 'foo' }));
       comp.ngOnInit();
       expect(svc.getProduct).not.toHaveBeenCalled();
     });

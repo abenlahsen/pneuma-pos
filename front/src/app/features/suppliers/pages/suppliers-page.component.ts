@@ -9,6 +9,8 @@ import { Supplier, SupplierPayload, PaginatedResponse, SupplierUnpaidRow } from 
 import { SupplierFormComponent } from '../components/supplier-form/supplier-form.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 
 import {
   ActiveFilter,
@@ -22,11 +24,20 @@ import {
 @Component({
   selector: 'app-suppliers-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, SupplierFormComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent],
+  imports: [CommonModule, FormsModule, SupplierFormComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ConfirmDeleteComponent],
   templateUrl: './suppliers-page.component.html',
   styleUrls: ['./suppliers-page.component.scss'],
 })
 export class SuppliersPageComponent implements OnInit {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   suppliers = signal<Supplier[]>([]);
 
   currentPage = signal(1);
@@ -233,11 +244,18 @@ export class SuppliersPageComponent implements OnInit {
   }
 
   deleteSupplier(supplier: Supplier): void {
-    if (confirm(`Voulez-vous vraiment supprimer le fournisseur "${supplier.name}" ?`)) {
-      this.supplierService.deleteSupplier(supplier.id).subscribe({
-        next: () => this.loadData(),
-      });
-    }
+    this.pendingDelete.set({
+      title: `Supprimer le fournisseur « ${supplier.name} » ?`,
+      consequence: this.unpaidFor(supplier) > 0
+        ? `Il reste ${this.unpaidFor(supplier)} DH dus à ce fournisseur.`
+        : 'Aucun montant ne lui est dû actuellement.',
+      detail: "La suppression échouera s'il reste des achats rattachés.",
+      run: () => {
+        this.supplierService.deleteSupplier(supplier.id).subscribe({
+          next: () => this.loadData(),
+        });
+      },
+    });
   }
 
   logout(): void {

@@ -9,17 +9,28 @@ import { Sale } from '../../../core/models/sale.model';
 import { Account } from '../../../core/models/account.model';
 import { AccountService } from '../../../core/services/account.service';
 import { SalePaymentDetailComponent } from '../components/sale-payment-detail/sale-payment-detail.component';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 
 const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Effet', 'Carte bancaire'];
 
 @Component({
   selector: 'app-payment-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, SalePaymentDetailComponent, IconComponent],
+  imports: [CommonModule, FormsModule, SalePaymentDetailComponent, IconComponent, ConfirmDeleteComponent],
   templateUrl: './payment-panel.component.html',
   styleUrl: './payment-panel.component.scss',
 })
 export class PaymentPanelComponent implements OnInit {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   @Input() sale!: Sale;
   @Output() closed = new EventEmitter<void>();
   @Output() statusChanged = new EventEmitter<string>();
@@ -107,7 +118,15 @@ export class PaymentPanelComponent implements OnInit {
   }
 
   deletePayment(payment: Payment): void {
-    if (!confirm('Supprimer ce paiement ?')) return;
+    this.pendingDelete.set({
+      title: 'Supprimer ce paiement ?',
+      consequence: `${payment.amount} DH reviendront au reste dû de cette vente.`,
+      detail: 'Le mouvement de trésorerie correspondant est supprimé avec lui.',
+      run: () => this.performDeletePayment(payment),
+    });
+  }
+
+  private performDeletePayment(payment: Payment): void {
     this.paymentService.deletePayment(this.sale.id, payment.id).subscribe({
       next: () => {
         this.loadPayments();

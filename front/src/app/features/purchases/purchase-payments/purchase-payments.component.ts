@@ -8,17 +8,28 @@ import { Purchase, PurchasePayment, PurchasePaymentSummary } from '../../../core
 import { Account } from '../../../core/models/account.model';
 import { AccountService } from '../../../core/services/account.service';
 import { PurchasePaymentDetailComponent } from '../components/purchase-payment-detail/purchase-payment-detail.component';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 
 const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Effet', 'Carte bancaire'];
 
 @Component({
   selector: 'app-purchase-payments',
   standalone: true,
-  imports: [CommonModule, FormsModule, PurchasePaymentDetailComponent, IconComponent],
+  imports: [CommonModule, FormsModule, PurchasePaymentDetailComponent, IconComponent, ConfirmDeleteComponent],
   templateUrl: './purchase-payments.component.html',
   styleUrl: './purchase-payments.component.scss',
 })
 export class PurchasePaymentsComponent implements OnInit {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   @Input() purchase!: Purchase;
   @Output() closed = new EventEmitter<void>();
   @Output() statusChanged = new EventEmitter<string>();
@@ -113,7 +124,15 @@ export class PurchasePaymentsComponent implements OnInit {
   }
 
   deletePayment(payment: PurchasePayment): void {
-    if (!confirm('Supprimer ce paiement ?')) return;
+    this.pendingDelete.set({
+      title: 'Supprimer ce paiement ?',
+      consequence: `${payment.amount} DH reviendront au dû de cet achat.`,
+      detail: 'Le mouvement de trésorerie correspondant est supprimé avec lui.',
+      run: () => this.performDeletePayment(payment),
+    });
+  }
+
+  private performDeletePayment(payment: PurchasePayment): void {
     this.purchaseService.deletePurchasePayment(this.purchase.id, payment.id).subscribe({
       next: () => {
         this.loadPayments();

@@ -2,11 +2,12 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Carrier, CarrierPayload } from '../../models/carrier.model';
+import { ReferentialModalComponent } from '../../../../shared/referential-modal/referential-modal.component';
 
 @Component({
   selector: 'app-carrier-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReferentialModalComponent],
   templateUrl: './carrier-form.component.html',
   styleUrls: ['../../../sales/sale-form/sale-form.component.scss']
 })

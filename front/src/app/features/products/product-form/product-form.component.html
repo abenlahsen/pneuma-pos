@@ -1,385 +1,415 @@
-<form (ngSubmit)="onSubmit()" #form="ngForm" class="form-container">
+<!-- Refonte 2b, gabarit 15a : éditeur plein écran en trois rangées.
+     Barre de 60 px, corps en minmax(0,1fr) 520px, pied d'actions de 64 px. -->
+<form (ngSubmit)="onSubmit()" #form="ngForm" class="pf-editor">
 
-  <div class="form-section">
-    <h3>Informations générales</h3>
-    <div class="form-grid">
-      <div class="form-control">
-        <label>Référence / SKU</label>
-        <input type="text" name="reference" [(ngModel)]="formData.reference" placeholder="Ex: MIC-PR4-2055516">
-      </div>
+  <!-- ── Rangée 1 : la barre ────────────────────────────────────────────── -->
+  <header class="pf-bar">
+    <span class="pf-identity">
+      <span class="pf-title">{{ formData.profile || (isEditing ? 'Produit ' + product!.id : 'Nouveau produit') }}</span>
+      <span class="pf-meta">
+        <ng-container *ngIf="formData.reference">{{ formData.reference }} · </ng-container>
+        <ng-container *ngIf="isTyre && dimensionInput()">{{ dimensionInput() }} · </ng-container>
+        <ng-container *ngIf="lastModified">modifié le {{ lastModified | date:'dd/MM/yyyy HH:mm' }}</ng-container>
+        <ng-container *ngIf="!lastModified">jamais enregistré</ng-container>
+      </span>
+    </span>
 
-      <div class="form-control">
-        <label>Type *</label>
-        <select name="type" [(ngModel)]="formData.type" required>
-          <option value="tyre">Pneu</option>
-          <option value="part">Pièce</option>
-          <option value="service">Service</option>
-        </select>
-      </div>
+    <span class="pf-badges">
+      <span class="pf-badge" [class.pf-badge--off]="!formData.is_active">
+        {{ formData.is_active ? 'ACTIF' : 'INACTIF' }}
+      </span>
+      <span class="pf-badge" *ngIf="isEditing && !isService">{{ totalStock }} EN STOCK</span>
+      <span class="pf-dirty" *ngIf="form.dirty">non enregistré</span>
+    </span>
+  </header>
 
-      <div class="form-control">
-        <label>Marque</label>
-        <select name="brand_id" [(ngModel)]="formData.brand_id">
-          <option [ngValue]="null">-- Aucune --</option>
-          <option *ngFor="let brand of brands" [ngValue]="brand.id">{{ brand.name }}</option>
-        </select>
-      </div>
+  <!-- ── Rangée 2 : le corps, deux colonnes ─────────────────────────────── -->
+  <!-- La deuxième colonne n'existe que s'il y a du stock à montrer : sans elle,
+       réserver 520 px laisserait un vide à droite (création, ou service). -->
+  <div class="pf-body" [class.pf-body--single]="!isEditing || isService">
 
-      <div class="form-control">
-        <label>Unité</label>
-        <select name="unit" [(ngModel)]="formData.unit">
-          <option value="piece">Pièce</option>
-          <option value="set">Jeu</option>
-          <option value="pair">Paire</option>
-          <option value="meter">Mètre</option>
-          <option value="liter">Litre</option>
-        </select>
-      </div>
+    <!-- Colonne gauche : la fiche produit -->
+    <div class="pf-main">
 
-      <div class="form-control checkbox-inline">
-        <label>
-          <input type="checkbox" name="is_active" [(ngModel)]="formData.is_active">
-          Actif
-        </label>
-      </div>
+      <!-- Le type d'abord : c'est lui qui compose les sections en dessous. -->
+      <section class="pf-block">
+        <h2 class="pf-block-title">Type de produit</h2>
+        <div class="pf-segmented">
+          <button type="button" [class.active]="isTyre" (click)="selectType('tyre')">Pneu</button>
+          <button type="button" [class.active]="isPart" (click)="selectType('part')">Pièce</button>
+          <button type="button" [class.active]="isService" (click)="selectType('service')">Service</button>
+        </div>
+        <p class="pf-note">
+          Le type détermine les sections affichées ci-dessous. « Service » retire la dimension et le stock.
+        </p>
+      </section>
 
-      <div class="form-control full-width">
-        <label>Description</label>
-        <textarea name="description" [(ngModel)]="formData.description" rows="2" placeholder="Description du produit..."></textarea>
-      </div>
+      <!-- La dimension d'un trait, éclatée en dessous pour relecture. -->
+      <section class="pf-block" *ngIf="isTyre">
+        <h2 class="pf-block-title">
+          Dimension
+          <span class="pf-parsed" *ngIf="parsedDimension()">Reconnue</span>
+          <span class="pf-parsed pf-parsed--ko" *ngIf="dimensionUnreadable()">Non reconnue</span>
+        </h2>
+
+        <div class="pf-dim-row">
+          <input
+            type="text"
+            name="dimension"
+            class="pf-dim-input"
+            [ngModel]="dimensionInput()"
+            (ngModelChange)="onDimensionInput($event)"
+            placeholder="205/55R16 91V, 205/55R16 ou 2055516"
+            autocomplete="off"
+          />
+          <button type="button" class="pf-link" (click)="dimensionManual.set(!dimensionManual())">
+            {{ dimensionManual() ? 'Revenir au champ unique' : 'Saisir champ par champ' }}
+          </button>
+        </div>
+
+        <div class="pf-dim-cells" *ngIf="parsedDimension() as dim">
+          <span class="pf-cell"><span class="pf-cell-label">Largeur</span>{{ dim.width }} mm</span>
+          <span class="pf-cell"><span class="pf-cell-label">Hauteur</span>{{ dim.height !== null ? dim.height + ' %' : '—' }}</span>
+          <span class="pf-cell"><span class="pf-cell-label">Jante</span>{{ dim.diameter }} ″</span>
+          <!-- Quand la saisie omet les indices, on conserve ceux de la fiche
+               plutôt que de les effacer — mais on le dit, sans quoi « Reconnue »
+               laisserait croire qu'ils viennent d'être analysés. -->
+          <span class="pf-cell">
+            <span class="pf-cell-label">Charge</span>
+            {{ dim.loadIndex || formData.tire_load_index || '—' }}
+            <em class="pf-cell-kept" *ngIf="!dim.loadIndex && formData.tire_load_index">conservé</em>
+          </span>
+          <span class="pf-cell">
+            <span class="pf-cell-label">Vitesse</span>
+            {{ dim.speedIndex || formData.tire_speed_index || '—' }}
+            <em class="pf-cell-kept" *ngIf="!dim.speedIndex && formData.tire_speed_index">conservé</em>
+          </span>
+        </div>
+
+        <p class="pf-note pf-note--warn" *ngIf="dimensionUnreadable() && !dimensionManual()">
+          Cette écriture n'a pas été reconnue. Utilisez « Saisir champ par champ ».
+        </p>
+
+        <!-- Les cinq champs d'origine, inchangés, révélés à la demande. -->
+        <div class="pf-grid" *ngIf="dimensionManual()">
+          <label class="pf-field">
+            <span>Largeur (mm)</span>
+            <input type="number" name="tire_width" [(ngModel)]="formData.tire_width" (ngModelChange)="syncDimensionFromFields()" min="0" step="0.5" placeholder="Ex: 205 ou 8.5">
+          </label>
+          <label class="pf-field">
+            <span>Hauteur (%)</span>
+            <input type="number" name="tire_height" [(ngModel)]="formData.tire_height" (ngModelChange)="syncDimensionFromFields()" min="0" step="0.5" placeholder="Ex: 55">
+          </label>
+          <label class="pf-field">
+            <span>Diamètre jante (pouces)</span>
+            <input type="number" name="tire_diameter" [(ngModel)]="formData.tire_diameter" (ngModelChange)="syncDimensionFromFields()" min="0" step="0.5" placeholder="Ex: 16 ou 17.5">
+          </label>
+          <label class="pf-field">
+            <span>Indice de charge</span>
+            <input type="text" name="tire_load_index" [(ngModel)]="formData.tire_load_index" (ngModelChange)="syncDimensionFromFields()" placeholder="Ex: 91">
+          </label>
+          <label class="pf-field">
+            <span>Indice de vitesse</span>
+            <input type="text" name="tire_speed_index" [(ngModel)]="formData.tire_speed_index" (ngModelChange)="syncDimensionFromFields()" placeholder="Ex: V">
+          </label>
+        </div>
+      </section>
+
+      <!-- Identité : commune aux trois types. -->
+      <section class="pf-block">
+        <h2 class="pf-block-title">Identité</h2>
+        <div class="pf-grid">
+          <label class="pf-field">
+            <span>Marque</span>
+            <select name="brand_id" [(ngModel)]="formData.brand_id">
+              <option [ngValue]="null">— Aucune —</option>
+              <option *ngFor="let brand of brands" [ngValue]="brand.id">{{ brand.name }}</option>
+            </select>
+          </label>
+
+          <label class="pf-field">
+            <span>{{ isTyre ? 'Profil' : (isService ? 'Nom du service *' : 'Nom / Libellé') }}</span>
+            <input type="text" name="profile" [(ngModel)]="formData.profile" [required]="isService"
+                   [placeholder]="isTyre ? 'Ex: PRIMACY 4' : (isService ? 'Ex: Vidange moteur' : 'Ex: Plaquettes de frein AV')">
+          </label>
+
+          <label class="pf-field">
+            <span>Référence / SKU</span>
+            <input type="text" name="reference" [(ngModel)]="formData.reference" placeholder="Ex: MIC-PR4-2055516">
+          </label>
+
+          <label class="pf-field">
+            <span>Unité</span>
+            <select name="unit" [(ngModel)]="formData.unit">
+              <option value="piece">Pièce</option>
+              <option value="set">Jeu</option>
+              <option value="pair">Paire</option>
+              <option value="meter">Mètre</option>
+              <option value="liter">Litre</option>
+            </select>
+          </label>
+
+          <label class="pf-field" *ngIf="isTyre">
+            <span>Saison</span>
+            <select name="tire_season" [(ngModel)]="formData.tire_season">
+              <option [ngValue]="null">— Aucune —</option>
+              <option value="summer">Été</option>
+              <option value="winter">Hiver</option>
+              <option value="all_season">4 saisons</option>
+            </select>
+          </label>
+
+          <label class="pf-field" *ngIf="isTyre">
+            <span>Marquage</span>
+            <input type="text" name="tire_marking" [(ngModel)]="formData.tire_marking" placeholder="Ex: MO, AO, *, PNCS, LR...">
+          </label>
+
+          <span class="pf-field pf-field--checks">
+            <label class="pf-check" *ngIf="isTyre">
+              <input type="checkbox" name="tire_runflat" [(ngModel)]="formData.tire_runflat"> Run Flat (RFT)
+            </label>
+            <label class="pf-check" *ngIf="isTyre">
+              <input type="checkbox" name="tire_reinforced" [(ngModel)]="formData.tire_reinforced"> Renforcé (XL)
+            </label>
+            <label class="pf-check">
+              <input type="checkbox" name="is_active" [(ngModel)]="formData.is_active"> Actif
+            </label>
+          </span>
+
+          <label class="pf-field pf-field--wide">
+            <span>Description</span>
+            <textarea name="description" [(ngModel)]="formData.description" rows="2" placeholder="Description du produit..."></textarea>
+          </label>
+        </div>
+      </section>
+
+      <!-- Étiquetage européen : composé sous le type, plus au milieu du formulaire. -->
+      <section class="pf-block" *ngIf="isTyre">
+        <h2 class="pf-block-title">
+          Étiquetage européen
+          <span class="pf-block-note">obligatoire à la vente en UE</span>
+        </h2>
+        <div class="pf-grid">
+          <label class="pf-field">
+            <span>Carburant</span>
+            <select name="eu_fuel" [(ngModel)]="formData.eu_fuel">
+              <option [ngValue]="null">—</option>
+              <option *ngFor="let g of ['A','B','C','D','E','F','G']" [value]="g">{{ g }}</option>
+            </select>
+          </label>
+          <label class="pf-field">
+            <span>Adhérence sur sol mouillé</span>
+            <select name="eu_wet_grip" [(ngModel)]="formData.eu_wet_grip">
+              <option [ngValue]="null">—</option>
+              <option *ngFor="let g of ['A','B','C','D','E','F','G']" [value]="g">{{ g }}</option>
+            </select>
+          </label>
+          <label class="pf-field">
+            <span>Bruit (dB)</span>
+            <input type="number" name="eu_noise_db" [(ngModel)]="formData.eu_noise_db" min="0" max="999" placeholder="Ex: 71">
+          </label>
+          <label class="pf-field">
+            <span>Classe de bruit</span>
+            <select name="eu_noise_class" [(ngModel)]="formData.eu_noise_class">
+              <option [ngValue]="null">—</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <!-- Pièce -->
+      <section class="pf-block" *ngIf="isPart">
+        <h2 class="pf-block-title">Caractéristiques pièce</h2>
+        <div class="pf-grid">
+          <label class="pf-field">
+            <span>Catégorie *</span>
+            <select name="part_category" [(ngModel)]="formData.part_category" required>
+              <option [ngValue]="null">— Choisir —</option>
+              <option value="brakes">Freinage</option>
+              <option value="lubricants">Lubrifiants</option>
+              <option value="engine">Moteur</option>
+              <option value="suspension">Suspension</option>
+              <option value="filters">Filtres</option>
+              <option value="electrical">Électrique</option>
+              <option value="body">Carrosserie</option>
+              <option value="other">Autre</option>
+            </select>
+          </label>
+          <label class="pf-field">
+            <span>Référence OEM / Constructeur</span>
+            <input type="text" name="oem_reference" [(ngModel)]="formData.oem_reference" placeholder="Ex: 7701210115">
+          </label>
+          <label class="pf-field pf-field--wide">
+            <span>Compatibilité véhicules</span>
+            <textarea name="compatibility" [(ngModel)]="formData.compatibility" rows="2"
+                      placeholder="Ex: Renault Clio IV (2012-2019), Peugeot 208 (2012-2019)..."></textarea>
+          </label>
+        </div>
+      </section>
+
+      <!-- Service -->
+      <section class="pf-block" *ngIf="isService">
+        <h2 class="pf-block-title">Caractéristiques service</h2>
+        <div class="pf-grid">
+          <label class="pf-field">
+            <span>Catégorie *</span>
+            <select name="service_category" [(ngModel)]="formData.service_category" required>
+              <option [ngValue]="null">— Choisir —</option>
+              <option value="mechanical">Mécanique</option>
+              <option value="oil">Vidange / Huile</option>
+              <option value="tires">Pneumatique</option>
+              <option value="bodywork">Carrosserie</option>
+              <option value="diagnostic">Diagnostic</option>
+              <option value="other">Autre</option>
+            </select>
+          </label>
+          <label class="pf-field">
+            <span>Durée estimée (minutes)</span>
+            <input type="number" name="duration_minutes" [(ngModel)]="formData.duration_minutes" min="0" placeholder="Ex: 30">
+          </label>
+          <label class="pf-field">
+            <span>Prix de vente par défaut (DH)</span>
+            <input type="number" name="selling_price" [(ngModel)]="formData.selling_price" min="0" step="0.01" placeholder="Ex: 250">
+          </label>
+        </div>
+      </section>
     </div>
-  </div>
 
-  <div class="form-section" *ngIf="isTyre">
-    <h3>Caractéristiques pneu</h3>
-    <div class="form-grid">
-      <div class="form-control">
-        <label>Profil</label>
-        <input type="text" name="profile" [(ngModel)]="formData.profile" placeholder="Ex: PRIMACY 4">
-      </div>
+    <!-- Colonne droite : le stock, qui n'est pas le produit -->
+    <aside class="pf-side" *ngIf="isEditing && !isService">
+      <section class="pf-block">
+        <h2 class="pf-block-title">
+          Stock par dépôt
+          <span class="pf-block-note">{{ stockItems().length }} lot(s) · {{ totalStock }} en stock</span>
+        </h2>
 
-      <div class="form-control">
-        <label>Largeur (mm)</label>
-        <input type="number" name="tire_width" [(ngModel)]="formData.tire_width" min="0" step="0.5" placeholder="Ex: 205 ou 8.5">
-      </div>
+        <p class="pf-note pf-note--strong">
+          Les lots s'enregistrent indépendamment de la fiche : chaque ligne est validée seule,
+          avec son motif. Le bouton du bas n'enregistre que le produit.
+        </p>
 
-      <div class="form-control">
-        <label>Hauteur (%)</label>
-        <input type="number" name="tire_height" [(ngModel)]="formData.tire_height" min="0" step="0.5" placeholder="Ex: 55">
-      </div>
+        <button type="button" class="pf-add" (click)="openAddStock()"
+          *ngIf="!showStockRow() && authService.hasPermission('create stock')">
+          + Ajouter un lot
+        </button>
 
-      <div class="form-control">
-        <label>Diamètre jante (pouces)</label>
-        <input type="number" name="tire_diameter" [(ngModel)]="formData.tire_diameter" min="0" step="0.5" placeholder="Ex: 16 ou 17.5">
-      </div>
+        <p class="pf-note" *ngIf="stockLoading()">Chargement…</p>
 
-      <div class="form-control">
-        <label>Indice de charge</label>
-        <input type="text" name="tire_load_index" [(ngModel)]="formData.tire_load_index" placeholder="Ex: 91">
-      </div>
-
-      <div class="form-control">
-        <label>Indice de vitesse</label>
-        <input type="text" name="tire_speed_index" [(ngModel)]="formData.tire_speed_index" placeholder="Ex: V">
-      </div>
-
-      <div class="form-control">
-        <label>Saison</label>
-        <select name="tire_season" [(ngModel)]="formData.tire_season">
-          <option [ngValue]="null">-- Aucune --</option>
-          <option value="summer">Été</option>
-          <option value="winter">Hiver</option>
-          <option value="all_season">4 Saisons</option>
-        </select>
-      </div>
-
-      <div class="form-control checkbox-inline">
-        <label>
-          <input type="checkbox" name="tire_runflat" [(ngModel)]="formData.tire_runflat">
-          Run Flat (RFT)
-        </label>
-      </div>
-
-      <div class="form-control checkbox-inline">
-        <label>
-          <input type="checkbox" name="tire_reinforced" [(ngModel)]="formData.tire_reinforced">
-          Renforcé (XL)
-        </label>
-      </div>
-
-      <div class="form-control">
-        <label>Marquage</label>
-        <input type="text" name="tire_marking" [(ngModel)]="formData.tire_marking" placeholder="Ex: MO, AO, *, PNCS, LR...">
-      </div>
-    </div>
-  </div>
-
-  <div class="form-section" *ngIf="isTyre">
-    <h3>Étiquetage européen</h3>
-    <div class="form-grid">
-      <div class="form-control">
-        <label>Efficacité énergétique</label>
-        <select name="eu_fuel" [(ngModel)]="formData.eu_fuel">
-          <option [ngValue]="null">--</option>
-          <option *ngFor="let g of ['A','B','C','D','E','F','G']" [value]="g">{{ g }}</option>
-        </select>
-      </div>
-
-      <div class="form-control">
-        <label>Adhérence sur sol mouillé</label>
-        <select name="eu_wet_grip" [(ngModel)]="formData.eu_wet_grip">
-          <option [ngValue]="null">--</option>
-          <option *ngFor="let g of ['A','B','C','D','E','F','G']" [value]="g">{{ g }}</option>
-        </select>
-      </div>
-
-      <div class="form-control">
-        <label>Bruit extérieur (dB)</label>
-        <input type="number" name="eu_noise_db" [(ngModel)]="formData.eu_noise_db" min="0" max="999" placeholder="Ex: 71">
-      </div>
-
-      <div class="form-control">
-        <label>Classe de bruit</label>
-        <select name="eu_noise_class" [(ngModel)]="formData.eu_noise_class">
-          <option [ngValue]="null">--</option>
-          <option value="A">A</option>
-          <option value="B">B</option>
-          <option value="C">C</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── Part-specific section ── -->
-  <div class="form-section" *ngIf="isPart">
-    <h3>Caractéristiques pièce</h3>
-    <div class="form-grid">
-      <div class="form-control">
-        <label>Nom / Libellé</label>
-        <input type="text" name="profile" [(ngModel)]="formData.profile" placeholder="Ex: Plaquettes de frein AV">
-      </div>
-
-      <div class="form-control">
-        <label>Catégorie *</label>
-        <select name="part_category" [(ngModel)]="formData.part_category" required>
-          <option [ngValue]="null">-- Choisir --</option>
-          <option value="brakes">Freinage</option>
-          <option value="lubricants">Lubrifiants</option>
-          <option value="engine">Moteur</option>
-          <option value="suspension">Suspension</option>
-          <option value="filters">Filtres</option>
-          <option value="electrical">Électrique</option>
-          <option value="body">Carrosserie</option>
-          <option value="other">Autre</option>
-        </select>
-      </div>
-
-      <div class="form-control">
-        <label>Référence OEM / Constructeur</label>
-        <input type="text" name="oem_reference" [(ngModel)]="formData.oem_reference" placeholder="Ex: 7701210115">
-      </div>
-
-      <div class="form-control full-width">
-        <label>Compatibilité véhicules</label>
-        <textarea name="compatibility" [(ngModel)]="formData.compatibility" rows="2"
-                  placeholder="Ex: Renault Clio IV (2012-2019), Peugeot 208 (2012-2019)..."></textarea>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── Service-specific section ── -->
-  <div class="form-section" *ngIf="isService">
-    <h3>Caractéristiques service</h3>
-    <div class="form-grid">
-      <div class="form-control">
-        <label>Nom du service *</label>
-        <input type="text" name="profile" [(ngModel)]="formData.profile" required
-               placeholder="Ex: Vidange moteur, Changement plaquettes AV">
-      </div>
-
-      <div class="form-control">
-        <label>Catégorie *</label>
-        <select name="service_category" [(ngModel)]="formData.service_category" required>
-          <option [ngValue]="null">-- Choisir --</option>
-          <option value="mechanical">Mécanique</option>
-          <option value="oil">Vidange / Huile</option>
-          <option value="tires">Pneumatique</option>
-          <option value="bodywork">Carrosserie</option>
-          <option value="diagnostic">Diagnostic</option>
-          <option value="other">Autre</option>
-        </select>
-      </div>
-
-      <div class="form-control">
-        <label>Durée estimée (minutes)</label>
-        <input type="number" name="duration_minutes" [(ngModel)]="formData.duration_minutes" min="0" placeholder="Ex: 30">
-      </div>
-
-      <div class="form-control">
-        <label>Prix de vente par défaut (DH)</label>
-        <input type="number" name="selling_price" [(ngModel)]="formData.selling_price" min="0" step="0.01" placeholder="Ex: 250">
-      </div>
-    </div>
-  </div>
-
-  <!-- ── Inventory Section (only when editing a non-service product) ── -->
-  <div class="form-section inventory-section" *ngIf="isEditing && !isService">
-    <div class="inventory-header">
-      <h3><app-icon name="package" [size]="14" /> Inventaire <span class="stock-total" *ngIf="totalStock > 0">({{ totalStock }} en stock)</span></h3>
-      <button type="button" class="btn btn-sm btn-add-stock" (click)="openAddStock()" *ngIf="!showStockRow() && authService.hasPermission('create stock')">
-        + Ajouter
-      </button>
-    </div>
-
-    <div class="inventory-table-wrap" *ngIf="stockLoading()">
-      <p class="text-muted text-center">Chargement...</p>
-    </div>
-
-    <div class="inventory-table-wrap" *ngIf="!stockLoading()">
-      <table class="inventory-table" *ngIf="stockItems().length > 0 || showStockRow()">
-        <thead>
-          <tr>
-            <th>Dépôt</th>
-            <th>Zone</th>
-            <th>Origine</th>
-            <th>DOT</th>
-            <th class="text-center">Qté</th>
-            <th class="text-right">P. Achat</th>
-            <th class="text-center">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Existing rows -->
+        <div class="pf-lots" *ngIf="!stockLoading()">
           <ng-container *ngFor="let item of stockItems()">
-            <tr *ngIf="editingStockId() !== item.id">
-              <td>{{ item.depot || '-' }}</td>
-              <td>{{ item.zone || '-' }}</td>
-              <td>{{ item.made_in || '-' }}</td>
-              <td>{{ item.dot || '-' }}</td>
-              <td class="text-center">
-                <span class="inv-qty" [class.inv-qty-zero]="item.quantity === 0">{{ item.quantity }}</span>
-              </td>
-              <td class="text-right">{{ item.purchase_price ? (item.purchase_price | number:'1.2-2') : '-' }}</td>
-              <td class="text-center actions-cell">
-                <button type="button" class="btn-icon-sm" (click)="editStock(item)" title="Modifier" *ngIf="authService.hasPermission('edit stock')"><app-icon name="edit" [size]="14" /></button>
-                <button type="button" class="btn-icon-sm text-danger" (click)="deleteStock(item)" title="Supprimer" *ngIf="authService.hasPermission('delete stock')"><app-icon name="trash" [size]="14" /></button>
-              </td>
-            </tr>
-            <!-- Inline edit row -->
-            <tr class="edit-row" *ngIf="editingStockId() === item.id">
-              <td><input type="text" [(ngModel)]="stockForm.depot" name="edit_depot" placeholder="Dépôt" class="inv-input" (keydown.enter)="$event.preventDefault()"></td>
-              <td><input type="text" [(ngModel)]="stockForm.zone" name="edit_zone" placeholder="Zone" class="inv-input" (keydown.enter)="$event.preventDefault()"></td>
-              <td><input type="text" [(ngModel)]="stockForm.made_in" name="edit_made_in" placeholder="Origine" class="inv-input" (keydown.enter)="$event.preventDefault()"></td>
-              <td><input type="text" [(ngModel)]="stockForm.dot" name="edit_dot" placeholder="DOT" class="inv-input" (keydown.enter)="$event.preventDefault()"></td>
-              <td><input type="number" [ngModel]="editingStockQuantity()" (ngModelChange)="editingStockQuantity.set(+$event); stockForm.quantity = +$event" name="edit_qty" min="0" class="inv-input text-center" style="width:60px" (keydown.enter)="$event.preventDefault()"></td>
-              <td><input type="number" [(ngModel)]="stockForm.purchase_price" name="edit_price" min="0" step="0.01" class="inv-input text-right" style="width:80px" (keydown.enter)="$event.preventDefault()"></td>
-              <td class="text-center actions-cell">
-                <button type="button" class="btn-icon-sm text-success" (click)="saveStock()" title="Enregistrer"><app-icon name="check-circle" [size]="14" /></button>
-                <button type="button" class="btn-icon-sm" (click)="cancelStockEdit()" title="Annuler"><app-icon name="close" [size]="14" /></button>
-              </td>
-            </tr>
-            <!-- Mandatory reason row when editing and quantity changed -->
-            <tr class="reason-row" *ngIf="editingStockId() === item.id && stockQuantityChanged()">
-              <td colspan="7">
-                <label class="reason-label">
-                  Motif du changement de quantité * <span class="hint">(requis)</span>
-                </label>
-                <input
-                  type="text"
-                  [ngModel]="stockReason()"
-                  (ngModelChange)="stockReason.set($event)"
-                  name="edit_reason"
-                  placeholder="Ex: Inventaire physique, casse, correction d'erreur..."
-                  class="inv-input reason-input"
-                  minlength="3"
-                  maxlength="1000"
-                  required
-                  (keydown.enter)="$event.preventDefault()"
-                >
-              </td>
-            </tr>
+
+            <div class="pf-lot" *ngIf="editingStockId() !== item.id">
+              <span class="pf-lot-where">
+                <span class="pf-lot-depot">{{ item.depot || 'Sans dépôt' }}<ng-container *ngIf="item.zone"> · {{ item.zone }}</ng-container></span>
+                <span class="pf-lot-sub"><ng-container *ngIf="item.dot">DOT {{ item.dot }}</ng-container><ng-container *ngIf="item.dot && item.made_in"> · </ng-container><ng-container *ngIf="item.made_in">origine {{ item.made_in }}</ng-container><ng-container *ngIf="!item.dot && !item.made_in">—</ng-container></span>
+              </span>
+              <span class="num pf-lot-qty" [class.pf-lot-qty--zero]="item.quantity === 0">{{ item.quantity }}</span>
+              <span class="num">{{ item.purchase_price ? (item.purchase_price | number:'1.2-2') : '—' }}</span>
+              <span class="pf-lot-actions">
+                <button type="button" class="btn-icon" (click)="editStock(item)" title="Modifier" *ngIf="authService.hasPermission('edit stock')"><app-icon name="edit" [size]="14" /></button>
+                <button type="button" class="btn-icon text-danger" (click)="deleteStock(item)" title="Supprimer" *ngIf="authService.hasPermission('delete stock')"><app-icon name="trash" [size]="14" /></button>
+              </span>
+            </div>
+
+            <div class="pf-lot-edit" *ngIf="editingStockId() === item.id">
+              <input type="text" [(ngModel)]="stockForm.depot" name="edit_depot" placeholder="Dépôt" (keydown.enter)="$event.preventDefault()">
+              <input type="text" [(ngModel)]="stockForm.zone" name="edit_zone" placeholder="Zone" (keydown.enter)="$event.preventDefault()">
+              <input type="text" [(ngModel)]="stockForm.made_in" name="edit_made_in" placeholder="Origine" (keydown.enter)="$event.preventDefault()">
+              <input type="text" [(ngModel)]="stockForm.dot" name="edit_dot" placeholder="DOT" (keydown.enter)="$event.preventDefault()">
+              <input type="number" [ngModel]="editingStockQuantity()" (ngModelChange)="editingStockQuantity.set(+$event); stockForm.quantity = +$event" name="edit_qty" min="0" placeholder="Qté" (keydown.enter)="$event.preventDefault()">
+              <input type="number" [(ngModel)]="stockForm.purchase_price" name="edit_price" min="0" step="0.01" placeholder="P. achat" (keydown.enter)="$event.preventDefault()">
+
+              <!-- Motif : quatre boutons plus une précision, au lieu d'un champ vide -->
+              <div class="pf-reason" *ngIf="stockQuantityChanged()">
+                <span class="pf-reason-label">
+                  Motif du changement de quantité
+                  <em>requis · {{ editingStockOriginalQty() }} → {{ editingStockQuantity() }}</em>
+                </span>
+                <div class="pf-segmented pf-segmented--sm">
+                  <button type="button" *ngFor="let preset of REASON_PRESETS"
+                    [class.active]="reasonPreset() === preset" (click)="selectReasonPreset(preset)">{{ preset }}</button>
+                </div>
+                <input type="text" [ngModel]="reasonDetail()" (ngModelChange)="onReasonDetail($event)"
+                  name="edit_reason_detail" placeholder="Précision (facultatif)" maxlength="1000"
+                  (keydown.enter)="$event.preventDefault()">
+              </div>
+
+              <div class="pf-lot-edit-actions">
+                <button type="button" class="pf-btn pf-btn--solid" (click)="saveStock()">Enregistrer ce lot</button>
+                <button type="button" class="pf-btn" (click)="cancelStockEdit()">Annuler</button>
+              </div>
+            </div>
           </ng-container>
 
-          <!-- New row -->
-          <tr class="edit-row" *ngIf="showStockRow() && !editingStockId()">
-            <td><input type="text" [(ngModel)]="stockForm.depot" name="new_depot" placeholder="Dépôt" class="inv-input"></td>
-            <td><input type="text" [(ngModel)]="stockForm.zone" name="new_zone" placeholder="Zone" class="inv-input"></td>
-            <td><input type="text" [(ngModel)]="stockForm.made_in" name="new_made_in" placeholder="Origine" class="inv-input"></td>
-            <td><input type="text" [(ngModel)]="stockForm.dot" name="new_dot" placeholder="DOT" class="inv-input"></td>
-            <td><input type="number" [(ngModel)]="stockForm.quantity" name="new_qty" min="0" class="inv-input text-center" style="width:60px"></td>
-            <td><input type="number" [(ngModel)]="stockForm.purchase_price" name="new_price" min="0" step="0.01" class="inv-input text-right" style="width:80px"></td>
-            <td class="text-center actions-cell">
-              <button type="button" class="btn-icon-sm text-success" (click)="saveStock()" title="Enregistrer"><app-icon name="check-circle" [size]="14" /></button>
-              <button type="button" class="btn-icon-sm" (click)="cancelStockEdit()" title="Annuler"><app-icon name="close" [size]="14" /></button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+          <div class="pf-lot-edit" *ngIf="showStockRow() && !editingStockId()">
+            <input type="text" [(ngModel)]="stockForm.depot" name="new_depot" placeholder="Dépôt">
+            <input type="text" [(ngModel)]="stockForm.zone" name="new_zone" placeholder="Zone">
+            <input type="text" [(ngModel)]="stockForm.made_in" name="new_made_in" placeholder="Origine">
+            <input type="text" [(ngModel)]="stockForm.dot" name="new_dot" placeholder="DOT">
+            <input type="number" [(ngModel)]="stockForm.quantity" name="new_qty" min="0" placeholder="Qté">
+            <input type="number" [(ngModel)]="stockForm.purchase_price" name="new_price" min="0" step="0.01" placeholder="P. achat">
+            <div class="pf-lot-edit-actions">
+              <button type="button" class="pf-btn pf-btn--solid" (click)="saveStock()">Enregistrer ce lot</button>
+              <button type="button" class="pf-btn" (click)="cancelStockEdit()">Annuler</button>
+            </div>
+          </div>
 
-      <p class="text-muted text-center" *ngIf="stockItems().length === 0 && !showStockRow()">
-        Aucun article en stock pour ce produit.
-      </p>
-    </div>
-  </div>
+          <p class="pf-note" *ngIf="stockItems().length === 0 && !showStockRow()">
+            Aucun lot en stock pour ce produit.
+          </p>
+        </div>
+      </section>
 
-  <!-- ── Stock Movements History (only when editing a non-service product) ── -->
-  <div class="form-section movements-section" *ngIf="isEditing && !isService && authService.hasPermission('view stock-movements')">
-    <div class="movements-header" (click)="toggleMovements()">
-      <h3>
-        <app-icon class="toggle-icon" [name]="showMovements() ? 'chevron-down' : 'chevron-right'" [size]="12" />
-        <app-icon name="receipt" [size]="14" /> Historique des mouvements
-        <span class="mv-count" *ngIf="movements().length > 0">({{ movements().length }})</span>
-      </h3>
-    </div>
+      <!-- Mouvements -->
+      <section class="pf-block" *ngIf="authService.hasPermission('view stock-movements')">
+        <button type="button" class="pf-block-toggle" (click)="toggleMovements()">
+          <app-icon [name]="showMovements() ? 'chevron-down' : 'chevron-right'" [size]="12" />
+          Mouvements
+          <span class="pf-block-note" *ngIf="movements().length">{{ movements().length }} · 90 derniers jours</span>
+        </button>
 
-    <div *ngIf="showMovements()">
-      <p class="text-muted text-center" *ngIf="movementsLoading()">Chargement...</p>
+        <ng-container *ngIf="showMovements()">
+          <p class="pf-note" *ngIf="movementsLoading()">Chargement…</p>
 
-      <div class="movements-table-wrap" *ngIf="!movementsLoading()">
-        <table class="movements-table" *ngIf="movements().length > 0">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Type</th>
-              <th>Dépôt</th>
-              <th class="text-center">Avant</th>
-              <th class="text-center">Après</th>
-              <th class="text-center">Δ</th>
-              <th>Utilisateur</th>
-              <th>Motif</th>
-              <th>Référence</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let m of movements()">
-              <td class="mv-date">{{ m.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
-              <td>
-                <span class="mv-chip" [ngClass]="movementTypeClass(m.type)">
-                  {{ movementTypeLabel(m.type) }}
-                </span>
-              </td>
-              <td>{{ m.stock?.depot || '-' }}</td>
-              <td class="text-center">{{ m.quantity_before }}</td>
-              <td class="text-center">{{ m.quantity_after }}</td>
-              <td class="text-center mv-delta" [class.mv-delta-pos]="m.delta > 0" [class.mv-delta-neg]="m.delta < 0">
+          <div class="pf-moves" *ngIf="!movementsLoading()">
+            <div class="pf-move" *ngFor="let m of movements()">
+              <span class="pf-move-date">{{ m.created_at | date:'dd/MM HH:mm' }}</span>
+              <span class="pf-move-what">
+                <span class="mv-chip" [ngClass]="movementTypeClass(m.type)">{{ movementTypeLabel(m.type) }}</span>
+                <span class="pf-move-sub">{{ movementReferenceLabel(m) }}<ng-container *ngIf="m.reason"> · {{ m.reason }}</ng-container><ng-container *ngIf="m.user?.name"> · {{ m.user?.name }}</ng-container></span>
+              </span>
+              <span class="num pf-move-delta" [class.pf-move-delta--pos]="m.delta > 0" [class.pf-move-delta--neg]="m.delta < 0">
                 {{ m.delta > 0 ? '+' : '' }}{{ m.delta }}
-              </td>
-              <td>{{ m.user?.name || '-' }}</td>
-              <td class="mv-reason">{{ m.reason || '-' }}</td>
-              <td>{{ movementReferenceLabel(m) }}</td>
-            </tr>
-          </tbody>
-        </table>
+              </span>
+              <span class="num pf-move-after">{{ m.quantity_after }}</span>
+            </div>
 
-        <p class="text-muted text-center" *ngIf="movements().length === 0">
-          Aucun mouvement enregistré.
-        </p>
-      </div>
-    </div>
+            <p class="pf-note" *ngIf="movements().length === 0">Aucun mouvement enregistré.</p>
+          </div>
+        </ng-container>
+      </section>
+    </aside>
   </div>
 
-  <div class="form-actions">
-    <button type="button" class="btn btn-secondary" (click)="cancel.emit()">Annuler</button>
-    <button type="submit" class="btn btn-primary" [disabled]="!form.valid">Enregistrer</button>
-  </div>
+  <!-- ── Rangée 3 : le pied d'actions ───────────────────────────────────── -->
+  <footer class="pf-foot">
+    <span class="pf-foot-hint">{{ requiredHint }}</span>
+    <button type="button" class="pf-btn" (click)="cancel.emit()">Annuler</button>
+    <button type="button" class="pf-btn" [disabled]="!form.valid" (click)="onSubmitAndNew()">Enregistrer et nouveau</button>
+    <button type="submit" class="pf-btn pf-btn--solid" [disabled]="!form.valid">Enregistrer le produit</button>
+  </footer>
 </form>
+
+<!-- Refonte 2b, gabarit 15c : la confirmation remplace le confirm() natif. -->
+<app-confirm-delete
+  *ngIf="pendingDelete() as pending"
+  [title]="pending.title"
+  [consequence]="pending.consequence ?? ''"
+  [detail]="pending.detail ?? ''"
+  [confirmLabel]="pending.confirmLabel ?? 'Supprimer'"
+  [reasonRequired]="pending.reasonRequired ?? false"
+  (confirm)="runPendingDelete($event)"
+  (cancel)="pendingDelete.set(null)" />

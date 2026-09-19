@@ -321,3 +321,14 @@
   (closed)="closeReturn()"
   (saved)="onReturnSaved()">
 </app-purchase-return>
+
+<!-- Refonte 2b, gabarit 15c : la confirmation remplace le confirm() natif. -->
+<app-confirm-delete
+  *ngIf="pendingDelete() as pending"
+  [title]="pending.title"
+  [consequence]="pending.consequence ?? ''"
+  [detail]="pending.detail ?? ''"
+  [confirmLabel]="pending.confirmLabel ?? 'Supprimer'"
+  [reasonRequired]="pending.reasonRequired ?? false"
+  (confirm)="runPendingDelete($event)"
+  (cancel)="pendingDelete.set(null)" />

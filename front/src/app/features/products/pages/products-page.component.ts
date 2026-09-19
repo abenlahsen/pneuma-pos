@@ -1,15 +1,16 @@
 import { computed, Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ProductService } from '../data-access/product.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Product, ProductFilters, ProductPayload } from '../models/product.model';
-import { ProductFormComponent } from '../product-form/product-form.component';
+import { Product, ProductFilters } from '../models/product.model';
 import { ProductDetailComponent } from '../product-detail/product-detail.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
+import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 
 import {
   ActiveFilter,
@@ -23,11 +24,20 @@ import {
 @Component({
   selector: 'app-products-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductFormComponent, ProductDetailComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent],
+  imports: [CommonModule, FormsModule, ProductDetailComponent, RouterLink, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ConfirmDeleteComponent],
   templateUrl: './products-page.component.html',
   styleUrls: ['./products-page.component.scss'],
 })
 export class ProductsPageComponent implements OnInit {
+
+  // ── Suppression : confirmation 15c au lieu d'un confirm() natif ───────────
+  readonly pendingDelete = signal<PendingDelete | null>(null);
+
+  runPendingDelete(reason: string): void {
+    const pending = this.pendingDelete();
+    this.pendingDelete.set(null);
+    pending?.run(reason);
+  }
   products = signal<Product[]>([]);
   filterOptions = signal<ProductFilters>({
     brands: [],
@@ -122,8 +132,6 @@ export class ProductsPageComponent implements OnInit {
 
     return applied;
   });
-  showForm = signal(false);
-  editingProduct = signal<Product | null>(null);
   viewingProduct = signal<Product | null>(null);
 
   private resetting = false;
@@ -132,6 +140,7 @@ export class ProductsPageComponent implements OnInit {
     private productService: ProductService,
     public authService: AuthService,
     private route: ActivatedRoute,
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -146,7 +155,7 @@ export class ProductsPageComponent implements OnInit {
     if (productId) {
       const editMode = this.route.snapshot.queryParamMap.get('edit') === '1';
       this.productService.getProduct(productId).subscribe({
-        next: (product) => editMode ? this.openEditForm(product) : this.openViewModal(product),
+        next: (product) => editMode ? this.goToEdit(product) : this.openViewModal(product),
       });
     }
   }
@@ -263,41 +272,13 @@ export class ProductsPageComponent implements OnInit {
     this.viewingProduct.set(null);
   }
 
-  openAddForm(): void {
-    this.editingProduct.set(null);
-    this.showForm.set(true);
-  }
-
-  openEditForm(product: Product): void {
-    this.editingProduct.set(product);
-    this.showForm.set(true);
-  }
-
-  closeForm(): void {
-    this.showForm.set(false);
-    this.editingProduct.set(null);
-  }
-
-  onFormSubmit(payload: ProductPayload): void {
-    const editing = this.editingProduct();
-
-    if (editing) {
-      this.productService.updateProduct(editing.id, payload).subscribe({
-        next: () => {
-          this.closeForm();
-          this.loadData();
-          this.loadFilters();
-        },
-      });
-    } else {
-      this.productService.createProduct(payload).subscribe({
-        next: () => {
-          this.closeForm();
-          this.loadData();
-          this.loadFilters();
-        },
-      });
-    }
+  /**
+   * Refonte 2b, étape 5a : le formulaire produit n'est plus une modale, il a
+   * sa propre route. Conservé comme méthode plutôt que comme routerLink parce
+   * que le détail produit l'appelle depuis sa sortie (edit).
+   */
+  goToEdit(product: Product): void {
+    this.router.navigate(['/products', product.id, 'edit']);
   }
 
   toggleActive(product: Product): void {
@@ -311,14 +292,19 @@ export class ProductsPageComponent implements OnInit {
       [product.brand?.name, product.profile, product.reference].filter(Boolean).join(' — ') ||
       `Produit #${product.id}`;
 
-    if (confirm(`Supprimer le produit "${label}" ?`)) {
-      this.productService.deleteProduct(product.id).subscribe({
-        next: () => {
-          this.loadData();
-          this.loadFilters();
-        },
-      });
-    }
+    this.pendingDelete.set({
+      title: `Supprimer le produit « ${label} » ?`,
+      consequence: 'Ses lots de stock et son historique de mouvements disparaissent avec lui.',
+      detail: "La suppression échouera s'il figure déjà sur une vente ou un achat.",
+      run: () => {
+        this.productService.deleteProduct(product.id).subscribe({
+          next: () => {
+            this.loadData();
+            this.loadFilters();
+          },
+        });
+      },
+    });
   }
 
   seasonLabel(season: string | null | undefined): string {
