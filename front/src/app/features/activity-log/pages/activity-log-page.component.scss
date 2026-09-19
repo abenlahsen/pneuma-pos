@@ -1,3 +1,5 @@
+@use '../../_variables' as *;
+
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
 
@@ -28,7 +30,7 @@ $_bg:      #f7fafc;
     height: 2.1rem;
     padding: 0 0.65rem;
     border: 1px solid $_border;
-    border-radius: 6px;
+    border-radius: 0;
     font-size: 0.875rem;
     background: $_surface;
     color: $_text;
@@ -45,7 +47,7 @@ $_bg:      #f7fafc;
 .btn-reset {
   height: 2.1rem;
   padding: 0 0.9rem;
-  border-radius: 6px;
+  border-radius: 0;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -70,7 +72,7 @@ $_bg:      #f7fafc;
 .table-card {
   background: $_surface;
   border: 1px solid $_border;
-  border-radius: 10px;
+  border-radius: 0;
   overflow: hidden;
   position: relative;
 }
@@ -128,7 +130,7 @@ $_bg:      #f7fafc;
 .btn-detail {
   background: none;
   border: 1px solid $_border;
-  border-radius: 6px;
+  border-radius: 0;
   padding: 0.2rem 0.5rem;
   font-size: 0.85rem;
   cursor: pointer;
@@ -146,7 +148,7 @@ $_bg:      #f7fafc;
 .action-badge {
   display: inline-block;
   padding: 0.2rem 0.55rem;
-  border-radius: 4px;
+  border-radius: 0;
   font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
@@ -193,7 +195,7 @@ $_bg:      #f7fafc;
   height: 2rem;
   padding: 0 0.5rem;
   border: 1px solid $_border;
-  border-radius: 6px;
+  border-radius: 0;
   background: $_surface;
   color: $_text;
   font-size: 0.85rem;
@@ -216,7 +218,7 @@ $_bg:      #f7fafc;
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba($text-dark, 0.45);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -226,8 +228,8 @@ $_bg:      #f7fafc;
 
 .detail-modal {
   background: $_surface;
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  border-radius: 0;
+  box-shadow: none;
   width: 100%;
   max-width: 680px;
   max-height: 85vh;
@@ -261,7 +263,7 @@ $_bg:      #f7fafc;
   color: $_muted;
   cursor: pointer;
   padding: 0.25rem 0.4rem;
-  border-radius: 4px;
+  border-radius: 0;
   line-height: 1;
   flex-shrink: 0;
 
@@ -362,7 +364,7 @@ $_bg:      #f7fafc;
   align-items: baseline;
   padding: 0.6rem 0.75rem;
   background: $_bg;
-  border-radius: 6px;
+  border-radius: 0;
 }
 
 .payment-label {

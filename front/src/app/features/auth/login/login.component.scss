@@ -150,6 +150,8 @@
     &:focus {
       outline: none;
       border-color: $text-dark;
+      // Soulignement de focus, pas une elevation : avec outline: none, c'est
+      // le seul repere visible a la tabulation.
       box-shadow: inset 0 -2px 0 0 $primary;
     }
 

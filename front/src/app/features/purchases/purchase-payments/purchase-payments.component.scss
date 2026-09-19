@@ -1,3 +1,5 @@
+@use '../../_variables' as *;
+
 // ── Design tokens ─────────────────────────────────────────────────────────────
 $_red:      #ff2d37;
 $_text:     #0f172a;
@@ -14,7 +16,7 @@ $_border2:  #d0d9e4;
 .panel-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.35);
+  background: rgba($text-dark, 0.35);
   z-index: 100;
   backdrop-filter: blur(1px);
 }
@@ -32,7 +34,7 @@ $_border2:  #d0d9e4;
   z-index: 101;
   display: flex;
   flex-direction: column;
-  box-shadow: -8px 0 40px rgba(15, 23, 42, 0.12);
+  box-shadow: none;
   overflow: hidden;
 }
 
@@ -72,7 +74,7 @@ $_border2:  #d0d9e4;
 .btn-close {
   background: none;
   border: 1.5px solid $_border2;
-  border-radius: 8px;
+  border-radius: 0;
   width: 2rem;
   height: 2rem;
   cursor: pointer;
@@ -100,7 +102,7 @@ $_border2:  #d0d9e4;
 // ── Summary ───────────────────────────────────────────────────────────────────
 .summary-section {
   background: $_surface2;
-  border-radius: 10px;
+  border-radius: 0;
   padding: 1rem 1.25rem;
   border: 1px solid $_border;
   display: flex;
@@ -132,7 +134,7 @@ $_border2:  #d0d9e4;
   align-items: center;
   background: rgba(237, 137, 54, 0.1);
   border: 1px solid rgba(237, 137, 54, 0.3);
-  border-radius: 6px;
+  border-radius: 0;
   padding: 0.4rem 0.6rem;
   font-size: 0.875rem;
   color: #c05621;
@@ -202,7 +204,7 @@ $_border2:  #d0d9e4;
   letter-spacing: 0.04em;
   color: #a16207;
   background: rgba(234, 179, 8, 0.12);
-  border-radius: 6px;
+  border-radius: 0;
   vertical-align: middle;
 }
 
@@ -237,7 +239,7 @@ $_border2:  #d0d9e4;
   font-size: 0.875rem;
   padding: 1.5rem;
   background: $_surface2;
-  border-radius: 10px;
+  border-radius: 0;
   border: 1.5px dashed $_border2;
 }
 
@@ -246,7 +248,7 @@ $_border2:  #d0d9e4;
   border-collapse: collapse;
   font-size: 0.875rem;
   border: 1px solid $_border;
-  border-radius: 10px;
+  border-radius: 0;
   overflow: hidden;
 
   th {
@@ -311,7 +313,7 @@ $_border2:  #d0d9e4;
 // ── Add payment form ──────────────────────────────────────────────────────────
 .add-payment-form {
   background: $_surface2;
-  border-radius: 10px;
+  border-radius: 0;
   padding: 1.25rem;
   border: 1.5px solid $_border;
 
@@ -348,7 +350,7 @@ $_border2:  #d0d9e4;
 
 .form-control {
   border: 1.5px solid $_border2;
-  border-radius: 8px;
+  border-radius: 0;
   padding: 0.55rem 0.75rem;
   font-size: 0.875rem;
   color: $_text;
@@ -382,7 +384,7 @@ $_border2:  #d0d9e4;
 // ── Buttons ───────────────────────────────────────────────────────────────────
 .btn {
   padding: 0.55rem 1.1rem;
-  border-radius: 8px;
+  border-radius: 0;
   border: 1.5px solid transparent;
   font-weight: 600;
   cursor: pointer;
@@ -399,9 +401,9 @@ $_border2:  #d0d9e4;
     background: $_red;
     color: white;
     border-color: $_red;
-    box-shadow: 0 2px 6px rgba(255, 45, 55, 0.3);
+    box-shadow: none;
 
-    &:hover:not(:disabled) { background: #e8000b; box-shadow: 0 4px 10px rgba(255, 45, 55, 0.4); transform: translateY(-1px); }
+    &:hover:not(:disabled) { background: #e8000b; box-shadow: none; }
     &:disabled { opacity: 0.55; cursor: not-allowed; }
   }
 
@@ -409,7 +411,7 @@ $_border2:  #d0d9e4;
     background: $_surface;
     color: $_strong;
     border-color: $_border2;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+    box-shadow: none;
 
     &:hover { background: $_surface2; border-color: #bcc6d4; }
   }

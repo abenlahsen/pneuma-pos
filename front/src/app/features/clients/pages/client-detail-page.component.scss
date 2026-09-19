@@ -1,3 +1,5 @@
+@use '../../_variables' as *;
+
 // ── Design tokens ─────────────────────────────────────────────────────────────
 $primary:       #ff2d37;
 $primary-dark:  #e8000b;
@@ -21,8 +23,8 @@ $dim:      #94a3b8;
 $label:    #334155;
 $strong:   #1e293b;
 
-$shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.04);
-$shadow-md: 0 1px 3px rgba(15, 23, 42, 0.05), 0 4px 12px rgba(15, 23, 42, 0.08);
+$shadow-sm: none;
+$shadow-md: none;
 
 $radius-sm:   8px;
 $radius-md:   12px;
@@ -67,10 +69,10 @@ $radius-full: 999px;
   align-items: center;
   gap: 1.25rem;
   background: $surface;
-  border-radius: $radius-lg;
+  border-radius: 0;
   border: 1px solid $border;
   border-top: 3px solid $primary;
-  box-shadow: $shadow-md;
+  box-shadow: none;
   padding: 1.5rem;
 }
 
@@ -86,7 +88,7 @@ $radius-full: 999px;
   font-size: 1.625rem;
   font-weight: 700;
   flex-shrink: 0;
-  box-shadow: 0 4px 14px rgba($primary, 0.35);
+  box-shadow: none;
 }
 
 .client-identity {
@@ -128,7 +130,7 @@ h1 {
   display: inline-flex;
   align-items: center;
   padding: 0.15rem 0.6rem;
-  border-radius: $radius-full;
+  border-radius: 0;
   font-size: 0.6875rem;
   font-weight: 700;
   background: $surface2;
@@ -151,7 +153,7 @@ h1 {
   align-items: center;
   gap: 0.35rem;
   padding: 0.575rem 1.1rem;
-  border-radius: $radius-sm;
+  border-radius: 0;
   font: inherit;
   font-size: 0.875rem;
   font-weight: 600;
@@ -167,13 +169,12 @@ h1 {
 .btn-primary {
   background: $primary;
   color: white;
-  box-shadow: 0 2px 6px rgba($primary, 0.3);
+  box-shadow: none;
   border-color: $primary;
 
   &:hover:not(:disabled) {
     background: $primary-dark;
-    box-shadow: 0 4px 10px rgba($primary, 0.4);
-    transform: translateY(-1px);
+    box-shadow: none;
   }
 }
 
@@ -181,7 +182,7 @@ h1 {
   background: $surface;
   color: $strong;
   border-color: $border2;
-  box-shadow: $shadow-sm;
+  box-shadow: none;
 
   &:hover:not(:disabled) { background: $surface2; border-color: #bcc6d4; }
 }
@@ -217,9 +218,9 @@ h1 {
 
 .kpi-card {
   background: $surface;
-  border-radius: $radius-md;
+  border-radius: 0;
   border: 1px solid $border;
-  box-shadow: $shadow-md;
+  box-shadow: none;
   padding: 1.25rem;
   display: flex;
   align-items: center;
@@ -227,8 +228,7 @@ h1 {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05), 0 8px 20px rgba(15, 23, 42, 0.1);
+    box-shadow: none;
   }
 
   &.kpi-card--danger {
@@ -245,7 +245,7 @@ h1 {
   align-items: center;
   justify-content: center;
   background: $surface2;
-  border-radius: $radius-sm;
+  border-radius: 0;
   border: 1px solid $border;
   flex-shrink: 0;
 }
@@ -286,9 +286,9 @@ h1 {
 // ── Panels ────────────────────────────────────────────────────────────────────
 .panel {
   background: $surface;
-  border-radius: $radius-md;
+  border-radius: 0;
   border: 1px solid $border;
-  box-shadow: $shadow-md;
+  box-shadow: none;
   padding: 1.5rem;
 }
 
@@ -360,7 +360,7 @@ h1 {
   display: inline-flex;
   align-items: center;
   padding: 0.2rem 0.6rem;
-  border-radius: $radius-full;
+  border-radius: 0;
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -378,7 +378,7 @@ h1 {
   min-width: 1.4rem;
   height: 1.4rem;
   padding: 0 0.35rem;
-  border-radius: $radius-full;
+  border-radius: 0;
   font-size: 0.6875rem;
   font-weight: 700;
   background: $primary-light;
@@ -399,14 +399,14 @@ h1 {
 
 .vehicle-card {
   border: 1px solid $border;
-  border-radius: $radius-sm;
+  border-radius: 0;
   background: $surface2;
   overflow: hidden;
   transition: border-color 0.15s, box-shadow 0.15s;
 
   &:hover {
     border-color: $border2;
-    box-shadow: $shadow-sm;
+    box-shadow: none;
   }
 
   &.vehicle-inactive {
@@ -441,7 +441,7 @@ h1 {
   letter-spacing: 0.07em;
   background: $surface;
   padding: 0.15rem 0.5rem;
-  border-radius: 4px;
+  border-radius: 0;
   border: 1px solid $border;
 }
 
@@ -471,7 +471,7 @@ h1 {
   height: 2rem;
   border: 1px solid $border;
   background: $surface;
-  border-radius: $radius-sm;
+  border-radius: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -513,7 +513,7 @@ h1 {
   padding: 0 1.5rem;
   border-bottom: 2px solid $border;
   background: $surface2;
-  border-radius: $radius-md $radius-md 0 0;
+  border-radius: 0;
 }
 
 .tab-btn {
@@ -655,7 +655,7 @@ h1 {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba($text-dark, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -666,13 +666,13 @@ h1 {
 
 .modal-container {
   background: $surface;
-  border-radius: $radius-md;
+  border-radius: 0;
   width: 100%;
   max-width: 600px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
+  box-shadow: none;
   border: 1px solid $border;
 
   &.modal-container--wide {
@@ -684,7 +684,7 @@ h1 {
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid $border;
   background: $surface2;
-  border-radius: $radius-md $radius-md 0 0;
+  border-radius: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;

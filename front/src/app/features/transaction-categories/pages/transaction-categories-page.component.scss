@@ -10,7 +10,7 @@ $_surface2:   #f8fafc;
 $_border:     #e8edf3;
 $_border2:    #d0d9e4;
 
-$_shadow-md: 0 1px 3px rgba(15, 23, 42, 0.05), 0 4px 12px rgba(15, 23, 42, 0.08);
+$_shadow-md: none;
 
 $_radius-sm: 8px;
 $_radius-md: 12px;
@@ -50,7 +50,7 @@ $_radius-lg: 14px;
 
 .alert {
   padding: 0.75rem 1rem;
-  border-radius: $_radius-sm;
+  border-radius: 0;
   margin-bottom: 1rem;
   font-size: 0.875rem;
 }
@@ -72,7 +72,7 @@ $_radius-lg: 14px;
   flex: 1;
   padding: 0.65rem;
   border: 2px solid $_border2;
-  border-radius: 10px;
+  border-radius: 0;
   background: $_surface2;
   color: $_muted;
   font-size: 0.9rem;
@@ -90,9 +90,9 @@ $_radius-lg: 14px;
 // ── Card ─────────────────────────────────────────────────────────────────────
 .card {
   background: $_surface;
-  border-radius: $_radius-lg;
+  border-radius: 0;
   border: 1px solid $_border;
-  box-shadow: $_shadow-md;
+  box-shadow: none;
 }
 
 .card-body {
@@ -120,7 +120,7 @@ $_radius-lg: 14px;
   color: $_muted;
   font-size: 0.9rem;
   background: $_surface2;
-  border-radius: $_radius-sm;
+  border-radius: 0;
 }
 
 // ── Category list ────────────────────────────────────────────────────────────
@@ -132,7 +132,7 @@ $_radius-lg: 14px;
 
 .category-card {
   border: 1px solid $_border;
-  border-radius: $_radius-md;
+  border-radius: 0;
   padding: 0.875rem 1rem;
   background: $_surface2;
 }
@@ -179,7 +179,7 @@ $_radius-lg: 14px;
   input {
     padding: 0.35rem 0.5rem;
     border: 1px solid $_border2;
-    border-radius: $_radius-sm;
+    border-radius: 0;
     font-size: 0.9rem;
   }
 }
@@ -216,7 +216,7 @@ $_radius-lg: 14px;
   cursor: pointer;
   font-size: 0.9375rem;
   padding: 0.3rem 0.45rem;
-  border-radius: $_radius-sm;
+  border-radius: 0;
 
   &:hover { background: $_border; }
   &.danger:hover { color: #dc2626; }
@@ -249,7 +249,7 @@ $_radius-lg: 14px;
   input {
     padding: 0.3rem 0.5rem;
     border: 1px solid $_border2;
-    border-radius: $_radius-sm;
+    border-radius: 0;
     font-size: 0.85rem;
   }
 }
@@ -265,7 +265,7 @@ $_radius-lg: 14px;
     flex: 1;
     padding: 0.5rem 0.7rem;
     border: 1px solid $_border2;
-    border-radius: $_radius-sm;
+    border-radius: 0;
     font-size: 0.875rem;
   }
 }
@@ -278,7 +278,7 @@ $_radius-lg: 14px;
 // ── Buttons ──────────────────────────────────────────────────────────────────
 .btn {
   padding: 0.5rem 0.9rem;
-  border-radius: $_radius-sm;
+  border-radius: 0;
   font-size: 0.8125rem;
   font-weight: 600;
   border: none;

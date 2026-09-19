@@ -1,3 +1,5 @@
+@use '../../_variables' as *;
+
 // ── Design tokens ─────────────────────────────────────────────────────────────
 $_red:      #ff2d37;
 $_text:     #0f172a;
@@ -9,8 +11,8 @@ $_surface2: #f8fafc;
 $_border:   #e8edf3;
 $_border2:  #d0d9e4;
 
-$_shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.04);
-$_shadow-md: 0 1px 3px rgba(15, 23, 42, 0.05), 0 4px 12px rgba(15, 23, 42, 0.08);
+$_shadow-sm: none;
+$_shadow-md: none;
 
 $_radius-sm: 8px;
 $_radius-md: 12px;
@@ -51,9 +53,9 @@ $_radius-lg: 14px;
 
 .card {
   background: $_surface;
-  border-radius: $_radius-lg;
+  border-radius: 0;
   border: 1px solid $_border;
-  box-shadow: $_shadow-md;
+  box-shadow: none;
 }
 
 .card-body {
@@ -100,7 +102,7 @@ $_radius-lg: 14px;
 .media-card,
 .theme-section {
   border: 1px solid $_border;
-  border-radius: $_radius-md;
+  border-radius: 0;
   padding: 1.25rem;
   background: $_surface2;
   display: flex;
@@ -126,7 +128,7 @@ $_radius-lg: 14px;
 .media-preview {
   min-height: 150px;
   border: 1.5px dashed $_border2;
-  border-radius: $_radius-md;
+  border-radius: 0;
   background: $_surface;
   display: flex;
   align-items: center;
@@ -189,7 +191,7 @@ $_radius-lg: 14px;
 .layout-grid {
   padding: 1.25rem;
   border: 1px solid $_border;
-  border-radius: $_radius-md;
+  border-radius: 0;
   background: $_surface;
 }
 
@@ -228,7 +230,7 @@ $_radius-lg: 14px;
   min-width: 56px;
   height: 44px;
   border: 1.5px solid $_border2;
-  border-radius: $_radius-sm;
+  border-radius: 0;
   background: $_surface;
   cursor: pointer;
   padding: 0.2rem;
@@ -258,7 +260,7 @@ $_radius-lg: 14px;
   width: 100%;
   padding: 0.7rem 0.9rem;
   border: 1.5px solid $_border2;
-  border-radius: $_radius-sm;
+  border-radius: 0;
   font-size: 0.9375rem;
   color: $_text;
   outline: none;
@@ -282,9 +284,9 @@ $_radius-lg: 14px;
   --preview-text: #0f172a;
   --preview-muted: #475569;
   --preview-border: rgba(148, 163, 184, 0.3);
-  --preview-shadow: rgba(15, 23, 42, 0.08);
+  --preview-shadow: rgba($text-dark, 0.08);
 
-  border-radius: 16px;
+  border-radius: 0;
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--preview-accent) 10%, #f8fafc) 0%,
@@ -307,8 +309,8 @@ $_radius-lg: 14px;
 .theme-preview__window {
   background: var(--preview-surface);
   border: 1px solid var(--preview-border);
-  border-radius: 16px;
-  box-shadow: 0 20px 45px var(--preview-shadow);
+  border-radius: 0;
+  box-shadow: none;
   overflow: hidden;
 }
 
@@ -331,13 +333,13 @@ $_radius-lg: 14px;
   .theme-preview__logo {
     width: 1.9rem;
     height: 1.9rem;
-    border-radius: 10px;
+    border-radius: 0;
   }
 }
 
 .theme-preview--navbar-flat {
   .theme-preview__topbar {
-    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.12);
+    box-shadow: none;
     background: color-mix(in srgb, var(--preview-accent) 82%, var(--preview-surface));
   }
 }
@@ -361,7 +363,7 @@ $_radius-lg: 14px;
 .theme-preview__logo {
   width: 2.2rem;
   height: 2.2rem;
-  border-radius: 12px;
+  border-radius: 0;
   background: var(--preview-primary);
   display: flex;
   align-items: center;
@@ -408,7 +410,7 @@ $_radius-lg: 14px;
 }
 
 .theme-preview__nav-item {
-  border-radius: 10px;
+  border-radius: 0;
   padding: 0.65rem 0.75rem;
   color: var(--preview-muted);
   font-size: 0.85rem;
@@ -450,7 +452,7 @@ $_radius-lg: 14px;
 
 .theme-preview__hero {
   border: 1px solid var(--preview-border);
-  border-radius: 14px;
+  border-radius: 0;
   padding: 1rem;
   display: flex;
   align-items: flex-start;
@@ -472,7 +474,7 @@ $_radius-lg: 14px;
 
 .theme-preview__cta {
   border: none;
-  border-radius: 10px;
+  border-radius: 0;
   background: var(--preview-primary);
   color: #fff;
   padding: 0.7rem 0.95rem;
@@ -487,7 +489,7 @@ $_radius-lg: 14px;
 
 .theme-preview__stat {
   border: 1px solid var(--preview-border);
-  border-radius: 12px;
+  border-radius: 0;
   padding: 0.85rem;
   background: color-mix(in srgb, var(--preview-surface) 92%, var(--preview-accent));
 
@@ -527,7 +529,7 @@ $_radius-lg: 14px;
 // ── Buttons ───────────────────────────────────────────────────────────────────
 .btn {
   padding: 0.65rem 1.25rem;
-  border-radius: $_radius-sm;
+  border-radius: 0;
   border: 1.5px solid transparent;
   font-weight: 600;
   font-size: 0.875rem;
@@ -550,12 +552,11 @@ $_radius-lg: 14px;
 .btn-primary {
   background: $_red;
   color: #fff;
-  box-shadow: 0 2px 6px rgba(255, 45, 55, 0.3);
+  box-shadow: none;
 
   &:hover:not(:disabled) {
     background: #e8000b;
-    box-shadow: 0 4px 10px rgba(255, 45, 55, 0.4);
-    transform: translateY(-1px);
+    box-shadow: none;
   }
 }
 
@@ -563,7 +564,7 @@ $_radius-lg: 14px;
   background: $_surface;
   color: $_text;
   border-color: $_border2;
-  box-shadow: $_shadow-sm;
+  box-shadow: none;
 
   &:hover:not(:disabled) {
     background: $_surface2;
@@ -584,7 +585,7 @@ $_radius-lg: 14px;
 
 // ── Alerts ────────────────────────────────────────────────────────────────────
 .alert {
-  border-radius: $_radius-sm;
+  border-radius: 0;
   padding: 0.875rem 1rem;
   font-size: 0.9rem;
   margin-bottom: 1rem;

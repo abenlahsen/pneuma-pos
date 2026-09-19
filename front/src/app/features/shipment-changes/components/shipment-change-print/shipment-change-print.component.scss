@@ -13,7 +13,7 @@
 
 .print-modal {
   background: #f0f0f0;
-  border-radius: 8px;
+  border-radius: 0;
   width: 100%;
   max-width: 860px;
   display: flex;
@@ -46,7 +46,7 @@
 
 .btn {
   padding: 6px 14px;
-  border-radius: 6px;
+  border-radius: 0;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -73,8 +73,8 @@
 .print-paper {
   background: #fff;
   padding: 12mm 14mm;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.18);
-  border-radius: 4px;
+  box-shadow: none;
+  border-radius: 0;
   font-family: 'Segoe UI', Arial, sans-serif;
   font-size: 10pt;
   color: #111;
@@ -250,7 +250,7 @@
   background: #f8f8f8;
   border-left: 3px solid #ddd;
   padding: 0.5rem 0.75rem;
-  border-radius: 2px;
+  border-radius: 0;
 
   h4 { margin: 0 0 4px; font-size: 8pt; color: #888; text-transform: uppercase; }
   p  { margin: 0; font-size: 9pt; }
@@ -267,7 +267,7 @@
 .signature-box {
   min-height: 70px;
   border: 1px dashed #ccc;
-  border-radius: 4px;
+  border-radius: 0;
   display: flex;
   align-items: flex-end;
   padding: 6px 10px;

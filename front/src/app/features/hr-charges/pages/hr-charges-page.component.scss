@@ -32,7 +32,7 @@
 
 .btn {
   padding: 0.6rem 1.1rem;
-  border-radius: $radius-sm;
+  border-radius: 0;
   font-size: 0.875rem;
   font-weight: 600;
   border: none;
@@ -43,12 +43,12 @@
   background: linear-gradient(135deg, $primary, $primary-dark);
   color: #fff;
 
-  &:hover { box-shadow: 0 4px 12px rgba($primary, 0.35); }
+  &:hover { box-shadow: none; }
 }
 
 .alert {
   padding: 0.75rem 1rem;
-  border-radius: $radius-sm;
+  border-radius: 0;
   margin-bottom: 1rem;
   font-size: 0.875rem;
 }
@@ -73,7 +73,7 @@
     width: 2rem;
     height: 2rem;
     border: 1px solid $border-color;
-    border-radius: 6px;
+    border-radius: 0;
     background: $bg-card;
     cursor: pointer;
     font-size: 1rem;
@@ -102,7 +102,7 @@
   select {
     padding: 0.5rem 0.75rem;
     border: 1.5px solid $border-color;
-    border-radius: $radius-sm;
+    border-radius: 0;
     font-size: 0.85rem;
     background: $bg-card;
     color: $text-dark;
@@ -121,7 +121,7 @@
 .summary-card {
   background: $bg-card;
   border: 1px solid $border-color;
-  border-radius: $radius-sm;
+  border-radius: 0;
   padding: 1rem 1.25rem;
 
   .summary-value {
@@ -144,7 +144,7 @@
 }
 
 // ── Table ──────────────────────────────────────────────────────────────────────
-.card { background: $bg-card; border: 1px solid $border-color; border-radius: $radius-sm; }
+.card { background: $bg-card; border: 1px solid $border-color; border-radius: 0; }
 .card-body { padding: 1.25rem; overflow-x: auto; }
 
 .table {
@@ -195,7 +195,7 @@ tfoot .total-row td { border-bottom: none; }
   cursor: pointer;
   font-size: 0.9rem;
   padding: 0.3rem 0.45rem;
-  border-radius: $radius-sm;
+  border-radius: 0;
 
   &:hover { background: $bg-body; }
   &.danger:hover { color: #dc2626; }

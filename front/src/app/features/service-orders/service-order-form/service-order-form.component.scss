@@ -14,7 +14,7 @@ $_border2:  #d0d9e4;
 // ── Form shell ────────────────────────────────────────────────────────────────
 .form-container {
   background: $_surface;
-  border-radius: 14px;
+  border-radius: 0;
   overflow: hidden;
   max-height: 90vh;
   overflow-y: auto;
@@ -43,7 +43,7 @@ $_border2:  #d0d9e4;
 .btn-icon {
   background: none;
   border: 1.5px solid $_border2;
-  border-radius: 8px;
+  border-radius: 0;
   width: 2rem;
   height: 2rem;
   cursor: pointer;
@@ -112,7 +112,7 @@ $_border2:  #d0d9e4;
   padding: 1rem;
   border: 1px solid rgba(255, 45, 55, 0.15);
   background: rgba(255, 45, 55, 0.03);
-  border-radius: 10px;
+  border-radius: 0;
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
@@ -159,7 +159,7 @@ $_border2:  #d0d9e4;
   input[type='text'] {
     padding: 0.6rem 0.85rem;
     border: 1.5px solid $_border2;
-    border-radius: 8px;
+    border-radius: 0;
     font-size: 0.9rem;
     transition: border-color 0.15s, box-shadow 0.15s;
     background: $_surface;
@@ -184,16 +184,16 @@ $_border2:  #d0d9e4;
   max-height: 240px;
   overflow-y: auto;
   border: 1.5px solid $_border2;
-  border-radius: 8px;
+  border-radius: 0;
   background: $_surface;
   padding: 0.3rem;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+  box-shadow: none;
 }
 
 .client-result {
   border: 1.5px solid transparent;
   background: $_surface;
-  border-radius: 8px;
+  border-radius: 0;
   text-align: left;
   padding: 0.6rem 0.75rem;
   cursor: pointer;
@@ -227,7 +227,7 @@ $_border2:  #d0d9e4;
   gap: 1rem;
   background: $_surface;
   border: 1.5px solid rgba(255, 45, 55, 0.2);
-  border-radius: 8px;
+  border-radius: 0;
   padding: 0.75rem 1rem;
 
   strong {
@@ -246,7 +246,7 @@ $_border2:  #d0d9e4;
 .quick-create-card {
   background: $_surface;
   border: 1.5px solid $_border2;
-  border-radius: 10px;
+  border-radius: 0;
   padding: 0.875rem 1rem;
   display: flex;
   flex-direction: column;
@@ -312,7 +312,7 @@ $_border2:  #d0d9e4;
 
 .form-control {
   border: 1.5px solid $_border2;
-  border-radius: 8px;
+  border-radius: 0;
   padding: 0.6rem 0.85rem;
   font-size: 0.9rem;
   color: $_text;
@@ -374,8 +374,8 @@ textarea.form-control {
   z-index: 50;
   background: $_surface;
   border: 1.5px solid $_border2;
-  border-radius: 8px;
-  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12);
+  border-radius: 0;
+  box-shadow: none;
   max-height: 220px;
   overflow-y: auto;
   margin-top: 2px;
@@ -412,7 +412,7 @@ textarea.form-control {
 
 .btn-add {
   padding: 0.45rem 0.9rem;
-  border-radius: 8px;
+  border-radius: 0;
   border: 1.5px solid transparent;
   font-weight: 600;
   font-size: 0.8125rem;
@@ -443,7 +443,7 @@ textarea.form-control {
 
 .line-row {
   border: 1.5px solid $_border;
-  border-radius: 8px;
+  border-radius: 0;
   background: $_surface2;
   transition: border-color 0.15s;
 
@@ -490,7 +490,7 @@ textarea.form-control {
   flex-shrink: 0;
   background: none;
   border: 1.5px solid $_border;
-  border-radius: 6px;
+  border-radius: 0;
   width: 1.75rem;
   height: 1.75rem;
   display: flex;
@@ -539,8 +539,8 @@ textarea.form-control {
   z-index: 50;
   background: $_surface;
   border: 1.5px solid $_border2;
-  border-radius: 8px;
-  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12);
+  border-radius: 0;
+  box-shadow: none;
   max-height: 220px;
   overflow-y: auto;
 }
@@ -632,7 +632,7 @@ textarea.form-control {
   padding: 0.5rem 0.75rem;
   background: $_surface;
   border: 1.5px solid $_border2;
-  border-radius: 8px;
+  border-radius: 0;
   font-size: 0.85rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -648,7 +648,7 @@ textarea.form-control {
 .totals-preview {
   margin-top: 1rem;
   background: $_surface2;
-  border-radius: 10px;
+  border-radius: 0;
   padding: 0.875rem 1rem;
   border: 1.5px solid $_border;
 }
@@ -690,7 +690,7 @@ textarea.form-control {
 // ── Buttons ───────────────────────────────────────────────────────────────────
 .btn {
   padding: 0.575rem 1.25rem;
-  border-radius: 8px;
+  border-radius: 0;
   border: 1.5px solid transparent;
   font-weight: 600;
   cursor: pointer;
@@ -705,12 +705,11 @@ textarea.form-control {
     background: $_red;
     color: white;
     border-color: $_red;
-    box-shadow: 0 2px 6px rgba(255, 45, 55, 0.3);
+    box-shadow: none;
 
     &:hover:not(:disabled) {
       background: #e8000b;
-      box-shadow: 0 4px 10px rgba(255, 45, 55, 0.4);
-      transform: translateY(-1px);
+      box-shadow: none;
     }
 
     &:disabled { opacity: 0.55; cursor: not-allowed; }
@@ -720,7 +719,7 @@ textarea.form-control {
     background: $_surface;
     color: $_strong;
     border-color: $_border2;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+    box-shadow: none;
 
     &:hover { background: $_surface2; border-color: #bcc6d4; }
   }
@@ -775,7 +774,7 @@ textarea.form-control {
   color: #dc2626;
   background: #fee2e2;
   border: 1.5px solid #fca5a5;
-  border-radius: 8px;
+  border-radius: 0;
   padding: 0.4rem 0.75rem;
 }
 

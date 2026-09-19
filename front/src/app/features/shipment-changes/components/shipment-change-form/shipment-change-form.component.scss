@@ -9,7 +9,7 @@
 .form-section {
   background: $bg-body;
   padding: 1.25rem;
-  border-radius: $radius;
+  border-radius: 0;
   border: 1px solid $border-color;
 }
 
@@ -59,7 +59,7 @@
   input, select, textarea {
     padding: 0.55rem 0.7rem;
     border: 1px solid $border-color;
-    border-radius: $radius-sm;
+    border-radius: 0;
     font-size: 0.875rem;
     font-family: inherit;
     color: $text-dark;
@@ -102,7 +102,7 @@
     width: 100%;
     padding: 0.5rem 0.6rem;
     border: 1px solid $border-color;
-    border-radius: $radius-sm;
+    border-radius: 0;
     font-size: 0.875rem;
     font-family: inherit;
     background: $bg-card;
@@ -131,7 +131,7 @@
 
 .btn {
   padding: 0.6rem 1.1rem;
-  border-radius: $radius-sm;
+  border-radius: 0;
   font-size: 0.875rem;
   font-weight: 600;
   border: none;
@@ -165,7 +165,7 @@
   cursor: pointer;
   font-size: 1rem;
   padding: 0.25rem 0.5rem;
-  border-radius: $radius-sm;
+  border-radius: 0;
 
   &:hover { background: $border-subtle; color: #dc2626; }
 }

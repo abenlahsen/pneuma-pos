@@ -200,8 +200,8 @@
     border: 1px solid $border-subtle;
     background: $bg-card;
     box-shadow: none;
-    transition: box-shadow 0.2s, transform 0.2s;
-    &:hover { transform: translateY(-1px); box-shadow: none; }
+    // Le soulevement au survol supposait une ombre pour le rendre lisible.
+    // Sans elle, il ne reste qu'un saut d'un pixel, qui se lit comme un defaut.
 
     &.income  .card-icon { background: rgba(255, 45, 55, 0.08);  color: $primary; }
     &.expense .card-icon { background: rgba(239, 68, 68, 0.08);  color: #dc2626; }

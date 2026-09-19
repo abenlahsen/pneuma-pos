@@ -21,7 +21,7 @@
   color: $text-muted;
   font-size: 0.875rem;
   background: $bg-body;
-  border-radius: $radius-sm;
+  border-radius: 0;
 }
 
 .table-responsive { overflow-x: auto; }
@@ -86,7 +86,7 @@
   cursor: pointer;
   font-size: 0.9375rem;
   padding: 0.3rem 0.4rem;
-  border-radius: $radius-sm;
+  border-radius: 0;
 
   &:hover { background: $border-subtle; }
   &.danger:hover { color: #dc2626; }
@@ -95,7 +95,7 @@
 .status-select {
   padding: 0.3rem 0.45rem;
   border: 1px solid $border-color;
-  border-radius: $radius-sm;
+  border-radius: 0;
   font-size: 0.75rem;
   background: $bg-card;
   color: $text-dark;
@@ -103,7 +103,7 @@
 
 .btn {
   padding: 0.5rem 0.9rem;
-  border-radius: $radius-sm;
+  border-radius: 0;
   font-size: 0.8125rem;
   font-weight: 600;
   border: none;

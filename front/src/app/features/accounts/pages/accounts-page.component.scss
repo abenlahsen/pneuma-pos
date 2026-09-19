@@ -12,8 +12,8 @@ $_surface2: #f8fafc;
 $_border:   #e8edf3;
 $_border2:  #d0d9e4;
 
-$_shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.04);
-$_shadow-md: 0 1px 3px rgba(15, 23, 42, 0.05), 0 4px 12px rgba(15, 23, 42, 0.08);
+$_shadow-sm: none;
+$_shadow-md: none;
 
 // ── Utility shims ─────────────────────────────────────────────────────────────
 .mt-4         { margin-top: 1.5rem; }
@@ -52,15 +52,14 @@ $_shadow-md: 0 1px 3px rgba(15, 23, 42, 0.05), 0 4px 12px rgba(15, 23, 42, 0.08)
 .account-card {
   background: $_surface;
   border: 1px solid $_border;
-  border-radius: 14px;
-  box-shadow: $_shadow-md;
+  border-radius: 0;
+  box-shadow: none;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s;
   overflow: hidden;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+    box-shadow: none;
     border-color: $_border2;
   }
 
@@ -85,7 +84,7 @@ $_shadow-md: 0 1px 3px rgba(15, 23, 42, 0.05), 0 4px 12px rgba(15, 23, 42, 0.08)
       justify-content: center;
       background: $_surface2;
       border: 1px solid $_border;
-      border-radius: 11px;
+      border-radius: 0;
       flex-shrink: 0;
     }
 

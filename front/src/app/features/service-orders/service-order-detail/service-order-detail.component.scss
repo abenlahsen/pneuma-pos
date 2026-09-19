@@ -1,3 +1,5 @@
+@use '../../_variables' as *;
+
 // ── Design tokens ─────────────────────────────────────────────────────────────
 $_red:      #ff2d37;
 $_text:     #0f172a;
@@ -9,12 +11,12 @@ $_surface2: #f8fafc;
 $_border:   #e8edf3;
 $_border2:  #d0d9e4;
 
-$_shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
+$_shadow: none;
 
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba($text-dark, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -25,13 +27,13 @@ $_shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
 
 .modal-content {
   background: $_surface;
-  border-radius: 14px;
+  border-radius: 0;
   border: 1px solid $_border;
   width: 100%;
   max-width: 1100px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: $_shadow;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
 }
@@ -43,7 +45,7 @@ $_shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid $_border;
   background: $_surface2;
-  border-radius: 14px 14px 0 0;
+  border-radius: 0;
   flex-shrink: 0;
   position: sticky;
   top: 0;
@@ -60,7 +62,7 @@ $_shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
   .btn-close {
     background: none;
     border: 1.5px solid $_border2;
-    border-radius: 8px;
+    border-radius: 0;
     font-size: 1rem;
     color: $_muted;
     cursor: pointer;
@@ -105,7 +107,7 @@ $_shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
       width: 3px;
       height: 12px;
       background: $_red;
-      border-radius: 2px;
+      border-radius: 0;
     }
   }
 }
@@ -189,7 +191,7 @@ $_shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
 .table-responsive {
   overflow-x: auto;
   border: 1px solid $_border;
-  border-radius: 10px;
+  border-radius: 0;
 }
 
 .table {
@@ -231,7 +233,7 @@ $_shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
   padding: 1rem 1.5rem;
   border-top: 1px solid $_border;
   background: $_surface2;
-  border-radius: 0 0 14px 14px;
+  border-radius: 0;
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
@@ -239,7 +241,7 @@ $_shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
 
   .btn {
     padding: 0.575rem 1.1rem;
-    border-radius: 8px;
+    border-radius: 0;
     border: 1.5px solid $_border2;
     background: $_surface;
     color: $_strong;
@@ -250,7 +252,7 @@ $_shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+    box-shadow: none;
 
     &:hover { background: $_surface2; border-color: #bcc6d4; }
 
@@ -258,12 +260,11 @@ $_shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
       background: $_red;
       color: white;
       border-color: $_red;
-      box-shadow: 0 2px 6px rgba(255, 45, 55, 0.3);
+      box-shadow: none;
 
       &:hover {
         background: #e8000b;
-        box-shadow: 0 4px 10px rgba(255, 45, 55, 0.4);
-        transform: translateY(-1px);
+        box-shadow: none;
       }
     }
   }

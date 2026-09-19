@@ -1,3 +1,5 @@
+@use '../../../_variables' as *;
+
 // ── Design tokens (matches supplier-payment.component.scss) ───────────────────
 $primary:      #ff2d37;
 $success-bg:   rgba(34, 197, 94, 0.10);
@@ -25,7 +27,7 @@ $radius-md: 12px;
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba($text-dark, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -36,13 +38,13 @@ $radius-md: 12px;
 
 .modal-container {
   background: $surface;
-  border-radius: $radius-md;
+  border-radius: 0;
   width: 100%;
   max-width: 760px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
+  box-shadow: none;
   border: 1px solid $border;
 }
 
@@ -50,7 +52,7 @@ $radius-md: 12px;
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid $border;
   background: $surface2;
-  border-radius: $radius-md $radius-md 0 0;
+  border-radius: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -76,7 +78,7 @@ $radius-md: 12px;
   height: 2rem;
   border: 1px solid $border;
   background: $surface;
-  border-radius: $radius-sm;
+  border-radius: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;

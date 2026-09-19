@@ -19,18 +19,18 @@
 }
 
 @keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modal-content {
   background: #fff;
-  border-radius: 16px;
+  border-radius: 0;
   width: 100%;
   max-width: 960px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  box-shadow: none;
   animation: slideUp 0.25s ease;
 }
 
@@ -55,7 +55,7 @@
   color: $text-light;
   cursor: pointer;
   padding: 0.3rem 0.5rem;
-  border-radius: 6px;
+  border-radius: 0;
   transition: all 0.15s;
 
   &:hover {
@@ -72,7 +72,7 @@
 .lines-table-wrapper {
   overflow-x: auto;
   border: 1px solid $border-color;
-  border-radius: 10px;
+  border-radius: 0;
 }
 
 .lines-table {
@@ -103,7 +103,7 @@
     width: 100%;
     padding: 0.4rem 0.5rem;
     border: 1.5px solid $border-color;
-    border-radius: 6px;
+    border-radius: 0;
     font-size: 0.85rem;
     color: $text-dark;
     background: #fff;
@@ -130,7 +130,7 @@
   cursor: pointer;
   font-size: 0.9rem;
   padding: 0.3rem 0.4rem;
-  border-radius: 6px;
+  border-radius: 0;
 
   &:hover { background: $bg-body; }
   &.danger:hover { color: #dc2626; }
@@ -140,7 +140,7 @@
   margin-top: 0.75rem;
   background: none;
   border: 1.5px dashed $border-color;
-  border-radius: 8px;
+  border-radius: 0;
   padding: 0.5rem 1rem;
   font-size: 0.85rem;
   font-weight: 600;
@@ -178,7 +178,7 @@
   color: $text-muted;
   border: 1px solid $border-color;
   padding: 0.55rem 1.25rem;
-  border-radius: 8px;
+  border-radius: 0;
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.15s;
@@ -191,15 +191,14 @@
   color: #fff;
   border: none;
   padding: 0.55rem 1.5rem;
-  border-radius: 8px;
+  border-radius: 0;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover:not(:disabled) {
-    box-shadow: 0 4px 12px rgba($primary, 0.35);
-    transform: translateY(-1px);
+    box-shadow: none;
   }
 
   &:disabled {
