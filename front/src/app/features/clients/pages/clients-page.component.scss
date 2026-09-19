@@ -1,9 +1,16 @@
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
+@include layout.list-row-pattern();
 
-/* Refonte 2b, §14c : la cellule qui porte un état occupe toute la ligne et
-   laisse le composant gérer son propre espacement. */
-.state-cell {
-  padding: 0;
+/* Refonte 2b, étape 4 — seule la définition des colonnes est propre à Clients ;
+   le motif de ligne vit dans _page-layout.scss. */
+.clients-grid {
+  grid-template-columns: minmax(0, 1fr) 150px 150px 96px;
 }
 
+.pagination-totals {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #0c1e33;
+}

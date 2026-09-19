@@ -14,14 +14,15 @@ import {
   ActiveFilter,
   ListEmptyComponent,
   ListErrorComponent,
-  SkeletonCellsComponent,
+  RowLockComponent,
+  SkeletonRowComponent,
   describeLoadError,
 } from '../../../shared/list-state';
 
 @Component({
   selector: 'app-suppliers-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, SupplierFormComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent],
+  imports: [CommonModule, FormsModule, SupplierFormComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent],
   templateUrl: './suppliers-page.component.html',
   styleUrls: ['./suppliers-page.component.scss'],
 })
@@ -44,6 +45,24 @@ export class SuppliersPageComponent implements OnInit {
   readonly loadError = signal<string | null>(null);
   readonly loadErrorDetail = signal<string | null>(null);
   readonly lastLoadedAt = signal<Date | null>(null);
+
+  /**
+   * Règle 3 du motif de ligne : contact et téléphone qualifient le fournisseur
+   * sans qu'on trie dessus. Ils tenaient deux colonnes pour des valeurs
+   * présentes chez 17 % et 21 % des fournisseurs.
+   */
+  subLineFor(supplier: Supplier): string {
+    return [supplier.contact_person, supplier.phone].filter(Boolean).join(' · ') || '—';
+  }
+
+  /**
+   * Le reste dû par fournisseur était déjà chargé pour le tableau d'impayés en
+   * haut de page, mais ne rejoignait jamais la ligne du fournisseur concerné —
+   * il fallait lire deux tableaux et les recouper de tête.
+   */
+  unpaidFor(supplier: Supplier): number {
+    return this.unpaidBySupplier().find((row) => row.supplier_id === supplier.id)?.total_unpaid ?? 0;
+  }
 
   readonly activeFilters = computed<ActiveFilter[]>(() => {
     const applied: ActiveFilter[] = [];

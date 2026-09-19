@@ -1,8 +1,14 @@
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
+@include layout.list-row-pattern();
 
 /* Refonte 2b, §14c : la cellule qui porte un état occupe toute la ligne et
    laisse le composant gérer son propre espacement. */
 .state-cell {
   padding: 0;
+}
+
+/* Refonte 2b, étape 4 — seules les colonnes sont propres à Produits. */
+.products-grid {
+  grid-template-columns: 126px minmax(0, 1fr) 210px 148px;
 }

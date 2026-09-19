@@ -1,5 +1,6 @@
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
+@include layout.list-row-pattern();
 
 // ── Impayés fournisseurs (résumé au-dessus des filtres) ────────────────────
 .unpaid-summary-card {
@@ -25,4 +26,9 @@
    laisse le composant gérer son propre espacement. */
 .state-cell {
   padding: 0;
+}
+
+/* Refonte 2b, étape 4 — seules les colonnes sont propres à Fournisseurs. */
+.suppliers-grid {
+  grid-template-columns: minmax(0, 1fr) 110px 150px 130px;
 }

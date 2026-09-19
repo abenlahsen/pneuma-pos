@@ -65,141 +65,81 @@
     </div>
   </div>
 
+    <!-- Refonte 2b, étape 4 : motif de ligne (grille CSS) au lieu de <table>.
+       12 colonnes → 4, la plus dense des trois listes reprises. Indice de
+       charge, indice de vitesse, run-flat, renforcé, saison et marquage sont
+       six colonnes pour six qualifiants d'un même pneu : ils descendent en
+       sous-ligne, exactement comme sur l'écran Stock, qui décrit le même objet.
+       Le type et le statut deviennent des étiquettes qui ne s'affichent que
+       lorsqu'elles disent quelque chose — 1215 produits sur 1215 sont des
+       pneus, et 10 seulement sont inactifs. -->
   <div class="card table-card">
-    <div class="table-responsive">
-      <table class="table">
-        <thead>
-          <tr>
-            <th class="text-center">Actions</th>
-            <th class="sortable" (click)="toggleSort('reference')">
-              Référence
-              <app-sort-icon [active]="sortBy() === 'reference'" [dir]="sortDirection()" />
-            </th>
-            <th class="sortable" (click)="toggleSort('type')">
-              Type
-              <app-sort-icon [active]="sortBy() === 'type'" [dir]="sortDirection()" />
-            </th>
-            <th>Marque</th>
-            <th>Profil</th>
-            <th>Dimension</th>
-            <th>IC</th>
-            <th>IV</th>
-            <th>RunFlat</th>
-            <th>Saison</th>
-            <th>Marquage</th>
-            <th class="text-center">Statut</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Refonte 2b, §14c : chargement, erreur, liste vide. -->
-          <tr *ngIf="loadError()">
-            <td colspan="12" class="state-cell">
-              <app-list-error
-                title="Les produits n'ont pas pu être chargés."
-                [cause]="loadError()!"
-                [detail]="loadErrorDetail()"
-                [lastLoadedAt]="lastLoadedAt()"
-                (retry)="loadData()" />
-            </td>
-          </tr>
+    <div class="list-grid-header products-grid">
+      <span>Dimension</span>
+      <span>Produit</span>
+      <button type="button" class="sortable" (click)="toggleSort('reference')">
+        Référence <app-sort-icon [active]="sortBy() === 'reference'" [dir]="sortDirection()" />
+      </button>
+      <span class="text-right">Actions</span>
+    </div>
 
-          <ng-container *ngIf="loading() && products().length === 0">
-            <tr appSkeletonCells [cells]="12" [seed]="i"
-                *ngFor="let row of skeletonRows; let i = index"></tr>
-          </ng-container>
+    <!-- Refonte 2b, §14c : chargement, erreur, liste vide — dans cet ordre. -->
+    <app-list-error
+      *ngIf="loadError()"
+      title="Les produits n'ont pas pu être chargés."
+      [cause]="loadError()!"
+      [detail]="loadErrorDetail()"
+      [lastLoadedAt]="lastLoadedAt()"
+      (retry)="loadData()" />
 
-          <tr *ngIf="!loading() && !loadError() && products().length === 0">
-            <td colspan="12" class="state-cell">
-              <app-list-empty
-                blankTitle="Aucun produit enregistré pour le moment."
-                noMatchTitle="Aucun produit ne correspond"
-                [filters]="activeFilters()"
-                (clearAll)="resetFilters()" />
-            </td>
-          </tr>
+    <ng-container *ngIf="loading() && products().length === 0">
+      <div class="list-grid-row products-grid" appSkeletonRow [cells]="4" [seed]="i"
+           *ngFor="let row of skeletonRows; let i = index"></div>
+    </ng-container>
 
+    <app-list-empty
+      *ngIf="!loading() && !loadError() && products().length === 0"
+      blankTitle="Aucun produit enregistré pour le moment."
+      noMatchTitle="Aucun produit ne correspond"
+      [filters]="activeFilters()"
+      (clearAll)="resetFilters()" />
 
-          <tr *ngFor="let product of products()" [class.inactive-row]="!product.is_active">
-            <td class="text-center actions-cell">
-              <button
-                class="btn-icon btn-sm"
-                (click)="openViewModal(product)"
-                title="Voir le détail"
-              >
-                &#128065;&#65039;
-              </button>
-              <button
-                class="btn-icon btn-sm text-primary"
-                (click)="toggleActive(product)"
-                [title]="product.is_active ? 'Désactiver' : 'Activer'"
-                *ngIf="authService.hasPermission('edit products')"
-              >
-                {{ product.is_active ? '&#10003;' : '&#9675;' }}
-              </button>
-              <button
-                class="btn-icon btn-sm text-primary"
-                (click)="openEditForm(product)"
-                title="Modifier"
-                *ngIf="authService.hasPermission('edit products')"
-              >
-                &#9998;&#65039;
-              </button>
-              <button
-                class="btn-icon btn-sm text-danger"
-                (click)="deleteProduct(product)"
-                title="Supprimer"
-                *ngIf="authService.hasPermission('delete products')"
-              >
-                &#128465;&#65039;
-              </button>
-            </td>
-            <td>{{ product.reference || '-' }}</td>
-            <td>
-              <span
-                class="badge"
-                [class.badge-primary]="product.type === 'tyre'"
-                [class.badge-warning]="product.type === 'part'"
-                [class.badge-info]="product.type === 'service'"
-              >
-                {{ typeLabel(product.type) }}
-              </span>
-            </td>
-            <td>
-              <span class="badge badge-primary" *ngIf="product.brand">{{ product.brand!.name }}</span>
-              <span *ngIf="!product.brand">-</span>
-            </td>
-            <td>{{ product.profile || '-' }}</td>
-            <td>
-              <span *ngIf="product.type === 'tyre' && product.tyre?.tire_width">
-                {{ product.tyre?.tire_width }}/{{ product.tyre?.tire_height }}R{{ product.tyre?.tire_diameter }}
-              </span>
-              <span *ngIf="product.type === 'part' && product.part?.category" class="tag">{{ partCategoryLabel(product.part?.category) }}</span>
-              <span *ngIf="product.type === 'service' && product.service?.category" class="tag">{{ serviceCategoryLabel(product.service?.category) }}</span>
-              <span *ngIf="(product.type === 'tyre' && !product.tyre?.tire_width) || (product.type === 'part' && !product.part?.category) || (product.type === 'service' && !product.service?.category)">-</span>
-            </td>
-            <td>{{ product.tyre?.tire_load_index || '-' }}</td>
-            <td>{{ product.tyre?.tire_speed_index || '-' }}</td>
-            <td>{{ product.type === 'tyre' ? (product.tyre?.tire_runflat ? 'Oui' : 'Non') : '-' }}</td>
-            <td>
-              <span *ngIf="product.type === 'tyre' && product.tyre?.tire_season" class="tag tag-season">{{ seasonLabel(product.tyre?.tire_season) }}</span>
-              <span *ngIf="product.type === 'service' && product.service?.duration_minutes">{{ product.service?.duration_minutes }} min</span>
-              <span *ngIf="!(product.type === 'tyre' && product.tyre?.tire_season) && !(product.type === 'service' && product.service?.duration_minutes)">-</span>
-            </td>
-            <td>
-              {{ product.tyre?.tire_marking || '' }}
-              <span *ngIf="product.tyre?.tire_runflat" class="tag tag-rft" title="Run Flat">RFT</span>
-              <span *ngIf="product.tyre?.tire_reinforced" class="tag tag-xl" title="Renforcé">XL</span>
-              <span *ngIf="product.type === 'part' && product.part?.oem_reference" class="text-small">{{ product.part?.oem_reference }}</span>
-              <span *ngIf="!product.tyre?.tire_marking && !product.tyre?.tire_runflat && !product.tyre?.tire_reinforced && !(product.type === 'part' && product.part?.oem_reference)">-</span>
-            </td>
-            <td class="text-center">
-              <span class="badge" [class.badge-success]="product.is_active" [class.badge-muted]="!product.is_active">
-                {{ product.is_active ? 'Actif' : 'Inactif' }}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="list-grid-row products-grid" *ngFor="let product of products()">
+      <span>{{ dimensionFor(product) }}</span>
+
+      <span style="min-width: 0">
+        <span class="list-grid-name">
+          <button type="button" (click)="openViewModal(product)">{{ nameFor(product) }}</button>
+          <span class="list-grid-tag" *ngIf="!product.is_active">INACTIF</span>
+          <span class="list-grid-tag" *ngIf="product.type !== 'tyre'">{{ typeLabel(product.type) }}</span>
+        </span>
+        <span class="list-grid-sub">{{ subLineFor(product) }}</span>
+      </span>
+
+      <span>{{ product.reference || '—' }}</span>
+
+      <span class="actions-cell" style="display: flex; gap: 5px; justify-content: flex-end">
+        <button class="btn-icon" (click)="openViewModal(product)" title="Voir le détail">
+          <app-icon name="view" [size]="15" />
+        </button>
+        <ng-container *ngIf="authService.hasPermission('edit products')">
+          <button class="btn-icon" (click)="toggleActive(product)"
+            [title]="product.is_active ? 'Désactiver' : 'Activer'">
+            <app-icon [name]="product.is_active ? 'check-circle' : 'circle'" [size]="15" />
+          </button>
+          <button class="btn-icon text-primary" (click)="openEditForm(product)" title="Modifier">
+            <app-icon name="edit" [size]="15" />
+          </button>
+        </ng-container>
+        <app-row-lock *ngIf="!authService.hasPermission('edit products')"
+          reason="Votre rôle ne permet pas de modifier un produit. Demandez à un administrateur." />
+        <button class="btn-icon text-danger" (click)="deleteProduct(product)" title="Supprimer"
+          *ngIf="authService.hasPermission('delete products')">
+          <app-icon name="trash" [size]="15" />
+        </button>
+        <app-row-lock *ngIf="!authService.hasPermission('delete products')"
+          reason="Votre rôle ne permet pas de supprimer un produit. Demandez à un administrateur." />
+      </span>
     </div>
 
     <div class="pagination-wrapper" *ngIf="total() > 0">

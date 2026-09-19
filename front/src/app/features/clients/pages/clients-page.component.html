@@ -66,85 +66,73 @@
 
   <p class="feedback error" *ngIf="errorMessage()">{{ errorMessage() }}</p>
 
+  <!-- Refonte 2b, étape 4 : motif de ligne (grille CSS) au lieu de <table>.
+       8 colonnes → 4. Ville et téléphone descendent en sous-ligne (règle 3 :
+       ce qui qualifie sans être trié n'occupe pas une piste), et « Actif »
+       devient une étiquette qui n'apparaît que lorsqu'elle dit quelque chose.
+       Délai de paiement et solde d'ouverture disparaissent : mesurés sur les
+       799 clients de la base, ils sont renseignés pour 0 % d'entre eux. Une
+       colonne de tirets est exactement la densité que cette refonte combat ;
+       les deux champs restent saisissables dans le formulaire. -->
   <div class="card table-card">
-    <div class="table-responsive">
-      <table class="table">
-        <thead>
-          <tr>
-            <th class="text-center">Actions</th>
-            <th>Client</th>
-            <th>Type</th>
-            <th>Téléphone</th>
-            <th>Ville</th>
-            <th>Statut</th>
-            <th class="text-right">Limite de crédit (DH)</th>
-            <th class="text-right">Solde d'ouverture (DH)</th>
-          </tr>
-        </thead>
+    <div class="list-grid-header clients-grid">
+      <span>Client</span>
+      <span>Règlement</span>
+      <span class="text-right">Limite crédit DH</span>
+      <span class="text-right">Actions</span>
+    </div>
 
-        <tbody>
-          <!-- Refonte 2b, §14c : chargement, erreur, liste vide. -->
-          <tr *ngIf="loadError()">
-            <td colspan="8" class="state-cell">
-              <app-list-error
-                title="Les clients n'ont pas pu être chargés."
-                [cause]="loadError()!"
-                [detail]="loadErrorDetail()"
-                [lastLoadedAt]="lastLoadedAt()"
-                (retry)="loadClients()" />
-            </td>
-          </tr>
+    <!-- Refonte 2b, §14c : chargement, erreur, liste vide — dans cet ordre. -->
+    <app-list-error
+      *ngIf="loadError()"
+      title="Les clients n'ont pas pu être chargés."
+      [cause]="loadError()!"
+      [detail]="loadErrorDetail()"
+      [lastLoadedAt]="lastLoadedAt()"
+      (retry)="loadClients()" />
 
-          <ng-container *ngIf="loading() && clients().length === 0">
-            <tr appSkeletonCells [cells]="8" [seed]="i"
-                *ngFor="let row of skeletonRows; let i = index"></tr>
-          </ng-container>
+    <ng-container *ngIf="loading() && clients().length === 0">
+      <div class="list-grid-row clients-grid" appSkeletonRow [cells]="4" [seed]="i"
+           *ngFor="let row of skeletonRows; let i = index"></div>
+    </ng-container>
 
-          <tr *ngIf="!loading() && !loadError() && clients().length === 0">
-            <td colspan="8" class="state-cell">
-              <app-list-empty
-                blankTitle="Aucun client enregistré pour le moment."
-                noMatchTitle="Aucun client ne correspond"
-                [filters]="activeFilters()"
-                (clearAll)="clearFilters()" />
-            </td>
-          </tr>
+    <app-list-empty
+      *ngIf="!loading() && !loadError() && clients().length === 0"
+      blankTitle="Aucun client enregistré pour le moment."
+      noMatchTitle="Aucun client ne correspond"
+      [filters]="activeFilters()"
+      (clearAll)="clearFilters()" />
 
-          <tr *ngFor="let client of clients(); trackBy: trackByClientId">
-            <td class="text-center">
-              <button class="btn-icon btn-sm text-primary" type="button" (click)="openEditModal(client)" title="Modifier">
-                <app-icon name="edit" [size]="14" />
-              </button>
-              <button
-                class="btn-icon btn-sm text-danger"
-                type="button"
-                (click)="deleteClient(client)"
-                title="Supprimer"
-                [disabled]="deletingClientId() === client.id"
-              >
-                <span *ngIf="deletingClientId() !== client.id"><app-icon name="trash" [size]="14" /></span>
-                <span *ngIf="deletingClientId() === client.id" class="inline-spinner"></span>
-              </button>
-            </td>
-            <td class="fw-semibold">
-              <button type="button" class="btn-link client-link" (click)="viewClient(client)">
-                {{ client.name }}
-              </button>
-              <small *ngIf="client.email">{{ client.email }}</small>
-            </td>
-            <td>{{ client.category || '-' }}</td>
-            <td>{{ client.phone || '-' }}</td>
-            <td>{{ client.city || '-' }}</td>
-            <td>
-              <span class="status-badge" [class.inactive]="client.is_active === false">
-                {{ client.is_active === false ? 'Inactif' : 'Actif' }}
-              </span>
-            </td>
-            <td class="text-right">{{ client.credit_limit != null ? (client.credit_limit | number:'1.2-2') : '0.00' }}</td>
-            <td class="text-right">{{ client.opening_balance != null ? (client.opening_balance | number:'1.2-2') : '0.00' }}</td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="list-grid-row clients-grid"
+         *ngFor="let client of clients(); trackBy: trackByClientId">
+      <span style="min-width: 0">
+        <span class="list-grid-name">
+          <a [routerLink]="['/clients', client.id]">{{ client.name }}</a>
+          <span class="list-grid-tag" *ngIf="client.is_active === false">INACTIF</span>
+          <span class="list-grid-tag" *ngIf="client.category">{{ client.category }}</span>
+        </span>
+        <span class="list-grid-sub">{{ subLineFor(client) }}</span>
+      </span>
+
+      <span>{{ client.default_payment_method || '—' }}</span>
+
+      <span class="text-right fw-semibold">{{ client.credit_limit ? (client.credit_limit | number:'1.0-0') : '—' }}</span>
+
+      <span class="actions-cell" style="display: flex; gap: 5px; justify-content: flex-end">
+        <button class="btn-icon" type="button" (click)="openEditModal(client)" title="Modifier">
+          <app-icon name="edit" [size]="15" />
+        </button>
+        <button
+          class="btn-icon text-danger"
+          type="button"
+          (click)="deleteClient(client)"
+          title="Supprimer"
+          [disabled]="deletingClientId() === client.id"
+        >
+          <span *ngIf="deletingClientId() !== client.id"><app-icon name="trash" [size]="15" /></span>
+          <span *ngIf="deletingClientId() === client.id" class="inline-spinner"></span>
+        </button>
+      </span>
     </div>
 
     <div class="pagination-wrapper" *ngIf="total() > 0">
@@ -152,6 +140,7 @@
         {{ (currentPage() - 1) * perPage() + 1 }} à {{ currentPage() * perPage() > total() ? total() : currentPage() * perPage() }}
         sur {{ total() }}
       </div>
+      <span class="pagination-totals">Limite de crédit sur cette page {{ pageCreditLimit() | number:'1.0-0' }} DH</span>
       <div class="pagination">
         <button class="btn-page" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">&laquo;</button>
         <button class="btn-page" *ngFor="let pg of pages" [class.active]="pg === currentPage()" (click)="goToPage(pg)">

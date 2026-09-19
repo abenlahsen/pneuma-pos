@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ClientFormComponent } from '../components/client-form/client-form.component';
 import { ClientService } from '../data-access/client.service';
 import { Client, ClientFilters, ClientPayload } from '../models/client.model';
@@ -12,14 +12,14 @@ import {
   ActiveFilter,
   ListEmptyComponent,
   ListErrorComponent,
-  SkeletonCellsComponent,
+  SkeletonRowComponent,
   describeLoadError,
 } from '../../../shared/list-state';
 
 @Component({
   selector: 'app-clients-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ClientFormComponent, AutoRefreshControlComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent],
+  imports: [CommonModule, FormsModule, ClientFormComponent, AutoRefreshControlComponent, IconComponent, RouterLink, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent],
   templateUrl: './clients-page.component.html',
   styleUrl: './clients-page.component.scss',
 })
@@ -41,6 +41,26 @@ export class ClientsPageComponent implements OnInit {
   readonly loadError = signal<string | null>(null);
   readonly loadErrorDetail = signal<string | null>(null);
   readonly lastLoadedAt = signal<Date | null>(null);
+
+  /**
+   * Refonte 2b, règle 3 du motif de ligne : ce qui qualifie sans être trié
+   * descend sous le nom plutôt que d'occuper une colonne. L'adresse
+   * électronique y figure aussi, quand elle existe — aucun des 799 clients de
+   * la base n'en a, mais le formulaire la propose.
+   */
+  subLineFor(client: Client): string {
+    return [client.city, client.phone, client.email].filter(Boolean).join(' · ') || '—';
+  }
+
+  /**
+   * Le gabarit de liste veut un total en pied. Celui de la sélection entière
+   * n'existe pas : l'API des clients ne renvoie aucun résumé. On annonce donc
+   * ce qu'on sait vraiment — le cumul de la page affichée — et on le dit dans
+   * le libellé.
+   */
+  readonly pageCreditLimit = computed(() =>
+    this.clients().reduce((sum, client) => sum + (client.credit_limit ?? 0), 0)
+  );
 
   /**
    * Méthode et non `computed()` : sur cet écran les filtres vivent dans un

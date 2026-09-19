@@ -84,98 +84,77 @@
     </div>
   </div>
 
+  <!-- Refonte 2b, étape 4 : motif de ligne (grille CSS) au lieu de <table>.
+       6 colonnes → 4. Contact et téléphone descendent en sous-ligne ; email et
+       adresse disparaissent, renseignés pour 0 % des 24 fournisseurs. À la
+       place vient « Reste dû », qui est la raison d'ouvrir cet écran : la
+       donnée était déjà chargée pour le tableau des impayés, en haut de page,
+       sans jamais rejoindre la ligne du fournisseur concerné.
+       « Délai » reste malgré ses 0 % : c'est lui qui pilote la projection de
+       trésorerie, et une case vide y est une consigne, pas du bruit. -->
   <div class="card table-card">
-    <div class="table-responsive">
-      <table class="table">
-        <thead>
-          <tr>
-            <th class="text-center">Actions</th>
-            <th class="sortable" (click)="toggleSort('name')">
-              Nom du Fournisseur
-              <app-sort-icon [active]="sortBy() === 'name'" [dir]="sortDirection()" />
-            </th>
-            <th class="sortable" (click)="toggleSort('contact_person')">
-              Contact
-              <app-sort-icon [active]="sortBy() === 'contact_person'" [dir]="sortDirection()" />
-            </th>
-            <th class="sortable" (click)="toggleSort('phone')">
-              Téléphone
-              <app-sort-icon [active]="sortBy() === 'phone'" [dir]="sortDirection()" />
-            </th>
-            <th class="sortable" (click)="toggleSort('email')">
-              Email
-              <app-sort-icon [active]="sortBy() === 'email'" [dir]="sortDirection()" />
-            </th>
-            <th>Adresse</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Refonte 2b, §14c : chargement, erreur, liste vide. -->
-          <tr *ngIf="loadError()">
-            <td colspan="6" class="state-cell">
-              <app-list-error
-                title="Les fournisseurs n'ont pas pu être chargés."
-                [cause]="loadError()!"
-                [detail]="loadErrorDetail()"
-                [lastLoadedAt]="lastLoadedAt()"
-                (retry)="loadData()" />
-            </td>
-          </tr>
+    <div class="list-grid-header suppliers-grid">
+      <button type="button" class="sortable" (click)="toggleSort('name')">
+        Fournisseur <app-sort-icon [active]="sortBy() === 'name'" [dir]="sortDirection()" />
+      </button>
+      <span class="text-right">Délai</span>
+      <span class="text-right">Reste dû DH</span>
+      <span class="text-right">Actions</span>
+    </div>
 
-          <ng-container *ngIf="loading() && suppliers().length === 0">
-            <tr appSkeletonCells [cells]="6" [seed]="i"
-                *ngFor="let row of skeletonRows; let i = index"></tr>
-          </ng-container>
+    <!-- Refonte 2b, §14c : chargement, erreur, liste vide — dans cet ordre. -->
+    <app-list-error
+      *ngIf="loadError()"
+      title="Les fournisseurs n'ont pas pu être chargés."
+      [cause]="loadError()!"
+      [detail]="loadErrorDetail()"
+      [lastLoadedAt]="lastLoadedAt()"
+      (retry)="loadData()" />
 
-          <tr *ngIf="!loading() && !loadError() && suppliers().length === 0">
-            <td colspan="6" class="state-cell">
-              <app-list-empty
-                blankTitle="Aucun fournisseur enregistré pour le moment."
-                noMatchTitle="Aucun fournisseur ne correspond"
-                [filters]="activeFilters()"
-                (clearAll)="resetFilters()" />
-            </td>
-          </tr>
+    <ng-container *ngIf="loading() && suppliers().length === 0">
+      <div class="list-grid-row suppliers-grid" appSkeletonRow [cells]="4" [seed]="i"
+           *ngFor="let row of skeletonRows; let i = index"></div>
+    </ng-container>
 
+    <app-list-empty
+      *ngIf="!loading() && !loadError() && suppliers().length === 0"
+      blankTitle="Aucun fournisseur enregistré pour le moment."
+      noMatchTitle="Aucun fournisseur ne correspond"
+      [filters]="activeFilters()"
+      (clearAll)="resetFilters()" />
 
-          <tr *ngFor="let supplier of suppliers()">
-            <td class="text-center actions-cell">
-              <button
-                class="btn-icon btn-sm"
-                (click)="viewSupplier(supplier)"
-                title="Voir la fiche"
-              >
-                <app-icon name="view" [size]="14" />
-              </button>
-              <button
-                class="btn-icon btn-sm text-primary"
-                (click)="openEditForm(supplier)"
-                title="Modifier"
-                *ngIf="authService.hasPermission('edit suppliers')"
-              >
-                <app-icon name="edit" [size]="14" />
-              </button>
-              <button
-                class="btn-icon btn-sm text-danger"
-                (click)="deleteSupplier(supplier)"
-                title="Supprimer"
-                *ngIf="authService.hasPermission('delete suppliers')"
-              >
-                <app-icon name="trash" [size]="14" />
-              </button>
-            </td>
-            <td>
-              <button type="button" class="btn-link supplier-link" (click)="viewSupplier(supplier)">
-                {{ supplier.name }}
-              </button>
-            </td>
-            <td>{{ supplier.contact_person || '-' }}</td>
-            <td>{{ supplier.phone || '-' }}</td>
-            <td>{{ supplier.email || '-' }}</td>
-            <td><div class="desc-col">{{ supplier.address || '-' }}</div></td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="list-grid-row suppliers-grid"
+         *ngFor="let supplier of suppliers()"
+         [class.list-grid-row--action]="unpaidFor(supplier) > 0">
+      <span style="min-width: 0">
+        <span class="list-grid-name">
+          <button type="button" (click)="viewSupplier(supplier)">{{ supplier.name }}</button>
+          <span class="list-grid-tag" *ngIf="supplier.payment_terms_days == null">SANS DÉLAI</span>
+        </span>
+        <span class="list-grid-sub">{{ subLineFor(supplier) }}</span>
+      </span>
+
+      <span class="text-right">{{ supplier.payment_terms_days != null ? supplier.payment_terms_days + ' j' : '—' }}</span>
+
+      <span class="text-right fw-semibold">{{ unpaidFor(supplier) ? (unpaidFor(supplier) | number:'1.0-0') : '—' }}</span>
+
+      <span class="actions-cell" style="display: flex; gap: 5px; justify-content: flex-end">
+        <button class="btn-icon" (click)="viewSupplier(supplier)" title="Voir la fiche">
+          <app-icon name="view" [size]="15" />
+        </button>
+        <button class="btn-icon text-primary" (click)="openEditForm(supplier)" title="Modifier"
+          *ngIf="authService.hasPermission('edit suppliers')">
+          <app-icon name="edit" [size]="15" />
+        </button>
+        <app-row-lock *ngIf="!authService.hasPermission('edit suppliers')"
+          reason="Votre rôle ne permet pas de modifier un fournisseur. Demandez à un administrateur." />
+        <button class="btn-icon text-danger" (click)="deleteSupplier(supplier)" title="Supprimer"
+          *ngIf="authService.hasPermission('delete suppliers')">
+          <app-icon name="trash" [size]="15" />
+        </button>
+        <app-row-lock *ngIf="!authService.hasPermission('delete suppliers')"
+          reason="Votre rôle ne permet pas de supprimer un fournisseur. Demandez à un administrateur." />
+      </span>
     </div>
 
     <div class="pagination-wrapper" *ngIf="total() > 0">

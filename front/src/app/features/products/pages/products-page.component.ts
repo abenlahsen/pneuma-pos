@@ -8,20 +8,22 @@ import { Product, ProductFilters, ProductPayload } from '../models/product.model
 import { ProductFormComponent } from '../product-form/product-form.component';
 import { ProductDetailComponent } from '../product-detail/product-detail.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
+import { IconComponent } from '../../../shared/icon/icon.component';
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 
 import {
   ActiveFilter,
   ListEmptyComponent,
   ListErrorComponent,
-  SkeletonCellsComponent,
+  RowLockComponent,
+  SkeletonRowComponent,
   describeLoadError,
 } from '../../../shared/list-state';
 
 @Component({
   selector: 'app-products-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductFormComponent, ProductDetailComponent, AutoRefreshControlComponent, SortIconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent],
+  imports: [CommonModule, FormsModule, ProductFormComponent, ProductDetailComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent],
   templateUrl: './products-page.component.html',
   styleUrls: ['./products-page.component.scss'],
 })
@@ -56,6 +58,49 @@ export class ProductsPageComponent implements OnInit {
   readonly loadError = signal<string | null>(null);
   readonly loadErrorDetail = signal<string | null>(null);
   readonly lastLoadedAt = signal<Date | null>(null);
+
+  /** Dimension du pneu, ou catégorie pour une pièce ou une prestation. */
+  dimensionFor(product: Product): string {
+    if (product.type === 'tyre') {
+      const tyre = product.tyre;
+      return tyre?.tire_width ? `${tyre.tire_width}/${tyre.tire_height}R${tyre.tire_diameter}` : '—';
+    }
+    if (product.type === 'part') return this.partCategoryLabel(product.part?.category) || '—';
+
+    return this.serviceCategoryLabel(product.service?.category) || '—';
+  }
+
+  /** Marque et profil font le nom : c'est ainsi qu'on désigne un pneu à l'oral. */
+  nameFor(product: Product): string {
+    return [product.brand?.name, product.profile].filter(Boolean).join(' ') || product.reference || 'Sans nom';
+  }
+
+  /**
+   * Règle 3 du motif de ligne. Indice de charge, indice de vitesse, saison,
+   * run-flat, renforcé et marquage tenaient six colonnes à eux seuls, pour
+   * qualifier un objet que personne ne trie sur ces critères.
+   */
+  subLineFor(product: Product): string {
+    const parts: string[] = [];
+
+    if (product.type === 'tyre') {
+      const tyre = product.tyre;
+      const indices = `${tyre?.tire_load_index ?? ''}${tyre?.tire_speed_index ?? ''}`.trim();
+      if (indices) parts.push(indices);
+      if (tyre?.tire_season) parts.push(this.seasonLabel(tyre.tire_season));
+      if (tyre?.tire_runflat) parts.push('RFT');
+      if (tyre?.tire_reinforced) parts.push('XL');
+      if (tyre?.tire_marking) parts.push(tyre.tire_marking);
+    } else if (product.type === 'part' && product.part?.oem_reference) {
+      parts.push(product.part.oem_reference);
+    } else if (product.type === 'service' && product.service?.duration_minutes) {
+      parts.push(`${product.service.duration_minutes} min`);
+    }
+
+    if (product.description) parts.push(product.description);
+
+    return parts.join(' · ') || '—';
+  }
 
   readonly activeFilters = computed<ActiveFilter[]>(() => {
     const applied: ActiveFilter[] = [];
