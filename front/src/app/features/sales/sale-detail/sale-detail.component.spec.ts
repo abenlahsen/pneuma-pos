@@ -54,30 +54,28 @@ describe('SaleDetailComponent', () => {
   });
 
   describe('openProductView', () => {
-    it('sets viewingProduct signal from resolved product', () => {
-      const fakeProduct = { id: 7 } as Product;
-      comp.openProductView({ linkedProduct: fakeProduct });
-      expect(comp.viewingProduct()).toEqual(fakeProduct);
+    // Refonte 2b, 6c : product-detail est supprimé ; consulter un produit,
+    // c'est ouvrir son éditeur, dans un nouvel onglet pour ne pas perdre la
+    // fiche en cours.
+    let open: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      open = vi.fn();
+      vi.stubGlobal('window', { open });
     });
 
-    it('does NOT change viewingProduct when item has no product', () => {
-      comp.openProductView({});
-      expect(comp.viewingProduct()).toBeNull();
+    afterEach(() => vi.unstubAllGlobals());
+
+    it("ouvre l'éditeur du produit dans un nouvel onglet", () => {
+      comp.openProductView({ linkedProduct: { id: 7 } });
+      expect(open).toHaveBeenCalledWith('/products/7/edit', '_blank', 'noopener');
     });
-  });
 
-  describe('editProductInNewTab', () => {
-    let openSpy: ReturnType<typeof vi.spyOn>;
-
-    beforeEach(() => { openSpy = vi.spyOn(window, 'open').mockReturnValue(null as any); });
-    afterEach(() => vi.restoreAllMocks());
-
-    it('clears viewingProduct and opens /products?id=7&edit=1 in a new tab', () => {
-      const fakeProduct = { id: 7 } as Product;
-      comp.viewingProduct.set(fakeProduct);
-      comp.editProductInNewTab(fakeProduct);
-      expect(comp.viewingProduct()).toBeNull();
-      expect(openSpy).toHaveBeenCalledWith('/products?id=7&edit=1', '_blank', 'noopener');
+    // Côté vente, getProduct accepte aussi item.product en dernier recours —
+    // contrairement à l'achat. Une ligne sans produit du tout, donc.
+    it("n'ouvre rien quand la ligne ne porte aucun produit résolu", () => {
+      comp.openProductView({ product_id: 9, product_name: 'Hors catalogue' });
+      expect(open).not.toHaveBeenCalled();
     });
   });
 

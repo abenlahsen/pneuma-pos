@@ -316,9 +316,3 @@
   </aside>
 </form>
 
-<app-product-detail
-  *ngIf="viewingProduct()"
-  [product]="viewingProduct()"
-  (close)="viewingProduct.set(null)"
-  (edit)="editProductInNewTab($event)"
-/>

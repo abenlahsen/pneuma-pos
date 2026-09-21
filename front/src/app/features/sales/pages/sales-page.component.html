@@ -60,7 +60,7 @@
         <p class="card-label">Sélection filtrée</p>
         <h3 class="card-value">{{ summaryLoaded() ? (summary().filtered_total | number:'1.2-2') : '—' }} DH</h3>
         <p class="card-hint">
-          {{ summaryLoaded() ? (summary().filtered_count) : '—' }} vente(s) · marge {{ summaryLoaded() ? (summary().filtered_total ? (summary().filtered_margin / summary().filtered_total * 100 | number:'1.1-1') : '0') : '—' }}%
+          {{ summaryLoaded() ? (summary().filtered_count) : '—' }} vente(s)@if (canSeeMargin()) { · marge {{ summaryLoaded() ? (summary().filtered_total ? (summary().filtered_margin / summary().filtered_total * 100 | number:'1.1-1') : '0') : '—' }}% }
         </p>
       </div>
     </div>
@@ -189,13 +189,15 @@
 
   <!-- Refonte 2b, étape 2 : motif de ligne — grille CSS au lieu de <table>, 17 colonnes → 9. -->
   <div class="card table-card">
-    <div class="list-grid-header sales-grid">
+    <div class="list-grid-header sales-grid" [class.sales-grid--no-margin]="!canSeeMargin()">
       <span>N°</span>
       <button type="button" class="sortable" (click)="toggleSort('date')">Date <app-sort-icon [active]="sortBy() === 'date'" [dir]="sortDirection()" /></button>
       <button type="button" class="sortable" (click)="toggleSort('client')">Client <app-sort-icon [active]="sortBy() === 'client'" [dir]="sortDirection()" /></button>
       <button type="button" class="sortable text-right" (click)="toggleSort('total_quantity')">Qté <app-sort-icon [active]="sortBy() === 'total_quantity'" [dir]="sortDirection()" /></button>
       <button type="button" class="sortable text-right" (click)="toggleSort('total_sale')">Total DH <app-sort-icon [active]="sortBy() === 'total_sale'" [dir]="sortDirection()" /></button>
-      <button type="button" class="sortable text-right" (click)="toggleSort('margin')">Marge DH <app-sort-icon [active]="sortBy() === 'margin'" [dir]="sortDirection()" /></button>
+      @if (canSeeMargin()) {
+        <button type="button" class="sortable text-right" (click)="toggleSort('margin')">Marge DH <app-sort-icon [active]="sortBy() === 'margin'" [dir]="sortDirection()" /></button>
+      }
       <button type="button" class="sortable" (click)="toggleSort('payment_status')">Paiement <app-sort-icon [active]="sortBy() === 'payment_status'" [dir]="sortDirection()" /></button>
       <button type="button" class="sortable" (click)="toggleSort('status')">Statut <app-sort-icon [active]="sortBy() === 'status'" [dir]="sortDirection()" /></button>
       <span class="text-right">Actions</span>
@@ -213,7 +215,7 @@
     <!-- `*ngIf` et non `[hidden]` : `.list-grid-row` pose `display: grid`, qui
          l'emporte sur le `display: none` de l'attribut. -->
     <ng-container *ngIf="loading() && sales().length === 0">
-      <div class="list-grid-row sales-grid" appSkeletonRow [cells]="9" [seed]="i"
+      <div class="list-grid-row sales-grid" [class.sales-grid--no-margin]="!canSeeMargin()" appSkeletonRow [cells]="canSeeMargin() ? 9 : 8" [seed]="i"
            *ngFor="let row of skeletonRows; let i = index"></div>
     </ng-container>
 
@@ -224,7 +226,7 @@
       [filters]="activeFilters()"
       (clearAll)="resetFilters()" />
 
-    <div class="list-grid-row sales-grid"
+    <div class="list-grid-row sales-grid" [class.sales-grid--no-margin]="!canSeeMargin()"
          *ngFor="let sale of sales()"
          [class.list-grid-row--action]="sale.payment_status === 'NON PAYE'">
       <span class="cell-id">{{ sale.id }}</span>
@@ -239,10 +241,12 @@
       </span>
       <span class="text-right">{{ sale.total_quantity }}</span>
       <span class="text-right fw-semibold">{{ sale.total_sale | number:'1.2-2' }}</span>
-      <span class="text-right">
-        {{ sale.margin | number:'1.2-2' }}
-        <span class="margin-pct" [class]="marginClass(sale)" *ngIf="(sale.total_sale ?? 0) > 0">{{ marginPct(sale) | number:'1.0-1' }}%</span>
-      </span>
+      @if (canSeeMargin()) {
+        <span class="text-right">
+          {{ sale.margin | number:'1.2-2' }}
+          <span class="margin-pct" [class]="marginClass(sale)" *ngIf="(sale.total_sale ?? 0) > 0">{{ marginPct(sale) | number:'1.0-1' }}%</span>
+        </span>
+      }
       <span class="list-grid-status"
             [class.list-grid-status--paid]="sale.payment_status === 'PAYE'"
             [class.list-grid-status--unpaid]="sale.payment_status === 'NON PAYE' || !sale.payment_status"
@@ -289,7 +293,7 @@
       <div class="pagination-info">
         {{ (currentPage() - 1) * perPage() + 1 }}–{{ (currentPage() * perPage()) > total() ? total() : (currentPage() * perPage()) }} sur {{ total() }} ventes
       </div>
-      <span class="pagination-totals">Total page {{ pageTotal() | number:'1.2-2' }} DH · marge {{ pageMargin() | number:'1.2-2' }} DH</span>
+      <span class="pagination-totals">Total page {{ pageTotal() | number:'1.2-2' }} DH@if (canSeeMargin()) { · marge {{ pageMargin() | number:'1.2-2' }} DH }</span>
       <div class="pagination">
         <button class="btn-page" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">
           &laquo;
@@ -310,18 +314,6 @@
   </div>
 </div>
 
-
-<app-sale-detail
-  *ngIf="detailSale()"
-  [sale]="detailSale()!"
-  [canEdit]="authService.hasPermission('edit sales') && !isSaleLocked(detailSale()!)"
-  [hasPrev]="detailNav.hasPrev()"
-  [hasNext]="detailNav.hasNext()"
-  [position]="detailNav.position()"
-  (close)="closeDetail()"
-  (edit)="editFromDetail()"
-  (prev)="detailNav.prev()"
-  (next)="detailNav.next()"></app-sale-detail>
 
 <app-payment-panel *ngIf="paymentSale()" [sale]="paymentSale()!" (closed)="closePayments()" (statusChanged)="loadData()"></app-payment-panel>
 

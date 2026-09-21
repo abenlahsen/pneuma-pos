@@ -1,0 +1,29 @@
+<div class="sdp-shell">
+  <p class="sdp-loading" *ngIf="loading()">Chargement de la vente…</p>
+
+  <app-list-error
+    *ngIf="loadError()"
+    title="La vente n'a pas pu être chargée."
+    [cause]="loadError()!"
+    [detail]="loadErrorDetail()"
+    (retry)="retry()" />
+
+  <app-sale-detail
+    *ngIf="!loading() && !loadError() && sale()"
+    [sale]="sale()!"
+    [canEdit]="canEdit()"
+    [hasPrev]="!!neighbours().prev"
+    [hasNext]="!!neighbours().next"
+    [position]="neighbours().position"
+    (close)="back()"
+    (edit)="editSale()"
+    (collect)="openCollect()"
+    (prev)="goPrev()"
+    (next)="goNext()" />
+</div>
+
+<app-payment-panel
+  *ngIf="collecting() && sale()"
+  [sale]="sale()!"
+  (closed)="closeCollect(false)"
+  (statusChanged)="closeCollect(true)" />

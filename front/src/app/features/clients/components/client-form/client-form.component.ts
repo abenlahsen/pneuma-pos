@@ -4,12 +4,19 @@ import { FormsModule } from '@angular/forms';
 import { Client, ClientPayload } from '../../models/client.model';
 import { CityService } from '../../../../core/services/city.service';
 
+/**
+ * Fiche client — refonte 2b, gabarit 15a.
+ *
+ * Douze champs : le §5b renvoie hors de la modale au-delà de dix. Le formulaire
+ * porte donc lui-même ses trois rangées, comme product-form, et s'ouvre sur sa
+ * propre route via <app-client-form-page>.
+ */
 @Component({
   selector: 'app-client-form',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './client-form.component.html',
-  styleUrls: ['../../../sales/sale-form/sale-form.component.scss']
+  styleUrl: './client-form.component.scss',
 })
 export class ClientFormComponent implements OnInit {
   @Input() client: Client | null = null;

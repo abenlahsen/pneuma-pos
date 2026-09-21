@@ -1,210 +1,148 @@
-<div class="modal-overlay print-overlay">
-  <div class="modal-content print-area" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <div class="modal-title">
-        <h2>Détail de la vente</h2>
-        <div class="modal-nav no-print">
-          <button type="button" [disabled]="!hasPrev" (click)="prev.emit()" title="Précédent (←)" aria-label="Précédent"><app-icon name="chevron-left" [size]="14" /></button>
-          <span class="modal-nav-id">N° {{ sale.id }}</span>
-          <span class="modal-nav-pos" *ngIf="position">{{ position }}</span>
-          <button type="button" [disabled]="!hasNext" (click)="next.emit()" title="Suivant (→)" aria-label="Suivant"><app-icon name="chevron-right" [size]="14" /></button>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-primary btn-sm" (click)="openPrint()"><app-icon name="print" [size]="14" /> Imprimer</button>
-        <button class="btn btn-secondary btn-sm no-print" *ngIf="authService.hasPermission('create shipment-changes')" (click)="openShipmentAddForm()"><app-icon name="package" [size]="14" /> Demander une modification</button>
-        <button class="btn-close" (click)="close.emit()"><app-icon name="close" [size]="14" /></button>
-      </div>
-    </div>
+<!-- Refonte 2b, gabarit 16b — la vente cesse d'être une modale. Deux rangées :
+     barre de 60 px, corps en minmax(0,1fr) 400px. Les articles, la livraison
+     et les paiements tiennent la colonne principale ; l'argent, la marge, le
+     client et le suivi passent à droite. -->
+<div class="sd-screen print-area">
 
-    <div class="detail-body">
-      <div class="detail-section">
-        <h3 class="section-title">Informations Générales</h3>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="label">Date</span>
-            <span class="value">{{ sale.date | date:'dd/MM/yyyy' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Client</span>
-            <span class="value">{{ clientName }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Téléphone</span>
-            <span class="value">{{ clientPhone }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Ville</span>
-            <span class="value">{{ clientCity }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Facture</span>
-            <span class="value">{{ sale.with_invoice ? 'Oui' : 'Non' }}</span>
-          </div>
-        </div>
-      </div>
+  <header class="sd-bar no-print">
+    <a class="sd-back" (click)="close.emit()" role="button" tabindex="0" (keydown.enter)="close.emit()">
+      <app-icon name="chevron-left" [size]="15" /> Ventes
+    </a>
 
-      <div class="detail-section" *ngIf="showAccountWarning">
-        <h3 class="section-title">Contexte client</h3>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="label">Solde impayé</span>
-            <span class="value">{{ outstandingBalance | number:'1.2-2' }} DH</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Limite de crédit</span>
-            <span class="value">{{ creditLimit | number:'1.2-2' }} DH</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Nombre de ventes</span>
-            <span class="value">{{ sale.client_summary?.sales_count || 0 }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Dernière vente</span>
-            <span class="value">{{ sale.client_summary?.last_sale_date || '-' }}</span>
-          </div>
+    <span class="sd-identity">
+      <span class="sd-title">Vente {{ sale.id }}</span>
+      <span class="sd-meta">
+        {{ sale.date | date:'dd/MM/yyyy' }}
+        @if (clientName !== '-') { · {{ clientName }} }
+        @if (sale.commercial?.name) { · {{ sale.commercial!.name }} }
+        @if (sale.partner?.name) { · Partenaire {{ sale.partner!.name }} }
+      </span>
+    </span>
+
+    <span class="sd-badges">
+      <span class="sd-badge">{{ sale.with_invoice ? 'FACTURÉE' : 'SANS FACTURE' }}</span>
+      <span class="sd-badge"
+            [class.sd-badge--ok]="isSettled"
+            [class.sd-badge--late]="!isSettled">
+        {{ sale.payment_status }}@if (unpaidDays; as d) { · {{ d }} J }
+      </span>
+      <span class="sd-badge">{{ sale.status }}</span>
+    </span>
+
+    <span class="sd-nav" *ngIf="hasPrev || hasNext">
+      <button type="button" [disabled]="!hasPrev" (click)="prev.emit()" title="Précédent (←)" aria-label="Précédent"><app-icon name="chevron-left" [size]="14" /></button>
+      <span class="sd-pos" *ngIf="position">{{ position }}</span>
+      <button type="button" [disabled]="!hasNext" (click)="next.emit()" title="Suivant (→)" aria-label="Suivant"><app-icon name="chevron-right" [size]="14" /></button>
+    </span>
+
+    <span class="sd-actions">
+      <button type="button" class="sd-btn" (click)="openPrint()">Imprimer</button>
+      @if (authService.hasPermission('create shipment-changes')) {
+        <button type="button" class="sd-btn" (click)="openShipmentAddForm()">Demander une modification</button>
+      }
+      @if (canEdit) {
+        <button type="button" class="sd-btn" (click)="edit.emit()">Modifier</button>
+      }
+      @if (!isSettled && amountDue > 0 && authService.hasPermission('manage sale-payments')) {
+        <button type="button" class="sd-btn sd-btn--primary" (click)="collect.emit()">
+          Encaisser {{ amountDue | number:'1.0-0' }} DH
+        </button>
+      }
+    </span>
+  </header>
+
+  <div class="sd-body">
+
+    <!-- ── Colonne principale ── -->
+    <div class="sd-main">
+
+      <h3 class="sd-section">Articles <span class="sd-count">{{ sale.total_quantity }}</span></h3>
+
+      <div class="sd-rows">
+        <div class="sd-row sd-row--head" [class.sd-row--margin]="canSeeMargin">
+          <span>Produit</span>
+          <span class="sd-num">Qté</span>
+          <span class="sd-num">Prix</span>
+          <span class="sd-num">Remise</span>
+          <span class="sd-num">Total</span>
+          @if (canSeeMargin) { <span class="sd-num no-print">Marge</span> }
         </div>
 
-        <div class="account-warning" *ngIf="overCreditLimit">
-          Le client lié dépasse actuellement sa limite de crédit configurée.
-        </div>
-      </div>
-
-      <div class="detail-section">
-        <h3 class="section-title">Articles ({{ sale.total_quantity }})</h3>
-        <div class="table-responsive mt-3">
-          <table class="table table-sm text-left">
-            <thead>
-              <tr>
-                <th class="col-produit">Produit</th>
-                <th class="text-center">Qté</th>
-                <th class="no-print text-center">Achat</th>
-                <th class="text-center">Prix</th>
-                <th class="text-center">Remise</th>
-                <th class="text-center">Total</th>
-                <th class="no-print text-center">Marge</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of sale.items">
-                <td class="col-produit">
-                  <span class="badge badge-primary mr-1" *ngIf="getProduct(item)?.brand">{{ getProduct(item)!.brand!.name }}</span>
-                  <button class="product-link fw-medium" type="button" (click)="openProductView(item)" *ngIf="getProduct(item); else plainRef" title="Voir le produit">{{ getProduct(item)?.reference || item.product_name || ('Produit #' + item.product_id) }}</button>
-                  <ng-template #plainRef><span class="fw-medium">{{ item.product_name || ('Produit #' + item.product_id) }}</span></ng-template>
-                  <span class="text-muted ml-1" *ngIf="getProduct(item)?.tyre?.tire_width">{{ getProduct(item)!.tyre!.tire_width }}/{{ getProduct(item)!.tyre!.tire_height }}R{{ getProduct(item)!.tyre!.tire_diameter }}</span>
-                  <span class="text-muted ml-1" *ngIf="getProduct(item)?.profile">— {{ getProduct(item)!.profile }}</span>
-                </td>
-                <td class="text-center">{{ item.quantity }}</td>
-                <td class="no-print text-center">{{ item.purchase_price | number:'1.2-2' }}</td>
-                <td class="text-center">{{ (item.selling_price ?? item.unit_price) | number:'1.2-2' }}</td>
-                <td class="text-center">{{ (item.discount || 0) | number:'1.0-2' }}%</td>
-                <td class="text-center">{{ lineTotal(item) | number:'1.2-2' }}</td>
-                <td class="no-print text-center" [class.text-success]="(lineTotal(item) - (item.purchase_price || 0) * item.quantity) > 0" [class.text-danger]="(lineTotal(item) - (item.purchase_price || 0) * item.quantity) < 0">{{ (lineTotal(item) - (item.purchase_price || 0) * item.quantity) | number:'1.2-2' }}</td>
-              </tr>
-              <tr *ngIf="!sale.items || sale.items.length === 0">
-                <td colspan="7" class="text-center text-muted">Aucun article.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="detail-section">
-        <h3 class="section-title">Finance</h3>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="label">Total Articles</span>
-            <span class="value">{{ sale.total_quantity }}</span>
-          </div>
-          <div class="detail-item no-print">
-            <span class="label">Total Achat</span>
-            <span class="value">{{ sale.total_purchase | number:'1.2-2' }} DH</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Total Vente</span>
-            <span class="value fw-semibold">{{ (sale.total_sale ?? sale.total) | number:'1.2-2' }} DH</span>
-          </div>
-          <div class="detail-item no-print">
-            <span class="label">Marge</span>
-            <span class="value fw-semibold" [class.text-success]="(sale.margin || 0) > 0" [class.text-danger]="(sale.margin || 0) < 0">{{ sale.margin | number:'1.2-2' }} DH</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="detail-section">
-        <h3 class="section-title">Logistique & Suivi</h3>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="label">Transport</span>
-            <span class="value">{{ sale.carrier?.name || '-' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">N° Suivi</span>
-            <span class="value">{{ sale.tracking_number || '-' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Partenaire</span>
-            <span class="value">{{ sale.partner?.name || '-' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Service</span>
-            <span class="value">{{ sale.service || '-' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Commercial</span>
-            <span class="value">{{ sale.commercial?.name || '-' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Mode(s) Paiement</span>
-            <span class="value method-badges" *ngIf="sale.payment_methods?.length; else noSaleDetailMethod">
-              <span class="badge badge-method" *ngFor="let m of sale.payment_methods" [ngClass]="paymentMethodClass(m)">{{ m }}</span>
+        @for (item of sale.items; track item.id) {
+          <div class="sd-row" [class.sd-row--margin]="canSeeMargin">
+            <span class="sd-product">
+              <span class="sd-product-main">
+                @if (getProduct(item)?.brand) { <span class="sd-brand">{{ getProduct(item)!.brand!.name }}</span> }
+                @if (getProduct(item)) {
+                  <button class="sd-link" type="button" (click)="openProductView(item)" title="Voir le produit">{{ getProduct(item)?.reference || item.product_name || ('Produit #' + item.product_id) }}</button>
+                } @else {
+                  <span class="sd-ref">{{ item.product_name || ('Produit #' + item.product_id) }}</span>
+                }
+              </span>
+              <span class="sd-product-sub">
+                @if (getProduct(item)?.tyre?.tire_width) {
+                  {{ getProduct(item)!.tyre!.tire_width }}/{{ getProduct(item)!.tyre!.tire_height }}R{{ getProduct(item)!.tyre!.tire_diameter }}
+                }
+                @if (getProduct(item)?.profile) { — {{ getProduct(item)!.profile }} }
+              </span>
             </span>
-            <ng-template #noSaleDetailMethod><span class="value">-</span></ng-template>
+            <span class="sd-num">{{ item.quantity }}</span>
+            <span class="sd-num">{{ (item.selling_price ?? item.unit_price) | number:'1.2-2' }}</span>
+            <span class="sd-num">{{ (item.discount || 0) | number:'1.0-2' }}%</span>
+            <span class="sd-num sd-strong">{{ lineTotal(item) | number:'1.2-2' }}</span>
+            @if (canSeeMargin) {
+              <span class="sd-num no-print" [class.sd-gain]="lineMargin(item) > 0" [class.sd-loss]="lineMargin(item) < 0">
+                {{ lineMargin(item) | number:'1.2-2' }}
+              </span>
+            }
           </div>
-          <div class="detail-item">
-            <span class="label">Statut</span>
-            <span class="value badge" [class.badge-success]="sale.status === 'LIVRE' || sale.status === 'MONTE' || sale.status === 'TERMINEE'" [class.badge-warning]="sale.status === 'EN COURS'" [class.badge-danger]="sale.status === 'ANNULE'">{{ sale.status }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Paiement</span>
-            <span class="value badge" [class.badge-success]="sale.payment_status === 'PAYE'" [class.badge-warning]="sale.payment_status === 'PARTIEL'" [class.badge-danger]="sale.payment_status === 'NON PAYE'">{{ sale.payment_status }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Date Livraison</span>
-            <span class="value">{{ sale.delivery_date ? (sale.delivery_date | date:'dd/MM/yyyy') : '-' }}</span>
-          </div>
-          <div class="detail-item full" *ngIf="sale.comments">
-            <span class="label">Commentaires</span>
-            <span class="value">{{ sale.comments }}</span>
-          </div>
-        </div>
+        } @empty {
+          <p class="sd-state">Aucun article sur cette vente.</p>
+        }
       </div>
 
-      <div class="detail-section" *ngIf="sale.payments && sale.payments.length > 0">
-        <h3 class="section-title">Historique des paiements</h3>
-        <div class="table-responsive mt-3">
-          <table class="table table-sm text-left">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th class="text-right">Montant</th>
-                <th>Mode</th>
-                <th>Référence</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let p of sale.payments">
-                <td>{{ p.date | date:'dd/MM/yyyy' }}</td>
-                <td class="text-right fw-semibold">{{ p.amount | number:'1.2-2' }} DH</td>
-                <td>{{ p.method || '-' }}</td>
-                <td class="text-muted">{{ p.reference || p.notes || '-' }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      <!-- La livraison tient en une ligne : elle n'a jamais mérité un bloc. -->
+      <div class="sd-strip">
+        <span class="sd-strip-label">Livraison</span>
+        <span class="sd-strip-item"><em>Transport</em> {{ sale.carrier?.name || '—' }}</span>
+        <span class="sd-strip-item"><em>Suivi</em> {{ sale.tracking_number || '—' }}</span>
+        <span class="sd-strip-item"><em>Service</em> {{ sale.service || '—' }}</span>
+        <span class="sd-strip-item"><em>Date</em> {{ sale.delivery_date ? (sale.delivery_date | date:'dd/MM/yyyy') : '—' }}</span>
       </div>
 
-      <div class="detail-section no-print">
+      @if (sale.comments) {
+        <p class="sd-note">{{ sale.comments }}</p>
+      }
+
+      <h3 class="sd-section">
+        Paiements
+        @if (sale.payments?.length) { <span class="sd-count">{{ sale.payments!.length }}</span> }
+      </h3>
+
+      @if (sale.payments?.length) {
+        <div class="sd-rows">
+          <div class="sd-row sd-row--pay sd-row--head">
+            <span>Date</span>
+            <span>Mode</span>
+            <span>Référence</span>
+            <span class="sd-num">Montant</span>
+          </div>
+          @for (p of sale.payments; track p.id) {
+            <div class="sd-row sd-row--pay">
+              <span class="sd-date">{{ p.date | date:'dd/MM/yyyy' }}</span>
+              <span>
+                <span class="sd-method" [ngClass]="paymentMethodClass(p.method || '')">{{ p.method || '—' }}</span>
+              </span>
+              <span class="sd-muted">{{ p.reference || p.notes || '—' }}</span>
+              <span class="sd-num sd-strong sd-gain">{{ p.amount | number:'1.2-2' }}</span>
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="sd-state">Aucun paiement enregistré. Il reste {{ amountDue | number:'1.2-2' }} DH à encaisser.</p>
+      }
+
+      <div class="no-print">
         <app-shipment-change-list
           [requests]="shipmentRequests()"
           [loading]="loadingShipmentRequests()"
@@ -218,37 +156,75 @@
           (delete)="deleteShipmentRequest($event)"
         />
       </div>
-
-      <div class="detail-section meta">
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="label">Créé le</span>
-            <span class="value text-muted">{{ sale.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Modifié le</span>
-            <span class="value text-muted">{{ sale.updated_at | date:'dd/MM/yyyy HH:mm' }}</span>
-          </div>
-        </div>
-      </div>
     </div>
 
-    <div class="modal-footer">
-      <div class="modal-footer-actions">
-        <button class="btn btn-primary" (click)="openPrint()">Imprimer</button>
-        <button *ngIf="canEdit" class="btn btn-secondary" (click)="edit.emit()"><app-icon name="edit" [size]="14" /> Modifier</button>
-        <button class="btn btn-secondary" (click)="close.emit()">Fermer</button>
-      </div>
-    </div>
+    <!-- ── Colonne de droite ── -->
+    <aside class="sd-side">
+
+      <section class="sd-panel">
+        <h3 class="sd-panel-title">Récapitulatif</h3>
+        <span class="sd-kv"><span>Articles</span><strong>{{ sale.total_quantity }}</strong></span>
+        <span class="sd-kv"><span>Total vente</span><strong>{{ saleTotal | number:'1.2-2' }}</strong></span>
+        <span class="sd-kv"><span>Payé</span><strong class="sd-gain">{{ amountPaid | number:'1.2-2' }}</strong></span>
+
+        <!-- Le reste dû est encadré : c'est la seule ligne sur laquelle on agit. -->
+        <span class="sd-due" [class.sd-due--settled]="amountDue === 0">
+          <span>Reste dû</span>
+          <strong>{{ amountDue | number:'1.2-2' }} DH</strong>
+        </span>
+      </section>
+
+      @if (canSeeMargin) {
+        <section class="sd-panel no-print">
+          <h3 class="sd-panel-title">Marge</h3>
+          <span class="sd-kv"><span>Total achat</span><strong>{{ sale.total_purchase | number:'1.2-2' }}</strong></span>
+          <span class="sd-kv">
+            <span>Marge brute</span>
+            <strong [class.sd-gain]="(sale.margin || 0) > 0" [class.sd-loss]="(sale.margin || 0) < 0">
+              {{ sale.margin | number:'1.2-2' }}
+            </strong>
+          </span>
+        </section>
+      }
+
+      @if (sale.client_id) {
+        <section class="sd-panel">
+          <h3 class="sd-panel-title">Client</h3>
+          <a class="sd-client" [routerLink]="['/clients', sale.client_id]">{{ clientName }} →</a>
+          <span class="sd-client-meta">{{ clientPhone }}@if (clientCity !== '-') { · {{ clientCity }} }</span>
+
+          @if (showAccountWarning) {
+            <span class="sd-kv"><span>Solde total dû</span><strong [class.sd-loss]="outstandingBalance > 0">{{ outstandingBalance | number:'1.2-2' }}</strong></span>
+            <span class="sd-kv"><span>Limite de crédit</span><strong>{{ creditLimit | number:'1.2-2' }}</strong></span>
+            <span class="sd-kv"><span>Ventes</span><strong>{{ sale.client_summary?.sales_count || 0 }}</strong></span>
+
+            @if (overCreditLimit) {
+              <p class="sd-warn">Ce client dépasse actuellement sa limite de crédit.</p>
+            }
+          }
+        </section>
+      }
+
+      <section class="sd-panel">
+        <h3 class="sd-panel-title">Suivi</h3>
+        <span class="sd-kv"><span>Facture</span><strong>{{ sale.with_invoice ? 'Oui' : 'Non' }}</strong></span>
+        @if (sale.payment_methods?.length) {
+          <span class="sd-kv">
+            <span>Mode(s)</span>
+            <strong class="sd-methods">
+              @for (m of sale.payment_methods; track m) {
+                <span class="sd-method" [ngClass]="paymentMethodClass(m)">{{ m }}</span>
+              }
+            </strong>
+          </span>
+        }
+        <span class="sd-kv"><span>Créée le</span><strong>{{ sale.created_at | date:'dd/MM/yyyy HH:mm' }}</strong></span>
+        <span class="sd-kv"><span>Modifiée le</span><strong>{{ sale.updated_at | date:'dd/MM/yyyy HH:mm' }}</strong></span>
+      </section>
+    </aside>
   </div>
 </div>
 
-<app-product-detail
-  *ngIf="viewingProduct()"
-  [product]="viewingProduct()!"
-  (close)="viewingProduct.set(null)"
-  (edit)="editProductInNewTab($event)"
-/>
 
 <app-document-print
   *ngIf="printDoc()"
@@ -256,20 +232,21 @@
   (closed)="printDoc.set(null)"
 />
 
-<div class="modal-overlay" *ngIf="showShipmentForm()" (click)="closeShipmentForm()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>{{ editingShipmentRequest() ? 'Modifier la demande' : 'Nouvelle demande de modification' }}</h2>
-      <button class="btn-close" (click)="closeShipmentForm()"><app-icon name="close" [size]="14" /></button>
-    </div>
+<!-- Refonte 2b : la demande de modification passe par la coque de volet. -->
+@if (showShipmentForm()) {
+  <app-side-panel
+    kicker="Expédition"
+    [title]="editingShipmentRequest() ? 'Modifier la demande' : 'Nouvelle demande de modification'"
+    [subtitle]="'Vente ' + sale.id"
+    (dismiss)="closeShipmentForm()">
     <app-shipment-change-form
       [sale]="sale"
       [request]="editingShipmentRequest()"
       (save)="onShipmentFormSubmit($event)"
       (cancel)="closeShipmentForm()"
     />
-  </div>
-</div>
+  </app-side-panel>
+}
 
 <app-shipment-change-print
   *ngIf="shipmentPrintDoc()"

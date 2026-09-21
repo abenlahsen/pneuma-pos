@@ -1,60 +1,37 @@
 @use '../../_variables' as *;
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
+/* Refonte 2b, gabarit 16b — ce que l'achat ajoute au gabarit de la vente.
+   La géométrie et la palette viennent de sale-detail.component.scss, que ce
+   composant importe avant celui-ci ; il ne reste ici que ses deux registres
+   propres et le bandeau d'erreur d'action. */
 
-// ── Utility ───────────────────────────────────────────────────────────────────
-.text-warning { color: #a16207; }
-
-// ── Badges ────────────────────────────────────────────────────────────────────
-.badge-purple    { background: rgba(107, 70, 193, 0.10); color: #6d28d9; }
-.badge-success   { background: rgba(34, 197, 94, 0.10);  color: #15803d; }
-.badge-blue      { background: rgba($invoice-color, 0.10); color: #1d4ed8; }
-.badge-secondary { background: rgba(100, 116, 139, 0.10); color: #475569; }
-
-// ── Table ─────────────────────────────────────────────────────────────────────
-.table-responsive { overflow-x: auto; }
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-
-  th {
-    padding: 0.6rem 0.875rem;
-    font-size: 0.6875rem;
-    font-weight: 700;
-    color: $text-light;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    border-bottom: 2px solid $border-subtle;
-    background: $bg-subtle;
-    white-space: nowrap;
-  }
-
-  td {
-    padding: 0.8rem 0.875rem;
-    border-bottom: 1px solid $border-subtle;
-    vertical-align: top;
-    color: $border-strong;
-    font-size: 0.875rem;
-  }
-
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover td { background: $bg-subtle; }
+.sd-row--buy {
+  grid-template-columns: minmax(0, 1fr) 62px 120px 120px;
 }
 
-.col-produit {
-  width: 60%;
-  white-space: normal;
+.sd-row--ret {
+  grid-template-columns: 96px minmax(0, 1fr) 84px 120px 44px;
 }
 
-.product-link {
-  background: none;
-  border: none;
-  padding: 0;
-  color: $primary;
-  font-size: inherit;
+.sd-row-action {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.sd-icon {
+  width: 26px;
+  height: 26px;
+  border: 1px solid $border-strong;
+  background: $bg-card;
+  color: $text-dark;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  text-align: left;
+}
 
-  &:hover { text-decoration: underline; }
+.sd-note--error {
+  border-left-color: $expense-color;
+  background: $overdue-bg;
+  color: $alert-ink;
 }

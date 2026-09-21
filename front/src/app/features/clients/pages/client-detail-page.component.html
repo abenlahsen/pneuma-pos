@@ -1,501 +1,292 @@
-<section class="client-detail-page">
+<!-- Refonte 2b, gabarit 16a — deux rangées : barre de 60 px, corps en
+     minmax(0,1fr) 400px. Plus d'onglets, plus de sections repliables : le
+     relevé est la colonne principale, le signalétique passe à droite. -->
+<div class="cd-screen">
 
-  <!-- ── En-tête ── -->
-  <div class="page-header">
-    <a class="back-link" [routerLink]="['/clients']"><app-icon name="chevron-left" [size]="14" /> Retour aux clients</a>
+  <header class="cd-bar">
+    <a class="cd-back" [routerLink]="['/clients']">
+      <app-icon name="chevron-left" [size]="15" /> Clients
+    </a>
 
-    @if (profile()?.client) {
-      <div class="client-hero">
-        <div class="client-avatar">{{ profile()!.client!.name.charAt(0).toUpperCase() }}</div>
+    @if (profile()?.client; as client) {
+      <span class="cd-identity">
+        <span class="cd-name">{{ client.name }}</span>
+        <span class="cd-meta">
+          Compte {{ client.id }}@if (client.city) { · {{ client.city }} }@if (client.phone) { · {{ client.phone }} }
+        </span>
+      </span>
 
-        <div class="client-identity">
-          <p class="eyebrow">Profil client</p>
-          <h1>{{ profile()!.client!.name }}</h1>
-          <div class="client-meta">
-            @if (profile()?.client?.phone) {
-              <span class="meta-item"><app-icon name="phone" [size]="14" /> {{ profile()!.client!.phone }}</span>
-            }
-            @if (profile()?.client?.city) {
-              <span class="meta-item"><app-icon name="map-pin" [size]="14" /> {{ profile()!.client!.city }}</span>
-            }
-            @if (profile()?.client?.category) {
-              <span class="tag">{{ profile()!.client!.category }}</span>
-            }
-            <span class="badge"
-                  [class.badge-success]="profile()?.client?.is_active !== false"
-                  [class.badge-danger]="profile()?.client?.is_active === false">
-              {{ profile()?.client?.is_active === false ? 'Inactif' : 'Actif' }}
-            </span>
-          </div>
-        </div>
+      <span class="cd-badges">
+        @if (client.category) {
+          <span class="cd-badge">{{ client.category | uppercase }}</span>
+        }
+        @if (client.is_active === false) {
+          <span class="cd-badge">INACTIF</span>
+        }
+        @if (worstOverdueDays(); as days) {
+          <span class="cd-badge cd-badge--late">{{ days }} J DE RETARD</span>
+        }
+      </span>
 
-        <div class="header-actions">
-          @if (authService.hasPermission('create sales')) {
-            <button type="button" class="btn btn-primary" (click)="openNewSaleForm()">
-              <app-icon name="tag" [size]="14" /> Nouvelle vente
-            </button>
-          }
-          @if (authService.hasPermission('manage sale-payments')) {
-            <button type="button" class="btn btn-primary" (click)="openPaymentModal()">
-              <app-icon name="credit-card" [size]="14" /> Régler des ventes
-            </button>
-          }
-          <button type="button" class="btn btn-secondary" (click)="openEditModal()">
-            <app-icon name="edit" [size]="14" /> Modifier
+      <span class="cd-actions">
+        @if (authService.hasPermission('edit clients')) {
+          <button type="button" class="cd-btn" (click)="openEditor()">Modifier</button>
+        }
+        @if (authService.hasPermission('manage sale-payments')) {
+          <button type="button" class="cd-btn cd-btn--dark" (click)="openPaymentModal()">Encaisser</button>
+        }
+        @if (authService.hasPermission('create sales')) {
+          <button type="button" class="cd-btn cd-btn--primary" (click)="openNewSaleForm()">Nouvelle vente</button>
+        }
+        @if (authService.hasPermission('delete clients')) {
+          <button type="button" class="cd-btn" (click)="deleteClient()" [disabled]="deleting()" title="Supprimer ce client">
+            <app-icon name="trash" [size]="14" />
           </button>
-          @if (authService.hasPermission('delete clients')) {
-            <button type="button" class="btn btn-danger" (click)="deleteClient()" [disabled]="deleting()">
-              <app-icon name="trash" [size]="14" /> Supprimer
-            </button>
-          }
-        </div>
-      </div>
+        }
+      </span>
     }
-  </div>
+  </header>
 
-  <!-- ── États de chargement / erreur ── -->
   @if (loading()) {
-    <section class="panel centered"><p>Chargement du profil client...</p></section>
+    <p class="cd-state">Chargement de la fiche client…</p>
   } @else if (errorMessage()) {
-    <section class="panel centered error-panel"><p>{{ errorMessage() }}</p></section>
+    <p class="cd-state cd-state--error">{{ errorMessage() }}</p>
   } @else if (profile()?.client) {
 
-    <!-- ── KPIs ── -->
-    <section class="kpi-grid">
-      <article class="kpi-card">
-        <span class="kpi-icon"><app-icon name="tag" [size]="14" /></span>
-        <div class="kpi-body">
-          <p class="kpi-label">OPÉRATIONS</p>
-          <p class="kpi-val">{{ profile()?.sales_count ?? 0 }}</p>
-        </div>
-      </article>
+    <div class="cd-body">
 
-      <article class="kpi-card">
-        <span class="kpi-icon"><app-icon name="banknote" [size]="14" /></span>
-        <div class="kpi-body">
-          <p class="kpi-label">TOTAL ACHETÉ</p>
-          <p class="kpi-val">{{ (profile()?.total_purchased ?? 0) | number:'1.2-2' }} <small>DH</small></p>
-        </div>
-      </article>
+      <!-- ── Colonne principale : les chiffres, l'ancienneté, le registre ── -->
+      <div class="cd-main">
 
-      <article class="kpi-card" [class.kpi-card--danger]="(profile()?.outstanding_balance ?? 0) > 0">
-        <span class="kpi-icon"><app-icon name="clock" [size]="14" /></span>
-        <div class="kpi-body">
-          <p class="kpi-label">SOLDE IMPAYÉ</p>
-          <p class="kpi-val">{{ (profile()?.outstanding_balance ?? 0) | number:'1.2-2' }} <small>DH</small></p>
-        </div>
-      </article>
+        <div class="cd-figures">
+          <div class="cd-figures-row">
+            <span class="cd-headline">
+              <span class="cd-headline-label">Solde dû</span>
+              <span class="cd-headline-value" [class.cd-headline-value--due]="outstanding() > 0">
+                {{ outstanding() | number:'1.2-2' }} <small>DH</small>
+              </span>
+            </span>
 
-      <article class="kpi-card">
-        <span class="kpi-icon"><app-icon name="calendar" [size]="14" /></span>
-        <div class="kpi-body">
-          <p class="kpi-label">DERNIÈRE OPÉRATION</p>
-          <p class="kpi-val kpi-val--date">
-            {{ profile()?.last_sale_date ? (profile()!.last_sale_date | date:'dd/MM/yyyy') : '—' }}
-          </p>
-        </div>
-      </article>
-    </section>
-
-    <!-- Refonte 2b : l'age de la dette remplace le seul total impaye -->
-    <section class="aging" *ngIf="aging() as ag">
-      <div class="aging-head">
-        <span class="aging-title">&Acirc;ge de la dette</span>
-        <span class="aging-total">{{ ag.total | number:'1.2-2' }} DH</span>
-        <span class="aging-credit" *ngIf="ag.credit_left !== null">
-          Cr&eacute;dit restant
-          <strong [class.aging-over]="ag.credit_left < 0">{{ ag.credit_left | number:'1.0-0' }} DH</strong>
-          sur {{ ag.credit_limit | number:'1.0-0' }}
-        </span>
-        <span class="aging-credit" *ngIf="ag.credit_left === null">Aucune limite de cr&eacute;dit fix&eacute;e</span>
-      </div>
-
-      <div class="aging-bar" *ngIf="ag.total > 0">
-        <span class="aging-seg aging-seg--1" [style.width.%]="agingShare(ag.buckets['0-30'])"></span>
-        <span class="aging-seg aging-seg--2" [style.width.%]="agingShare(ag.buckets['31-60'])"></span>
-        <span class="aging-seg aging-seg--3" [style.width.%]="agingShare(ag.buckets['61-90'])"></span>
-        <span class="aging-seg aging-seg--4" [style.width.%]="agingShare(ag.buckets['90+'])"></span>
-      </div>
-
-      <div class="aging-grid">
-        <span class="aging-cell"><span class="aging-label">0-30 j</span><span class="aging-amount">{{ ag.buckets['0-30'] | number:'1.0-0' }}</span></span>
-        <span class="aging-cell"><span class="aging-label">31-60 j</span><span class="aging-amount">{{ ag.buckets['31-60'] | number:'1.0-0' }}</span></span>
-        <span class="aging-cell"><span class="aging-label">61-90 j</span><span class="aging-amount">{{ ag.buckets['61-90'] | number:'1.0-0' }}</span></span>
-        <span class="aging-cell aging-cell--late"><span class="aging-label">+90 j</span><span class="aging-amount">{{ ag.buckets['90+'] | number:'1.0-0' }}</span></span>
-      </div>
-
-      <p class="aging-delay" *ngIf="paymentDelay() as d">
-        <ng-container *ngIf="d.observed_days !== null">
-          D&eacute;lai de paiement r&eacute;el <strong>{{ d.observed_days }} j</strong>
-          <ng-container *ngIf="d.contractual_days !== null"> face au contractuel {{ d.contractual_days }} j</ng-container>
-          <span class="aging-sample"> &middot; observ&eacute; sur {{ d.observed_sample }} ventes sold&eacute;es</span>
-        </ng-container>
-        <ng-container *ngIf="d.observed_days === null">
-          Pas encore assez de ventes sold&eacute;es pour mesurer un d&eacute;lai r&eacute;el<ng-container *ngIf="d.contractual_days !== null"> &middot; contractuel {{ d.contractual_days }} j</ng-container>
-        </ng-container>
-      </p>
-    </section>
-
-    <!-- ── Infos + Finances ── -->
-    <section class="details-grid">
-      <article class="panel">
-        <h2 class="panel-title">Informations client</h2>
-        <dl class="info-list">
-          <div class="info-row">
-            <dt>Téléphone</dt>
-            <dd>{{ profile()?.client?.phone || '—' }}</dd>
+            <span class="cd-context">
+              <span class="cd-ctx">
+                <span class="cd-ctx-label">Total acheté</span>
+                <span class="cd-ctx-value">{{ (statement()?.summary?.total_purchased ?? profile()?.total_purchased ?? 0) | number:'1.0-0' }}</span>
+              </span>
+              <span class="cd-ctx">
+                <span class="cd-ctx-label">Opérations</span>
+                <span class="cd-ctx-value">{{ profile()?.sales_count ?? 0 }}</span>
+              </span>
+              <span class="cd-ctx">
+                <span class="cd-ctx-label">Délai réel</span>
+                <span class="cd-ctx-value">{{ observedDelayLabel() }}</span>
+              </span>
+            </span>
           </div>
-          <div class="info-row">
-            <dt>Email</dt>
-            <dd>{{ profile()?.client?.email || '—' }}</dd>
-          </div>
-          <div class="info-row">
-            <dt>Ville</dt>
-            <dd>{{ profile()?.client?.city || '—' }}</dd>
-          </div>
-          <div class="info-row">
-            <dt>Adresse</dt>
-            <dd>{{ profile()?.client?.address || '—' }}</dd>
-          </div>
-          @if (profile()?.client?.notes) {
-            <div class="info-row">
-              <dt>Notes</dt>
-              <dd>{{ profile()!.client!.notes }}</dd>
-            </div>
-          }
-        </dl>
-      </article>
 
-      <article class="panel">
-        <h2 class="panel-title">Paramètres financiers</h2>
-        <dl class="info-list">
-          <div class="info-row">
-            <dt>Limite de crédit</dt>
-            <dd>{{ (profile()?.client?.credit_limit ?? 0) | number:'1.2-2' }} DH</dd>
-          </div>
-          <div class="info-row">
-            <dt>Solde d'ouverture</dt>
-            <dd>{{ (profile()?.client?.opening_balance ?? 0) | number:'1.2-2' }} DH</dd>
-          </div>
-          <div class="info-row">
-            <dt>Délai de paiement</dt>
-            <dd>
-              {{ profile()?.client?.payment_terms_days != null
-                  ? profile()!.client!.payment_terms_days + ' jours'
-                  : '—' }}
-            </dd>
-          </div>
-          <div class="info-row">
-            <dt>Mode de paiement</dt>
-            <dd>{{ profile()?.client?.default_payment_method || '—' }}</dd>
-          </div>
-        </dl>
-      </article>
-    </section>
-
-    <!-- ── Véhicules ── -->
-    <section class="panel vehicles-panel">
-      <div class="panel-header">
-        <h2 class="panel-title">
-          Véhicules
-          @if (vehicles().length > 0) {
-            <span class="count-pill">{{ vehicles().length }}</span>
-          }
-        </h2>
-        @if (!showVehicleForm()) {
-          <button type="button" class="btn btn-sm btn-outline" (click)="openAddVehicle()">
-            + Ajouter
-          </button>
-        }
-      </div>
-
-      @if (showVehicleForm()) {
-        <app-vehicle-form
-          [clientId]="profile()!.client!.id"
-          [vehicle]="editingVehicle()"
-          (saved)="onVehicleSaved($event)"
-          (cancelled)="showVehicleForm.set(false); editingVehicle.set(null)"
-        />
-      }
-
-      @if (vehicles().length > 0) {
-        <div class="vehicles-list">
-          @for (v of vehicles(); track v.id) {
-            <div class="vehicle-card" [class.vehicle-inactive]="!v.is_active">
-              <div class="vehicle-card-header">
-                <span class="vehicle-plate">{{ v.plate }}</span>
-                <span class="vehicle-brand">{{ v.brand }} {{ v.model_name }}</span>
-                <span class="badge"
-                      [class.badge-success]="v.is_active"
-                      [class.badge-neutral]="!v.is_active">
-                  {{ v.is_active ? 'Actif' : 'Inactif' }}
+          @if (aging(); as ag) {
+            <div class="cd-aging">
+              <div class="cd-aging-head">
+                <span class="cd-aging-title">Âge de la dette</span>
+                <span class="cd-aging-hint">cliquer une tranche filtre le relevé</span>
+                <span class="cd-aging-credit">
+                  @if (ag.credit_left !== null) {
+                    Limite {{ ag.credit_limit | number:'1.0-0' }} · reste
+                    <strong [class.cd-over]="ag.credit_left < 0">{{ ag.credit_left | number:'1.0-0' }}</strong>
+                  } @else {
+                    Aucune limite de crédit fixée
+                  }
                 </span>
-                <div class="vehicle-card-actions">
-                  <button type="button" class="btn-icon" (click)="editVehicle(v)" title="Modifier"><app-icon name="edit" [size]="14" /></button>
-                  <button type="button" class="btn-icon btn-icon-danger" (click)="deleteVehicle(v)" title="Supprimer"><app-icon name="trash" [size]="14" /></button>
+              </div>
+
+              @if (ag.total > 0) {
+                <div class="cd-aging-bar">
+                  <span class="cd-seg cd-seg--1" [style.width.%]="agingShare(ag.buckets['0-30'])"></span>
+                  <span class="cd-seg cd-seg--2" [style.width.%]="agingShare(ag.buckets['31-60'])"></span>
+                  <span class="cd-seg cd-seg--3" [style.width.%]="agingShare(ag.buckets['61-90'])"></span>
+                  <span class="cd-seg cd-seg--4" [style.width.%]="agingShare(ag.buckets['90+'])"></span>
                 </div>
-              </div>
-              <div class="vehicle-card-body">
-                <span>Mise en circulation :
-                  {{ v.circulation_month < 10 ? '0' : '' }}{{ v.circulation_month }}/{{ v.circulation_year }}</span>
-                @if (v.vin) { <span>VIN : {{ v.vin }}</span> }
-                @if (v.notes) { <span>{{ v.notes }}</span> }
-              </div>
-            </div>
-          }
-        </div>
-      } @else if (!showVehicleForm()) {
-        <div class="empty-state">
-          <p>Aucun véhicule enregistré pour ce client.</p>
-        </div>
-      }
-    </section>
+              }
 
-    <!-- ── Historique & Relevé ── -->
-    <section class="panel tab-panel">
-      <div class="tab-nav">
-        <button type="button" class="tab-btn"
-                [class.active]="activeTab() === 'overview'"
-                (click)="setTab('overview')">
-          <app-icon name="tag" [size]="14" /> Historique des opérations
-        </button>
-        <button type="button" class="tab-btn"
-                [class.active]="activeTab() === 'statement'"
-                (click)="setTab('statement')">
-          <app-icon name="package" [size]="14" /> Relevé de compte
-        </button>
-      </div>
-
-      <!-- Historique des opérations -->
-      @if (activeTab() === 'overview') {
-        @if (profileLoading()) {
-          <div class="empty-state"><p>Chargement de l'historique...</p></div>
-        } @else if (!salesHistory().length) {
-          <div class="empty-state"><p>Aucun historique pour ce client.</p></div>
-        } @else {
-          <div class="table-wrapper">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>RÉFÉRENCE</th>
-                  <th>DATE</th>
-                  <th>STATUT</th>
-                  <th class="col-right">TOTAL</th>
-                  <th class="col-right">PAYÉ</th>
-                  <th class="col-right">SOLDE</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (sale of salesHistory(); track trackByRowId($index, sale)) {
-                  <tr>
-                    <td class="ref-cell">
-                      {{ sale.reference || sale.invoice_number || (sale.type === 'service_order' ? ('OS #' + sale.id) : ('Vente #' + sale.id)) }}
-                    </td>
-                    <td>{{ (sale.sale_date || sale.created_at) ? ((sale.sale_date || sale.created_at) | date:'dd/MM/yyyy') : '—' }}</td>
-                    <td>
-                      <span class="badge" [ngClass]="paymentStatusClass(sale.payment_status)">
-                        {{ sale.payment_status || sale.status || '—' }}
-                      </span>
-                    </td>
-                    <td class="col-right num">{{ (sale.total_amount ?? 0) | number:'1.2-2' }} DH</td>
-                    <td class="col-right num">{{ (sale.amount_paid ?? 0) | number:'1.2-2' }} DH</td>
-                    <td class="col-right num" [class.text-danger]="(sale.balance_due ?? 0) > 0">
-                      {{ (sale.balance_due ?? 0) | number:'1.2-2' }} DH
-                    </td>
-                    <td class="col-right actions-cell">
-                      @if (sale.type === 'service_order') {
-                        <a class="btn-icon" title="Voir l'ordre de service"
-                           [routerLink]="['/service-orders']" [queryParams]="{ id: sale.id }"><app-icon name="link" [size]="14" /></a>
-                      } @else {
-                        <a class="btn-icon" title="Voir la vente"
-                           [routerLink]="['/sales']" [queryParams]="{ id: sale.id }"><app-icon name="link" [size]="14" /></a>
-                      }
-                    </td>
-                  </tr>
+              <div class="cd-aging-grid">
+                @for (b of bucketKeys; track b) {
+                  <button type="button" class="cd-aging-cell"
+                          [class.cd-aging-cell--late]="b === '90+'"
+                          [class.cd-aging-cell--on]="agingBucket() === b"
+                          [attr.aria-pressed]="agingBucket() === b"
+                          (click)="toggleAgingBucket(b)">
+                    <span class="cd-aging-label">{{ bucketLabel(b) }}</span>
+                    <span class="cd-aging-amount">{{ ag.buckets[b] | number:'1.0-0' }}</span>
+                  </button>
                 }
-              </tbody>
-            </table>
-          </div>
-        }
-      }
-
-      <!-- Relevé de compte -->
-      @else {
-        <div class="statement-kpi-row">
-          <div class="stmt-kpi">
-            <p class="kpi-label">SOLDE IMPAYÉ</p>
-            <p class="stmt-val">{{ (statement()?.summary?.outstanding_balance ?? profile()?.outstanding_balance ?? 0) | number:'1.2-2' }} <small>DH</small></p>
-          </div>
-          <div class="stmt-kpi">
-            <p class="kpi-label">TOTAL ACHETÉ</p>
-            <p class="stmt-val">{{ (statement()?.summary?.total_purchased ?? profile()?.total_purchased ?? 0) | number:'1.2-2' }} <small>DH</small></p>
-          </div>
-          <div class="stmt-kpi">
-            <p class="kpi-label">TOTAL PAYÉ</p>
-            <p class="stmt-val">{{ (statement()?.summary?.total_paid ?? 0) | number:'1.2-2' }} <small>DH</small></p>
-          </div>
-          <div class="stmt-kpi">
-            <p class="kpi-label">SOLDE D'OUVERTURE</p>
-            <p class="stmt-val">{{ (statement()?.summary?.opening_balance ?? profile()?.client?.opening_balance ?? 0) | number:'1.2-2' }} <small>DH</small></p>
-          </div>
-        </div>
-
-        @if (statementLoading()) {
-          <div class="empty-state"><p>Chargement du relevé de compte...</p></div>
-        } @else if (statementErrorMessage()) {
-          <div class="empty-state"><p>{{ statementErrorMessage() }}</p></div>
-        } @else {
-          @if (openInvoices().length) {
-            <div class="subsection">
-              <div class="subsection-header" (click)="toggleOpenInvoices()">
-                <h3 class="subsection-title">Factures en cours</h3>
-                <app-icon class="collapse-icon" [name]="openInvoicesCollapsed() ? 'chevron-right' : 'chevron-down'" [size]="12" />
               </div>
-              @if (!openInvoicesCollapsed()) {
-                <div class="table-wrapper">
-                  <table class="table">
-                    <thead>
-                      <tr>
-                        <th>RÉFÉRENCE</th>
-                        <th>DATE</th>
-                        <th class="col-right">TOTAL</th>
-                        <th class="col-right">SOLDE DÛ</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      @for (sale of openInvoices(); track trackByRowId($index, sale)) {
-                        <tr>
-                          <td class="ref-cell">{{ sale.reference || sale.invoice_number || (sale.type === 'service_order' ? ('OS #' + sale.id) : ('Vente #' + sale.id)) }}</td>
-                          <td>{{ (sale.sale_date || sale.created_at) ? ((sale.sale_date || sale.created_at) | date:'dd/MM/yyyy') : '—' }}</td>
-                          <td class="col-right num">{{ (sale.total_amount ?? 0) | number:'1.2-2' }} DH</td>
-                          <td class="col-right num text-danger">{{ (sale.balance_due ?? 0) | number:'1.2-2' }} DH</td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
-                </div>
-              }
             </div>
           }
+        </div>
 
-          <div class="subsection">
-            <div class="subsection-header" (click)="toggleEntries()">
-              <h3 class="subsection-title">Écritures comptables</h3>
-              <app-icon class="collapse-icon" [name]="entriesCollapsed() ? 'chevron-right' : 'chevron-down'" [size]="12" />
-            </div>
-            @if (!entriesCollapsed()) {
-              @if (!statementEntries().length) {
-                <div class="empty-state"><p>Aucune écriture disponible.</p></div>
-              } @else {
-                <div class="table-wrapper">
-                  <table class="table">
-                    <thead>
-                      <tr>
-                        <th>DATE</th>
-                        <th>TYPE</th>
-                        <th>DESCRIPTION</th>
-                        <th class="col-right">DÉBIT</th>
-                        <th class="col-right">CRÉDIT</th>
-                        <th class="col-right">SOLDE</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      @for (entry of statementEntries(); track trackByRowId($index, entry)) {
-                        <tr>
-                          <td>{{ entry.date ? (entry.date | date:'dd/MM/yyyy') : '—' }}</td>
-                          <td>{{ entry.type || '—' }}</td>
-                          <td>{{ entry.description || entry.reference || '—' }}</td>
-                          <td class="col-right num">{{ (entry.debit ?? 0) | number:'1.2-2' }} DH</td>
-                          <td class="col-right num">{{ (entry.credit ?? 0) | number:'1.2-2' }} DH</td>
-                          <td class="col-right num">{{ (entry.balance ?? entry.amount ?? 0) | number:'1.2-2' }} DH</td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
-                </div>
-              }
-            }
-          </div>
-
-          <div class="subsection">
-            <div class="subsection-header" (click)="togglePayments()">
-              <h3 class="subsection-title">Paiements</h3>
-              <app-icon class="collapse-icon" [name]="paymentsCollapsed() ? 'chevron-right' : 'chevron-down'" [size]="12" />
-            </div>
-            @if (!paymentsCollapsed()) {
-              @if (!(statement()?.payments?.length ?? 0)) {
-                <div class="empty-state"><p>Aucun paiement enregistré.</p></div>
-              } @else {
-                <div class="table-wrapper">
-                  <table class="table">
-                    <thead>
-                      <tr>
-                        <th>RÉFÉRENCE</th>
-                        <th>DATE</th>
-                        <th>MÉTHODE</th>
-                        <th class="col-right">MONTANT</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      @for (payment of statement()?.payments ?? []; track trackByRowId($index, payment)) {
-                        <tr>
-                          <td class="ref-cell">
-                            {{ payment.reference || ('Paiement #' + payment.id) }}
-                            @if (payment.multi) {
-                              <span class="badge badge-warning" title="Ce paiement couvre plusieurs ventes">multi</span>
-                            }
-                          </td>
-                          <td>{{ (payment.date || payment.created_at) ? ((payment.date || payment.created_at) | date:'dd/MM/yyyy') : '—' }}</td>
-                          <td>{{ payment.payment_method || '—' }}</td>
-                          <td class="col-right num">{{ (payment.amount ?? 0) | number:'1.2-2' }} DH</td>
-                          <td class="col-right actions-cell">
-                            @if (payment.sale_id) {
-                              <button
-                                type="button"
-                                class="btn-icon"
-                                title="Voir le détail du paiement"
-                                (click)="openPaymentView(payment)"
-                              ><app-icon name="view" [size]="14" /></button>
-                              @if (authService.hasPermission('manage sale-payments')) {
-                                <button
-                                  type="button"
-                                  class="btn-icon"
-                                  title="Supprimer ce paiement"
-                                  [disabled]="deletingPaymentId() === payment.id"
-                                  (click)="deleteStatementPayment(payment)"
-                                ><app-icon name="trash" [size]="14" /></button>
-                              }
-                            }
-                          </td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
-                </div>
-              }
-            }
-          </div>
+        @if (actionError()) {
+          <p class="cd-action-error">{{ actionError() }}</p>
         }
-      }
-    </section>
-  }
-</section>
 
-@if (isEditModalOpen()) {
-  <div class="modal-overlay" (click)="closeEditModal()">
-    <div class="modal-container" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>Modifier Client</h2>
-        <button class="btn-icon" type="button" (click)="closeEditModal()" [disabled]="saving()"><app-icon name="close" [size]="14" /></button>
+        <!-- ── Le registre ── -->
+        <div class="cd-register-head">
+          <span class="cd-register-title">Relevé de compte</span>
+
+          <div class="cd-scopes">
+            <button type="button" class="cd-scope" [class.cd-scope--on]="scope() === 'all'" (click)="setScope('all')">TOUT</button>
+            <button type="button" class="cd-scope cd-scope--due" [class.cd-scope--on]="scope() === 'open'" (click)="setScope('open')">
+              EN COURS {{ openInvoices().length }}
+            </button>
+            <button type="button" class="cd-scope cd-scope--paid" [class.cd-scope--on]="scope() === 'payments'" (click)="setScope('payments')">
+              PAIEMENTS {{ paymentEntryCount() }}
+            </button>
+          </div>
+
+          @if (hasActiveFilter()) {
+            <button type="button" class="cd-clear" (click)="clearFilters()">Tout afficher</button>
+          }
+
+          <span class="cd-register-count">{{ visibleEntries().length }} écriture(s)</span>
+        </div>
+
+        <div class="cd-register">
+          <div class="cd-row cd-row--head">
+            <span>Date</span>
+            <span>Écriture</span>
+            <span class="cd-num">Débit</span>
+            <span class="cd-num">Crédit</span>
+            <span class="cd-num">Solde</span>
+            <span></span>
+          </div>
+
+          <div class="cd-rows">
+            @if (statementLoading()) {
+              <p class="cd-state">Chargement du relevé…</p>
+            } @else if (statementErrorMessage()) {
+              <p class="cd-state cd-state--error">{{ statementErrorMessage() }}</p>
+            } @else if (!visibleEntries().length) {
+              <p class="cd-state">
+                @if (hasActiveFilter()) {
+                  Aucune écriture ne correspond à ce filtre.
+                  <button type="button" class="cd-linkbtn" (click)="clearFilters()">Tout afficher</button>
+                } @else {
+                  Aucune écriture sur ce compte.
+                }
+              </p>
+            } @else {
+              @for (entry of visibleEntries(); track $index) {
+                <div class="cd-row" [class.cd-row--late]="isOverdueEntry(entry) && !isPaymentEntry(entry)">
+                  <span class="cd-date">{{ entry.date ? (entry.date | date:'dd/MM/yy') : '—' }}</span>
+
+                  <span class="cd-label">
+                    <span class="cd-label-main">{{ entry.description || entry.reference || '—' }}</span>
+                    @if (overdueDays(entry); as days) {
+                      <span class="cd-label-sub">Échue depuis {{ days }} jours</span>
+                    }
+                  </span>
+
+                  <span class="cd-num cd-debit">{{ (entry.debit ?? 0) > 0 ? ((entry.debit ?? 0) | number:'1.2-2') : '—' }}</span>
+                  <span class="cd-num cd-credit">{{ (entry.credit ?? 0) > 0 ? ((entry.credit ?? 0) | number:'1.2-2') : '—' }}</span>
+                  <span class="cd-num cd-balance" [class.cd-over]="(entry.balance ?? 0) > 0">
+                    {{ (entry.balance ?? entry.amount ?? 0) | number:'1.2-2' }}
+                  </span>
+
+                  <span class="cd-row-action">
+                    @if (isPaymentEntry(entry) && entry.payment_id) {
+                      <button type="button" class="cd-icon" title="Voir le paiement" (click)="openEntryPayment(entry)">
+                        <app-icon name="credit-card" [size]="14" />
+                      </button>
+                      @if (authService.hasPermission('manage sale-payments') && entryPayment(entry)) {
+                        <button type="button" class="cd-icon" title="Supprimer ce paiement"
+                                [disabled]="deletingPaymentId() === entry.payment_id"
+                                (click)="deleteEntryPayment(entry)">
+                          <app-icon name="trash" [size]="14" />
+                        </button>
+                      }
+                    } @else if (entry.sale_id) {
+                      <a class="cd-icon" title="Ouvrir la vente" [routerLink]="['/sales']" [queryParams]="{ id: entry.sale_id }">
+                        <app-icon name="view" [size]="14" />
+                      </a>
+                    }
+                  </span>
+                </div>
+              }
+            }
+          </div>
+        </div>
       </div>
-      <div class="modal-body">
-        <app-client-form [client]="profile()?.client ?? null" (save)="saveClient($event)" (cancel)="closeEditModal()"></app-client-form>
-      </div>
+
+      <!-- ── Colonne de droite : le signalétique ── -->
+      <aside class="cd-side">
+
+        <section class="cd-panel">
+          <h2 class="cd-panel-title">Conditions</h2>
+          <span class="cd-kv"><span>Limite de crédit</span><strong>{{ (profile()?.client?.credit_limit ?? 0) | number:'1.2-2' }}</strong></span>
+          <span class="cd-kv"><span>Délai accordé</span><strong>{{ profile()?.client?.payment_terms_days != null ? profile()!.client!.payment_terms_days + ' jours' : '—' }}</strong></span>
+          <span class="cd-kv"><span>Mode de paiement</span><strong>{{ profile()?.client?.default_payment_method || '—' }}</strong></span>
+          <span class="cd-kv"><span>Solde d'ouverture</span><strong>{{ (profile()?.client?.opening_balance ?? 0) | number:'1.2-2' }}</strong></span>
+
+          @if (paymentDelay(); as d) {
+            <p class="cd-note">
+              @if (d.observed_days !== null) {
+                Délai accordé {{ d.contractual_days ?? '—' }} j, délai réellement observé
+                <strong>{{ d.observed_days }} j</strong> sur {{ d.observed_sample }} ventes soldées.
+                C'est cet écart que la projection de trésorerie utilise.
+              } @else {
+                Pas encore assez de ventes soldées pour mesurer un délai réel@if (d.contractual_days !== null) { · contractuel {{ d.contractual_days }} j }.
+              }
+            </p>
+          }
+        </section>
+
+        <section class="cd-panel">
+          <div class="cd-panel-head">
+            <h2 class="cd-panel-title">Véhicules</h2>
+            <span class="cd-pill">{{ vehicles().length }}</span>
+            @if (!showVehicleForm() && authService.hasPermission('edit clients')) {
+              <button type="button" class="cd-btn cd-btn--sm" (click)="openAddVehicle()">+ Ajouter</button>
+            }
+          </div>
+
+          @if (showVehicleForm()) {
+            <app-vehicle-form
+              [clientId]="profile()!.client!.id"
+              [vehicle]="editingVehicle()"
+              (saved)="onVehicleSaved($event)"
+              (cancelled)="showVehicleForm.set(false); editingVehicle.set(null)"
+            />
+          }
+
+          @if (vehicles().length) {
+            <div class="cd-vehicles">
+              @for (v of vehicles(); track v.id) {
+                <span class="cd-vehicle" [class.cd-vehicle--off]="!v.is_active">
+                  <span class="cd-plate">{{ v.plate }}</span>
+                  <span class="cd-vehicle-name">{{ v.brand }} {{ v.model_name }}</span>
+                  @if (!v.is_active) { <span class="cd-tag">INACTIF</span> }
+                  <span class="cd-vehicle-actions">
+                    <button type="button" class="cd-icon" (click)="editVehicle(v)" title="Modifier"><app-icon name="edit" [size]="13" /></button>
+                    <button type="button" class="cd-icon" (click)="deleteVehicle(v)" title="Supprimer"><app-icon name="trash" [size]="13" /></button>
+                  </span>
+                </span>
+              }
+            </div>
+          } @else if (!showVehicleForm()) {
+            <p class="cd-note">Aucun véhicule enregistré.</p>
+          }
+        </section>
+
+        <section class="cd-panel">
+          <h2 class="cd-panel-title">Coordonnées</h2>
+          <p class="cd-contact">
+            {{ profile()?.client?.phone || '—' }}@if (profile()?.client?.email) { · {{ profile()!.client!.email }} }<br>
+            {{ profile()?.client?.address || 'Adresse non renseignée' }}@if (profile()?.client?.city) {, {{ profile()!.client!.city }} }
+            @if (profile()?.client?.notes) { <br>{{ profile()!.client!.notes }} }
+          </p>
+        </section>
+      </aside>
     </div>
-  </div>
-}
+  }
+</div>
 
 @if (isPaymentModalOpen() && activeClientId) {
   <app-client-payment

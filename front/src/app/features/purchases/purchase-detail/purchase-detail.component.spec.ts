@@ -29,30 +29,26 @@ describe('PurchaseDetailComponent', () => {
   });
 
   describe('openProductView', () => {
-    it('sets viewingProduct when product resolves via linkedProduct', () => {
-      const fakeProduct = { id: 5 } as Product;
-      comp.openProductView({ linkedProduct: fakeProduct });
-      expect(comp.viewingProduct()).toEqual(fakeProduct);
+    // Refonte 2b, 6c : product-detail est supprimé ; consulter un produit,
+    // c'est ouvrir son éditeur, dans un nouvel onglet pour ne pas perdre la
+    // fiche en cours.
+    let open: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      open = vi.fn();
+      vi.stubGlobal('window', { open });
     });
 
-    it('does NOT set viewingProduct when only .product is present', () => {
-      comp.openProductView({ product: { id: 5 } });
-      expect(comp.viewingProduct()).toBeNull();
+    afterEach(() => vi.unstubAllGlobals());
+
+    it("ouvre l'éditeur du produit dans un nouvel onglet", () => {
+      comp.openProductView({ linkedProduct: { id: 5 } });
+      expect(open).toHaveBeenCalledWith('/products/5/edit', '_blank', 'noopener');
     });
-  });
 
-  describe('editProductInNewTab', () => {
-    let openSpy: ReturnType<typeof vi.spyOn>;
-
-    beforeEach(() => { openSpy = vi.spyOn(window, 'open').mockReturnValue(null as any); });
-    afterEach(() => vi.restoreAllMocks());
-
-    it('clears viewingProduct and opens /products?id=5&edit=1 in a new tab', () => {
-      const fakeProduct = { id: 5 } as Product;
-      comp.viewingProduct.set(fakeProduct);
-      comp.editProductInNewTab(fakeProduct);
-      expect(comp.viewingProduct()).toBeNull();
-      expect(openSpy).toHaveBeenCalledWith('/products?id=5&edit=1', '_blank', 'noopener');
+    it("n'ouvre rien quand la ligne ne porte aucun produit résolu", () => {
+      comp.openProductView({ product: { id: 9 } });
+      expect(open).not.toHaveBeenCalled();
     });
   });
 

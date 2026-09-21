@@ -1,0 +1,38 @@
+<div class="pdp-shell">
+  <p class="pdp-loading" *ngIf="loading()">Chargement de l'achat…</p>
+
+  <app-list-error
+    *ngIf="loadError()"
+    title="L'achat n'a pas pu être chargé."
+    [cause]="loadError()!"
+    [detail]="loadErrorDetail()"
+    (retry)="retry()" />
+
+  <app-purchase-detail
+    *ngIf="!loading() && !loadError() && purchase()"
+    [purchase]="purchase()!"
+    [canEdit]="canEdit()"
+    [canReturn]="canReturn()"
+    [hasPrev]="!!neighbours().prev"
+    [hasNext]="!!neighbours().next"
+    [position]="neighbours().position"
+    (prev)="goPrev()"
+    (next)="goNext()"
+    (close)="back()"
+    (edit)="editPurchase()"
+    (settle)="settling.set(true)"
+    (openReturn)="returning.set(true)"
+    (returnsChanged)="reload()" />
+</div>
+
+<app-purchase-payments
+  *ngIf="settling() && purchase()"
+  [purchase]="purchase()!"
+  (closed)="closeSettle(false)"
+  (statusChanged)="closeSettle(true)" />
+
+<app-purchase-return
+  *ngIf="returning() && purchase()"
+  [purchase]="purchase()!"
+  (closed)="closeReturn(false)"
+  (saved)="closeReturn(true)" />

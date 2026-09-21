@@ -6,13 +6,14 @@ import { ClientService } from '../../data-access/client.service';
 import { UnpaidSaleRow, ClientPaymentPayload } from '../../models/client.model';
 import { Account } from '../../../../core/models/account.model';
 import { AccountService } from '../../../../core/services/account.service';
+import { SidePanelComponent } from '../../../../shared/side-panel/side-panel.component';
 
 const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Effet', 'Carte bancaire'];
 
 @Component({
   selector: 'app-client-payment',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent],
+  imports: [CommonModule, FormsModule, IconComponent, SidePanelComponent],
   templateUrl: './client-payment.component.html',
   styleUrl: './client-payment.component.scss',
 })

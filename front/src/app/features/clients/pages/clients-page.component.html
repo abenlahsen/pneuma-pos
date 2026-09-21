@@ -152,18 +152,6 @@
   </div>
 </div>
 
-<div class="modal-overlay" *ngIf="isModalOpen()" (click)="closeModal()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>{{ selectedClient() ? 'Modifier Client' : 'Nouveau Client' }}</h2>
-      <button class="btn-icon" type="button" (click)="closeModal()" [disabled]="saving()">X</button>
-    </div>
-    <div class="modal-body">
-      <app-client-form [client]="selectedClient()" (save)="saveClient($event)" (cancel)="closeModal()"></app-client-form>
-    </div>
-  </div>
-</div>
-
 <!-- Refonte 2b, gabarit 15c : la confirmation remplace le confirm() natif. -->
 <app-confirm-delete
   *ngIf="pendingDelete() as pending"

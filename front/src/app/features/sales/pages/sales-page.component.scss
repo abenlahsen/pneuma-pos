@@ -145,6 +145,12 @@
 
 .sales-grid {
   grid-template-columns: 52px 84px minmax(0, 1fr) 78px 118px 118px 98px 112px 120px;
+
+  /* Sans la permission « view margins », la colonne Marge n'est pas rendue :
+     la grille doit compter une piste de moins, sinon tout se décale. */
+  &--no-margin {
+    grid-template-columns: 52px 84px minmax(0, 1fr) 78px 118px 98px 112px 120px;
+  }
 }
 
 .pagination-totals {

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"><style>body{margin:0;background:#dfe7f2;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}a{color:#c2181f}a:hover{color:#8f1218}code{font:500 11.5px ui-monospace,Menlo,monospace;background:#f4f8fd;border:1px solid #cfdcec;padding:1px 5px}</style></helmet>
+
+<section style="padding:36px 40px 52px;display:flex;flex-direction:column;gap:20px">
+
+<div style="display:flex;align-items:baseline;gap:10px">
+<span style="font:700 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#0c1e33;color:#fff;border-radius:4px;letter-spacing:.06em">16</span>
+<span style="font:700 13px/1.2 'Inter',sans-serif;color:#0c1e33">ÉCRANS DE DÉTAIL</span>
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e">Trois écrans de détail, un même défaut : l'information qui motive l'ouverture de la fiche est enterrée sous celle qui la décrit. On ouvre une fiche client pour savoir ce qu'il doit, pas pour lire son adresse.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Le relevé remonte, le signalétique descend.</strong> Sur la fiche client, le relevé est aujourd'hui dans un onglet, sous trois sections repliables : factures en cours, écritures, paiements. Trois clics pour atteindre la raison d'être de l'écran. Il devient la colonne principale, en registre unique — même grammaire que Cash Flow, avec la colonne de solde progressif. Identité, paramètres financiers et véhicules passent à droite.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">L'âge de la dette devient actionnable.</strong> La barre segmentée 0-30 / 31-60 / 61-90 / +90 existe déjà et c'est la bonne donnée. Elle filtre le registre au clic, au lieu d'être une illustration.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Vente et achat sortent de la modale.</strong> Six sections dans une boîte qui défile — mêmes raisons que <code>product-form</code>. Ils prennent la structure de l'éditeur : barre de titre, deux colonnes, pied d'actions.</p>
+</div>
+
+<div id="16a" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter',sans-serif;color:#41546e"><a href="#16a" style="font:700 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(12,30,51,.1);color:#0c1e33;border-radius:5px;text-decoration:none">16a</a>Fiche client — le relevé en colonne principale</div>
+
+<div style="width:1440px;height:880px;display:grid;grid-template-rows:60px minmax(0,1fr);background:#e6edf7;color:#0c1e33;border:1px solid #adc2da;overflow:hidden;box-shadow:0 10px 25px rgba(12,30,51,.14)">
+
+  <div style="display:flex;align-items:center;gap:14px;padding:0 20px;background:#f4f8fd;border-bottom:1px solid #cfdcec">
+    <a href="#16a" style="display:flex;align-items:center;gap:7px;height:36px;padding:0 12px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-size:12.5px;font-weight:600;text-decoration:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>Clients</a>
+    <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+      <span style="font-size:15.5px;font-weight:700;letter-spacing:-.01em">Garage Atlas Pneus</span>
+      <span style="font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">Compte 1042 · Casablanca · 0661 24 88 03 · K. Amrani</span>
+    </span>
+    <span style="display:flex;align-items:center;gap:6px;margin-left:10px">
+      <span style="padding:3px 8px;border:1px solid #cfdcec;background:#fff;font-size:10px;font-weight:700;letter-spacing:.08em;color:#4a5c75">PROFESSIONNEL</span>
+      <span style="padding:3px 8px;border:1px solid #c2181f;background:#fdeff1;font-size:10px;font-weight:700;letter-spacing:.08em;color:#c2181f">47 J DE RETARD</span>
+    </span>
+    <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
+      <button type="button" style="height:36px;padding:0 13px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Modifier</button>
+      <button type="button" style="height:36px;padding:0 13px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Relevé PDF</button>
+      <button type="button" style="height:36px;padding:0 14px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Encaisser</button>
+      <button type="button" style="height:36px;padding:0 15px;border:1px solid #ff2d37;background:#ff2d37;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Nouvelle vente</button>
+    </span>
+  </div>
+
+  <div style="min-height:0;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) 400px;background:#fff">
+
+    <div style="min-height:0;overflow:hidden;display:flex;flex-direction:column;border-right:1px solid #cfdcec">
+
+      <div style="padding:15px 22px 14px;border-bottom:1px solid #cfdcec">
+        <div style="display:flex;align-items:flex-end;gap:16px">
+          <span>
+            <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Solde dû</span>
+            <span style="display:block;margin-top:4px;font-size:32px;font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums;color:#c2181f">48 600,00 <span style="font-size:14px;font-weight:600;color:#4a5c75">DH</span></span>
+          </span>
+          <span style="margin-left:auto;display:flex;gap:22px;text-align:right">
+            <span><span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#4a5c75">Total acheté</span><span style="display:block;margin-top:4px;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums">842 300</span></span>
+            <span><span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#4a5c75">Opérations</span><span style="display:block;margin-top:4px;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums">64</span></span>
+            <span><span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#4a5c75">Délai réel</span><span style="display:block;margin-top:4px;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums">54 j</span></span>
+          </span>
+        </div>
+
+        <div style="margin-top:14px">
+          <div style="display:flex;align-items:baseline;gap:9px">
+            <span style="font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#4a5c75">Âge de la dette</span>
+            <span style="font-size:11px;color:#4a5c75">cliquer un segment filtre le relevé</span>
+            <span style="margin-left:auto;font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">Limite 80 000 · reste 31 400</span>
+          </div>
+          <div style="margin-top:7px;display:flex;height:12px;gap:1px">
+            <span style="width:12%;background:#adc2da" title="0-30 j"></span>
+            <span style="width:18%;background:#7d9bbd" title="31-60 j"></span>
+            <span style="width:0%;background:#4a7ba8"></span>
+            <span style="width:70%;background:#c2181f" title="+90 j"></span>
+          </div>
+          <div style="margin-top:7px;display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #cfdcec">
+            <button type="button" style="padding:7px 10px;border:0;border-right:1px solid #cfdcec;background:#fff;text-align:left;font-family:inherit;cursor:pointer"><span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.1em;color:#4a5c75">0-30 J</span><span style="display:block;margin-top:2px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">5 830</span></button>
+            <button type="button" style="padding:7px 10px;border:0;border-right:1px solid #cfdcec;background:#fff;text-align:left;font-family:inherit;cursor:pointer"><span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.1em;color:#4a5c75">31-60 J</span><span style="display:block;margin-top:2px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">8 750</span></button>
+            <button type="button" style="padding:7px 10px;border:0;border-right:1px solid #cfdcec;background:#fff;text-align:left;font-family:inherit;cursor:pointer"><span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.1em;color:#4a5c75">61-90 J</span><span style="display:block;margin-top:2px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;color:#4a5c75">0</span></button>
+            <button type="button" style="padding:7px 10px;border:0;background:#fdeff1;text-align:left;font-family:inherit;cursor:pointer"><span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.1em;color:#c2181f">+90 J</span><span style="display:block;margin-top:2px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;color:#c2181f">34 020</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 22px;border-bottom:1px solid #cfdcec;background:#f4f8fd">
+        <span style="font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase">Relevé de compte</span>
+        <div style="display:flex;margin-left:6px">
+          <button type="button" style="height:30px;padding:0 11px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer">TOUT</button>
+          <button type="button" style="height:30px;padding:0 11px;border:1px solid #cfdcec;border-left:0;background:#fff;color:#c2181f;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer">EN COURS 3</button>
+          <button type="button" style="height:30px;padding:0 11px;border:1px solid #cfdcec;border-left:0;background:#fff;color:#15616d;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer">PAIEMENTS</button>
+          <button type="button" style="height:30px;padding:0 11px;border:1px solid #cfdcec;border-left:0;background:#fff;color:#41546e;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer">AVOIRS</button>
+        </div>
+        <span style="margin-left:auto;font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">Exercice 2026 · 41 écritures</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:82px minmax(0,1fr) 112px 112px 122px 44px;align-items:center;gap:11px;padding:7px 22px;border-bottom:1px solid #0c1e33;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#4a5c75">
+        <span>Date</span><span>Écriture</span><span style="text-align:right">Débit</span><span style="text-align:right">Crédit</span><span style="text-align:right">Solde</span><span></span>
+      </div>
+
+      <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column">
+
+        <div style="display:grid;grid-template-columns:82px minmax(0,1fr) 112px 112px 122px 44px;align-items:center;gap:11px;min-height:54px;padding:0 22px;border-bottom:1px solid #e7eef8;border-left:3px solid #c2181f;margin-left:-3px;background:#fdeff1">
+          <span style="font-size:12px;color:#8f1218;font-variant-numeric:tabular-nums">02/07/26</span>
+          <span style="min-width:0"><span style="font-size:13.5px;font-weight:700">Facture F-2026-0517</span> <span style="font-size:11.5px;color:#41546e">· vente 4182 · 12 pneus</span><span style="display:block;font-size:11px;font-weight:600;color:#c2181f">Échue depuis 47 jours · relancée le 05/09</span></span>
+          <span style="text-align:right;font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums">34 020,00</span>
+          <span style="text-align:right;font-size:12.5px;color:#4a5c75">—</span>
+          <span style="text-align:right;font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums;color:#c2181f">48 600,00</span>
+          <span style="display:flex;justify-content:flex-end"><button type="button" title="Ouvrir la vente" style="width:32px;height:32px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:82px minmax(0,1fr) 112px 112px 122px 44px;align-items:center;gap:11px;min-height:54px;padding:0 22px;border-bottom:1px solid #e7eef8;border-left:3px solid #c2181f;margin-left:-3px">
+          <span style="font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">18/07/26</span>
+          <span style="min-width:0"><span style="font-size:13.5px;font-weight:700">Facture F-2026-0548</span> <span style="font-size:11.5px;color:#41546e">· vente 4211 · 6 pneus</span><span style="display:block;font-size:11px;color:#4a5c75">Échue depuis 31 jours</span></span>
+          <span style="text-align:right;font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums">8 750,00</span>
+          <span style="text-align:right;font-size:12.5px;color:#4a5c75">—</span>
+          <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">14 580,00</span>
+          <span style="display:flex;justify-content:flex-end"><button type="button" title="Ouvrir la vente" style="width:32px;height:32px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:82px minmax(0,1fr) 112px 112px 122px 44px;align-items:center;gap:11px;min-height:54px;padding:0 22px;border-bottom:1px solid #e7eef8">
+          <span style="font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">12/09/26</span>
+          <span style="min-width:0"><span style="font-size:13.5px;font-weight:600">Acompte</span> <span style="font-size:11.5px;color:#4a5c75">· espèce · affecté à F-2026-0517</span></span>
+          <span style="text-align:right;font-size:12.5px;color:#4a5c75">—</span>
+          <span style="text-align:right;font-size:13.5px;font-variant-numeric:tabular-nums;color:#15616d">2 360,00</span>
+          <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">5 830,00</span>
+          <span style="display:flex;justify-content:flex-end"><button type="button" title="Voir le paiement" style="width:32px;height:32px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M2 7h20v11H2zM2 11h20"/></svg></button></span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:82px minmax(0,1fr) 112px 112px 122px 44px;align-items:center;gap:11px;min-height:54px;padding:0 22px;border-bottom:1px solid #e7eef8">
+          <span style="font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">09/09/26</span>
+          <span style="min-width:0"><span style="font-size:13.5px;font-weight:600">Avoir 2026-31</span> <span style="font-size:11.5px;color:#4a5c75">· retour de 2 pneus non montés</span></span>
+          <span style="text-align:right;font-size:12.5px;color:#4a5c75">—</span>
+          <span style="text-align:right;font-size:13.5px;font-variant-numeric:tabular-nums;color:#15616d">2 360,00</span>
+          <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">8 190,00</span>
+          <span style="display:flex;justify-content:flex-end"><button type="button" title="Ouvrir l'avoir" style="width:32px;height:32px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:82px minmax(0,1fr) 112px 112px 122px 44px;align-items:center;gap:11px;min-height:54px;padding:0 22px;border-bottom:1px solid #e7eef8">
+          <span style="font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">28/08/26</span>
+          <span style="min-width:0"><span style="font-size:13.5px;font-weight:600">Bon de livraison BL-4233</span> <span style="font-size:11.5px;color:#4a5c75">· 8 pneus · payé à la livraison</span></span>
+          <span style="text-align:right;font-size:13.5px;font-variant-numeric:tabular-nums">12 950,00</span>
+          <span style="text-align:right;font-size:13.5px;font-variant-numeric:tabular-nums;color:#15616d">12 950,00</span>
+          <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">10 550,00</span>
+          <span style="display:flex;justify-content:flex-end"><button type="button" title="Ouvrir la vente" style="width:32px;height:32px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:82px minmax(0,1fr) 112px 112px 122px 44px;align-items:center;gap:11px;min-height:54px;padding:0 22px;border-bottom:1px solid #e7eef8">
+          <span style="font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">21/06/26</span>
+          <span style="min-width:0"><span style="font-size:13.5px;font-weight:600">Paiement</span> <span style="font-size:11.5px;color:#4a5c75">· chèque 4471023 · encaissé le 26/06</span></span>
+          <span style="text-align:right;font-size:12.5px;color:#4a5c75">—</span>
+          <span style="text-align:right;font-size:13.5px;font-variant-numeric:tabular-nums;color:#15616d">12 400,00</span>
+          <span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">10 550,00</span>
+          <span style="display:flex;justify-content:flex-end"><button type="button" title="Voir le paiement" style="width:32px;height:32px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.6"><path d="M2 7h20v11H2zM2 11h20"/></svg></button></span>
+        </div>
+
+        <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:#f4f8fd;border-top:1px solid #cfdcec">
+          <span style="font-size:11.5px;color:#4a5c75">35 écritures antérieures · <a href="#16a" style="color:#41546e">exercice 2025</a></span>
+        </div>
+      </div>
+    </div>
+
+    <aside style="min-height:0;overflow:hidden;display:flex;flex-direction:column;background:#f4f8fd">
+
+      <div style="padding:14px 18px;border-bottom:1px solid #cfdcec">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Conditions</span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;margin-top:9px;padding:7px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12.5px;color:#41546e">Limite de crédit</span><span style="font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums">80 000,00</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12.5px;color:#41546e">Délai accordé</span><span style="font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums">30 jours</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12.5px;color:#41546e">Remise habituelle</span><span style="font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums">8 %</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0"><span style="font-size:12.5px;color:#41546e">Solde d'ouverture</span><span style="font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums">0,00</span></span>
+        <p style="margin:9px 0 0;padding:9px 11px;border:1px solid #cfdcec;background:#fff;font-size:11px;line-height:1.55;color:#41546e">Délai accordé 30 j, délai réellement observé 54 j sur 38 ventes soldées. C'est cet écart que la projection de trésorerie utilise.</p>
+      </div>
+
+      <div style="padding:14px 18px;border-bottom:1px solid #cfdcec">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Véhicules</span>
+          <span style="padding:0 6px;border:1px solid #cfdcec;background:#fff;font-size:11px;font-weight:700;color:#4a5c75;font-variant-numeric:tabular-nums">3</span>
+          <button type="button" style="margin-left:auto;height:28px;padding:0 10px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">+ Ajouter</button>
+        </div>
+        <div style="margin-top:9px;background:#fff;border:1px solid #cfdcec">
+          <span style="display:flex;align-items:center;gap:10px;padding:9px 11px;border-bottom:1px solid #e7eef8"><span style="font-size:13px;font-weight:700;font-variant-numeric:tabular-nums">44821-A-12</span><span style="font-size:11.5px;color:#4a5c75">Dacia Logan</span><span style="margin-left:auto;font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">148 200 km</span></span>
+          <span style="display:flex;align-items:center;gap:10px;padding:9px 11px;border-bottom:1px solid #e7eef8"><span style="font-size:13px;font-weight:700;font-variant-numeric:tabular-nums">10932-B-06</span><span style="font-size:11.5px;color:#4a5c75">Renault Master</span><span style="margin-left:auto;font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">96 400 km</span></span>
+          <span style="display:flex;align-items:center;gap:10px;padding:9px 11px"><span style="font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:#4a5c75">78440-C-01</span><span style="font-size:11.5px;color:#4a5c75">Ford Transit</span><span style="margin-left:auto;padding:1px 5px;border:1px solid #cfdcec;font-size:9.5px;font-weight:700;letter-spacing:.06em;color:#4a5c75">INACTIF</span></span>
+        </div>
+      </div>
+
+      <div style="padding:14px 18px;border-bottom:1px solid #cfdcec">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Coordonnées</span>
+        <p style="margin:9px 0 0;font-size:12.5px;line-height:1.65;color:#41546e">0661 24 88 03 · contact@atlaspneus.ma<br>Km 8, route de Rabat, Casablanca<br>ICE 001428739000047</p>
+      </div>
+
+      <div style="flex:1;min-height:0;overflow:hidden;padding:14px 18px;display:flex;flex-direction:column">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Dernière activité</span>
+        <div style="margin-top:9px;display:flex;flex-direction:column">
+          <span style="display:flex;gap:9px;padding:6px 0;border-bottom:1px solid #cfdcec"><span style="font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums;width:48px;flex-shrink:0">17/09</span><span style="font-size:12px;color:#41546e">Commande portail CMD-2026-0088 · 16 pneus</span></span>
+          <span style="display:flex;gap:9px;padding:6px 0;border-bottom:1px solid #cfdcec"><span style="font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums;width:48px;flex-shrink:0">12/09</span><span style="font-size:12px;color:#41546e">Acompte encaissé · 2 360 DH</span></span>
+          <span style="display:flex;gap:9px;padding:6px 0"><span style="font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums;width:48px;flex-shrink:0">05/09</span><span style="font-size:12px;color:#41546e">Relance envoyée sur F-2026-0517</span></span>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+<p style="margin:2px 0 0;max-width:1440px;font:400 12px/1.6 'Inter',sans-serif;color:#4a5c75">Les quatre cadrans actuels deviennent un chiffre principal et trois chiffres de contexte. « Délai réel 54 j » est ajouté : il est calculé ailleurs dans l'application et c'est l'information qui explique pourquoi ce client tient un solde permanent sans être mauvais payeur.</p>
+</div>
+
+<div id="16b" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px;margin-top:12px">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter',sans-serif;color:#41546e"><a href="#16b" style="font:700 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(12,30,51,.1);color:#0c1e33;border-radius:5px;text-decoration:none">16b</a>Détail de vente — hors modale, même gabarit pour l'achat</div>
+
+<div style="width:1320px;height:800px;display:grid;grid-template-rows:60px minmax(0,1fr);background:#e6edf7;color:#0c1e33;border:1px solid #adc2da;overflow:hidden;box-shadow:0 10px 25px rgba(12,30,51,.14)">
+
+  <div style="display:flex;align-items:center;gap:14px;padding:0 20px;background:#f4f8fd;border-bottom:1px solid #cfdcec">
+    <a href="#16b" style="display:flex;align-items:center;gap:7px;height:36px;padding:0 12px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-size:12.5px;font-weight:600;text-decoration:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>Ventes</a>
+    <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+      <span style="font-size:15.5px;font-weight:700;letter-spacing:-.01em">Vente 4182</span>
+      <span style="font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">02/07/2026 · <a href="#16a" style="color:#41546e">Garage Atlas Pneus</a> · K. Amrani · Partenaire Zenith</span>
+    </span>
+    <span style="display:flex;align-items:center;gap:6px;margin-left:10px">
+      <span style="padding:3px 8px;border:1px solid #cfdcec;background:#fff;font-size:10px;font-weight:700;letter-spacing:.08em;color:#4a5c75">FACTURÉE</span>
+      <span style="padding:3px 8px;border:1px solid #c2181f;background:#fdeff1;font-size:10px;font-weight:700;letter-spacing:.08em;color:#c2181f">NON PAYÉE · 77 J</span>
+    </span>
+    <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
+      <button type="button" style="height:36px;padding:0 13px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Imprimer</button>
+      <button type="button" style="height:36px;padding:0 13px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Modifier</button>
+      <button type="button" style="height:36px;padding:0 15px;border:1px solid #ff2d37;background:#ff2d37;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Encaisser 48 600 DH</button>
+    </span>
+  </div>
+
+  <div style="min-height:0;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) 400px;background:#fff">
+
+    <div style="min-height:0;overflow:hidden;display:flex;flex-direction:column;border-right:1px solid #cfdcec">
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 72px 104px 84px 112px;align-items:center;gap:12px;padding:7px 22px;border-bottom:1px solid #0c1e33;background:#f4f8fd;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#4a5c75">
+        <span>Article · lot</span><span style="text-align:right">Qté</span><span style="text-align:right">P. unit.</span><span style="text-align:right">Remise</span><span style="text-align:right">Total HT</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 72px 104px 84px 112px;align-items:center;gap:12px;min-height:58px;padding:0 22px;border-bottom:1px solid #e7eef8">
+        <span style="min-width:0"><span style="display:block;font-size:14px;font-weight:600">MICHELIN PRIMACY 4</span><span style="display:block;font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">205/55R16 91V · Casablanca A-12 · DOT 2425</span></span>
+        <span style="text-align:right;font-size:13.5px;font-variant-numeric:tabular-nums">8</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">1 180,00</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums;color:#15616d">−8 %</span>
+        <span style="text-align:right;font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums">8 684,80</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 72px 104px 84px 112px;align-items:center;gap:12px;min-height:58px;padding:0 22px;border-bottom:1px solid #e7eef8">
+        <span style="min-width:0"><span style="display:block;font-size:14px;font-weight:600">BRIDGESTONE TURANZA T005</span><span style="display:block;font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">225/45R17 94Y · Casablanca A-08 · DOT 1125</span></span>
+        <span style="text-align:right;font-size:13.5px;font-variant-numeric:tabular-nums">4</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">1 420,00</span>
+        <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums;color:#15616d">−8 %</span>
+        <span style="text-align:right;font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums">5 225,60</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 72px 104px 84px 112px;align-items:center;gap:12px;min-height:58px;padding:0 22px;border-bottom:1px solid #e7eef8">
+        <span style="min-width:0"><span style="display:block;font-size:14px;font-weight:600">Montage et équilibrage</span><span style="display:block;font-size:11.5px;color:#4a5c75">Prestation · 12 roues</span></span>
+        <span style="text-align:right;font-size:13.5px;font-variant-numeric:tabular-nums">12</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">60,00</span>
+        <span style="text-align:right;font-size:12.5px;color:#4a5c75">—</span>
+        <span style="text-align:right;font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums">720,00</span>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 22px;border-bottom:1px solid #cfdcec;background:#f4f8fd">
+        <span style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#4a5c75">Livraison</span>
+        <span style="font-size:12.5px;color:#41546e">Transporteur Rapide Log · BL-4182 · livré le 04/07</span>
+        <span style="margin-left:auto;padding:2px 7px;border:1px solid #cfdcec;background:#fff;font-size:10px;font-weight:700;letter-spacing:.07em;color:#15616d">LIVRÉE</span>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:9px;padding:10px 22px;border-bottom:1px solid #cfdcec">
+        <span style="font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase">Paiements</span>
+        <span style="font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">1 sur 48 600 DH dus</span>
+        <button type="button" style="margin-left:auto;height:30px;padding:0 11px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">+ Enregistrer un paiement</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:88px minmax(0,1fr) 124px 44px;align-items:center;gap:12px;padding:6px 22px;border-bottom:1px solid #cfdcec;background:#f4f8fd;font-size:9px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">
+        <span>Date</span><span>Méthode · référence</span><span style="text-align:right">Montant</span><span></span>
+      </div>
+      <div style="display:grid;grid-template-columns:88px minmax(0,1fr) 124px 44px;align-items:center;gap:12px;min-height:50px;padding:0 22px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">12/09/26</span>
+        <span style="min-width:0"><span style="font-size:13px;font-weight:600">Espèce</span> <span style="font-size:11.5px;color:#4a5c75">· acompte · encaissé par S. Bennis</span></span>
+        <span style="text-align:right;font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums;color:#15616d">2 360,00</span>
+        <span style="display:flex;justify-content:flex-end"><button type="button" title="Supprimer" style="width:30px;height:30px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8f1218" stroke-width="1.6"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button></span>
+      </div>
+
+      <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:#f4f8fd;border-top:1px solid #cfdcec">
+        <span style="font-size:11.5px;color:#4a5c75;max-width:420px;text-align:center;line-height:1.6">Les paiements sont dans la colonne principale, pas dans une modale séparée : c'est ce qu'on vient vérifier sur une vente impayée.</span>
+      </div>
+    </div>
+
+    <aside style="min-height:0;overflow:hidden;display:flex;flex-direction:column;background:#f4f8fd">
+
+      <div style="padding:15px 18px;border-bottom:1px solid #0c1e33">
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0"><span style="font-size:12.5px;color:#41546e">Sous-total HT</span><span style="font-size:13.5px;font-variant-numeric:tabular-nums">15 875,40</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0"><span style="font-size:12.5px;color:#41546e">Remise accordée</span><span style="font-size:13.5px;font-variant-numeric:tabular-nums;color:#15616d">−1 245,60</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12.5px;color:#41546e">TVA 20 %</span><span style="font-size:13.5px;font-variant-numeric:tabular-nums">3 175,08</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:9px 0 6px"><span style="font-size:13.5px;font-weight:700">Total TTC</span><span style="font-size:20px;font-weight:700;font-variant-numeric:tabular-nums">50 960,00</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0"><span style="font-size:12.5px;color:#41546e">Payé</span><span style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums;color:#15616d">2 360,00</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 11px;margin-top:6px;background:#fdeff1;border:1px solid #c2181f"><span style="font-size:13px;font-weight:700;color:#8f1218">Reste dû</span><span style="font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;color:#c2181f">48 600,00</span></span>
+      </div>
+
+      <div style="padding:14px 18px;border-bottom:1px solid #cfdcec">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Marge</span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;padding:6px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12.5px;color:#41546e">Coût d'achat</span><span style="font-size:13px;font-variant-numeric:tabular-nums">12 665,40</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12.5px;color:#41546e">Marge brute</span><span style="font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums">3 210,00</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0"><span style="font-size:12.5px;color:#41546e">Taux</span><span style="font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums">17,4 %</span></span>
+        <p style="margin:8px 0 0;font-size:11px;line-height:1.55;color:#4a5c75">Visible selon la permission « voir les marges ».</p>
+      </div>
+
+      <div style="padding:14px 18px;border-bottom:1px solid #cfdcec">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Client</span>
+        <a href="#16a" style="display:block;margin-top:8px;font-size:14px;font-weight:600;color:#0c1e33;text-decoration:none">Garage Atlas Pneus →</a>
+        <span style="display:block;margin-top:3px;font-size:11.5px;color:#4a5c75">Casablanca · 0661 24 88 03</span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;margin-top:9px;padding:7px 0;border-top:1px solid #cfdcec"><span style="font-size:12px;color:#41546e">Solde total du client</span><span style="font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:#c2181f">48 600</span></span>
+        <span style="display:block;font-size:11px;color:#4a5c75;line-height:1.55">Cette vente est la totalité de son impayé.</span>
+      </div>
+
+      <div style="flex:1;min-height:0;overflow:hidden;padding:14px 18px">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Suivi</span>
+        <div style="margin-top:8px;display:flex;flex-direction:column">
+          <span style="display:flex;gap:9px;padding:6px 0;border-bottom:1px solid #cfdcec"><span style="font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums;width:48px;flex-shrink:0">05/09</span><span style="font-size:12px;color:#41546e">Relance envoyée · K. Amrani</span></span>
+          <span style="display:flex;gap:9px;padding:6px 0;border-bottom:1px solid #cfdcec"><span style="font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums;width:48px;flex-shrink:0">04/07</span><span style="font-size:12px;color:#41546e">Livrée · BL-4182</span></span>
+          <span style="display:flex;gap:9px;padding:6px 0"><span style="font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums;width:48px;flex-shrink:0">02/07</span><span style="font-size:12px;color:#41546e">Créée et facturée · K. Amrani</span></span>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+<p style="margin:2px 0 0;max-width:1320px;font:400 12px/1.6 'Inter',sans-serif;color:#4a5c75">Le détail d'achat prend le même gabarit : articles à gauche, réception à la place de la livraison, retours fournisseur sous les paiements, et le panneau de droite affiche le délai contractuel du fournisseur au lieu de la marge.</p>
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e">Ces deux gabarits absorbent aussi <code>sale-payment-detail</code> et <code>purchase-payment-detail</code> : les paiements passent dans la colonne principale du détail, ce qui supprime deux modales. <code>product-detail</code> disparaît — il doublait l'éditeur 15a, qui montre déjà tout en lecture.</p>
+<p style="margin:0;font:400 12px/1.5 'Inter',sans-serif;color:#4a5c75">À dire ensuite : « le détail d'achat en entier » · « la fiche fournisseur sur le modèle 16a » · « ajoute ce lot au handoff » · « audite les onze modules restants ».</p>
+</div>
+
+</section>
+
+</x-dc>
+</body>
+</html>

@@ -1,9 +1,9 @@
 import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, SimpleChanges, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { Purchase } from '../../../core/models/purchase.model';
 import { Product } from '../../../core/models/product.model';
-import { ProductDetailComponent } from '../../products/product-detail/product-detail.component';
 import { DocumentPrintComponent, PrintDocument, PrintLine } from '../../../shared/document-print/document-print.component';
 import { paymentMethodClass } from '../../../core/constants/payment-method.constants';
 import { AuthService } from '../../../core/services/auth.service';
@@ -18,7 +18,7 @@ import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 @Component({
   selector: 'app-purchase-detail',
   standalone: true,
-  imports: [CommonModule, ProductDetailComponent, DocumentPrintComponent, IconComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, RouterLink, DocumentPrintComponent, IconComponent, ConfirmDeleteComponent],
   templateUrl: './purchase-detail.component.html',
   styleUrls: ['../../sales/sale-detail/sale-detail.component.scss', './purchase-detail.component.scss']
 })
@@ -45,11 +45,15 @@ export class PurchaseDetailComponent implements OnInit, OnChanges {
   @Output() close = new EventEmitter<void>();
   @Output() edit = new EventEmitter<void>();
   @Output() openReturn = new EventEmitter<void>();
+  /** Refonte 2b, 16b : le règlement se déclenche depuis la barre. */
+  @Output() settle = new EventEmitter<void>();
   /** Emitted after a return is deleted here — the parent's purchase list and this
    *  modal's own (now stale) status/payment_status/returned_amount need a refresh. */
   @Output() returnsChanged = new EventEmitter<void>();
 
-  viewingProduct = signal<Product | null>(null);
+  /** Échec d'une action : la fiche reste affichée. */
+  readonly actionError = signal('');
+
   printDoc = signal<PrintDocument | null>(null);
   returns = signal<PurchaseReturn[]>([]);
   loadingReturns = signal(false);
@@ -76,7 +80,6 @@ export class PurchaseDetailComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     const change = changes['purchase'];
     if (!change || change.firstChange) return;
-    this.viewingProduct.set(null);
     this.printDoc.set(null);
     this.returns.set([]);
     this.loadReturns();
@@ -98,7 +101,55 @@ export class PurchaseDetailComponent implements OnInit, OnChanges {
   }
 
   private hasNestedPanelOpen(): boolean {
-    return !!this.viewingProduct() || !!this.printDoc();
+    return !!this.printDoc();
+  }
+
+  // ── Refonte 2b, gabarit 16b ───────────────────────────────────────────────
+
+  get purchaseTotal(): number {
+    return Number(this.purchase?.net_amount ?? this.purchase?.total_price ?? 0);
+  }
+
+  get amountPaid(): number {
+    return (this.purchase?.payments ?? []).reduce((sum, p: any) => sum + Number(p.amount ?? 0), 0);
+  }
+
+  /** Ce qui reste à régler — le chiffre que porte l'action principale. */
+  get amountDue(): number {
+    return Math.max(0, Math.round((this.purchaseTotal - this.amountPaid) * 100) / 100);
+  }
+
+  get isSettled(): boolean {
+    return this.purchase?.payment_status === 'PAYE';
+  }
+
+  /** Le délai que le fournisseur accorde, quand sa fiche le renseigne. */
+  get contractualDays(): number | null {
+    const days = (this.purchase?.supplier as any)?.payment_terms_days;
+    return typeof days === 'number' ? days : null;
+  }
+
+  /** Âge du règlement : depuis combien de jours cet achat attend d'être payé. */
+  get settlementAgeDays(): number | null {
+    if (this.isSettled || !this.purchase?.date) return null;
+    const days = Math.floor((Date.now() - new Date(this.purchase.date).getTime()) / 86_400_000);
+    return days > 0 ? days : null;
+  }
+
+  /**
+   * Le dépassement du délai fournisseur, s'il y en a un. C'est ce que la
+   * colonne de droite montre à la place de la marge : sur un achat, la
+   * question n'est pas ce qu'on gagne mais depuis quand on doit.
+   */
+  get daysOverTerms(): number | null {
+    const age = this.settlementAgeDays;
+    const terms = this.contractualDays;
+    if (age === null || terms === null) return null;
+    return age - terms > 0 ? age - terms : null;
+  }
+
+  get returnedAmount(): number {
+    return this.returns().reduce((sum, r: any) => sum + Number(r.total_amount ?? 0), 0);
   }
 
   loadReturns(): void {
@@ -126,7 +177,7 @@ export class PurchaseDetailComponent implements OnInit, OnChanges {
         this.loadReturns();
         this.returnsChanged.emit();
       },
-      error: () => alert('Erreur lors de la suppression du retour.'),
+      error: () => this.actionError.set("Le retour n'a pas pu être supprimé."),
     });
   }
 
@@ -193,15 +244,16 @@ export class PurchaseDetailComponent implements OnInit, OnChanges {
     return parts.length ? parts.join(' · ') : undefined;
   }
 
+  /**
+   * Refonte 2b, 6c : product-detail est supprimé. Il répétait en lecture seule
+   * ce que l'éditeur 15a montre déjà. On ouvre donc l'éditeur, dans un nouvel
+   * onglet pour ne pas perdre la saisie ou la fiche en cours.
+   */
   openProductView(item: any): void {
     const product = this.getProduct(item);
-    if (product) {
-      this.viewingProduct.set(product);
+    if (product?.id) {
+      window.open(`/products/${product.id}/edit`, '_blank', 'noopener');
     }
   }
 
-  editProductInNewTab(product: Product): void {
-    this.viewingProduct.set(null);
-    window.open(`/products?id=${product.id}&edit=1`, '_blank', 'noopener');
-  }
 }

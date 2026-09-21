@@ -62,6 +62,13 @@ export const routes: Routes = [
       import('./features/sales/sale-form-page/sale-form-page.component').then((m) => m.SaleFormPageComponent),
   },
   {
+    path: 'sales/:id',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'view sales' },
+    loadComponent: () =>
+      import('./features/sales/sale-detail-page/sale-detail-page.component').then((m) => m.SaleDetailPageComponent),
+  },
+  {
     path: 'service-orders',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view service-orders' },
@@ -104,6 +111,20 @@ export const routes: Routes = [
       import('./features/clients/pages/clients-page.component').then((m) => m.ClientsPageComponent),
   },
   {
+    path: 'clients/new',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'create clients' },
+    loadComponent: () =>
+      import('./features/clients/client-form-page/client-form-page.component').then((m) => m.ClientFormPageComponent),
+  },
+  {
+    path: 'clients/:id/edit',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'edit clients' },
+    loadComponent: () =>
+      import('./features/clients/client-form-page/client-form-page.component').then((m) => m.ClientFormPageComponent),
+  },
+  {
     path: 'clients/:id',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view clients' },
@@ -116,6 +137,13 @@ export const routes: Routes = [
     data: { permission: 'view purchases' },
     loadComponent: () =>
       import('./features/purchases/pages/purchases-page.component').then((m) => m.PurchasesPageComponent),
+  },
+  {
+    path: 'achats/:id',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'view purchases' },
+    loadComponent: () =>
+      import('./features/purchases/purchase-detail-page/purchase-detail-page.component').then((m) => m.PurchaseDetailPageComponent),
   },
   {
     path: 'stock',

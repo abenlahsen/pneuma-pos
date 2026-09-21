@@ -3,9 +3,8 @@ import { IconComponent } from '../../../shared/icon/icon.component';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { ClientFormComponent } from '../components/client-form/client-form.component';
 import { ClientService } from '../data-access/client.service';
-import { Client, ClientFilters, ClientPayload } from '../models/client.model';
+import { Client, ClientFilters } from '../models/client.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { CityService } from '../../../core/services/city.service';
 import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
@@ -21,7 +20,7 @@ import {
 @Component({
   selector: 'app-clients-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ClientFormComponent, AutoRefreshControlComponent, IconComponent, RouterLink, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent, RouterLink, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, ConfirmDeleteComponent],
   templateUrl: './clients-page.component.html',
   styleUrl: './clients-page.component.scss',
 })
@@ -45,7 +44,6 @@ export class ClientsPageComponent implements OnInit {
   readonly total = signal(0);
   readonly perPage = signal(100);
   readonly loading = signal(false);
-  readonly saving = signal(false);
 
   // ── Refonte 2b, §14c : les quatre états manquants ─────────────────────────
   readonly skeletonRows = [0, 1, 2, 3, 4, 5, 6, 7];
@@ -105,9 +103,6 @@ export class ClientsPageComponent implements OnInit {
   readonly cities = signal<string[]>([]);
   readonly isExporting = signal(false);
   readonly exportError = signal('');
-
-  readonly isModalOpen = signal(false);
-  readonly selectedClient = signal<Client | null>(null);
 
   filters: ClientFilters = {
     search: '',
@@ -184,45 +179,16 @@ export class ClientsPageComponent implements OnInit {
     this.loadClients();
   }
 
+  /**
+   * Refonte 2b, 6a : la fiche client porte douze champs, le §5b la renvoie donc
+   * hors de la modale. Les deux entrées ouvrent l'éditeur 15a sur sa route.
+   */
   openCreateModal(): void {
-    this.selectedClient.set(null);
-    this.isModalOpen.set(true);
+    this.router.navigate(['/clients/new']);
   }
 
   openEditModal(client: Client): void {
-    this.selectedClient.set(client);
-    this.isModalOpen.set(true);
-  }
-
-  closeModal(): void {
-    this.isModalOpen.set(false);
-    this.selectedClient.set(null);
-  }
-
-  saveClient(payload: ClientPayload): void {
-    const selectedClient = this.selectedClient();
-    const request$ = selectedClient
-      ? this.clientService.updateClient(selectedClient.id, payload)
-      : this.clientService.createClient(payload);
-
-    this.saving.set(true);
-    this.errorMessage.set('');
-
-    request$.subscribe({
-      next: () => {
-        this.saving.set(false);
-        this.closeModal();
-        this.loadClients();
-      },
-      error: () => {
-        this.saving.set(false);
-        this.errorMessage.set(
-          selectedClient
-            ? 'Impossible de modifier le client pour le moment.'
-            : 'Impossible de créer le client pour le moment.',
-        );
-      },
-    });
+    this.router.navigate(['/clients', client.id, 'edit']);
   }
 
   deleteClient(client: Client): void {

@@ -107,7 +107,7 @@
 
       <span style="min-width: 0">
         <span class="list-grid-name">
-          <button type="button" (click)="openViewModal(product)">{{ nameFor(product) }}</button>
+          <button type="button" (click)="goToEdit(product)">{{ nameFor(product) }}</button>
           <span class="list-grid-tag" *ngIf="!product.is_active">INACTIF</span>
           <span class="list-grid-tag" *ngIf="product.type !== 'tyre'">{{ typeLabel(product.type) }}</span>
         </span>
@@ -117,7 +117,7 @@
       <span>{{ product.reference || '—' }}</span>
 
       <span class="actions-cell" style="display: flex; gap: 5px; justify-content: flex-end">
-        <button class="btn-icon" (click)="openViewModal(product)" title="Voir le détail">
+        <button class="btn-icon" (click)="goToEdit(product)" title="Ouvrir la fiche produit">
           <app-icon name="view" [size]="15" />
         </button>
         <ng-container *ngIf="authService.hasPermission('edit products')">
@@ -157,12 +157,6 @@
   </div>
 </div>
 
-<app-product-detail
-  *ngIf="viewingProduct()"
-  [product]="viewingProduct()!"
-  (close)="closeViewModal()"
-  (edit)="closeViewModal(); goToEdit($event)"
-/>
 
 <!-- Refonte 2b, gabarit 15c : la confirmation remplace le confirm() natif. -->
 <app-confirm-delete

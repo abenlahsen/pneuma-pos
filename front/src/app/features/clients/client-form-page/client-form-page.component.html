@@ -1,0 +1,18 @@
+<div class="cfp-shell">
+  <p class="cfp-loading" *ngIf="loading()">Chargement de la fiche…</p>
+
+  <app-list-error
+    *ngIf="loadError()"
+    title="La fiche client n'a pas pu être chargée."
+    [cause]="loadError()!"
+    [detail]="loadErrorDetail()"
+    (retry)="retry()" />
+
+  <p class="cfp-save-error" *ngIf="saveError()">{{ saveError() }}</p>
+
+  <app-client-form
+    *ngIf="!loading() && !loadError()"
+    [client]="client()"
+    (save)="onSave($event)"
+    (cancel)="cancel()" />
+</div>

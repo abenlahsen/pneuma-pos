@@ -5,11 +5,9 @@ import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ClientService } from '../data-access/client.service';
-import { ClientFormComponent } from '../components/client-form/client-form.component';
 import { ClientPaymentComponent } from '../components/client-payment/client-payment.component';
 import { SalePaymentDetailComponent } from '../../sales/components/sale-payment-detail/sale-payment-detail.component';
 import {
-  ClientPayload,
   ClientProfileResponse,
   ClientSalesHistoryRow,
   ClientStatementEntry,
@@ -20,14 +18,25 @@ import { VehicleService } from '../../vehicles/data-access/vehicle.service';
 import { Vehicle } from '../../vehicles/models/vehicle.model';
 import { VehicleFormComponent } from '../../../shared/vehicle-form/vehicle-form.component';
 import { AuthService } from '../../../core/services/auth.service';
-import { SaleService } from '../../sales/data-access/sale.service';
 import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
 import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
+
+/** Les quatre tranches d'ancienneté, dans l'ordre où elles se lisent. */
+export type AgingBucket = '0-30' | '31-60' | '61-90' | '90+';
+
+/**
+ * Les vues du registre. Le gabarit en dessine quatre — Tout, En cours,
+ * Paiements, Avoirs — mais il n'y en a que trois ici : l'avoir client n'existe
+ * pas dans le domaine. Aucune table, aucun modèle, aucun type d'écriture ne le
+ * porte ; seuls les retours fournisseur existent, et ils sont de l'autre côté.
+ * Un bouton qui ne peut jamais rien trouver vaut moins que pas de bouton.
+ */
+export type RegisterScope = 'all' | 'open' | 'payments';
 
 @Component({
   selector: 'app-client-detail-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, ClientFormComponent, VehicleFormComponent, ClientPaymentComponent, SalePaymentDetailComponent, IconComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, RouterLink, VehicleFormComponent, ClientPaymentComponent, SalePaymentDetailComponent, IconComponent, ConfirmDeleteComponent],
   templateUrl: './client-detail-page.component.html',
   styleUrl: './client-detail-page.component.scss',
 })
@@ -47,7 +56,6 @@ export class ClientDetailPageComponent implements OnInit {
   private readonly vehicleService = inject(VehicleService);
   private readonly destroyRef = inject(DestroyRef);
   readonly authService = inject(AuthService);
-  private readonly saleService = inject(SaleService);
 
   activeClientId: number | null = null;
 
@@ -56,36 +64,39 @@ export class ClientDetailPageComponent implements OnInit {
   readonly statementLoading = signal(false);
   readonly errorMessage = signal('');
   readonly statementErrorMessage = signal('');
-  readonly activeTab = signal<'overview' | 'statement'>('statement');
+  /**
+   * Échec d'une action, par opposition à un échec de chargement : la fiche
+   * reste affichée. Les deux alert() natifs qui tenaient ce rôle disparaissent
+   * avec la même logique que les confirm() du §5c.
+   */
+  readonly actionError = signal('');
 
   readonly profile = signal<ClientProfileResponse | null>(null);
   readonly statement = signal<ClientStatementResponse | null>(null);
 
-  readonly isEditModalOpen = signal(false);
   readonly isPaymentModalOpen = signal(false);
   readonly viewingPaymentId = signal<number | null>(null);
   readonly deletingPaymentId = signal<number | null>(null);
-  readonly saving = signal(false);
-
-  readonly openInvoicesCollapsed = signal(true);
-  readonly entriesCollapsed = signal(false);
-  readonly paymentsCollapsed = signal(true);
   readonly deleting = signal(false);
 
   readonly vehicles = signal<Vehicle[]>([]);
   readonly showVehicleForm = signal(false);
   readonly editingVehicle = signal<Vehicle | null>(null);
 
+  // ── Refonte 2b, 16a : les deux filtres du registre ────────────────────────
+  /** Vue courante du registre — les boutons en tête. */
+  readonly scope = signal<RegisterScope>('all');
+  /** Tranche d'ancienneté sélectionnée, `null` quand aucune ne l'est. */
+  readonly agingBucket = signal<AgingBucket | null>(null);
 
-  readonly salesHistory = computed<ClientSalesHistoryRow[]>(() => {
-    const p = this.profile();
-    const s = this.statement();
-    return p?.sales_history ?? p?.sales ?? s?.sales ?? [];
-  });
-
-  readonly statementEntries = computed<ClientStatementEntry[]>(() => {
-    return this.statement()?.entries ?? [];
-  });
+  /**
+   * Le registre. Le serveur le construit déjà unifié — solde d'ouverture,
+   * ventes, paiements, ordres de service et leurs paiements — trié par date
+   * avec un solde progressif, du plus récent au plus ancien. L'écran le
+   * fragmentait en trois tableaux repliables ; il le montre maintenant tel
+   * qu'il est calculé.
+   */
+  readonly entries = computed<ClientStatementEntry[]>(() => this.statement()?.entries ?? []);
 
   /** Refonte 2b : l'âge de la dette et le délai réel viennent du relevé. */
   readonly aging = computed(() => this.statement()?.summary?.aging ?? null);
@@ -100,6 +111,137 @@ export class ClientDetailPageComponent implements OnInit {
   readonly openInvoices = computed<ClientSalesHistoryRow[]>(() => {
     return (this.statement()?.sales ?? []).filter((sale) => (sale.balance_due ?? 0) > 0);
   });
+
+  /** Identifiants des ventes encore dues — sert au filtre « en cours ». */
+  private readonly openSaleIds = computed<Set<number>>(
+    () => new Set(this.openInvoices().map((s) => s.id).filter((id): id is number => typeof id === 'number')),
+  );
+
+  /**
+   * Ventes dues rangées par tranche d'ancienneté. On reproduit ici la règle du
+   * serveur (ClientDebtService::aging) : l'âge se compte depuis la date de la
+   * vente, et les ordres de service en sont exclus — sans quoi le total des
+   * cellules ne correspondrait plus à celui de la barre.
+   */
+  private readonly saleIdsByBucket = computed<Record<AgingBucket, Set<number>>>(() => {
+    const buckets: Record<AgingBucket, Set<number>> = {
+      '0-30': new Set(), '31-60': new Set(), '61-90': new Set(), '90+': new Set(),
+    };
+
+    for (const sale of this.openInvoices()) {
+      if (sale.type === 'service_order' || typeof sale.id !== 'number') continue;
+
+      const days = this.daysSince(sale.sale_date ?? sale.created_at);
+      if (days === null) continue;
+
+      const key: AgingBucket = days <= 30 ? '0-30' : days <= 60 ? '31-60' : days <= 90 ? '61-90' : '90+';
+      buckets[key].add(sale.id);
+    }
+
+    return buckets;
+  });
+
+  /** Le registre après application des deux filtres. */
+  readonly visibleEntries = computed<ClientStatementEntry[]>(() => {
+    const bucket = this.agingBucket();
+    const ids = bucket ? this.saleIdsByBucket()[bucket] : null;
+    const open = this.openSaleIds();
+
+    return this.entries().filter((entry) => {
+      // La tranche d'ancienneté retient une facture ET ce qui a été versé
+      // dessus : c'est la lecture utile quand on veut relancer.
+      if (ids && !(typeof entry.sale_id === 'number' && ids.has(entry.sale_id))) return false;
+
+      switch (this.scope()) {
+        case 'open':
+          return typeof entry.sale_id === 'number' && open.has(entry.sale_id);
+        case 'payments':
+          return this.isPaymentEntry(entry);
+        default:
+          return true;
+      }
+    });
+  });
+
+  readonly paymentEntryCount = computed(() => this.entries().filter((e) => this.isPaymentEntry(e)).length);
+
+  /** Le chiffre principal : ce que le client doit aujourd'hui. */
+  readonly outstanding = computed(
+    () => this.statement()?.summary?.outstanding_balance ?? this.profile()?.outstanding_balance ?? 0,
+  );
+
+  /** L'ordre de lecture des tranches, et leur libellé — le gabarit les montre en clair. */
+  readonly bucketKeys: AgingBucket[] = ['0-30', '31-60', '61-90', '90+'];
+
+  bucketLabel(bucket: AgingBucket): string {
+    return bucket === '90+' ? '+90 J' : `${bucket} J`;
+  }
+
+  /**
+   * Le délai réellement observé, en chiffre de contexte. Il était jusqu'ici
+   * relégué dans une note de bas de bloc alors qu'il explique à lui seul
+   * pourquoi un client tient un solde permanent sans être mauvais payeur.
+   */
+  readonly observedDelayLabel = computed(() => {
+    const days = this.paymentDelay()?.observed_days;
+    return typeof days === 'number' ? `${days} j` : '—';
+  });
+
+  /**
+   * Le retard le plus ancien, affiché en badge dans la barre. C'est le seul
+   * chiffre qui dit d'un coup d'œil si la fiche demande une relance.
+   */
+  readonly worstOverdueDays = computed<number | null>(() => {
+    let worst = 0;
+
+    for (const sale of this.openInvoices()) {
+      if (sale.type === 'service_order') continue;
+      const days = this.daysSince(sale.sale_date ?? sale.created_at);
+      const accorded = this.profile()?.client?.payment_terms_days ?? 0;
+      if (days !== null && days - accorded > worst) worst = days - accorded;
+    }
+
+    return worst > 0 ? worst : null;
+  });
+
+  isPaymentEntry(entry: ClientStatementEntry): boolean {
+    return entry.type === 'payment' || entry.type === 'service_payment';
+  }
+
+  /** Une ligne qui porte encore une dette : elle prend le filet rouge. */
+  isOverdueEntry(entry: ClientStatementEntry): boolean {
+    return typeof entry.sale_id === 'number' && this.openSaleIds().has(entry.sale_id);
+  }
+
+  /** « Échue depuis 47 jours » sous la ligne, comme sur la barre d'ancienneté. */
+  overdueDays(entry: ClientStatementEntry): number | null {
+    if (!this.isOverdueEntry(entry) || this.isPaymentEntry(entry)) return null;
+    const days = this.daysSince(entry.date);
+    return days !== null && days > 0 ? days : null;
+  }
+
+  private daysSince(date: string | null | undefined): number | null {
+    if (!date) return null;
+    const then = new Date(date).getTime();
+    if (!Number.isFinite(then)) return null;
+    return Math.floor((Date.now() - then) / 86_400_000);
+  }
+
+  setScope(scope: RegisterScope): void {
+    this.scope.set(scope);
+  }
+
+  /** Un second clic sur la même tranche la désélectionne. */
+  toggleAgingBucket(bucket: AgingBucket): void {
+    this.agingBucket.update((current) => (current === bucket ? null : bucket));
+  }
+
+  clearFilters(): void {
+    this.scope.set('all');
+    this.agingBucket.set(null);
+  }
+
+  readonly hasActiveFilter = computed(() => this.scope() !== 'all' || this.agingBucket() !== null);
 
   ngOnInit(): void {
     this.route.paramMap
@@ -123,26 +265,6 @@ export class ClientDetailPageComponent implements OnInit {
       });
   }
 
-  setTab(tab: 'overview' | 'statement'): void {
-    this.activeTab.set(tab);
-  }
-
-  trackByRowId(_: number, row: { id?: number | string | null }): number | string {
-    return row.id ?? _;
-  }
-
-  toggleOpenInvoices(): void { this.openInvoicesCollapsed.update(v => !v); }
-  toggleEntries(): void { this.entriesCollapsed.update(v => !v); }
-  togglePayments(): void { this.paymentsCollapsed.update(v => !v); }
-
-  paymentStatusClass(status: string | null | undefined): string {
-    const s = (status ?? '').toUpperCase();
-    if (s === 'PAYE') return 'badge-success';
-    if (s === 'PARTIEL') return 'badge-warning';
-    if (s === 'NON PAYE') return 'badge-danger';
-    return 'badge-neutral';
-  }
-
   deleteClient(): void {
     const name = this.profile()?.client?.name ?? 'ce client';
     const id = this.activeClientId;
@@ -162,17 +284,14 @@ export class ClientDetailPageComponent implements OnInit {
       next: () => this.router.navigate(['/clients']),
       error: () => {
         this.deleting.set(false);
-        alert('Impossible de supprimer ce client. Il est peut-être lié à des ventes ou des paiements.');
+        this.actionError.set('Impossible de supprimer ce client. Il est peut-être lié à des ventes ou des paiements.');
       },
     });
   }
 
-  openEditModal(): void {
-    this.isEditModalOpen.set(true);
-  }
-
-  closeEditModal(): void {
-    this.isEditModalOpen.set(false);
+  /** Refonte 2b, 6a : la modale d'édition écrite en ligne passe sur sa route. */
+  openEditor(): void {
+    this.router.navigate(['/clients', this.activeClientId, 'edit']);
   }
 
   openPaymentModal(): void {
@@ -189,6 +308,27 @@ export class ClientDetailPageComponent implements OnInit {
 
   openPaymentView(payment: ClientPaymentRow): void {
     if (typeof payment.id === 'number') this.viewingPaymentId.set(payment.id);
+  }
+
+  /** Depuis le registre, où l'écriture ne porte que l'identifiant du paiement. */
+  openEntryPayment(entry: ClientStatementEntry): void {
+    if (typeof entry.payment_id === 'number') this.viewingPaymentId.set(entry.payment_id);
+  }
+
+  /**
+   * Le relevé montre une ligne par affectation : un paiement réparti sur
+   * plusieurs ventes y apparaît autant de fois. On remonte donc au paiement
+   * lui-même pour que la confirmation dise la vraie conséquence — « ces
+   * montants seront retirés de toutes les ventes que ce paiement couvrait ».
+   */
+  entryPayment(entry: ClientStatementEntry): ClientPaymentRow | null {
+    if (typeof entry.payment_id !== 'number') return null;
+    return (this.statement()?.payments ?? []).find((p) => p.id === entry.payment_id) ?? null;
+  }
+
+  deleteEntryPayment(entry: ClientStatementEntry): void {
+    const payment = this.entryPayment(entry);
+    if (payment) this.deleteStatementPayment(payment);
   }
 
   closePaymentView(): void {
@@ -217,7 +357,7 @@ export class ClientDetailPageComponent implements OnInit {
       },
       error: () => {
         this.deletingPaymentId.set(null);
-        alert('Impossible de supprimer ce paiement.');
+        this.actionError.set('Impossible de supprimer ce paiement.');
       },
     });
   }
@@ -260,27 +400,6 @@ export class ClientDetailPageComponent implements OnInit {
     });
   }
 
-  formatVehicle(v: Vehicle): string {
-    return this.vehicleService.formatDisplay(v);
-  }
-
-  saveClient(payload: ClientPayload): void {
-    const clientId = this.activeClientId;
-    if (!clientId) return;
-
-    this.saving.set(true);
-    this.clientService.updateClient(clientId, payload).subscribe({
-      next: () => {
-        this.saving.set(false);
-        this.isEditModalOpen.set(false);
-        this.loadClient(clientId);
-      },
-      error: () => {
-        this.saving.set(false);
-      },
-    });
-  }
-
   /** Refonte 2b, étape 4 : l'ancienne modale d'ajout de vente est remplacée par l'écran plein /sales/new, préchargé avec ce client. */
   openNewSaleForm(): void {
     this.router.navigate(['/sales/new'], { queryParams: { client_id: this.activeClientId } });
@@ -293,15 +412,13 @@ export class ClientDetailPageComponent implements OnInit {
     this.statementLoading.set(true);
     this.errorMessage.set('');
     this.statementErrorMessage.set('');
+    this.actionError.set('');
     this.profile.set(null);
     this.statement.set(null);
     this.vehicles.set([]);
     this.showVehicleForm.set(false);
     this.editingVehicle.set(null);
-    this.activeTab.set('statement');
-    this.openInvoicesCollapsed.set(true);
-    this.entriesCollapsed.set(false);
-    this.paymentsCollapsed.set(true);
+    this.clearFilters();
 
     this.vehicleService.getVehiclesForClient(clientId)
       .pipe(takeUntilDestroyed(this.destroyRef))

@@ -1,351 +1,440 @@
 @use '../../_variables' as *;
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
+/* Refonte 2b, gabarit 16b — le détail de vente, hors modale.
+   Deux rangées : barre de 60 px, corps en minmax(0,1fr) 400px. Le prototype
+   dessine deux rangées là où le texte du §6b en annonce trois ; c'est le
+   dessin qui fait foi, les actions tiennent dans la barre. */
 
-
-// ── Overlay ───────────────────────────────────────────────────────────────────
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba($text-dark, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1.5rem;
-  backdrop-filter: blur(2px);
+.sd-screen {
+  display: grid;
+  grid-template-rows: 60px minmax(0, 1fr);
+  height: calc(100vh - 60px);
+  background: $bg-card;
+  border: 1px solid $border-color;
 }
 
-// ── Modal container ───────────────────────────────────────────────────────────
-.modal-content {
+/* ── Rangée 1 : la barre ──────────────────────────────────────────────── */
+.sd-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 20px;
+  background: $bg-subtle;
+  border-bottom: 1px solid $border-strong;
+}
+
+.sd-back {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid $border-color;
   background: $bg-card;
-  border-radius: 0;
-  width: 100%;
-  max-width: 1100px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: $shadow-modal;
-  border: 1px solid $border-subtle;
+  color: $text-dark;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.sd-identity {
   display: flex;
   flex-direction: column;
+  gap: 1px;
+  min-width: 0;
 }
 
-// ── Modal header ──────────────────────────────────────────────────────────────
-.modal-header {
+.sd-title {
+  font-size: 15.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.sd-meta {
+  font-size: 11.5px;
+  color: $text-muted;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sd-badges {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 0.75rem;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid $border-subtle;
-  background: $bg-subtle;
-  border-radius: 0;
+  gap: 6px;
   flex-shrink: 0;
-  // The whole .modal-content scrolls, so keep the title, the ‹ › navigation
-  // and the close button reachable while a long record is scrolled.
-  position: sticky;
-  top: 0;
-  z-index: 2;
+}
 
-  h2 {
-    margin: 0;
-    font-size: 1.05rem;
-    font-weight: 700;
+.sd-badge {
+  padding: 3px 8px;
+  border: 1px solid $border-strong;
+  background: $bg-card;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: $text-muted;
+  white-space: nowrap;
+
+  &--ok { border-color: $income-color; color: $income-color; }
+
+  &--late {
+    border-color: $expense-color;
+    background: $overdue-bg;
+    color: $expense-color;
+  }
+}
+
+.sd-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+
+  button {
+    width: 28px;
+    height: 28px;
+    border: 1px solid $border-color;
+    background: $bg-card;
     color: $text-dark;
-    letter-spacing: -0.01em;
-  }
-
-  .modal-title {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-    min-width: 0;
-  }
-
-  // Précédent / Suivant — shared with purchase-detail (it lists this file in its styleUrls).
-  .modal-nav {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-  }
-
-  // Record number (N° {id}) shown between the ‹ arrow and the position counter.
-  .modal-nav-id {
-    padding: 0.2rem 0.6rem;
-    border-radius: 999px;
-    background: $bg-subtle;
-    color: $border-strong;
-    font-size: 0.8rem;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-
-  .modal-nav-pos {
-    min-width: 4rem;
-    text-align: center;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: $text-muted;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-
-  // Right-hand action group (Imprimer, Demander une modification, ✕): one flex
-  // row so the close button no longer drops under the inline buttons.
-  .modal-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    flex-shrink: 0;
-
-    .btn {
-      padding: 0.4rem 0.85rem;
-      border-radius: 0;
-      border: 1.5px solid $border-color;
-      background: $bg-card;
-      color: $border-strong;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 0.8125rem;
-      box-shadow: none;
-      transition: background 0.15s, border-color 0.15s;
-
-      &:hover { background: $bg-subtle; border-color: #bcc6d4; }
-    }
-  }
-
-  .btn-close,
-  .modal-nav button {
-    background: none;
-    border: 1.5px solid $border-color;
-    border-radius: 0;
-    width: 2rem;
-    height: 2rem;
-    padding: 0;
-    cursor: pointer;
-    color: $text-muted;
-    font-size: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.15s;
+    cursor: pointer;
 
-    &:not(:disabled):hover { background: $border-subtle; color: $text-dark; border-color: #bcc6d4; }
-  }
-
-  .modal-nav button {
-    font-size: 1.25rem;
-    line-height: 1;
-    flex-shrink: 0;
-
-    &:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
   }
 }
 
-// ── Detail body ───────────────────────────────────────────────────────────────
-.detail-body { padding: 1.5rem; }
-
-.detail-section {
-  margin-bottom: 1.5rem;
-
-  &.meta { margin-bottom: 0; }
-
-  .section-title {
-    font-size: 0.6875rem;
-    font-weight: 700;
-    color: $text-light;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin: 0 0 0.875rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid $border-subtle;
-  }
+.sd-pos {
+  font-size: 11px;
+  color: $text-muted;
+  font-variant-numeric: tabular-nums;
 }
 
-// ── Detail grid ───────────────────────────────────────────────────────────────
-.detail-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 0.875rem;
-}
-
-.detail-item {
+.sd-actions {
+  margin-left: auto;
   display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-
-  &.full { grid-column: 1 / -1; }
-
-  .label {
-    font-size: 0.6875rem;
-    font-weight: 700;
-    color: $text-light;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-  }
-
-  .value {
-    font-size: 0.9375rem;
-    font-weight: 600;
-    color: $border-strong;
-  }
-}
-
-// ── Utilities ─────────────────────────────────────────────────────────────────
-.fw-semibold   { font-weight: 600; }
-.text-success  { color: #15803d; }
-.text-danger   { color: $expense-color; }
-.text-muted    { color: $text-muted; }
-
-// ── Badges ────────────────────────────────────────────────────────────────────
-.badge {
-  display: inline-flex;
   align-items: center;
-  padding: 0.2rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  width: fit-content;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
-.badge-success { background: rgba(34, 197, 94, 0.10);  color: #15803d; }
-.badge-warning { background: rgba(234, 179, 8, 0.12);  color: #a16207; }
-.badge-danger  { background: rgba($expense-color, 0.10);  color: $expense-color; }
-
-// Payment-method badges (aggregated from the operation's actual payments).
-// Shared by sale-detail and purchase-detail (purchase-detail includes this
-// stylesheet via styleUrls).
-.method-badges {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-}
-.badge-method {
-  background: rgba(100, 116, 139, 0.1);
-  color: #475569; // neutral fallback for legacy/unmapped values
-
-  &.method-especes  { background: rgba($income-color, 0.12); color: #065f46; }
-  &.method-cheque   { background: rgba($invoice-color, 0.10); color: #1d4ed8; }
-  &.method-virement { background: rgba(139, 92, 246, 0.10); color: #6d28d9; }
-  &.method-effet    { background: rgba(245, 158, 11, 0.12); color: #92400e; }
-  &.method-carte    { background: rgba(236, 72, 153, 0.10); color: #9d174d; }
-}
-
-// ── Account warning ───────────────────────────────────────────────────────────
-.account-warning {
-  margin-top: 0.75rem;
-  padding: 0.75rem 1rem;
-  border-radius: 0;
-  border: 1px solid rgba($expense-color, 0.25);
-  background: rgba($expense-color, 0.06);
-  color: #b91c1c;
+.sd-btn {
+  height: 36px;
+  padding: 0 13px;
+  border: 1px solid $border-color;
+  background: $bg-card;
+  color: $text-dark;
+  font: inherit;
+  font-size: 13px;
   font-weight: 600;
-  font-size: 0.875rem;
-}
-
-// ── Table ─────────────────────────────────────────────────────────────────────
-.col-produit {
-  width: 45%;
-  white-space: normal;
-}
-
-.product-link {
-  background: none;
-  border: none;
-  padding: 0;
-  color: $primary;
-  font-size: inherit;
   cursor: pointer;
-  text-align: left;
+  white-space: nowrap;
 
-  &:hover { text-decoration: underline; }
-}
-
-.table-responsive { overflow-x: auto; }
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-
-  th {
-    padding: 0.6rem 0.875rem;
-    font-size: 0.6875rem;
+  &--primary {
+    padding: 0 15px;
+    border-color: $primary;
+    background: $primary;
+    color: $bg-card;
     font-weight: 700;
-    color: $text-light;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    border-bottom: 2px solid $border-subtle;
-    background: $bg-subtle;
-    white-space: nowrap;
-
-    &.text-center { text-align: center; }
-    &.text-right  { text-align: right; }
   }
-
-  td {
-    padding: 0.8rem 0.875rem;
-    border-bottom: 1px solid $border-subtle;
-    vertical-align: top;
-    color: $border-strong;
-    font-size: 0.875rem;
-
-    &.text-center { text-align: center; }
-    &.text-right  { text-align: right; }
-  }
-
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover td { background: $bg-subtle; }
 }
 
-// ── Modal footer ──────────────────────────────────────────────────────────────
-// Shared with purchase-detail (it lists this file in its styleUrls).
-.modal-footer {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid $border-subtle;
+/* ── Rangée 2 : le corps ──────────────────────────────────────────────── */
+.sd-body {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+}
+
+.sd-main {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 22px 22px;
+  border-right: 1px solid $border-strong;
+}
+
+.sd-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 0.6rem;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: $text-dark;
+
+  &:not(:first-child) { margin-top: 1.5rem; }
+}
+
+.sd-count {
+  padding: 0 6px;
+  border: 1px solid $border-strong;
+  background: $bg-subtle;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: $text-muted;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Les registres ────────────────────────────────────────────────────── */
+.sd-rows { border: 1px solid $border-strong; }
+
+.sd-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 62px 96px 74px 106px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 11px;
+  border-bottom: 1px solid $border-subtle;
+
+  &:last-child { border-bottom: 0; }
+
+  &--margin { grid-template-columns: minmax(0, 1fr) 62px 96px 74px 106px 106px; }
+
+  &--pay { grid-template-columns: 96px 130px minmax(0, 1fr) 120px; }
+
+  &--head {
+    padding: 6px 11px;
+    border-bottom: 1px solid $text-dark;
+    background: $bg-subtle;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: $text-muted;
+  }
+}
+
+.sd-num { text-align: right; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.sd-strong { font-weight: 700; }
+.sd-gain { color: $income-color; }
+.sd-loss { color: $expense-color; }
+.sd-muted { font-size: 12px; color: $text-muted; }
+.sd-date { font-size: 12px; color: $text-muted; font-variant-numeric: tabular-nums; }
+
+.sd-product { min-width: 0; }
+
+.sd-product-main {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sd-product-sub {
+  display: block;
+  font-size: 11px;
+  color: $text-muted;
+}
+
+.sd-brand {
+  padding: 1px 5px;
+  border: 1px solid $border-strong;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: $text-muted;
+  flex-shrink: 0;
+}
+
+.sd-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $text-dark;
+  text-decoration: underline;
+  cursor: pointer;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sd-ref { font-size: 12.5px; font-weight: 600; }
+
+.sd-method {
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid $border-strong;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: $text-secondary;
+}
+
+/* ── La livraison, en bandeau d'une ligne ─────────────────────────────── */
+.sd-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 18px;
+  margin-top: 1.5rem;
+  padding: 9px 11px;
+  border: 1px solid $border-strong;
+  background: $bg-subtle;
+}
+
+.sd-strip-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: $text-muted;
+}
+
+.sd-strip-item {
+  font-size: 12.5px;
+  color: $text-dark;
+
+  em {
+    font-style: normal;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $text-muted;
+    margin-right: 4px;
+  }
+}
+
+.sd-note {
+  margin: 0.75rem 0 0;
+  padding: 9px 11px;
+  border-left: 3px solid $border-color;
+  background: $bg-subtle;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: $text-secondary;
+}
+
+.sd-state {
+  margin: 0;
+  padding: 1.25rem 11px;
+  font-size: 12.5px;
+  color: $text-muted;
+}
+
+/* ── Colonne de droite ────────────────────────────────────────────────── */
+.sd-side {
+  min-height: 0;
+  overflow-y: auto;
+  background: $bg-subtle;
+}
+
+.sd-panel {
+  padding: 14px 18px;
+  border-bottom: 1px solid $border-strong;
+}
+
+.sd-panel-title {
+  margin: 0 0 6px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: $text-muted;
+}
+
+.sd-kv {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-  flex-shrink: 0;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid $border-strong;
+  font-size: 12.5px;
+  color: $text-secondary;
 
-  .modal-footer-actions {
-    display: flex;
-    gap: 0.5rem;
-    margin-left: auto;
-    flex-wrap: wrap;
-  }
+  &:last-child { border-bottom: 0; }
 
-  .btn {
-    padding: 0.55rem 1.25rem;
-    border-radius: 0;
-    border: 1.5px solid $border-color;
-    background: $bg-card;
-    color: $border-strong;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 0.875rem;
-    box-shadow: none;
-    transition: background 0.15s, border-color 0.15s;
-
-    &:hover { background: $bg-subtle; border-color: #bcc6d4; }
+  strong {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: $text-dark;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
   }
 }
 
-/* Print rules live in global styles.scss because Angular's view encapsulation
-   scopes selectors and prevents `body *` from matching elements outside this
-   component (which is required to hide everything except the printable area). */
+.sd-methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: flex-end;
+}
 
-@media (max-width: 768px) {
-  .modal-footer {
-    .modal-footer-actions { width: 100%; justify-content: flex-end; margin-left: 0; }
+/* Le reste dû est la seule ligne encadrée : c'est celle sur laquelle on agit. */
+.sd-due {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 9px;
+  padding: 9px 11px;
+  border: 1px solid $expense-color;
+  background: $overdue-bg;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $expense-color;
+
+  strong {
+    font-size: 16px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
   }
+
+  &--settled {
+    border-color: $income-color;
+    background: $bg-card;
+    color: $income-color;
+  }
+}
+
+.sd-client {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: $text-dark;
+  text-decoration: none;
+}
+
+.sd-client-meta {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 11.5px;
+  color: $text-muted;
+}
+
+.sd-warn {
+  margin: 9px 0 0;
+  padding: 8px 10px;
+  border-left: 3px solid $warning-border;
+  background: $warning-bg;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: $warning-dark;
+}
+
+/* ── Étroit : la colonne de droite passe dessous ──────────────────────── */
+@media (max-width: 1100px) {
+  .sd-screen { height: auto; }
+  .sd-body { grid-template-columns: minmax(0, 1fr); }
+  .sd-main { border-right: 0; }
+  .sd-side { border-top: 1px solid $border-strong; }
+}
+
+@media print {
+  .no-print { display: none !important; }
+  .sd-screen { height: auto; border: 0; }
+  .sd-body { grid-template-columns: minmax(0, 1fr); }
+  .sd-main { overflow: visible; border-right: 0; }
+  .sd-side { overflow: visible; background: $bg-card; }
 }

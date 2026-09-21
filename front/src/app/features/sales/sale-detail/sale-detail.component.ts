@@ -1,9 +1,10 @@
 import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, SimpleChanges, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { IconComponent } from '../../../shared/icon/icon.component';
+import { SidePanelComponent } from '../../../shared/side-panel/side-panel.component';
 import { Sale } from '../../../core/models/sale.model';
 import { Product } from '../../../core/models/product.model';
-import { ProductDetailComponent } from '../../products/product-detail/product-detail.component';
 import { DocumentPrintComponent, PrintDocument, PrintLine } from '../../../shared/document-print/document-print.component';
 import { paymentMethodClass } from '../../../core/constants/payment-method.constants';
 import { AuthService } from '../../../core/services/auth.service';
@@ -22,11 +23,12 @@ import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
   standalone: true,
   imports: [
     CommonModule,
-    ProductDetailComponent,
+    RouterLink,
     DocumentPrintComponent,
     ShipmentChangeListComponent,
     ShipmentChangeFormComponent,
     ShipmentChangePrintComponent,
+    SidePanelComponent,
     IconComponent, ConfirmDeleteComponent],
   templateUrl: './sale-detail.component.html',
   styleUrl: './sale-detail.component.scss'
@@ -52,8 +54,9 @@ export class SaleDetailComponent implements OnInit, OnChanges {
   @Output() edit = new EventEmitter<void>();
   @Output() prev = new EventEmitter<void>();
   @Output() next = new EventEmitter<void>();
+  /** Refonte 2b, 16b : l'encaissement se déclenche depuis la barre de la fiche. */
+  @Output() collect = new EventEmitter<void>();
 
-  viewingProduct = signal<Product | null>(null);
   printDoc = signal<PrintDocument | null>(null);
   readonly paymentMethodClass = paymentMethodClass;
 
@@ -81,7 +84,6 @@ export class SaleDetailComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     const change = changes['sale'];
     if (!change || change.firstChange) return;
-    this.viewingProduct.set(null);
     this.printDoc.set(null);
     this.shipmentRequests.set([]);
     this.closeShipmentForm();
@@ -105,7 +107,7 @@ export class SaleDetailComponent implements OnInit, OnChanges {
   }
 
   private hasNestedPanelOpen(): boolean {
-    return !!this.viewingProduct() || !!this.printDoc() || this.showShipmentForm() || !!this.shipmentPrintDoc();
+    return !!this.printDoc() || this.showShipmentForm() || !!this.shipmentPrintDoc();
   }
 
   private loadShipmentRequests(): void {
@@ -222,6 +224,46 @@ export class SaleDetailComponent implements OnInit, OnChanges {
     return this.sale?.linked_client?.city?.trim() || this.sale?.city?.trim() || '-';
   }
 
+  // ── Refonte 2b, gabarit 16b ───────────────────────────────────────────────
+
+  /** Le total de la vente, quel que soit le champ qui le porte. */
+  get saleTotal(): number {
+    return Number(this.sale?.total_sale ?? this.sale?.total ?? 0);
+  }
+
+  get amountPaid(): number {
+    return (this.sale?.payments ?? []).reduce((sum, p: any) => sum + Number(p.amount ?? 0), 0);
+  }
+
+  /**
+   * Ce qui reste dû. C'est le chiffre que porte l'action principale de la
+   * barre — « Encaisser 48 600 DH » plutôt que « Encaisser » : on décide de
+   * cliquer en sachant de combien il s'agit.
+   */
+  get amountDue(): number {
+    return Math.max(0, Math.round((this.saleTotal - this.amountPaid) * 100) / 100);
+  }
+
+  get isSettled(): boolean {
+    return this.sale?.payment_status === 'PAYE';
+  }
+
+  /** Âge de la créance, accolé au badge de paiement quand elle court encore. */
+  get unpaidDays(): number | null {
+    if (this.isSettled || !this.sale?.date) return null;
+    const days = Math.floor((Date.now() - new Date(this.sale.date).getTime()) / 86_400_000);
+    return days > 0 ? days : null;
+  }
+
+  /** Le § 6b réserve la marge à une permission dédiée. */
+  get canSeeMargin(): boolean {
+    return this.authService.hasPermission('view margins');
+  }
+
+  lineMargin(item: any): number {
+    return this.lineTotal(item) - Number(item.purchase_price || 0) * Number(item.quantity || 0);
+  }
+
   get outstandingBalance(): number {
     return Number(this.sale?.client_summary?.outstanding_balance ?? 0);
   }
@@ -242,16 +284,16 @@ export class SaleDetailComponent implements OnInit, OnChanges {
     return item.linkedProduct || item.linked_product || item.product;
   }
 
+  /**
+   * Refonte 2b, 6c : product-detail est supprimé. Il répétait en lecture seule
+   * ce que l'éditeur 15a montre déjà. On ouvre donc l'éditeur, dans un nouvel
+   * onglet pour ne pas perdre la saisie ou la fiche en cours.
+   */
   openProductView(item: any): void {
     const product = this.getProduct(item);
-    if (product) {
-      this.viewingProduct.set(product);
+    if (product?.id) {
+      window.open(`/products/${product.id}/edit`, '_blank', 'noopener');
     }
-  }
-
-  editProductInNewTab(product: Product): void {
-    this.viewingProduct.set(null);
-    window.open(`/products?id=${product.id}&edit=1`, '_blank', 'noopener');
   }
 
   private printLabel(product: any, fallback: string): string {

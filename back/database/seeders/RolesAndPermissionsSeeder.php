@@ -138,6 +138,11 @@ class RolesAndPermissionsSeeder extends Seeder
 
             // Reporting (Administrator only)
             'view reporting',
+
+            // Marges — refonte 2b §6b : le prix d'achat et la marge d'une vente
+            // ne se montrent plus à quiconque peut voir la vente. Administrator
+            // et Manager ; les commerciaux vendent, ils n'arbitrent pas la marge.
+            'view margins',
         ];
 
         foreach ($permissions as $permission) {
@@ -190,6 +195,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit sales',
             'delete sales',
             'manage sale-payments',
+
+            // Marges : un vendeur qui négocie une remise doit voir son plancher.
+            // C'est aussi ce qui lui laisse la colonne Marge de la liste Ventes
+            // et son classement par commercial dans le Reporting.
+            'view margins',
 
             // Purchases
             'view purchases',

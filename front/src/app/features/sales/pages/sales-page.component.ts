@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../../core/services/auth.service';
-import { SaleDetailComponent } from '../sale-detail/sale-detail.component';
+import { ListContextService } from '../../../core/services/list-context.service';
 import { PaymentPanelComponent } from '../payment-panel/payment-panel.component';
 import { Sale, SaleFilters, SaleSummary } from '../models/sale.model';
 import { SALE_STATUSES, SALE_STATUS_LABELS, SALE_STATUS_TRANSITIONS, SaleStatus } from '../../../core/constants/status.constants';
@@ -14,7 +14,6 @@ import { SaleService } from '../data-access/sale.service';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 import { CityService } from '../../../core/services/city.service';
-import { DetailNavigator } from '../../../core/utils/detail-navigator';
 import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
 import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 import {
@@ -30,7 +29,7 @@ import {
 @Component({
   selector: 'app-sales-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, SaleDetailComponent, PaymentPanelComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, FormsModule, RouterLink, PaymentPanelComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ConfirmDeleteComponent],
   templateUrl: './sales-page.component.html',
   styleUrl: './sales-page.component.scss',
 })
@@ -192,23 +191,12 @@ export class SalesPageComponent implements OnInit {
 
   exportError = signal('');
   deletingSaleId = signal<number | null>(null);
-  detailSale = signal<Sale | null>(null);
   paymentSale = signal<Sale | null>(null);
 
-  /** Précédent / Suivant inside the detail modal — follows the table order across pages. */
-  readonly detailNav = new DetailNavigator<Sale>({
-    items: this.sales,
-    current: this.detailSale,
-    page: this.currentPage,
-    lastPage: this.lastPage,
-    perPage: this.perPage,
-    total: this.total,
-    loading: this.loading,
-    goToPage: (page) => this.goToPage(page),
-  });
 
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private listContext = inject(ListContextService);
   private destroyRef = inject(DestroyRef);
 
   constructor(
@@ -227,9 +215,7 @@ export class SalesPageComponent implements OnInit {
       .subscribe(params => {
         const id = Number(params.get('id'));
         if (Number.isFinite(id) && id > 0) {
-          this.saleService.getSale(id).subscribe({
-            next: sale => this.openDetail(sale),
-          });
+          this.router.navigate(['/sales', id]);
         }
 
         // "Valider et encaisser" depuis l'écran plein de saisie (sale-form-page)
@@ -256,10 +242,18 @@ export class SalesPageComponent implements OnInit {
         this.currentPage.set(response.current_page);
         this.lastPage.set(response.last_page);
         this.total.set(response.total);
+        // Refonte 2b, 6b : la fiche est maintenant une page, ce composant sera
+        // détruit en y arrivant. On lègue l'ordre du tableau au service.
+        this.listContext.set('sales', {
+          ids: response.data.map((sale: Sale) => sale.id),
+          page: response.current_page,
+          lastPage: response.last_page,
+          perPage: this.perPage(),
+          total: response.total,
+        });
         this.loading.set(false);
         this.loadError.set(null);
         this.lastLoadedAt.set(new Date());
-        this.detailNav.onListLoaded();
       },
       error: (err) => {
         // On garde les lignes déjà affichées : l'écran d'erreur dit ce qui a
@@ -269,7 +263,6 @@ export class SalesPageComponent implements OnInit {
         this.loadError.set(cause);
         this.loadErrorDetail.set(detail);
         this.loading.set(false);
-        this.detailNav.reset();
       },
     });
 
@@ -350,6 +343,14 @@ export class SalesPageComponent implements OnInit {
     this.loadData();
   }
 
+  /**
+   * Refonte 2b, 6b : le prix d'achat et la marge passent sous permission. La
+   * liste doit suivre la fiche, sinon le garde-fou ne garde rien.
+   */
+  canSeeMargin(): boolean {
+    return this.authService.hasPermission('view margins');
+  }
+
   goToPage(page: number): void {
     if (page >= 1 && page <= this.lastPage()) {
       this.currentPage.set(page);
@@ -357,8 +358,12 @@ export class SalesPageComponent implements OnInit {
     }
   }
 
+  /**
+   * Refonte 2b, 6b : la fiche de vente a sa propre route. La liste n'ouvre plus
+   * de modale, elle y conduit.
+   */
   openDetail(sale: Sale): void {
-    this.detailSale.set(sale);
+    this.router.navigate(['/sales', sale.id]);
   }
 
   getClientName(sale: Sale): string {
@@ -385,18 +390,7 @@ export class SalesPageComponent implements OnInit {
     return parts.join(' · ');
   }
 
-  closeDetail(): void {
-    this.detailSale.set(null);
-    this.detailNav.reset();
-  }
 
-  /** La modification se fait maintenant sur l'écran plein /sales/:id/edit (sale-form-page), pas dans une modale ici. */
-  editFromDetail(): void {
-    const sale = this.detailSale();
-    if (!sale) return;
-    this.closeDetail();
-    this.router.navigate(['/sales', sale.id, 'edit']);
-  }
 
   deleteSale(sale: Sale): void {
     this.pendingDelete.set({

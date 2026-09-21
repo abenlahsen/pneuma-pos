@@ -46,22 +46,22 @@ describe('ProductsPageComponent', () => {
       expect(comp.searchQuery()).toBe('');
     });
 
-    it('calls getProduct(42) and opens view modal when ?id=42 with no ?edit=1', () => {
+    // Refonte 2b, 6c : product-detail est supprimé. Les deux formes du lien
+    // — avec ou sans ?edit=1 — mènent maintenant au même éditeur, et sans
+    // charger le produit au passage : la route s'en charge.
+    it("route vers l'éditeur avec ?id=42, sans charger le produit", () => {
       const svc = makeProductService(of(fakeProduct));
       const { comp, router } = build(svc, makeRoute({ id: '42' }));
       comp.ngOnInit();
-      expect(svc.getProduct).toHaveBeenCalledWith(42);
-      expect(comp.viewingProduct()).toEqual(fakeProduct);
-      expect(router.navigate).not.toHaveBeenCalled();
+      expect(svc.getProduct).not.toHaveBeenCalled();
+      expect(router.navigate).toHaveBeenCalledWith(['/products', 42, 'edit']);
     });
 
-    it('routes to the editor when ?id=42&edit=1, instead of opening a modal', () => {
+    it("route vers l'éditeur avec ?id=42&edit=1 — même destination", () => {
       const svc = makeProductService(of(fakeProduct));
       const { comp, router } = build(svc, makeRoute({ id: '42', edit: '1' }));
       comp.ngOnInit();
-      expect(svc.getProduct).toHaveBeenCalledWith(42);
       expect(router.navigate).toHaveBeenCalledWith(['/products', 42, 'edit']);
-      expect(comp.viewingProduct()).toBeNull();
     });
 
     it('does NOT call getProduct when ?id= param is absent', () => {

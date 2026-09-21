@@ -1,0 +1,199 @@
+@use '../../../_variables' as *;
+
+/* Refonte 2b, gabarit 15a — l'éditeur client, en trois rangées.
+   Douze champs : le §5b renvoie hors de la modale au-delà de dix. La colonne
+   de droite isole ce qui engage l'argent, pour qu'on ne le modifie pas en
+   passant en corrigeant un numéro de téléphone. */
+
+.cf-editor {
+  display: grid;
+  grid-template-rows: 60px minmax(0, 1fr) 64px;
+  height: calc(100vh - 60px);
+  background: $bg-card;
+  border: 1px solid $border-strong;
+}
+
+/* ── Rangée 1 : la barre ──────────────────────────────────────────────── */
+.cf-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 1.25rem;
+  border-bottom: 1px solid $text-dark;
+}
+
+.cf-identity {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.cf-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: $text-dark;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cf-meta {
+  font-size: 11.5px;
+  color: $text-muted;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cf-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.cf-badge {
+  padding: 2px 7px;
+  border: 1px solid $income-color;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: $income-color;
+
+  &--off {
+    border-color: $border-color;
+    color: $text-muted;
+  }
+}
+
+/* ── Rangée 2 : le corps ──────────────────────────────────────────────── */
+.cf-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  min-height: 0;
+}
+
+.cf-main,
+.cf-side {
+  overflow-y: auto;
+  padding: 1.25rem;
+}
+
+.cf-side {
+  background: $bg-subtle;
+  border-left: 1px solid $border-strong;
+}
+
+.cf-block-title {
+  margin: 0 0 0.9rem;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: $text-dark;
+}
+
+.cf-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem 1rem;
+}
+
+.cf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+
+  &--wide {
+    grid-column: 1 / -1;
+  }
+
+  > span {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $text-secondary;
+  }
+
+  input,
+  select,
+  textarea {
+    padding: 0.45rem 0.7rem;
+    border: 1px solid $border-color;
+    background: $bg-card;
+    font: inherit;
+    font-size: 0.875rem;
+    color: $text-dark;
+
+    &:focus {
+      outline: none;
+      border-color: $primary;
+      box-shadow: 0 0 0 3px rgba($primary, 0.1);
+    }
+  }
+
+  textarea {
+    resize: vertical;
+  }
+}
+
+.cf-side .cf-field + .cf-field {
+  margin-top: 0.9rem;
+}
+
+.cf-hint {
+  font-size: 11px;
+  line-height: 1.5;
+  font-style: normal;
+  color: $text-muted;
+}
+
+.cf-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: $text-secondary;
+  cursor: pointer;
+}
+
+/* ── Rangée 3 : le pied ───────────────────────────────────────────────── */
+.cf-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 1.25rem;
+  border-top: 1px solid $border-strong;
+  background: $bg-subtle;
+}
+
+.cf-foot-hint {
+  flex: 1;
+  font-size: 11.5px;
+  color: $text-muted;
+}
+
+.cf-btn {
+  padding: 8px 16px;
+  border: 1px solid $border-color;
+  background: $bg-card;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $text-dark;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &--solid {
+    border-color: $text-dark;
+    background: $text-dark;
+    color: $bg-card;
+  }
+}

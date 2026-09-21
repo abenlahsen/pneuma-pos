@@ -1,0 +1,15 @@
+@use '../../_variables' as *;
+
+/* Refonte 2b, étape 6b — la coque de la fiche de vente. Elle ne porte que le
+   chargement et les erreurs ; la géométrie des deux rangées appartient à
+   <app-sale-detail>, qui est seul à connaître son état. */
+.sdp-shell {
+  display: block;
+}
+
+.sdp-loading {
+  margin: 0;
+  padding: 2rem 1.25rem;
+  font-size: 12.5px;
+  color: $text-muted;
+}

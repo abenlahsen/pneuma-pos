@@ -1,134 +1,111 @@
-<div class="modal-overlay" (click)="close()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>Régler des ventes — {{ clientName || 'Client' }}</h2>
-      <button class="btn-icon" type="button" (click)="close()" [disabled]="submitting()"><app-icon name="close" [size]="14" /></button>
+<!-- Refonte 2b, gabarit du volet latéral : la modale écrite à la main passe par
+     la coque partagée. Le volet est plus large que les 520 px du gabarit — il
+     porte un tableau d'affectation à cinq colonnes — mais garde le reste. -->
+<app-side-panel
+  kicker="Encaissement"
+  title="Régler des ventes"
+  [subtitle]="clientName || 'Client'"
+  [width]="720"
+  (dismiss)="close()">
+
+  <div *ngIf="loading()" class="cp-state">Chargement des ventes non soldées…</div>
+
+  <div *ngIf="!loading() && errorMessage()" class="cp-state cp-state--error">{{ errorMessage() }}</div>
+
+  <ng-container *ngIf="!loading() && !errorMessage()">
+    <div *ngIf="unpaidSales().length === 0" class="cp-state">
+      Aucune vente en attente de paiement pour ce client.
     </div>
 
-    <div class="modal-body">
-      <div *ngIf="loading()" class="empty-state"><p>Chargement des ventes non soldées…</p></div>
+    <ng-container *ngIf="unpaidSales().length > 0">
+      <div class="cp-grid">
+        <label class="cp-field">
+          <span>Montant total (DH) *</span>
+          <input type="number" min="0.01" step="0.01"
+                 [(ngModel)]="totalAmount" (ngModelChange)="onTotalAmountChange()" />
+        </label>
+        <label class="cp-field">
+          <span>Date *</span>
+          <input type="date" [(ngModel)]="date" />
+        </label>
+        <label class="cp-field">
+          <span>Méthode</span>
+          <select [(ngModel)]="method">
+            <option *ngFor="let m of paymentMethods" [value]="m">{{ m }}</option>
+          </select>
+        </label>
+        <label class="cp-field">
+          <span>Compte de paiement *</span>
+          <select [(ngModel)]="accountId">
+            <option [ngValue]="0" disabled>— Sélectionner un compte —</option>
+            <option *ngFor="let acc of accounts()" [ngValue]="acc.id">{{ acc.name }}</option>
+          </select>
+        </label>
+        <label class="cp-field">
+          <span>Référence</span>
+          <input type="text" [(ngModel)]="reference" placeholder="N° chèque, virement…" />
+        </label>
+        <label class="cp-field">
+          <span>Notes</span>
+          <input type="text" [(ngModel)]="notes" placeholder="Notes optionnelles" />
+        </label>
+      </div>
 
-      <div *ngIf="!loading() && errorMessage()" class="empty-state error"><p>{{ errorMessage() }}</p></div>
+      <div class="cp-filter">
+        <span class="cp-filter-label">Facture</span>
+        <div class="cp-pills">
+          <button type="button" class="cp-pill" [class.cp-pill--on]="filterWithInvoice() === ''" (click)="setFilterWithInvoice('')">Tous</button>
+          <button type="button" class="cp-pill" [class.cp-pill--on]="filterWithInvoice() === '1'" (click)="setFilterWithInvoice('1')">Avec</button>
+          <button type="button" class="cp-pill" [class.cp-pill--on]="filterWithInvoice() === '0'" (click)="setFilterWithInvoice('0')">Sans</button>
+        </div>
+      </div>
 
-      <ng-container *ngIf="!loading() && !errorMessage()">
-        <div *ngIf="unpaidSales().length === 0" class="empty-state">
-          <p>Aucune vente en attente de paiement pour ce client.</p>
+      <h3 class="cp-section">Répartition sur les ventes <em>du plus ancien au plus récent</em></h3>
+
+      <div *ngIf="visibleSales().length === 0" class="cp-state">
+        Aucune vente non soldée ne correspond à ce filtre.
+      </div>
+
+      <div class="cp-rows" *ngIf="visibleSales().length > 0">
+        <div class="cp-row cp-row--head">
+          <span>Vente</span>
+          <span>Date</span>
+          <span class="cp-num">Montant</span>
+          <span class="cp-num">Solde dû</span>
+          <span class="cp-num">Affecté</span>
         </div>
 
-        <ng-container *ngIf="unpaidSales().length > 0">
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Montant total (DH) *</label>
-              <input
-                type="number"
-                class="form-control"
-                min="0.01"
-                step="0.01"
-                [(ngModel)]="totalAmount"
-                (ngModelChange)="onTotalAmountChange()"
-              />
-            </div>
-            <div class="form-group">
-              <label>Date *</label>
-              <input type="date" class="form-control" [(ngModel)]="date" />
-            </div>
-            <div class="form-group">
-              <label>Méthode</label>
-              <select class="form-control" [(ngModel)]="method">
-                <option *ngFor="let m of paymentMethods" [value]="m">{{ m }}</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Compte de paiement *</label>
-              <select class="form-control" [(ngModel)]="accountId">
-                <option [ngValue]="0" disabled>-- Sélectionner un compte --</option>
-                <option *ngFor="let acc of accounts()" [ngValue]="acc.id">{{ acc.name }}</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Référence</label>
-              <input type="text" class="form-control" [(ngModel)]="reference" placeholder="N° chèque, virement…" />
-            </div>
-            <div class="form-group form-group--full">
-              <label>Notes</label>
-              <input type="text" class="form-control" [(ngModel)]="notes" placeholder="Notes optionnelles" />
-            </div>
-          </div>
+        <div class="cp-row" *ngFor="let s of visibleSales()">
+          <span class="cp-ref">Vente #{{ s.id }}</span>
+          <span class="cp-date">{{ s.date ? (s.date | date:'dd/MM/yyyy') : '—' }}</span>
+          <span class="cp-num">{{ s.total_sale | number:'1.2-2' }}</span>
+          <span class="cp-num cp-due">{{ s.remaining | number:'1.2-2' }}</span>
+          <span class="cp-alloc">
+            <input type="number" min="0" [max]="s.remaining" step="0.01"
+                   [ngModel]="getAllocation(s.id)" (ngModelChange)="setAllocation(s.id, $event)" />
+            <button type="button" class="cp-fill" title="Régler le montant total de cette vente"
+                    (click)="useFullAmount(s)"><app-icon name="check" [size]="14" /></button>
+          </span>
+        </div>
+      </div>
+    </ng-container>
+  </ng-container>
 
-          <div class="filter-bar">
-            <label>Facture</label>
-            <div class="pill-group">
-              <button type="button" class="pill" [class.active]="filterWithInvoice() === ''" (click)="setFilterWithInvoice('')">Tous</button>
-              <button type="button" class="pill" [class.active]="filterWithInvoice() === '1'" (click)="setFilterWithInvoice('1')">Avec</button>
-              <button type="button" class="pill" [class.active]="filterWithInvoice() === '0'" (click)="setFilterWithInvoice('0')">Sans</button>
-            </div>
-          </div>
-
-          <h3 class="section-title">Répartition sur les ventes (du plus ancien au plus récent)</h3>
-
-          <div *ngIf="visibleSales().length === 0" class="empty-state">
-            <p>Aucune vente non soldée ne correspond à ce filtre.</p>
-          </div>
-
-          <ng-container *ngIf="visibleSales().length > 0">
-            <div class="table-wrapper">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>VENTE</th>
-                    <th>DATE</th>
-                    <th class="col-right">MONTANT</th>
-                    <th class="col-right">SOLDE DÛ</th>
-                    <th class="col-right">MONTANT AFFECTÉ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let s of visibleSales()">
-                    <td class="ref-cell">Vente #{{ s.id }}</td>
-                    <td>{{ s.date ? (s.date | date:'dd/MM/yyyy') : '—' }}</td>
-                    <td class="col-right num">{{ s.total_sale | number:'1.2-2' }} DH</td>
-                    <td class="col-right num text-danger">{{ s.remaining | number:'1.2-2' }} DH</td>
-                    <td class="col-right">
-                      <div class="allocation-input">
-                        <input
-                          type="number"
-                          class="form-control form-control--sm"
-                          min="0"
-                          [max]="s.remaining"
-                          step="0.01"
-                          [ngModel]="getAllocation(s.id)"
-                          (ngModelChange)="setAllocation(s.id, $event)"
-                        />
-                        <button
-                          type="button"
-                          class="btn-fill"
-                          title="Régler le montant total de cette vente"
-                          (click)="useFullAmount(s)"
-                        ><app-icon name="check" [size]="14" /></button>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="allocation-summary" [class.mismatch]="allocationMismatch()">
-              <span>Réparti : {{ allocatedTotal() | number:'1.2-2' }} DH</span>
-              <span>Montant du paiement : {{ totalAmount | number:'1.2-2' }} DH</span>
-              <span *ngIf="allocationMismatch()" class="mismatch-hint">
-                <app-icon name="alert-triangle" [size]="14" /> La répartition doit être égale au montant du paiement.
-              </span>
-            </div>
-          </ng-container>
-        </ng-container>
-      </ng-container>
-    </div>
-
-    <div class="modal-footer" *ngIf="!loading() && unpaidSales().length > 0">
-      <button class="btn btn-secondary" type="button" (click)="close()" [disabled]="submitting()">Annuler</button>
-      <button class="btn btn-primary" type="button" (click)="submit()" [disabled]="!canSubmit()">
+  <ng-container actions>
+    @if (!loading() && unpaidSales().length > 0) {
+      <span class="cp-summary" [class.cp-summary--off]="allocationMismatch()">
+        Réparti <strong>{{ allocatedTotal() | number:'1.2-2' }}</strong> sur {{ totalAmount | number:'1.2-2' }} DH
+        @if (allocationMismatch()) {
+          <em>— la répartition doit être égale au montant du paiement</em>
+        }
+      </span>
+      <button type="button" class="cp-btn" (click)="close()" [disabled]="submitting()">Annuler</button>
+      <button type="button" class="cp-btn cp-btn--solid" (click)="submit()" [disabled]="!canSubmit()">
         {{ submitting() ? 'Enregistrement…' : 'Enregistrer le paiement' }}
       </button>
-    </div>
-  </div>
-</div>
+    } @else {
+      <span class="cp-summary"></span>
+      <button type="button" class="cp-btn" (click)="close()">Fermer</button>
+    }
+  </ng-container>
+</app-side-panel>

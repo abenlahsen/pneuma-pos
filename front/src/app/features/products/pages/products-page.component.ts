@@ -5,7 +5,6 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ProductService } from '../data-access/product.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Product, ProductFilters } from '../models/product.model';
-import { ProductDetailComponent } from '../product-detail/product-detail.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
@@ -24,7 +23,7 @@ import {
 @Component({
   selector: 'app-products-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductDetailComponent, RouterLink, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, FormsModule, RouterLink, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ConfirmDeleteComponent],
   templateUrl: './products-page.component.html',
   styleUrls: ['./products-page.component.scss'],
 })
@@ -132,7 +131,6 @@ export class ProductsPageComponent implements OnInit {
 
     return applied;
   });
-  viewingProduct = signal<Product | null>(null);
 
   private resetting = false;
 
@@ -151,12 +149,11 @@ export class ProductsPageComponent implements OnInit {
     }
     this.loadData();
 
+    // Depuis 6c, consulter et modifier sont le même écran : ?edit=1 ne
+    // distingue plus rien, les deux formes du lien mènent à l'éditeur.
     const productId = Number(this.route.snapshot.queryParamMap.get('id'));
     if (productId) {
-      const editMode = this.route.snapshot.queryParamMap.get('edit') === '1';
-      this.productService.getProduct(productId).subscribe({
-        next: (product) => editMode ? this.goToEdit(product) : this.openViewModal(product),
-      });
+      this.router.navigate(['/products', productId, 'edit']);
     }
   }
 
@@ -264,18 +261,11 @@ export class ProductsPageComponent implements OnInit {
     }
   }
 
-  openViewModal(product: Product): void {
-    this.viewingProduct.set(product);
-  }
-
-  closeViewModal(): void {
-    this.viewingProduct.set(null);
-  }
 
   /**
    * Refonte 2b, étape 5a : le formulaire produit n'est plus une modale, il a
-   * sa propre route. Conservé comme méthode plutôt que comme routerLink parce
-   * que le détail produit l'appelle depuis sa sortie (edit).
+   * sa propre route. Depuis 6c, c'est aussi la seule façon de consulter un
+   * produit : l'éditeur montre tout, product-detail n'y ajoutait rien.
    */
   goToEdit(product: Product): void {
     this.router.navigate(['/products', product.id, 'edit']);

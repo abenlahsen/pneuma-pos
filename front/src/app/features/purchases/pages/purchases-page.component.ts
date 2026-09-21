@@ -2,20 +2,19 @@ import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angula
 import { CommonModule } from '@angular/common';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PurchaseService } from '../data-access/purchase.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ListContextService } from '../../../core/services/list-context.service';
 import { Purchase, PurchaseGroupRow, PurchaseSummary, PurchaseSupplierGroup } from '../models/purchase.model';
 import { PURCHASE_STATUSES, PURCHASE_STATUS_LABELS, PURCHASE_STATUS_TRANSITIONS, PAYMENT_STATUSES, PAYMENT_STATUS_LABELS, PurchaseStatus } from '../../../core/constants/status.constants';
 import { PAYMENT_METHODS, paymentMethodClass } from '../../../core/constants/payment-method.constants';
 import { PurchaseFormComponent } from '../purchase-form/purchase-form.component';
-import { PurchaseDetailComponent } from '../purchase-detail/purchase-detail.component';
 import { PurchasePaymentsComponent } from '../purchase-payments/purchase-payments.component';
 import { PurchaseReturnComponent } from '../purchase-return/purchase-return.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
-import { DetailNavigator } from '../../../core/utils/detail-navigator';
 import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
 import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 import {
@@ -31,7 +30,7 @@ import {
 @Component({
   selector: 'app-purchases-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, PurchaseFormComponent, PurchaseDetailComponent, PurchasePaymentsComponent, PurchaseReturnComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, FormsModule, RouterLink, PurchaseFormComponent, PurchasePaymentsComponent, PurchaseReturnComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ConfirmDeleteComponent],
   templateUrl: './purchases-page.component.html',
   styleUrls: ['./purchases-page.component.scss']
 })
@@ -54,6 +53,8 @@ export class PurchasesPageComponent implements OnInit {
 
   private purchaseService = inject(PurchaseService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private listContext = inject(ListContextService);
   private destroyRef = inject(DestroyRef);
   public authService = inject(AuthService);
 
@@ -107,9 +108,9 @@ export class PurchasesPageComponent implements OnInit {
 
   /** Une ligne de groupe suffit pour ouvrir la fiche ou le règlement existants. */
   openRowDetail(row: PurchaseGroupRow): void {
-    this.purchaseService.getPurchase(row.id).subscribe({
-      next: (purchase) => this.openDetail(purchase),
-    });
+    // La fiche est une route : elle charge l'achat elle-même, inutile de le
+    // faire ici pour le jeter aussitôt.
+    this.router.navigate(['/achats', row.id]);
   }
 
   openRowPayments(row: PurchaseGroupRow): void {
@@ -213,21 +214,9 @@ export class PurchasesPageComponent implements OnInit {
 
   isFormOpen = signal<boolean>(false);
   selectedPurchase = signal<Purchase | null>(null);
-  detailPurchase = signal<Purchase | null>(null);
   paymentPurchase = signal<Purchase | null>(null);
   returnPurchase = signal<Purchase | null>(null);
 
-  /** Précédent / Suivant inside the detail modal — follows the table order across pages. */
-  readonly detailNav = new DetailNavigator<Purchase>({
-    items: this.purchases,
-    current: this.detailPurchase,
-    page: this.currentPage,
-    lastPage: this.lastPage,
-    perPage: this.perPage,
-    total: this.total,
-    loading: this.loading,
-    goToPage: (page) => this.goToPage(page),
-  });
 
   readonly pages = computed(() => {
     const pages: number[] = [];
@@ -245,11 +234,19 @@ export class PurchasesPageComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(params => {
         const id = Number(params.get('id'));
-        if (!Number.isFinite(id) || id <= 0) return;
+        if (Number.isFinite(id) && id > 0) {
+          this.router.navigate(['/achats', id]);
+          return;
+        }
 
-        this.purchaseService.getPurchase(id).subscribe({
-          next: purchase => this.openDetail(purchase),
-        });
+        // L'achat n'a pas d'écran plein de saisie : la fiche routée renvoie ici
+        // avec ?edit=<id> pour rouvrir le formulaire de la liste.
+        const editId = Number(params.get('edit'));
+        if (Number.isFinite(editId) && editId > 0) {
+          this.purchaseService.getPurchase(editId).subscribe({
+            next: purchase => this.openForm(purchase),
+          });
+        }
       });
   }
 
@@ -307,12 +304,19 @@ export class PurchasesPageComponent implements OnInit {
         // La liste plate reste chargée pour la navigation Précédent / Suivant
         // dans la fiche ; c'est la vue groupée qui pilote la pagination.
         this.purchases.set(response.data);
-        this.detailNav.onListLoaded();
+        // La fiche est une page depuis 6b : on lègue l'ordre au service, ce
+        // composant n'existera plus quand elle en aura besoin.
+        this.listContext.set('purchases', {
+          ids: response.data.map((purchase: Purchase) => purchase.id),
+          page: this.currentPage(),
+          lastPage: this.lastPage(),
+          perPage: response.data.length,
+          total: this.total(),
+        });
       },
       error: (err) => {
         console.error('Error loading purchases', err);
         this.loading.set(false);
-        this.detailNav.reset();
       }
     });
 
@@ -368,27 +372,12 @@ export class PurchasesPageComponent implements OnInit {
     }
   }
 
+  /**
+   * Refonte 2b, 6b : la fiche d'achat a sa propre route. La liste n'ouvre plus
+   * de modale, elle y conduit.
+   */
   openDetail(purchase: Purchase): void {
-    this.detailPurchase.set(purchase);
-  }
-
-  closeDetail(): void {
-    this.detailPurchase.set(null);
-    this.detailNav.reset();
-  }
-
-  editFromDetail(): void {
-    const purchase = this.detailPurchase();
-    if (!purchase) return;
-    this.closeDetail();
-    this.openForm(purchase);
-  }
-
-  returnFromDetail(): void {
-    const purchase = this.detailPurchase();
-    if (!purchase) return;
-    this.closeDetail();
-    this.openReturn(purchase);
+    this.router.navigate(['/achats', purchase.id]);
   }
 
   openReturn(purchase: Purchase): void {
@@ -404,15 +393,6 @@ export class PurchasesPageComponent implements OnInit {
     this.loadData();
   }
 
-  /** A return was deleted from inside the detail modal — refresh both the list and the still-open modal's now-stale purchase. */
-  onDetailReturnsChanged(): void {
-    this.loadData();
-    const current = this.detailPurchase();
-    if (!current) return;
-    this.purchaseService.getPurchase(current.id).subscribe({
-      next: (purchase) => this.detailPurchase.set(purchase),
-    });
-  }
 
   canReturnPurchase(purchase: Purchase): boolean {
     return this.authService.hasPermission('cancel purchases') && purchase.status !== 'ANNULE';

@@ -2,7 +2,6 @@ import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, computed, in
 import { CommonModule } from '@angular/common';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
-import { ProductDetailComponent } from '../../products/product-detail/product-detail.component';
 import { Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, finalize, switchMap, takeUntil } from 'rxjs/operators';
 
@@ -39,7 +38,7 @@ import { QuickClientFormComponent } from '../../../shared/quick-client-form/quic
 @Component({
   selector: 'app-sale-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductDetailComponent, VehicleSelectorComponent, QuickClientFormComponent, IconComponent],
+  imports: [CommonModule, FormsModule, VehicleSelectorComponent, QuickClientFormComponent, IconComponent],
   templateUrl: './sale-form.component.html',
   styleUrl: './sale-form.component.scss'
 })
@@ -399,22 +398,21 @@ export class SaleFormComponent implements OnInit, OnDestroy {
     return [typeTag, ref, brand, detail, profile].filter(Boolean).join(' — ');
   }
 
-  viewingProduct = signal<any>(null);
 
   getProduct(item: any): any {
     return item.linkedProduct || item.linked_product || item.product;
   }
 
+  /**
+   * Refonte 2b, 6c : product-detail est supprimé. Il répétait en lecture seule
+   * ce que l'éditeur 15a montre déjà. On ouvre donc l'éditeur, dans un nouvel
+   * onglet pour ne pas perdre la saisie ou la fiche en cours.
+   */
   openProductView(item: any): void {
     const product = this.getProduct(item);
-    if (product) {
-      this.viewingProduct.set(product);
+    if (product?.id) {
+      window.open(`/products/${product.id}/edit`, '_blank', 'noopener');
     }
-  }
-
-  editProductInNewTab(product: any): void {
-    this.viewingProduct.set(null);
-    window.open(`/products?id=${product.id}&edit=1`, '_blank', 'noopener');
   }
 
   lineTotal(item: any): number {

@@ -1,229 +1,240 @@
-<div class="modal-overlay print-overlay">
-  <div class="modal-content print-area" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <div class="modal-title">
-        <h2>Détail de l'achat</h2>
-        <div class="modal-nav no-print">
-          <button type="button" [disabled]="!hasPrev" (click)="prev.emit()" title="Précédent (←)" aria-label="Précédent"><app-icon name="chevron-left" [size]="14" /></button>
-          <span class="modal-nav-id">N° {{ purchase.id }}</span>
-          <span class="modal-nav-pos" *ngIf="position">{{ position }}</span>
-          <button type="button" [disabled]="!hasNext" (click)="next.emit()" title="Suivant (→)" aria-label="Suivant"><app-icon name="chevron-right" [size]="14" /></button>
+<!-- Refonte 2b, gabarit 16b — l'achat cesse d'être une modale. Même gabarit que
+     la vente : les classes .sd-* viennent de sale-detail.component.scss, que ce
+     composant importe déjà. Deux différences de fond : la réception remplace la
+     livraison, et la colonne de droite montre le délai fournisseur et l'âge du
+     règlement là où la vente montre la marge. -->
+<div class="sd-screen print-area">
+
+  <header class="sd-bar no-print">
+    <a class="sd-back" (click)="close.emit()" role="button" tabindex="0" (keydown.enter)="close.emit()">
+      <app-icon name="chevron-left" [size]="15" /> Achats
+    </a>
+
+    <span class="sd-identity">
+      <span class="sd-title">Achat {{ purchase.id }}</span>
+      <span class="sd-meta">
+        {{ purchase.date | date:'dd/MM/yyyy' }}
+        @if (purchase.supplier?.name) { · {{ purchase.supplier!.name }} }
+        @if (purchase.invoice_number) { · Facture {{ purchase.invoice_number }} }
+        @if (purchase.bl_number) { · BL {{ purchase.bl_number }} }
+      </span>
+    </span>
+
+    <span class="sd-badges">
+      <span class="sd-badge">{{ purchase.with_invoice ? 'FACTURÉ' : 'SANS FACTURE' }}</span>
+      <span class="sd-badge"
+            [class.sd-badge--ok]="isSettled"
+            [class.sd-badge--late]="!isSettled">
+        {{ purchase.payment_status }}@if (settlementAgeDays; as d) { · {{ d }} J }
+      </span>
+      <span class="sd-badge">{{ purchase.status }}</span>
+    </span>
+
+    <span class="sd-nav" *ngIf="hasPrev || hasNext">
+      <button type="button" [disabled]="!hasPrev" (click)="prev.emit()" title="Précédent (←)" aria-label="Précédent"><app-icon name="chevron-left" [size]="14" /></button>
+      <span class="sd-pos" *ngIf="position">{{ position }}</span>
+      <button type="button" [disabled]="!hasNext" (click)="next.emit()" title="Suivant (→)" aria-label="Suivant"><app-icon name="chevron-right" [size]="14" /></button>
+    </span>
+
+    <span class="sd-actions">
+      <button type="button" class="sd-btn" (click)="openPrint()">Imprimer</button>
+      @if (canReturn) {
+        <button type="button" class="sd-btn" (click)="openReturn.emit()">Retour fournisseur</button>
+      }
+      @if (canEdit) {
+        <button type="button" class="sd-btn" (click)="edit.emit()">Modifier</button>
+      }
+      @if (!isSettled && amountDue > 0 && authService.hasPermission('manage purchase-payments')) {
+        <button type="button" class="sd-btn sd-btn--primary" (click)="settle.emit()">
+          Régler {{ amountDue | number:'1.0-0' }} DH
+        </button>
+      }
+    </span>
+  </header>
+
+  <div class="sd-body">
+
+    <!-- ── Colonne principale ── -->
+    <div class="sd-main">
+
+      @if (actionError()) {
+        <p class="sd-note sd-note--error">{{ actionError() }}</p>
+      }
+
+      <h3 class="sd-section">Articles <span class="sd-count">{{ purchase.total_quantity }}</span></h3>
+
+      <div class="sd-rows">
+        <div class="sd-row sd-row--buy sd-row--head">
+          <span>Produit</span>
+          <span class="sd-num">Qté</span>
+          <span class="sd-num">Prix unitaire</span>
+          <span class="sd-num">Total</span>
         </div>
+
+        @for (item of purchase.items; track item.id) {
+          <div class="sd-row sd-row--buy">
+            <span class="sd-product">
+              <span class="sd-product-main">
+                @if (getProduct(item)?.brand) { <span class="sd-brand">{{ getProduct(item)!.brand!.name }}</span> }
+                @if (getProduct(item)) {
+                  <button class="sd-link" type="button" (click)="openProductView(item)" title="Voir le produit">{{ getProduct(item)?.reference || ('Produit #' + item.product_id) }}</button>
+                } @else {
+                  <span class="sd-ref">Produit #{{ item.product_id }}</span>
+                }
+              </span>
+              <span class="sd-product-sub">
+                @if (getProduct(item)?.tyre?.tire_width) {
+                  {{ getProduct(item)!.tyre!.tire_width }}/{{ getProduct(item)!.tyre!.tire_height }}R{{ getProduct(item)!.tyre!.tire_diameter }}
+                }
+                @if (getProduct(item)?.profile) { — {{ getProduct(item)!.profile }} }
+              </span>
+            </span>
+            <span class="sd-num">{{ item.quantity }}</span>
+            <span class="sd-num">{{ item.unit_price | number:'1.2-2' }}</span>
+            <span class="sd-num sd-strong">{{ (item.total_price ?? (item.unit_price * item.quantity)) | number:'1.2-2' }}</span>
+          </div>
+        } @empty {
+          <p class="sd-state">Aucun article sur cet achat.</p>
+        }
       </div>
-      <div class="modal-actions">
-        <button class="btn btn-primary btn-sm" (click)="openPrint()"><app-icon name="print" [size]="14" /> Imprimer</button>
-        <button class="btn-close" (click)="close.emit()"><app-icon name="close" [size]="14" /></button>
+
+      <!-- La réception tient en une ligne, comme la livraison côté vente. -->
+      <div class="sd-strip">
+        <span class="sd-strip-label">Réception</span>
+        <span class="sd-strip-item"><em>Bon de livraison</em> {{ purchase.bl_number || '—' }}</span>
+        <span class="sd-strip-item"><em>Facture</em> {{ purchase.invoice_number || '—' }}</span>
+        <span class="sd-strip-item"><em>Acheteur</em> {{ purchase.commercial?.name || '—' }}</span>
+        <span class="sd-strip-item"><em>Statut</em> {{ purchase.status }}</span>
       </div>
+
+      <h3 class="sd-section">
+        Paiements
+        @if (purchase.payments?.length) { <span class="sd-count">{{ purchase.payments!.length }}</span> }
+      </h3>
+
+      @if (purchase.payments?.length) {
+        <div class="sd-rows">
+          <div class="sd-row sd-row--pay sd-row--head">
+            <span>Date</span>
+            <span>Mode</span>
+            <span>Référence</span>
+            <span class="sd-num">Montant</span>
+          </div>
+          @for (p of purchase.payments; track p.id) {
+            <div class="sd-row sd-row--pay">
+              <span class="sd-date">{{ p.date | date:'dd/MM/yyyy' }}</span>
+              <span><span class="sd-method" [ngClass]="paymentMethodClass(p.method || '')">{{ p.method || '—' }}</span></span>
+              <span class="sd-muted">{{ p.reference || p.notes || '—' }}</span>
+              <span class="sd-num sd-strong sd-loss">{{ p.amount | number:'1.2-2' }}</span>
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="sd-state">Aucun règlement enregistré. Il reste {{ amountDue | number:'1.2-2' }} DH à payer.</p>
+      }
+
+      <!-- Les retours viennent sous les paiements : ils changent le dû. -->
+      <h3 class="sd-section no-print">
+        Retours fournisseur
+        @if (returns().length) { <span class="sd-count">{{ returns().length }}</span> }
+      </h3>
+
+      @if (loadingReturns()) {
+        <p class="sd-state">Chargement des retours…</p>
+      } @else if (returns().length) {
+        <div class="sd-rows no-print">
+          <div class="sd-row sd-row--ret sd-row--head">
+            <span>Date</span>
+            <span>Motif</span>
+            <span class="sd-num">Articles</span>
+            <span class="sd-num">Montant</span>
+            <span></span>
+          </div>
+          @for (r of returns(); track r.id) {
+            <div class="sd-row sd-row--ret">
+              <span class="sd-date">{{ r.date | date:'dd/MM/yyyy' }}</span>
+              <span class="sd-muted">{{ r.reason || '—' }}</span>
+              <span class="sd-num">{{ r.total_quantity }}</span>
+              <span class="sd-num sd-strong">{{ r.total_amount | number:'1.2-2' }}</span>
+              <span class="sd-row-action">
+                <button type="button" class="sd-icon" (click)="deleteReturn(r)" title="Supprimer le retour">
+                  <app-icon name="trash" [size]="13" />
+                </button>
+              </span>
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="sd-state no-print">Aucun retour sur cet achat.</p>
+      }
     </div>
 
-    <div class="detail-body">
-      <div class="detail-section">
-        <h3 class="section-title">Informations Générales</h3>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="label">Date</span>
-            <span class="value">{{ purchase.date | date:'dd/MM/yyyy' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Fournisseur</span>
-            <span class="value">{{ purchase.supplier?.name || '-' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Commercial</span>
-            <span class="value">{{ purchase.commercial?.name || '-' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Avec facture</span>
-            <span class="value badge" [class.badge-success]="purchase.with_invoice" [class.badge-secondary]="!purchase.with_invoice">
-              {{ purchase.with_invoice ? 'Oui' : 'Non' }}
-            </span>
-          </div>
-          <div class="detail-item" *ngIf="purchase.bl_number">
-            <span class="label">N° BL</span>
-            <span class="value">{{ purchase.bl_number }}</span>
-          </div>
-          <div class="detail-item" *ngIf="purchase.with_invoice && purchase.invoice_number">
-            <span class="label">N° Facture</span>
-            <span class="value">{{ purchase.invoice_number }}</span>
-          </div>
-        </div>
-      </div>
+    <!-- ── Colonne de droite ── -->
+    <aside class="sd-side">
 
-      <div class="detail-section">
-        <h3 class="section-title">Articles ({{ purchase.total_quantity }})</h3>
-        <div class="table-responsive mt-3">
-          <table class="table table-sm text-left">
-            <thead>
-              <tr>
-                <th class="col-produit">Produit</th>
-                <th>Qté</th>
-                <th>Prix</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of purchase.items">
-                <td class="col-produit">
-                  <span class="badge badge-primary mr-1" *ngIf="getProduct(item)?.brand">{{ getProduct(item)!.brand!.name }}</span>
-                  <button class="product-link fw-medium" type="button" (click)="openProductView(item)" *ngIf="getProduct(item); else plainRef" title="Voir le produit">{{ getProduct(item)?.reference || 'Produit #' + item.product_id }}</button>
-                  <ng-template #plainRef><span class="fw-medium">{{ 'Produit #' + item.product_id }}</span></ng-template>
-                  <span class="text-muted ml-1" *ngIf="getProduct(item)?.tyre?.tire_width">{{ getProduct(item)!.tyre!.tire_width }}/{{ getProduct(item)!.tyre!.tire_height }}R{{ getProduct(item)!.tyre!.tire_diameter }}</span>
-                  <span class="text-muted ml-1" *ngIf="getProduct(item)?.profile">— {{ getProduct(item)!.profile }}</span>
-                </td>
-                <td>{{ item.quantity }}</td>
-                <td>{{ item.unit_price | number:'1.2-2' }}</td>
-                <td>{{ (item.unit_price * item.quantity) | number:'1.2-2' }}</td>
-              </tr>
-              <tr *ngIf="!purchase.items || purchase.items.length === 0">
-                <td colspan="4" class="text-center text-muted">Aucun article.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <section class="sd-panel">
+        <h3 class="sd-panel-title">Récapitulatif</h3>
+        <span class="sd-kv"><span>Articles</span><strong>{{ purchase.total_quantity }}</strong></span>
+        <span class="sd-kv"><span>Total brut</span><strong>{{ purchase.total_price | number:'1.2-2' }}</strong></span>
+        @if (purchase.discount) {
+          <span class="sd-kv"><span>Remise</span><strong>{{ purchase.discount | number:'1.0-2' }} %</strong></span>
+        }
+        @if (returnedAmount > 0) {
+          <span class="sd-kv"><span>Retourné</span><strong class="sd-gain">− {{ returnedAmount | number:'1.2-2' }}</strong></span>
+        }
+        <span class="sd-kv"><span>Net</span><strong>{{ purchaseTotal | number:'1.2-2' }}</strong></span>
+        <span class="sd-kv"><span>Payé</span><strong>{{ amountPaid | number:'1.2-2' }}</strong></span>
 
-      <div class="detail-section">
-        <h3 class="section-title">Finance</h3>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="label">Total Articles</span>
-            <span class="value">{{ purchase.total_quantity }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Sous-total</span>
-            <span class="value">{{ purchase.total_price | number:'1.2-2' }} DH</span>
-          </div>
-          <div class="detail-item" *ngIf="(purchase.discount ?? 0) > 0">
-            <span class="label">Remise</span>
-            <span class="value text-warning">{{ purchase.discount }}%</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Net à payer</span>
-            <span class="value fw-semibold">{{ (purchase.net_amount ?? purchase.total_price) | number:'1.2-2' }} DH</span>
-          </div>
-        </div>
-      </div>
+        <span class="sd-due" [class.sd-due--settled]="amountDue === 0">
+          <span>Reste dû</span>
+          <strong>{{ amountDue | number:'1.2-2' }} DH</strong>
+        </span>
+      </section>
 
-      <div class="detail-section">
-        <h3 class="section-title">Statut</h3>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="label">Statut</span>
-            <span class="value badge"
-              [class.badge-warning]="purchase.status === 'EN COURS'"
-              [class.badge-success]="purchase.status === 'RECU'"
-              [class.badge-blue]="purchase.status === 'TERMINE'"
-              [class.badge-danger]="purchase.status === 'ANNULE'">
-              {{ purchase.status }}
-            </span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Paiement</span>
-            <span class="value badge"
-              [class.badge-success]="purchase.payment_status === 'PAYE'"
-              [class.badge-warning]="purchase.payment_status === 'PARTIEL'"
-              [class.badge-danger]="purchase.payment_status === 'NON PAYE'">
-              {{ purchase.payment_status }}
-            </span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Mode(s) de paiement</span>
-            <span class="value method-badges" *ngIf="purchase.payment_methods?.length; else noPurchaseDetailMethod">
-              <span class="badge badge-method" *ngFor="let m of purchase.payment_methods" [ngClass]="paymentMethodClass(m)">{{ m }}</span>
-            </span>
-            <ng-template #noPurchaseDetailMethod><span class="value">-</span></ng-template>
-          </div>
-        </div>
-      </div>
+      <!-- Sur un achat, la question n'est pas la marge mais l'âge de la dette. -->
+      <section class="sd-panel">
+        <h3 class="sd-panel-title">Règlement</h3>
+        <span class="sd-kv">
+          <span>Délai accordé</span>
+          <strong>{{ contractualDays !== null ? contractualDays + ' jours' : '—' }}</strong>
+        </span>
+        <span class="sd-kv">
+          <span>En attente depuis</span>
+          <strong>{{ settlementAgeDays !== null ? settlementAgeDays + ' jours' : '—' }}</strong>
+        </span>
 
-      <div class="detail-section" *ngIf="purchase.payments && purchase.payments.length > 0">
-        <h3 class="section-title">Historique des paiements</h3>
-        <div class="table-responsive mt-3">
-          <table class="table table-sm text-left">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th class="text-right">Montant</th>
-                <th>Mode</th>
-                <th>Référence</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let p of purchase.payments">
-                <td>{{ p.date | date:'dd/MM/yyyy' }}</td>
-                <td class="text-right fw-semibold">{{ p.amount | number:'1.2-2' }} DH</td>
-                <td>{{ p.method || '-' }}</td>
-                <td class="text-muted">{{ p.reference || p.notes || '-' }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+        @if (daysOverTerms; as over) {
+          <p class="sd-warn">Le délai accordé est dépassé de {{ over }} jours.</p>
+        }
+      </section>
 
-      <div class="detail-section" *ngIf="!loadingReturns() && returns().length > 0">
-        <h3 class="section-title">Retours fournisseur</h3>
-        <div class="table-responsive mt-3">
-          <table class="table table-sm text-left">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Qté</th>
-                <th class="text-right">Montant</th>
-                <th class="text-right">Remboursé</th>
-                <th>Motif</th>
-                <th *ngIf="authService.hasPermission('cancel purchases')"></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let r of returns()">
-                <td>{{ r.date | date:'dd/MM/yyyy' }}</td>
-                <td>{{ r.total_quantity }}</td>
-                <td class="text-right fw-semibold">{{ r.total_amount | number:'1.2-2' }} DH</td>
-                <td class="text-right">
-                  <span *ngIf="r.refund_amount > 0">{{ r.refund_amount | number:'1.2-2' }} DH</span>
-                  <span class="text-muted" *ngIf="r.refund_amount <= 0">-</span>
-                </td>
-                <td class="text-muted">{{ r.reason || '-' }}</td>
-                <td *ngIf="authService.hasPermission('cancel purchases')">
-                  <button class="btn-icon" (click)="deleteReturn(r)" title="Supprimer le retour"><app-icon name="trash" [size]="14" /></button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      @if (purchase.supplier) {
+        <section class="sd-panel">
+          <h3 class="sd-panel-title">Fournisseur</h3>
+          <a class="sd-client" [routerLink]="['/suppliers', purchase.supplier!.id]">{{ purchase.supplier!.name }} →</a>
+          <span class="sd-client-meta">{{ purchase.supplier!.phone || '—' }}</span>
+        </section>
+      }
 
-      <div class="detail-section meta">
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="label">Créé le</span>
-            <span class="value text-muted">{{ purchase.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">Modifié le</span>
-            <span class="value text-muted">{{ purchase.updated_at | date:'dd/MM/yyyy HH:mm' }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal-footer">
-      <div class="modal-footer-actions">
-        <button class="btn btn-primary" (click)="openPrint()">Imprimer</button>
-        <button *ngIf="canEdit" class="btn btn-secondary" (click)="edit.emit()"><app-icon name="edit" [size]="14" /> Modifier</button>
-        <button *ngIf="canReturn" class="btn btn-secondary" (click)="openReturn.emit()"><app-icon name="refresh" [size]="14" /> Retour fournisseur</button>
-        <button class="btn btn-secondary" (click)="close.emit()">Fermer</button>
-      </div>
-    </div>
+      <section class="sd-panel">
+        <h3 class="sd-panel-title">Suivi</h3>
+        @if (purchase.payment_methods?.length) {
+          <span class="sd-kv">
+            <span>Mode(s)</span>
+            <strong class="sd-methods">
+              @for (m of purchase.payment_methods; track m) {
+                <span class="sd-method" [ngClass]="paymentMethodClass(m)">{{ m }}</span>
+              }
+            </strong>
+          </span>
+        }
+        <span class="sd-kv"><span>Créé le</span><strong>{{ purchase.created_at | date:'dd/MM/yyyy HH:mm' }}</strong></span>
+        <span class="sd-kv"><span>Modifié le</span><strong>{{ purchase.updated_at | date:'dd/MM/yyyy HH:mm' }}</strong></span>
+      </section>
+    </aside>
   </div>
 </div>
 
-<app-product-detail
-  *ngIf="viewingProduct()"
-  [product]="viewingProduct()!"
-  (close)="viewingProduct.set(null)"
-  (edit)="editProductInNewTab($event)"
-/>
 
 <app-document-print
   *ngIf="printDoc()"
