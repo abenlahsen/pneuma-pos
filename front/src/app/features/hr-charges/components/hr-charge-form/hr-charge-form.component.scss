@@ -30,7 +30,7 @@
   max-width: 960px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: none;
+  box-shadow: $shadow-modal;
   animation: slideUp 0.25s ease;
 }
 

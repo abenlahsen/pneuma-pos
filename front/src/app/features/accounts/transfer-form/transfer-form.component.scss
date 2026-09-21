@@ -25,7 +25,7 @@
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: none;
+  box-shadow: $shadow-modal;
   border: 1px solid $border-subtle;
   overflow: hidden;
 }

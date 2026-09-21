@@ -37,5 +37,12 @@ $invoice-bg:       #e6ebfd;  // colonne « à facturer »
 $radius:           0;
 $radius-sm:        0;
 $radius-lg:        0;
+// ── Élévation ─────────────────────────────────────────────────────────────
+// Le système n'en a qu'une : celle des surfaces qui flottent réellement
+// au-dessus du reste — modales et volets. Les cartes, cadrans et lignes n'en
+// ont pas (handoff §5d : « la seule élévation légitime du système »).
+$shadow-modal:     0 18px 48px rgba(#0c1e33, 0.22);   // boîte centrée
+$shadow-panel:     -8px 0 40px rgba(#0c1e33, 0.16);   // volet venu du bord
+
 $shadow-sm:        none;
 $shadow-md:        none;

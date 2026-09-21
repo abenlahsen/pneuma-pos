@@ -20,7 +20,7 @@
   border: 1px solid $text-dark;
   /* La seule élévation légitime du système : la modale flotte réellement
      au-dessus du reste, contrairement aux cartes et aux cadrans. */
-  box-shadow: 0 18px 48px rgba($text-dark, 0.22);
+  box-shadow: $shadow-modal;
 }
 
 .rm-head {

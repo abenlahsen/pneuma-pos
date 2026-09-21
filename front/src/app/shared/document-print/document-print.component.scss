@@ -1,3 +1,5 @@
+@use '../../features/_variables' as *;
+
 // ── Overlay & Modal ──────────────────────────────────────────────────────────
 .print-modal-overlay {
   position: fixed;
@@ -342,7 +344,7 @@
   .print-modal {
     background: none;
     padding: 0;
-    box-shadow: none;
+    box-shadow: $shadow-modal;
     gap: 0;
   }
 

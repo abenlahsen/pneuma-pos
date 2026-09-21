@@ -223,7 +223,7 @@
 .detail-modal {
   background: $bg-card;
   border-radius: 0;
-  box-shadow: none;
+  box-shadow: $shadow-modal;
   width: 100%;
   max-width: 680px;
   max-height: 85vh;
