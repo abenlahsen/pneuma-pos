@@ -29,10 +29,27 @@ test.describe('Paramètres Entreprise', () => {
     await expect(page.locator('#patente')).toBeVisible();
   });
 
-  test('affiche les contrôles de thème', async ({ page }) => {
-    await expect(page.locator('#primary_color')).toBeVisible();
-    await expect(page.locator('label:has-text("Mode")')).toBeVisible();
-    await expect(page.locator('label:has-text("Disposition du menu")')).toBeVisible();
+  // Refonte 2b, 17a : le personnalisateur de thème est retiré de l'écran. Ses
+  // trois sélecteurs de couleur ne pilotaient plus aucune règle CSS et son
+  // sélecteur de disposition portait sur un menu supprimé à l'étape 3. Ce qui
+  // se vérifie ici désormais, c'est la liste de sections qui l'a remplacé.
+  test('affiche la liste de sections et pas de contrôle de thème', async ({ page }) => {
+    await expect(page.locator('#primary_color')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Identité et contact' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Documents et logo' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Objectifs et primes' })).toBeVisible();
+  });
+
+  test('chaque section a son propre pied d'enregistrement', async ({ page }) => {
+    const save = page.getByRole('button', { name: 'Enregistrer cette section' });
+    await expect(save).toBeDisabled();
+
+    await page.locator('#legal_name').fill('TEST_E2E_LEGAL');
+    await expect(save).toBeEnabled();
+
+    // « Annuler » ne touche que la section affichée.
+    await page.getByRole('button', { name: 'Annuler' }).click();
+    await expect(save).toBeDisabled();
   });
 
   test('modifier le nom de l\'entreprise et enregistrer', async ({ page }) => {

@@ -1,486 +1,230 @@
-<div class="page-container">
-  <div class="header">
-    <div class="title-section">
-      <h1>Paramètres</h1>
-      <p class="subtitle">Configurez les informations de votre entreprise pour les futurs documents et paramètres applicatifs.</p>
-    </div>
-    <a routerLink="/settings/transaction-categories" class="btn btn-secondary" *ngIf="authService.hasPermission('view transaction-categories')">
-      <app-icon name="tag" [size]="14" /> Gérer les catégories de transactions
-    </a>
-  </div>
+<!-- Refonte 2b, gabarit 17a — deux rangées, puis deux colonnes : liste de
+     sections de 248 px à gauche, contenu à droite, pied d'actions propre à la
+     section affichée. Chaque section s'enregistre seule. -->
+<div class="st-screen">
 
-  <div class="card">
-    <div class="card-body">
-      <div class="section-header">
-        <div>
-          <h2>Informations société</h2>
-          <p class="section-subtitle">Renseignez les informations légales, de contact et l'identité visuelle de votre entreprise.</p>
-        </div>
-      </div>
+  <header class="st-bar">
+    <span class="st-title">Paramètres</span>
+    <span class="st-sub">
+      {{ form().company_name || 'Entreprise' }}@if (form().city) { · {{ form().city }} }
+    </span>
+    @if (lastSavedAt(); as at) {
+      <span class="st-stamp">Dernière modification {{ at | date:'dd/MM à HH:mm' }}</span>
+    }
+  </header>
 
-      <div *ngIf="loading()" class="text-center py-4">
-        <div class="spinner"></div>
-        Chargement...
-      </div>
+  <div class="st-body">
 
-      <div *ngIf="!loading()">
-        <div class="alert alert-danger" *ngIf="errorMessage()">{{ errorMessage() }}</div>
-        <div class="alert alert-success" *ngIf="successMessage()">{{ successMessage() }}</div>
+    <!-- ── La liste de sections ── -->
+    <nav class="st-nav">
+      @for (group of groups; track group.label) {
+        @if (visibleEntries(group.entries).length) {
+          <span class="st-group">{{ group.label }}</span>
 
-        <form class="settings-form" (ngSubmit)="save()">
-          <div class="media-grid">
-            <div class="media-card">
-              <div class="media-card__header">
-                <h3>Logo de l'entreprise</h3>
-                <p>Importez le logo principal affiché dans vos supports.</p>
-              </div>
-
-              <div class="media-preview" [class.media-preview--empty]="!logoUrl()">
-                <ng-container *ngIf="logoUrl(); else emptyLogo">
-                  <img [src]="logoUrl()!" alt="Logo de l'entreprise" class="media-preview__image media-preview__image--logo" />
-                </ng-container>
-                <ng-template #emptyLogo>
-                  <span class="media-preview__placeholder">Aucun logo</span>
-                </ng-template>
-              </div>
-
-              <div class="media-actions">
-                <label class="btn btn-secondary media-upload">
-                  <input type="file" accept="image/*" (change)="onLogoSelected($event)" hidden />
-                  Choisir un logo
-                </label>
-                <button type="button" class="btn btn-danger" *ngIf="logoUrl()" (click)="removeLogo()">
-                  Supprimer
-                </button>
-              </div>
-            </div>
-
-            <div class="media-card">
-              <div class="media-card__header">
-                <h3>Favicon</h3>
-                <p>Importez l'icône affichée dans l'onglet du navigateur.</p>
-              </div>
-
-              <div class="media-preview media-preview--favicon" [class.media-preview--empty]="!faviconUrl()">
-                <ng-container *ngIf="faviconUrl(); else emptyFavicon">
-                  <img [src]="faviconUrl()!" alt="Favicon de l'entreprise" class="media-preview__image media-preview__image--favicon" />
-                </ng-container>
-                <ng-template #emptyFavicon>
-                  <span class="media-preview__placeholder">Aucun favicon</span>
-                </ng-template>
-              </div>
-
-              <div class="media-actions">
-                <label class="btn btn-secondary media-upload">
-                  <input type="file" accept="image/*,.ico" (change)="onFaviconSelected($event)" hidden />
-                  Choisir un favicon
-                </label>
-                <button type="button" class="btn btn-danger" *ngIf="faviconUrl()" (click)="removeFavicon()">
-                  Supprimer
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-grid">
-            <div class="form-group form-group-wide">
-              <label for="company_name">Nom de l'entreprise</label>
-              <input
-                id="company_name"
-                type="text"
-                class="form-control"
-                [ngModel]="form().company_name"
-                (ngModelChange)="updateField('company_name', $event)"
-                name="company_name"
-                required
-              />
-            </div>
-
-            <div class="form-group form-group-wide">
-              <label for="legal_name">Raison sociale</label>
-              <input
-                id="legal_name"
-                type="text"
-                class="form-control"
-                [ngModel]="form().legal_name"
-                (ngModelChange)="updateField('legal_name', $event || null)"
-                name="legal_name"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="email">Email</label>
-              <input
-                id="email"
-                type="email"
-                class="form-control"
-                [ngModel]="form().email"
-                (ngModelChange)="updateField('email', $event || null)"
-                name="email"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="phone">Téléphone</label>
-              <input
-                id="phone"
-                type="text"
-                class="form-control"
-                [ngModel]="form().phone"
-                (ngModelChange)="updateField('phone', $event || null)"
-                name="phone"
-              />
-            </div>
-
-            <div class="form-group form-group-wide">
-              <label for="address">Adresse</label>
-              <input
-                id="address"
-                type="text"
-                class="form-control"
-                [ngModel]="form().address"
-                (ngModelChange)="updateField('address', $event || null)"
-                name="address"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="city">Ville</label>
-              <select
-                id="city"
-                class="form-control"
-                [ngModel]="form().city"
-                (ngModelChange)="updateField('city', $event || null)"
-                name="city"
-              >
-                <option [ngValue]="null">— Sélectionner —</option>
-                <option *ngFor="let c of cities" [value]="c">{{ c }}</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="state">Région</label>
-              <input
-                id="state"
-                type="text"
-                class="form-control"
-                [ngModel]="form().state"
-                (ngModelChange)="updateField('state', $event || null)"
-                name="state"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="postal_code">Code postal</label>
-              <input
-                id="postal_code"
-                type="text"
-                class="form-control"
-                [ngModel]="form().postal_code"
-                (ngModelChange)="updateField('postal_code', $event || null)"
-                name="postal_code"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="country">Pays</label>
-              <input
-                id="country"
-                type="text"
-                class="form-control"
-                [ngModel]="form().country"
-                (ngModelChange)="updateField('country', $event || null)"
-                name="country"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="tax_id">Identifiant fiscal</label>
-              <input
-                id="tax_id"
-                type="text"
-                class="form-control"
-                [ngModel]="form().tax_id"
-                (ngModelChange)="updateField('tax_id', $event || null)"
-                name="tax_id"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="rc">RC</label>
-              <input
-                id="rc"
-                type="text"
-                class="form-control"
-                [ngModel]="form().rc"
-                (ngModelChange)="updateField('rc', $event || null)"
-                name="rc"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="ice">ICE</label>
-              <input
-                id="ice"
-                type="text"
-                class="form-control"
-                [ngModel]="form().ice"
-                (ngModelChange)="updateField('ice', $event || null)"
-                name="ice"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="cnss">CNSS</label>
-              <input
-                id="cnss"
-                type="text"
-                class="form-control"
-                [ngModel]="form().cnss"
-                (ngModelChange)="updateField('cnss', $event || null)"
-                name="cnss"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="patente">Patente</label>
-              <input
-                id="patente"
-                type="text"
-                class="form-control"
-                [ngModel]="form().patente"
-                (ngModelChange)="updateField('patente', $event || null)"
-                name="patente"
-              />
-            </div>
-          </div>
-
-          <div class="theme-section">
-            <div class="section-header section-header--split">
-              <div>
-                <h2>Thème de l'application</h2>
-                <p class="section-subtitle">Personnalisez le mode d'affichage, les couleurs et la structure générale. L'aperçu ci-dessous illustre le style appliqué, sans reproduire exactement l'interface réelle.</p>
-              </div>
-
-              <button type="button" class="btn btn-secondary" (click)="resetThemeDefaults()">
-                Réinitialiser le thème
+          @for (entry of visibleEntries(group.entries); track entry.label) {
+            @if (entry.section) {
+              <button type="button" class="st-entry"
+                      [class.st-entry--on]="activeSection() === entry.section"
+                      (click)="selectSection(entry.section!)">
+                {{ entry.label }}
               </button>
-            </div>
+            } @else {
+              <!-- Ces écrans existent déjà ailleurs : la liste y navigue,
+                   elle ne les réimplémente pas. -->
+              <a class="st-entry st-entry--link" [routerLink]="entry.route">
+                {{ entry.label }}
+                @if (countFor(entry); as n) { <span class="st-count">{{ n }}</span> }
+                <app-icon name="chevron-right" [size]="13" />
+              </a>
+            }
+          }
+        }
+      }
+    </nav>
 
-            <div class="theme-grid">
-              <div class="theme-controls">
-                <div class="form-group">
-                  <label for="theme_mode">Mode</label>
-                  <select
-                    id="theme_mode"
-                    class="form-control"
-                    [ngModel]="form().theme_mode"
-                    (ngModelChange)="updateField('theme_mode', $event)"
-                    name="theme_mode"
-                  >
-                    <option *ngFor="let option of themeModeOptions" [ngValue]="option.value">
-                      {{ option.label }}
-                    </option>
-                  </select>
-                </div>
+    <!-- ── Le contenu de la section ── -->
+    <div class="st-content">
 
-                <!-- « Disposition du menu » et « Style de la barre supérieure »
-                     ont disparu d'ici : depuis que le rail a remplacé l'ancienne
-                     navbar (refonte 2b, étape 3), ces deux réglages ne pilotent
-                     plus rien. Les proposer revenait à promettre un effet qui ne
-                     se produit pas. La colonne et le champ d'API restent en
-                     place, eux, pour ne rien casser. -->
-                <div class="layout-grid">
-                  <div class="form-group form-group-wide">
-                    <label for="content_width">Largeur du contenu</label>
-                    <select
-                      id="content_width"
-                      class="form-control"
-                      [ngModel]="form().content_width"
-                      (ngModelChange)="updateField('content_width', $event)"
-                      name="content_width"
-                    >
-                      <option *ngFor="let option of contentWidthOptions" [ngValue]="option.value">
-                        {{ option.label }}
-                      </option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="color-grid">
-                  <div class="color-field">
-                    <label for="primary_color">Couleur principale</label>
-                    <div class="color-input">
-                      <input
-                        id="primary_color"
-                        type="color"
-                        class="color-input__picker"
-                        [ngModel]="form().primary_color"
-                        (ngModelChange)="updateField('primary_color', $event)"
-                        name="primary_color"
-                      />
-                      <input
-                        type="text"
-                        class="form-control"
-                        [ngModel]="form().primary_color"
-                        (ngModelChange)="updateField('primary_color', $event)"
-                        name="primary_color_text"
-                      />
-                    </div>
-                  </div>
-
-                  <div class="color-field">
-                    <label for="accent_color">Couleur d'accent</label>
-                    <div class="color-input">
-                      <input
-                        id="accent_color"
-                        type="color"
-                        class="color-input__picker"
-                        [ngModel]="form().accent_color"
-                        (ngModelChange)="updateField('accent_color', $event)"
-                        name="accent_color"
-                      />
-                      <input
-                        type="text"
-                        class="form-control"
-                        [ngModel]="form().accent_color"
-                        (ngModelChange)="updateField('accent_color', $event)"
-                        name="accent_color_text"
-                      />
-                    </div>
-                  </div>
-
-                  <div class="color-field">
-                    <label for="surface_color">Couleur de surface</label>
-                    <div class="color-input">
-                      <input
-                        id="surface_color"
-                        type="color"
-                        class="color-input__picker"
-                        [ngModel]="form().surface_color"
-                        (ngModelChange)="updateField('surface_color', $event)"
-                        name="surface_color"
-                      />
-                      <input
-                        type="text"
-                        class="form-control"
-                        [ngModel]="form().surface_color"
-                        (ngModelChange)="updateField('surface_color', $event)"
-                        name="surface_color_text"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div
-                class="theme-preview"
-                [class.theme-preview--dark]="previewThemeMode() === 'dark'"
-                [class.theme-preview--horizontal]="previewMenuLayout() === 'horizontal'"
-                [class.theme-preview--navbar-compact]="previewNavbarVariant() === 'compact'"
-                [class.theme-preview--navbar-flat]="previewNavbarVariant() === 'flat'"
-                [class.theme-preview--width-boxed]="previewContentWidth() === 'boxed'"
-                [class.theme-preview--width-compact]="previewContentWidth() === 'compact'"
-                [ngStyle]="previewStyles()"
-              >
-                <div class="theme-preview__window">
-                  <div class="theme-preview__topbar">
-                    <div class="theme-preview__brand">
-                      <div class="theme-preview__logo">P</div>
-                      <div>
-                        <strong>{{ form().company_name || 'Votre entreprise' }}</strong>
-                        <span>Point de vente</span>
-                      </div>
-                    </div>
-                    <div class="theme-preview__badge">{{ previewThemeMode() === 'system' ? 'Auto' : (previewThemeMode() === 'dark' ? 'Sombre' : 'Clair') }}</div>
-                  </div>
-
-                  <div class="theme-preview__menu-top" *ngIf="previewMenuLayout() === 'horizontal'">
-                    <span class="theme-preview__nav-item theme-preview__nav-item--active">Tableau de bord</span>
-                    <span class="theme-preview__nav-item">Produits</span>
-                    <span class="theme-preview__nav-item">Ventes</span>
-                    <span class="theme-preview__nav-item">Paramètres</span>
-                  </div>
-
-                  <div class="theme-preview__content">
-                    <aside class="theme-preview__sidebar" *ngIf="previewMenuLayout() === 'vertical'">
-                      <span class="theme-preview__nav-item theme-preview__nav-item--active">Tableau de bord</span>
-                      <span class="theme-preview__nav-item">Produits</span>
-                      <span class="theme-preview__nav-item">Ventes</span>
-                      <span class="theme-preview__nav-item">Paramètres</span>
-                    </aside>
-
-                    <div class="theme-preview__panel">
-                      <div class="theme-preview__content-shell">
-                        <div class="theme-preview__hero">
-                          <div>
-                            <h3>Résumé du jour</h3>
-                            <p>Un aperçu simplifié des couleurs et de la structure sélectionnées.</p>
-                          </div>
-                          <button type="button" class="theme-preview__cta">Nouvelle vente</button>
-                        </div>
-
-                        <div class="theme-preview__stats">
-                          <div class="theme-preview__stat">
-                            <span>Commandes</span>
-                            <strong>128</strong>
-                          </div>
-                          <div class="theme-preview__stat">
-                            <span>Revenus</span>
-                            <strong>24 560 DH</strong>
-                          </div>
-                          <div class="theme-preview__stat">
-                            <span>Clients</span>
-                            <strong>42</strong>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="theme-preview__legend">
-                  <span><strong>Menu :</strong> {{ previewMenuLayout() === 'horizontal' ? 'Horizontal' : 'Vertical' }}</span>
-                  <span><strong>Barre supérieure :</strong> {{ previewNavbarVariant() === 'compact' ? 'Compacte' : (previewNavbarVariant() === 'flat' ? 'Plate' : 'Standard') }}</span>
-                  <span><strong>Contenu :</strong> {{ previewContentWidth() === 'boxed' ? 'Encadré' : (previewContentWidth() === 'compact' ? 'Compact' : 'Pleine largeur') }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="primes-section">
-            <div class="section-header">
-              <div>
-                <h2>Primes commerciaux</h2>
-                <p class="section-subtitle">Définissez l'objectif collectif mensuel de pneus pour débloquer les primes.</p>
-              </div>
-            </div>
-            <div class="form-grid">
-              <div class="form-group">
-                <label for="prime_threshold">Seuil mensuel de pneus (objectif collectif)</label>
-                <input
-                  id="prime_threshold"
-                  type="number"
-                  class="form-control"
-                  [ngModel]="form().prime_threshold"
-                  (ngModelChange)="updateField('prime_threshold', $event)"
-                  name="prime_threshold"
-                  placeholder="350"
-                  min="0"
-                  step="1"
-                />
-                <small class="field-hint">Si le shop vend ≥ ce nombre de pneus sur le mois, tous les commerciaux reçoivent leur prime.</small>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit" [disabled]="saving() || loading()">
-              {{ saving() ? 'Enregistrement...' : 'Enregistrer' }}
-            </button>
-          </div>
-        </form>
+      <div class="st-head">
+        <span class="st-head-title">{{ header().title }}</span>
+        <span class="st-head-hint">{{ header().hint }}</span>
       </div>
+
+      <div class="st-panes">
+        @if (loading()) {
+          <p class="st-state">Chargement des paramètres…</p>
+        } @else if (errorMessage() && !saving()) {
+          <p class="st-state st-state--error">{{ errorMessage() }}</p>
+        }
+
+        @if (!loading()) {
+          <!-- ── Identité et contact ── -->
+          @if (activeSection() === 'identity') {
+            <div class="st-block">
+              <span class="st-block-title">Raison sociale</span>
+              <div class="st-grid st-grid--2">
+                <label class="st-field st-field--wide">
+                  <span>Nom commercial *</span>
+                  <input type="text" [ngModel]="form().company_name" (ngModelChange)="updateField('company_name', $event)" name="company_name" id="company_name" class="st-lead">
+                </label>
+                <label class="st-field">
+                  <span>Raison sociale</span>
+                  <input type="text" [ngModel]="form().legal_name" (ngModelChange)="updateField('legal_name', $event)" name="legal_name" id="legal_name">
+                </label>
+                <label class="st-field">
+                  <span>Patente</span>
+                  <input type="text" [ngModel]="form().patente" (ngModelChange)="updateField('patente', $event)" name="patente" id="patente">
+                </label>
+              </div>
+            </div>
+
+            <div class="st-block">
+              <span class="st-block-title">Identifiants légaux</span>
+              <span class="st-block-hint">Repris en pied de facture. Le format n'est pas vérifié — une saisie erronée passera sur vos documents.</span>
+              <div class="st-grid st-grid--4">
+                <label class="st-field">
+                  <span>ICE</span>
+                  <input type="text" [ngModel]="form().ice" (ngModelChange)="updateField('ice', $event)" name="ice" id="ice" class="st-num">
+                </label>
+                <label class="st-field">
+                  <span>RC</span>
+                  <input type="text" [ngModel]="form().rc" (ngModelChange)="updateField('rc', $event)" name="rc" id="rc" class="st-num">
+                </label>
+                <label class="st-field">
+                  <span>IF</span>
+                  <input type="text" [ngModel]="form().tax_id" (ngModelChange)="updateField('tax_id', $event)" name="tax_id" id="tax_id" class="st-num">
+                </label>
+                <label class="st-field">
+                  <span>CNSS</span>
+                  <input type="text" [ngModel]="form().cnss" (ngModelChange)="updateField('cnss', $event)" name="cnss" id="cnss" class="st-num">
+                </label>
+              </div>
+            </div>
+
+            <div class="st-block">
+              <span class="st-block-title">Contact et siège</span>
+              <div class="st-grid st-grid--3">
+                <label class="st-field st-field--2col">
+                  <span>Adresse</span>
+                  <input type="text" [ngModel]="form().address" (ngModelChange)="updateField('address', $event)" name="address" id="address">
+                </label>
+                <label class="st-field">
+                  <span>Ville</span>
+                  <select [ngModel]="form().city" (ngModelChange)="updateField('city', $event)" name="city" id="city">
+                    <option [ngValue]="null">— Sélectionner —</option>
+                    <option *ngFor="let c of cities" [value]="c">{{ c }}</option>
+                  </select>
+                </label>
+                <label class="st-field">
+                  <span>Région</span>
+                  <input type="text" [ngModel]="form().state" (ngModelChange)="updateField('state', $event)" name="state" id="state">
+                </label>
+                <label class="st-field">
+                  <span>Code postal</span>
+                  <input type="text" [ngModel]="form().postal_code" (ngModelChange)="updateField('postal_code', $event)" name="postal_code" id="postal_code" class="st-num">
+                </label>
+                <label class="st-field">
+                  <span>Pays</span>
+                  <input type="text" [ngModel]="form().country" (ngModelChange)="updateField('country', $event)" name="country" id="country">
+                </label>
+                <label class="st-field">
+                  <span>Téléphone</span>
+                  <input type="text" [ngModel]="form().phone" (ngModelChange)="updateField('phone', $event)" name="phone" id="phone" class="st-num">
+                </label>
+                <label class="st-field">
+                  <span>Email</span>
+                  <input type="email" [ngModel]="form().email" (ngModelChange)="updateField('email', $event)" name="email" id="email">
+                </label>
+              </div>
+            </div>
+          }
+
+          <!-- ── Documents et logo ── -->
+          @if (activeSection() === 'documents') {
+            <div class="st-block">
+              <span class="st-block-title">Logo</span>
+              <span class="st-block-hint">Repris en tête des bons de vente, d'achat et des fiches d'intervention. PNG ou SVG, fond transparent.</span>
+              <div class="st-media">
+                <span class="st-media-frame">
+                  @if (logoUrl()) {
+                    <img [src]="logoUrl()!" alt="Logo de l'entreprise">
+                  } @else {
+                    <span class="st-media-empty">Aucun logo</span>
+                  }
+                </span>
+                <span class="st-media-actions">
+                  <label class="st-btn">
+                    Choisir un fichier
+                    <input type="file" accept="image/*" (change)="onLogoSelected($event)" hidden>
+                  </label>
+                  @if (logoUrl()) {
+                    <button type="button" class="st-btn" (click)="removeLogo()">Retirer</button>
+                  }
+                </span>
+              </div>
+            </div>
+
+            <div class="st-block">
+              <span class="st-block-title">Favicon</span>
+              <span class="st-block-hint">L'icône de l'onglet du navigateur. Carrée, 32 px au minimum.</span>
+              <div class="st-media">
+                <span class="st-media-frame st-media-frame--small">
+                  @if (faviconUrl()) {
+                    <img [src]="faviconUrl()!" alt="Favicon">
+                  } @else {
+                    <span class="st-media-empty">Aucun</span>
+                  }
+                </span>
+                <span class="st-media-actions">
+                  <label class="st-btn">
+                    Choisir un fichier
+                    <input type="file" accept="image/*" (change)="onFaviconSelected($event)" hidden>
+                  </label>
+                  @if (faviconUrl()) {
+                    <button type="button" class="st-btn" (click)="removeFavicon()">Retirer</button>
+                  }
+                </span>
+              </div>
+            </div>
+          }
+
+          <!-- ── Objectifs et primes ── -->
+          @if (activeSection() === 'primes') {
+            <div class="st-block">
+              <span class="st-block-title">Objectif mensuel</span>
+              <span class="st-block-hint">Nombre de pneus à vendre dans le mois, tous commerciaux confondus, au-delà duquel les primes se débloquent.</span>
+              <div class="st-grid st-grid--3">
+                <label class="st-field">
+                  <span>Seuil de pneus</span>
+                  <input type="number" min="0" step="1" class="st-lead st-num"
+                         [ngModel]="form().prime_threshold" (ngModelChange)="updateField('prime_threshold', $event)" name="prime_threshold" id="prime_threshold">
+                </label>
+              </div>
+              <p class="st-note">
+                Le taux de prime par pneu se règle utilisateur par utilisateur, sur sa fiche.
+                <a routerLink="/primes">Voir le suivi des primes →</a>
+              </p>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- ── Le pied, propre à la section ── -->
+      <footer class="st-foot">
+        <span class="st-foot-state">
+          @if (successMessage()) {
+            <span class="st-ok">{{ successMessage() }}</span>
+          } @else if (errorMessage() && saving() === false && isDirty()) {
+            <span class="st-ko">{{ errorMessage() }}</span>
+          } @else {
+            {{ dirtyLabel() }}
+          }
+        </span>
+        <button type="button" class="st-btn" [disabled]="!isDirty() || saving()" (click)="revert()">Annuler</button>
+        <button type="button" class="st-btn st-btn--primary" [disabled]="!isDirty() || saving()" (click)="save()">
+          {{ saving() ? 'Enregistrement…' : 'Enregistrer cette section' }}
+        </button>
+      </footer>
     </div>
   </div>
 </div>

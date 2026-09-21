@@ -47,22 +47,13 @@ export const NAV_ITEMS: NavItem[] = [
       { label: 'Reporting', icon: 'bar-chart', route: '/reporting', permission: 'view reporting' },
     ],
   },
-  {
-    label: 'Administration',
-    icon: 'user',
-    children: [
-      { label: 'Utilisateurs', icon: 'users', route: '/users', permission: 'view users' },
-      { label: 'Rôles', icon: 'lock', route: '/roles', permission: 'view roles' },
-      { label: 'Activité', icon: 'package', route: '/activity-log', permission: 'view activity-log' },
-      { label: 'KPI', icon: 'trending-up', route: '/kpi-history', permission: 'view activity-log' },
-    ],
-  },
-  {
-    label: 'Paramètres',
-    icon: 'settings',
-    children: [
-      { label: 'Entreprise', icon: 'building', route: '/settings', permission: 'view settings' },
-      { label: 'Catégories', icon: 'tag', route: '/settings/transaction-categories', permission: 'view transaction-categories' },
-    ],
-  },
+  /**
+   * Refonte 2b, 17a : Utilisateurs, Rôles, Activité et les catégories de
+   * transaction ont quitté le rail. Ce sont des réglages, et la liste de gauche
+   * des Paramètres y conduit désormais. Leurs routes ne changent pas.
+   *
+   * L'historique des KPI reste ici : c'est une consultation, pas un réglage.
+   */
+  { label: 'KPI', icon: 'trending-up', route: '/kpi-history', permission: 'view activity-log' },
+  { label: 'Paramètres', icon: 'settings', route: '/settings', permission: 'view settings' },
 ];

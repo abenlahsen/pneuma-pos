@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"><style>body{margin:0;background:#dfe7f2;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}a{color:#c2181f}a:hover{color:#8f1218}code{font:500 11.5px ui-monospace,Menlo,monospace;background:#f4f8fd;border:1px solid #cfdcec;padding:1px 5px}</style></helmet>
+
+<section style="padding:36px 40px 52px;display:flex;flex-direction:column;gap:20px">
+
+<div style="display:flex;align-items:baseline;gap:10px">
+<span style="font:700 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#0c1e33;color:#fff;border-radius:4px;letter-spacing:.06em">17</span>
+<span style="font:700 13px/1.2 'Inter',sans-serif;color:#0c1e33">PARAMÈTRES</span>
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e">Une page, un formulaire, vingt champs, deux zones de téléversement, un personnalisateur de thème avec aperçu en direct, et l'objectif mensuel de primes tout en bas. Quatre sujets sans rapport dans le même flux, avec un seul bouton d'enregistrement à la fin.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Une section à la fois, chacune enregistrée seule.</strong> Liste de sections à gauche, contenu à droite. Le bouton d'enregistrement appartient à la section, pas à la page : modifier le numéro de téléphone ne remet plus en jeu le logo et l'objectif de primes.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Le personnalisateur de thème pilote une option supprimée.</strong> Son aperçu propose <code>menuLayout</code> horizontal ou vertical et dessine une barre haute ou une barre latérale selon le choix. L'étape 3 a supprimé <code>menuLayout</code> — le rail est la seule disposition. Cette section est morte : son sélecteur ne change plus rien, et son aperçu montre une interface qui n'existe pas.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Les trois sélecteurs de couleur sont à trancher par vous.</strong> Ils permettent de changer les couleurs de l'application depuis l'interface, ce qui contredit frontalement une palette où chaque teinte porte un sens — le rouge dit l'argent dû, le pétrole la facturation. Pneu.ma est une seule entreprise sur trois dépôts, pas un produit multi-marques : je les ai retirés du dessin. Si vous prévoyez de revendre l'application à d'autres magasins, dites-le-moi et on rouvre le sujet autrement qu'avec trois pastilles libres.</p>
+</div>
+
+<div id="17a" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter',sans-serif;color:#41546e"><a href="#17a" style="font:700 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(12,30,51,.1);color:#0c1e33;border-radius:5px;text-decoration:none">17a</a>Paramètres — section Entreprise</div>
+
+<div style="width:1320px;height:820px;display:grid;grid-template-rows:60px minmax(0,1fr);background:#e6edf7;color:#0c1e33;border:1px solid #adc2da;overflow:hidden;box-shadow:0 10px 25px rgba(12,30,51,.14)">
+
+  <div style="display:flex;align-items:center;gap:14px;padding:0 20px;background:#f4f8fd;border-bottom:1px solid #cfdcec">
+    <span style="font-size:15.5px;font-weight:700;letter-spacing:-.01em">Paramètres</span>
+    <span style="font-size:11.5px;color:#4a5c75">Agence Casablanca · 3 dépôts · 11 utilisateurs</span>
+    <span style="margin-left:auto;display:flex;align-items:center;gap:9px">
+      <span style="font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">Dernière modification 14/09 · Y. Benali</span>
+      <span style="width:30px;height:30px;background:#ff2d37;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">YB</span>
+    </span>
+  </div>
+
+  <div style="min-height:0;overflow:hidden;display:grid;grid-template-columns:248px minmax(0,1fr);background:#fff">
+
+    <nav style="min-height:0;overflow:hidden;display:flex;flex-direction:column;background:#f4f8fd;border-right:1px solid #cfdcec">
+      <span style="padding:13px 18px 9px;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Entreprise</span>
+      <a href="#17a" style="display:flex;align-items:center;gap:10px;padding:11px 18px;background:#fff;border-left:3px solid #ff2d37;border-top:1px solid #cfdcec;border-bottom:1px solid #cfdcec;color:#0c1e33;text-decoration:none;font-size:13.5px;font-weight:700">Identité et contact</a>
+      <a href="#17a" style="display:flex;align-items:center;gap:10px;padding:11px 18px;padding-left:21px;color:#41546e;text-decoration:none;font-size:13.5px;font-weight:500">Documents et logo</a>
+      <a href="#17a" style="display:flex;align-items:center;gap:10px;padding:11px 18px;padding-left:21px;color:#41546e;text-decoration:none;font-size:13.5px;font-weight:500">Dépôts et zones</a>
+
+      <span style="padding:16px 18px 9px;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Commercial</span>
+      <a href="#17a" style="display:flex;align-items:center;gap:10px;padding:11px 18px;padding-left:21px;color:#41546e;text-decoration:none;font-size:13.5px;font-weight:500">Objectifs et primes</a>
+      <a href="#17a" style="display:flex;align-items:center;gap:10px;padding:11px 18px;padding-left:21px;color:#41546e;text-decoration:none;font-size:13.5px;font-weight:500">Délais et crédit</a>
+      <a href="#17a" style="display:flex;align-items:center;gap:10px;padding:11px 18px;padding-left:21px;color:#41546e;text-decoration:none;font-size:13.5px;font-weight:500">TVA et facturation</a>
+
+      <span style="padding:16px 18px 9px;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Référentiels</span>
+      <a href="#17a" style="display:flex;align-items:center;gap:10px;padding:11px 18px;padding-left:21px;color:#41546e;text-decoration:none;font-size:13.5px;font-weight:500">Marques<span style="margin-left:auto;font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">14</span></a>
+      <a href="#17a" style="display:flex;align-items:center;gap:10px;padding:11px 18px;padding-left:21px;color:#41546e;text-decoration:none;font-size:13.5px;font-weight:500">Transporteurs<span style="margin-left:auto;font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">6</span></a>
+      <a href="#17a" style="display:flex;align-items:center;gap:10px;padding:11px 18px;padding-left:21px;color:#41546e;text-decoration:none;font-size:13.5px;font-weight:500">Catégories de transaction<span style="margin-left:auto;font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">22</span></a>
+
+      <span style="padding:16px 18px 9px;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Accès</span>
+      <a href="#17a" style="display:flex;align-items:center;gap:10px;padding:11px 18px;padding-left:21px;color:#41546e;text-decoration:none;font-size:13.5px;font-weight:500">Utilisateurs<span style="margin-left:auto;font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">11</span></a>
+      <a href="#17a" style="display:flex;align-items:center;gap:10px;padding:11px 18px;padding-left:21px;color:#41546e;text-decoration:none;font-size:13.5px;font-weight:500">Rôles et permissions<span style="margin-left:auto;font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">4</span></a>
+      <a href="#17a" style="display:flex;align-items:center;gap:10px;padding:11px 18px;padding-left:21px;color:#41546e;text-decoration:none;font-size:13.5px;font-weight:500">Journal d'activité</a>
+    </nav>
+
+    <div style="min-height:0;overflow:hidden;display:flex;flex-direction:column">
+
+      <div style="padding:17px 24px 15px;border-bottom:1px solid #cfdcec">
+        <span style="display:block;font-size:18px;font-weight:700;letter-spacing:-.015em">Identité et contact</span>
+        <span style="display:block;margin-top:4px;font-size:12.5px;color:#41546e">Ces informations apparaissent sur les devis, les factures et le portail client.</span>
+      </div>
+
+      <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column">
+
+        <div style="padding:18px 24px 16px;border-bottom:1px solid #e7eef8">
+          <span style="display:block;font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Raison sociale</span>
+          <div style="margin-top:10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px">
+            <label style="display:flex;flex-direction:column;gap:5px;grid-column:1/-1">
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Nom commercial</span>
+              <input type="text" value="PNEU.MA" style="height:42px;padding:0 12px;border:1px solid #0c1e33;background:#fff;font-family:inherit;font-size:14.5px;font-weight:600;color:#0c1e33">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:5px">
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Forme juridique</span>
+              <input type="text" value="SARL" style="height:40px;padding:0 11px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13.5px;color:#0c1e33">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:5px">
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Capital social</span>
+              <input type="text" value="1 200 000,00 DH" style="height:40px;padding:0 11px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13.5px;color:#0c1e33;font-variant-numeric:tabular-nums">
+            </label>
+          </div>
+        </div>
+
+        <div style="padding:18px 24px 16px;border-bottom:1px solid #e7eef8">
+          <span style="display:block;font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Identifiants légaux</span>
+          <span style="display:block;margin-top:3px;font-size:11.5px;color:#4a5c75">Repris en pied de facture. Le format n'est pas vérifié — une saisie erronée passera sur vos documents.</span>
+          <div style="margin-top:10px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px">
+            <label style="display:flex;flex-direction:column;gap:5px">
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">ICE</span>
+              <input type="text" value="001428739000047" style="height:40px;padding:0 11px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13.5px;color:#0c1e33;font-variant-numeric:tabular-nums">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:5px">
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">RC</span>
+              <input type="text" value="482915" style="height:40px;padding:0 11px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13.5px;color:#0c1e33;font-variant-numeric:tabular-nums">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:5px">
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">IF</span>
+              <input type="text" value="40281937" style="height:40px;padding:0 11px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13.5px;color:#0c1e33;font-variant-numeric:tabular-nums">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:5px">
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">CNSS</span>
+              <input type="text" value="7294016" style="height:40px;padding:0 11px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13.5px;color:#0c1e33;font-variant-numeric:tabular-nums">
+            </label>
+          </div>
+        </div>
+
+        <div style="padding:18px 24px 16px;border-bottom:1px solid #e7eef8">
+          <span style="display:block;font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Contact et siège</span>
+          <div style="margin-top:10px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px">
+            <label style="display:flex;flex-direction:column;gap:5px;grid-column:1/3">
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Adresse</span>
+              <input type="text" value="Km 12, route de Rabat, Aïn Sebaâ" style="height:40px;padding:0 11px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13.5px;color:#0c1e33">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:5px">
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Ville</span>
+              <input type="text" value="Casablanca" style="height:40px;padding:0 11px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13.5px;color:#0c1e33">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:5px">
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Téléphone</span>
+              <input type="text" value="0522 00 00 00" style="height:40px;padding:0 11px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13.5px;color:#0c1e33;font-variant-numeric:tabular-nums">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:5px">
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Email</span>
+              <input type="text" value="contact@pneu.ma" style="height:40px;padding:0 11px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13.5px;color:#0c1e33">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:5px">
+              <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Site web</span>
+              <input type="text" value="pneu.ma" style="height:40px;padding:0 11px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13.5px;color:#0c1e33">
+            </label>
+          </div>
+        </div>
+
+        <div style="flex:1;min-height:0;padding:16px 24px;background:#f4f8fd;display:flex;align-items:flex-start;gap:11px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4a5c75" stroke-width="1.7" style="flex-shrink:0;margin-top:2px"><circle cx="12" cy="12" r="9"/><path d="M12 8v.3M12 11v5"/></svg>
+          <span style="font-size:11.5px;line-height:1.6;color:#41546e;max-width:620px">Les coordonnées bancaires ont leur propre section sous « TVA et facturation » : elles changent rarement et leur modification mérite une trace séparée dans le journal d'activité.</span>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:12px;padding:13px 24px;border-top:1px solid #0c1e33;background:#f4f8fd">
+        <span style="font-size:11.5px;color:#4a5c75">Deux champs modifiés · non enregistrés</span>
+        <span style="margin-left:auto;display:flex;gap:8px">
+          <button type="button" style="height:40px;padding:0 15px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer">Annuler</button>
+          <button type="button" style="height:40px;padding:0 20px;border:1px solid #ff2d37;background:#ff2d37;color:#fff;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer">Enregistrer cette section</button>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+<p style="margin:2px 0 0;max-width:1320px;font:400 12px/1.6 'Inter',sans-serif;color:#4a5c75">La liste de gauche absorbe des pages qui vivaient ailleurs sans logique apparente : les référentiels avaient leurs propres routes, atteignables seulement par un bouton en haut de l'écran Paramètres, et les utilisateurs et rôles occupaient deux entrées distinctes du rail. Ce sont des réglages : ils appartiennent ici.</p>
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e">Ce que le dessin retire : le personnalisateur de thème entier — sélecteur de disposition mort, trois sélecteurs de couleur, et l'aperçu en direct qui dessinait une interface qui n'existe plus. Environ 200 lignes de gabarit et leur SCSS. Le mode sombre, s'il vous intéresse pour les gardes du soir, est un sujet distinct qui demande une seconde palette complète — pas une case à cocher.</p>
+<p style="margin:0;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e">Ce que le dessin déplace : l'objectif mensuel de primes quitte le bas du formulaire d'identité pour la section « Objectifs et primes ». Les délais de paiement par défaut et la limite de crédit standard, aujourd'hui saisis client par client, gagnent une valeur par défaut sous « Délais et crédit ».</p>
+<p style="margin:0;font:400 12px/1.5 'Inter',sans-serif;color:#4a5c75">À dire ensuite : « garde le mode sombre » · « on revend l'application, il faut les couleurs » · « dessine la section Objectifs » · « ajoute ce lot au handoff ».</p>
+</div>
+
+</section>
+
+</x-dc>
+</body>
+</html>
