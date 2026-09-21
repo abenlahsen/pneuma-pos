@@ -1,8 +1,10 @@
-<!-- Refonte 2b, gabarit 15b : coque de modale partagee. Le formulaire
-     porte lui-meme sa coque, comme product-form porte la sienne. -->
+<!-- Refonte 2b, gabarit 15b : coque de modale partagée. Le formulaire
+     porte lui-même sa coque, comme product-form porte la sienne. -->
 <app-referential-modal
   referential="transporteur"
   [title]="carrier ? 'Modifier ' + carrier.name : 'Nouveau transporteur'"
+  [linked]="linkedCount"
+  [linkedLabel]="linkedLabel"
   (dismiss)="cancel.emit()">
 
   <form (ngSubmit)="onSubmit()" #form="ngForm" class="rf-form" id="transporteur-form">

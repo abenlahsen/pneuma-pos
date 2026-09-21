@@ -18,6 +18,9 @@ class CarrierResource extends JsonResource
             'phone' => $this->resource->phone,
             'email' => $this->resource->email,
             'user_id' => $this->resource->user_id,
+            // Nombre de ventes livrées — absent de la réponse quand il n'a pas
+            // été compté, pour que le front distingue « aucune » de « inconnu ».
+            'sales_count' => $this->whenCounted('sales'),
             'created_at' => $this->resource->created_at,
             'updated_at' => $this->resource->updated_at,
         ];

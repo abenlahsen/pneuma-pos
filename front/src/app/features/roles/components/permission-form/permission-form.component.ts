@@ -18,7 +18,7 @@ import { ReferentialModalComponent } from '../../../../shared/referential-modal/
       referential="permission"
       title="Nouvelle permission"
       [linked]="roleCount()"
-      linkedLabel="rôles pourront la porter"
+      [linkedLabel]="linkedLabel()"
       (dismiss)="cancel.emit()">
 
       <label class="rf-field">
@@ -50,6 +50,11 @@ export class PermissionFormComponent {
 
   readonly save = output<string>();
   readonly cancel = output<void>();
+
+  /** En français, zéro prend le singulier : « 1 rôle pourra la porter ». */
+  linkedLabel(): string {
+    return (this.roleCount() ?? 0) > 1 ? 'rôles pourront la porter' : 'rôle pourra la porter';
+  }
 
   submit(): void {
     const value = this.name().trim();

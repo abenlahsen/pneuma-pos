@@ -15,7 +15,11 @@ class CarrierService
      */
     public function list(array $filters = [])
     {
-        $query = Carrier::query();
+        // Le formulaire 15b annonce en pied ce qui dépend du transporteur. Ici
+        // le compte importe d'autant plus que rien ne bloque la suppression :
+        // la clé étrangère est en nullOnDelete, les ventes survivent sans
+        // transporteur. Un withCount, pas une requête par ligne.
+        $query = Carrier::query()->withCount('sales');
 
         $sortable = ['name', 'phone', 'email', 'created_at'];
         if (! empty($filters['sort_by']) && in_array($filters['sort_by'], $sortable)) {
@@ -52,7 +56,7 @@ class CarrierService
         return Carrier::create(array_merge(
             $validated,
             ['user_id' => $user->id]
-        ));
+        ))->loadCount('sales');
     }
 
     /**
@@ -64,7 +68,9 @@ class CarrierService
     {
         $carrier->update($validated);
 
-        return $carrier->fresh();
+        // La ligne remplacée dans la liste doit garder son compte, sans quoi le
+        // pied de la modale se viderait après un simple renommage.
+        return $carrier->fresh()->loadCount('sales');
     }
 
     /**

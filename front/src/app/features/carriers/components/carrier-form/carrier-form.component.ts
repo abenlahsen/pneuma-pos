@@ -20,8 +20,29 @@ export class CarrierFormComponent implements OnInit {
 
   ngOnInit() {
     if (this.carrier) {
-      this.formData = { ...this.carrier };
+      // Champ par champ, et non un étalement de l'objet : le transporteur porte
+      // désormais un compte de ventes, qui n'a rien à faire dans le corps envoyé.
+      this.formData = {
+        name: this.carrier.name,
+        phone: this.carrier.phone,
+        email: this.carrier.email,
+      };
     }
+  }
+
+  /**
+   * Ce qui dépend du transporteur, annoncé en pied de la coque 15b. Rien ne
+   * bloque la suppression côté serveur — la clé étrangère est en nullOnDelete,
+   * les ventes survivent sans transporteur — donc ce compte est le seul
+   * avertissement avant l'action. `null` tant qu'on ne le sait pas.
+   */
+  get linkedCount(): number | null {
+    return this.carrier?.sales_count ?? null;
+  }
+
+  /** En français, zéro prend le singulier : « 0 vente livrée », « 2 ventes livrées ». */
+  get linkedLabel(): string {
+    return (this.linkedCount ?? 0) > 1 ? 'ventes livrées' : 'vente livrée';
   }
 
   onSubmit() {

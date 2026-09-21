@@ -17,7 +17,10 @@ class BrandService
      */
     public function list(array $filters = [])
     {
-        $query = Brand::query();
+        // Le formulaire 15b annonce en pied ce qui dépend de la marque ; c'est
+        // aussi ce qui bloque sa suppression (voir delete()). Un withCount, pas
+        // une requête par ligne.
+        $query = Brand::query()->withCount('products');
 
         if (!empty($filters['search'])) {
             $query->where('name', 'like', '%' . $filters['search'] . '%');
@@ -51,7 +54,7 @@ class BrandService
     {
         $payload = $this->preparePayload($validated, $logo);
 
-        return Brand::create($payload);
+        return Brand::create($payload)->loadCount('products');
     }
 
     /**
@@ -70,7 +73,9 @@ class BrandService
 
         $brand->update($payload);
 
-        return $brand->fresh();
+        // La ligne remplacée dans la liste doit garder son compte, sans quoi le
+        // pied de la modale se viderait après un simple renommage.
+        return $brand->fresh()->loadCount('products');
     }
 
     /**

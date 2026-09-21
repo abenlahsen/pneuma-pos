@@ -24,6 +24,22 @@ export class BrandFormComponent implements OnInit, OnChanges {
   logoFile?: File;
   logoPreview: string | null = null;
 
+  /**
+   * Ce qui dépend de la marque, annoncé en pied de la coque 15b. C'est aussi ce
+   * qui bloque sa suppression côté serveur : une marque portant des produits ne
+   * peut pas être supprimée. `null` tant qu'on ne le sait pas — à la création,
+   * ou si l'API n'a pas renvoyé le compte : le pied reste alors vide plutôt que
+   * d'afficher un zéro qui se lirait comme une certitude.
+   */
+  get linkedCount(): number | null {
+    return this.brand?.products_count ?? null;
+  }
+
+  /** En français, zéro prend le singulier : « 0 produit lié », « 2 produits liés ». */
+  get linkedLabel(): string {
+    return (this.linkedCount ?? 0) > 1 ? 'produits liés' : 'produit lié';
+  }
+
   ngOnInit() {
     this.syncFormWithBrand();
   }

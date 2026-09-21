@@ -62,7 +62,7 @@ class BrandController extends Controller
 
     public function show(Brand $brand): JsonResponse
     {
-        return response()->json((new BrandResource($brand))->resolve(request()));
+        return response()->json((new BrandResource($brand->loadCount('products')))->resolve(request()));
     }
 
     public function update(UpdateBrandRequest $request, Brand $brand): JsonResponse
@@ -87,6 +87,6 @@ class BrandController extends Controller
     {
         $brand->update(['is_active' => !$brand->is_active]);
 
-        return response()->json((new BrandResource($brand))->resolve(request()));
+        return response()->json((new BrandResource($brand->loadCount('products')))->resolve(request()));
     }
 }

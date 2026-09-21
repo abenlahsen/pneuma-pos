@@ -42,7 +42,7 @@ class CarrierController extends Controller
 
     public function show(Carrier $carrier): JsonResponse
     {
-        return response()->json((new CarrierResource($carrier))->resolve(request()));
+        return response()->json((new CarrierResource($carrier->loadCount('sales')))->resolve(request()));
     }
 
     public function update(UpdateCarrierRequest $request, Carrier $carrier): JsonResponse

@@ -6,6 +6,7 @@ use App\Models\Carrier;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Permission;
@@ -179,6 +180,19 @@ class CarrierApiTest extends TestCase
         return Carrier::query()->create(array_merge($this->carrierPayload(), $attributes));
     }
 
+    /**
+     * Une vente minimale rattachée à un transporteur. Aucune colonne de `sales`
+     * n'est obligatoire sans valeur par défaut, donc la clé étrangère suffit.
+     */
+    protected function createSaleForCarrier($carrierId)
+    {
+        DB::table('sales')->insert([
+            'carrier_id' => $carrierId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
     public function test_carriers_endpoints_require_authentication()
     {
         $carrier = $this->createCarrier(['email' => 'auth-check@example.com']);
@@ -343,5 +357,67 @@ class CarrierApiTest extends TestCase
         $this->assertDatabaseMissing('carriers', [
             'id' => $carrier->id,
         ]);
+    }
+
+    /**
+     * Refonte 2b, gabarit 15b : le pied de la modale annonce ce qui dépend de
+     * l'objet. Le compte doit voyager avec la liste, et valoir 0 — pas être
+     * absent — pour un transporteur sans vente.
+     */
+    public function test_index_returns_sales_count_for_each_carrier()
+    {
+        $this->authenticateWithPermissions(['view carriers']);
+
+        $withSales = $this->createCarrier(['name' => 'Avec ventes', 'email' => 'avec@example.com']);
+        $without = $this->createCarrier(['name' => 'Sans vente', 'email' => 'sans@example.com']);
+
+        $this->createSaleForCarrier($withSales->id);
+        $this->createSaleForCarrier($withSales->id);
+
+        $response = $this->getJson($this->baseUrl.'?per_page=100')->assertOk();
+
+        $counts = collect($response->json('data'))->pluck('sales_count', 'id');
+
+        $this->assertSame(2, $counts[$withSales->id]);
+        $this->assertSame(0, $counts[$without->id]);
+    }
+
+    /**
+     * Supprimer un transporteur ne supprime pas ses ventes : la clé étrangère
+     * est en nullOnDelete. Le compte affiché avant l'action est donc le seul
+     * avertissement — ce test fixe ce comportement pour qu'il reste conscient.
+     */
+    public function test_delete_leaves_sales_in_place_without_their_carrier()
+    {
+        $this->authenticateWithPermissions(['delete carriers']);
+
+        $carrier = $this->createCarrier(['email' => 'avec-ventes@example.com']);
+        $this->createSaleForCarrier($carrier->id);
+
+        $this->deleteJson($this->baseUrl.'/'.$carrier->id)->assertNoContent();
+
+        $this->assertDatabaseMissing('carriers', ['id' => $carrier->id]);
+        $this->assertSame(0, DB::table('sales')->where('carrier_id', $carrier->id)->count());
+    }
+
+    /**
+     * Un renommage ne doit pas vider le pied de la modale : la ligne renvoyée
+     * remplace celle de la liste, elle doit donc porter le même compte.
+     */
+    public function test_update_still_returns_sales_count()
+    {
+        $carrier = $this->createCarrier(['name' => 'Avant', 'email' => 'avant@example.com']);
+        $this->createSaleForCarrier($carrier->id);
+
+        $this->authenticateWithPermissions(['edit carriers']);
+
+        $this->putJson($this->baseUrl.'/'.$carrier->id, [
+            'name' => 'Après',
+            'phone' => '0612345678',
+            'email' => 'apres@example.com',
+        ])
+            ->assertOk()
+            ->assertJsonPath('name', 'Après')
+            ->assertJsonPath('sales_count', 1);
     }
 }

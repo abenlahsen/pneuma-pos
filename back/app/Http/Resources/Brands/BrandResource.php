@@ -21,6 +21,9 @@ class BrandResource extends JsonResource
             'logo' => $logoPath,
             'logo_url' => $logoUrl,
             'is_active' => (bool) $this->resource->is_active,
+            // Nombre de produits liés — absent de la réponse quand il n'a pas
+            // été compté, pour que le front distingue « aucun » de « inconnu ».
+            'products_count' => $this->whenCounted('products'),
             'created_at' => $this->resource->created_at,
             'updated_at' => $this->resource->updated_at,
         ];

@@ -79,8 +79,9 @@ export class TransactionCategoryFormComponent {
     return this.initialName() ? this.childCount() : null;
   }
 
+  /** En français, zéro prend le singulier : « 1 sous-catégorie liée ». */
   linkedLabel(): string {
-    return 'sous-catégorie(s) liée(s)';
+    return (this.linked() ?? 0) > 1 ? 'sous-catégories liées' : 'sous-catégorie liée';
   }
 
   submit(): void {

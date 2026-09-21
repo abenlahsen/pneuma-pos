@@ -440,6 +440,75 @@ class BrandApiTest extends TestCase
         $response->assertForbidden();
     }
 
+    /**
+     * Refonte 2b, gabarit 15b : le pied de la modale annonce ce qui dépend de
+     * l'objet. Le compte doit donc voyager avec la liste, et valoir 0 — pas
+     * être absent — pour une marque sans produit.
+     */
+    public function test_index_returns_products_count_for_each_brand()
+    {
+        $this->ensureProductsTableExists();
+        $this->authenticateWithPermissions(['view brands']);
+
+        $withProducts = $this->createBrand(['name' => 'AAA Avec produits']);
+        $this->createBrand(['name' => 'BBB Sans produit']);
+
+        foreach (['REF-COUNT-1', 'REF-COUNT-2'] as $reference) {
+            DB::table('products')->insert([
+                'brand_id' => $withProducts->id,
+                'profile' => '205/55R16',
+                'reference' => $reference,
+                'type' => 'tyre',
+                'description' => 'Produit lié',
+                'unit' => 'pcs',
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        $response = $this->getJson($this->baseUrl.'?sort_by=name&sort_direction=asc&per_page=100');
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('data.0.name', 'AAA Avec produits')
+            ->assertJsonPath('data.0.products_count', 2)
+            ->assertJsonPath('data.1.name', 'BBB Sans produit')
+            ->assertJsonPath('data.1.products_count', 0);
+    }
+
+    /**
+     * Un renommage ne doit pas vider le pied de la modale : la ligne renvoyée
+     * remplace celle de la liste, elle doit donc porter le même compte.
+     */
+    public function test_update_still_returns_products_count()
+    {
+        $this->ensureProductsTableExists();
+        $brand = $this->createBrand(['name' => 'Avant renommage']);
+
+        DB::table('products')->insert([
+            'brand_id' => $brand->id,
+            'profile' => '205/55R16',
+            'reference' => 'REF-COUNT-UPDATE',
+            'type' => 'tyre',
+            'description' => 'Produit lié',
+            'unit' => 'pcs',
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->authenticateWithPermissions(['edit brands']);
+
+        $this->putJson($this->baseUrl.'/'.$brand->id, [
+            'name' => 'Après renommage',
+            'is_active' => true,
+        ])
+            ->assertOk()
+            ->assertJsonPath('name', 'Après renommage')
+            ->assertJsonPath('products_count', 1);
+    }
+
     public function test_delete_returns_validation_error_when_brand_is_used_by_products()
     {
         $this->ensureProductsTableExists();
