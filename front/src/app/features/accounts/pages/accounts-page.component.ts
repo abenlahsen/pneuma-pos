@@ -72,6 +72,28 @@ export class AccountsPageComponent implements OnInit {
     );
   });
 
+  // ── Refonte 2b, 7b : la bande de cellules à filet ────────────────────────
+  readonly totalBalance = computed(() =>
+    this.accounts().reduce((sum, a) => sum + Number(a.current_balance ?? 0), 0),
+  );
+
+  /** Les deux natures de compte que la trésorerie distingue vraiment. */
+  readonly cashBalance = computed(() => this.sumByType('cash'));
+  readonly bankBalance = computed(() => this.sumByType('bank'));
+
+  readonly activeCount = computed(() => this.accounts().filter((a) => a.is_active).length);
+
+  /**
+   * Les types sont 'cash', 'bank' et 'person'. La bande ne montre que les deux
+   * premiers : le total les couvre tous, et un compte de personne n'est pas de
+   * la trésorerie au même titre.
+   */
+  private sumByType(type: string): number {
+    return this.accounts()
+      .filter((a) => a.type === type)
+      .reduce((sum, a) => sum + Number(a.current_balance ?? 0), 0);
+  }
+
   constructor(
     private accountService: AccountService,
     private cashFlowService: CashFlowService,

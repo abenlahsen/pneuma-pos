@@ -6,7 +6,7 @@
       </button>
       <h1>{{ selectedAccount() ? selectedAccount()?.name : 'Comptes' }}</h1>
       <p class="subtitle" *ngIf="!selectedAccount()">Gérez vos flux de trésorerie multi-comptes</p>
-      <p class="subtitle" *ngIf="selectedAccount()">{{ getTypeLabel(selectedAccount()!.type) }} • {{ selectedAccount()!.is_active ? 'Actif' : 'Inactif' }}</p>
+      <p class="subtitle" *ngIf="selectedAccount()">{{ getTypeLabel(selectedAccount()!.type) }} · {{ selectedAccount()!.is_active ? 'Actif' : 'Inactif' }}</p>
     </div>
     <div class="actions">
       <ng-container *ngIf="!selectedAccount()">
@@ -31,180 +31,151 @@
       [lastLoadedAt]="lastLoadedAt()"
       (retry)="loadAccounts()" />
 
-    <div class="loading-state" *ngIf="loading()">Chargement des comptes...</div>
+    <!-- Refonte 2b, 7b : bande de cellules à filet. Le total tient la première
+         cellule, les deux natures de compte suivent. -->
+    <div class="ac-strip">
+      <span class="ac-cell">
+        <span class="ac-label">Solde total</span>
+        <span class="ac-value" [class.ac-value--neg]="totalBalance() < 0">{{ totalBalance() | number:'1.2-2' }}</span>
+      </span>
+      <span class="ac-cell">
+        <span class="ac-label">Caisse</span>
+        <span class="ac-value">{{ cashBalance() | number:'1.2-2' }}</span>
+      </span>
+      <span class="ac-cell">
+        <span class="ac-label">Banque</span>
+        <span class="ac-value">{{ bankBalance() | number:'1.2-2' }}</span>
+      </span>
+      <span class="ac-cell">
+        <span class="ac-label">Comptes actifs</span>
+        <span class="ac-value">{{ activeCount() }}<small> / {{ accounts().length }}</small></span>
+      </span>
+    </div>
 
-    <div class="accounts-grid" *ngIf="!loading()">
-      <div class="account-card"
-           *ngFor="let acc of accounts()"
-           (click)="viewAccount(acc)"
-           [class.inactive]="!acc.is_active">
-        <div class="card-header">
-          <span class="icon"><app-icon [name]="getIcon(acc.type)" [size]="18" /></span>
-          <div class="info">
-            <h3>{{ acc.name }}</h3>
-            <span class="type">{{ getTypeLabel(acc.type) }}</span>
-          </div>
-          <div class="actions" *ngIf="authService.hasPermission('edit accounts')">
-            <button class="btn-icon" (click)="openEditForm(acc, $event)"><app-icon name="edit" [size]="14" /></button>
-            <button class="btn-icon text-danger" *ngIf="authService.hasPermission('delete accounts')" (click)="deleteAccount(acc, $event)"><app-icon name="trash" [size]="14" /></button>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="balance" [class.negative]="acc.current_balance < 0">
-            {{ acc.current_balance | number:'1.2-2' }} DH
-          </div>
-          <p class="kpi-sub" *ngIf="acc.expected_balance !== acc.current_balance">
-            Prévu: {{ acc.expected_balance | number:'1.2-2' }} DH
-          </p>
-          <p class="desc" *ngIf="acc.description">{{ acc.description }}</p>
-        </div>
+    <div class="ac-loading" *ngIf="loading()">Chargement des comptes…</div>
+
+    <!-- Les cartes deviennent des lignes sélectionnables. -->
+    <div class="ac-rows" *ngIf="!loading()">
+      <div class="ac-row ac-row--head">
+        <span>Compte</span>
+        <span>Type</span>
+        <span class="ac-num">Solde</span>
+        <span class="ac-num">Prévisionnel</span>
+        <span></span>
       </div>
+
+      <button type="button" class="ac-row"
+              *ngFor="let acc of accounts()"
+              [class.ac-row--off]="!acc.is_active"
+              (click)="viewAccount(acc)">
+        <span class="ac-name">
+          <span class="ac-name-main">{{ acc.name }}</span>
+          <span class="ac-name-sub" *ngIf="acc.description">{{ acc.description }}</span>
+        </span>
+        <span class="ac-type">
+          {{ getTypeLabel(acc.type) }}
+          <em *ngIf="!acc.is_active">inactif</em>
+        </span>
+        <span class="ac-num ac-strong" [class.ac-value--neg]="acc.current_balance < 0">
+          {{ acc.current_balance | number:'1.2-2' }}
+        </span>
+        <span class="ac-num ac-muted">
+          {{ acc.expected_balance !== acc.current_balance ? (acc.expected_balance | number:'1.2-2') : '—' }}
+        </span>
+        <span class="ac-row-actions" *ngIf="authService.hasPermission('edit accounts')">
+          <span class="ac-icon" (click)="openEditForm(acc, $event)" title="Modifier"><app-icon name="edit" [size]="13" /></span>
+          <span class="ac-icon" *ngIf="authService.hasPermission('delete accounts')" (click)="deleteAccount(acc, $event)" title="Supprimer"><app-icon name="trash" [size]="13" /></span>
+        </span>
+      </button>
+
+      <p class="ac-empty" *ngIf="!accounts().length">Aucun compte enregistré.</p>
     </div>
   </ng-container>
 
+  <!-- ── Un compte en particulier ── -->
   <ng-container *ngIf="selectedAccount() as acc">
-    <div class="summary-cards">
-      <div class="card summary-card balance" [class.negative]="acc.current_balance < 0">
-        <div class="card-icon"><app-icon name="target" [size]="20" /></div>
-        <div class="card-content">
-          <p class="card-label">Solde Actuel</p>
-          <h3 class="card-value">{{ acc.current_balance | number:'1.2-2' }} DH</h3>
-        </div>
-      </div>
-      <div class="card summary-card income">
-        <div class="card-icon"><app-icon name="trending-up" [size]="20" /></div>
-        <div class="card-content">
-          <p class="card-label">Total Entrées</p>
-          <h3 class="card-value">{{ accountSummary().income | number:'1.2-2' }} DH</h3>
-        </div>
-      </div>
-      <div class="card summary-card expense">
-        <div class="card-icon"><app-icon name="trending-down" [size]="20" /></div>
-        <div class="card-content">
-          <p class="card-label">Total Sorties</p>
-          <h3 class="card-value">{{ accountSummary().expenses | number:'1.2-2' }} DH</h3>
-        </div>
-      </div>
-      <div class="card summary-card expected" *ngIf="acc.expected_balance !== acc.current_balance">
-        <div class="card-icon"><app-icon name="clock" [size]="20" /></div>
-        <div class="card-content">
-          <p class="card-label">Solde Prévisionnel</p>
-          <h3 class="card-value">{{ acc.expected_balance | number:'1.2-2' }} DH</h3>
-          <p class="card-hint">incl. chèques/effets à venir</p>
-        </div>
-      </div>
+    <div class="ac-strip">
+      <span class="ac-cell">
+        <span class="ac-label">Solde actuel</span>
+        <span class="ac-value" [class.ac-value--neg]="acc.current_balance < 0">{{ acc.current_balance | number:'1.2-2' }}</span>
+      </span>
+      <span class="ac-cell">
+        <span class="ac-label">Total entrées</span>
+        <span class="ac-value ac-value--in">{{ accountSummary().income | number:'1.2-2' }}</span>
+      </span>
+      <span class="ac-cell">
+        <span class="ac-label">Total sorties</span>
+        <span class="ac-value ac-value--out">{{ accountSummary().expenses | number:'1.2-2' }}</span>
+      </span>
+      <span class="ac-cell">
+        <span class="ac-label">Prévisionnel</span>
+        <span class="ac-value">{{ acc.expected_balance | number:'1.2-2' }}</span>
+        <span class="ac-hint" *ngIf="acc.expected_balance !== acc.current_balance">chèques et effets à venir inclus</span>
+      </span>
     </div>
 
-    <div class="card table-card mt-4" *ngIf="pendingTransactions().length > 0">
-      <div class="card-header border-bottom p-3">
-        <h3 class="m-0"><app-icon name="clock" [size]="14" /> Paiements à venir</h3>
-      </div>
-      <div class="table-responsive">
-        <table class="table">
-          <thead>
-            <tr>
-              <th></th>
-              <th>Date échéance</th>
-              <th>Montant</th>
-              <th>Type</th>
-              <th>Méthode</th>
-              <th>Référence</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let t of pendingTransactions()" class="pending-row">
-              <td class="actions-cell">
-                <button
-                  *ngIf="t.purchase_payment_id"
-                  (click)="openPaymentView(t)"
-                  class="btn-icon"
-                  title="Voir le détail du paiement"
-                ><app-icon name="view" [size]="14" /></button>
-                <button
-                  *ngIf="t.sale_payment_id"
-                  (click)="openSalePaymentView(t)"
-                  class="btn-icon"
-                  title="Voir le détail du paiement"
-                ><app-icon name="view" [size]="14" /></button>
-              </td>
-              <td class="date-cell">{{ t.date | date:'dd/MM/yyyy' }} <span class="badge badge-pending">À venir</span></td>
-              <td class="amount-cell">
-                <span [class.amount-income]="t.type === 'income'" [class.amount-expense]="t.type === 'expense'">
-                  {{ t.type === 'expense' ? '-' : '+' }}{{ t.amount | number:'1.2-2' }} DH
-                </span>
-              </td>
-              <td>
-                <span class="badge" [class.badge-income]="t.type === 'income'" [class.badge-expense]="t.type === 'expense'">
-                  {{ t.type === 'income' ? 'Revenu' : 'Dépense' }}
-                </span>
-              </td>
-              <td>{{ t.method || '—' }}</td>
-              <td>{{ t.category || '—' }}</td>
-              <td class="desc-col">{{ t.description }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <!-- Les paiements à venir : même motif de ligne que le reste. -->
+    <ng-container *ngIf="pendingTransactions().length">
+      <h3 class="ac-section">Paiements à venir <span class="ac-count">{{ pendingTransactions().length }}</span></h3>
 
-    <div class="card table-card mt-4">
-      <div class="card-header border-bottom p-3">
-        <h3 class="m-0">Transactions du compte</h3>
+      <div class="ac-rows">
+        <div class="ac-row ac-row--tx ac-row--head">
+          <span>Échéance</span>
+          <span class="ac-num">Montant</span>
+          <span>Méthode</span>
+          <span>Référence</span>
+          <span>Description</span>
+          <span></span>
+        </div>
+
+        <div class="ac-row ac-row--tx ac-row--pending" *ngFor="let t of pendingTransactions()">
+          <span class="ac-date">{{ t.date | date:'dd/MM/yyyy' }}</span>
+          <span class="ac-num ac-strong" [class.ac-value--in]="t.type === 'income'" [class.ac-value--out]="t.type === 'expense'">
+            {{ t.type === 'expense' ? '−' : '+' }}{{ t.amount | number:'1.2-2' }}
+          </span>
+          <span class="ac-muted">{{ t.method || '—' }}</span>
+          <span class="ac-muted">{{ t.category || '—' }}</span>
+          <span class="ac-desc">{{ t.description }}</span>
+          <span class="ac-row-actions">
+            <button type="button" class="ac-icon" *ngIf="t.purchase_payment_id" (click)="openPaymentView(t)" title="Voir le paiement"><app-icon name="view" [size]="13" /></button>
+            <button type="button" class="ac-icon" *ngIf="t.sale_payment_id" (click)="openSalePaymentView(t)" title="Voir le paiement"><app-icon name="view" [size]="13" /></button>
+          </span>
+        </div>
       </div>
-      <div class="table-responsive">
-        <table class="table">
-          <thead>
-            <tr>
-              <th></th>
-              <th>Date</th>
-              <th>Montant</th>
-              <th>Type</th>
-              <th>Méthode</th>
-              <th>Catégorie</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngIf="loadingTransactions()">
-              <td colspan="7" class="text-center py-4">Chargement...</td>
-            </tr>
-            <tr *ngFor="let t of settledTransactions()" [class.income-row]="t.type === 'income'" [class.expense-row]="t.type === 'expense'">
-              <td class="actions-cell">
-                <button
-                  *ngIf="t.purchase_payment_id"
-                  (click)="openPaymentView(t)"
-                  class="btn-icon"
-                  title="Voir le détail du paiement"
-                ><app-icon name="view" [size]="14" /></button>
-                <button
-                  *ngIf="t.sale_payment_id"
-                  (click)="openSalePaymentView(t)"
-                  class="btn-icon"
-                  title="Voir le détail du paiement"
-                ><app-icon name="view" [size]="14" /></button>
-              </td>
-              <td class="date-cell">{{ t.date | date:'dd/MM/yyyy' }}</td>
-              <td class="amount-cell">
-                <span [class.amount-income]="t.type === 'income'" [class.amount-expense]="t.type === 'expense'">
-                  {{ t.type === 'expense' ? '-' : '+' }}{{ t.amount | number:'1.2-2' }} DH
-                </span>
-              </td>
-              <td>
-                <span class="badge" [class.badge-income]="t.type === 'income'" [class.badge-expense]="t.type === 'expense'">
-                  {{ t.type === 'income' ? 'Revenu' : 'Dépense' }}
-                </span>
-              </td>
-              <td>{{ t.method || '—' }}</td>
-              <td>{{ t.category || '—' }}</td>
-              <td class="desc-col">{{ t.description }}</td>
-            </tr>
-            <tr *ngIf="!loadingTransactions() && settledTransactions().length === 0">
-              <td colspan="7" class="empty-state">Aucune transaction pour ce compte.</td>
-            </tr>
-          </tbody>
-        </table>
+    </ng-container>
+
+    <h3 class="ac-section">
+      Transactions du compte
+      <span class="ac-count" *ngIf="settledTransactions().length">{{ settledTransactions().length }}</span>
+    </h3>
+
+    <div class="ac-rows">
+      <div class="ac-row ac-row--tx ac-row--head">
+        <span>Date</span>
+        <span class="ac-num">Montant</span>
+        <span>Méthode</span>
+        <span>Catégorie</span>
+        <span>Description</span>
+        <span></span>
       </div>
+
+      <p class="ac-empty" *ngIf="loadingTransactions()">Chargement des transactions…</p>
+
+      <div class="ac-row ac-row--tx" *ngFor="let t of settledTransactions()">
+        <span class="ac-date">{{ t.date | date:'dd/MM/yyyy' }}</span>
+        <span class="ac-num ac-strong" [class.ac-value--in]="t.type === 'income'" [class.ac-value--out]="t.type === 'expense'">
+          {{ t.type === 'expense' ? '−' : '+' }}{{ t.amount | number:'1.2-2' }}
+        </span>
+        <span class="ac-muted">{{ t.method || '—' }}</span>
+        <span class="ac-muted">{{ t.category || '—' }}</span>
+        <span class="ac-desc">{{ t.description }}</span>
+        <span class="ac-row-actions">
+          <button type="button" class="ac-icon" *ngIf="t.purchase_payment_id" (click)="openPaymentView(t)" title="Voir le paiement"><app-icon name="view" [size]="13" /></button>
+          <button type="button" class="ac-icon" *ngIf="t.sale_payment_id" (click)="openSalePaymentView(t)" title="Voir le paiement"><app-icon name="view" [size]="13" /></button>
+        </span>
+      </div>
+
+      <p class="ac-empty" *ngIf="!loadingTransactions() && !settledTransactions().length">Aucune transaction sur ce compte.</p>
     </div>
   </ng-container>
 

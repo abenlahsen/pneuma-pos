@@ -1,9 +1,22 @@
 <div class="page-container">
+  <!-- Refonte 2b, 7c : la navigation par mois passe dans la barre de titre,
+       au même endroit que celle du Reporting. -->
   <div class="header">
     <div class="title-section">
       <h1>Charges RH</h1>
       <p class="subtitle">Salaires, primes, CNSS et autres charges de personnel — visible uniquement par les utilisateurs autorisés.</p>
     </div>
+
+    <span class="hr-month">
+      <button type="button" class="hr-month-btn" (click)="prevMonth()" aria-label="Mois précédent">
+        <app-icon name="chevron-left" [size]="15" />
+      </button>
+      <span class="hr-month-label">{{ monthLabel() }}</span>
+      <button type="button" class="hr-month-btn" (click)="nextMonth()" [disabled]="isCurrentMonth()" aria-label="Mois suivant">
+        <app-icon name="chevron-right" [size]="15" />
+      </button>
+    </span>
+
     <button
       type="button"
       class="btn btn-primary"
@@ -14,14 +27,6 @@
 
   <div class="alert alert-danger" *ngIf="errorMessage()">{{ errorMessage() }}</div>
 
-  <!-- Month navigation -->
-  <div class="month-nav">
-    <button class="nav-btn" (click)="prevMonth()">&#8592;</button>
-    <span class="month-label">{{ monthLabel() }}</span>
-    <button class="nav-btn" (click)="nextMonth()" [disabled]="isCurrentMonth()">&#8594;</button>
-  </div>
-
-  <!-- Filters -->
   <div class="filters-bar">
     <select [(ngModel)]="filterEmployeeId" (ngModelChange)="applyFilters()">
       <option [ngValue]="null">Tous les employés</option>
@@ -34,24 +39,28 @@
     </select>
   </div>
 
-  <!-- Summary cards -->
-  <div class="summary-cards" *ngIf="summary() as s">
-    <div class="summary-card highlight">
-      <div class="summary-value">{{ formatAmount(s.total) }} DH</div>
-      <div class="summary-label">Total du mois</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-value">{{ s.employee_count }}</div>
-      <div class="summary-label">Employés concernés</div>
-    </div>
-    <div class="summary-card" *ngFor="let sub of subcategoryTotals()">
-      <div class="summary-value">{{ formatAmount(sub.amount) }} DH</div>
-      <div class="summary-label">{{ sub.name }}</div>
-    </div>
+  <!-- Refonte 2b, 7c : quatre cellules fixes. Les sous-catégories étaient
+       générées par *ngFor : leur nombre est illimité et la rangée cassait
+       au-delà de quatre ou cinq. La répartition complète passe à droite. -->
+  <div class="hr-strip" *ngIf="summary() as s">
+    <span class="hr-cell">
+      <span class="hr-label">Total du mois</span>
+      <span class="hr-value hr-value--lead">{{ formatAmount(s.total) }}</span>
+    </span>
+    <span class="hr-cell">
+      <span class="hr-label">Employés concernés</span>
+      <span class="hr-value">{{ s.employee_count }}</span>
+    </span>
+    <span class="hr-cell" *ngFor="let sub of topSubcategories()">
+      <span class="hr-label">{{ sub.name }}</span>
+      <span class="hr-value">{{ formatAmount(sub.amount) }}</span>
+    </span>
+    <span class="hr-cell" *ngFor="let slot of emptyStripSlots()">
+      <span class="hr-label">—</span>
+      <span class="hr-value hr-value--none">0</span>
+    </span>
   </div>
 
-  <!-- Loading -->
-  <!-- Refonte 2b, §14c état 3 : sans cela, un serveur muet passe pour une absence de données. -->
   <app-list-error
     *ngIf="loadError()"
     title="Les charges RH n'ont pas pu être chargées."
@@ -60,72 +69,71 @@
     [lastLoadedAt]="lastLoadedAt()"
     (retry)="loadData()" />
 
-  <div *ngIf="loading()" class="loading-state">
-    <div class="spinner"></div>
-    Chargement...
-  </div>
+  <div *ngIf="loading()" class="hr-state">Chargement des charges…</div>
 
-  <!-- Table -->
-  <div class="card" *ngIf="!loading()">
-    <div class="card-body">
-      <div *ngIf="charges().length === 0" class="empty-state">
-        Aucune charge RH enregistrée pour ce mois.
+  <div class="hr-body" *ngIf="!loading()">
+
+    <!-- ── Le registre ── -->
+    <div class="hr-main">
+      <div class="hr-rows">
+        <div class="hr-row hr-row--head">
+          <span>Date</span>
+          <span>Employé</span>
+          <span>Type de charge</span>
+          <span class="hr-num">Montant</span>
+          <span>Compte</span>
+          <span>Description</span>
+          <span></span>
+        </div>
+
+        <div class="hr-row" *ngFor="let charge of charges()">
+          <span class="hr-date">{{ charge.date | date: 'dd/MM/yyyy' }}</span>
+          <span class="hr-name">{{ charge.employee_name }}</span>
+          <span class="hr-muted">{{ charge.subcategory }}</span>
+          <span class="hr-num hr-strong">{{ formatAmount(charge.amount) }}</span>
+          <span class="hr-muted">{{ charge.account?.name || '—' }}</span>
+          <span class="hr-desc">{{ charge.description }}</span>
+          <span class="hr-row-actions">
+            <button type="button" class="hr-icon" title="Modifier"
+                    *ngIf="authService.hasPermission('edit hr-charges')" (click)="openEdit(charge)">
+              <app-icon name="edit" [size]="13" />
+            </button>
+            <button type="button" class="hr-icon" title="Dupliquer"
+                    *ngIf="authService.hasPermission('create hr-charges')" (click)="duplicateCharge(charge)">
+              <app-icon name="package" [size]="13" />
+            </button>
+            <button type="button" class="hr-icon" title="Supprimer"
+                    *ngIf="authService.hasPermission('delete hr-charges')" (click)="deleteCharge(charge)">
+              <app-icon name="trash" [size]="13" />
+            </button>
+          </span>
+        </div>
+
+        <p class="hr-state" *ngIf="!charges().length">Aucune charge RH enregistrée pour ce mois.</p>
+
+        <div class="hr-row hr-row--total" *ngIf="charges().length">
+          <span>Total</span>
+          <span></span>
+          <span></span>
+          <span class="hr-num hr-strong">{{ formatAmount(summary()?.total || 0) }}</span>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
       </div>
-
-      <table *ngIf="charges().length > 0" class="table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Employé</th>
-            <th>Type de charge</th>
-            <th class="text-right">Montant</th>
-            <th>Compte</th>
-            <th>Description</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let charge of charges()">
-            <td>{{ charge.date | date: 'dd/MM/yyyy' }}</td>
-            <td class="employee-name">{{ charge.employee_name }}</td>
-            <td>{{ charge.subcategory }}</td>
-            <td class="text-right amount">{{ formatAmount(charge.amount) }} DH</td>
-            <td>{{ charge.account?.name }}</td>
-            <td class="description">{{ charge.description }}</td>
-            <td class="actions-cell">
-              <button
-                type="button"
-                class="btn-icon primary"
-                title="Modifier"
-                *ngIf="authService.hasPermission('edit hr-charges')"
-                (click)="openEdit(charge)"
-              ><app-icon name="edit" [size]="14" /></button>
-              <button
-                type="button"
-                class="btn-icon primary"
-                title="Dupliquer"
-                *ngIf="authService.hasPermission('create hr-charges')"
-                (click)="duplicateCharge(charge)"
-              >⧉</button>
-              <button
-                type="button"
-                class="btn-icon danger"
-                title="Supprimer"
-                *ngIf="authService.hasPermission('delete hr-charges')"
-                (click)="deleteCharge(charge)"
-              ><app-icon name="trash" [size]="14" /></button>
-            </td>
-          </tr>
-        </tbody>
-        <tfoot>
-          <tr class="total-row">
-            <td colspan="3"><strong>Total</strong></td>
-            <td class="text-right"><strong>{{ formatAmount(summary()?.total || 0) }} DH</strong></td>
-            <td colspan="3"></td>
-          </tr>
-        </tfoot>
-      </table>
     </div>
+
+    <!-- ── La répartition complète, en barres ── -->
+    <aside class="hr-side" *ngIf="subcategoryTotals().length">
+      <span class="hr-side-title">Répartition par type de charge</span>
+      <span class="hr-bar-line" *ngFor="let sub of subcategoryTotals()">
+        <span class="hr-bar-name">{{ sub.name }}</span>
+        <span class="hr-bar-track">
+          <span class="hr-bar-fill" [style.width.%]="barWidth(sub.amount)"></span>
+        </span>
+        <span class="hr-bar-amount">{{ formatAmount(sub.amount) }}</span>
+      </span>
+    </aside>
   </div>
 
   <app-hr-charge-form

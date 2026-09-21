@@ -3,246 +3,207 @@
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
+/* Refonte 2b, 7b — les comptes rejoignent le motif des autres écrans.
+   Partaient : les cartes de compte en grille, les quatre cadrans à icône
+   colorée, et les deux tableaux. Restent trois objets : une bande de cellules
+   à filet, un registre de lignes, et rien d'autre. */
 
-
-// ── Utility shims ─────────────────────────────────────────────────────────────
-.mt-4         { margin-top: 1.5rem; }
-.m-0          { margin: 0; }
-.p-3          { padding: 1rem 1.25rem; }
-.py-4         { padding-top: 1rem; padding-bottom: 1rem; }
-.border-bottom { border-bottom: 1px solid $border-subtle; }
-
-// ── Back button ───────────────────────────────────────────────────────────────
-.btn-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  background: none;
-  border: none;
-  color: $text-muted;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 0;
-  margin-bottom: 0.35rem;
-  transition: color 0.15s;
-
-  &:hover { color: $text-dark; }
-}
-
-// ── Accounts grid ─────────────────────────────────────────────────────────────
-.accounts-grid {
+// ── La bande de cellules ─────────────────────────────────────────────────────
+.ac-strip {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-// ── Account card ──────────────────────────────────────────────────────────────
-.account-card {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 1.25rem;
+  border: 1px solid $border-strong;
   background: $bg-card;
-  border: 1px solid $border-subtle;
-  border-radius: 0;
-  box-shadow: none;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s;
-  overflow: hidden;
-
-  &:hover {
-    box-shadow: none;
-    border-color: $border-color;
-  }
-
-  &.inactive {
-    opacity: 0.6;
-    filter: grayscale(0.2);
-  }
-
-  .card-header {
-    display: flex;
-    align-items: center;
-    gap: 0.875rem;
-    padding: 1.25rem 1.25rem 0.75rem;
-    border-bottom: none;
-
-    .icon {
-      font-size: 1.5rem;
-      width: 46px;
-      height: 46px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: $bg-subtle;
-      border: 1px solid $border-subtle;
-      border-radius: 0;
-      flex-shrink: 0;
-    }
-
-    .info {
-      flex: 1;
-      min-width: 0;
-
-      h3 {
-        margin: 0 0 0.15rem;
-        font-size: 0.9375rem;
-        font-weight: 700;
-        color: $text-dark;
-        letter-spacing: -0.01em;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .type {
-        font-size: 0.75rem;
-        color: $text-muted;
-        font-weight: 500;
-      }
-    }
-
-    .actions {
-      display: flex;
-      gap: 0.25rem;
-      flex-shrink: 0;
-    }
-  }
-
-  .card-body {
-    padding: 0.75rem 1.25rem 1.25rem;
-
-    .balance {
-      font-size: 1.625rem;
-      font-weight: 800;
-      color: $text-dark;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-
-      &.negative { color: $expense-color; }
-    }
-
-    .kpi-sub {
-      margin: 0.4rem 0 0;
-      font-size: 0.8rem;
-      color: $text-muted;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .desc {
-      margin: 0.5rem 0 0;
-      font-size: 0.8125rem;
-      color: $text-light;
-      font-style: italic;
-    }
-  }
 }
 
-// ── Summary card extras (card-content/card-hint not in mixin) ─────────────────
-.card-content {
-  flex: 1;
-  min-width: 0;
+.ac-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 11px 14px;
+  border-right: 1px solid $border-strong;
+
+  &:last-child { border-right: 0; }
 }
 
-.card-hint {
-  margin: 0.25rem 0 0;
-  font-size: 0.75rem;
+.ac-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   color: $text-muted;
-  font-style: italic;
 }
 
-// ── Summary card extra variants ───────────────────────────────────────────────
-.summary-card.expected {
-  .card-icon { background: rgba(234, 179, 8, 0.1); color: #a16207; }
-  .card-value { color: #a16207; }
+.ac-value {
+  font-size: 19px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+
+  small { font-size: 13px; font-weight: 600; color: $text-muted; }
+
+  &--neg { color: $expense-color; }
+  &--in  { color: $income-color; }
+  &--out { color: $expense-color; }
 }
 
-.summary-card.balance.negative {
-  border-top: 3px solid $expense-color;
-  .card-icon { background: rgba($expense-color, 0.08); color: $expense-color; }
-  .card-value { color: $expense-color; }
+.ac-hint {
+  font-size: 10.5px;
+  color: $text-muted;
 }
 
-// ── Transaction tables ────────────────────────────────────────────────────────
-.table-card { overflow: hidden; }
-.table-responsive { overflow-x: auto; }
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-
-  th, td {
-    padding: 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid $border-subtle;
-    white-space: nowrap;
-    font-size: 0.8125rem;
-    vertical-align: middle;
-  }
-
-  th {
-    background: $bg-subtle;
-    font-weight: 600;
-    font-size: 0.875rem;
-    color: $text-muted;
-    text-transform: uppercase;
-  }
-
-  tbody tr:hover { background: rgba($bg-subtle, 0.5); }
-  tr:last-child td { border-bottom: none; }
-}
-
-.income-row td { border-left: 2px solid rgba(34, 197, 94, 0.25); }
-.expense-row td { border-left: 2px solid rgba($expense-color, 0.2); }
-.pending-row td { background: rgba(234, 179, 8, 0.04); }
-
-.badge {
-  display: inline-flex;
+// ── Les registres ────────────────────────────────────────────────────────────
+.ac-section {
+  display: flex;
   align-items: center;
-  padding: 0.28rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
+  gap: 8px;
+  margin: 1.5rem 0 0.6rem;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: $text-dark;
+}
+
+.ac-count {
+  padding: 0 6px;
+  border: 1px solid $border-strong;
+  background: $bg-subtle;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: $text-muted;
+  font-variant-numeric: tabular-nums;
+}
+
+.ac-rows {
+  border: 1px solid $border-strong;
+  background: $bg-card;
+}
+
+.ac-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 130px 140px 140px 92px;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-bottom: 1px solid $border-subtle;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: $text-dark;
+
+  &:last-child { border-bottom: 0; }
+
+  // Une ligne de compte se sélectionne ; une ligne de transaction non.
+  &:not(.ac-row--head):not(.ac-row--tx) {
+    cursor: pointer;
+
+    &:hover { background: $bg-subtle; }
+  }
+
+  &--head {
+    padding: 6px 12px;
+    border-bottom: 1px solid $text-dark;
+    background: $bg-subtle;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: $text-muted;
+  }
+
+  &--tx { grid-template-columns: 96px 128px 110px 130px minmax(0, 1fr) 64px; }
+
+  // Une échéance qui n'est pas encore passée : filet ambre, pas une couleur de
+  // fond — elle n'est ni un problème ni un encaissement.
+  &--pending {
+    border-left: 3px solid $warning-border;
+    margin-left: -3px;
+  }
+
+  &--off .ac-name-main { color: $text-muted; }
+}
+
+.ac-num { text-align: right; font-variant-numeric: tabular-nums; font-size: 12.5px; }
+.ac-strong { font-weight: 700; }
+.ac-muted { font-size: 12px; color: $text-muted; }
+.ac-date { font-size: 12px; color: $text-muted; font-variant-numeric: tabular-nums; }
+
+.ac-name { min-width: 0; }
+
+.ac-name-main {
+  display: block;
+  font-size: 13.5px;
   font-weight: 600;
 }
 
-.badge-income  { background: rgba(34, 197, 94, 0.12);  color: #15803d; }
-.badge-expense { background: rgba($expense-color, 0.12);  color: $expense-color; }
-.badge-pending { background: rgba(234, 179, 8, 0.12);  color: #a16207; }
-
-.amount-income  { color: #15803d; font-weight: 600; }
-.amount-expense { color: $expense-color; font-weight: 600; }
-
-.date-cell   { color: $text-muted; font-variant-numeric: tabular-nums; }
-.amount-cell { font-variant-numeric: tabular-nums; }
-
-.desc-col {
-  white-space: normal !important;
-  max-width: 300px;
+.ac-name-sub {
+  display: block;
+  font-size: 11px;
+  color: $text-muted;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.empty-state {
-  text-align: center;
+.ac-type {
+  font-size: 12.5px;
+  color: $text-secondary;
+
+  em {
+    font-style: normal;
+    margin-left: 6px;
+    padding: 1px 5px;
+    border: 1px solid $border-strong;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $text-muted;
+  }
+}
+
+.ac-desc {
+  font-size: 12.5px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ac-row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.ac-icon {
+  width: 26px;
+  height: 26px;
+  border: 1px solid $border-strong;
+  background: $bg-card;
+  color: $text-dark;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+// ── États ────────────────────────────────────────────────────────────────────
+.ac-loading,
+.ac-empty {
+  margin: 0;
+  padding: 1.5rem 12px;
+  font-size: 12.5px;
   color: $text-muted;
-  padding: 2rem 1rem;
 }
 
-.spinner {
-  width: 1.5rem;
-  height: 1.5rem;
-  border: 2px solid $border-subtle;
-  border-top-color: $primary;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  display: inline-block;
-  vertical-align: middle;
-  margin-right: 0.5rem;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-// ── Responsive ────────────────────────────────────────────────────────────────
-@media (max-width: 768px) {
-  .accounts-grid { grid-template-columns: 1fr; }
+@media (max-width: 900px) {
+  .ac-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ac-cell:nth-child(2) { border-right: 0; }
+  .ac-cell:nth-child(-n + 2) { border-bottom: 1px solid $border-strong; }
 }

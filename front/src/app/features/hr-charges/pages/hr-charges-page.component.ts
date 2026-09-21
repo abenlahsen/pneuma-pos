@@ -78,10 +78,30 @@ export class HrChargesPageComponent implements OnInit {
     () => this.selectedYear() === this.currentYear && this.selectedMonth() === this.currentMonth,
   );
 
+  /** La répartition complète, du plus lourd au plus léger — la colonne de droite. */
   subcategoryTotals = computed(() => {
     const bySub = this.summary()?.by_subcategory || {};
-    return Object.entries(bySub).map(([name, amount]) => ({ name, amount }));
+    return Object.entries(bySub)
+      .map(([name, amount]) => ({ name, amount: Number(amount) }))
+      .sort((a, b) => b.amount - a.amount);
   });
+
+  /**
+   * Refonte 2b, 7c : la bande est fixée à quatre cellules. Les deux premières
+   * sont le total et l'effectif ; les deux suivantes sont les postes les plus
+   * lourds. Avant, une cellule par sous-catégorie — leur nombre est illimité et
+   * la rangée cassait au-delà de quatre ou cinq.
+   */
+  topSubcategories = computed(() => this.subcategoryTotals().slice(0, 2));
+
+  /** Les cellules à combler quand il y a moins de deux sous-catégories. */
+  emptyStripSlots = computed(() => Array(Math.max(0, 2 - this.topSubcategories().length)).fill(0));
+
+  /** Largeur d'une barre, rapportée au poste le plus lourd du mois. */
+  barWidth(amount: number): number {
+    const max = this.subcategoryTotals()[0]?.amount ?? 0;
+    return max > 0 ? (amount / max) * 100 : 0;
+  }
 
   defaultDate = computed(() => {
     if (this.isCurrentMonth()) return this.now.toISOString().slice(0, 10);
