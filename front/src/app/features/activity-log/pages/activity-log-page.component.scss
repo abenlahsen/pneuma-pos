@@ -59,7 +59,7 @@
   background: $bg-subtle;
   color: $text-muted;
   border: 1px solid $border-subtle;
-  &:hover { background: #edf2f7; }
+  &:hover { background: $border-subtle; }
 }
 
 // ── Table ─────────────────────────────────────────────────────────────────────
@@ -152,15 +152,15 @@
   letter-spacing: 0.02em;
 
   &.entity-vente       { background: rgba(255, 45, 55, 0.08);  color: #c0020b; }
-  &.entity-achat       { background: rgba(59, 130, 246, 0.1);  color: #1d4ed8; }
+  &.entity-achat       { background: rgba($invoice-color, 0.1);  color: #1d4ed8; }
   &.entity-service     { background: rgba(168, 85, 247, 0.1);  color: #7c3aed; }
-  &.entity-compte      { background: rgba(16, 185, 129, 0.10); color: #065f46; }
+  &.entity-compte      { background: rgba($income-color, 0.10); color: #065f46; }
   &.entity-transaction { background: rgba(245, 158, 11, 0.12); color: #92400e; }
 }
 
 .action-badge {
-  &.badge-success { background: rgba(72, 187, 120, 0.12); color: #276749; }
-  &.badge-blue    { background: rgba(59, 130, 246, 0.1);  color: #1d4ed8; }
+  &.badge-success { background: rgba($income-color, 0.12); color: #276749; }
+  &.badge-blue    { background: rgba($invoice-color, 0.1);  color: #1d4ed8; }
   &.badge-danger  { background: rgba(245, 101, 101, 0.12); color: #c53030; }
   &.badge-purple  { background: rgba(168, 85, 247, 0.1);  color: #6d28d9; }
   &.badge-warning { background: rgba(237, 137, 54, 0.12); color: #c05621; }

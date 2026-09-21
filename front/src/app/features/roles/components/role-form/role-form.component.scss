@@ -1,0 +1,159 @@
+@use '../../../_variables' as *;
+
+/* Refonte 2b, gabarit 15a appliqué au rôle — trois rangées. */
+.rfm-editor {
+  display: grid;
+  grid-template-rows: 60px minmax(0, 1fr) 64px;
+  height: calc(100vh - 60px);
+  background: $bg-card;
+  border: 1px solid $border-strong;
+}
+
+.rfm-bar {
+  display: flex;
+  align-items: center;
+  padding: 0 1.25rem;
+  border-bottom: 1px solid $text-dark;
+}
+
+.rfm-identity { display: flex; flex-direction: column; min-width: 0; }
+.rfm-title { font-size: 15px; font-weight: 600; color: $text-dark; }
+.rfm-meta { font-size: 11.5px; color: $text-muted; }
+
+.rfm-body {
+  overflow-y: auto;
+  padding: 1.25rem;
+}
+
+.rfm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 420px;
+
+  > span {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $text-secondary;
+  }
+
+  input {
+    padding: 0.45rem 0.7rem;
+    border: 1px solid $border-color;
+    background: $bg-card;
+    font: inherit;
+    font-size: 0.875rem;
+    color: $text-dark;
+
+    &:focus {
+      outline: none;
+      border-color: $primary;
+      box-shadow: 0 0 0 3px rgba(255, 45, 55, 0.1);
+    }
+  }
+}
+
+.rfm-perms-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 1.5rem 0 0.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid $border-subtle;
+}
+
+.rfm-section {
+  flex: 1;
+  margin: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: $text-dark;
+}
+
+.rfm-bulk { display: flex; gap: 12px; }
+
+.rfm-link {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: $primary;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.rfm-matrix {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1px;
+  background: $border-subtle;
+  border: 1px solid $border-subtle;
+}
+
+.rfm-group {
+  padding: 9px 11px;
+  background: $bg-card;
+}
+
+.rfm-group-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 5px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $text-dark;
+  cursor: pointer;
+}
+
+.rfm-group-perms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding-left: 20px;
+}
+
+.rfm-check {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: $text-muted;
+  cursor: pointer;
+}
+
+.rfm-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 1.25rem;
+  border-top: 1px solid $text-dark;
+  background: $bg-subtle;
+}
+
+.rfm-foot-hint { flex: 1; font-size: 11.5px; color: $text-muted; }
+
+.rfm-btn {
+  padding: 8px 16px;
+  border: 1px solid $border-color;
+  background: $bg-card;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $text-dark;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  &--solid {
+    border-color: $primary;
+    background: $primary;
+    color: $bg-card;
+  }
+}

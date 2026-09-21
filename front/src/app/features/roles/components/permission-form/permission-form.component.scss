@@ -1,0 +1,57 @@
+@use '../../../../features/_variables' as *;
+
+/* Refonte 2b, gabarit 15b — champs de modale de référentiel. La coque
+   (largeur, bordure, sur-titre, pied) vient de shared/referential-modal. */
+.rf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  > span {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $text-secondary;
+  }
+
+  input {
+    padding: 0.45rem 0.7rem;
+    border: 1px solid $border-color;
+    background: $bg-card;
+    font: inherit;
+    font-size: 0.875rem;
+    color: $text-dark;
+
+    &:focus {
+      outline: none;
+      border-color: $primary;
+      box-shadow: 0 0 0 3px rgba(255, 45, 55, 0.1);
+    }
+  }
+}
+
+.rf-hint {
+  font-style: normal;
+  font-size: 10.5px;
+  color: $text-muted;
+}
+
+.rf-btn {
+  padding: 8px 16px;
+  border: 1px solid $border-color;
+  background: $bg-card;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $text-dark;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  &--solid {
+    border-color: $primary;
+    background: $primary;
+    color: $bg-card;
+  }
+}

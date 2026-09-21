@@ -1,16 +1,8 @@
+@use '../../_variables' as *;
+
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
 
-$_primary:  #ff2d37;
-$_green:    #22c55e;
-$_red:      #ef4444;
-$_amber:    #f59e0b;
-$_text:     #0f172a;
-$_muted:    #64748b;
-$_surface:  #ffffff;
-$_surface2: #f8fafc;
-$_border:   #e8edf3;
-$_bg:       #f1f5f9;
 
 // ── Month navigation ─────────────────────────────────────────────────────────
 .month-nav {
@@ -25,21 +17,21 @@ $_bg:       #f1f5f9;
     justify-content: center;
     width: 2rem;
     height: 2rem;
-    border: 1px solid $_border;
+    border: 1px solid $border-subtle;
     border-radius: 0;
-    background: $_surface;
+    background: $bg-card;
     cursor: pointer;
     font-size: 1rem;
     transition: background 0.15s;
 
-    &:hover:not(:disabled) { background: $_surface2; }
+    &:hover:not(:disabled) { background: $bg-subtle; }
     &:disabled { opacity: 0.4; cursor: not-allowed; }
   }
 
   .month-label {
     font-size: 1.125rem;
     font-weight: 600;
-    color: $_text;
+    color: $text-dark;
     min-width: 160px;
     text-align: center;
   }
@@ -56,13 +48,13 @@ $_bg:       #f1f5f9;
   border: 1px solid transparent;
 
   &.eligible {
-    background: rgba($_green, 0.08);
-    border-color: rgba($_green, 0.25);
+    background: rgba($income-color, 0.08);
+    border-color: rgba($income-color, 0.25);
   }
 
   &.not-eligible {
-    background: rgba($_red, 0.06);
-    border-color: rgba($_red, 0.2);
+    background: rgba($primary, 0.06);
+    border-color: rgba($primary, 0.2);
   }
 
   .banner-left {
@@ -70,7 +62,7 @@ $_bg:       #f1f5f9;
     align-items: center;
     gap: 0.5rem;
     font-size: 0.9375rem;
-    color: $_text;
+    color: $text-dark;
   }
 
   .banner-icon { font-size: 1.25rem; }
@@ -84,13 +76,13 @@ $_bg:       #f1f5f9;
     font-weight: 600;
 
     &.badge-success {
-      background: rgba($_green, 0.15);
-      color: darken($_green, 10%);
+      background: rgba($income-color, 0.15);
+      color: darken($income-color, 10%);
     }
 
     &.badge-danger {
-      background: rgba($_red, 0.12);
-      color: darken($_red, 5%);
+      background: rgba($primary, 0.12);
+      color: darken($primary, 5%);
     }
   }
 }
@@ -104,32 +96,32 @@ $_bg:       #f1f5f9;
 }
 
 .summary-card {
-  background: $_surface;
-  border: 1px solid $_border;
+  background: $bg-card;
+  border: 1px solid $border-subtle;
   border-radius: 0;
   padding: 1rem 1.25rem;
 
   .summary-value {
     font-size: 1.5rem;
     font-weight: 700;
-    color: $_text;
+    color: $text-dark;
     line-height: 1.2;
   }
 
   .summary-label {
     font-size: 0.8125rem;
-    color: $_muted;
+    color: $text-muted;
     margin-top: 0.25rem;
   }
 
   &.highlight.eligible {
-    border-color: rgba($_green, 0.4);
-    .summary-value { color: darken($_green, 8%); }
+    border-color: rgba($income-color, 0.4);
+    .summary-value { color: darken($income-color, 8%); }
   }
 }
 
 // ── Table ──────────────────────────────────────────────────────────────────────
-.card { background: $_surface; border: 1px solid $_border; border-radius: 0; }
+.card { background: $bg-card; border: 1px solid $border-subtle; border-radius: 0; }
 .card-body { padding: 1.25rem; overflow-x: auto; }
 
 .table {
@@ -139,37 +131,37 @@ $_bg:       #f1f5f9;
   th, td {
     padding: 0.75rem 1rem;
     text-align: left;
-    border-bottom: 1px solid $_border;
+    border-bottom: 1px solid $border-subtle;
     font-size: 0.8125rem;
     white-space: nowrap;
     vertical-align: middle;
   }
 
   th {
-    background: $_surface2;
+    background: $bg-subtle;
     font-weight: 600;
     font-size: 0.8125rem;
-    color: $_muted;
+    color: $text-muted;
     text-transform: uppercase;
     letter-spacing: 0.03em;
   }
 
-  tbody tr:hover { background: rgba($_surface2, 0.6); }
+  tbody tr:hover { background: rgba($bg-subtle, 0.6); }
   tr:last-child td { border-bottom: none; }
 
   .text-right { text-align: right; }
 
-  .commercial-name { font-weight: 500; color: $_text; }
+  .commercial-name { font-weight: 500; color: $text-dark; }
 
-  .prime-amount { font-weight: 600; color: darken($_green, 8%); }
-  .prime-zero { color: $_muted !important; font-weight: 400 !important; }
+  .prime-amount { font-weight: 600; color: darken($income-color, 8%); }
+  .prime-zero { color: $text-muted !important; font-weight: 400 !important; }
 
-  .row-disabled td { color: $_muted; }
+  .row-disabled td { color: $text-muted; }
 }
 
 .total-row {
-  background: $_surface2;
-  td { border-top: 2px solid $_border; font-size: 0.875rem; }
+  background: $bg-subtle;
+  td { border-top: 2px solid $border-subtle; font-size: 0.875rem; }
 }
 
 tfoot .total-row td { border-bottom: none; }
@@ -180,13 +172,13 @@ tfoot .total-row td { border-bottom: none; }
   align-items: center;
   gap: 0.75rem;
   padding: 2rem;
-  color: $_muted;
+  color: $text-muted;
   font-size: 0.9375rem;
 }
 
 .empty-state {
   text-align: center;
-  color: $_muted;
+  color: $text-muted;
   padding: 2rem;
   font-size: 0.9375rem;
 }
@@ -195,15 +187,15 @@ tfoot .total-row td { border-bottom: none; }
   margin-top: 1rem;
   padding: 0.75rem 1.25rem;
   border-radius: 0;
-  background: rgba($_red, 0.06);
-  border: 1px solid rgba($_red, 0.18);
-  color: darken($_red, 5%);
+  background: rgba($primary, 0.06);
+  border: 1px solid rgba($primary, 0.18);
+  color: darken($primary, 5%);
   font-size: 0.875rem;
 
   &.notice-warning {
-    background: rgba($_amber, 0.08);
-    border-color: rgba($_amber, 0.3);
-    color: darken($_amber, 15%);
+    background: rgba($warning-color, 0.08);
+    border-color: rgba($warning-color, 0.3);
+    color: darken($warning-color, 15%);
   }
 }
 
@@ -211,8 +203,8 @@ tfoot .total-row td { border-bottom: none; }
 .spinner {
   width: 20px;
   height: 20px;
-  border: 2px solid rgba($_primary, 0.2);
-  border-top-color: $_primary;
+  border: 2px solid rgba($primary, 0.2);
+  border-top-color: $primary;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

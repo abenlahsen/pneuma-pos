@@ -1,16 +1,9 @@
 @use '../../features/_variables' as *;
 
-$_red:     $primary;
-$_text:    #0f172a;
-$_muted:   #64748b;
-$_dim:     #94a3b8;
-$_surface: #ffffff;
-$_border:  #e8edf3;
-$_border2: #d0d9e4;
 
 .qcf-card {
-  background: $_surface;
-  border: 1.5px solid $_border2;
+  background: $bg-card;
+  border: 1.5px solid $border-color;
   border-radius: 10px;
   padding: 0.875rem 1rem;
   display: flex;
@@ -28,29 +21,29 @@ $_border2: #d0d9e4;
     margin: 0 0 0.15rem;
     font-size: 0.9rem;
     font-weight: 600;
-    color: $_text;
+    color: $text-dark;
   }
 
   p {
     margin: 0;
     font-size: 0.8rem;
-    color: $_muted;
+    color: $text-muted;
   }
 }
 
 .qcf-close {
   padding: 0.3rem 0.75rem;
   border-radius: 6px;
-  border: 1.5px solid $_border2;
-  background: $_surface;
+  border: 1.5px solid $border-color;
+  background: $bg-card;
   font-size: 0.8rem;
   font-weight: 600;
-  color: $_muted;
+  color: $text-muted;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
   transition: all 0.15s;
-  &:hover { background: #f8fafc; border-color: #bcc6d4; color: $_text; }
+  &:hover { background: $bg-subtle; border-color: #bcc6d4; color: $text-dark; }
 }
 
 .qcf-grid {
@@ -71,33 +64,33 @@ $_border2: #d0d9e4;
     font-weight: 600;
     color: #334155;
 
-    .required { color: $_red; margin-left: 2px; }
+    .required { color: $primary; margin-left: 2px; }
   }
 }
 
 .qcf-input {
   padding: 0.55rem 0.8rem;
-  border: 1.5px solid $_border2;
+  border: 1.5px solid $border-color;
   border-radius: 8px;
   font-size: 0.875rem;
-  color: $_text;
-  background: $_surface;
+  color: $text-dark;
+  background: $bg-card;
   width: 100%;
   box-sizing: border-box;
   transition: border-color 0.15s, box-shadow 0.15s;
 
   &:focus {
     outline: none;
-    border-color: $_red;
+    border-color: $primary;
     box-shadow: 0 0 0 3px rgba(255, 45, 55, 0.1);
   }
 
-  &::placeholder { color: $_dim; }
+  &::placeholder { color: $text-light; }
 }
 
 .qcf-error {
   font-size: 0.75rem;
-  color: $_red;
+  color: $primary;
 }
 
 .qcf-warning-banner {
@@ -135,7 +128,7 @@ $_border2: #d0d9e4;
     justify-content: space-between;
     gap: 0.75rem;
     font-size: 0.8rem;
-    color: $_text;
+    color: $text-dark;
   }
 }
 
@@ -143,7 +136,7 @@ $_border2: #d0d9e4;
   padding: 0.3rem 0.65rem;
   border-radius: 6px;
   border: 1.5px solid #fde3b8;
-  background: $_surface;
+  background: $bg-card;
   font-size: 0.75rem;
   font-weight: 600;
   color: #92400e;
@@ -156,7 +149,7 @@ $_border2: #d0d9e4;
 .qcf-general-error {
   margin: 0;
   font-size: 0.8rem;
-  color: $_red;
+  color: $primary;
 }
 
 .qcf-actions {
@@ -168,7 +161,7 @@ $_border2: #d0d9e4;
   padding: 0.5rem 1.25rem;
   border-radius: 8px;
   border: none;
-  background: $_red;
+  background: $primary;
   color: white;
   font-weight: 600;
   font-size: 0.875rem;

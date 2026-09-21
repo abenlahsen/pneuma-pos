@@ -1,26 +1,14 @@
+@use '../../_variables' as *;
+
 // ── Design tokens ─────────────────────────────────────────────────────────────
-$_red:        #ff2d37;
-$_red-dark:   #cc0a13;
-$_text:       #0f172a;
-$_muted:      #64748b;
-$_dim:        #94a3b8;
-$_bg:         #f1f5f9;
-$_surface:    #ffffff;
-$_surface2:   #f8fafc;
-$_border:     #e8edf3;
-$_border2:    #d0d9e4;
 
-$_shadow-md: none;
 
-$_radius-sm: 8px;
-$_radius-md: 12px;
-$_radius-lg: 14px;
 
 .page-container {
   max-width: 900px;
   margin: 1.5rem auto;
   padding: 0 1.25rem;
-  background: $_bg;
+  background: $bg-subtle;
   min-height: 100%;
 }
 
@@ -34,7 +22,7 @@ $_radius-lg: 14px;
   .title-section {
     h1 {
       margin: 0;
-      color: $_text;
+      color: $text-dark;
       font-size: 1.625rem;
       font-weight: 800;
       letter-spacing: -0.02em;
@@ -42,7 +30,7 @@ $_radius-lg: 14px;
 
     .subtitle {
       margin: 0.25rem 0 0;
-      color: $_muted;
+      color: $text-muted;
       font-size: 0.875rem;
     }
   }
@@ -56,9 +44,9 @@ $_radius-lg: 14px;
 }
 
 .alert-danger {
-  background: rgba(239, 68, 68, 0.08);
+  background: rgba($expense-color, 0.08);
   color: #b91c1c;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba($expense-color, 0.2);
 }
 
 // ── Type toggle ──────────────────────────────────────────────────────────────
@@ -71,27 +59,27 @@ $_radius-lg: 14px;
 .toggle-btn {
   flex: 1;
   padding: 0.65rem;
-  border: 2px solid $_border2;
+  border: 2px solid $border-color;
   border-radius: 0;
-  background: $_surface2;
-  color: $_muted;
+  background: $bg-subtle;
+  color: $text-muted;
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 
   &.active {
-    border-color: $_red;
-    background: linear-gradient(135deg, rgba($_red, 0.08), rgba($_red-dark, 0.08));
-    color: $_red-dark;
+    border-color: $primary;
+    background: rgba($primary, 0.08);
+    color: $primary-dark;
   }
 }
 
 // ── Card ─────────────────────────────────────────────────────────────────────
 .card {
-  background: $_surface;
+  background: $bg-card;
   border-radius: 0;
-  border: 1px solid $_border;
+  border: 1px solid $border-subtle;
   box-shadow: none;
 }
 
@@ -108,7 +96,7 @@ $_radius-lg: 14px;
 
   h2 {
     margin: 0;
-    color: $_text;
+    color: $text-dark;
     font-size: 1.1rem;
     font-weight: 700;
   }
@@ -117,9 +105,9 @@ $_radius-lg: 14px;
 .empty-state {
   padding: 2rem;
   text-align: center;
-  color: $_muted;
+  color: $text-muted;
   font-size: 0.9rem;
-  background: $_surface2;
+  background: $bg-subtle;
   border-radius: 0;
 }
 
@@ -131,10 +119,10 @@ $_radius-lg: 14px;
 }
 
 .category-card {
-  border: 1px solid $_border;
+  border: 1px solid $border-subtle;
   border-radius: 0;
   padding: 0.875rem 1rem;
-  background: $_surface2;
+  background: $bg-subtle;
 }
 
 .category-row {
@@ -158,12 +146,12 @@ $_radius-lg: 14px;
   gap: 0.4rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: $_muted;
+  color: $text-muted;
   cursor: pointer;
   white-space: nowrap;
 
   input[type='checkbox'] {
-    accent-color: $_red;
+    accent-color: $primary;
     cursor: pointer;
   }
 }
@@ -173,12 +161,12 @@ $_radius-lg: 14px;
   align-items: center;
   gap: 0.5rem;
   font-weight: 600;
-  color: $_text;
+  color: $text-dark;
   font-size: 0.95rem;
 
   input {
     padding: 0.35rem 0.5rem;
-    border: 1px solid $_border2;
+    border: 1px solid $border-color;
     border-radius: 0;
     font-size: 0.9rem;
   }
@@ -199,8 +187,8 @@ $_radius-lg: 14px;
 }
 
 .badge-confidential {
-  background: rgba($_red, 0.1);
-  color: $_red-dark;
+  background: rgba($primary, 0.1);
+  color: $primary-dark;
 }
 
 .category-actions {
@@ -218,14 +206,14 @@ $_radius-lg: 14px;
   padding: 0.3rem 0.45rem;
   border-radius: 0;
 
-  &:hover { background: $_border; }
-  &.danger:hover { color: #dc2626; }
+  &:hover { background: $border-subtle; }
+  &.danger:hover { color: $expense-color; }
 }
 
 .children-list {
   margin-top: 0.75rem;
   padding-top: 0.75rem;
-  border-top: 1px dashed $_border2;
+  border-top: 1px dashed $border-color;
   padding-left: 1.25rem;
   display: flex;
   flex-direction: column;
@@ -244,11 +232,11 @@ $_radius-lg: 14px;
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
-  color: $_text;
+  color: $text-dark;
 
   input {
     padding: 0.3rem 0.5rem;
-    border: 1px solid $_border2;
+    border: 1px solid $border-color;
     border-radius: 0;
     font-size: 0.85rem;
   }
@@ -264,7 +252,7 @@ $_radius-lg: 14px;
   input {
     flex: 1;
     padding: 0.5rem 0.7rem;
-    border: 1px solid $_border2;
+    border: 1px solid $border-color;
     border-radius: 0;
     font-size: 0.875rem;
   }
@@ -289,18 +277,18 @@ $_radius-lg: 14px;
 }
 
 .btn-primary {
-  background: $_red;
+  background: $primary;
   color: #fff;
 
-  &:hover { background: $_red-dark; }
+  &:hover { background: $primary-dark; }
 }
 
 .btn-secondary {
-  background: $_surface2;
-  color: $_text;
-  border: 1px solid $_border2;
+  background: $bg-subtle;
+  color: $text-dark;
+  border: 1px solid $border-color;
 
-  &:hover { background: $_border; }
+  &:hover { background: $border-subtle; }
 }
 
 .btn-sm { padding: 0.4rem 0.75rem; }
@@ -309,8 +297,8 @@ $_radius-lg: 14px;
   display: inline-block;
   width: 16px;
   height: 16px;
-  border: 2px solid $_border2;
-  border-top-color: $_red;
+  border: 2px solid $border-color;
+  border-top-color: $primary;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }

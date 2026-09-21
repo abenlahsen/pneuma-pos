@@ -1,3 +1,5 @@
+@use '../_variables' as *;
+
 // Refonte 2b — Accueil (écran 2b du handoff) : quatre chiffres qui décident,
 // puis une liste de choses à faire, et un volet droit de contexte.
 // Styles locaux à l'écran, comme pour les autres écrans refaits.
@@ -216,7 +218,7 @@
 .todo-row {
   min-height: 56px;
   border-bottom: 1px solid #e7eef8;
-  &:hover { background: #f8fafc; }
+  &:hover { background: $bg-subtle; }
 }
 
 .todo-index {

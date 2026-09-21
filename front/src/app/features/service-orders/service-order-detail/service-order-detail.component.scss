@@ -1,17 +1,7 @@
 @use '../../_variables' as *;
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-$_red:      #ff2d37;
-$_text:     #0f172a;
-$_strong:   #1e293b;
-$_muted:    #64748b;
-$_dim:      #94a3b8;
-$_surface:  #ffffff;
-$_surface2: #f8fafc;
-$_border:   #e8edf3;
-$_border2:  #d0d9e4;
 
-$_shadow: none;
 
 .modal-overlay {
   position: fixed;
@@ -26,9 +16,9 @@ $_shadow: none;
 }
 
 .modal-content {
-  background: $_surface;
+  background: $bg-card;
   border-radius: 0;
-  border: 1px solid $_border;
+  border: 1px solid $border-subtle;
   width: 100%;
   max-width: 1100px;
   max-height: 90vh;
@@ -43,8 +33,8 @@ $_shadow: none;
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid $_border;
-  background: $_surface2;
+  border-bottom: 1px solid $border-subtle;
+  background: $bg-subtle;
   border-radius: 0;
   flex-shrink: 0;
   position: sticky;
@@ -55,23 +45,23 @@ $_shadow: none;
     margin: 0;
     font-size: 1.05rem;
     font-weight: 700;
-    color: $_text;
+    color: $text-dark;
     letter-spacing: -0.01em;
   }
 
   .btn-close {
     background: none;
-    border: 1.5px solid $_border2;
+    border: 1.5px solid $border-color;
     border-radius: 0;
     font-size: 1rem;
-    color: $_muted;
+    color: $text-muted;
     cursor: pointer;
     padding: 0.25rem 0.5rem;
     transition: all 0.15s;
 
     &:hover {
-      background: $_border;
-      color: $_text;
+      background: $border-subtle;
+      color: $text-dark;
       border-color: #bcc6d4;
     }
   }
@@ -91,12 +81,12 @@ $_shadow: none;
   .section-title {
     font-size: 0.6875rem;
     font-weight: 700;
-    color: $_muted;
+    color: $text-muted;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     margin: 0 0 0.875rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid $_border;
+    border-bottom: 1px solid $border-subtle;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -106,7 +96,7 @@ $_shadow: none;
       display: inline-block;
       width: 3px;
       height: 12px;
-      background: $_red;
+      background: $primary;
       border-radius: 0;
     }
   }
@@ -128,7 +118,7 @@ $_shadow: none;
   .label {
     font-size: 0.6875rem;
     font-weight: 700;
-    color: $_dim;
+    color: $text-light;
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
@@ -136,13 +126,13 @@ $_shadow: none;
   .value {
     font-size: 0.9375rem;
     font-weight: 500;
-    color: $_strong;
+    color: $border-strong;
   }
 }
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 .fw-semibold { font-weight: 600; }
-.text-muted  { color: $_muted; }
+.text-muted  { color: $text-muted; }
 .text-center { text-align: center; }
 .text-right  { text-align: right; }
 .mt-3        { margin-top: 0.75rem; }
@@ -161,14 +151,14 @@ $_shadow: none;
 
 .badge-success      { background: rgba(34, 197, 94, 0.10);  color: #15803d; }
 .badge-warning      { background: rgba(234, 179, 8, 0.12);  color: #a16207; }
-.badge-danger       { background: rgba(239, 68, 68, 0.10);  color: #dc2626; }
-.badge-type         { background: rgba(255, 45, 55, 0.08);  color: $_red; }
+.badge-danger       { background: rgba($expense-color, 0.10);  color: $expense-color; }
+.badge-type         { background: rgba(255, 45, 55, 0.08);  color: $primary; }
 .badge-part-inline  { background: rgba(34, 197, 94, 0.10);  color: #15803d; }
 
 // ── Item detail helpers ───────────────────────────────────────────────────────
 .item-desc {
   font-size: 0.8rem;
-  color: $_muted;
+  color: $text-muted;
   margin-top: 0.2rem;
 }
 
@@ -176,13 +166,13 @@ $_shadow: none;
   display: flex;
   gap: 0.75rem;
   font-size: 0.8rem;
-  color: $_muted;
+  color: $text-muted;
   margin-top: 0.2rem;
 }
 
 .item-ref {
   font-size: 0.8rem;
-  color: $_muted;
+  color: $text-muted;
   margin-top: 0.2rem;
   font-family: ui-monospace, 'Courier New', monospace;
 }
@@ -190,7 +180,7 @@ $_shadow: none;
 // ── Table ─────────────────────────────────────────────────────────────────────
 .table-responsive {
   overflow-x: auto;
-  border: 1px solid $_border;
+  border: 1px solid $border-subtle;
   border-radius: 0;
 }
 
@@ -202,28 +192,28 @@ $_shadow: none;
     padding: 0.6rem 0.875rem;
     font-size: 0.6875rem;
     font-weight: 700;
-    color: $_dim;
+    color: $text-light;
     text-transform: uppercase;
     letter-spacing: 0.07em;
-    border-bottom: 2px solid $_border;
+    border-bottom: 2px solid $border-subtle;
     white-space: nowrap;
-    background: $_surface2;
+    background: $bg-subtle;
   }
 
   td {
     padding: 0.8rem 0.875rem;
-    border-bottom: 1px solid $_border;
+    border-bottom: 1px solid $border-subtle;
     vertical-align: top;
-    color: $_strong;
+    color: $border-strong;
     font-size: 0.875rem;
   }
 
   tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover td { background: $_surface2; }
+  tbody tr:hover td { background: $bg-subtle; }
 }
 
 .description-cell {
-  color: $_text;
+  color: $text-dark;
   font-size: 0.875rem;
   max-width: 320px;
 }
@@ -231,8 +221,8 @@ $_shadow: none;
 // ── Footer ────────────────────────────────────────────────────────────────────
 .modal-footer {
   padding: 1rem 1.5rem;
-  border-top: 1px solid $_border;
-  background: $_surface2;
+  border-top: 1px solid $border-subtle;
+  background: $bg-subtle;
   border-radius: 0;
   display: flex;
   justify-content: flex-end;
@@ -242,9 +232,9 @@ $_shadow: none;
   .btn {
     padding: 0.575rem 1.1rem;
     border-radius: 0;
-    border: 1.5px solid $_border2;
-    background: $_surface;
-    color: $_strong;
+    border: 1.5px solid $border-color;
+    background: $bg-card;
+    color: $border-strong;
     cursor: pointer;
     font-size: 0.875rem;
     font-weight: 600;
@@ -254,12 +244,12 @@ $_shadow: none;
     gap: 0.35rem;
     box-shadow: none;
 
-    &:hover { background: $_surface2; border-color: #bcc6d4; }
+    &:hover { background: $bg-subtle; border-color: #bcc6d4; }
 
     &.btn-primary {
-      background: $_red;
+      background: $primary;
       color: white;
-      border-color: $_red;
+      border-color: $primary;
       box-shadow: none;
 
       &:hover {

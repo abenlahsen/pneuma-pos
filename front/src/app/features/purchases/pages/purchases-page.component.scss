@@ -1,3 +1,5 @@
+@use '../../_variables' as *;
+
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
 
@@ -20,8 +22,8 @@
   background: rgba(100, 116, 139, 0.1);
   color: #475569; // neutral fallback for legacy/unmapped values
 
-  &.method-especes  { background: rgba(16, 185, 129, 0.12); color: #065f46; }
-  &.method-cheque   { background: rgba(59, 130, 246, 0.10); color: #1d4ed8; }
+  &.method-especes  { background: rgba($income-color, 0.12); color: #065f46; }
+  &.method-cheque   { background: rgba($invoice-color, 0.10); color: #1d4ed8; }
   &.method-virement { background: rgba(139, 92, 246, 0.10); color: #6d28d9; }
   &.method-effet    { background: rgba(245, 158, 11, 0.12); color: #92400e; }
   &.method-carte    { background: rgba(236, 72, 153, 0.10); color: #9d174d; }
@@ -164,7 +166,7 @@
 .pur-row {
   min-height: 56px;
   border-bottom: 1px solid #e7eef8;
-  &:hover { background: #f8fafc; }
+  &:hover { background: $bg-subtle; }
 
   &--old {
     border-left: 3px solid #8a5a00;
@@ -270,7 +272,7 @@
 .ret-row {
   min-height: 44px;
   border-bottom: 1px solid #e7eef8;
-  background: #f8fafc;
+  background: $bg-subtle;
   font-size: 12px;
   color: #41546e;
   font-variant-numeric: tabular-nums;

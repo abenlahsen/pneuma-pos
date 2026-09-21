@@ -1,3 +1,5 @@
+@use '../../_variables' as *;
+
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
 
@@ -204,7 +206,7 @@
 .register-row {
   min-height: 50px;
   border-bottom: 1px solid #e7eef8;
-  &:hover { background: #f8fafc; }
+  &:hover { background: $bg-subtle; }
   &--pending { background: #f4f8fd; }
 }
 

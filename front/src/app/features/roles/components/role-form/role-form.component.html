@@ -1,0 +1,49 @@
+<!-- Refonte 2b : gabarit 15a (éditeur), pas 15b. Voir le composant : 83
+     permissions ne tiennent pas dans une modale de 480 px sans défilement. -->
+<div class="rfm-editor">
+
+  <header class="rfm-bar">
+    <span class="rfm-identity">
+      <span class="rfm-title">{{ role() ? 'Modifier ' + role()!.name : 'Nouveau rôle' }}</span>
+      <span class="rfm-meta">{{ selectedCount() }} permission(s) accordée(s) sur {{ totalCount() }}</span>
+    </span>
+  </header>
+
+  <div class="rfm-body">
+    <label class="rfm-field">
+      <span>Nom du rôle *</span>
+      <input type="text" [ngModel]="name()" (ngModelChange)="name.set($event)" name="role_name" placeholder="Ex: Manager">
+    </label>
+
+    <div class="rfm-perms-head">
+      <h2 class="rfm-section">Permissions</h2>
+      <span class="rfm-bulk">
+        <button type="button" class="rfm-link" (click)="selectAll()">Tout sélectionner</button>
+        <button type="button" class="rfm-link" (click)="deselectAll()">Tout désélectionner</button>
+      </span>
+    </div>
+
+    <div class="rfm-matrix">
+      <div class="rfm-group" *ngFor="let entry of grouped() | keyvalue">
+        <label class="rfm-group-head">
+          <input type="checkbox" [checked]="allSelectedFor(entry.key)" (change)="toggleResource(entry.key)">
+          <span>{{ resourceLabel()(entry.key) }}</span>
+        </label>
+        <div class="rfm-group-perms">
+          <label class="rfm-check" *ngFor="let perm of entry.value">
+            <input type="checkbox" [checked]="has(perm.id)" (change)="toggle(perm.id)">
+            {{ actionLabel()(perm.name) }}
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="rfm-foot">
+    <span class="rfm-foot-hint">Champ requis : le nom. Un rôle sans permission ne donne accès à rien.</span>
+    <button type="button" class="rfm-btn" (click)="cancel.emit()">Annuler</button>
+    <button type="button" class="rfm-btn rfm-btn--solid" [disabled]="!name().trim()" (click)="submit()">
+      {{ role() ? 'Mettre à jour' : 'Créer le rôle' }}
+    </button>
+  </footer>
+</div>

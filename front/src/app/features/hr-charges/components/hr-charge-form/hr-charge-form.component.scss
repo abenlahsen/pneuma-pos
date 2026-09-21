@@ -133,7 +133,7 @@
   border-radius: 0;
 
   &:hover { background: $bg-body; }
-  &.danger:hover { color: #dc2626; }
+  &.danger:hover { color: $expense-color; }
 }
 
 .btn-add-line {
@@ -187,7 +187,7 @@
 }
 
 .btn-submit {
-  background: linear-gradient(135deg, $primary, $primary-dark);
+  background: $primary;
   color: #fff;
   border: none;
   padding: 0.55rem 1.5rem;

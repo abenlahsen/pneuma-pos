@@ -2,8 +2,8 @@
 
 /* Refonte 2b, gabarit 15a — éditeur plein écran en trois rangées.
    Ce fichier était à moitié converti : rayons partiellement mis à zéro et
-   palette d'avant la refonte encore en place (#edf2f7 en filets, #48bb78 et
-   #38a169 sur le bouton d'ajout de stock). Tout passe par les jetons. */
+   palette d'avant la refonte encore en place ($border-subtle en filets, $income-color et
+   $income-color sur le bouton d'ajout de stock). Tout passe par les jetons. */
 
 .pf-editor {
   display: grid;

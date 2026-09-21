@@ -1,28 +1,14 @@
 @use '../../_variables' as *;
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-$_red:      #ff2d37;
-$_text:     #0f172a;
-$_muted:    #64748b;
-$_dim:      #94a3b8;
-$_bg:       #f1f5f9;
-$_surface:  #ffffff;
-$_surface2: #f8fafc;
-$_border:   #e8edf3;
-$_border2:  #d0d9e4;
 
-$_shadow-sm: none;
-$_shadow-md: none;
 
-$_radius-sm: 8px;
-$_radius-md: 12px;
-$_radius-lg: 14px;
 
 .page-container {
   max-width: 100%;
   margin: 1.5rem auto;
   padding: 0 1.25rem;
-  background: $_bg;
+  background: $bg-subtle;
   min-height: 100%;
 }
 
@@ -36,7 +22,7 @@ $_radius-lg: 14px;
   .title-section {
     h1 {
       margin: 0;
-      color: $_text;
+      color: $text-dark;
       font-size: 1.625rem;
       font-weight: 800;
       letter-spacing: -0.02em;
@@ -45,16 +31,16 @@ $_radius-lg: 14px;
 
     .subtitle {
       margin: 0.25rem 0 0;
-      color: $_muted;
+      color: $text-muted;
       font-size: 0.875rem;
     }
   }
 }
 
 .card {
-  background: $_surface;
+  background: $bg-card;
   border-radius: 0;
-  border: 1px solid $_border;
+  border: 1px solid $border-subtle;
   box-shadow: none;
 }
 
@@ -67,7 +53,7 @@ $_radius-lg: 14px;
 
   h2 {
     margin: 0;
-    color: $_text;
+    color: $text-dark;
     font-size: 1.1rem;
     font-weight: 700;
     letter-spacing: -0.01em;
@@ -83,7 +69,7 @@ $_radius-lg: 14px;
 
 .section-subtitle {
   margin: 0.35rem 0 0;
-  color: $_muted;
+  color: $text-muted;
   font-size: 0.875rem;
 }
 
@@ -101,10 +87,10 @@ $_radius-lg: 14px;
 
 .media-card,
 .theme-section {
-  border: 1px solid $_border;
+  border: 1px solid $border-subtle;
   border-radius: 0;
   padding: 1.25rem;
-  background: $_surface2;
+  background: $bg-subtle;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -113,23 +99,23 @@ $_radius-lg: 14px;
 .media-card__header {
   h3 {
     margin: 0;
-    color: $_text;
+    color: $text-dark;
     font-size: 0.9375rem;
     font-weight: 700;
   }
 
   p {
     margin: 0.3rem 0 0;
-    color: $_muted;
+    color: $text-muted;
     font-size: 0.875rem;
   }
 }
 
 .media-preview {
   min-height: 150px;
-  border: 1.5px dashed $_border2;
+  border: 1.5px dashed $border-color;
   border-radius: 0;
-  background: $_surface;
+  background: $bg-card;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -142,11 +128,11 @@ $_radius-lg: 14px;
 }
 
 .media-preview--empty {
-  background: $_surface2;
+  background: $bg-subtle;
 }
 
 .media-preview__placeholder {
-  color: $_dim;
+  color: $text-light;
   font-size: 0.9rem;
 }
 
@@ -190,9 +176,9 @@ $_radius-lg: 14px;
 
 .layout-grid {
   padding: 1.25rem;
-  border: 1px solid $_border;
+  border: 1px solid $border-subtle;
   border-radius: 0;
-  background: $_surface;
+  background: $bg-card;
 }
 
 .theme-controls {
@@ -229,14 +215,14 @@ $_radius-lg: 14px;
   width: 56px;
   min-width: 56px;
   height: 44px;
-  border: 1.5px solid $_border2;
+  border: 1.5px solid $border-color;
   border-radius: 0;
-  background: $_surface;
+  background: $bg-card;
   cursor: pointer;
   padding: 0.2rem;
   transition: border-color 0.2s;
 
-  &:focus { border-color: $_red; outline: none; }
+  &:focus { border-color: $primary; outline: none; }
 }
 
 .form-group {
@@ -259,19 +245,19 @@ $_radius-lg: 14px;
 .form-control {
   width: 100%;
   padding: 0.7rem 0.9rem;
-  border: 1.5px solid $_border2;
+  border: 1.5px solid $border-color;
   border-radius: 0;
   font-size: 0.9375rem;
-  color: $_text;
+  color: $text-dark;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
-  background: $_surface;
+  background: $bg-card;
   box-sizing: border-box;
 
-  &::placeholder { color: $_dim; }
+  &::placeholder { color: $text-light; }
 
   &:focus {
-    border-color: $_red;
+    border-color: $primary;
     box-shadow: 0 0 0 3px rgba(255, 45, 55, 0.1);
   }
 }
@@ -279,19 +265,15 @@ $_radius-lg: 14px;
 // ── Theme preview ─────────────────────────────────────────────────────────────
 .theme-preview {
   --preview-primary: #ff2d37;
-  --preview-accent: #1e293b;
+  --preview-accent: $text-dark;
   --preview-surface: #ffffff;
-  --preview-text: #0f172a;
+  --preview-text: $text-dark;
   --preview-muted: #475569;
   --preview-border: rgba(148, 163, 184, 0.3);
   --preview-shadow: rgba($text-dark, 0.08);
 
   border-radius: 0;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--preview-accent) 10%, #f8fafc) 0%,
-    #e2e8f0 100%
-  );
+  background: color-mix(in srgb, var(--preview-accent) 10%, $bg-subtle);
   padding: 1rem;
   display: flex;
   flex-direction: column;
@@ -299,11 +281,7 @@ $_radius-lg: 14px;
 }
 
 .theme-preview--dark {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--preview-accent) 28%, #0f172a) 0%,
-    #020617 100%
-  );
+  background: color-mix(in srgb, var(--preview-accent) 28%, $text-dark);
 }
 
 .theme-preview__window {
@@ -550,7 +528,7 @@ $_radius-lg: 14px;
 }
 
 .btn-primary {
-  background: $_red;
+  background: $primary;
   color: #fff;
   box-shadow: none;
 
@@ -561,13 +539,13 @@ $_radius-lg: 14px;
 }
 
 .btn-secondary {
-  background: $_surface;
-  color: $_text;
-  border-color: $_border2;
+  background: $bg-card;
+  color: $text-dark;
+  border-color: $border-color;
   box-shadow: none;
 
   &:hover:not(:disabled) {
-    background: $_surface2;
+    background: $bg-subtle;
     border-color: #bcc6d4;
   }
 }
@@ -610,8 +588,8 @@ $_radius-lg: 14px;
 .spinner {
   width: 1.4rem;
   height: 1.4rem;
-  border: 2px solid $_border;
-  border-top-color: $_red;
+  border: 2px solid $border-subtle;
+  border-top-color: $primary;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   display: inline-block;

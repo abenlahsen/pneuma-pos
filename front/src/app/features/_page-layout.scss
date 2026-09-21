@@ -1,3 +1,5 @@
+@use '_variables' as *;
+
 // ─── _page-layout.scss — motif partagé de toutes les pages de liste ──────────
 // Usage : @use '../../_page-layout' as layout; @include layout.page-layout();
 //
@@ -204,11 +206,11 @@
     // Sans elle, il ne reste qu'un saut d'un pixel, qui se lit comme un defaut.
 
     &.income  .card-icon { background: rgba(255, 45, 55, 0.08);  color: $primary; }
-    &.expense .card-icon { background: rgba(239, 68, 68, 0.08);  color: #dc2626; }
-    &.balance .card-icon { background: rgba(16, 185, 129, 0.1);  color: #059669; }
+    &.expense .card-icon { background: rgba($expense-color, 0.08);  color: $expense-color; }
+    &.balance .card-icon { background: rgba($income-color, 0.1);  color: #059669; }
     &.margin  .card-icon { background: rgba(139, 92, 246, 0.1);  color: #7c3aed; }
-    &.info    .card-icon { background: rgba(59, 130, 246, 0.1);  color: $invoice-color; }
-    &.balance.negative .card-icon { background: rgba(239, 68, 68, 0.08); color: #dc2626; }
+    &.info    .card-icon { background: rgba($invoice-color, 0.1);  color: $invoice-color; }
+    &.balance.negative .card-icon { background: rgba($expense-color, 0.08); color: $expense-color; }
 
     .card-icon {
       width: 40px;
@@ -484,11 +486,11 @@
     white-space: nowrap;
 
     &-primary   { background: rgba(255, 45, 55, 0.1);   color: #c0101a; }
-    &-success   { background: rgba(16, 185, 129, 0.1);  color: #065f46; }
-    &-danger    { background: rgba(239, 68, 68, 0.1);   color: #b91c1c; }
+    &-success   { background: rgba($income-color, 0.1);  color: #065f46; }
+    &-danger    { background: rgba($expense-color, 0.1);   color: #b91c1c; }
     &-warning   { background: rgba(245, 158, 11, 0.12); color: #92400e; }
     &-secondary { background: rgba(100, 116, 139, 0.1); color: #475569; }
-    &-blue      { background: rgba(59, 130, 246, 0.1);  color: #1d4ed8; }
+    &-blue      { background: rgba($invoice-color, 0.1);  color: #1d4ed8; }
     &-purple    { background: rgba(139, 92, 246, 0.1);  color: #6d28d9; }
   }
 
@@ -520,18 +522,18 @@
     border-radius: 0;
     font-size: 0.7rem;
     font-weight: 700;
-    background: rgba(16, 185, 129, 0.1);
+    background: rgba($income-color, 0.1);
     color: #065f46;
-    &.inactive { background: rgba(239, 68, 68, 0.1); color: #b91c1c; }
+    &.inactive { background: rgba($expense-color, 0.1); color: #b91c1c; }
   }
 
   // ── Sale/purchase status colors ───────────────────────────────────────────
   .bg-en-cours  { background: rgba(245, 158, 11, 0.1);  color: #92400e; }
-  .bg-livre     { background: rgba(16, 185, 129, 0.12); color: #065f46; }
-  .bg-monte     { background: rgba(16, 185, 129, 0.18); color: #047857; }
+  .bg-livre     { background: rgba($income-color, 0.12); color: #065f46; }
+  .bg-monte     { background: rgba($income-color, 0.18); color: #047857; }
   .bg-terminee,
-  .bg-termine   { background: rgba(59, 130, 246, 0.1);  color: #1d4ed8; }
-  .bg-annule    { background: rgba(239, 68, 68, 0.1);   color: #b91c1c; }
+  .bg-termine   { background: rgba($invoice-color, 0.1);  color: #1d4ed8; }
+  .bg-annule    { background: rgba($expense-color, 0.1);   color: #b91c1c; }
   .bg-recu      { background: rgba(139, 92, 246, 0.1);  color: #6d28d9; }
   .bg-retour    { background: rgba(100, 116, 139, 0.1); color: #475569; }
 
@@ -581,8 +583,8 @@
 
   .inline-spinner {
     width: 0.85rem; height: 0.85rem;
-    border: 1.5px solid rgba(239, 68, 68, 0.2);
-    border-top-color: #ef4444;
+    border: 1.5px solid rgba($expense-color, 0.2);
+    border-top-color: $expense-color;
     border-radius: 0;
     animation: spin 0.9s linear infinite;
     display: inline-block;
@@ -603,7 +605,7 @@
   .text-muted   { color: $text-muted; }
   .text-small   { font-size: 0.875rem; }
   .text-success { color: #059669; }
-  .text-danger  { color: #dc2626; }
+  .text-danger  { color: $expense-color; }
   .text-primary { color: $primary; }
 
   // ── Feedback ──────────────────────────────────────────────────────────────
@@ -615,7 +617,7 @@
   }
 
   .export-error {
-    color: #dc2626;
+    color: $expense-color;
     font-size: 0.875rem;
     margin: -0.75rem 0 1rem;
   }

@@ -40,7 +40,7 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, $primary, $primary-dark);
+  background: $primary;
   color: #fff;
 
   &:hover { box-shadow: none; }
@@ -54,9 +54,9 @@
 }
 
 .alert-danger {
-  background: rgba(239, 68, 68, 0.08);
+  background: rgba($expense-color, 0.08);
   color: #b91c1c;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba($expense-color, 0.2);
 }
 
 // ── Month navigation ─────────────────────────────────────────────────────────
@@ -198,7 +198,7 @@ tfoot .total-row td { border-bottom: none; }
   border-radius: 0;
 
   &:hover { background: $bg-body; }
-  &.danger:hover { color: #dc2626; }
+  &.danger:hover { color: $expense-color; }
   &.primary:hover { color: $primary-dark; }
 }
 

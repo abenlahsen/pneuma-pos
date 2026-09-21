@@ -41,14 +41,12 @@ describe('TransactionCategoriesPageComponent', () => {
 
   describe('switchType', () => {
     it('reloads categories and closes open forms when switching type', () => {
-      comp.addingParent.set(true);
-      comp.newParentName.set('draft');
+      comp.openCategoryForm();
 
       comp.switchType('income');
 
       expect(comp.activeType()).toBe('income');
-      expect(comp.addingParent()).toBe(false);
-      expect(comp.newParentName()).toBe('');
+      expect(comp.categoryForm()).toBeNull();
       expect(mockService.getTree).toHaveBeenCalledWith('income');
     });
 
@@ -59,63 +57,63 @@ describe('TransactionCategoriesPageComponent', () => {
     });
   });
 
-  describe('submitAddParent', () => {
+  /**
+   * Refonte 2b, étape 5b : les trois saisies écrites en ligne sont passées dans
+   * un formulaire extrait. Les tests décrivent donc la saisie — openCategoryForm,
+   * openChildForm, openRenameForm — puis la soumettent, au lieu de remplir des
+   * signaux de page qui n'existent plus.
+   */
+  describe("ajout d'une catégorie", () => {
     it('does not call the API when the name is blank', () => {
-      comp.newParentName.set('   ');
-      comp.submitAddParent();
+      comp.openCategoryForm();
+      comp.submitCategoryForm('   ');
       expect(mockService.create).not.toHaveBeenCalled();
     });
 
     it('appends the created category and closes the add form', () => {
       const created = makeCategory({ id: 5, name: 'Loyer' });
       mockService.create.mockReturnValue(of(created));
-      comp.addingParent.set(true);
-      comp.newParentName.set('Loyer');
-
-      comp.submitAddParent();
+      comp.openCategoryForm();
+      comp.submitCategoryForm('Loyer');
 
       expect(comp.categories()).toContainEqual(created);
-      expect(comp.addingParent()).toBe(false);
+      expect(comp.categoryForm()).toBeNull();
     });
 
     it('surfaces a validation error from the API without closing the form', () => {
       mockService.create.mockReturnValue(throwError(() => ({ error: { errors: { name: ['Déjà utilisé.'] } } })));
-      comp.addingParent.set(true);
-      comp.newParentName.set('Loyer');
-
-      comp.submitAddParent();
+      comp.openCategoryForm();
+      comp.submitCategoryForm('Loyer');
 
       expect(comp.errorMessage()).toBe('Déjà utilisé.');
-      expect(comp.addingParent()).toBe(true);
     });
   });
 
-  describe('submitAddChild', () => {
+  describe("ajout d'une sous-catégorie", () => {
     it('appends the child under its parent', () => {
       const parent = makeCategory({ id: 1, name: 'Loyer', children: [] });
       comp.categories.set([parent]);
       const child = makeCategory({ id: 2, name: 'Bureau', parent_id: 1 });
       mockService.create.mockReturnValue(of(child));
-      comp.newChildName.set('Bureau');
 
-      comp.submitAddChild(parent);
+      comp.openChildForm(parent);
+      comp.submitCategoryForm('Bureau');
 
       expect(comp.categories()[0].children).toContainEqual(child);
     });
   });
 
-  describe('submitEdit', () => {
+  describe('renommage', () => {
     it('replaces a top-level category in place', () => {
       comp.categories.set([makeCategory({ id: 1, name: 'Old' })]);
       const updated = makeCategory({ id: 1, name: 'New' });
       mockService.update.mockReturnValue(of(updated));
-      comp.editingId.set(1);
-      comp.editingName.set('New');
 
-      comp.submitEdit(comp.categories()[0]);
+      comp.openRenameForm(comp.categories()[0]);
+      comp.submitCategoryForm('New');
 
       expect(comp.categories()[0].name).toBe('New');
-      expect(comp.editingId()).toBeNull();
+      expect(comp.categoryForm()).toBeNull();
     });
 
     it('replaces a child category without disturbing its siblings', () => {
@@ -124,9 +122,9 @@ describe('TransactionCategoriesPageComponent', () => {
       comp.categories.set([makeCategory({ id: 1, name: 'Loyer', children: [child1, child2] })]);
       const updatedChild = makeCategory({ id: 2, name: 'Siège', parent_id: 1 });
       mockService.update.mockReturnValue(of(updatedChild));
-      comp.editingName.set('Siège');
 
-      comp.submitEdit(child1);
+      comp.openRenameForm(child1, comp.categories()[0]);
+      comp.submitCategoryForm('Siège');
 
       const children = comp.categories()[0].children!;
       expect(children.find((c) => c.id === 2)!.name).toBe('Siège');

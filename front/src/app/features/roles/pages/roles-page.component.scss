@@ -1,16 +1,9 @@
+@use '../../_variables' as *;
+
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
 
 // Internal tokens (mirror _page-layout internals)
-$_red:     #ff2d37;
-$_text:    #0f172a;
-$_muted:   #64748b;
-$_dim:     #94a3b8;
-$_bg:      #f1f5f9;
-$_surface: #ffffff;
-$_surface-2: #f8fafc;
-$_border:  #e8edf3;
-$_border-2: #d0d9e4;
 
 // ── Table-card spacing ───────────────────────────────────────────────────────
 .table-card {
@@ -38,9 +31,9 @@ $_border-2: #d0d9e4;
   border-radius: 999px;
   font-size: 0.68rem;
   font-weight: 600;
-  background: rgba(59, 130, 246, 0.08);
+  background: rgba($invoice-color, 0.08);
   color: #1d4ed8;
-  border: 1px solid rgba(59, 130, 246, 0.18);
+  border: 1px solid rgba($invoice-color, 0.18);
   white-space: nowrap;
 }
 
@@ -48,20 +41,20 @@ $_border-2: #d0d9e4;
 .permissions-card {
   overflow: hidden;
   border-radius: 0;
-  border: 1px solid $_border;
-  background: $_surface;
+  border: 1px solid $border-subtle;
+  background: $bg-card;
   box-shadow: none;
 
   .card-header {
     padding: 0.8rem 1.25rem;
-    border-bottom: 1px solid $_border;
-    background: $_surface-2;
+    border-bottom: 1px solid $border-subtle;
+    background: $bg-subtle;
 
     h2 {
       margin: 0;
       font-size: 0.72rem;
       font-weight: 700;
-      color: $_muted;
+      color: $text-muted;
       text-transform: uppercase;
       letter-spacing: 0.08em;
     }
@@ -79,8 +72,8 @@ $_border-2: #d0d9e4;
 }
 
 .permission-group {
-  background: $_surface-2;
-  border: 1px solid $_border;
+  background: $bg-subtle;
+  border: 1px solid $border-subtle;
   border-radius: 0;
   overflow: hidden;
 }
@@ -90,11 +83,11 @@ $_border-2: #d0d9e4;
   padding: 0.5rem 0.75rem;
   font-size: 0.7rem;
   font-weight: 700;
-  color: $_muted;
+  color: $text-muted;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  background: $_bg;
-  border-bottom: 1px solid $_border;
+  background: $bg-subtle;
+  border-bottom: 1px solid $border-subtle;
 }
 
 .group-perms {
@@ -117,7 +110,7 @@ $_border-2: #d0d9e4;
 
 .perm-name {
   font-size: 0.78rem;
-  color: $_text;
+  color: $text-dark;
   font-weight: 500;
   flex: 1;
   min-width: 0;
@@ -134,7 +127,7 @@ $_border-2: #d0d9e4;
 // ── Modal: permissions section ────────────────────────────────────────────────
 .permissions-section {
   margin-top: 1.25rem;
-  border-top: 1px solid $_border;
+  border-top: 1px solid $border-subtle;
   padding-top: 1.25rem;
 }
 
@@ -150,7 +143,7 @@ $_border-2: #d0d9e4;
     margin: 0;
     font-size: 0.72rem;
     font-weight: 700;
-    color: $_muted;
+    color: $text-muted;
     text-transform: uppercase;
     letter-spacing: 0.08em;
   }
@@ -168,12 +161,12 @@ $_border-2: #d0d9e4;
 }
 
 .btn-outline {
-  background: $_surface !important;
-  color: $_muted !important;
-  border: 1px solid $_border-2 !important;
+  background: $bg-card !important;
+  color: $text-muted !important;
+  border: 1px solid $border-color !important;
   &:hover {
-    background: $_bg !important;
-    color: $_text !important;
+    background: $bg-subtle !important;
+    color: $text-dark !important;
     border-color: #c4cdd8 !important;
   }
 }
@@ -189,26 +182,26 @@ $_border-2: #d0d9e4;
 
   // Custom scrollbar
   &::-webkit-scrollbar { width: 5px; }
-  &::-webkit-scrollbar-track { background: $_bg; border-radius: 0; }
-  &::-webkit-scrollbar-thumb { background: $_border-2; border-radius: 0; &:hover { background: $_dim; } }
+  &::-webkit-scrollbar-track { background: $bg-subtle; border-radius: 0; }
+  &::-webkit-scrollbar-thumb { background: $border-color; border-radius: 0; &:hover { background: $text-light; } }
 }
 
 .matrix-group {
-  background: $_surface-2;
-  border: 1px solid $_border;
+  background: $bg-subtle;
+  border: 1px solid $border-subtle;
   border-radius: 0;
   overflow: hidden;
 }
 
 .matrix-group-header {
   padding: 0.45rem 0.65rem;
-  background: $_bg;
-  border-bottom: 1px solid $_border;
+  background: $bg-subtle;
+  border-bottom: 1px solid $border-subtle;
 
   .checkbox-label {
     font-size: 0.72rem;
     font-weight: 700;
-    color: $_muted;
+    color: $text-muted;
     text-transform: uppercase;
     letter-spacing: 0.07em;
   }
@@ -229,7 +222,7 @@ $_border-2: #d0d9e4;
   border-radius: 0;
   cursor: pointer;
   font-size: 0.8rem;
-  color: $_text;
+  color: $text-dark;
   font-weight: 500;
   transition: background 0.12s;
 
@@ -240,7 +233,7 @@ $_border-2: #d0d9e4;
   input[type="checkbox"] {
     width: 14px;
     height: 14px;
-    accent-color: $_red;
+    accent-color: $primary;
     cursor: pointer;
     flex-shrink: 0;
   }
@@ -253,7 +246,7 @@ $_border-2: #d0d9e4;
   gap: 0.65rem;
   margin-top: 1.5rem;
   padding-top: 1.25rem;
-  border-top: 1px solid $_border;
+  border-top: 1px solid $border-subtle;
 }
 
 // ── Responsive ────────────────────────────────────────────────────────────────

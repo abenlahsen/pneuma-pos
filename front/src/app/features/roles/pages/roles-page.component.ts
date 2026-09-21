@@ -8,6 +8,8 @@ import { Permission, Role } from '../models/role.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
 import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
+import { RoleFormComponent } from '../components/role-form/role-form.component';
+import { PermissionFormComponent } from '../components/permission-form/permission-form.component';
 import {
   ListEmptyComponent,
   ListErrorComponent,
@@ -18,7 +20,7 @@ import {
 @Component({
   selector: 'app-roles-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent, ConfirmDeleteComponent, RoleFormComponent, PermissionFormComponent],
   templateUrl: './roles-page.component.html',
   styleUrls: ['./roles-page.component.scss'],
 })
@@ -45,11 +47,8 @@ export class RolesPageComponent implements OnInit {
 
   showForm = signal(false);
   editingRole = signal<Role | null>(null);
-  formName = signal('');
-  formPermissions = signal<Set<number>>(new Set());
 
   showPermissionForm = signal(false);
-  newPermissionName = signal('');
 
   groupedPermissions = signal<Map<string, Permission[]>>(new Map());
 
@@ -134,15 +133,11 @@ export class RolesPageComponent implements OnInit {
 
   openAddForm(): void {
     this.editingRole.set(null);
-    this.formName.set('');
-    this.formPermissions.set(new Set());
     this.showForm.set(true);
   }
 
   openEditForm(role: Role): void {
     this.editingRole.set(role);
-    this.formName.set(role.name);
-    this.formPermissions.set(new Set(role.permissions.map((permission) => permission.id)));
     this.showForm.set(true);
   }
 
@@ -151,58 +146,14 @@ export class RolesPageComponent implements OnInit {
     this.editingRole.set(null);
   }
 
-  togglePermission(permId: number): void {
-    const current = new Set(this.formPermissions());
 
-    if (current.has(permId)) {
-      current.delete(permId);
-    } else {
-      current.add(permId);
-    }
 
-    this.formPermissions.set(current);
-  }
 
-  hasPermission(permId: number): boolean {
-    return this.formPermissions().has(permId);
-  }
 
-  toggleAllForResource(resource: string): void {
-    const resourcePerms = this.groupedPermissions().get(resource) || [];
-    const current = new Set(this.formPermissions());
-    const allSelected = resourcePerms.every((permission) => current.has(permission.id));
 
-    for (const perm of resourcePerms) {
-      if (allSelected) {
-        current.delete(perm.id);
-      } else {
-        current.add(perm.id);
-      }
-    }
 
-    this.formPermissions.set(current);
-  }
-
-  isAllSelectedForResource(resource: string): boolean {
-    const resourcePerms = this.groupedPermissions().get(resource) || [];
-    return resourcePerms.length > 0 && resourcePerms.every((permission) => this.formPermissions().has(permission.id));
-  }
-
-  selectAll(): void {
-    const allIds = this.permissions().map((permission) => permission.id);
-    this.formPermissions.set(new Set(allIds));
-  }
-
-  deselectAll(): void {
-    this.formPermissions.set(new Set());
-  }
-
-  saveRole(): void {
-    const payload = {
-      name: this.formName(),
-      permissions: Array.from(this.formPermissions()),
-    };
-
+  /** Le formulaire porte désormais son propre état ; la page reçoit le résultat. */
+  saveRoleFrom(payload: { name: string; permissions: number[] }): void {
     const editing = this.editingRole();
 
     if (editing) {
@@ -235,7 +186,6 @@ export class RolesPageComponent implements OnInit {
   }
 
   openPermissionForm(): void {
-    this.newPermissionName.set('');
     this.showPermissionForm.set(true);
   }
 
@@ -243,13 +193,7 @@ export class RolesPageComponent implements OnInit {
     this.showPermissionForm.set(false);
   }
 
-  addPermission(): void {
-    const name = this.newPermissionName().trim();
-
-    if (!name) {
-      return;
-    }
-
+  addPermissionNamed(name: string): void {
     this.roleService.createPermission(name).subscribe({
       next: () => {
         this.closePermissionForm();

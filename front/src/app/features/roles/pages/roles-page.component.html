@@ -90,75 +90,23 @@
   </div>
 </div>
 
-<div class="modal-overlay" *ngIf="showForm()" (click)="closeForm()">
-  <div class="modal-container modal-lg" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>{{ editingRole() ? 'Modifier le Rôle' : 'Nouveau Rôle' }}</h2>
-      <button class="btn-icon" (click)="closeForm()">X</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Nom du rôle</label>
-        <input type="text" class="form-control" [ngModel]="formName()" (ngModelChange)="formName.set($event)" placeholder="Ex: Manager">
-      </div>
+<!-- Refonte 2b, étape 5b : les deux formulaires écrits en ligne sont extraits.
+     Le rôle prend le gabarit 15a (83 permissions ne tiennent pas dans 480 px) ;
+     la permission, à champ unique, prend la coque 15b. -->
+<app-role-form
+  *ngIf="showForm()"
+  [role]="editingRole()"
+  [grouped]="groupedPermissions()"
+  [resourceLabel]="getResourceLabel"
+  [actionLabel]="getActionLabel"
+  (save)="saveRoleFrom($event)"
+  (cancel)="closeForm()" />
 
-      <div class="permissions-section">
-        <div class="permissions-header">
-          <h3>Permissions</h3>
-          <div class="bulk-actions">
-            <button class="btn btn-xs btn-outline" (click)="selectAll()">Tout sélectionner</button>
-            <button class="btn btn-xs btn-outline" (click)="deselectAll()">Tout désélectionner</button>
-          </div>
-        </div>
-
-        <div class="permissions-matrix">
-          <div class="matrix-group" *ngFor="let entry of groupedPermissions() | keyvalue">
-            <div class="matrix-group-header">
-              <label class="checkbox-label">
-                <input type="checkbox" [checked]="isAllSelectedForResource(entry.key)" (change)="toggleAllForResource(entry.key)">
-                <span class="fw-semibold">{{ getResourceLabel(entry.key) }}</span>
-              </label>
-            </div>
-            <div class="matrix-group-perms">
-              <label class="checkbox-label" *ngFor="let perm of entry.value">
-                <input type="checkbox" [checked]="hasPermission(perm.id)" (change)="togglePermission(perm.id)">
-                {{ getActionLabel(perm.name) }}
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-actions">
-        <button class="btn btn-secondary" (click)="closeForm()">Annuler</button>
-        <button class="btn btn-primary" (click)="saveRole()" [disabled]="!formName()">
-          {{ editingRole() ? 'Mettre à jour' : 'Créer' }}
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" *ngIf="showPermissionForm()" (click)="closePermissionForm()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>Nouvelle Permission</h2>
-      <button class="btn-icon" (click)="closePermissionForm()">X</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Nom de la permission</label>
-        <input type="text" class="form-control" [ngModel]="newPermissionName()" (ngModelChange)="newPermissionName.set($event)" placeholder="Ex: view dashboard" (keyup.enter)="addPermission()">
-        <small class="text-muted">Format recommandé : action ressource (ex: view sales, edit purchases)</small>
-      </div>
-      <div class="form-actions">
-        <button class="btn btn-secondary" (click)="closePermissionForm()">Annuler</button>
-        <button class="btn btn-primary" (click)="addPermission()" [disabled]="!newPermissionName()">Créer</button>
-      </div>
-    </div>
-  </div>
-</div>
-
+<app-permission-form
+  *ngIf="showPermissionForm()"
+  [roleCount]="roles().length"
+  (save)="addPermissionNamed($event)"
+  (cancel)="closePermissionForm()" />
 <!-- Refonte 2b, gabarit 15c : la confirmation remplace le confirm() natif. -->
 <app-confirm-delete
   *ngIf="pendingDelete() as pending"

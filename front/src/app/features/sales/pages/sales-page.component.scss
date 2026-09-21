@@ -1,3 +1,5 @@
+@use '../../_variables' as *;
+
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
 
@@ -43,8 +45,8 @@
   flex-wrap: wrap;
   gap: 8px;
   padding: 11px 18px;
-  border-bottom: 1px solid #d0d9e4;
-  background: #f8fafc;
+  border-bottom: 1px solid $border-color;
+  background: $bg-subtle;
 }
 
 .filter-bar-search {
@@ -56,9 +58,9 @@
   max-width: 100%;
   padding: 0 11px;
   background: #fff;
-  border: 1px solid #d0d9e4;
+  border: 1px solid $border-color;
 
-  app-icon { color: #64748b; flex-shrink: 0; }
+  app-icon { color: $text-muted; flex-shrink: 0; }
 
   input {
     flex: 1;
@@ -67,8 +69,8 @@
     outline: none;
     background: transparent;
     font-size: 12.5px;
-    color: #0f172a;
-    &::placeholder { color: #94a3b8; }
+    color: $text-dark;
+    &::placeholder { color: $text-light; }
   }
 }
 
@@ -79,10 +81,10 @@
   height: 32px;
   padding: 0 10px;
   background: #fff;
-  border: 1px solid #0f172a;
+  border: 1px solid $text-dark;
   font-size: 12px;
   font-weight: 600;
-  color: #0f172a;
+  color: $text-dark;
   white-space: nowrap;
 
   button {
@@ -90,11 +92,11 @@
     border: none;
     padding: 0;
     cursor: pointer;
-    color: #64748b;
+    color: $text-muted;
     font: inherit;
     font-weight: 400;
     display: inline-flex;
-    &:hover { color: #ef4444; }
+    &:hover { color: $expense-color; }
   }
 
   // Filtre "à problème" (ex. impayé) : le seul cas où un jeton porte du
@@ -113,18 +115,18 @@
   gap: 7px;
   height: 32px;
   padding: 0 12px;
-  border: 1px solid #d0d9e4;
+  border: 1px solid $border-color;
   background: #fff;
-  color: #0f172a;
+  color: $text-dark;
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
-  &:hover { background: #f8fafc; }
+  &:hover { background: $bg-subtle; }
 
   .filter-toggle-count {
     padding: 0 5px;
-    background: #0f172a;
+    background: $text-dark;
     color: #fff;
     font-size: 10.5px;
     font-weight: 700;
@@ -133,7 +135,7 @@
 
 .filter-result-count {
   font-size: 11.5px;
-  color: #64748b;
+  color: $text-muted;
   font-variant-numeric: tabular-nums;
 }
 

@@ -1,3 +1,5 @@
+@use '../../_variables' as *;
+
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
 
@@ -5,15 +7,6 @@
 .modal-container { max-width: 1200px; }
 
 // ── Design tokens (mirror _page-layout) ──────────────────────────────────────
-$_red:      #ff2d37;
-$_amber:    #d97706;
-$_text:     #0f172a;
-$_muted:    #64748b;
-$_dim:      #94a3b8;
-$_surface:  #ffffff;
-$_surface2: #f8fafc;
-$_border:   #e8edf3;
-$_border2:  #d0d9e4;
 
 // ── Filters section: pas de .card-body wrapper dans ce template ──────────────
 .filters-section {
@@ -34,7 +27,7 @@ $_border2:  #d0d9e4;
   gap: 0.5rem;
   justify-content: flex-end;
   padding-top: 0.25rem;
-  border-top: 1px solid $_border;
+  border-top: 1px solid $border-subtle;
 }
 
 // ── Filter group (alias de form-group pour les filtres) ───────────────────────
@@ -46,23 +39,23 @@ $_border2:  #d0d9e4;
   label {
     font-size: 0.72rem;
     font-weight: 700;
-    color: $_muted;
+    color: $text-muted;
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
 
   .form-control {
     padding: 0.45rem 0.7rem;
-    border: 1px solid $_border2;
+    border: 1px solid $border-color;
     font-size: 0.875rem;
-    color: $_text;
-    background: $_surface;
+    color: $text-dark;
+    background: $bg-card;
     width: 100%;
     transition: border-color 0.18s, box-shadow 0.18s;
 
     &:focus {
       outline: none;
-      border-color: $_red;
+      border-color: $primary;
       box-shadow: 0 0 0 3px rgba(255, 45, 55, 0.1);
     }
   }
@@ -74,28 +67,28 @@ $_border2:  #d0d9e4;
   border-collapse: collapse;
 
   th {
-    background: $_surface2;
+    background: $bg-subtle;
     font-weight: 700;
     font-size: 0.65rem;
-    color: $_dim;
+    color: $text-light;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     padding: 0.6rem 0.875rem;
-    border-bottom: 2px solid $_border;
+    border-bottom: 2px solid $border-subtle;
     white-space: nowrap;
     text-align: left;
   }
 
   td {
     padding: 0.65rem 0.875rem;
-    border-bottom: 1px solid $_border;
+    border-bottom: 1px solid $border-subtle;
     font-size: 0.8125rem;
-    color: $_text;
+    color: $text-dark;
     vertical-align: middle;
   }
 
   tr:last-child td { border-bottom: none; }
-  tbody tr:hover td { background: $_surface2; }
+  tbody tr:hover td { background: $bg-subtle; }
 }
 
 // ── Table cells ───────────────────────────────────────────────────────────────
@@ -111,7 +104,7 @@ $_border2:  #d0d9e4;
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0;
-  &.margin-low  { color: #dc2626; }
+  &.margin-low  { color: $expense-color; }
   &.margin-mid  { color: #d97706; }
   &.margin-high { color: #16a34a; }
 }
@@ -122,7 +115,7 @@ $_border2:  #d0d9e4;
 .client-name {
   font-weight: 600;
   font-size: 0.875rem;
-  color: $_text;
+  color: $text-dark;
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -132,19 +125,19 @@ $_border2:  #d0d9e4;
 
 .client-phone {
   font-size: 0.78rem;
-  color: $_muted;
+  color: $text-muted;
   margin-top: 0.1rem;
 }
 
 .vehicle-name {
   font-weight: 600;
   font-size: 0.875rem;
-  color: $_text;
+  color: $text-dark;
 }
 
 .mileage {
   font-size: 0.78rem;
-  color: $_muted;
+  color: $text-muted;
   margin-top: 0.1rem;
 }
 
@@ -157,18 +150,18 @@ $_border2:  #d0d9e4;
 
 .badge-type {
   background: rgba(255, 45, 55, 0.08);
-  color: $_red;
+  color: $primary;
 }
 
 .badge-part-type {
   background: rgba(217, 119, 6, 0.10);
-  color: $_amber;
+  color: $warning-color;
 }
 
 .badge-more {
-  background: $_surface2;
-  color: $_muted;
-  border: 1px solid $_border2;
+  background: $bg-subtle;
+  color: $text-muted;
+  border: 1px solid $border-color;
 }
 
 // ── Action buttons ────────────────────────────────────────────────────────────
@@ -182,7 +175,7 @@ $_border2:  #d0d9e4;
   &:hover {
     background: #fee2e2 !important;
     border-color: #fca5a5 !important;
-    color: #dc2626;
+    color: $expense-color;
   }
 }
 
@@ -190,14 +183,14 @@ $_border2:  #d0d9e4;
 .loading-state {
   padding: 3rem;
   text-align: center;
-  color: $_muted;
+  color: $text-muted;
   font-size: 0.9rem;
 }
 
 .empty-state {
   padding: 3rem;
   text-align: center;
-  color: $_dim;
+  color: $text-light;
   font-size: 0.9rem;
 }
 
@@ -319,7 +312,7 @@ $_border2:  #d0d9e4;
 .board-empty {
   padding: 1.5rem;
   text-align: center;
-  color: #94a3b8;
+  color: $text-light;
   font-size: 0.85rem;
 }
 

@@ -1,3 +1,5 @@
+@use '../../_variables' as *;
+
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
 @include layout.list-row-pattern();
@@ -10,7 +12,7 @@
 .section-title {
   margin: 0;
   font-size: 0.78rem;
-  color: #64748b;
+  color: $text-muted;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -18,7 +20,7 @@
 
 .total-row td {
   font-weight: 700;
-  border-top: 2px solid #e8edf3;
+  border-top: 2px solid $border-subtle;
   border-bottom: none !important;
 }
 

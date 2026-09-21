@@ -1,21 +1,9 @@
+@use '../../_variables' as *;
+
 // Refonte 2b, étape 4 — écran plein deux volets (Refonte Nouvelle vente.dc.html),
 // remplace la modale à cinq sections. Ce composant est monté par
 // sale-form-page.component (routé) et occupe toute la hauteur disponible du
 // `<main class="main-content">` fourni par app.html.
-$_ink:      #0c1e33;
-$_muted:    #4a5c75;
-$_border:   #adc2da;
-$_rule:     #e7eef8;
-$_block:    #cfdcec;
-$_red:      #ff2d37;
-$_danger:   #c2181f;
-$_alert-bg: #fdeff1;
-$_alert-ink:#8f1218;
-$_warn:     #8a5a00;
-$_warn-bg:  #fdf6e6;
-$_warn-border: #d4a017;
-$_income:   #15616d;
-$_subtle:   #f4f8fd;
 
 :host {
   display: block;
@@ -27,7 +15,7 @@ $_subtle:   #f4f8fd;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 480px;
   background: #fff;
-  border: 1px solid $_border;
+  border: 1px solid $border-subtle;
 }
 
 // ── Volet gauche : catalogue ────────────────────────────────────────────
@@ -35,12 +23,12 @@ $_subtle:   #f4f8fd;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  border-right: 1px solid $_block;
+  border-right: 1px solid $border-strong;
 }
 
 .lot-search-bar {
   padding: 14px 20px;
-  border-bottom: 1px solid $_block;
+  border-bottom: 1px solid $border-strong;
 
   label {
     display: flex;
@@ -49,8 +37,8 @@ $_subtle:   #f4f8fd;
     height: 46px;
     padding: 0 14px;
     background: #fff;
-    border: 2px solid $_ink;
-    color: $_ink;
+    border: 2px solid $text-dark;
+    color: $text-dark;
   }
 
   input {
@@ -61,8 +49,8 @@ $_subtle:   #f4f8fd;
     background: transparent;
     font-size: 15px;
     font-weight: 600;
-    color: $_ink;
-    &::placeholder { font-weight: 400; color: $_muted; }
+    color: $text-dark;
+    &::placeholder { font-weight: 400; color: $text-muted; }
   }
 }
 
@@ -72,13 +60,13 @@ $_subtle:   #f4f8fd;
   align-items: center;
   gap: 12px;
   padding: 7px 20px;
-  border-bottom: 1px solid $_ink;
-  background: $_subtle;
+  border-bottom: 1px solid $text-dark;
+  background: $border-subtle;
   font-size: 9.5px;
   font-weight: 700;
   letter-spacing: 0.13em;
   text-transform: uppercase;
-  color: $_muted;
+  color: $text-muted;
 }
 
 .lot-list {
@@ -94,7 +82,7 @@ $_subtle:   #f4f8fd;
   gap: 12px;
   min-height: 62px;
   padding: 0 20px;
-  border-bottom: 1px solid $_rule;
+  border-bottom: 1px solid $border-subtle;
 }
 
 .lot-name {
@@ -106,7 +94,7 @@ $_subtle:   #f4f8fd;
 .lot-title {
   font-size: 14.5px;
   font-weight: 600;
-  color: $_ink;
+  color: $text-dark;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -114,13 +102,13 @@ $_subtle:   #f4f8fd;
 
 .lot-sub {
   font-size: 11.5px;
-  color: $_muted;
+  color: $text-muted;
 }
 
 .btn-add-lot {
   height: 34px;
-  border: 1px solid $_ink;
-  background: $_ink;
+  border: 1px solid $text-dark;
+  background: $text-dark;
   color: #fff;
   font-family: inherit;
   font-size: 12.5px;
@@ -134,10 +122,10 @@ $_subtle:   #f4f8fd;
   align-items: center;
   gap: 12px;
   padding: 13px 20px;
-  border-bottom: 1px solid $_block;
-  background: $_subtle;
+  border-bottom: 1px solid $border-strong;
+  background: $border-subtle;
   font-size: 12px;
-  color: $_muted;
+  color: $text-muted;
 
   .btn { margin-left: auto; }
   .btn + .btn { margin-left: 0; }
@@ -145,8 +133,8 @@ $_subtle:   #f4f8fd;
 
 .free-line-form {
   padding: 14px 20px;
-  border-bottom: 1px solid $_block;
-  background: $_subtle;
+  border-bottom: 1px solid $border-strong;
+  background: $border-subtle;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -154,10 +142,10 @@ $_subtle:   #f4f8fd;
   input[type="text"] {
     height: 38px;
     padding: 0 12px;
-    border: 1px solid $_border;
+    border: 1px solid $border-subtle;
     background: #fff;
     font-size: 13.5px;
-    color: $_ink;
+    color: $text-dark;
   }
 }
 
@@ -166,7 +154,7 @@ $_subtle:   #f4f8fd;
   align-items: center;
   justify-content: space-between;
   font-size: 13px;
-  color: $_ink;
+  color: $text-dark;
 }
 
 .free-line-results {
@@ -181,11 +169,11 @@ $_subtle:   #f4f8fd;
   padding: 8px 10px;
   border: none;
   background: #fff;
-  border-bottom: 1px solid $_rule;
+  border-bottom: 1px solid $border-subtle;
   font-size: 13px;
-  color: $_ink;
+  color: $text-dark;
   cursor: pointer;
-  &:hover { background: $_subtle; }
+  &:hover { background: $border-subtle; }
 }
 
 .logistics-panel {
@@ -200,7 +188,7 @@ $_subtle:   #f4f8fd;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: $_muted;
+  color: $text-muted;
 }
 
 .logistics-chips {
@@ -213,12 +201,12 @@ $_subtle:   #f4f8fd;
   height: 32px;
   padding: 0 11px;
   background: #fff;
-  border: 1px solid $_ink;
+  border: 1px solid $text-dark;
   font-size: 12px;
   font-weight: 600;
-  color: $_ink;
+  color: $text-dark;
 
-  &--required:invalid { border-color: $_border; color: $_muted; }
+  &--required:invalid { border-color: $border-subtle; color: $text-muted; }
 }
 
 .chip-toggle {
@@ -227,21 +215,21 @@ $_subtle:   #f4f8fd;
   gap: 7px;
   height: 32px;
   padding: 0 12px;
-  border: 1px solid $_border;
+  border: 1px solid $border-subtle;
   background: #fff;
-  color: $_ink;
+  color: $text-dark;
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
-  &:hover { background: $_subtle; }
+  &:hover { background: $border-subtle; }
 }
 
 .logistics-hint {
   margin: 0;
   font-size: 11.5px;
   line-height: 1.55;
-  color: $_muted;
+  color: $text-muted;
 }
 
 .logistics-grid {
@@ -256,13 +244,13 @@ $_subtle:   #f4f8fd;
 
     &.full-width { grid-column: 1 / -1; }
 
-    label { font-size: 0.72rem; font-weight: 700; color: $_muted; text-transform: uppercase; letter-spacing: 0.06em; }
+    label { font-size: 0.72rem; font-weight: 700; color: $text-muted; text-transform: uppercase; letter-spacing: 0.06em; }
 
     input, select, textarea {
       padding: 0.45rem 0.7rem;
-      border: 1px solid $_border;
+      border: 1px solid $border-subtle;
       font-size: 0.875rem;
-      color: $_ink;
+      color: $text-dark;
       background: #fff;
       font-family: inherit;
     }
@@ -274,12 +262,12 @@ $_subtle:   #f4f8fd;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: $_subtle;
+  background: $border-subtle;
 }
 
 .client-banner {
   padding: 14px 18px;
-  border-bottom: 1px solid $_block;
+  border-bottom: 1px solid $border-strong;
   background: #fff;
   display: flex;
   flex-direction: column;
@@ -292,14 +280,14 @@ $_subtle:   #f4f8fd;
   flex-direction: column;
   gap: 0.4rem;
 
-  label { font-size: 0.75rem; font-weight: 700; color: $_muted; text-transform: uppercase; letter-spacing: 0.05em; }
+  label { font-size: 0.75rem; font-weight: 700; color: $text-muted; text-transform: uppercase; letter-spacing: 0.05em; }
 
   input {
     height: 38px;
     padding: 0 12px;
-    border: 1px solid $_border;
+    border: 1px solid $border-subtle;
     font-size: 13.5px;
-    color: $_ink;
+    color: $text-dark;
   }
 
   .btn { align-self: flex-start; }
@@ -312,7 +300,7 @@ $_subtle:   #f4f8fd;
   right: 0;
   z-index: 50;
   background: #fff;
-  border: 1px solid $_border;
+  border: 1px solid $border-subtle;
   max-height: 240px;
   overflow-y: auto;
 }
@@ -324,13 +312,13 @@ $_subtle:   #f4f8fd;
   text-align: left;
   padding: 8px 12px;
   border: none;
-  border-bottom: 1px solid $_rule;
+  border-bottom: 1px solid $border-subtle;
   background: #fff;
   cursor: pointer;
-  &:hover { background: $_subtle; }
+  &:hover { background: $border-subtle; }
 
-  .result-name { font-size: 13px; font-weight: 600; color: $_ink; }
-  .result-meta { font-size: 11.5px; color: $_muted; }
+  .result-name { font-size: 13px; font-weight: 600; color: $text-dark; }
+  .result-meta { font-size: 11.5px; color: $text-muted; }
 }
 
 .client-summary-row {
@@ -346,13 +334,13 @@ $_subtle:   #f4f8fd;
   flex-direction: column;
 }
 
-.client-name { font-size: 15px; font-weight: 700; color: $_ink; }
-.client-meta { font-size: 11.5px; color: $_muted; }
+.client-name { font-size: 15px; font-weight: 700; color: $text-dark; }
+.client-meta { font-size: 11.5px; color: $text-muted; }
 
 .badge-link {
   padding: 2px 7px;
-  border: 1px solid $_income;
-  color: $_income;
+  border: 1px solid $income-color;
+  color: $income-color;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -361,19 +349,19 @@ $_subtle:   #f4f8fd;
 .account-metrics {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  border: 1px solid $_block;
+  border: 1px solid $border-strong;
 }
 
 .metric-card {
   padding: 8px 10px;
-  border-right: 1px solid $_block;
+  border-right: 1px solid $border-strong;
   display: flex;
   flex-direction: column;
   &:last-child { border-right: none; }
 
-  .metric-label { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: $_muted; }
+  .metric-label { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: $text-muted; }
   strong { margin-top: 3px; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .metric-alert { color: $_danger; }
+  .metric-alert { color: $expense-color; }
 }
 
 .warning-banner {
@@ -384,8 +372,8 @@ $_subtle:   #f4f8fd;
   font-size: 11.5px;
   line-height: 1.5;
 
-  &.soft-warning { border: 1px solid $_warn-border; background: $_warn-bg; color: #7a4f00; strong { color: #5f3e00; } }
-  &.danger-warning { border: 1px solid $_danger; background: $_alert-bg; color: $_alert-ink; strong { color: $_danger; } }
+  &.soft-warning { border: 1px solid $warning-border; background: $warning-bg; color: #7a4f00; strong { color: #5f3e00; } }
+  &.danger-warning { border: 1px solid $expense-color; background: $overdue-bg; color: $alert-ink; strong { color: $expense-color; } }
 
   ul { margin: 0.25rem 0 0; padding-left: 1.1rem; }
 }
@@ -397,7 +385,7 @@ $_subtle:   #f4f8fd;
   align-items: center;
   gap: 10px;
   padding: 11px 18px;
-  border-bottom: 1px solid $_ink;
+  border-bottom: 1px solid $text-dark;
   background: #fff;
 }
 
@@ -406,12 +394,12 @@ $_subtle:   #f4f8fd;
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: $_ink;
+  color: $text-dark;
 }
 
 .ticket-count {
   font-size: 11.5px;
-  color: $_muted;
+  color: $text-muted;
   font-variant-numeric: tabular-nums;
 }
 
@@ -422,10 +410,10 @@ $_subtle:   #f4f8fd;
   gap: 7px;
   font-size: 12px;
   font-weight: 600;
-  color: $_ink;
+  color: $text-dark;
   cursor: pointer;
 
-  input { width: 15px; height: 15px; accent-color: $_ink; }
+  input { width: 15px; height: 15px; accent-color: $text-dark; }
 }
 
 .ticket-body {
@@ -446,17 +434,17 @@ $_subtle:   #f4f8fd;
 
 .ticket-list-header {
   padding: 6px 18px;
-  border-bottom: 1px solid $_block;
+  border-bottom: 1px solid $border-strong;
   font-size: 8.5px;
   font-weight: 700;
   letter-spacing: 0.11em;
   text-transform: uppercase;
-  color: $_muted;
+  color: $text-muted;
 }
 
 .ticket-row {
   min-height: 60px;
-  border-bottom: 1px solid $_rule;
+  border-bottom: 1px solid $border-subtle;
 }
 
 .ticket-item-name {
@@ -470,7 +458,7 @@ $_subtle:   #f4f8fd;
   font-size: 13px;
   font-weight: 600;
   line-height: 1.3;
-  color: $_ink;
+  color: $text-dark;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -478,13 +466,13 @@ $_subtle:   #f4f8fd;
 
 .item-sub {
   font-size: 10.5px;
-  color: $_muted;
+  color: $text-muted;
 }
 
 .item-stock-warning {
   font-size: 10.5px;
   font-weight: 600;
-  color: $_danger;
+  color: $expense-color;
 }
 
 .product-link {
@@ -492,24 +480,24 @@ $_subtle:   #f4f8fd;
   border: none;
   padding: 0 0 0 4px;
   cursor: pointer;
-  color: $_muted;
+  color: $text-muted;
   vertical-align: middle;
-  &:hover { color: $_ink; }
+  &:hover { color: $text-dark; }
 }
 
 .ticket-input {
   width: 100%;
   height: 32px;
   padding: 0 6px;
-  border: 1px solid $_border;
+  border: 1px solid $border-subtle;
   background: #fff;
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
-  color: $_ink;
+  color: $text-dark;
   text-align: center;
 
-  &:focus { outline: none; border-color: $_ink; }
+  &:focus { outline: none; border-color: $text-dark; }
 }
 
 .ticket-line-total {
@@ -517,20 +505,20 @@ $_subtle:   #f4f8fd;
   font-size: 14px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: $_ink;
+  color: $text-dark;
 }
 
 .btn-remove-line {
   width: 28px;
   height: 28px;
-  border: 1px solid $_block;
+  border: 1px solid $border-strong;
   background: #fff;
-  color: $_alert-ink;
+  color: $alert-ink;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  &:hover { background: $_alert-bg; border-color: $_danger; }
+  &:hover { background: $overdue-bg; border-color: $expense-color; }
 }
 
 .ticket-empty {
@@ -538,11 +526,11 @@ $_subtle:   #f4f8fd;
   text-align: center;
   font-size: 11.5px;
   line-height: 1.55;
-  color: $_muted;
+  color: $text-muted;
 }
 
 .ticket-footer {
-  border-top: 1px solid $_ink;
+  border-top: 1px solid $text-dark;
   background: #fff;
 }
 
@@ -558,32 +546,32 @@ $_subtle:   #f4f8fd;
   justify-content: space-between;
   align-items: baseline;
   font-size: 12.5px;
-  color: $_muted;
+  color: $text-muted;
   font-variant-numeric: tabular-nums;
 
   &--margin {
     padding-top: 7px;
-    border-top: 1px solid $_block;
+    border-top: 1px solid $border-strong;
     font-size: 13px;
     font-weight: 600;
-    color: $_ink;
+    color: $text-dark;
 
-    .negative { color: $_danger; }
+    .negative { color: $expense-color; }
   }
 }
 
-.totals-discount { color: $_warn; }
+.totals-discount { color: $warning-color; }
 
 .margin-pct {
   margin-left: 0.4rem;
   font-size: 11.5px;
   font-weight: 600;
-  color: $_muted;
+  color: $text-muted;
 }
 
 .ticket-grand-total {
   padding: 14px 18px;
-  background: $_ink;
+  background: $text-dark;
   color: #fff;
   display: flex;
   align-items: baseline;
@@ -619,21 +607,21 @@ $_subtle:   #f4f8fd;
 // ── Boutons génériques (pas de mixin partagé ici — voir la même note pour
 // les classes de motif de ligne ajoutées à l'étape 2) ────────────────────
 .btn {
-  border: 1px solid $_border;
+  border: 1px solid $border-subtle;
   background: #fff;
-  color: $_ink;
+  color: $text-dark;
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   padding: 0 13px;
-  &:hover { background: $_subtle; }
+  &:hover { background: $border-subtle; }
 
   &-sm { height: 30px; font-size: 12px; padding: 0 10px; }
 
   &-primary {
-    border-color: $_red;
-    background: $_red;
+    border-color: $primary;
+    background: $primary;
     color: #fff;
     font-weight: 700;
     &:hover { filter: brightness(0.95); }
@@ -646,23 +634,23 @@ $_subtle:   #f4f8fd;
 .btn-icon {
   width: 2rem;
   height: 2rem;
-  border: 1px solid $_block;
+  border: 1px solid $border-strong;
   background: #fff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  &:hover { background: $_subtle; }
+  &:hover { background: $border-subtle; }
 }
 
 .text-right { text-align: right !important; }
 .text-center { text-align: center !important; }
-.text-muted { color: $_muted; }
+.text-muted { color: $text-muted; }
 
 .empty-state {
   padding: 1.5rem;
   text-align: center;
-  color: $_muted;
+  color: $text-muted;
   font-size: 0.875rem;
   &.small { padding: 0.75rem; font-size: 0.8rem; }
 }
@@ -670,7 +658,7 @@ $_subtle:   #f4f8fd;
 .helper-text {
   padding: 0.75rem;
   text-align: center;
-  color: $_muted;
+  color: $text-muted;
   font-size: 0.8rem;
 }
 
@@ -680,5 +668,5 @@ $_subtle:   #f4f8fd;
 
 @media (max-width: 900px) {
   .sale-form-screen { grid-template-columns: 1fr; grid-auto-rows: minmax(320px, auto); }
-  .catalog-pane { border-right: none; border-bottom: 1px solid $_block; }
+  .catalog-pane { border-right: none; border-bottom: 1px solid $border-strong; }
 }

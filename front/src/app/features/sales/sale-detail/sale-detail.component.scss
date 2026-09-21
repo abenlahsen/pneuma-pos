@@ -1,19 +1,7 @@
 @use '../../_variables' as *;
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-$_red:      #ff2d37;
-$_text:     #0f172a;
-$_strong:   #1e293b;
-$_label:    #334155;
-$_muted:    #64748b;
-$_dim:      #94a3b8;
-$_surface:  #ffffff;
-$_surface2: #f8fafc;
-$_bg:       #f1f5f9;
-$_border:   #e8edf3;
-$_border2:  #d0d9e4;
 
-$_shadow-sm: none;
 
 // ── Overlay ───────────────────────────────────────────────────────────────────
 .modal-overlay {
@@ -30,14 +18,14 @@ $_shadow-sm: none;
 
 // ── Modal container ───────────────────────────────────────────────────────────
 .modal-content {
-  background: $_surface;
+  background: $bg-card;
   border-radius: 0;
   width: 100%;
   max-width: 1100px;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: none;
-  border: 1px solid $_border;
+  border: 1px solid $border-subtle;
   display: flex;
   flex-direction: column;
 }
@@ -49,8 +37,8 @@ $_shadow-sm: none;
   align-items: center;
   gap: 0.75rem;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid $_border;
-  background: $_surface2;
+  border-bottom: 1px solid $border-subtle;
+  background: $bg-subtle;
   border-radius: 0;
   flex-shrink: 0;
   // The whole .modal-content scrolls, so keep the title, the ‹ › navigation
@@ -63,7 +51,7 @@ $_shadow-sm: none;
     margin: 0;
     font-size: 1.05rem;
     font-weight: 700;
-    color: $_text;
+    color: $text-dark;
     letter-spacing: -0.01em;
   }
 
@@ -86,8 +74,8 @@ $_shadow-sm: none;
   .modal-nav-id {
     padding: 0.2rem 0.6rem;
     border-radius: 999px;
-    background: $_bg;
-    color: $_strong;
+    background: $bg-subtle;
+    color: $border-strong;
     font-size: 0.8rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
@@ -99,7 +87,7 @@ $_shadow-sm: none;
     text-align: center;
     font-size: 0.8rem;
     font-weight: 600;
-    color: $_muted;
+    color: $text-muted;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
@@ -117,36 +105,36 @@ $_shadow-sm: none;
     .btn {
       padding: 0.4rem 0.85rem;
       border-radius: 0;
-      border: 1.5px solid $_border2;
-      background: $_surface;
-      color: $_strong;
+      border: 1.5px solid $border-color;
+      background: $bg-card;
+      color: $border-strong;
       cursor: pointer;
       font-weight: 600;
       font-size: 0.8125rem;
       box-shadow: none;
       transition: background 0.15s, border-color 0.15s;
 
-      &:hover { background: $_surface2; border-color: #bcc6d4; }
+      &:hover { background: $bg-subtle; border-color: #bcc6d4; }
     }
   }
 
   .btn-close,
   .modal-nav button {
     background: none;
-    border: 1.5px solid $_border2;
+    border: 1.5px solid $border-color;
     border-radius: 0;
     width: 2rem;
     height: 2rem;
     padding: 0;
     cursor: pointer;
-    color: $_muted;
+    color: $text-muted;
     font-size: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.15s;
 
-    &:not(:disabled):hover { background: $_border; color: $_text; border-color: #bcc6d4; }
+    &:not(:disabled):hover { background: $border-subtle; color: $text-dark; border-color: #bcc6d4; }
   }
 
   .modal-nav button {
@@ -172,12 +160,12 @@ $_shadow-sm: none;
   .section-title {
     font-size: 0.6875rem;
     font-weight: 700;
-    color: $_dim;
+    color: $text-light;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     margin: 0 0 0.875rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid $_border;
+    border-bottom: 1px solid $border-subtle;
   }
 }
 
@@ -198,7 +186,7 @@ $_shadow-sm: none;
   .label {
     font-size: 0.6875rem;
     font-weight: 700;
-    color: $_dim;
+    color: $text-light;
     text-transform: uppercase;
     letter-spacing: 0.07em;
   }
@@ -206,15 +194,15 @@ $_shadow-sm: none;
   .value {
     font-size: 0.9375rem;
     font-weight: 600;
-    color: $_strong;
+    color: $border-strong;
   }
 }
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 .fw-semibold   { font-weight: 600; }
 .text-success  { color: #15803d; }
-.text-danger   { color: #dc2626; }
-.text-muted    { color: $_muted; }
+.text-danger   { color: $expense-color; }
+.text-muted    { color: $text-muted; }
 
 // ── Badges ────────────────────────────────────────────────────────────────────
 .badge {
@@ -230,7 +218,7 @@ $_shadow-sm: none;
 
 .badge-success { background: rgba(34, 197, 94, 0.10);  color: #15803d; }
 .badge-warning { background: rgba(234, 179, 8, 0.12);  color: #a16207; }
-.badge-danger  { background: rgba(239, 68, 68, 0.10);  color: #dc2626; }
+.badge-danger  { background: rgba($expense-color, 0.10);  color: $expense-color; }
 
 // Payment-method badges (aggregated from the operation's actual payments).
 // Shared by sale-detail and purchase-detail (purchase-detail includes this
@@ -244,8 +232,8 @@ $_shadow-sm: none;
   background: rgba(100, 116, 139, 0.1);
   color: #475569; // neutral fallback for legacy/unmapped values
 
-  &.method-especes  { background: rgba(16, 185, 129, 0.12); color: #065f46; }
-  &.method-cheque   { background: rgba(59, 130, 246, 0.10); color: #1d4ed8; }
+  &.method-especes  { background: rgba($income-color, 0.12); color: #065f46; }
+  &.method-cheque   { background: rgba($invoice-color, 0.10); color: #1d4ed8; }
   &.method-virement { background: rgba(139, 92, 246, 0.10); color: #6d28d9; }
   &.method-effet    { background: rgba(245, 158, 11, 0.12); color: #92400e; }
   &.method-carte    { background: rgba(236, 72, 153, 0.10); color: #9d174d; }
@@ -256,8 +244,8 @@ $_shadow-sm: none;
   margin-top: 0.75rem;
   padding: 0.75rem 1rem;
   border-radius: 0;
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba($expense-color, 0.25);
+  background: rgba($expense-color, 0.06);
   color: #b91c1c;
   font-weight: 600;
   font-size: 0.875rem;
@@ -273,7 +261,7 @@ $_shadow-sm: none;
   background: none;
   border: none;
   padding: 0;
-  color: $_red;
+  color: $primary;
   font-size: inherit;
   cursor: pointer;
   text-align: left;
@@ -291,11 +279,11 @@ $_shadow-sm: none;
     padding: 0.6rem 0.875rem;
     font-size: 0.6875rem;
     font-weight: 700;
-    color: $_dim;
+    color: $text-light;
     text-transform: uppercase;
     letter-spacing: 0.07em;
-    border-bottom: 2px solid $_border;
-    background: $_surface2;
+    border-bottom: 2px solid $border-subtle;
+    background: $bg-subtle;
     white-space: nowrap;
 
     &.text-center { text-align: center; }
@@ -304,9 +292,9 @@ $_shadow-sm: none;
 
   td {
     padding: 0.8rem 0.875rem;
-    border-bottom: 1px solid $_border;
+    border-bottom: 1px solid $border-subtle;
     vertical-align: top;
-    color: $_strong;
+    color: $border-strong;
     font-size: 0.875rem;
 
     &.text-center { text-align: center; }
@@ -314,14 +302,14 @@ $_shadow-sm: none;
   }
 
   tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover td { background: $_surface2; }
+  tbody tr:hover td { background: $bg-subtle; }
 }
 
 // ── Modal footer ──────────────────────────────────────────────────────────────
 // Shared with purchase-detail (it lists this file in its styleUrls).
 .modal-footer {
   padding: 1rem 1.5rem;
-  border-top: 1px solid $_border;
+  border-top: 1px solid $border-subtle;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -339,16 +327,16 @@ $_shadow-sm: none;
   .btn {
     padding: 0.55rem 1.25rem;
     border-radius: 0;
-    border: 1.5px solid $_border2;
-    background: $_surface;
-    color: $_strong;
+    border: 1.5px solid $border-color;
+    background: $bg-card;
+    color: $border-strong;
     cursor: pointer;
     font-weight: 600;
     font-size: 0.875rem;
     box-shadow: none;
     transition: background 0.15s, border-color 0.15s;
 
-    &:hover { background: $_surface2; border-color: #bcc6d4; }
+    &:hover { background: $bg-subtle; border-color: #bcc6d4; }
   }
 }
 

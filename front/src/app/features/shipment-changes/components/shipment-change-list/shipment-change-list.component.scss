@@ -70,7 +70,7 @@
 
 .badge-success { background: rgba(34, 197, 94, 0.10);  color: #15803d; }
 .badge-warning { background: rgba(234, 179, 8, 0.12);  color: #a16207; }
-.badge-danger  { background: rgba(239, 68, 68, 0.10);  color: #dc2626; }
+.badge-danger  { background: rgba($expense-color, 0.10);  color: $expense-color; }
 .badge-neutral { background: rgba(100, 116, 139, 0.10); color: #475569; }
 
 .actions-cell {
@@ -89,7 +89,7 @@
   border-radius: 0;
 
   &:hover { background: $border-subtle; }
-  &.danger:hover { color: #dc2626; }
+  &.danger:hover { color: $expense-color; }
 }
 
 .status-select {

@@ -8,6 +8,7 @@ import { TransactionCategory, TransactionCategoryType } from '../models/transact
 import { AuthService } from '../../../core/services/auth.service';
 import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
 import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
+import { TransactionCategoryFormComponent } from '../components/transaction-category-form/transaction-category-form.component';
 
 import {
   ListErrorComponent,
@@ -17,7 +18,7 @@ import {
 @Component({
   selector: 'app-transaction-categories-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, IconComponent, ListErrorComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, FormsModule, RouterLink, IconComponent, ListErrorComponent, ConfirmDeleteComponent, TransactionCategoryFormComponent],
   templateUrl: './transaction-categories-page.component.html',
   styleUrl: './transaction-categories-page.component.scss',
 })
@@ -42,15 +43,6 @@ export class TransactionCategoriesPageComponent implements OnInit {
   readonly loadErrorDetail = signal<string | null>(null);
   readonly lastLoadedAt = signal<Date | null>(null);
   errorMessage = signal('');
-
-  addingParent = signal(false);
-  newParentName = signal('');
-
-  addingChildFor = signal<number | null>(null);
-  newChildName = signal('');
-
-  editingId = signal<number | null>(null);
-  editingName = signal('');
 
   constructor(
     private transactionCategoryService: TransactionCategoryService,
@@ -87,80 +79,84 @@ export class TransactionCategoriesPageComponent implements OnInit {
   }
 
   private closeAllForms(): void {
-    this.addingParent.set(false);
-    this.newParentName.set('');
-    this.addingChildFor.set(null);
-    this.newChildName.set('');
-    this.editingId.set(null);
-    this.editingName.set('');
+    this.categoryForm.set(null);
   }
 
-  openAddParent(): void {
-    this.addingParent.set(true);
-    this.newParentName.set('');
+  /**
+   * Refonte 2b, étape 5b : les trois saisies écrites en ligne — ajouter une
+   * catégorie, ajouter une sous-catégorie, renommer — passent par le même
+   * formulaire extrait. Un seul descripteur suffit : c'est `apply` qui sait
+   * laquelle des trois on fait.
+   */
+  readonly categoryForm = signal<{
+    initialName: string;
+    parentName: string;
+    childCount: number | null;
+    apply: (name: string) => void;
+  } | null>(null);
+
+  openCategoryForm(): void {
+    this.categoryForm.set({
+      initialName: '',
+      parentName: '',
+      childCount: null,
+      apply: (name) => this.createParent(name),
+    });
   }
 
-  cancelAddParent(): void {
-    this.addingParent.set(false);
-    this.newParentName.set('');
+  openChildForm(parent: TransactionCategory): void {
+    this.categoryForm.set({
+      initialName: '',
+      parentName: parent.name,
+      childCount: null,
+      apply: (name) => this.createChild(parent, name),
+    });
   }
 
-  submitAddParent(): void {
-    const name = this.newParentName().trim();
+  openRenameForm(category: TransactionCategory, parent?: TransactionCategory): void {
+    this.categoryForm.set({
+      initialName: category.name,
+      parentName: parent?.name ?? '',
+      childCount: category.children?.length ?? null,
+      apply: (name) => this.rename(category, name),
+    });
+  }
+
+  submitCategoryForm(rawName: string): void {
+    const name = rawName.trim();
+    // Le formulaire désactive déjà son bouton sur un nom vide, mais la page
+    // reste la dernière à pouvoir refuser : elle ne suppose rien de l'appelant.
     if (!name) return;
 
+    const form = this.categoryForm();
+    this.categoryForm.set(null);
+    form?.apply(name);
+  }
+
+  private createParent(name: string): void {
     this.transactionCategoryService.create({ name, type: this.activeType() }).subscribe({
       next: (category) => {
         this.categories.update((list) => [...list, category]);
-        this.cancelAddParent();
       },
       error: (err) => this.showError(err),
     });
   }
 
-  openAddChild(parentId: number): void {
-    this.addingChildFor.set(parentId);
-    this.newChildName.set('');
-  }
-
-  cancelAddChild(): void {
-    this.addingChildFor.set(null);
-    this.newChildName.set('');
-  }
-
-  submitAddChild(parent: TransactionCategory): void {
-    const name = this.newChildName().trim();
-    if (!name) return;
-
+  private createChild(parent: TransactionCategory, name: string): void {
     this.transactionCategoryService.create({ name, type: this.activeType(), parent_id: parent.id }).subscribe({
       next: (child) => {
         this.categories.update((list) =>
           list.map((c) => (c.id === parent.id ? { ...c, children: [...(c.children || []), child] } : c)),
         );
-        this.cancelAddChild();
       },
       error: (err) => this.showError(err),
     });
   }
 
-  startEdit(category: TransactionCategory): void {
-    this.editingId.set(category.id);
-    this.editingName.set(category.name);
-  }
-
-  cancelEdit(): void {
-    this.editingId.set(null);
-    this.editingName.set('');
-  }
-
-  submitEdit(category: TransactionCategory): void {
-    const name = this.editingName().trim();
-    if (!name) return;
-
+  private rename(category: TransactionCategory, name: string): void {
     this.transactionCategoryService.update(category.id, { name }).subscribe({
       next: (updated) => {
         this.categories.update((list) => this.replaceInTree(list, updated));
-        this.cancelEdit();
       },
       error: (err) => this.showError(err),
     });

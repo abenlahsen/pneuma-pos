@@ -91,7 +91,7 @@
 
   &.active {
     border-color: $primary;
-    background: linear-gradient(135deg, rgba($primary, 0.08), rgba($primary-dark, 0.08));
+    background: rgba($primary, 0.08);
     color: $primary-dark;
   }
 
@@ -184,7 +184,7 @@
 }
 
 .btn-submit {
-  background: linear-gradient(135deg, $primary, $primary-dark);
+  background: $primary;
   color: #fff;
   border: none;
   padding: 0.55rem 1.5rem;

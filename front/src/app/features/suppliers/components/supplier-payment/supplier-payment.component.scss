@@ -2,20 +2,20 @@
 
 // ── Design tokens (matches supplier-detail-page.component.scss) ───────────────
 $primary:      #ff2d37;
-$danger-bg:    rgba(239, 68, 68, 0.10);
-$danger-text:  #dc2626;
+$danger-bg:    rgba($expense-color, 0.10);
+$danger-text:  $expense-color;
 $warning-bg:   rgba(234, 179, 8, 0.12);
 $warning-text: #a16207;
 
-$bg:       #f1f5f9;
+$bg:       $bg-subtle;
 $surface:  #ffffff;
-$surface2: #f8fafc;
-$border:   #e8edf3;
-$border2:  #d0d9e4;
-$text:     #0f172a;
-$muted:    #64748b;
-$dim:      #94a3b8;
-$strong:   #1e293b;
+$surface2: $bg-subtle;
+$border:   $border-subtle;
+$border2:  $border-color;
+$text:     $text-dark;
+$muted:    $text-muted;
+$dim:      $text-light;
+$strong:   $text-dark;
 
 $radius-sm: 8px;
 $radius-md: 12px;

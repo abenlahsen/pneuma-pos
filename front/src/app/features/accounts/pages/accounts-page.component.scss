@@ -1,26 +1,17 @@
+@use '../../_variables' as *;
+
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-$_red:      #ff2d37;
-$_text:     #0f172a;
-$_strong:   #1e293b;
-$_muted:    #64748b;
-$_dim:      #94a3b8;
-$_surface:  #ffffff;
-$_surface2: #f8fafc;
-$_border:   #e8edf3;
-$_border2:  #d0d9e4;
 
-$_shadow-sm: none;
-$_shadow-md: none;
 
 // ── Utility shims ─────────────────────────────────────────────────────────────
 .mt-4         { margin-top: 1.5rem; }
 .m-0          { margin: 0; }
 .p-3          { padding: 1rem 1.25rem; }
 .py-4         { padding-top: 1rem; padding-bottom: 1rem; }
-.border-bottom { border-bottom: 1px solid $_border; }
+.border-bottom { border-bottom: 1px solid $border-subtle; }
 
 // ── Back button ───────────────────────────────────────────────────────────────
 .btn-back {
@@ -29,7 +20,7 @@ $_shadow-md: none;
   gap: 0.35rem;
   background: none;
   border: none;
-  color: $_muted;
+  color: $text-muted;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -37,7 +28,7 @@ $_shadow-md: none;
   margin-bottom: 0.35rem;
   transition: color 0.15s;
 
-  &:hover { color: $_text; }
+  &:hover { color: $text-dark; }
 }
 
 // ── Accounts grid ─────────────────────────────────────────────────────────────
@@ -50,8 +41,8 @@ $_shadow-md: none;
 
 // ── Account card ──────────────────────────────────────────────────────────────
 .account-card {
-  background: $_surface;
-  border: 1px solid $_border;
+  background: $bg-card;
+  border: 1px solid $border-subtle;
   border-radius: 0;
   box-shadow: none;
   cursor: pointer;
@@ -60,7 +51,7 @@ $_shadow-md: none;
 
   &:hover {
     box-shadow: none;
-    border-color: $_border2;
+    border-color: $border-color;
   }
 
   &.inactive {
@@ -82,8 +73,8 @@ $_shadow-md: none;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: $_surface2;
-      border: 1px solid $_border;
+      background: $bg-subtle;
+      border: 1px solid $border-subtle;
       border-radius: 0;
       flex-shrink: 0;
     }
@@ -96,7 +87,7 @@ $_shadow-md: none;
         margin: 0 0 0.15rem;
         font-size: 0.9375rem;
         font-weight: 700;
-        color: $_text;
+        color: $text-dark;
         letter-spacing: -0.01em;
         white-space: nowrap;
         overflow: hidden;
@@ -105,7 +96,7 @@ $_shadow-md: none;
 
       .type {
         font-size: 0.75rem;
-        color: $_muted;
+        color: $text-muted;
         font-weight: 500;
       }
     }
@@ -123,25 +114,25 @@ $_shadow-md: none;
     .balance {
       font-size: 1.625rem;
       font-weight: 800;
-      color: $_text;
+      color: $text-dark;
       font-variant-numeric: tabular-nums;
       letter-spacing: -0.03em;
       line-height: 1.1;
 
-      &.negative { color: #dc2626; }
+      &.negative { color: $expense-color; }
     }
 
     .kpi-sub {
       margin: 0.4rem 0 0;
       font-size: 0.8rem;
-      color: $_muted;
+      color: $text-muted;
       font-variant-numeric: tabular-nums;
     }
 
     .desc {
       margin: 0.5rem 0 0;
       font-size: 0.8125rem;
-      color: $_dim;
+      color: $text-light;
       font-style: italic;
     }
   }
@@ -156,7 +147,7 @@ $_shadow-md: none;
 .card-hint {
   margin: 0.25rem 0 0;
   font-size: 0.75rem;
-  color: $_muted;
+  color: $text-muted;
   font-style: italic;
 }
 
@@ -167,9 +158,9 @@ $_shadow-md: none;
 }
 
 .summary-card.balance.negative {
-  border-top: 3px solid #ef4444;
-  .card-icon { background: rgba(239, 68, 68, 0.08); color: #dc2626; }
-  .card-value { color: #dc2626; }
+  border-top: 3px solid $expense-color;
+  .card-icon { background: rgba($expense-color, 0.08); color: $expense-color; }
+  .card-value { color: $expense-color; }
 }
 
 // ── Transaction tables ────────────────────────────────────────────────────────
@@ -183,26 +174,26 @@ $_shadow-md: none;
   th, td {
     padding: 0.75rem;
     text-align: left;
-    border-bottom: 1px solid $_border;
+    border-bottom: 1px solid $border-subtle;
     white-space: nowrap;
     font-size: 0.8125rem;
     vertical-align: middle;
   }
 
   th {
-    background: $_surface2;
+    background: $bg-subtle;
     font-weight: 600;
     font-size: 0.875rem;
-    color: $_muted;
+    color: $text-muted;
     text-transform: uppercase;
   }
 
-  tbody tr:hover { background: rgba($_surface2, 0.5); }
+  tbody tr:hover { background: rgba($bg-subtle, 0.5); }
   tr:last-child td { border-bottom: none; }
 }
 
 .income-row td { border-left: 2px solid rgba(34, 197, 94, 0.25); }
-.expense-row td { border-left: 2px solid rgba(239, 68, 68, 0.2); }
+.expense-row td { border-left: 2px solid rgba($expense-color, 0.2); }
 .pending-row td { background: rgba(234, 179, 8, 0.04); }
 
 .badge {
@@ -215,13 +206,13 @@ $_shadow-md: none;
 }
 
 .badge-income  { background: rgba(34, 197, 94, 0.12);  color: #15803d; }
-.badge-expense { background: rgba(239, 68, 68, 0.12);  color: #dc2626; }
+.badge-expense { background: rgba($expense-color, 0.12);  color: $expense-color; }
 .badge-pending { background: rgba(234, 179, 8, 0.12);  color: #a16207; }
 
 .amount-income  { color: #15803d; font-weight: 600; }
-.amount-expense { color: #dc2626; font-weight: 600; }
+.amount-expense { color: $expense-color; font-weight: 600; }
 
-.date-cell   { color: $_muted; font-variant-numeric: tabular-nums; }
+.date-cell   { color: $text-muted; font-variant-numeric: tabular-nums; }
 .amount-cell { font-variant-numeric: tabular-nums; }
 
 .desc-col {
@@ -233,15 +224,15 @@ $_shadow-md: none;
 
 .empty-state {
   text-align: center;
-  color: $_muted;
+  color: $text-muted;
   padding: 2rem 1rem;
 }
 
 .spinner {
   width: 1.5rem;
   height: 1.5rem;
-  border: 2px solid $_border;
-  border-top-color: $_red;
+  border: 2px solid $border-subtle;
+  border-top-color: $primary;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   display: inline-block;

@@ -1,18 +1,7 @@
 @use '../../_variables' as *;
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-$_red:      #ff2d37;
-$_text:     #0f172a;
-$_strong:   #1e293b;
-$_label:    #334155;
-$_muted:    #64748b;
-$_dim:      #94a3b8;
-$_surface:  #ffffff;
-$_surface2: #f8fafc;
-$_border:   #e8edf3;
-$_border2:  #d0d9e4;
 
-$_shadow-sm: none;
 
 // ── Overlay ───────────────────────────────────────────────────────────────────
 .modal-overlay {
@@ -29,7 +18,7 @@ $_shadow-sm: none;
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
 .modal-content {
-  background: $_surface;
+  background: $bg-card;
   border-radius: 0;
   width: 100%;
   max-width: 520px;
@@ -37,7 +26,7 @@ $_shadow-sm: none;
   display: flex;
   flex-direction: column;
   box-shadow: none;
-  border: 1px solid $_border;
+  border: 1px solid $border-subtle;
   overflow: hidden;
 }
 
@@ -46,34 +35,34 @@ $_shadow-sm: none;
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid $_border;
-  background: $_surface2;
+  border-bottom: 1px solid $border-subtle;
+  background: $bg-subtle;
   flex-shrink: 0;
 
   h2 {
     margin: 0;
     font-size: 1.05rem;
     font-weight: 700;
-    color: $_text;
+    color: $text-dark;
     letter-spacing: -0.01em;
   }
 }
 
 .btn-close {
   background: none;
-  border: 1.5px solid $_border2;
+  border: 1.5px solid $border-color;
   border-radius: 0;
   width: 2rem;
   height: 2rem;
   cursor: pointer;
-  color: $_muted;
+  color: $text-muted;
   font-size: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.15s;
 
-  &:hover { background: $_border; color: $_text; border-color: #bcc6d4; }
+  &:hover { background: $border-subtle; color: $text-dark; border-color: #bcc6d4; }
 }
 
 // ── Body ──────────────────────────────────────────────────────────────────────
@@ -101,7 +90,7 @@ $_shadow-sm: none;
   label {
     font-size: 0.8rem;
     font-weight: 600;
-    color: $_label;
+    color: $text-muted;
     letter-spacing: 0.01em;
   }
 
@@ -109,21 +98,21 @@ $_shadow-sm: none;
   select,
   textarea {
     padding: 0.55rem 0.8rem;
-    border: 1.5px solid $_border2;
+    border: 1.5px solid $border-color;
     border-radius: 0;
     font-size: 0.9rem;
-    color: $_text;
-    background: $_surface;
+    color: $text-dark;
+    background: $bg-card;
     width: 100%;
     box-sizing: border-box;
     transition: border-color 0.15s, box-shadow 0.15s;
     font-family: inherit;
 
-    &::placeholder { color: $_dim; }
+    &::placeholder { color: $text-light; }
 
     &:focus {
       outline: none;
-      border-color: $_red;
+      border-color: $primary;
       box-shadow: 0 0 0 3px rgba(255, 45, 55, 0.1);
     }
   }
@@ -137,7 +126,7 @@ $_shadow-sm: none;
   justify-content: flex-end;
   gap: 0.75rem;
   padding-top: 0.5rem;
-  border-top: 1px solid $_border;
+  border-top: 1px solid $border-subtle;
   margin-top: 0.5rem;
 }
 
@@ -159,18 +148,18 @@ $_shadow-sm: none;
 }
 
 .btn-cancel {
-  background: $_surface;
-  color: $_strong;
-  border-color: $_border2;
+  background: $bg-card;
+  color: $border-strong;
+  border-color: $border-color;
   box-shadow: none;
 
-  &:hover { background: $_surface2; border-color: #bcc6d4; }
+  &:hover { background: $bg-subtle; border-color: #bcc6d4; }
 }
 
 .btn-submit {
-  background: $_red;
+  background: $primary;
   color: white;
-  border-color: $_red;
+  border-color: $primary;
   box-shadow: none;
 
   &:hover:not(:disabled) { background: #e8000b; box-shadow: none; }
