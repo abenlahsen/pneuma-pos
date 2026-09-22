@@ -1,3 +1,9 @@
+// Refonte 2b, étape 8a : les deux seuils de repli sont déclarés dans
+// app/_breakpoints.scss et réexportés ici. Les feuilles d'écran font déjà
+// `@use '../../_variables' as *` : elles reçoivent $bp-reduce, $bp-reshape et
+// les deux mixins sans importer un second fichier.
+@forward '../breakpoints';
+
 // ── Marque ────────────────────────────────────────────────────────────────
 $primary:          #ff2d37;  // action principale, une seule par écran
 $primary-dark:     #c2181f;  // argent dû, retard, texte d'alerte  (était #cc0a13)

@@ -1,6 +1,27 @@
+// La palette réexporte les seuils (voir features/_variables.scss).
+@use '../../features/variables' as *;
+
 :host {
   display: block;
   height: 100%;
+}
+
+// Sous $bp-reshape le rail quitte la grille : il devient un volet ouvert par
+// le ☰ de la barre haute, et se replie sinon. C'est le seul endroit où sa
+// présence dépend du seuil ; ailleurs il ne fait que rétrécir.
+:host(.rail--panel) {
+  @include below-reshape {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    display: flex;
+  }
+}
+
+:host(:not(.rail--panel)) {
+  @include below-reshape {
+    display: none;
+  }
 }
 
 .rail {
@@ -8,9 +29,18 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  :host(.rail--panel) & {
+    @include below-reshape {
+      width: 272px;
+      max-width: 82vw;
+      align-items: stretch;
+      padding: 8px 0;
+    }
+  }
   gap: 2px;
   padding: 8px 0;
-  background: #081627;
+  background: $rail-bg;
   overflow-y: auto;
 
   // "Paramètres" reste le dernier élément de la liste (voir nav-items.ts) —
@@ -22,6 +52,35 @@
 .rail-item {
   width: 56px;
   height: 54px;
+
+  // Sous $bp-reduce le rail passe de 72 à 64 px : les libellés tombent, les
+  // icônes restent. Une icône seule sans son libellé reste identifiable ;
+  // un libellé tronqué à 40 px ne l'est pas.
+  @include below-reduce {
+    width: 52px;
+    height: $touch-target-reduced + 12px;
+    gap: 0;
+
+    span { display: none; }
+  }
+
+  // En volet, le rail retrouve ses libellés : la place ne manque plus.
+  :host(.rail--panel) & {
+    @include below-reshape {
+      flex-direction: row;
+      justify-content: flex-start;
+      gap: 12px;
+      width: 100%;
+      height: $touch-target-mobile + 10px;
+      padding: 0 16px;
+      font-size: 13px;
+      letter-spacing: 0;
+      text-transform: none;
+
+      span { display: block; text-align: left; }
+    }
+  }
+
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -54,7 +113,26 @@
 
 .rail-flyout {
   position: fixed;
-  left: 80px;
+  left: $rail-width + 8px;
+
+  @include below-reduce {
+    left: $rail-width-reduced + 8px;
+  }
+
+  // En volet, les sous-destinations se déplient sur place plutôt que de
+  // sortir sur le côté : il n'y a plus de côté.
+  :host(.rail--panel) & {
+    @include below-reshape {
+      position: static;
+      left: auto;
+      min-width: 0;
+      border: 0;
+      border-left: 3px solid #ff2d37;
+      box-shadow: none;
+      background: rgba(230, 237, 247, 0.06);
+    }
+  }
+
   z-index: 200;
   min-width: 200px;
   background: #fff;
@@ -86,4 +164,18 @@
 
   &:hover { background: #f4f8fd; }
   &.active { background: rgba(255, 45, 55, 0.08); color: #c2181f; font-weight: 600; }
+}
+
+// Le voile n'existe que sous le seuil, et seulement volet ouvert.
+.rail-scrim {
+  display: none;
+}
+
+:host(.rail--panel) .rail-scrim {
+  @include below-reshape {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(12, 30, 51, 0.28);
+  }
 }

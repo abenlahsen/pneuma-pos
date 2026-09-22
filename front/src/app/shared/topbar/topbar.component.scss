@@ -1,3 +1,7 @@
+// La palette réexporte les seuils (voir features/_variables.scss) : un seul
+// import donne les jetons de couleur et les deux mixins de repli.
+@use '../../features/variables' as *;
+
 :host {
   display: block;
   height: 100%;
@@ -134,4 +138,60 @@
 
 @media (max-width: 1024px) {
   .topbar-search { display: none; }
+}
+
+// ── Refonte 2b, 8a ─────────────────────────────────────────────────────────
+// La barre haute rétrécit sous $bp-reduce et n'ouvre son ☰ que sous
+// $bp-reshape, là où le rail a cessé d'être une colonne.
+.topbar {
+  @include below-reduce {
+    height: $topbar-height-reduced;
+    padding: 0 14px;
+    gap: 12px;
+  }
+}
+
+.topbar-search {
+  @include below-reduce {
+    height: $touch-target-reduced;
+  }
+}
+
+.topbar-avatar {
+  @include below-reduce {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+// Le libellé de recherche et l'horloge sont les deux premiers à partir : le
+// bouton reste identifiable par sa loupe, l'heure est ailleurs sur l'appareil.
+.topbar-search-label {
+  @include below-reshape {
+    display: none;
+  }
+}
+
+.topbar-search-hint,
+.topbar-clock {
+  @include below-reduce {
+    display: none;
+  }
+}
+
+.topbar-menu {
+  display: none;
+
+  @include below-reshape {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: $touch-target-mobile;
+    height: $touch-target-mobile;
+    flex-shrink: 0;
+    border: 1px solid $border-color;
+    background: $bg-card;
+    color: $text-dark;
+    cursor: pointer;
+  }
 }

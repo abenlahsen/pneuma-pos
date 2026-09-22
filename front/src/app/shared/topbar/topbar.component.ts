@@ -1,7 +1,8 @@
-import { Component, ElementRef, HostListener, OnDestroy, OnInit, computed, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
 import { SettingsService } from '../../features/settings/data-access/settings.service';
+import { ShellNavService } from '../../core/services/shell-nav.service';
 import { IconComponent } from '../icon/icon.component';
 import { CommandPaletteService } from '../command-palette/command-palette.service';
 
@@ -41,6 +42,13 @@ export class TopbarComponent implements OnInit, OnDestroy {
 
   /** ⌘ sur Mac, Ctrl ailleurs : afficher l'autre raccourci ne sert personne. */
   readonly shortcutLabel = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘K' : 'Ctrl K';
+
+  private readonly shellNav = inject(ShellNavService);
+
+  /** Ouvre ou referme le rail en volet, sous le seuil de changement de forme. */
+  toggleNavPanel(): void {
+    this.shellNav.toggle();
+  }
 
   constructor(
     public authService: AuthService,

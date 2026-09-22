@@ -1,0 +1,12 @@
+<nav class="bb">
+  @for (entry of visibleEntries(); track entry.route) {
+    <a class="bb-item"
+       [class.bb-item--action]="entry.action"
+       [routerLink]="entry.route"
+       routerLinkActive="bb-item--on"
+       [routerLinkActiveOptions]="{ exact: !!entry.exact }">
+      <app-icon [name]="entry.icon" [size]="20" />
+      <span>{{ entry.label }}</span>
+    </a>
+  }
+</nav>

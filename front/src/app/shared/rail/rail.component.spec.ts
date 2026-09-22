@@ -8,12 +8,14 @@ describe('RailComponent', () => {
   let routerEvents: Subject<any>;
   let mockRouter: { url: string; events: Subject<any> };
   let mockElementRef: { nativeElement: HTMLElement };
+  /** Refonte 2b, 8a : le rail lit l'état du volet, qu'il partage avec la barre haute. */
+  let mockShellNav: { panelOpen: () => boolean; close: ReturnType<typeof vi.fn> };
 
   function createComponent(initialUrl = '/dashboard'): RailComponent {
     routerEvents = new Subject();
     mockRouter = { url: initialUrl, events: routerEvents };
     mockElementRef = { nativeElement: document.createElement('div') };
-    return new RailComponent(mockAuthService as any, mockRouter as any, mockElementRef as any);
+    return new RailComponent(mockAuthService as any, mockRouter as any, mockElementRef as any, mockShellNav as any);
   }
 
   /** toggleGroup reads `event.currentTarget.getBoundingClientRect()` to position the flyout. */
@@ -24,6 +26,7 @@ describe('RailComponent', () => {
 
   beforeEach(() => {
     mockAuthService = { hasPermission: vi.fn().mockReturnValue(true) };
+    mockShellNav = { panelOpen: () => false, close: vi.fn() };
   });
 
   describe('toggleGroup', () => {

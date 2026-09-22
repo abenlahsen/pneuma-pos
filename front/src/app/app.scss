@@ -1,3 +1,5 @@
+@use './breakpoints' as *;
+
 // Les jetons de couleur --app-* vivent dans styles.scss (feuille globale),
 // pas ici : un `:root { … }` écrit dans ce composant est réécrit par
 // l'encapsulation de vues Angular en `:root[_ngcontent-xxx]`, un sélecteur
@@ -8,20 +10,42 @@
 
 :host {
   display: block;
-  min-height: 100vh;
+  height: 100vh;
+  // 100dvh suit la barre d'URL des navigateurs mobiles, qui se rétracte au
+  // défilement ; 100vh la compte toujours à sa taille dépliée. La ligne vh
+  // reste en repli pour les navigateurs qui ignorent dvh.
+  height: 100dvh;
   background: var(--app-background);
   color: var(--app-text);
 }
 
 // Rail 72px + barre haute 60px (refonte 2b, étape 3 — remplace le navbar et
 // ses deux variantes horizontale/verticale pilotées par `menuLayout`).
+//
+// Étape 8a : la grille suit les deux seuils. Sous $bp-reduce elle rétrécit ;
+// sous $bp-reshape elle perd sa colonne de rail et gagne une rangée de barre
+// basse — la forme change, pas seulement les mesures.
 .app-shell {
-  min-height: 100vh;
+  // Hauteur fixe et non min-height : sinon la rangée du milieu grandit avec
+  // une liste longue, la page entière défile et la barre basse finit sous la
+  // dernière ligne au lieu de rester en bas. C'est .main-content qui défile.
+  height: 100vh;
+  height: 100dvh;
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
-  grid-template-rows: 60px minmax(0, 1fr);
+  grid-template-columns: $rail-width minmax(0, 1fr);
+  grid-template-rows: $topbar-height minmax(0, 1fr);
   background: var(--app-background);
   color: var(--app-text);
+
+  @include below-reduce {
+    grid-template-columns: $rail-width-reduced minmax(0, 1fr);
+    grid-template-rows: $topbar-height-reduced minmax(0, 1fr);
+  }
+
+  @include below-reshape {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: $topbar-height-reduced minmax(0, 1fr) #{$bottombar-total};
+  }
 }
 
 app-topbar {
@@ -33,6 +57,23 @@ app-rail {
   grid-column: 1;
   grid-row: 2;
   min-height: 0;
+
+  // Sous $bp-reshape le rail ne tient plus sa colonne : il devient un volet
+  // que le ☰ de la barre haute ouvre par-dessus le contenu.
+  @include below-reshape {
+    grid-column: 1 / -1;
+    grid-row: 1 / -1;
+  }
+}
+
+app-bottom-bar {
+  display: none;
+
+  @include below-reshape {
+    display: block;
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
 }
 
 .main-content {
@@ -42,6 +83,10 @@ app-rail {
   overflow-y: auto;
   background: var(--app-background);
   color: var(--app-text);
+
+  @include below-reshape {
+    grid-column: 1 / -1;
+  }
 }
 
 .main-content__inner {
@@ -62,8 +107,16 @@ app-rail {
   max-width: 1120px;
 }
 
-@media (max-width: 1024px) {
+// Le contenu respire moins dès qu'on réduit ; le seuil de 1024 px écrit à la
+// main disparaît au profit du seuil partagé.
+@include below-reduce {
   .main-content__inner {
     padding: 1rem;
+  }
+}
+
+@include below-reshape {
+  .main-content__inner {
+    padding: 0.75rem;
   }
 }

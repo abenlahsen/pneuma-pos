@@ -2,6 +2,7 @@ import { Component, OnInit, effect, signal } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { RouterOutlet } from '@angular/router';
 import { RailComponent } from './shared/rail/rail.component';
+import { BottomBarComponent } from './shared/bottom-bar/bottom-bar.component';
 import { TopbarComponent } from './shared/topbar/topbar.component';
 import { CommandPaletteComponent } from './shared/command-palette/command-palette.component';
 import { AuthService } from './core/services/auth.service';
@@ -11,7 +12,7 @@ import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RailComponent, TopbarComponent, CommandPaletteComponent],
+  imports: [RouterOutlet, RailComponent, BottomBarComponent, TopbarComponent, CommandPaletteComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

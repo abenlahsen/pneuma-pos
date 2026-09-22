@@ -3,6 +3,10 @@
     <app-topbar></app-topbar>
     <app-rail></app-rail>
 
+    <!-- Refonte 2b, 8a : n'apparaît que sous le seuil de changement de forme,
+         là où le rail a cessé d'être une colonne. C'est app.scss qui décide. -->
+    <app-bottom-bar></app-bottom-bar>
+
     <main class="main-content">
       <div class="main-content__inner">
         <router-outlet />

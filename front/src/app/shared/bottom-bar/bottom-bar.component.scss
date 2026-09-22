@@ -1,0 +1,61 @@
+// La palette réexporte les seuils : un seul import donne $rail-bg et les
+// deux mixins de repli.
+@use '../../features/variables' as *;
+
+/* Refonte 2b, gabarit 14b — la barre basse.
+   Elle n'existe que sous le seuil de changement de forme ; c'est le shell qui
+   décide de l'afficher (voir app.scss), ce fichier ne fait que la dessiner. */
+
+:host {
+  display: block;
+}
+
+.bb {
+  // La hauteur inclut la zone de geste d'iOS, et le remplissage la réserve :
+  // sans cela la barre système recouvre les libellés. Le shell réserve la
+  // même mesure ($bottombar-total), les deux ne peuvent pas diverger.
+  height: $bottombar-total;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  display: flex;
+  align-items: stretch;
+  // Même fond que le rail : c'est la même surface de navigation, vue sous
+  // l'autre forme.
+  background: $rail-bg;
+}
+
+.bb-item {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: rgba(230, 237, 247, 0.66);
+  text-decoration: none;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+
+  span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* La destination courante s'allume. */
+  &--on {
+    background: #ff2d37;
+    color: #fff;
+  }
+
+  /* « Nouveau » est une action : elle garde sa couleur sans jamais s'allumer,
+     sinon elle paraîtrait être l'écran où l'on se trouve. */
+  &--action {
+    color: #fff;
+
+    &.bb-item--on { background: none; color: #fff; }
+  }
+}

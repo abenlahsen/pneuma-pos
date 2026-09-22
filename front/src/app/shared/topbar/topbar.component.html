@@ -1,4 +1,11 @@
 <header class="topbar">
+  <!-- Refonte 2b, 8a : sous le seuil de changement de forme, le rail n'est
+       plus visible. Ce bouton le rouvre en volet — c'est le seul chemin vers
+       les destinations que la barre basse ne porte pas. -->
+  <button type="button" class="topbar-menu" (click)="toggleNavPanel()" aria-label="Menu">
+    <app-icon name="menu" [size]="18" />
+  </button>
+
   <img [src]="brandLogoUrl()" (error)="onLogoError()" alt="PNEU.MA" class="topbar-logo">
 
   <!-- Un bouton, pas un champ : la saisie se fait dans la palette, qui doit

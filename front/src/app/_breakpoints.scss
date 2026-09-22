@@ -1,0 +1,77 @@
+// ── Refonte 2b, étape 8a — les deux seuils de l'application ─────────────────
+//
+// Deux seuils, déclarés ici une fois, et rien d'autre nulle part. Ils ne
+// décrivent pas des tailles d'appareil mais deux décisions de forme :
+//
+//   $bp-reduce (1200 px) — on RÉDUIT. Tout garde sa forme, tout rétrécit :
+//     le rail perd ses libellés, la barre haute et les cibles tactiles
+//     descendent d'un cran. Un écran qui fonctionne au-dessus fonctionne
+//     encore en dessous, plus serré.
+//
+//   $bp-reshape (900 px) — on CHANGE DE FORME. Le rail disparaît au profit
+//     d'une barre basse, la grille de ligne devient une fiche. Ce n'est plus
+//     le même écran en plus petit, c'est un autre agencement.
+//
+// La nuance compte pour 8b : sous $bp-reduce une liste perd des colonnes,
+// sous $bp-reshape elle cesse d'être une liste.
+$bp-reduce:  1200px;
+$bp-reshape: 900px;
+
+// ── Ce que chaque seuil impose au shell ─────────────────────────────────────
+// Ces mesures sont ici et non dans les composants pour que le rail, la barre
+// haute et la grille du shell ne puissent pas diverger : elles décrivent une
+// seule et même géométrie vue de trois endroits.
+
+// Rail : 72 px avec les libellés, 64 px sans, absent sous $bp-reshape.
+$rail-width:         72px;
+$rail-width-reduced: 64px;
+
+// Barre haute.
+$topbar-height:         60px;
+$topbar-height-reduced: 56px;
+
+// Barre basse, qui remplace le rail sous $bp-reshape.
+//
+// $bottombar-height est la hauteur utile — celle des cibles. La place que la
+// barre occupe réellement lui ajoute la zone de geste d'iOS, sinon celle-ci
+// recouvre les libellés. Le shell et la barre doivent utiliser la MÊME mesure,
+// d'où la constante partagée plutôt qu'un calc() recopié aux deux endroits.
+$bottombar-height: 64px;
+$bottombar-total:  calc(#{$bottombar-height} + env(safe-area-inset-bottom, 0px));
+
+// Cibles tactiles et lignes de liste. 38 px est le minimum confortable au
+// doigt sur les boutons d'une fiche ; 36 px suffit dans une barre, où l'on
+// vise une zone plus large que le bouton lui-même.
+$touch-target:         40px;
+$touch-target-reduced: 36px;
+$touch-target-mobile:  38px;
+
+$list-row-height:         58px;
+$list-row-height-reduced: 62px;
+
+// ── Deux mixins, pour ne plus jamais réécrire une requête ───────────────────
+//
+//   @include below-reduce  { … }   // tablette paysage et en dessous
+//   @include below-reshape { … }   // tablette portrait et en dessous
+//
+// Écrire `@media (max-width: 1200px)` à la main redevient une erreur : la
+// valeur ne doit exister qu'ici.
+@mixin below-reduce {
+  @media (max-width: $bp-reduce) {
+    @content;
+  }
+}
+
+@mixin below-reshape {
+  @media (max-width: $bp-reshape) {
+    @content;
+  }
+}
+
+// La bande entre les deux seuils, quand une règle ne doit valoir qu'en
+// paysage — le rail réduit existe là et nulle part ailleurs.
+@mixin reduce-only {
+  @media (max-width: $bp-reduce) and (min-width: #{$bp-reshape + 1px}) {
+    @content;
+  }
+}

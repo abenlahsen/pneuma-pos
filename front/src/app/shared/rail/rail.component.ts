@@ -1,7 +1,8 @@
-import { Component, ElementRef, HostListener, computed, signal } from '@angular/core';
+import { Component, ElementRef, HostBinding, HostListener, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { filter } from 'rxjs';
+import { ShellNavService } from '../../core/services/shell-nav.service';
 import { AuthService } from '../../core/services/auth.service';
 import { IconComponent } from '../icon/icon.component';
 import { NAV_ITEMS, NavItem } from './nav-items';
@@ -21,6 +22,21 @@ import { NAV_ITEMS, NavItem } from './nav-items';
 })
 export class RailComponent {
   readonly allNavItems = NAV_ITEMS;
+
+  /**
+   * Refonte 2b, 8a : sous le seuil de changement de forme, le rail n'est plus
+   * une colonne mais un volet. La classe porte cet état ; la feuille de style
+   * décide seule à partir de quelle largeur elle signifie quelque chose.
+   */
+  @HostBinding('class.rail--panel')
+  get isPanel(): boolean {
+    return this.shellNav.panelOpen();
+  }
+
+  /** Le voile du volet : un clic à côté referme, comme partout ailleurs. */
+  closePanel(): void {
+    this.shellNav.close();
+  }
 
   /** Groupe dont le volet est actuellement ouvert (un seul à la fois), null si aucun. */
   openGroup = signal<string | null>(null);
@@ -49,13 +65,21 @@ export class RailComponent {
     return item.children.some((child) => child.route && this.router.url.startsWith(child.route));
   }
 
+  // Injection par constructeur et non par `inject()` : ce composant est
+  // instancié directement avec des doublures dans rail.component.spec.ts,
+  // sans TestBed — un `inject()` en initialiseur de champ exige un contexte
+  // d'injection et ferait échouer les sept tests du fichier.
   constructor(
     private authService: AuthService,
     private router: Router,
     private elementRef: ElementRef<HTMLElement>,
+    private shellNav: ShellNavService,
   ) {
     this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe(() => {
       this.openGroup.set(null);
+      // Un volet resté ouvert sur l'écran d'arrivée masquerait ce qu'on vient
+      // de demander.
+      this.shellNav.close();
     });
   }
 

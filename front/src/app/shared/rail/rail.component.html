@@ -1,3 +1,8 @@
+<!-- Refonte 2b, 8a : sous le seuil de changement de forme, ce voile rend le
+     volet refermable d'un clic à côté. Au-dessus il n'existe pas — la feuille
+     de style ne l'affiche que là où le rail est un volet. -->
+<span class="rail-scrim" (click)="closePanel()"></span>
+
 <nav class="rail">
   <ng-container *ngFor="let item of visibleNavItems()">
     <a *ngIf="!item.children"
