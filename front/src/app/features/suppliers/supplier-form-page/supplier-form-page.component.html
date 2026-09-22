@@ -1,0 +1,18 @@
+<div class="sfp-shell">
+  <p class="sfp-loading" *ngIf="loading()">Chargement de la fiche…</p>
+
+  <app-list-error
+    *ngIf="loadError()"
+    title="La fiche fournisseur n'a pas pu être chargée."
+    [cause]="loadError()!"
+    [detail]="loadErrorDetail()"
+    (retry)="retry()" />
+
+  <p class="sfp-save-error" *ngIf="saveError()">{{ saveError() }}</p>
+
+  <app-supplier-form
+    *ngIf="!loading() && !loadError()"
+    [supplier]="supplier()"
+    (save)="onSave($event)"
+    (cancel)="cancel()" />
+</div>

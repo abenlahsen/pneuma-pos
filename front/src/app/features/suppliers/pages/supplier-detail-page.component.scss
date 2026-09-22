@@ -1,600 +1,539 @@
 @use '../../_variables' as *;
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
-$primary:       #ff2d37;
-$primary-dark:  #e8000b;
-$primary-light: rgba(255, 45, 55, 0.10);
+/* Refonte 2b, gabarit 16a — la fiche fournisseur, miroir de la fiche client.
+   L'ancienne feuille pesait 600 lignes : onglets, quatre cadrans à icône et
+   trois tableaux repliables. Tout cela disparaît avec la structure.
 
-$success-bg:   rgba(34, 197, 94, 0.10);
-$success-text: #15803d;
-$warning-bg:   rgba(234, 179, 8, 0.12);
-$warning-text: #a16207;
-$danger-bg:    rgba($expense-color, 0.10);
-$danger-text:  $expense-color;
+   Deux différences avec le client : la dernière tranche d'ancienneté est un
+   seuil de risque légal et non un simple retard, et la ligne d'achat qui le
+   franchit le dit dans sa sous-ligne. */
 
-$bg:       $bg-subtle;
-$surface:  #ffffff;
-$surface2: $bg-subtle;
-$border:   $border-subtle;
-$border2:  $border-color;
-$text:     $text-dark;
-$muted:    $text-muted;
-$dim:      $text-light;
-$label:    #334155;
-$strong:   $text-dark;
-
-$shadow-sm: none;
-$shadow-md: none;
-
-$radius-sm:   8px;
-$radius-md:   12px;
-$radius-lg:   14px;
-$radius-full: 999px;
-
-// ── Host ──────────────────────────────────────────────────────────────────────
-:host { display: block; }
-
-// ── Page layout ───────────────────────────────────────────────────────────────
-.supplier-detail-page {
+.sd-screen {
   display: grid;
-  gap: 1.25rem;
-  padding: 1.5rem;
-  background: $bg;
-  min-height: 100%;
-  -webkit-font-smoothing: antialiased;
+  grid-template-rows: 60px minmax(0, 1fr);
+  height: calc(100vh - 60px);
+  background: $bg-card;
+  border: 1px solid $border-color;
 }
 
-// ── Page header ───────────────────────────────────────────────────────────────
-.page-header {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.back-link {
-  display: inline-flex;
+/* ── Rangée 1 : la barre ──────────────────────────────────────────────── */
+.sd-bar {
+  display: flex;
   align-items: center;
-  gap: 0.375rem;
-  font-size: 0.8125rem;
-  color: $muted;
+  gap: 14px;
+  padding: 0 20px;
+  background: $bg-subtle;
+  border-bottom: 1px solid $border-strong;
+}
+
+.sd-back {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid $border-color;
+  background: $bg-card;
+  color: $text-dark;
+  font-size: 12.5px;
+  font-weight: 600;
   text-decoration: none;
-  font-weight: 500;
-  transition: color 0.15s;
-
-  &:hover { color: $text; }
-}
-
-// ── Supplier hero card ────────────────────────────────────────────────────────
-.supplier-hero {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  background: $surface;
-  border-radius: 0;
-  border: 1px solid $border;
-  border-top: 3px solid $primary;
-  box-shadow: none;
-  padding: 1.5rem;
-}
-
-.supplier-avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: $primary;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.625rem;
-  font-weight: 700;
   flex-shrink: 0;
-  box-shadow: none;
 }
 
-.supplier-identity {
-  flex: 1;
+.sd-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
   min-width: 0;
 }
 
-.eyebrow {
-  font-size: 0.6875rem;
+.sd-name {
+  font-size: 15.5px;
   font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: $primary;
-  margin: 0 0 0.2rem;
-}
-
-h1 {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: $text;
-  margin: 0 0 0.5rem;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-}
-
-.supplier-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  flex-wrap: wrap;
-}
-
-.meta-item {
-  font-size: 0.8125rem;
-  color: $muted;
-}
-
-// ── Buttons ───────────────────────────────────────────────────────────────────
-.header-actions {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.575rem 1.1rem;
-  border-radius: 0;
-  font: inherit;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
+  letter-spacing: -0.01em;
   white-space: nowrap;
-  transition: all 0.15s ease;
-  text-decoration: none;
-  border: 1.5px solid transparent;
-
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.btn-secondary {
-  background: $surface;
-  color: $strong;
-  border-color: $border2;
-  box-shadow: none;
-
-  &:hover:not(:disabled) { background: $surface2; border-color: #bcc6d4; }
+.sd-meta {
+  font-size: 11.5px;
+  color: $text-muted;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.btn-primary {
-  background: $primary;
-  color: white;
-
-  &:hover:not(:disabled) { filter: brightness(0.95); }
-}
-
-.btn-danger {
-  background: $surface;
-  color: $danger-text;
-  border-color: #fca5a5;
-
-  &:hover:not(:disabled) { background: #fee2e2; border-color: $danger-text; }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
-}
-
-// ── KPI grid ──────────────────────────────────────────────────────────────────
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-}
-
-.kpi-card {
-  background: $surface;
-  border-radius: 0;
-  border: 1px solid $border;
-  box-shadow: none;
-  padding: 1.25rem;
+.sd-badges {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-  &:hover {
-    box-shadow: none;
-  }
-
-  &.kpi-card--danger {
-    border-color: #fca5a5;
-    background: #fff5f5 0%;
-  }
-}
-
-.kpi-icon {
-  font-size: 1.625rem;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: $surface2;
-  border-radius: 0;
-  border: 1px solid $border;
+  gap: 6px;
   flex-shrink: 0;
 }
 
-.kpi-body { flex: 1; min-width: 0; }
-
-.kpi-label {
-  font-size: 0.65rem;
+.sd-badge {
+  padding: 3px 8px;
+  border: 1px solid $border-strong;
+  background: $bg-card;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: $dim;
-  margin: 0 0 0.2rem;
-}
+  color: $text-muted;
+  white-space: nowrap;
 
-.kpi-val {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: $text;
-  margin: 0;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-
-  small {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: $dim;
-    letter-spacing: 0;
+  &--late {
+    border-color: $expense-color;
+    background: $overdue-bg;
+    color: $expense-color;
   }
 
-  &.kpi-val--date {
-    font-size: 1.05rem;
-    letter-spacing: 0;
+  /* Un retard qui n'a pas encore atteint le seuil légal : il alerte sans
+     annoncer un problème de conformité. */
+  &--warn {
+    border-color: $warning-border;
+    background: $warning-bg;
+    color: $warning-dark;
   }
 }
 
-// ── Panels ────────────────────────────────────────────────────────────────────
-.panel {
-  background: $surface;
-  border-radius: 0;
-  border: 1px solid $border;
-  box-shadow: none;
-  padding: 1.5rem;
+.sd-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
-.panel-title {
-  font-size: 0.9375rem;
+.sd-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 13px;
+  border: 1px solid $border-color;
+  background: $bg-card;
+  color: $text-dark;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  &--dark {
+    border-color: $text-dark;
+    background: $text-dark;
+    color: $bg-card;
+    font-weight: 700;
+  }
+
+  &--primary {
+    border-color: $primary;
+    background: $primary;
+    color: $bg-card;
+    font-weight: 700;
+  }
+
+  &--sm {
+    height: 28px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+}
+
+/* ── Rangée 2 : le corps ──────────────────────────────────────────────── */
+.sd-body {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  background: $bg-card;
+}
+
+.sd-main {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid $border-strong;
+}
+
+/* ── Les chiffres ─────────────────────────────────────────────────────── */
+.sd-figures {
+  padding: 15px 22px 14px;
+  border-bottom: 1px solid $border-strong;
+}
+
+.sd-figures-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.sd-headline-label,
+.sd-ctx-label,
+.sd-aging-title,
+.sd-register-title,
+.sd-panel-title {
+  display: block;
+  font-size: 9.5px;
   font-weight: 700;
-  color: $text;
-  margin: 0 0 1.25rem;
-  padding-left: 0.75rem;
-  border-left: 3px solid $primary;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: $text-muted;
 }
 
-.centered { display: flex; justify-content: center; padding: 2rem; }
-.error-panel { color: #b91c1c; }
+.sd-headline-value {
+  display: block;
+  margin-top: 4px;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
 
-// ── Info list (key-value rows) ─────────────────────────────────────────────────
-.info-list {
-  margin: 0;
+  small { font-size: 14px; font-weight: 600; color: $text-muted; }
+
+  &--due { color: $expense-color; }
+}
+
+.sd-context {
+  margin-left: auto;
+  display: flex;
+  gap: 22px;
+  text-align: right;
+}
+
+.sd-ctx-value {
+  display: block;
+  margin-top: 4px;
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── L'âge de la dette, cliquable ─────────────────────────────────────── */
+.sd-aging { margin-top: 14px; }
+
+.sd-aging-head {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+
+.sd-aging-hint,
+.sd-aging-legal {
+  font-size: 11px;
+  color: $text-muted;
+  font-variant-numeric: tabular-nums;
+}
+
+.sd-aging-legal {
+  margin-left: auto;
+  font-size: 11px;
+  color: $text-muted;
+}
+
+.sd-over { color: $expense-color; }
+
+.sd-aging-bar {
+  margin-top: 7px;
+  display: flex;
+  height: 12px;
+  gap: 1px;
+}
+
+.sd-seg {
+  &--1 { background: $border-color; }
+  &--2 { background: #7d9bbd; }
+  &--3 { background: #4a7ba8; }
+  &--4 { background: $expense-color; }
+}
+
+.sd-aging-grid {
+  margin-top: 7px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid $border-strong;
+}
+
+.sd-aging-cell {
+  padding: 7px 10px;
+  border: 0;
+  border-right: 1px solid $border-strong;
+  background: $bg-card;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+
+  &:last-child { border-right: 0; }
+
+  /* La dernière tranche n'est pas « en retard » mais « hors délai légal ». */
+  &--legal {
+    background: $overdue-bg;
+    .sd-aging-label,
+    .sd-aging-amount { color: $expense-color; }
+  }
+
+  /* La tranche retenue s'inverse : on doit voir sur quoi le relevé est filtré. */
+  &--on {
+    background: $text-dark;
+    .sd-aging-label,
+    .sd-aging-amount { color: $bg-card; }
+  }
+}
+
+.sd-aging-label {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: $text-muted;
+}
+
+.sd-aging-amount {
+  display: block;
+  margin-top: 2px;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── L'en-tête du registre ────────────────────────────────────────────── */
+.sd-register-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-bottom: 1px solid $border-strong;
+  background: $bg-subtle;
+}
+
+.sd-register-title { letter-spacing: 0.15em; color: $text-dark; }
+
+.sd-scopes {
+  display: flex;
+  margin-left: 6px;
+}
+
+.sd-scope {
+  height: 30px;
+  padding: 0 11px;
+  border: 1px solid $border-strong;
+  border-left: 0;
+  background: $bg-card;
+  color: $text-secondary;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:first-child { border-left: 1px solid $border-strong; }
+
+  &--due { color: $expense-color; }
+  &--paid { color: $income-color; }
+
+  &--on {
+    border-color: $text-dark;
+    background: $text-dark;
+    color: $bg-card;
+  }
+}
+
+.sd-clear,
+.sd-linkbtn {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: $primary;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.sd-register-count {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: $text-muted;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Le registre ──────────────────────────────────────────────────────── */
+.sd-register {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
 
-.info-row {
+.sd-rows {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.sd-row {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr) 112px 112px 122px 76px;
+  align-items: center;
+  gap: 11px;
+  min-height: 54px;
+  padding: 0 22px;
+  border-bottom: 1px solid $border-subtle;
+
+  &--head {
+    min-height: 0;
+    padding: 7px 22px;
+    border-bottom: 1px solid $text-dark;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: $text-muted;
+  }
+
+  /* Le filet dit « cet achat n'est pas réglé » ; il rougit au seuil légal. */
+  &--due {
+    border-left: 3px solid $warning-border;
+    margin-left: -3px;
+  }
+
+  &--legal {
+    border-left-color: $expense-color;
+    background: $overdue-bg;
+  }
+}
+
+.sd-num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.sd-date {
+  font-size: 12px;
+  color: $text-muted;
+  font-variant-numeric: tabular-nums;
+}
+
+.sd-label { min-width: 0; }
+
+.sd-label-main {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.sd-label-sub {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: $warning-dark;
+
+  &--legal { color: $expense-color; }
+}
+
+.sd-debit { font-size: 13.5px; font-weight: 600; }
+.sd-credit { font-size: 13.5px; color: $income-color; }
+.sd-balance { font-size: 13.5px; font-weight: 700; }
+
+.sd-row-action { display: flex; justify-content: flex-end; gap: 4px; }
+
+.sd-icon {
+  width: 32px;
+  height: 32px;
+  border: 1px solid $border-strong;
+  background: $bg-card;
+  color: $text-dark;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* ── Colonne de droite ────────────────────────────────────────────────── */
+.sd-side {
+  min-height: 0;
+  overflow-y: auto;
+  background: $bg-subtle;
+}
+
+.sd-panel {
+  padding: 14px 18px;
+  border-bottom: 1px solid $border-strong;
+}
+
+.sd-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sd-panel-title { margin: 0; }
+
+
+.sd-panel-head .sd-btn { margin-left: auto; }
+
+.sd-kv {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 1rem;
-  padding: 0.625rem 0;
-  border-bottom: 1px solid $border;
+  padding: 7px 0;
+  border-bottom: 1px solid $border-strong;
+  font-size: 12.5px;
+  color: $text-secondary;
 
-  &:last-child { border-bottom: none; }
+  &:last-of-type { border-bottom: 0; }
 
-  dt {
-    font-size: 0.8125rem;
-    color: $muted;
-    font-weight: 500;
-    flex-shrink: 0;
-  }
-
-  dd {
-    font-size: 0.8125rem;
-    color: $strong;
-    font-weight: 600;
-    text-align: right;
-    margin: 0;
-    font-variant-numeric: tabular-nums;
-  }
+  strong { font-size: 13.5px; font-weight: 700; color: $text-dark; font-variant-numeric: tabular-nums; }
 }
 
-// ── Badges ────────────────────────────────────────────────────────────────────
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.2rem 0.6rem;
-  border-radius: 0;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
+.sd-note {
+  margin: 9px 0 0;
+  padding: 9px 11px;
+  border: 1px solid $border-strong;
+  background: $bg-card;
+  font-size: 11px;
+  line-height: 1.55;
+  color: $text-secondary;
 }
 
-.badge-success { background: $success-bg; color: $success-text; }
-.badge-warning { background: $warning-bg; color: $warning-text; }
-.badge-danger  { background: $danger-bg;  color: $danger-text; }
-.badge-neutral { background: $surface2;   color: $muted; border: 1px solid $border; }
 
-// ── Empty state ───────────────────────────────────────────────────────────────
-.empty-state {
-  padding: 2rem 1.5rem;
-  text-align: center;
 
-  p {
-    color: $dim;
-    font-size: 0.875rem;
-    margin: 0;
-  }
+
+
+
+
+.sd-contact {
+  margin: 9px 0 0;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: $text-secondary;
 }
 
-// ── Tabs ──────────────────────────────────────────────────────────────────────
-.tab-panel {
-  padding: 0;
-  overflow: hidden;
+/* ── États ────────────────────────────────────────────────────────────── */
+.sd-state {
+  margin: 0;
+  padding: 1.75rem 22px;
+  font-size: 12.5px;
+  color: $text-muted;
+
+  &--error { color: $alert-ink; }
 }
 
-.tab-nav {
-  display: flex;
-  gap: 0;
-  padding: 0 1.5rem;
-  border-bottom: 2px solid $border;
-  background: $surface2;
-  border-radius: 0;
+.sd-action-error {
+  margin: 0;
+  padding: 0.7rem 22px;
+  border-left: 3px solid $expense-color;
+  background: $overdue-bg;
+  font-size: 12.5px;
+  color: $alert-ink;
 }
 
-.tab-btn {
-  padding: 0.875rem 1rem;
-  font: inherit;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: $muted;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-  cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
-  white-space: nowrap;
+/* ── Étroit : la colonne de droite passe dessous ──────────────────────── */
+@media (max-width: 1100px) {
+  .sd-screen { height: auto; }
 
-  &:hover { color: $text; }
+  .sd-body { grid-template-columns: minmax(0, 1fr); }
 
-  &.active {
-    color: $primary;
-    border-bottom-color: $primary;
-  }
-}
+  .sd-main { border-right: 0; }
 
-// ── Tables ────────────────────────────────────────────────────────────────────
-.table-wrapper {
-  overflow-x: auto;
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-
-  th {
-    background: $surface2;
-    color: $dim;
-    text-transform: uppercase;
-    font-size: 0.6875rem;
-    font-weight: 700;
-    letter-spacing: 0.07em;
-    padding: 0.6rem 1rem;
-    border-bottom: 2px solid $border;
-    white-space: nowrap;
-  }
-
-  td {
-    padding: 0.7rem 1rem;
-    font-size: 0.8125rem;
-    border-bottom: 1px solid $border;
-    color: $strong;
-  }
-
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover td { background: $surface2; }
-}
-
-.col-right { text-align: right; }
-.num { font-variant-numeric: tabular-nums; }
-
-.ref-cell {
-  font-weight: 600;
-  font-size: 0.8rem;
-  color: $label;
-  font-family: ui-monospace, 'Courier New', monospace;
-  letter-spacing: 0.02em;
-}
-
-.text-danger {
-  color: $danger-text;
-  font-weight: 700;
-}
-
-// ── Statement KPI row ─────────────────────────────────────────────────────────
-.statement-kpi-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0;
-  border-bottom: 1px solid $border;
-}
-
-.stmt-kpi {
-  padding: 1.25rem 1.5rem;
-  border-right: 1px solid $border;
-
-  &:last-child { border-right: none; }
-}
-
-.stmt-val {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: $text;
-  margin: 0.25rem 0 0;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-
-  small {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: $dim;
-    letter-spacing: 0;
-  }
-}
-
-// ── Subsections ───────────────────────────────────────────────────────────────
-.subsection {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid $border;
-
-  &:last-child { border-bottom: none; }
-}
-
-.subsection-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  user-select: none;
-  margin-bottom: 0.875rem;
-
-  .subsection-title { margin: 0; }
-}
-
-.collapse-icon {
-  font-size: 0.7rem;
-  color: $dim;
-  margin-left: 0.5rem;
-}
-
-.subsection-title {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: $muted;
-  margin: 0 0 0.875rem;
-}
-
-// ── Modals ────────────────────────────────────────────────────────────────────
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba($text-dark, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1.5rem;
-  backdrop-filter: blur(2px);
-}
-
-.modal-container {
-  background: $surface;
-  border-radius: 0;
-  width: 100%;
-  max-width: 600px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: $shadow-modal;
-  border: 1px solid $border;
-}
-
-.modal-header {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid $border;
-  background: $surface2;
-  border-radius: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-shrink: 0;
-
-  h2 {
-    margin: 0;
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: $text;
-    letter-spacing: -0.01em;
-  }
-}
-
-.modal-body {
-  padding: 1.5rem;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.actions-cell {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  justify-content: flex-end;
-}
-
-.btn-icon {
-  width: 2rem;
-  height: 2rem;
-  border: 1px solid $border;
-  background: $surface;
-  border-radius: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 0.9rem;
-  text-decoration: none;
-  transition: background 0.15s, border-color 0.15s;
-
-  &:hover { background: $surface2; border-color: $border2; }
-}
-
-// ── Responsive ────────────────────────────────────────────────────────────────
-@media (max-width: 1024px) {
-  .kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .supplier-detail-page { padding: 1rem; }
-
-  .supplier-hero {
-    flex-wrap: wrap;
-    gap: 1rem;
-    padding: 1.25rem;
-  }
-
-  .header-actions {
-    width: 100%;
-    margin-left: 0;
-
-    .btn { flex: 1; justify-content: center; }
-  }
-
-  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-  .statement-kpi-row { grid-template-columns: repeat(2, 1fr); }
-
-  .stmt-kpi:nth-child(2n) { border-right: none; }
-  .stmt-kpi:nth-child(n+3) { border-top: 1px solid $border; }
-
-  .tab-nav { padding: 0 1rem; }
-  .tab-btn { padding: 0.75rem 0.625rem; font-size: 0.8125rem; }
-}
-
-@media (max-width: 480px) {
-  .kpi-grid { grid-template-columns: 1fr 1fr; }
-  .supplier-avatar { width: 48px; height: 48px; font-size: 1.25rem; }
-  h1 { font-size: 1.25rem; }
+  .sd-side { border-top: 1px solid $border-strong; }
 }

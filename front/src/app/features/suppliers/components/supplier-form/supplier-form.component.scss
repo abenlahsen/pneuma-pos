@@ -1,73 +1,216 @@
 @use '../../../_variables' as *;
 
-.form-control {
-  label[for='supplier-email'] {
-    display: block;
-    margin-bottom: 0.45rem;
-    font-weight: 600;
-    color: #374151;
-  }
+/* Refonte 2b, gabarit 15a — l'éditeur fournisseur, en trois rangées.
+   Jumelle de client-form.component.scss. Six champs seulement ici, mais la
+   fiche fournisseur est le jumeau de la fiche client : son éditeur s'ouvre au
+   même endroit et de la même façon. La colonne de droite isole ce qui engage
+   l'argent, pour qu'on ne le modifie pas en corrigeant un téléphone. */
 
-  input[name='email'] {
-    width: 100%;
-    border: 1px solid #cbd5e1;
-    border-radius: 0;
-    background: #fff;
-    color: #111827;
-    transition:
-      border-color 0.2s ease,
-      box-shadow 0.2s ease,
-      background-color 0.2s ease;
-  }
+.sf-editor {
+  display: grid;
+  grid-template-rows: 60px minmax(0, 1fr) 64px;
+  height: calc(100vh - 60px);
+  background: $bg-card;
+  border: 1px solid $border-strong;
+}
 
-  input[name='email']::placeholder {
-    color: #9ca3af;
-  }
+/* ── Rangée 1 : la barre ──────────────────────────────────────────────── */
+.sf-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 1.25rem;
+  border-bottom: 1px solid $text-dark;
+}
 
-  input[name='email']:focus {
-    outline: none;
-    border-color: $primary;
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(255, 45, 55, 0.1);
-  }
+.sf-identity {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
 
-  input[name='email'].ng-invalid.ng-touched,
-  input[name='email'].ng-invalid.ng-dirty {
-    border-color: $expense-color;
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(194, 24, 31, 0.12);
-  }
+.sf-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: $text-dark;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-  input[name='email'].ng-valid.ng-dirty,
-  input[name='email'].ng-valid.ng-touched {
-    border-color: #cbd5e1;
-    background: #fff;
-    box-shadow: none;
+.sf-meta {
+  font-size: 11.5px;
+  color: $text-muted;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sf-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sf-badge {
+  padding: 2px 7px;
+  border: 1px solid $income-color;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: $income-color;
+
+  &--off {
+    border-color: $border-color;
+    color: $text-muted;
   }
 }
 
-.error-text {
-  display: block;
-  margin-top: 0.45rem;
-  padding-left: 0.1rem;
-  font-size: 0.82rem;
-  line-height: 1.35;
+/* ── Rangée 2 : le corps ──────────────────────────────────────────────── */
+.sf-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  min-height: 0;
+}
+
+.sf-main,
+.sf-side {
+  overflow-y: auto;
+  padding: 1.25rem;
+}
+
+.sf-side {
+  background: $bg-subtle;
+  border-left: 1px solid $border-strong;
+}
+
+.sf-block-title {
+  margin: 0 0 0.9rem;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: $text-dark;
+}
+
+.sf-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem 1rem;
+}
+
+.sf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+
+  &--wide {
+    grid-column: 1 / -1;
+  }
+
+  > span {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $text-secondary;
+  }
+
+  input,
+  select,
+  textarea {
+    padding: 0.45rem 0.7rem;
+    border: 1px solid $border-color;
+    background: $bg-card;
+    font: inherit;
+    font-size: 0.875rem;
+    color: $text-dark;
+
+    &:focus {
+      outline: none;
+      border-color: $primary;
+      box-shadow: 0 0 0 3px rgba($primary, 0.1);
+    }
+  }
+
+  textarea {
+    resize: vertical;
+  }
+}
+
+.sf-side .sf-field + .sf-field {
+  margin-top: 0.9rem;
+}
+
+.sf-hint {
+  font-size: 11px;
+  line-height: 1.5;
+  font-style: normal;
+  color: $text-muted;
+}
+
+.sf-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: $text-secondary;
+  cursor: pointer;
+}
+
+/* ── Rangée 3 : le pied ───────────────────────────────────────────────── */
+.sf-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 1.25rem;
+  border-top: 1px solid $border-strong;
+  background: $bg-subtle;
+}
+
+.sf-foot-hint {
+  flex: 1;
+  font-size: 11.5px;
+  color: $text-muted;
+}
+
+.sf-btn {
+  padding: 8px 16px;
+  border: 1px solid $border-color;
+  background: $bg-card;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $text-dark;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &--solid {
+    border-color: $text-dark;
+    background: $text-dark;
+    color: $bg-card;
+  }
+}
+
+.sf-error {
+  font-size: 11px;
+  font-style: normal;
   color: $expense-color;
 }
 
-.hint-text {
-  display: block;
-  margin-top: 0.45rem;
-  padding-left: 0.1rem;
-  font-size: 0.78rem;
-  line-height: 1.35;
-  color: #6b7280;
-}
-
-@media (max-width: 768px) {
-  .form-control {
-    input[name='email'] {
-      font-size: 16px;
-    }
-  }
+.sf-note {
+  margin: 0.9rem 0 0;
+  padding: 9px 11px;
+  border: 1px solid $border-strong;
+  background: $bg-card;
+  font-size: 11px;
+  line-height: 1.55;
+  color: $text-secondary;
 }

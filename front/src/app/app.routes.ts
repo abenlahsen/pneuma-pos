@@ -83,6 +83,20 @@ export const routes: Routes = [
       import('./features/suppliers/pages/suppliers-page.component').then((m) => m.SuppliersPageComponent),
   },
   {
+    path: 'suppliers/new',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'create suppliers' },
+    loadComponent: () =>
+      import('./features/suppliers/supplier-form-page/supplier-form-page.component').then((m) => m.SupplierFormPageComponent),
+  },
+  {
+    path: 'suppliers/:id/edit',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'edit suppliers' },
+    loadComponent: () =>
+      import('./features/suppliers/supplier-form-page/supplier-form-page.component').then((m) => m.SupplierFormPageComponent),
+  },
+  {
     path: 'suppliers/:id',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view suppliers' },

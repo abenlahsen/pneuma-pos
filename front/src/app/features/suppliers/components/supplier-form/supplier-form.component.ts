@@ -3,12 +3,19 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Supplier, SupplierPayload } from '../../models/supplier.model';
 
+/**
+ * Fiche fournisseur — refonte 2b, gabarit 15a.
+ *
+ * Jumelle de client-form : six champs seulement, que le §5b aurait laissés en
+ * modale 15b, mais la fiche fournisseur est le miroir de la fiche client et son
+ * éditeur s'ouvre au même endroit, sur sa propre route.
+ */
 @Component({
   selector: 'app-supplier-form',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './supplier-form.component.html',
-  styleUrls: ['../../../sales/sale-form/sale-form.component.scss', './supplier-form.component.scss']
+  styleUrl: './supplier-form.component.scss',
 })
 export class SupplierFormComponent implements OnInit, OnChanges {
   @Input() supplier: Supplier | null = null;

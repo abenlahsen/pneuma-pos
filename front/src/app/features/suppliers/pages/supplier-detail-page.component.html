@@ -1,361 +1,263 @@
-<section class="supplier-detail-page">
+<!-- Refonte 2b, gabarit 16a — le miroir de la fiche client. Deux rangées :
+     barre de 60 px, corps en minmax(0,1fr) 400px. Le relevé dit ce qu'on doit
+     au fournisseur au lieu de ce qu'il nous doit ; l'âge de la dette devient
+     l'âge du règlement, avec le seuil de risque légal en dernière tranche. -->
+<div class="sd-screen">
 
-  <!-- ── En-tête ── -->
-  <div class="page-header">
-    <a class="back-link" [routerLink]="['/suppliers']"><app-icon name="chevron-left" [size]="14" /> Retour aux fournisseurs</a>
+  <header class="sd-bar">
+    <a class="sd-back" [routerLink]="['/suppliers']">
+      <app-icon name="chevron-left" [size]="15" /> Fournisseurs
+    </a>
 
-    @if (profile()?.supplier) {
-      <div class="supplier-hero">
-        <div class="supplier-avatar">{{ profile()!.supplier!.name.charAt(0).toUpperCase() }}</div>
+    @if (supplier(); as supplier) {
+      <span class="sd-identity">
+        <span class="sd-name">{{ supplier.name }}</span>
+        <span class="sd-meta">
+          Compte {{ supplier.id }}@if (supplier.contact_person) { · {{ supplier.contact_person }} }@if (supplier.phone) { · {{ supplier.phone }} }
+        </span>
+      </span>
 
-        <div class="supplier-identity">
-          <p class="eyebrow">Fiche fournisseur</p>
-          <h1>{{ profile()!.supplier!.name }}</h1>
-          <div class="supplier-meta">
-            @if (profile()?.supplier?.contact_person) {
-              <span class="meta-item"><app-icon name="user" [size]="14" /> {{ profile()!.supplier!.contact_person }}</span>
-            }
-            @if (profile()?.supplier?.phone) {
-              <span class="meta-item"><app-icon name="phone" [size]="14" /> {{ profile()!.supplier!.phone }}</span>
-            }
-            @if (profile()?.supplier?.email) {
-              <span class="meta-item"><app-icon name="mail" [size]="14" /> {{ profile()!.supplier!.email }}</span>
-            }
-          </div>
-        </div>
+      <span class="sd-badges">
+        @if (supplier.payment_terms_days) {
+          <span class="sd-badge">{{ supplier.payment_terms_days }} J DE DÉLAI</span>
+        }
+        @if (worstWaitingDays(); as days) {
+          <span class="sd-badge" [class.sd-badge--late]="days > legalRiskDays" [class.sd-badge--warn]="days <= legalRiskDays">
+            {{ days }} J DE RETARD
+          </span>
+        }
+      </span>
 
-        <div class="header-actions">
-          @if (authService.hasPermission('manage purchase-payments')) {
-            <button type="button" class="btn btn-primary" (click)="openPaymentModal()"><app-icon name="credit-card" [size]="14" /> Régler des achats</button>
-          }
-          <button type="button" class="btn btn-secondary" (click)="openEditModal()"><app-icon name="edit" [size]="14" /> Modifier</button>
-          @if (authService.hasPermission('delete suppliers')) {
-            <button type="button" class="btn btn-danger" (click)="deleteSupplier()" [disabled]="deleting()">
-              <app-icon name="trash" [size]="14" /> Supprimer
-            </button>
-          }
-        </div>
-      </div>
+      <span class="sd-actions">
+        @if (authService.hasPermission('edit suppliers')) {
+          <button type="button" class="sd-btn" (click)="openEditor()">Modifier</button>
+        }
+        @if (authService.hasPermission('manage purchase-payments')) {
+          <button type="button" class="sd-btn sd-btn--dark" (click)="openPaymentModal()">Régler</button>
+        }
+        @if (authService.hasPermission('delete suppliers')) {
+          <button type="button" class="sd-btn" (click)="deleteSupplier()" [disabled]="deleting()" title="Supprimer ce fournisseur">
+            <app-icon name="trash" [size]="14" />
+          </button>
+        }
+      </span>
     }
-  </div>
+  </header>
 
-  <!-- ── États ── -->
   @if (loading()) {
-    <section class="panel centered"><p>Chargement du profil fournisseur...</p></section>
+    <p class="sd-state">Chargement de la fiche fournisseur…</p>
   } @else if (errorMessage()) {
-    <section class="panel centered error-panel"><p>{{ errorMessage() }}</p></section>
-  } @else if (profile()?.supplier) {
+    <p class="sd-state sd-state--error">{{ errorMessage() }}</p>
+  } @else if (supplier()) {
 
-    <!-- ── KPIs ── -->
-    <section class="kpi-grid">
-      <article class="kpi-card">
-        <span class="kpi-icon"><app-icon name="package" [size]="14" /></span>
-        <div class="kpi-body">
-          <p class="kpi-label">ACHATS</p>
-          <p class="kpi-val">{{ profile()?.purchases_count ?? 0 }}</p>
-        </div>
-      </article>
+    <div class="sd-body">
 
-      <article class="kpi-card">
-        <span class="kpi-icon"><app-icon name="banknote" [size]="14" /></span>
-        <div class="kpi-body">
-          <p class="kpi-label">TOTAL ACHETÉ</p>
-          <p class="kpi-val">{{ (profile()?.total_purchased ?? 0) | number:'1.2-2' }} <small>DH</small></p>
-        </div>
-      </article>
+      <!-- ── Colonne principale ── -->
+      <div class="sd-main">
 
-      <article class="kpi-card" [class.kpi-card--danger]="(profile()?.outstanding_balance ?? 0) > 0">
-        <span class="kpi-icon"><app-icon name="clock" [size]="14" /></span>
-        <div class="kpi-body">
-          <p class="kpi-label">SOLDE DÛ</p>
-          <p class="kpi-val">{{ (profile()?.outstanding_balance ?? 0) | number:'1.2-2' }} <small>DH</small></p>
-        </div>
-      </article>
+        <div class="sd-figures">
+          <div class="sd-figures-row">
+            <span class="sd-headline">
+              <span class="sd-headline-label">Reste à régler</span>
+              <span class="sd-headline-value" [class.sd-headline-value--due]="outstanding() > 0">
+                {{ outstanding() | number:'1.2-2' }} <small>DH</small>
+              </span>
+            </span>
 
-      <article class="kpi-card">
-        <span class="kpi-icon"><app-icon name="calendar" [size]="14" /></span>
-        <div class="kpi-body">
-          <p class="kpi-label">DERNIER ACHAT</p>
-          <p class="kpi-val kpi-val--date">
-            {{ profile()?.last_purchase_date ? (profile()!.last_purchase_date | date:'dd/MM/yyyy') : '—' }}
-          </p>
-        </div>
-      </article>
-    </section>
-
-    <!-- ── Informations fournisseur ── -->
-    <article class="panel">
-      <h2 class="panel-title">Informations fournisseur</h2>
-      <dl class="info-list">
-        <div class="info-row">
-          <dt>Personne de contact</dt>
-          <dd>{{ profile()?.supplier?.contact_person || '—' }}</dd>
-        </div>
-        <div class="info-row">
-          <dt>Téléphone</dt>
-          <dd>{{ profile()?.supplier?.phone || '—' }}</dd>
-        </div>
-        <div class="info-row">
-          <dt>Email</dt>
-          <dd>{{ profile()?.supplier?.email || '—' }}</dd>
-        </div>
-        <div class="info-row">
-          <dt>Adresse</dt>
-          <dd>{{ profile()?.supplier?.address || '—' }}</dd>
-        </div>
-      </dl>
-    </article>
-
-    <!-- ── Historique & Relevé ── -->
-    <section class="panel tab-panel">
-      <div class="tab-nav">
-        <button type="button" class="tab-btn"
-                [class.active]="activeTab() === 'overview'"
-                (click)="setTab('overview')">
-          <app-icon name="package" [size]="14" /> Historique des achats
-        </button>
-        <button type="button" class="tab-btn"
-                [class.active]="activeTab() === 'statement'"
-                (click)="setTab('statement')">
-          <app-icon name="package" [size]="14" /> Relevé de compte
-        </button>
-      </div>
-
-      <!-- Historique des achats -->
-      @if (activeTab() === 'overview') {
-        @if (profileLoading()) {
-          <div class="empty-state"><p>Chargement de l'historique...</p></div>
-        } @else if (!purchasesHistory().length) {
-          <div class="empty-state"><p>Aucun historique d'achats pour ce fournisseur.</p></div>
-        } @else {
-          <div class="table-wrapper">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>RÉFÉRENCE</th>
-                  <th>DATE</th>
-                  <th>STATUT</th>
-                  <th>PAIEMENT</th>
-                  <th class="col-right">MONTANT</th>
-                  <th class="col-right">PAYÉ</th>
-                  <th class="col-right">SOLDE</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (p of purchasesHistory(); track trackById($index, p)) {
-                  <tr>
-                    <td class="ref-cell">Achat #{{ p.id }}</td>
-                    <td>{{ p.date ? (p.date | date:'dd/MM/yyyy') : '—' }}</td>
-                    <td>
-                      <span class="badge" [ngClass]="purchaseStatusClass(p.status)">
-                        {{ p.status || '—' }}
-                      </span>
-                    </td>
-                    <td>
-                      <span class="badge" [ngClass]="paymentStatusClass(p.payment_status)">
-                        {{ p.payment_status || '—' }}
-                      </span>
-                    </td>
-                    <td class="col-right num">{{ (p.net_amount ?? 0) | number:'1.2-2' }} DH</td>
-                    <td class="col-right num">{{ (p.paid_amount ?? 0) | number:'1.2-2' }} DH</td>
-                    <td class="col-right num" [class.text-danger]="(p.outstanding_amount ?? 0) > 0">
-                      {{ (p.outstanding_amount ?? 0) | number:'1.2-2' }} DH
-                    </td>
-                    <td class="col-right actions-cell">
-                      <a class="btn-icon" title="Voir la commande fournisseur" [routerLink]="['/achats']" [queryParams]="{ id: p.id }"><app-icon name="link" [size]="14" /></a>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
+            <span class="sd-context">
+              <span class="sd-ctx">
+                <span class="sd-ctx-label">Total acheté</span>
+                <span class="sd-ctx-value">{{ (statement()?.summary?.total_purchased ?? 0) | number:'1.0-0' }}</span>
+              </span>
+              <span class="sd-ctx">
+                <span class="sd-ctx-label">Achats</span>
+                <span class="sd-ctx-value">{{ statement()?.summary?.purchases_count ?? 0 }}</span>
+              </span>
+              <span class="sd-ctx">
+                <span class="sd-ctx-label">Délai accordé</span>
+                <span class="sd-ctx-value">{{ contractualDays() ? contractualDays() + ' j' : '—' }}</span>
+              </span>
+            </span>
           </div>
-        }
-      }
 
-      <!-- Relevé de compte -->
-      @else {
-        <div class="statement-kpi-row">
-          <div class="stmt-kpi">
-            <p class="kpi-label">SOLDE DÛ</p>
-            <p class="stmt-val">{{ (statement()?.summary?.outstanding_balance ?? profile()?.outstanding_balance ?? 0) | number:'1.2-2' }} <small>DH</small></p>
-          </div>
-          <div class="stmt-kpi">
-            <p class="kpi-label">TOTAL ACHETÉ</p>
-            <p class="stmt-val">{{ (statement()?.summary?.total_purchased ?? profile()?.total_purchased ?? 0) | number:'1.2-2' }} <small>DH</small></p>
-          </div>
-          <div class="stmt-kpi">
-            <p class="kpi-label">TOTAL PAYÉ</p>
-            <p class="stmt-val">{{ (statement()?.summary?.total_paid ?? 0) | number:'1.2-2' }} <small>DH</small></p>
-          </div>
-          <div class="stmt-kpi">
-            <p class="kpi-label">NB ACHATS</p>
-            <p class="stmt-val">{{ statement()?.summary?.purchases_count ?? 0 }}</p>
-          </div>
-        </div>
-
-        @if (statementLoading()) {
-          <div class="empty-state"><p>Chargement du relevé...</p></div>
-        } @else if (statementErrorMessage()) {
-          <div class="empty-state"><p>{{ statementErrorMessage() }}</p></div>
-        } @else {
-          @if (openPurchases().length) {
-            <div class="subsection">
-              <div class="subsection-header" (click)="toggleOpenPurchases()">
-                <h3 class="subsection-title">Achats en attente de paiement</h3>
-                <app-icon class="collapse-icon" [name]="openPurchasesCollapsed() ? 'chevron-right' : 'chevron-down'" [size]="12" />
+          @if (settlementAging(); as ag) {
+            <div class="sd-aging">
+              <div class="sd-aging-head">
+                <span class="sd-aging-title">Âge du règlement</span>
+                <span class="sd-aging-hint">cliquer une tranche filtre le relevé</span>
+                <span class="sd-aging-legal">
+                  Risque légal au-delà de {{ legalRiskDays }} jours
+                </span>
               </div>
-              @if (!openPurchasesCollapsed()) {
-                <div class="table-wrapper">
-                  <table class="table">
-                    <thead>
-                      <tr>
-                        <th>RÉFÉRENCE</th>
-                        <th>DATE</th>
-                        <th class="col-right">TOTAL</th>
-                        <th class="col-right">SOLDE DÛ</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      @for (p of openPurchases(); track trackById($index, p)) {
-                        <tr>
-                          <td class="ref-cell">Achat #{{ p.id }}</td>
-                          <td>{{ p.date ? (p.date | date:'dd/MM/yyyy') : '—' }}</td>
-                          <td class="col-right num">{{ (p.net_amount ?? 0) | number:'1.2-2' }} DH</td>
-                          <td class="col-right num text-danger">{{ (p.outstanding_amount ?? 0) | number:'1.2-2' }} DH</td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
+
+              @if (ag.total > 0) {
+                <div class="sd-aging-bar">
+                  <span class="sd-seg sd-seg--1" [style.width.%]="agingShare(ag.buckets['0-30'])"></span>
+                  <span class="sd-seg sd-seg--2" [style.width.%]="agingShare(ag.buckets['31-60'])"></span>
+                  <span class="sd-seg sd-seg--3" [style.width.%]="agingShare(ag.buckets['61-90'])"></span>
+                  <span class="sd-seg sd-seg--4" [style.width.%]="agingShare(ag.buckets['90+'])"></span>
                 </div>
               }
+
+              <div class="sd-aging-grid">
+                @for (b of bucketKeys; track b) {
+                  <button type="button" class="sd-aging-cell"
+                          [class.sd-aging-cell--legal]="b === '90+'"
+                          [class.sd-aging-cell--on]="bucket() === b"
+                          [attr.aria-pressed]="bucket() === b"
+                          (click)="toggleBucket(b)">
+                    <span class="sd-aging-label">{{ bucketLabel(b) }}</span>
+                    <span class="sd-aging-amount">{{ ag.buckets[b] | number:'1.0-0' }}</span>
+                  </button>
+                }
+              </div>
             </div>
           }
+        </div>
 
-          <div class="subsection">
-            <div class="subsection-header" (click)="toggleEntries()">
-              <h3 class="subsection-title">Écritures comptables</h3>
-              <app-icon class="collapse-icon" [name]="entriesCollapsed() ? 'chevron-right' : 'chevron-down'" [size]="12" />
-            </div>
-            @if (!entriesCollapsed()) {
-              @if (!statementEntries().length) {
-                <div class="empty-state"><p>Aucune écriture disponible.</p></div>
-              } @else {
-                <div class="table-wrapper">
-                  <table class="table">
-                    <thead>
-                      <tr>
-                        <th>DATE</th>
-                        <th>TYPE</th>
-                        <th>DESCRIPTION</th>
-                        <th class="col-right">DÉBIT</th>
-                        <th class="col-right">CRÉDIT</th>
-                        <th class="col-right">SOLDE</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      @for (entry of statementEntries(); track $index) {
-                        <tr>
-                          <td>{{ entry.date ? (entry.date | date:'dd/MM/yyyy') : '—' }}</td>
-                          <td>{{ entry.type || '—' }}</td>
-                          <td>{{ entry.description || '—' }}</td>
-                          <td class="col-right num">{{ (entry.debit ?? 0) | number:'1.2-2' }} DH</td>
-                          <td class="col-right num">{{ (entry.credit ?? 0) | number:'1.2-2' }} DH</td>
-                          <td class="col-right num">{{ (entry.balance ?? 0) | number:'1.2-2' }} DH</td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
-                </div>
-              }
-            }
-          </div>
-
-          <div class="subsection">
-            <div class="subsection-header" (click)="togglePayments()">
-              <h3 class="subsection-title">Paiements effectués</h3>
-              <app-icon class="collapse-icon" [name]="paymentsCollapsed() ? 'chevron-right' : 'chevron-down'" [size]="12" />
-            </div>
-            @if (!paymentsCollapsed()) {
-              @if (!(statement()?.payments?.length ?? 0)) {
-                <div class="empty-state"><p>Aucun paiement enregistré.</p></div>
-              } @else {
-                <div class="table-wrapper">
-                  <table class="table">
-                    <thead>
-                      <tr>
-                        <th>RÉFÉRENCE</th>
-                        <th>DATE</th>
-                        <th>MÉTHODE</th>
-                        <th class="col-right">MONTANT</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      @for (payment of statement()?.payments ?? []; track trackById($index, payment)) {
-                        <tr>
-                          <td class="ref-cell">
-                            {{ payment.reference || ('Paiement #' + payment.id) }}
-                            @if (payment.multi) {
-                              <span class="badge badge-warning" title="Ce paiement couvre plusieurs achats">multi</span>
-                            }
-                          </td>
-                          <td>{{ payment.date ? (payment.date | date:'dd/MM/yyyy') : '—' }}</td>
-                          <td>{{ payment.method || '—' }}</td>
-                          <td class="col-right num">{{ (payment.amount ?? 0) | number:'1.2-2' }} DH</td>
-                          <td class="col-right actions-cell">
-                            <button
-                              type="button"
-                              class="btn-icon"
-                              title="Voir le détail du paiement"
-                              (click)="openPaymentView(payment)"
-                            ><app-icon name="view" [size]="14" /></button>
-                            @if (authService.hasPermission('manage purchase-payments')) {
-                              <button
-                                type="button"
-                                class="btn-icon"
-                                title="Supprimer ce paiement"
-                                [disabled]="deletingPaymentId() === payment.id"
-                                (click)="deleteStatementPayment(payment)"
-                              ><app-icon name="trash" [size]="14" /></button>
-                            }
-                          </td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
-                </div>
-              }
-            }
-          </div>
+        @if (actionError()) {
+          <p class="sd-action-error">{{ actionError() }}</p>
         }
-      }
-    </section>
-  }
-</section>
 
-@if (isEditModalOpen()) {
-  <div class="modal-overlay" (click)="closeEditModal()">
-    <div class="modal-container" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>Modifier fournisseur</h2>
-        <button class="btn-icon" type="button" (click)="closeEditModal()" [disabled]="saving()"><app-icon name="close" [size]="14" /></button>
+        <!-- ── Le registre ── -->
+        <div class="sd-register-head">
+          <span class="sd-register-title">Relevé fournisseur</span>
+
+          <div class="sd-scopes">
+            <button type="button" class="sd-scope" [class.sd-scope--on]="scope() === 'all'" (click)="setScope('all')">TOUT</button>
+            <button type="button" class="sd-scope sd-scope--due" [class.sd-scope--on]="scope() === 'due'" (click)="setScope('due')">
+              À RÉGLER {{ openPurchases().length }}
+            </button>
+            <button type="button" class="sd-scope sd-scope--paid" [class.sd-scope--on]="scope() === 'payments'" (click)="setScope('payments')">
+              PAIEMENTS {{ paymentEntryCount() }}
+            </button>
+            <button type="button" class="sd-scope" [class.sd-scope--on]="scope() === 'refunds'" (click)="setScope('refunds')">
+              AVOIRS {{ refundEntryCount() }}
+            </button>
+          </div>
+
+          @if (hasActiveFilter()) {
+            <button type="button" class="sd-clear" (click)="clearFilters()">Tout afficher</button>
+          }
+
+          <span class="sd-register-count">{{ visibleEntries().length }} écriture(s)</span>
+        </div>
+
+        <div class="sd-register">
+          <div class="sd-row sd-row--head">
+            <span>Date</span>
+            <span>Écriture</span>
+            <span class="sd-num">Débit</span>
+            <span class="sd-num">Crédit</span>
+            <span class="sd-num">Solde</span>
+            <span></span>
+          </div>
+
+          <div class="sd-rows">
+            @if (statementLoading()) {
+              <p class="sd-state">Chargement du relevé…</p>
+            } @else if (statementErrorMessage()) {
+              <p class="sd-state sd-state--error">{{ statementErrorMessage() }}</p>
+            } @else if (!visibleEntries().length) {
+              <p class="sd-state">
+                @if (hasActiveFilter()) {
+                  Aucune écriture ne correspond à ce filtre.
+                  <button type="button" class="sd-linkbtn" (click)="clearFilters()">Tout afficher</button>
+                } @else {
+                  Aucune écriture sur ce compte.
+                }
+              </p>
+            } @else {
+              @for (entry of visibleEntries(); track $index) {
+                <div class="sd-row"
+                     [class.sd-row--due]="isDueEntry(entry) && entry.type === 'purchase'"
+                     [class.sd-row--legal]="atLegalRisk(entry)">
+                  <span class="sd-date">{{ entry.date ? (entry.date | date:'dd/MM/yy') : '—' }}</span>
+
+                  <span class="sd-label">
+                    <span class="sd-label-main">{{ entry.description || '—' }}</span>
+                    @if (waitingDays(entry); as days) {
+                      <span class="sd-label-sub" [class.sd-label-sub--legal]="days > legalRiskDays">
+                        En attente depuis {{ days }} jours@if (days > legalRiskDays) { · risque légal }
+                      </span>
+                    }
+                  </span>
+
+                  <span class="sd-num sd-debit">{{ (entry.debit ?? 0) > 0 ? ((entry.debit ?? 0) | number:'1.2-2') : '—' }}</span>
+                  <span class="sd-num sd-credit">{{ (entry.credit ?? 0) > 0 ? ((entry.credit ?? 0) | number:'1.2-2') : '—' }}</span>
+                  <span class="sd-num sd-balance" [class.sd-over]="(entry.balance ?? 0) > 0">
+                    {{ (entry.balance ?? 0) | number:'1.2-2' }}
+                  </span>
+
+                  <span class="sd-row-action">
+                    @if (entry.type === 'payment' && entry.payment_id) {
+                      <button type="button" class="sd-icon" title="Voir le paiement" (click)="openEntryPayment(entry)">
+                        <app-icon name="credit-card" [size]="14" />
+                      </button>
+                      @if (authService.hasPermission('manage purchase-payments') && entryPayment(entry)) {
+                        <button type="button" class="sd-icon" title="Supprimer ce paiement"
+                                [disabled]="deletingPaymentId() === entry.payment_id"
+                                (click)="deleteEntryPayment(entry)">
+                          <app-icon name="trash" [size]="14" />
+                        </button>
+                      }
+                    } @else if (entry.purchase_id) {
+                      <a class="sd-icon" title="Ouvrir l'achat" [routerLink]="['/achats', entry.purchase_id]">
+                        <app-icon name="view" [size]="14" />
+                      </a>
+                    }
+                  </span>
+                </div>
+              }
+            }
+          </div>
+        </div>
       </div>
-      <div class="modal-body">
-        <app-supplier-form
-          [supplier]="profile()?.supplier ?? null"
-          (save)="saveSupplier($event)"
-          (cancel)="closeEditModal()">
-        </app-supplier-form>
-      </div>
+
+      <!-- ── Colonne de droite ── -->
+      <aside class="sd-side">
+
+        <section class="sd-panel">
+          <h2 class="sd-panel-title">Conditions</h2>
+          <span class="sd-kv">
+            <span>Délai contractuel</span>
+            <strong>{{ contractualDays() ? contractualDays() + ' jours' : '—' }}</strong>
+          </span>
+          <span class="sd-kv"><span>Total réglé</span><strong>{{ (statement()?.summary?.total_paid ?? 0) | number:'1.2-2' }}</strong></span>
+          <span class="sd-kv"><span>Paiements</span><strong>{{ statement()?.summary?.payments_count ?? 0 }}</strong></span>
+          <span class="sd-kv">
+            <span>Dernier achat</span>
+            <strong>{{ statement()?.summary?.last_purchase_date ? (statement()!.summary.last_purchase_date! | date:'dd/MM/yyyy') : '—' }}</strong>
+          </span>
+
+          <p class="sd-note">
+            @if (contractualDays()) {
+              Le délai accordé sert à projeter les échéances en Cash Flow.
+              Au-delà de {{ legalRiskDays }} jours de retard, le règlement relève du risque légal.
+            } @else {
+              Aucun délai contractuel n'est renseigné sur cette fiche : la projection de trésorerie
+              utilisera la moyenne de la maison.
+            }
+          </p>
+        </section>
+
+        <section class="sd-panel">
+          <h2 class="sd-panel-title">Coordonnées</h2>
+          <p class="sd-contact">
+            {{ supplier()?.phone || '—' }}@if (supplier()?.email) { · {{ supplier()!.email }} }<br>
+            {{ supplier()?.address || 'Adresse non renseignée' }}
+            @if (supplier()?.contact_person) { <br>Contact : {{ supplier()!.contact_person }} }
+          </p>
+        </section>
+      </aside>
     </div>
-  </div>
-}
+  }
+</div>
 
 @if (isPaymentModalOpen() && activeId) {
   <app-supplier-payment
     [supplierId]="activeId"
-    [supplierName]="profile()?.supplier?.name ?? ''"
+    [supplierName]="supplier()?.name ?? ''"
     (closed)="closePaymentModal()"
     (saved)="onPaymentSaved()">
   </app-supplier-payment>

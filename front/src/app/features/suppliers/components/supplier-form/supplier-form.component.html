@@ -1,55 +1,94 @@
-<form (ngSubmit)="onSubmit()" #form="ngForm" class="form-container">
-  
-  <div class="form-section">
-    <div class="form-grid">
-      <div class="form-control full-width">
-        <label>Raison Sociale / Nom *</label>
-        <input type="text" name="name" [(ngModel)]="formData.name" required placeholder="Nom du fournisseur">
-      </div>
-      
-      <div class="form-control">
-        <label>Personne de Contact</label>
-        <input type="text" name="contact_person" [(ngModel)]="formData.contact_person" placeholder="Nom du contact">
-      </div>
-      
-      <div class="form-control">
-        <label>Téléphone</label>
-        <input type="text" name="phone" [(ngModel)]="formData.phone" placeholder="Numéro de téléphone">
-      </div>
-      
-      <div class="form-control full-width">
-        <label for="supplier-email">Email</label>
-        <input
-          #emailModel="ngModel"
-          id="supplier-email"
-          type="email"
-          name="email"
-          [(ngModel)]="formData.email"
-          (blur)="normalizeEmail()"
-          inputmode="email"
-          autocomplete="email"
-          spellcheck="false"
-          placeholder="exemple@fournisseur.com">
-        <small *ngIf="emailModel.invalid && (emailModel.dirty || emailModel.touched)" class="error-text">
-          Saisissez une adresse email valide.
-        </small>
-      </div>
-      
-      <div class="form-control full-width">
-        <label>Adresse physique</label>
-        <textarea name="address" [(ngModel)]="formData.address" rows="3" placeholder="Adresse complète..."></textarea>
-      </div>
+<!-- Refonte 2b, gabarit 15a — éditeur plein écran en trois rangées, comme
+     client-form. Six champs seulement : le §5b l'aurait laissé en modale 15b,
+     mais la fiche fournisseur est le jumeau de la fiche client et son éditeur
+     s'ouvre au même endroit, de la même façon. -->
+<div class="sf-editor">
 
-      <div class="form-control">
-        <label>Délai de paiement contractuel (jours)</label>
-        <input type="number" name="payment_terms_days" [(ngModel)]="formData.payment_terms_days" min="0" max="365" placeholder="Ex: 60">
-        <small class="hint-text">Utilisé pour projeter les échéances de règlement en Cash Flow. Laissez vide si non défini.</small>
+  <header class="sf-bar">
+    <span class="sf-identity">
+      <span class="sf-title">{{ supplier ? 'Modifier ' + supplier.name : 'Nouveau fournisseur' }}</span>
+      <span class="sf-meta">
+        @if (supplier) {
+          Compte {{ supplier.id }}@if (supplier.contact_person) { · {{ supplier.contact_person }} }
+        } @else {
+          Le nom suffit à créer la fiche ; tout le reste se complète plus tard.
+        }
+      </span>
+    </span>
+  </header>
+
+  <form (ngSubmit)="onSubmit()" #form="ngForm" id="supplier-editor-form" class="sf-body">
+
+    <div class="sf-main">
+      <h2 class="sf-block-title">Identité</h2>
+      <div class="sf-grid">
+        <label class="sf-field sf-field--wide">
+          <span>Raison sociale / Nom *</span>
+          <input type="text" name="name" id="supplier-name" [(ngModel)]="formData.name" required placeholder="Nom du fournisseur">
+        </label>
+
+        <label class="sf-field">
+          <span>Personne de contact</span>
+          <input type="text" name="contact_person" [(ngModel)]="formData.contact_person" placeholder="Nom du contact">
+        </label>
+
+        <label class="sf-field">
+          <span>Téléphone</span>
+          <input type="text" name="phone" [(ngModel)]="formData.phone" placeholder="Numéro de téléphone">
+        </label>
+
+        <label class="sf-field sf-field--wide">
+          <span>Email</span>
+          <input
+            #emailModel="ngModel"
+            id="supplier-email"
+            type="email"
+            name="email"
+            [(ngModel)]="formData.email"
+            (blur)="normalizeEmail()"
+            inputmode="email"
+            autocomplete="email"
+            spellcheck="false"
+            placeholder="exemple@fournisseur.com">
+          @if (emailModel.invalid && (emailModel.dirty || emailModel.touched)) {
+            <em class="sf-error">Saisissez une adresse email valide.</em>
+          }
+        </label>
+
+        <label class="sf-field sf-field--wide">
+          <span>Adresse physique</span>
+          <textarea name="address" [(ngModel)]="formData.address" rows="3" placeholder="Adresse complète…"></textarea>
+        </label>
       </div>
     </div>
-  </div>
 
-  <div class="form-actions">
-    <button type="button" class="btn btn-secondary" (click)="cancel.emit()">Annuler</button>
-    <button type="submit" class="btn btn-primary" [disabled]="!form.valid">Enregistrer</button>
-  </div>
-</form>
+    <!-- Ce qui engage l'argent tient sa propre colonne, comme sur la fiche
+         client : on ne modifie pas un délai de règlement en passant. -->
+    <aside class="sf-side">
+      <h2 class="sf-block-title">Conditions de règlement</h2>
+
+      <label class="sf-field">
+        <span>Délai contractuel (jours)</span>
+        <input type="number" name="payment_terms_days" id="payment_terms_days"
+               [(ngModel)]="formData.payment_terms_days" min="0" max="365" placeholder="Ex: 60">
+        <em class="sf-hint">
+          Le délai que ce fournisseur accorde. Il sert à projeter les échéances en Cash Flow
+          et à mesurer le dépassement sur la fiche d'achat. Laissé vide, aucun délai n'est opposé.
+        </em>
+      </label>
+
+      <p class="sf-note">
+        Au-delà de 90 jours, un règlement fournisseur en retard relève du risque légal :
+        c'est le seuil que la fiche et l'écran Achats signalent.
+      </p>
+    </aside>
+  </form>
+
+  <footer class="sf-foot">
+    <span class="sf-foot-hint">Champ requis : le nom.</span>
+    <button type="button" class="sf-btn" (click)="cancel.emit()">Annuler</button>
+    <button type="submit" form="supplier-editor-form" class="sf-btn sf-btn--solid" [disabled]="!form.valid">
+      {{ supplier ? 'Mettre à jour' : 'Créer le fournisseur' }}
+    </button>
+  </footer>
+</div>

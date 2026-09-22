@@ -174,21 +174,6 @@
   </div>
 </div>
 
-<div class="modal-overlay" *ngIf="showForm()" (click)="closeForm()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>{{ editingSupplier() ? 'Modifier Fournisseur' : 'Nouveau Fournisseur' }}</h2>
-      <button class="btn-icon" (click)="closeForm()">X</button>
-    </div>
-    <div class="modal-body">
-      <app-supplier-form
-        [supplier]="editingSupplier()"
-        (save)="onFormSubmit($event)"
-        (cancel)="closeForm()">
-      </app-supplier-form>
-    </div>
-  </div>
-</div>
 
 <!-- Refonte 2b, gabarit 15c : la confirmation remplace le confirm() natif. -->
 <app-confirm-delete

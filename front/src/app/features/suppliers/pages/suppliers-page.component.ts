@@ -5,8 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { SupplierService } from '../data-access/supplier.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Supplier, SupplierPayload, PaginatedResponse, SupplierUnpaidRow } from '../models/supplier.model';
-import { SupplierFormComponent } from '../components/supplier-form/supplier-form.component';
+import { Supplier, PaginatedResponse, SupplierUnpaidRow } from '../models/supplier.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
@@ -24,7 +23,7 @@ import {
 @Component({
   selector: 'app-suppliers-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, SupplierFormComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ConfirmDeleteComponent],
   templateUrl: './suppliers-page.component.html',
   styleUrls: ['./suppliers-page.component.scss'],
 })
@@ -92,8 +91,6 @@ export class SuppliersPageComponent implements OnInit {
 
     return applied;
   });
-  showForm = signal(false);
-  editingSupplier = signal<Supplier | null>(null);
 
   unpaidBySupplier = signal<SupplierUnpaidRow[]>([]);
   loadingUnpaid = signal(false);
@@ -209,39 +206,18 @@ export class SuppliersPageComponent implements OnInit {
     }
   }
 
+  /**
+   * Refonte 2b : la fiche fournisseur a son éditeur routé, comme la fiche
+   * client. Les deux entrées y conduisent au lieu d'ouvrir une modale.
+   */
   openAddForm(): void {
-    this.editingSupplier.set(null);
-    this.showForm.set(true);
+    this.router.navigate(['/suppliers/new']);
   }
 
   openEditForm(supplier: Supplier): void {
-    this.editingSupplier.set(supplier);
-    this.showForm.set(true);
+    this.router.navigate(['/suppliers', supplier.id, 'edit']);
   }
 
-  closeForm(): void {
-    this.showForm.set(false);
-    this.editingSupplier.set(null);
-  }
-
-  onFormSubmit(payload: SupplierPayload): void {
-    const editing = this.editingSupplier();
-    if (editing) {
-      this.supplierService.updateSupplier(editing.id, payload).subscribe({
-        next: () => {
-          this.closeForm();
-          this.loadData();
-        },
-      });
-    } else {
-      this.supplierService.createSupplier(payload).subscribe({
-        next: () => {
-          this.closeForm();
-          this.loadData();
-        },
-      });
-    }
-  }
 
   deleteSupplier(supplier: Supplier): void {
     this.pendingDelete.set({

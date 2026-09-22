@@ -1,0 +1,24 @@
+@use '../../_variables' as *;
+
+/* Refonte 2b, étape 8 — la coque de l'éditeur supplier. Elle ne porte que le
+   chargement et les erreurs ; la géométrie des trois rangées appartient au
+   formulaire, qui est seul à connaître son état. */
+.sfp-shell {
+  display: block;
+}
+
+.sfp-loading {
+  margin: 0;
+  padding: 2rem 1.25rem;
+  font-size: 12.5px;
+  color: $text-muted;
+}
+
+.sfp-save-error {
+  margin: 0 0 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border-left: 3px solid $expense-color;
+  background: $overdue-bg;
+  font-size: 0.875rem;
+  color: $alert-ink;
+}
