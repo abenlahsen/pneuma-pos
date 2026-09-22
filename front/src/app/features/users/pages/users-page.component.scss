@@ -1,8 +1,53 @@
+@use '../../_variables' as *;
+
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
+@include layout.list-row-pattern();
 
-/* Refonte 2b, §14c : la cellule qui porte un état occupe toute la ligne et
-   laisse le composant gérer son propre espacement. */
-.state-cell {
-  padding: 0;
+/* Refonte 2b, 9a — Utilisateurs au motif de ligne.
+   Sept colonnes : utilisateur (nom + email en sous-ligne), téléphone,
+   commission, prime, rôle, date de création, actions. */
+.users-grid {
+  grid-template-columns: minmax(0, 1fr) 132px 112px 122px 148px 104px 96px;
+
+  /* Quatre colonnes tombent sous $bp-reduce — téléphone, commission, prime et
+     date : ce sont des qualifiants, pas des critères de lecture. Restent
+     l'utilisateur, son rôle et les actions. */
+  @include below-reduce {
+    grid-template-columns: minmax(0, 1fr) 148px 96px;
+  }
+}
+
+/* Le rôle occupe la place de l'état : c'est le qualifiant qui décide de ce
+   que cette ligne peut faire. */
+.role-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border: 1px solid $border-strong;
+  background: $bg-subtle;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: $text-secondary;
+
+  + .role-badge { margin-left: 4px; }
+}
+
+/* ── Le formulaire dans la coque 15b ─────────────────────────────────────── */
+/* Deux colonnes : huit champs empilés dépasseraient la hauteur d'écran, et le
+   gabarit 15b interdit à une modale de défiler. */
+.uf-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 0.9rem;
+}
+
+.uf-field--wide { grid-column: 1 / -1; }
+
+.uf-input--error { border-color: $expense-color; }
+
+.uf-error {
+  font-size: 11px;
+  font-style: normal;
+  color: $expense-color;
 }

@@ -10,19 +10,21 @@ import { RoleService } from '../../roles/data-access/role.service';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
 import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
+import { ReferentialModalComponent } from '../../../shared/referential-modal/referential-modal.component';
+import { RowLockComponent } from '../../../shared/list-state';
 
 import {
   ActiveFilter,
   ListEmptyComponent,
   ListErrorComponent,
-  SkeletonCellsComponent,
+  SkeletonRowComponent,
   describeLoadError,
 } from '../../../shared/list-state';
 
 @Component({
   selector: 'app-users-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ReferentialModalComponent, ConfirmDeleteComponent],
   templateUrl: './users-page.component.html',
   styleUrls: ['./users-page.component.scss'],
 })
@@ -86,6 +88,35 @@ export class UsersPageComponent implements OnInit {
     private roleService: RoleService,
     public authService: AuthService,
   ) {}
+
+  /**
+   * Refonte 2b, 9a : ce que les colonnes tombées sous $bp-reduce portaient —
+   * téléphone, commission, prime par pneu et date de création. Elles ne
+   * disparaissent pas, elles descendent dans la sous-ligne.
+   */
+  foldedSubLineFor(user: ManagedUser): string {
+    const parts: (string | null)[] = [
+      user.phone || null,
+      user.commission_rate != null ? `commission ${user.commission_rate} %` : null,
+      user.prime_per_tyre != null ? `prime ${user.prime_per_tyre} DH/pneu` : null,
+      user.created_at ? `créé le ${new Date(user.created_at).toLocaleDateString('fr-FR')}` : null,
+    ];
+    return parts.filter((p): p is string => !!p).join(' · ');
+  }
+
+  /**
+   * Le titre de la coque. Calculé ici et non dans la liaison : une apostrophe
+   * échappée dans une expression de gabarit n'est pas analysable par Angular.
+   */
+  formTitle(): string {
+    const user = this.editingUser();
+    return user ? `Modifier ${user.name || "l'utilisateur"}` : 'Nouvel utilisateur';
+  }
+
+  /** En français, zéro prend le singulier : « 1 rôle attribué ». */
+  linkedRolesLabel(): string {
+    return (this.editingUser()?.roles?.length ?? 0) > 1 ? 'rôles attribués' : 'rôle attribué';
+  }
 
   ngOnInit(): void {
     this.loadData();

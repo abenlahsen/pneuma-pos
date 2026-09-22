@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { SidePanelComponent } from '../../../../shared/side-panel/side-panel.component';
 import { IconComponent } from '../../../../shared/icon/icon.component';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HrCharge, HrChargeBatchPayload, HrChargeFilters } from '../../models/hr-charge.model';
@@ -9,7 +10,7 @@ const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Effet', 'Carte banc
 @Component({
   selector: 'app-hr-charge-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, IconComponent],
+  imports: [CommonModule, ReactiveFormsModule, IconComponent, SidePanelComponent],
   templateUrl: './hr-charge-form.component.html',
   styleUrl: './hr-charge-form.component.scss',
 })

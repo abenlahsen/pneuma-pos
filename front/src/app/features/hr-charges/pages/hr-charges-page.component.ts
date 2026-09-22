@@ -13,6 +13,7 @@ import {
   HrChargeUpdatePayload,
 } from '../models/hr-charge.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { RowOverflowComponent } from '../../../shared/row-overflow/row-overflow.component';
 import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
 import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 
@@ -22,14 +23,17 @@ const MONTH_NAMES = [
 ];
 
 import {
+  ActiveFilter,
+  ListEmptyComponent,
   ListErrorComponent,
+  SkeletonRowComponent,
   describeLoadError,
 } from '../../../shared/list-state';
 
 @Component({
   selector: 'app-hr-charges-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, HrChargeFormComponent, IconComponent, ListErrorComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, FormsModule, HrChargeFormComponent, IconComponent, ListErrorComponent, ListEmptyComponent, SkeletonRowComponent, RowOverflowComponent, ConfirmDeleteComponent],
   templateUrl: './hr-charges-page.component.html',
   styleUrl: './hr-charges-page.component.scss',
 })
@@ -51,6 +55,8 @@ export class HrChargesPageComponent implements OnInit {
   // ── Refonte 2b, §14c état 3 : un chargement qui échoue ne doit pas passer
   // pour une absence de données. Cet écran n'est pas une liste filtrée : il ne
   // reçoit que cet état-là, les trois autres n'y auraient rien à dire.
+  readonly skeletonRows = [0, 1, 2, 3, 4, 5, 6, 7];
+
   readonly loadError = signal<string | null>(null);
   readonly loadErrorDetail = signal<string | null>(null);
   readonly lastLoadedAt = signal<Date | null>(null);
@@ -77,6 +83,54 @@ export class HrChargesPageComponent implements OnInit {
   isCurrentMonth = computed(
     () => this.selectedYear() === this.currentYear && this.selectedMonth() === this.currentMonth,
   );
+
+  /**
+   * Les filtres actifs, nommés pour que l'écran vide dise pourquoi il l'est.
+   * Le mois compte parmi eux : une liste vide sur un mois creux n'a pas la
+   * même cause qu'une liste vide sous un filtre d'employé.
+   */
+  readonly activeFilters = computed<ActiveFilter[]>(() => {
+    const applied: ActiveFilter[] = [];
+
+    const employeeId = this.filterEmployeeId();
+    if (employeeId !== null) {
+      const employee = this.filters().employees.find((e) => e.id === employeeId);
+      applied.push({
+        label: `employé ${employee?.name ?? employeeId}`,
+        clear: () => { this.filterEmployeeId.set(null); this.applyFilters(); },
+      });
+    }
+
+    const subcategory = this.filterSubcategory();
+    if (subcategory) {
+      applied.push({
+        label: `type ${subcategory}`,
+        clear: () => { this.filterSubcategory.set(''); this.applyFilters(); },
+      });
+    }
+
+    return applied;
+  });
+
+  resetFilters(): void {
+    this.filterEmployeeId.set(null);
+    this.filterSubcategory.set('');
+    this.applyFilters();
+  }
+
+  /**
+   * Refonte 2b, 9a : ce que les colonnes tombées sous $bp-reduce portaient —
+   * date, compte et description. Le type de charge reste en sous-ligne fixe,
+   * il qualifie la ligne à toutes les largeurs.
+   */
+  foldedSubLineFor(charge: HrCharge): string {
+    const parts: (string | null)[] = [
+      charge.date ? new Date(charge.date).toLocaleDateString('fr-FR') : null,
+      charge.account?.name || null,
+      charge.description || null,
+    ];
+    return parts.filter((p): p is string => !!p).join(' · ');
+  }
 
   /** La répartition complète, du plus lourd au plus léger — la colonne de droite. */
   subcategoryTotals = computed(() => {

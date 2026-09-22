@@ -75,51 +75,68 @@
 
     <!-- ── Le registre ── -->
     <div class="hr-main">
-      <div class="hr-rows">
-        <div class="hr-row hr-row--head">
-          <span>Date</span>
-          <span>Employé</span>
-          <span>Type de charge</span>
-          <span class="hr-num">Montant</span>
-          <span>Compte</span>
-          <span>Description</span>
-          <span></span>
-        </div>
+      <div class="list-grid-header hr-grid">
+        <span>Employé</span>
+        <span class="list-cell--drop">Type de charge</span>
+        <span class="list-cell--drop">Date</span>
+        <span class="text-right">Montant</span>
+        <span class="list-cell--drop">Compte</span>
+        <span class="list-cell--drop">Description</span>
+        <span class="text-right">Actions</span>
+      </div>
 
-        <div class="hr-row" *ngFor="let charge of charges()">
-          <span class="hr-date">{{ charge.date | date: 'dd/MM/yyyy' }}</span>
-          <span class="hr-name">{{ charge.employee_name }}</span>
-          <span class="hr-muted">{{ charge.subcategory }}</span>
-          <span class="hr-num hr-strong">{{ formatAmount(charge.amount) }}</span>
-          <span class="hr-muted">{{ charge.account?.name || '—' }}</span>
-          <span class="hr-desc">{{ charge.description }}</span>
-          <span class="hr-row-actions">
-            <button type="button" class="hr-icon" title="Modifier"
+      <ng-container *ngIf="loading()">
+        <div class="list-grid-row hr-grid" appSkeletonRow [cells]="7" [seed]="i"
+             *ngFor="let row of skeletonRows; let i = index"></div>
+      </ng-container>
+
+      <app-list-empty
+        *ngIf="!loading() && !loadError() && !charges().length"
+        blankTitle="Aucune charge RH enregistrée pour ce mois."
+        noMatchTitle="Aucune charge ne correspond"
+        [filters]="activeFilters()"
+        (clearAll)="resetFilters()" />
+
+      <div class="list-grid-row hr-grid" *ngFor="let charge of charges()">
+        <span class="list-cell--identity">
+          <span class="list-grid-name">{{ charge.employee_name }}</span>
+          <span class="list-grid-sub">{{ charge.subcategory }}</span>
+          <!-- Refonte 2b, 8b : ce que les colonnes tombées portaient. -->
+          <span class="list-grid-sub list-grid-sub--fold">{{ foldedSubLineFor(charge) }}</span>
+        </span>
+
+        <span class="list-cell--drop">{{ charge.subcategory }}</span>
+        <span class="list-cell--drop">{{ charge.date | date: 'dd/MM/yyyy' }}</span>
+        <span class="text-right list-cell--amount">{{ formatAmount(charge.amount) }}</span>
+        <span class="list-cell--drop">{{ charge.account?.name || '—' }}</span>
+        <span class="list-cell--drop">{{ charge.description || '—' }}</span>
+
+        <span class="actions-cell list-cell--actions">
+          <app-row-overflow>
+            <button type="button" class="btn-icon ro-item" title="Modifier"
                     *ngIf="authService.hasPermission('edit hr-charges')" (click)="openEdit(charge)">
-              <app-icon name="edit" [size]="13" />
+              <app-icon name="edit" [size]="15" /><span class="ro-label">Modifier</span>
             </button>
-            <button type="button" class="hr-icon" title="Dupliquer"
+            <button type="button" class="btn-icon ro-item" title="Dupliquer"
                     *ngIf="authService.hasPermission('create hr-charges')" (click)="duplicateCharge(charge)">
-              <app-icon name="package" [size]="13" />
+              <app-icon name="copy" [size]="15" /><span class="ro-label">Dupliquer</span>
             </button>
-            <button type="button" class="hr-icon" title="Supprimer"
+            <button type="button" class="btn-icon ro-item ro-item--danger" title="Supprimer"
                     *ngIf="authService.hasPermission('delete hr-charges')" (click)="deleteCharge(charge)">
-              <app-icon name="trash" [size]="13" />
+              <app-icon name="trash" [size]="15" /><span class="ro-label">Supprimer</span>
             </button>
-          </span>
-        </div>
+          </app-row-overflow>
+        </span>
+      </div>
 
-        <p class="hr-state" *ngIf="!charges().length">Aucune charge RH enregistrée pour ce mois.</p>
-
-        <div class="hr-row hr-row--total" *ngIf="charges().length">
-          <span>Total</span>
-          <span></span>
-          <span></span>
-          <span class="hr-num hr-strong">{{ formatAmount(summary()?.total || 0) }}</span>
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
+      <div class="list-grid-row hr-grid hr-total" *ngIf="charges().length">
+        <span>Total du mois</span>
+        <span class="list-cell--drop"></span>
+        <span class="list-cell--drop"></span>
+        <span class="text-right">{{ formatAmount(summary()?.total || 0) }}</span>
+        <span class="list-cell--drop"></span>
+        <span class="list-cell--drop"></span>
+        <span></span>
       </div>
     </div>
 

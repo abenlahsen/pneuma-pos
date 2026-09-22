@@ -1,11 +1,15 @@
-<div class="modal-overlay" (click)="onCancel()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2><app-icon [name]="editMode ? 'edit' : (charge ? 'copy' : 'plus')" [size]="16" /> {{ editMode ? 'Modifier la charge RH' : (charge ? 'Dupliquer la charge RH' : 'Nouvelle saisie de charges RH') }}</h2>
-      <button (click)="onCancel()" class="btn-close"><app-icon name="close" [size]="14" /></button>
-    </div>
+<!-- Refonte 2b, 9a : la modale écrite à la main passe par la coque de volet
+     15d, comme client-payment. Le tableau de lignes reste un tableau : c'est
+     une saisie en lot, chaque ligne se lit en regard des autres. Élargi à
+     1040 px — sept colonnes de saisie ne tiennent pas dans 520. -->
+<app-side-panel
+  kicker="Charges RH"
+  [title]="editMode ? 'Modifier la charge' : (charge ? 'Dupliquer la charge' : 'Nouvelle saisie')"
+  [subtitle]="lines.length ? lines.length + ' ligne(s) · ' + (totalAmount() | number: '1.2-2') + ' DH' : 'Aucune ligne'"
+  [width]="1040"
+  (dismiss)="onCancel()">
 
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-body">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" id="hr-charge-form">
       <div class="lines-table-wrapper">
         <table class="lines-table" formArrayName="lines">
           <thead>
@@ -72,16 +76,17 @@
 
       <button *ngIf="!editMode" type="button" class="btn-add-line" (click)="addLine()"><app-icon name="plus" [size]="14" /> Ajouter une ligne</button>
 
-      <div class="total-row">
-        Total : <strong>{{ totalAmount() | number: '1.2-2' }} DH</strong>
-      </div>
+      <button *ngIf="!editMode" type="button" class="btn-add-line" (click)="addLine()"><app-icon name="plus" [size]="14" /> Ajouter une ligne</button>
+  </form>
 
-      <div class="modal-footer">
-        <button type="button" (click)="onCancel()" class="btn btn-cancel">Annuler</button>
-        <button type="submit" [disabled]="form.invalid || lines.length === 0" class="btn btn-submit">
-          {{ editMode ? 'Enregistrer' : 'Enregistrer (' + lines.length + ')' }}
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
+  <ng-container actions>
+    <span class="hf-total">
+      Total <strong>{{ totalAmount() | number: '1.2-2' }} DH</strong>
+      <em *ngIf="lines.length">sur {{ lines.length }} ligne(s)</em>
+    </span>
+    <button type="button" (click)="onCancel()" class="hf-btn">Annuler</button>
+    <button type="submit" form="hr-charge-form" [disabled]="form.invalid || lines.length === 0" class="hf-btn hf-btn--solid">
+      {{ editMode ? 'Enregistrer' : 'Enregistrer (' + lines.length + ')' }}
+    </button>
+  </ng-container>
+</app-side-panel>

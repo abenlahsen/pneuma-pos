@@ -28,67 +28,69 @@
   </div>
 
   <div class="card table-card">
-    <div class="table-responsive">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Nom</th>
-            <th>Email</th>
-            <th>Téléphone</th>
-            <th>Commission (%)</th>
-            <th>Prime / pneu (DH)</th>
-            <th>Rôle</th>
-            <th>Date de création</th>
-            <th class="text-center">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Refonte 2b, §14c : chargement, erreur, liste vide. -->
-          <tr *ngIf="loadError()">
-            <td colspan="8" class="state-cell">
-              <app-list-error
-                title="Les utilisateurs n'ont pas pu être chargés."
-                [cause]="loadError()!"
-                [detail]="loadErrorDetail()"
-                [lastLoadedAt]="lastLoadedAt()"
-                (retry)="loadData()" />
-            </td>
-          </tr>
+    <div class="list-grid-header users-grid">
+      <span>Utilisateur</span>
+      <span class="list-cell--drop">Téléphone</span>
+      <span class="list-cell--drop text-right">Commission</span>
+      <span class="list-cell--drop text-right">Prime / pneu</span>
+      <span>Rôle</span>
+      <span class="list-cell--drop">Créé le</span>
+      <span class="text-right">Actions</span>
+    </div>
 
-          <ng-container *ngIf="loading() && users().length === 0">
-            <tr appSkeletonCells [cells]="8" [seed]="i"
-                *ngFor="let row of skeletonRows; let i = index"></tr>
-          </ng-container>
+    <!-- Refonte 2b, §14c état 3 : sans cela, un serveur muet passe pour une
+         absence de données. -->
+    <app-list-error
+      *ngIf="loadError()"
+      title="Les utilisateurs n'ont pas pu être chargés."
+      [cause]="loadError()!"
+      [detail]="loadErrorDetail()"
+      [lastLoadedAt]="lastLoadedAt()"
+      (retry)="loadData()" />
 
-          <tr *ngIf="!loading() && !loadError() && users().length === 0">
-            <td colspan="8" class="state-cell">
-              <app-list-empty
-                blankTitle="Aucun utilisateur enregistré pour le moment."
-                noMatchTitle="Aucun utilisateur ne correspond"
-                [filters]="activeFilters()"
-                (clearAll)="resetFilters()" />
-            </td>
-          </tr>
-          <tr *ngFor="let user of users()">
-            <td>
-              <div class="fw-semibold">{{ user.name }}</div>
-            </td>
-            <td>{{ user.email }}</td>
-            <td>{{ user.phone || '—' }}</td>
-            <td>{{ user.commission_rate != null ? user.commission_rate + '%' : '—' }}</td>
-            <td>{{ user.prime_per_tyre != null ? (user.prime_per_tyre | number:'1.2-2') + ' DH' : '—' }}</td>
-            <td>
-              <span class="role-badge" *ngFor="let role of user.roles">{{ role.name }}</span>
-              <span class="text-muted" *ngIf="user.roles.length === 0">Aucun rôle</span>
-            </td>
-            <td>{{ user.created_at | date:'dd/MM/yyyy' }}</td>
-            <td class="text-center actions-cell">
-              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(user)" title="Modifier" *ngIf="authService.hasPermission('edit users')"><app-icon name="edit" [size]="14" /></button>
-              <button class="btn-icon btn-sm text-danger" (click)="deleteUser(user)" title="Supprimer" *ngIf="authService.hasPermission('delete users')"><app-icon name="trash" [size]="14" /></button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- `*ngIf` et non `[hidden]` : `.list-grid-row` pose `display: grid`, qui
+         l'emporte sur le `display: none` de l'attribut. -->
+    <ng-container *ngIf="loading() && users().length === 0">
+      <div class="list-grid-row users-grid" appSkeletonRow [cells]="7" [seed]="i"
+           *ngFor="let row of skeletonRows; let i = index"></div>
+    </ng-container>
+
+    <app-list-empty
+      *ngIf="!loading() && !loadError() && users().length === 0"
+      blankTitle="Aucun utilisateur enregistré pour le moment."
+      noMatchTitle="Aucun utilisateur ne correspond"
+      [filters]="activeFilters()"
+      (clearAll)="resetFilters()" />
+
+    <div class="list-grid-row users-grid" *ngFor="let user of users()">
+      <span class="list-cell--identity">
+        <span class="list-grid-name">{{ user.name }}</span>
+        <span class="list-grid-sub">{{ user.email }}</span>
+        <!-- Refonte 2b, 8b : ce que les colonnes tombées portaient. -->
+        <span class="list-grid-sub list-grid-sub--fold">{{ foldedSubLineFor(user) }}</span>
+      </span>
+
+      <span class="list-cell--drop">{{ user.phone || '—' }}</span>
+      <span class="list-cell--drop text-right">{{ user.commission_rate != null ? user.commission_rate + ' %' : '—' }}</span>
+      <span class="list-cell--drop text-right">{{ user.prime_per_tyre != null ? (user.prime_per_tyre | number:'1.2-2') : '—' }}</span>
+
+      <!-- Le rôle tient la place de l'état : c'est le qualifiant qui décide de
+           ce que cette ligne peut faire. -->
+      <span class="list-grid-status">
+        <span class="role-badge" *ngFor="let role of user.roles">{{ role.name }}</span>
+        <span class="list-grid-sub" *ngIf="user.roles.length === 0">Aucun rôle</span>
+      </span>
+
+      <span class="list-cell--drop">{{ user.created_at | date:'dd/MM/yyyy' }}</span>
+
+      <span class="actions-cell list-cell--actions">
+        <button class="btn-icon text-primary" (click)="openEditForm(user)" title="Modifier" *ngIf="authService.hasPermission('edit users')"><app-icon name="edit" [size]="15" /></button>
+        <app-row-lock *ngIf="!authService.hasPermission('edit users')"
+          reason="Votre rôle ne permet pas de modifier un utilisateur. Demandez à un administrateur." />
+        <button class="btn-icon text-danger" (click)="deleteUser(user)" title="Supprimer" *ngIf="authService.hasPermission('delete users')"><app-icon name="trash" [size]="15" /></button>
+        <app-row-lock *ngIf="!authService.hasPermission('delete users')"
+          reason="Votre rôle ne permet pas de supprimer un utilisateur. Demandez à un administrateur." />
+      </span>
     </div>
 
     <div class="pagination-wrapper" *ngIf="total() > 0">
@@ -106,58 +108,82 @@
   </div>
 </div>
 
-<div class="modal-overlay" *ngIf="showForm()" (click)="closeForm()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>{{ editingUser() ? 'Modifier Utilisateur' : 'Nouvel Utilisateur' }}</h2>
-      <button class="btn-icon" (click)="closeForm()">X</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Nom</label>
-        <input type="text" class="form-control" [ngModel]="formName()" (ngModelChange)="formName.set($event)" placeholder="Nom complet">
-      </div>
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" class="form-control" [ngModel]="formEmail()" (ngModelChange)="formEmail.set($event)" placeholder="email@example.com" autocomplete="off">
-      </div>
-      <div class="form-group">
-        <label>{{ editingUser() ? 'Nouveau mot de passe (laisser vide pour ne pas changer)' : 'Mot de passe' }}</label>
-        <input type="password" class="form-control" [ngModel]="formPassword()" (ngModelChange)="formPassword.set($event)" placeholder="••••••" autocomplete="new-password">
-      </div>
-      <div class="form-group" *ngIf="formPassword()">
-        <label>Confirmation du mot de passe</label>
-        <input type="password" class="form-control" [class.input-error]="formPassword() && formPasswordConfirmation() && !passwordsMatch()" [ngModel]="formPasswordConfirmation()" (ngModelChange)="formPasswordConfirmation.set($event)" placeholder="••••••" autocomplete="new-password">
-        <small class="text-danger" *ngIf="formPassword() && formPasswordConfirmation() && !passwordsMatch()">Les mots de passe ne correspondent pas</small>
-      </div>
-      <div class="form-group">
-        <label>Téléphone</label>
-        <input type="text" class="form-control" [ngModel]="formPhone()" (ngModelChange)="formPhone.set($event)" placeholder="06 00 00 00 00">
-      </div>
-      <div class="form-group">
-        <label>Taux de commission (%)</label>
-        <input type="number" class="form-control" [ngModel]="formCommissionRate()" (ngModelChange)="formCommissionRate.set($event)" placeholder="0" min="0" max="100" step="0.5">
-      </div>
-      <div class="form-group">
-        <label>Prime / pneu (DH)</label>
-        <input type="number" class="form-control" [ngModel]="formPrimePerTyre()" (ngModelChange)="formPrimePerTyre.set($event)" placeholder="0" min="0" step="0.5">
-      </div>
-      <div class="form-group">
-        <label>Rôle</label>
-        <select class="form-control" [ngModel]="formRole()" (ngModelChange)="formRole.set($event)">
-          <option value="">-- Aucun rôle --</option>
+<!-- Refonte 2b, 9a : la modale écrite en ligne passe par la coque 15b.
+     Huit champs, sous le seuil de dix du §5b — mais rangés en deux colonnes
+     pour que la boîte ne défile pas, ce que le gabarit interdit. -->
+@if (showForm()) {
+  <app-referential-modal
+    referential="utilisateur"
+    [title]="formTitle()"
+    [linked]="editingUser() ? (editingUser()!.roles?.length ?? 0) : null"
+    [linkedLabel]="linkedRolesLabel()"
+    (dismiss)="closeForm()">
+
+    <div class="uf-grid">
+      <label class="rf-field uf-field--wide">
+        <span>Nom *</span>
+        <input type="text" [ngModel]="formName()" (ngModelChange)="formName.set($event)" name="name" placeholder="Nom complet">
+      </label>
+
+      <label class="rf-field uf-field--wide">
+        <span>Email *</span>
+        <input type="email" [ngModel]="formEmail()" (ngModelChange)="formEmail.set($event)" name="email" placeholder="email@example.com" autocomplete="off">
+      </label>
+
+      <label class="rf-field uf-field--wide">
+        <span>{{ editingUser() ? 'Nouveau mot de passe' : 'Mot de passe *' }}</span>
+        <input type="password" [ngModel]="formPassword()" (ngModelChange)="formPassword.set($event)" name="password" placeholder="••••••" autocomplete="new-password">
+        @if (editingUser()) {
+          <em class="rf-hint">Laissé vide, le mot de passe actuel est conservé.</em>
+        }
+      </label>
+
+      @if (formPassword()) {
+        <label class="rf-field uf-field--wide">
+          <span>Confirmation *</span>
+          <input type="password"
+                 [class.uf-input--error]="formPasswordConfirmation() && !passwordsMatch()"
+                 [ngModel]="formPasswordConfirmation()" (ngModelChange)="formPasswordConfirmation.set($event)"
+                 name="password_confirmation" placeholder="••••••" autocomplete="new-password">
+          @if (formPasswordConfirmation() && !passwordsMatch()) {
+            <em class="uf-error">Les deux saisies ne correspondent pas.</em>
+          }
+        </label>
+      }
+
+      <label class="rf-field">
+        <span>Téléphone</span>
+        <input type="text" [ngModel]="formPhone()" (ngModelChange)="formPhone.set($event)" name="phone" placeholder="06 00 00 00 00">
+      </label>
+
+      <label class="rf-field">
+        <span>Rôle</span>
+        <select [ngModel]="formRole()" (ngModelChange)="formRole.set($event)" name="role">
+          <option value="">— Aucun rôle —</option>
           <option *ngFor="let role of roles()" [value]="role.name">{{ role.name }}</option>
         </select>
-      </div>
-      <div class="form-actions">
-        <button class="btn btn-secondary" (click)="closeForm()">Annuler</button>
-        <button class="btn btn-primary" (click)="saveUser()" [disabled]="!formName() || !formEmail() || (!editingUser() && !formPassword()) || (formPassword() && !passwordsMatch())">
-          {{ editingUser() ? 'Mettre à jour' : 'Créer' }}
-        </button>
-      </div>
+      </label>
+
+      <label class="rf-field">
+        <span>Commission (%)</span>
+        <input type="number" [ngModel]="formCommissionRate()" (ngModelChange)="formCommissionRate.set($event)" name="commission_rate" placeholder="0" min="0" max="100" step="0.5">
+      </label>
+
+      <label class="rf-field">
+        <span>Prime / pneu (DH)</span>
+        <input type="number" [ngModel]="formPrimePerTyre()" (ngModelChange)="formPrimePerTyre.set($event)" name="prime_per_tyre" placeholder="0" min="0" step="0.5">
+      </label>
     </div>
-  </div>
-</div>
+
+    <ng-container actions>
+      <button type="button" class="rf-btn" (click)="closeForm()">Annuler</button>
+      <button type="button" class="rf-btn rf-btn--solid" (click)="saveUser()"
+              [disabled]="!formName() || !formEmail() || (!editingUser() && !formPassword()) || (formPassword() && !passwordsMatch())">
+        {{ editingUser() ? 'Mettre à jour' : 'Créer' }}
+      </button>
+    </ng-container>
+  </app-referential-modal>
+}
 
 <!-- Refonte 2b, gabarit 15c : la confirmation remplace le confirm() natif. -->
 <app-confirm-delete

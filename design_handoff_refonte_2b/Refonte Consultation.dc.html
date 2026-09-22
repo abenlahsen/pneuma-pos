@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"><style>body{margin:0;background:#dfe7f2;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}a{color:#c2181f}a:hover{color:#8f1218}code{font:500 11.5px ui-monospace,Menlo,monospace;background:#f4f8fd;border:1px solid #cfdcec;padding:1px 5px}</style></helmet>
+
+<section style="padding:36px 40px 52px;display:flex;flex-direction:column;gap:20px">
+
+<div style="display:flex;align-items:baseline;gap:10px">
+<span style="font:700 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#0c1e33;color:#fff;border-radius:4px;letter-spacing:.06em">18</span>
+<span style="font:700 13px/1.2 'Inter',sans-serif;color:#0c1e33">PRIMES, HISTORIQUE KPI, DEMANDE D'EXPÉDITION</span>
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e">Les trois écrans qui ne rentraient dans aucun gabarit existant. <a href="#18a">18a</a> répond à une question, <a href="#18b">18b</a> se consulte jour par jour, <a href="#18c">18c</a> part chez un tiers.</p>
+</div>
+
+<div id="18a" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter',sans-serif;color:#41546e"><a href="#18a" style="font:700 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(12,30,51,.1);color:#0c1e33;border-radius:5px;text-decoration:none">18a</a>Primes — l'objectif collectif d'abord, la répartition ensuite</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px;margin-bottom:4px">
+<p style="margin:0;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e">L'écran actuel pose l'objectif dans un bandeau vert ou rouge, puis trois cadrans, puis le tableau. Mais la prime est collective : tant que la boutique n'a pas atteint son seuil, personne ne touche rien, et le tableau entier est grisé. La question du milieu de mois n'est pas « combien touche chacun » mais <strong style="font-weight:600;color:#0c1e33">« combien de pneus manque-t-il, et en combien de jours »</strong>. L'écran actuel ne donne ni l'écart ni le rythme.</p>
+</div>
+
+<div style="width:1440px;height:820px;display:grid;grid-template-columns:72px minmax(0,1fr);grid-template-rows:60px minmax(0,1fr);background:#e6edf7;color:#0c1e33;border:1px solid #adc2da;overflow:hidden;box-shadow:0 10px 25px rgba(12,30,51,.14)">
+
+  <div style="grid-column:1/-1;display:flex;align-items:center;gap:16px;padding:0 18px;background:#f4f8fd;border-bottom:1px solid #cfdcec">
+    <img src="assets/logo.png" alt="PNEU.MA" style="height:26px;width:auto;flex-shrink:0">
+    <span style="font-size:15px;font-weight:700;letter-spacing:-.01em">Primes commerciaux</span>
+    <div style="display:flex;align-items:center">
+      <button type="button" title="Mois précédent" style="width:32px;height:32px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13px;cursor:pointer">←</button>
+      <span style="height:32px;padding:0 14px;display:flex;align-items:center;border-top:1px solid #adc2da;border-bottom:1px solid #adc2da;background:#fff;font-size:13px;font-weight:700">Septembre 2026</span>
+      <button type="button" title="Mois suivant" style="width:32px;height:32px;border:1px solid #adc2da;background:#f4f8fd;color:#adc2da;font-family:inherit;font-size:13px;cursor:not-allowed">→</button>
+    </div>
+    <span style="margin-left:auto;font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">Arrêté au 17/09 · 11 jours ouvrés restants</span>
+    <button type="button" style="height:36px;padding:0 13px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Exporter</button>
+    <span style="width:30px;height:30px;background:#ff2d37;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">YB</span>
+  </div>
+
+  <nav style="grid-row:2;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;background:#081627">
+    <a href="#18a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>ACCUEIL</a>
+    <a href="#18a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 3h7l11 11-7 7L3 10V3z"/></svg>VENTES</a>
+    <a href="#18a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M14.5 3.5a5 5 0 0 0-6.3 6.3L3 15v6h6l5.2-5.2a5 5 0 0 0 6.3-6.3l-3.2 3.2-3-3 3.2-3.2z"/></svg>SERVICE</a>
+    <a href="#18a" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/></svg>STOCK</a>
+    <a href="#18a" style="width:56px;height:54px;background:#ff2d37;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M4 20V9M10 20V4M16 20v-8M22 20H2"/></svg>CHIFFRES</a>
+  </nav>
+
+  <main style="grid-column:2;grid-row:2;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) 360px;background:#fff">
+
+    <div style="min-height:0;overflow:hidden;display:flex;flex-direction:column;border-right:1px solid #cfdcec">
+
+      <div style="padding:20px 24px 18px;border-bottom:1px solid #0c1e33">
+        <div style="display:flex;align-items:flex-end;gap:20px">
+          <span>
+            <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Objectif collectif · pneus vendus</span>
+            <span style="display:flex;align-items:baseline;gap:8px;margin-top:5px"><span style="font-size:38px;font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums">697</span><span style="font-size:18px;font-weight:600;color:#4a5c75;font-variant-numeric:tabular-nums">/ 900</span></span>
+          </span>
+          <span style="padding-bottom:3px">
+            <span style="display:block;font-size:13.5px;font-weight:700;color:#8a5a00;font-variant-numeric:tabular-nums">Il manque 203 pneus</span>
+            <span style="display:block;margin-top:2px;font-size:12px;color:#41546e;font-variant-numeric:tabular-nums">soit 18,5 par jour ouvré jusqu'au 30/09</span>
+          </span>
+          <span style="margin-left:auto;text-align:right;padding-bottom:3px">
+            <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#4a5c75">Rythme actuel</span>
+            <span style="display:block;margin-top:4px;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums">46,5 / jour</span>
+            <span style="display:block;margin-top:2px;font-size:11.5px;font-weight:600;color:#15616d">Projection 1 208 — objectif atteint le 22/09</span>
+          </span>
+        </div>
+
+        <div style="margin-top:16px;position:relative;height:30px">
+          <div style="position:absolute;left:0;right:0;top:9px;height:12px;background:#e7eef8"></div>
+          <div style="position:absolute;left:0;top:9px;height:12px;width:57.7%;background:#0c1e33"></div>
+          <div style="position:absolute;left:57.7%;top:9px;height:12px;width:42.3%;background:repeating-linear-gradient(90deg,#adc2da 0 4px,transparent 4px 7px)"></div>
+          <div style="position:absolute;left:74.4%;top:0;bottom:0;width:2px;background:#8a5a00"></div>
+          <span style="position:absolute;left:74.4%;top:-16px;transform:translateX(-50%);font-size:10px;font-weight:700;letter-spacing:.08em;color:#8a5a00;white-space:nowrap">SEUIL 900</span>
+          <span style="position:absolute;left:57.7%;bottom:-16px;transform:translateX(-50%);font-size:10px;font-weight:600;color:#0c1e33;white-space:nowrap;font-variant-numeric:tabular-nums">aujourd'hui 697</span>
+        </div>
+        <p style="margin:22px 0 0;font-size:11.5px;line-height:1.55;color:#4a5c75">La barre pleine est le réalisé. Les hachures sont la projection au rythme des 15 premiers jours. La projection se base sur les ventes et le service auto confondus, comme le calcul de la prime.</p>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;padding:11px 24px;border-bottom:1px solid #cfdcec;background:#f4f8fd">
+        <span style="font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase">Répartition</span>
+        <span style="font-size:11.5px;color:#4a5c75">Prime de 25 DH par pneu, versée à chacun si le seuil collectif est atteint</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 88px 88px 96px 180px 128px;align-items:center;gap:12px;padding:7px 24px;border-bottom:1px solid #0c1e33;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#4a5c75">
+        <span>Commercial</span><span style="text-align:right">Ventes</span><span style="text-align:right">Service</span><span style="text-align:right">Total</span><span>Part du collectif</span><span style="text-align:right">Prime si atteint</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 88px 88px 96px 180px 128px;align-items:center;gap:12px;min-height:56px;padding:0 24px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:14px;font-weight:600">Karim Amrani</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">252</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">32</span>
+        <span style="text-align:right;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">284</span>
+        <span style="display:flex;align-items:center;gap:8px"><span style="flex:1;height:7px;background:#e7eef8"><span style="display:block;height:100%;width:40.7%;background:#0c1e33"></span></span><span style="font-size:11.5px;color:#41546e;font-variant-numeric:tabular-nums;width:40px;text-align:right">40,7 %</span></span>
+        <span style="text-align:right;font-size:14.5px;font-weight:600;font-variant-numeric:tabular-nums;color:#4a5c75">7 100,00</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 88px 88px 96px 180px 128px;align-items:center;gap:12px;min-height:56px;padding:0 24px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:14px;font-weight:600">Samira Bennis</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">208</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">23</span>
+        <span style="text-align:right;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">231</span>
+        <span style="display:flex;align-items:center;gap:8px"><span style="flex:1;height:7px;background:#e7eef8"><span style="display:block;height:100%;width:33.1%;background:#0c1e33"></span></span><span style="font-size:11.5px;color:#41546e;font-variant-numeric:tabular-nums;width:40px;text-align:right">33,1 %</span></span>
+        <span style="text-align:right;font-size:14.5px;font-weight:600;font-variant-numeric:tabular-nums;color:#4a5c75">5 775,00</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 88px 88px 96px 180px 128px;align-items:center;gap:12px;min-height:56px;padding:0 24px;border-bottom:1px solid #e7eef8">
+        <span style="font-size:14px;font-weight:600">Rachid Ouali</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">164</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">18</span>
+        <span style="text-align:right;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">182</span>
+        <span style="display:flex;align-items:center;gap:8px"><span style="flex:1;height:7px;background:#e7eef8"><span style="display:block;height:100%;width:26.1%;background:#0c1e33"></span></span><span style="font-size:11.5px;color:#41546e;font-variant-numeric:tabular-nums;width:40px;text-align:right">26,1 %</span></span>
+        <span style="text-align:right;font-size:14.5px;font-weight:600;font-variant-numeric:tabular-nums;color:#4a5c75">4 550,00</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 88px 88px 96px 180px 128px;align-items:center;gap:12px;min-height:50px;padding:0 24px;border-top:1px solid #0c1e33;background:#f4f8fd">
+        <span style="font-size:13px;font-weight:700">Boutique</span>
+        <span style="text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">624</span>
+        <span style="text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">73</span>
+        <span style="text-align:right;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">697</span>
+        <span></span>
+        <span style="text-align:right;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">17 425,00</span>
+      </div>
+
+      <div style="flex:1;min-height:0;display:flex;align-items:flex-end;padding:14px 24px">
+        <p style="margin:0;font-size:11.5px;line-height:1.6;color:#41546e">Tant que le seuil n'est pas atteint, les primes s'affichent en gris et la colonne s'appelle « prime si atteint ». Elle passe en encre et devient « prime due » le jour où le compteur franchit 900 — sans griser les lignes, qui restent lisibles.</p>
+      </div>
+    </div>
+
+    <aside style="min-height:0;overflow:hidden;display:flex;flex-direction:column;background:#f4f8fd">
+      <div style="padding:15px 18px;border-bottom:1px solid #cfdcec">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Coût de la prime</span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;margin-top:9px;padding:7px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12.5px;color:#41546e">Au réalisé</span><span style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">17 425,00</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12.5px;color:#41546e">À la projection</span><span style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">30 200,00</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0"><span style="font-size:12.5px;color:#41546e">Part de la marge nette</span><span style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">14,2 %</span></span>
+      </div>
+
+      <div style="padding:15px 18px;border-bottom:1px solid #cfdcec">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Six derniers mois</span>
+        <div style="margin-top:10px;display:flex;flex-direction:column">
+          <span style="display:grid;grid-template-columns:72px minmax(0,1fr) 54px;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12px;color:#41546e">Août</span><span style="height:6px;background:#e7eef8"><span style="display:block;height:100%;width:73%;background:#15616d"></span></span><span style="font-size:12px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums;color:#15616d">661 ✓</span></span>
+          <span style="display:grid;grid-template-columns:72px minmax(0,1fr) 54px;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12px;color:#41546e">Juillet</span><span style="height:6px;background:#e7eef8"><span style="display:block;height:100%;width:68%;background:#adc2da"></span></span><span style="font-size:12px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums;color:#4a5c75">612</span></span>
+          <span style="display:grid;grid-template-columns:72px minmax(0,1fr) 54px;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12px;color:#41546e">Juin</span><span style="height:6px;background:#e7eef8"><span style="display:block;height:100%;width:81%;background:#15616d"></span></span><span style="font-size:12px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums;color:#15616d">729 ✓</span></span>
+          <span style="display:grid;grid-template-columns:72px minmax(0,1fr) 54px;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12px;color:#41546e">Mai</span><span style="height:6px;background:#e7eef8"><span style="display:block;height:100%;width:62%;background:#adc2da"></span></span><span style="font-size:12px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums;color:#4a5c75">558</span></span>
+          <span style="display:grid;grid-template-columns:72px minmax(0,1fr) 54px;align-items:center;gap:8px;padding:6px 0"><span style="font-size:12px;color:#41546e">Avril</span><span style="height:6px;background:#e7eef8"><span style="display:block;height:100%;width:77%;background:#15616d"></span></span><span style="font-size:12px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums;color:#15616d">694 ✓</span></span>
+        </div>
+        <p style="margin:9px 0 0;font-size:11px;line-height:1.55;color:#4a5c75">Le seuil d'un mois passé est celui qui s'appliquait alors : il a pu changer.</p>
+      </div>
+
+      <div style="padding:15px 18px">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Règle</span>
+        <p style="margin:8px 0 0;font-size:12px;line-height:1.6;color:#41546e">Seuil 900 pneus par mois pour la boutique. Prime de 25 DH par pneu vendu, ventes et service auto confondus. Réglable dans Paramètres.</p>
+      </div>
+    </aside>
+  </main>
+</div>
+<p style="margin:2px 0 0;max-width:1440px;font:400 12px/1.6 'Inter',sans-serif;color:#4a5c75">Le seuil (900) et le taux (25 DH) sont des exemples. La projection et l'historique demandent deux données que l'API ne renvoie pas encore : le seuil des mois passés et les ventes jour par jour du mois en cours.</p>
+</div>
+
+<div id="18b" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px;margin-top:12px">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter',sans-serif;color:#41546e"><a href="#18b" style="font:700 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(12,30,51,.1);color:#0c1e33;border-radius:5px;text-decoration:none">18b</a>Historique KPI — la liste et le détail côte à côte, sans onglets</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px;margin-bottom:4px">
+<p style="margin:0;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e">Aujourd'hui : un tableau de neuf colonnes, puis un œil par ligne qui ouvre une modale à deux onglets et quatre tableaux. On compare deux jours en ouvrant deux modales l'une après l'autre. La liste devient étroite à gauche et reste visible ; le détail s'affiche à droite, les deux onglets empilés — la liste des jours sert de navigation, les flèches ↑ ↓ passent d'un jour à l'autre.</p>
+</div>
+
+<div style="width:1440px;height:860px;display:grid;grid-template-columns:72px minmax(0,1fr);grid-template-rows:60px minmax(0,1fr);background:#e6edf7;color:#0c1e33;border:1px solid #adc2da;overflow:hidden;box-shadow:0 10px 25px rgba(12,30,51,.14)">
+
+  <div style="grid-column:1/-1;display:flex;align-items:center;gap:16px;padding:0 18px;background:#f4f8fd;border-bottom:1px solid #cfdcec">
+    <img src="assets/logo.png" alt="PNEU.MA" style="height:26px;width:auto;flex-shrink:0">
+    <span style="font-size:15px;font-weight:700;letter-spacing:-.01em">Historique KPI</span>
+    <span style="font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">Instantané pris chaque soir à 23:59 · 262 jours</span>
+    <span style="margin-left:auto;display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 10px;background:#fff;border:1px solid #0c1e33;font-size:12px;font-weight:600">01/09 → 17/09/2026 <span style="color:#4a5c75;font-weight:400">✕</span></span>
+    <button type="button" style="height:36px;padding:0 13px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Exporter</button>
+    <span style="width:30px;height:30px;background:#ff2d37;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">YB</span>
+  </div>
+
+  <nav style="grid-row:2;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;background:#081627">
+    <a href="#18b" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>ACCUEIL</a>
+    <a href="#18b" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M3 3h7l11 11-7 7L3 10V3z"/></svg>VENTES</a>
+    <a href="#18b" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M14.5 3.5a5 5 0 0 0-6.3 6.3L3 15v6h6l5.2-5.2a5 5 0 0 0 6.3-6.3l-3.2 3.2-3-3 3.2-3.2z"/></svg>SERVICE</a>
+    <a href="#18b" style="width:56px;height:54px;color:rgba(230,237,247,.66);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/></svg>STOCK</a>
+    <a href="#18b" style="width:56px;height:54px;background:#ff2d37;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-decoration:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"><path d="M4 20V9M10 20V4M16 20v-8M22 20H2"/></svg>CHIFFRES</a>
+  </nav>
+
+  <main style="grid-column:2;grid-row:2;overflow:hidden;display:grid;grid-template-columns:392px minmax(0,1fr);background:#fff">
+
+    <div style="min-height:0;overflow:hidden;display:flex;flex-direction:column;border-right:1px solid #0c1e33;background:#f4f8fd">
+      <div style="display:grid;grid-template-columns:76px minmax(0,1fr) 98px 60px;align-items:center;gap:10px;padding:7px 16px;border-bottom:1px solid #0c1e33;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#4a5c75">
+        <span>Jour</span><span style="text-align:right">CA</span><span style="text-align:right">Marge nette</span><span style="text-align:right">Pneus</span>
+      </div>
+      <div style="display:grid;grid-template-columns:76px minmax(0,1fr) 98px 60px;align-items:center;gap:10px;min-height:46px;padding:0 16px;border-bottom:1px solid #e7eef8;background:#fff">
+        <span style="font-size:12.5px;font-variant-numeric:tabular-nums">Mer. 17</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">86 420</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">14 380</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">42</span>
+      </div>
+      <div style="display:grid;grid-template-columns:76px minmax(0,1fr) 98px 60px;align-items:center;gap:10px;min-height:46px;padding:0 16px 0 13px;border-bottom:1px solid #e7eef8;border-left:3px solid #0c1e33;background:#e6ebfd">
+        <span style="font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums">Mar. 16</span>
+        <span style="text-align:right;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums">71 240</span>
+        <span style="text-align:right;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums">11 920</span>
+        <span style="text-align:right;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums">38</span>
+      </div>
+      <div style="display:grid;grid-template-columns:76px minmax(0,1fr) 98px 60px;align-items:center;gap:10px;min-height:46px;padding:0 16px;border-bottom:1px solid #e7eef8;background:#fff">
+        <span style="font-size:12.5px;font-variant-numeric:tabular-nums">Lun. 15</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">64 800</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums;color:#c2181f">−2 140</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">35</span>
+      </div>
+      <div style="display:grid;grid-template-columns:76px minmax(0,1fr) 98px 60px;align-items:center;gap:10px;min-height:38px;padding:0 16px;border-bottom:1px solid #e7eef8;background:#f4f8fd">
+        <span style="font-size:12px;color:#4a5c75;font-variant-numeric:tabular-nums">Dim. 14</span>
+        <span style="grid-column:2/-1;font-size:11.5px;color:#4a5c75">Fermé</span>
+      </div>
+      <div style="display:grid;grid-template-columns:76px minmax(0,1fr) 98px 60px;align-items:center;gap:10px;min-height:46px;padding:0 16px;border-bottom:1px solid #e7eef8;background:#fff">
+        <span style="font-size:12.5px;font-variant-numeric:tabular-nums">Sam. 13</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">92 150</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">16 240</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">51</span>
+      </div>
+      <div style="display:grid;grid-template-columns:76px minmax(0,1fr) 98px 60px;align-items:center;gap:10px;min-height:46px;padding:0 16px;border-bottom:1px solid #e7eef8;background:#fff">
+        <span style="font-size:12.5px;font-variant-numeric:tabular-nums">Ven. 12</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">58 300</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">9 810</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">29</span>
+      </div>
+      <div style="display:grid;grid-template-columns:76px minmax(0,1fr) 98px 60px;align-items:center;gap:10px;min-height:46px;padding:0 16px;border-bottom:1px solid #e7eef8;background:#fff">
+        <span style="font-size:12.5px;font-variant-numeric:tabular-nums">Jeu. 11</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">77 600</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">13 050</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">44</span>
+      </div>
+      <div style="display:grid;grid-template-columns:76px minmax(0,1fr) 98px 60px;align-items:center;gap:10px;min-height:46px;padding:0 16px;border-bottom:1px solid #e7eef8;background:#fff">
+        <span style="font-size:12.5px;font-variant-numeric:tabular-nums">Mer. 10</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">69 900</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">12 110</span>
+        <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">37</span>
+      </div>
+      <div style="flex:1;min-height:0;display:flex;align-items:flex-end;padding:12px 16px">
+        <span style="font-size:11px;line-height:1.55;color:#4a5c75">Quatre colonnes au lieu de huit : les autres sont dans le détail. ↑ ↓ passent d'un jour à l'autre.</span>
+      </div>
+    </div>
+
+    <div style="min-height:0;overflow:hidden;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:baseline;gap:12px;padding:15px 24px;border-bottom:1px solid #cfdcec">
+        <span style="font-size:18px;font-weight:700;letter-spacing:-.02em">Mardi 16 septembre 2026</span>
+        <span style="font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">instantané de 23:59</span>
+        <span style="margin-left:auto;display:flex">
+          <button type="button" title="Jour précédent" style="width:32px;height:32px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13px;cursor:pointer">↓</button>
+          <button type="button" title="Jour suivant" style="width:32px;height:32px;border:1px solid #adc2da;border-left:0;background:#fff;color:#0c1e33;font-family:inherit;font-size:13px;cursor:pointer">↑</button>
+        </span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 120px 132px 140px;align-items:center;gap:12px;padding:7px 24px;border-bottom:1px solid #0c1e33;background:#f4f8fd;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#4a5c75">
+        <span>Performance</span><span style="text-align:right">Ce jour</span><span style="text-align:right">Mois à date</span><span style="text-align:right">Année à date</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 120px 132px 140px;align-items:baseline;gap:12px;padding:10px 24px;border-bottom:1px solid #e7eef8"><span style="font-size:13px;font-weight:600">Chiffre d'affaires</span><span style="text-align:right;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">71 240</span><span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">1 197 880</span><span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">10 842 300</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 120px 132px 140px;align-items:baseline;gap:12px;padding:10px 24px;border-bottom:1px solid #e7eef8"><span style="font-size:13px;font-weight:600">Achats</span><span style="text-align:right;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">0</span><span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">902 500</span><span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">7 614 800</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 120px 132px 140px;align-items:baseline;gap:12px;padding:10px 24px;border-bottom:1px solid #e7eef8"><span style="font-size:13px;font-weight:600">Marge brute</span><span style="text-align:right;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">12 110</span><span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">204 520</span><span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">1 896 400</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 120px 132px 140px;align-items:baseline;gap:12px;padding:10px 24px;border-bottom:1px solid #e7eef8"><span style="font-size:13px;font-weight:600">Marge nette</span><span style="text-align:right;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">11 920</span><span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">108 120</span><span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">1 042 600</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 120px 132px 140px;align-items:baseline;gap:12px;padding:10px 24px;border-bottom:1px solid #cfdcec"><span style="font-size:13px;font-weight:600">Pneus vendus</span><span style="text-align:right;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">38</span><span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">655</span><span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums">5 871</span></div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid #cfdcec">
+        <span style="padding:11px 24px;border-right:1px solid #cfdcec"><span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#4a5c75">Valeur du stock</span><span style="display:block;margin-top:3px;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">2 426 100</span></span>
+        <span style="padding:11px 16px;border-right:1px solid #cfdcec"><span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#4a5c75">Trésorerie</span><span style="display:block;margin-top:3px;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">160 010</span></span>
+        <span style="padding:11px 16px;border-right:1px solid #cfdcec"><span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#c2181f">Impayés clients</span><span style="display:block;margin-top:3px;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;color:#c2181f">271 600</span></span>
+        <span style="padding:11px 16px"><span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#4a5c75">Dû fournisseurs</span><span style="display:block;margin-top:3px;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">412 000</span></span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 110px 70px 104px 104px 72px;align-items:center;gap:10px;padding:7px 24px;border-bottom:1px solid #0c1e33;background:#f4f8fd;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#4a5c75">
+        <span>Par commercial · mois à date</span><span style="text-align:right">CA</span><span style="text-align:right">Pneus</span><span style="text-align:right">Marge</span><span style="text-align:right">Impayés</span><span style="text-align:right">Taux</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 110px 70px 104px 104px 72px;align-items:baseline;gap:10px;padding:9px 24px;border-bottom:1px solid #e7eef8"><span style="font-size:13px;font-weight:600">Karim Amrani</span><span style="text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">478 200</span><span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">266</span><span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">83 100</span><span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">142 800</span><span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">17,4 %</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 110px 70px 104px 104px 72px;align-items:baseline;gap:10px;padding:9px 24px;border-bottom:1px solid #e7eef8"><span style="font-size:13px;font-weight:600">Samira Bennis</span><span style="text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">402 100</span><span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">217</span><span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">71 600</span><span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">68 300</span><span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">17,8 %</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 110px 70px 104px 104px 72px;align-items:baseline;gap:10px;padding:9px 24px;border-bottom:1px solid #e7eef8"><span style="font-size:13px;font-weight:600">Rachid Ouali</span><span style="text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">317 580</span><span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">172</span><span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">49 820</span><span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">60 500</span><span style="text-align:right;font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;color:#c2181f">15,7 %</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 110px 70px 104px 104px 72px;align-items:baseline;gap:10px;padding:8px 24px;border-bottom:1px solid #cfdcec;background:#f4f8fd"><span style="font-size:11.5px;font-weight:700;letter-spacing:.06em;color:#4a5c75">dont service auto</span><span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums;color:#41546e">142 300</span><span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums;color:#41546e">96 ordres</span><span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums;color:#41546e">46 100</span><span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums;color:#41546e">8 200</span><span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums;color:#41546e">32,4 %</span></div>
+
+      <div style="flex:1;min-height:0;display:flex;align-items:flex-end;padding:12px 24px">
+        <p style="margin:0;font-size:11.5px;line-height:1.6;color:#41546e">Les deux tableaux par commercial (ventes et service auto) fusionnent : le service devient une ligne de total sous les trois vendeurs. Le détail ventilé par vendeur reste dans Reporting, qui est l'écran fait pour ça.</p>
+      </div>
+    </div>
+  </main>
+</div>
+</div>
+
+<div id="18c" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px;margin-top:12px">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter',sans-serif;color:#41546e"><a href="#18c" style="font:700 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(12,30,51,.1);color:#0c1e33;border-radius:5px;text-decoration:none">18c</a>Demande de modification d'expédition — le document A4 envoyé au transporteur</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px;margin-bottom:4px">
+<p style="margin:0;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e">Le document existant est déjà bien construit : émetteur, destinataire, référence, tableau avant / après, motif, signatures, mentions légales. Il manque une hiérarchie. Tout est au même poids, alors que le transporteur cherche une seule chose : <strong style="font-weight:600;color:#0c1e33">quel colis, et quoi changer</strong>. Le numéro d'expédition devient le plus gros élément de la page, et la nouvelle valeur passe en gras à côté de l'ancienne barrée.</p>
+<p style="margin:0;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e">Aucune couleur d'interface sur la feuille : elle part par fax, par photo WhatsApp ou en impression noir et blanc. Seuls le logo et l'encre.</p>
+</div>
+
+<div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap">
+<div style="width:794px;height:1123px;background:#fff;color:#111;border:1px solid #adc2da;box-shadow:0 10px 25px rgba(12,30,51,.14);padding:56px 60px 44px;box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+
+  <div style="display:flex;align-items:flex-start;gap:24px;padding-bottom:18px;border-bottom:2px solid #111">
+    <img src="assets/logo.png" alt="PNEU.MA" style="height:42px;width:auto;flex-shrink:0">
+    <div style="margin-left:auto;text-align:right">
+      <span style="display:block;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#555">Demande de modification d'expédition</span>
+      <span style="display:block;margin-top:6px;font-size:22px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums">DM-2026-0142</span>
+      <span style="display:block;margin-top:3px;font-size:12px;color:#444;font-variant-numeric:tabular-nums">Casablanca, le 17/09/2026</span>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;padding:18px 0;border-bottom:1px solid #bbb">
+    <div>
+      <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#555">De</span>
+      <span style="display:block;margin-top:6px;font-size:13.5px;font-weight:700">PNEU.MA SARL</span>
+      <span style="display:block;margin-top:2px;font-size:12px;line-height:1.6;color:#333">Bd. Mohammed V, 214 · Casablanca<br>0522 00 00 00 · expedition@pneu.ma</span>
+    </div>
+    <div>
+      <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#555">À l'attention de</span>
+      <span style="display:block;margin-top:6px;font-size:13.5px;font-weight:700">Rapide Log · Service modification</span>
+      <span style="display:block;margin-top:2px;font-size:12px;line-height:1.6;color:#333">0522 44 18 30 · modif@rapidelog.ma</span>
+    </div>
+  </div>
+
+  <div style="margin-top:22px;border:2px solid #111;display:grid;grid-template-columns:minmax(0,1.3fr) repeat(3,minmax(0,1fr))">
+    <div style="padding:14px 16px;border-right:1px solid #111">
+      <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#555">N° d'expédition</span>
+      <span style="display:block;margin-top:6px;font:700 25px/1 ui-monospace,Menlo,monospace;letter-spacing:.02em">RL-88412093</span>
+    </div>
+    <div style="padding:14px 14px;border-right:1px solid #bbb">
+      <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#555">Vente</span>
+      <span style="display:block;margin-top:8px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">n° 4251</span>
+    </div>
+    <div style="padding:14px 14px;border-right:1px solid #bbb">
+      <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#555">Expédiée le</span>
+      <span style="display:block;margin-top:8px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">16/09/2026</span>
+    </div>
+    <div style="padding:14px 14px">
+      <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#555">Colis</span>
+      <span style="display:block;margin-top:8px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">4 pneus</span>
+    </div>
+  </div>
+
+  <div style="margin-top:26px">
+    <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#555">Modifications demandées</span>
+    <div style="margin-top:8px;display:grid;grid-template-columns:150px minmax(0,1fr) 22px minmax(0,1fr);gap:12px;padding:7px 0;border-bottom:1px solid #111;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#555">
+      <span>Élément</span><span>Valeur actuelle</span><span></span><span>Nouvelle valeur</span>
+    </div>
+    <div style="display:grid;grid-template-columns:150px minmax(0,1fr) 22px minmax(0,1fr);gap:12px;align-items:start;padding:12px 0;border-bottom:1px solid #ccc">
+      <span style="font-size:12.5px;font-weight:600">Destinataire</span>
+      <span style="font-size:12.5px;line-height:1.55;color:#666;text-decoration:line-through">Garage Atlas Pneus</span>
+      <span style="font-size:13px;color:#111">→</span>
+      <span style="font-size:13.5px;font-weight:700;line-height:1.55">Atlas Pneus — dépôt Aïn Sebaâ</span>
+    </div>
+    <div style="display:grid;grid-template-columns:150px minmax(0,1fr) 22px minmax(0,1fr);gap:12px;align-items:start;padding:12px 0;border-bottom:1px solid #ccc">
+      <span style="font-size:12.5px;font-weight:600">Adresse de livraison</span>
+      <span style="font-size:12.5px;line-height:1.55;color:#666;text-decoration:line-through">Km 8, route de Rabat, Casablanca</span>
+      <span style="font-size:13px;color:#111">→</span>
+      <span style="font-size:13.5px;font-weight:700;line-height:1.55">Rue 14, zone industrielle Aïn Sebaâ, lot 32, Casablanca</span>
+    </div>
+    <div style="display:grid;grid-template-columns:150px minmax(0,1fr) 22px minmax(0,1fr);gap:12px;align-items:start;padding:12px 0;border-bottom:1px solid #ccc">
+      <span style="font-size:12.5px;font-weight:600">Téléphone</span>
+      <span style="font-size:12.5px;line-height:1.55;color:#666;text-decoration:line-through;font-variant-numeric:tabular-nums">0661 24 88 03</span>
+      <span style="font-size:13px;color:#111">→</span>
+      <span style="font-size:13.5px;font-weight:700;line-height:1.55;font-variant-numeric:tabular-nums">0661 24 88 17</span>
+    </div>
+  </div>
+
+  <div style="margin-top:24px">
+    <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#555">Motif</span>
+    <p style="margin:7px 0 0;font-size:12.5px;line-height:1.65;color:#222">Le client a demandé une livraison sur son second dépôt, où le montage est prévu. Merci de modifier l'expédition avant la tournée du 18/09.</p>
+  </div>
+
+  <div style="margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:28px">
+    <div style="height:118px;border:1px solid #111;padding:10px 12px;display:flex;flex-direction:column">
+      <span style="font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#555">Cachet et signature de l'expéditeur</span>
+      <span style="margin-top:auto;font-size:11px;color:#555">Y. Benali · responsable expéditions</span>
+    </div>
+    <div style="height:118px;border:1px dashed #888;padding:10px 12px;display:flex;flex-direction:column">
+      <span style="font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#555">Réservé au transporteur</span>
+      <span style="margin-top:auto;display:flex;gap:18px;font-size:11px;color:#555"><span>☐ Acceptée</span><span>☐ Refusée</span><span>Date : ____ / ____</span></span>
+    </div>
+  </div>
+
+  <div style="margin-top:22px;padding-top:10px;border-top:1px solid #bbb;display:flex;flex-wrap:wrap;gap:4px 16px;font-size:9.5px;color:#555;font-variant-numeric:tabular-nums">
+    <span>PNEU.MA SARL</span><span>RC 481223</span><span>ICE 002345678000091</span><span>IF 40218873</span><span>CNSS 8812340</span><span>Patente 34102218</span>
+  </div>
+</div>
+
+<div style="flex:1;min-width:280px;max-width:420px;display:flex;flex-direction:column;gap:10px">
+  <p style="margin:0;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Ce qui change par rapport au document actuel</strong></p>
+  <p style="margin:0;font:400 12px/1.65 'Inter',sans-serif;color:#41546e">Le numéro d'expédition passe dans un cadre épais, en chasse fixe et en grand. C'est ce que le transporteur saisit dans son système.</p>
+  <p style="margin:0;font:400 12px/1.65 'Inter',sans-serif;color:#41546e">L'ancienne valeur est barrée et grisée, la nouvelle en gras, avec une flèche entre les deux. Ça reste lisible même en photo floue.</p>
+  <p style="margin:0;font:400 12px/1.65 'Inter',sans-serif;color:#41546e">La case transporteur gagne « acceptée / refusée » et une date. Le document revient signé, ce qui sert de preuve en cas de litige.</p>
+  <p style="margin:0;font:400 12px/1.65 'Inter',sans-serif;color:#41546e">Il ajoute deux champs absents aujourd'hui : le nombre de colis et le signataire. Le reste reprend les champs de <code>shipment-change-print</code> tels quels.</p>
+  <p style="margin:0;font:400 12px/1.65 'Inter',sans-serif;color:#41546e">L'aperçu à l'écran perd sa modale : il s'ouvre sur sa propre route, avec Télécharger PDF et Imprimer dans la barre, comme le relevé client.</p>
+</div>
+</div>
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 12.5px/1.65 'Inter',sans-serif;color:#41546e">Les six autres modules jamais redessinés (<code>users</code>, <code>partners</code>, <code>accounts</code>, <code>hr-charges</code>, <code>activity-log</code>, la liste et le formulaire de <code>shipment-changes</code>) passent par les gabarits existants : mixin de ligne pour les listes, coque 15b pour les formulaires courts, volet 15d pour ceux qui portent un tableau de lignes.</p>
+</div>
+
+</section>
+
+</x-dc>
+</body>
+</html>

@@ -1,17 +1,6 @@
 @use '../../../_variables' as *;
 
 /* ---------- Modal Overlay ---------- */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  padding: 1rem;
-  animation: fadeIn 0.2s ease;
-}
 
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -23,50 +12,9 @@
   to { opacity: 1; }
 }
 
-.modal-content {
-  background: #fff;
-  border-radius: 0;
-  width: 100%;
-  max-width: 960px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: $shadow-modal;
-  animation: slideUp 0.25s ease;
-}
 
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid $border-color;
 
-  h2 {
-    margin: 0;
-    font-size: 1.15rem;
-    color: $text-dark;
-  }
-}
 
-.btn-close {
-  background: none;
-  border: none;
-  font-size: 1.1rem;
-  color: $text-light;
-  cursor: pointer;
-  padding: 0.3rem 0.5rem;
-  border-radius: 0;
-  transition: all 0.15s;
-
-  &:hover {
-    background: $bg-body;
-    color: $text-dark;
-  }
-}
-
-.modal-body {
-  padding: 1.5rem;
-}
 
 /* ---------- Lines table ---------- */
 .lines-table-wrapper {
@@ -154,59 +102,48 @@
   }
 }
 
-.total-row {
-  margin-top: 1rem;
-  text-align: right;
-  font-size: 0.95rem;
-  color: $text-dark;
-
-  strong { color: $primary-dark; }
-}
 
 /* ---------- Modal Footer ---------- */
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid $border-color;
-  margin-top: 1rem;
-}
 
-.btn-cancel {
-  background: $bg-body;
-  color: $text-muted;
-  border: 1px solid $border-color;
-  padding: 0.55rem 1.25rem;
-  border-radius: 0;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.15s;
 
-  &:hover { background: $border-color; }
-}
-
-.btn-submit {
-  background: $primary;
-  color: #fff;
-  border: none;
-  padding: 0.55rem 1.5rem;
-  border-radius: 0;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover:not(:disabled) {
-    box-shadow: none;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
 
 @media (max-width: 640px) {
   .modal-content { max-height: 95vh; }
+}
+
+/* ── Refonte 2b, 9a : ce que la coque de volet ne prend pas ──────────────── */
+
+.hf-total {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: $text-muted;
+  font-variant-numeric: tabular-nums;
+
+  strong { font-size: 14px; color: $text-dark; }
+
+  em {
+    font-style: normal;
+    margin-left: 6px;
+  }
+}
+
+.hf-btn {
+  padding: 8px 16px;
+  border: 1px solid $border-color;
+  background: $bg-card;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $text-dark;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  &--solid {
+    border-color: $text-dark;
+    background: $text-dark;
+    color: $bg-card;
+  }
 }
