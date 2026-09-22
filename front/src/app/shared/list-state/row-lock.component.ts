@@ -26,8 +26,16 @@ import { IconComponent } from '../icon/icon.component';
       <app-icon name="lock" [size]="14" />
     </span>
   `,
+  // La taille vit ici et non dans le mixin de _page-layout : celui-ci écrit
+  // `.list-cell--actions .list-grid-lock`, qui ne pouvait pas atteindre ce
+  // cadenas pour deux raisons cumulées — la classe rendue est `.rl`, et le
+  // DOM interne d'un composant enfant ne porte pas l'attribut `_ngcontent-*`
+  // de la page, si bien qu'une feuille encapsulée ne le sélectionne jamais.
+  // Un composant est seul à pouvoir dimensionner son propre rendu.
   styles: [
     `
+      @use '../../breakpoints' as *;
+
       .rl {
         display: inline-flex;
         align-items: center;
@@ -38,6 +46,14 @@ import { IconComponent } from '../icon/icon.component';
         background: #f4f8fd;
         color: #8fa3bd;
         cursor: not-allowed;
+
+        // Même cible que les boutons voisins sous le seuil de changement de
+        // forme, sinon la colonne d'actions cesse d'avoir une largeur
+        // constante — ce que ce cadenas existe précisément pour garantir.
+        @include below-reshape {
+          width: $touch-target-mobile;
+          height: $touch-target-mobile;
+        }
       }
     `,
   ],

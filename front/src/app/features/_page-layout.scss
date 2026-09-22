@@ -104,7 +104,7 @@
       border-radius: 0;
       cursor: pointer;
       transition: all 0.18s;
-      &:hover { background: #fff0f0; color: $expense-color; border-color: #fecaca; }
+      &:hover { background: $overdue-bg; color: $expense-color; border-color: $expense-color; }
     }
 
     &-sm {
@@ -191,6 +191,28 @@
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
     margin-bottom: 1.5rem;
+
+    // Refonte 2b, 8b : cinq cellules deviennent trois sous $bp-reduce, deux
+    // sous $bp-reshape. `auto-fit` seul rétrécissait les cadrans sans jamais
+    // en retirer, jusqu'à rendre les chiffres illisibles.
+    //
+    // La cellule qui porte l'impayé ou le montant dû ne tombe jamais : c'est
+    // le seul chiffre sur lequel on agit. Un écran la marque .summary-card--keep
+    // et range les autres dans l'ordre d'importance décroissante — le repli
+    // retire par la fin.
+    @include below-reduce {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+
+      .summary-card:nth-child(n + 4):not(.summary-card--keep) { display: none; }
+    }
+
+    @include below-reshape {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+
+      .summary-card:nth-child(n + 3):not(.summary-card--keep) { display: none; }
+    }
   }
 
   .summary-card {
@@ -207,8 +229,11 @@
 
     &.income  .card-icon { background: rgba(255, 45, 55, 0.08);  color: $primary; }
     &.expense .card-icon { background: rgba($expense-color, 0.08);  color: $expense-color; }
-    &.balance .card-icon { background: rgba($income-color, 0.1);  color: #059669; }
-    &.margin  .card-icon { background: rgba(139, 92, 246, 0.1);  color: #7c3aed; }
+    &.balance .card-icon { background: rgba($income-color, 0.1);  color: $income-color; }
+    // La marge n'est ni une entrée ni une sortie d'argent : le violet
+    // Tailwind n'a pas d'équivalent 2b, et lui en inventer un romprait la
+    // règle « une couleur = un sens ». Neutre.
+    &.margin  .card-icon { background: rgba($text-secondary, 0.1);  color: $text-secondary; }
     &.info    .card-icon { background: rgba($invoice-color, 0.1);  color: $invoice-color; }
     &.balance.negative .card-icon { background: rgba($expense-color, 0.08); color: $expense-color; }
 
@@ -306,7 +331,7 @@
         cursor: pointer;
         flex-shrink: 0;
         transition: all 0.18s;
-        &:hover { background: #fff0f0; color: $expense-color; border-color: #fecaca; }
+        &:hover { background: $overdue-bg; color: $expense-color; border-color: $expense-color; }
       }
     }
 
@@ -485,13 +510,13 @@
     letter-spacing: 0.02em;
     white-space: nowrap;
 
-    &-primary   { background: rgba(255, 45, 55, 0.1);   color: #c0101a; }
-    &-success   { background: rgba($income-color, 0.1);  color: #065f46; }
-    &-danger    { background: rgba($expense-color, 0.1);   color: #b91c1c; }
-    &-warning   { background: rgba(245, 158, 11, 0.12); color: #92400e; }
-    &-secondary { background: rgba(100, 116, 139, 0.1); color: #475569; }
-    &-blue      { background: rgba($invoice-color, 0.1);  color: #1d4ed8; }
-    &-purple    { background: rgba(139, 92, 246, 0.1);  color: #6d28d9; }
+    &-primary   { background: rgba(255, 45, 55, 0.1);   color: $primary-dark; }
+    &-success   { background: rgba($income-color, 0.1);  color: $income-color; }
+    &-danger    { background: rgba($expense-color, 0.1);   color: $expense-color; }
+    &-warning   { background: rgba($warning-color, 0.12); color: $warning-color; }
+    &-secondary { background: rgba($text-secondary, 0.1); color: $text-secondary; }
+    &-blue      { background: rgba($invoice-color, 0.1);  color: $invoice-color; }
+    &-purple    { background: rgba($text-secondary, 0.1);  color: $text-secondary; }
   }
 
   // Payment-method badges (.badge-method / .method-badges) are NOT defined here:
@@ -523,19 +548,20 @@
     font-size: 0.7rem;
     font-weight: 700;
     background: rgba($income-color, 0.1);
-    color: #065f46;
-    &.inactive { background: rgba($expense-color, 0.1); color: #b91c1c; }
+    color: $income-color;
+    &.inactive { background: rgba($expense-color, 0.1); color: $expense-color; }
   }
 
   // ── Sale/purchase status colors ───────────────────────────────────────────
-  .bg-en-cours  { background: rgba(245, 158, 11, 0.1);  color: #92400e; }
-  .bg-livre     { background: rgba($income-color, 0.12); color: #065f46; }
-  .bg-monte     { background: rgba($income-color, 0.18); color: #047857; }
+  .bg-en-cours  { background: rgba($warning-color, 0.1);  color: $warning-color; }
+  .bg-livre     { background: rgba($income-color, 0.12); color: $income-color; }
+  .bg-monte     { background: rgba($income-color, 0.18); color: $income-color; }
   .bg-terminee,
-  .bg-termine   { background: rgba($invoice-color, 0.1);  color: #1d4ed8; }
-  .bg-annule    { background: rgba($expense-color, 0.1);   color: #b91c1c; }
-  .bg-recu      { background: rgba(139, 92, 246, 0.1);  color: #6d28d9; }
-  .bg-retour    { background: rgba(100, 116, 139, 0.1); color: #475569; }
+  .bg-termine   { background: rgba($invoice-color, 0.1);  color: $invoice-color; }
+  .bg-annule    { background: rgba($expense-color, 0.1);   color: $expense-color; }
+  // « Reçu » était violet pour la même raison : neutre aussi.
+  .bg-recu      { background: rgba($text-secondary, 0.1);  color: $text-secondary; }
+  .bg-retour    { background: rgba($text-secondary, 0.1); color: $text-secondary; }
 
   // ── Link helpers ──────────────────────────────────────────────────────────
   .client-link, .link-text {
@@ -604,7 +630,7 @@
   .fw-semibold  { font-weight: 600; font-variant-numeric: tabular-nums; }
   .text-muted   { color: $text-muted; }
   .text-small   { font-size: 0.875rem; }
-  .text-success { color: #059669; }
+  .text-success { color: $income-color; }
   .text-danger  { color: $expense-color; }
   .text-primary { color: $primary; }
 
@@ -613,7 +639,7 @@
     margin: 0 0 1rem;
     padding: 0.75rem 1rem;
     border-radius: 0;
-    &.error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; font-size: 0.875rem; }
+    &.error { background: $overdue-bg; color: $expense-color; border: 1px solid $expense-color; font-size: 0.875rem; }
   }
 
   .export-error {
@@ -876,5 +902,110 @@
   border: 1px solid $border-subtle;
   background: $bg-subtle;
   color: $border-color;
+}
+
+// ── Repli (refonte 2b, 8b — gabarits 14a et 14b) ───────────────────────────
+//
+// Le repli vit ici et nulle part ailleurs : c'est ce qui permet de traiter
+// les 25 listes d'un coup. Un écran ne déclare que deux choses — quelles
+// colonnes tombent, et sa nouvelle grille sous le seuil :
+//
+//   .ma-grille { grid-template-columns: 52px 84px minmax(0,1fr) 118px 112px; }
+//   @include below-reduce { .ma-grille { grid-template-columns: 84px minmax(0,1fr) 118px; } }
+//
+// et marque ses cellules :
+//
+//   .list-cell--drop      la cellule tombe sous $bp-reduce
+//   .list-cell--identity  le libellé et sa sous-ligne (survit partout)
+//   .list-cell--amount    le montant (survit partout)
+//   .list-cell--actions   les boutons
+//   .list-grid-status     l'état (classe déjà existante)
+//
+// Ce que la cellule tombée portait rejoint la sous-ligne : le CSS ne déplace
+// pas de contenu, l'écran le met donc dans un .list-grid-sub--fold que le
+// mixin ne montre qu'une fois la colonne tombée.
+
+.list-cell--identity { min-width: 0; }
+
+// Visible seulement quand des colonnes sont tombées — sinon l'information
+// serait écrite deux fois sur la même ligne.
+.list-grid-sub--fold { display: none; }
+
+@include below-reduce {
+  .list-grid-header,
+  .list-grid-row {
+    gap: 10px;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .list-grid-row { min-height: $list-row-height-reduced; }
+
+  .list-cell--drop { display: none; }
+
+  .list-grid-sub--fold { display: block; }
+
+  // Au-delà de deux boutons, la colonne d'actions passe derrière un menu ⋯
+  // — c'est l'écran qui monte le menu, le mixin ne fait que cacher le reste.
+  .list-cell--actions .list-action--overflow { display: none; }
+}
+
+// ── Sous $bp-reshape : la ligne cesse d'être une grille ────────────────────
+// Deux rangées — libellé et montant, puis état et boutons. Toute cellule non
+// nommée disparaît : à cette largeur, ce qui n'est pas l'une des quatre n'a
+// pas de place, et la sous-ligne porte déjà les qualifiants.
+@include below-reshape {
+  .list-grid-header { display: none; }
+
+  .list-grid-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'identity amount'
+      'status   actions';
+    align-items: start;
+    row-gap: 9px;
+    column-gap: 12px;
+    min-height: 0;
+    padding: 13px 14px;
+
+    > * { display: none; }
+
+    > .list-cell--identity {
+      display: block;
+      grid-area: identity;
+    }
+
+    > .list-cell--amount {
+      display: block;
+      grid-area: amount;
+      text-align: right;
+      font-size: 15px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    > .list-grid-status {
+      display: block;
+      grid-area: status;
+      align-self: center;
+    }
+
+    > .list-cell--actions {
+      display: flex;
+      grid-area: actions;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+  }
+
+  // Les cibles passent à 38 px : c'est la mesure du gabarit 14b.
+  .list-cell--actions .btn-icon,
+  .list-cell--actions .list-grid-lock {
+    width: $touch-target-mobile;
+    height: $touch-target-mobile;
+  }
+
+  .list-grid-name { font-size: 14.5px; }
 }
 }

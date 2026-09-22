@@ -6,6 +6,7 @@ import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../../core/services/auth.service';
 import { ListContextService } from '../../../core/services/list-context.service';
+import { RowOverflowComponent } from '../../../shared/row-overflow/row-overflow.component';
 import { PaymentPanelComponent } from '../payment-panel/payment-panel.component';
 import { Sale, SaleFilters, SaleSummary } from '../models/sale.model';
 import { SALE_STATUSES, SALE_STATUS_LABELS, SALE_STATUS_TRANSITIONS, SaleStatus } from '../../../core/constants/status.constants';
@@ -29,7 +30,7 @@ import {
 @Component({
   selector: 'app-sales-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, PaymentPanelComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, FormsModule, RouterLink, PaymentPanelComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, RowOverflowComponent, ConfirmDeleteComponent],
   templateUrl: './sales-page.component.html',
   styleUrl: './sales-page.component.scss',
 })
@@ -347,6 +348,28 @@ export class SalesPageComponent implements OnInit {
    * Refonte 2b, 6b : le prix d'achat et la marge passent sous permission. La
    * liste doit suivre la fiche, sinon le garde-fou ne garde rien.
    */
+  /**
+   * Refonte 2b, 8b : ce que les colonnes tombées sous $bp-reduce portaient —
+   * n° de vente, quantité, marge et statut de livraison (gabarit 14a). Elles
+   * ne disparaissent pas, elles descendent dans la sous-ligne.
+   *
+   * La marge n'y figure que sous permission, comme dans la colonne : replier
+   * un écran ne doit pas rouvrir ce que le garde-fou ferme.
+   */
+  foldedSubLineFor(sale: Sale): string {
+    const parts: (string | null)[] = [
+      `N° ${sale.id}`,
+      `${sale.total_quantity ?? 0} art.`,
+      sale.status ? SALE_STATUS_LABELS[sale.status as SaleStatus] ?? sale.status : null,
+    ];
+
+    if (this.canSeeMargin()) {
+      parts.push(`marge ${Math.round(Number(sale.margin ?? 0))} DH`);
+    }
+
+    return parts.filter((p): p is string => !!p).join(' · ');
+  }
+
   canSeeMargin(): boolean {
     return this.authService.hasPermission('view margins');
   }

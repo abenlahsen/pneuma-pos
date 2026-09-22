@@ -1,0 +1,130 @@
+@use '../../features/variables' as *;
+
+/* Refonte 2b, 8b — le menu ⋯ d'une ligne de liste.
+   Deux rendus d'un même contenu : en ligne au-dessus du seuil de réduction,
+   replié derrière un bouton en dessous. */
+
+:host {
+  display: contents;
+}
+
+/* Le ⋯ n'existe pas tant que la place ne manque pas. */
+.ro-toggle {
+  display: none;
+}
+
+/* `display: contents` fait disparaître ce conteneur de la mise en page : les
+   boutons projetés deviennent enfants directs de la rangée d'actions et s'y
+   alignent comme s'ils y avaient été écrits. */
+.ro-items {
+  display: contents;
+}
+
+@include below-reduce {
+  :host {
+    display: inline-flex;
+    position: relative;
+  }
+
+  .ro-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: $touch-target-reduced;
+    height: $touch-target-reduced;
+    border: 1px solid $border-color;
+    background: $bg-card;
+    color: $text-dark;
+    cursor: pointer;
+
+    &--on {
+      border-color: $text-dark;
+      background: $text-dark;
+      color: $bg-card;
+    }
+  }
+
+  .ro-items {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 60;
+    min-width: 208px;
+    flex-direction: column;
+    padding: 4px;
+    border: 1px solid $text-dark;
+    background: $bg-card;
+    /* La seule élévation légitime du système, celle des surfaces qui flottent
+       réellement au-dessus du reste (handoff §5d). */
+    box-shadow: $shadow-modal;
+
+    &--open { display: flex; }
+  }
+
+  /* Les actions projetées cessent d'être des boutons-icônes carrés pour
+     devenir des lignes de menu, libellé compris. */
+  ::ng-deep .ro-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    min-height: $touch-target-reduced;
+    padding: 0 10px;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: $text-dark;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover { background: $bg-subtle; }
+
+    &:disabled,
+    &[disabled] {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    &--danger { color: $expense-color; }
+  }
+
+  /* Le sélecteur de statut : une ligne de menu qui porte un champ. */
+  ::ng-deep .ro-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 7px 10px;
+    border-top: 1px solid $border-subtle;
+
+    > span {
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: $text-muted;
+    }
+
+    select {
+      height: $touch-target-reduced;
+      padding: 0 8px;
+      border: 1px solid $border-color;
+      background: $bg-card;
+      font: inherit;
+      font-size: 13px;
+      color: $text-dark;
+
+      &:disabled { opacity: 0.45; cursor: not-allowed; }
+    }
+  }
+}
+
+@include below-reshape {
+  .ro-toggle {
+    width: $touch-target-mobile;
+    height: $touch-target-mobile;
+  }
+}

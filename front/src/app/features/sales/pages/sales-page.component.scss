@@ -151,6 +151,20 @@
   &--no-margin {
     grid-template-columns: 52px 84px minmax(0, 1fr) 78px 118px 98px 112px 120px;
   }
+
+  /* Refonte 2b, 8b : quatre colonnes tombent sous $bp-reduce — n° de vente,
+     quantité, marge et statut de livraison (gabarit 14a). Ce qui reste :
+     date, client, total, paiement, actions. La grille ne change pas de
+     nature, elle compte cinq pistes au lieu de neuf.
+
+     Une seule déclaration pour les deux variantes : la colonne Marge tombe de
+     toute façon ici, `--no-margin` n'a donc plus rien à retrancher. */
+  @include below-reduce {
+    &,
+    &--no-margin {
+      grid-template-columns: 84px minmax(0, 1fr) 118px 98px 120px;
+    }
+  }
 }
 
 .pagination-totals {
@@ -169,4 +183,38 @@
   font-weight: 600;
   color: #4a5c75;
   &.margin-low { color: #c2181f; }
+}
+
+/* ── Refonte 2b, 8b : le menu ⋯ ─────────────────────────────────────────── */
+
+/* Le libellé accompagne l'icône dans le menu déroulant, et nulle part
+   ailleurs : sur la ligne, l'infobulle suffit et la place manque. */
+.ro-label { display: none; }
+
+@include below-reduce {
+  .ro-label { display: inline; }
+}
+
+/* Gabarit 14b : sous le seuil de changement de forme, la rangée du bas porte
+   l'état. Le statut de livraison rejoint la cellule d'état du paiement plutôt
+   que de lui disputer sa zone de grille — deux textes, un seul emplacement.
+   Sa modification reste dans le menu ⋯, où le doigt la trouve sans viser un
+   <select> de 98 px. */
+.cell-delivery-status { display: none; }
+
+@include below-reshape {
+  .cell-delivery-status {
+    display: inline;
+    margin-left: 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: $text-secondary;
+
+    &::before {
+      content: '·';
+      margin-right: 8px;
+      color: $border-color;
+    }
+  }
 }

@@ -45,7 +45,7 @@
       </div>
     </div>
 
-    <div class="card summary-card alert">
+    <div class="card summary-card alert summary-card--keep">
       <div class="card-icon"><app-icon name="clock" [size]="20" /></div>
       <div class="card-content">
         <p class="card-label">Impayé</p>
@@ -229,20 +229,24 @@
     <div class="list-grid-row sales-grid" [class.sales-grid--no-margin]="!canSeeMargin()"
          *ngFor="let sale of sales()"
          [class.list-grid-row--action]="sale.payment_status === 'NON PAYE'">
-      <span class="cell-id">{{ sale.id }}</span>
+      <span class="cell-id list-cell--drop">{{ sale.id }}</span>
       <span>{{ sale.date | date:'dd/MM/yy' }}</span>
-      <span style="min-width: 0">
+      <span class="list-cell--identity">
         <span class="list-grid-name">
           <a *ngIf="sale.client_id" [routerLink]="['/clients', sale.client_id]">{{ getClientName(sale) }}</a>
           <ng-container *ngIf="!sale.client_id">{{ getClientName(sale) }}</ng-container>
           <span class="list-grid-tag" *ngIf="sale.with_invoice">FACTURE</span>
         </span>
         <span class="list-grid-sub">{{ subLineFor(sale) || '-' }}</span>
+        <!-- Refonte 2b, 8b : ce que les colonnes tombées portaient. Le CSS ne
+             déplace pas de contenu ; le mixin ne fait que montrer cette
+             sous-ligne une fois les colonnes retirées. -->
+        <span class="list-grid-sub list-grid-sub--fold">{{ foldedSubLineFor(sale) }}</span>
       </span>
-      <span class="text-right">{{ sale.total_quantity }}</span>
-      <span class="text-right fw-semibold">{{ sale.total_sale | number:'1.2-2' }}</span>
+      <span class="text-right list-cell--drop">{{ sale.total_quantity }}</span>
+      <span class="text-right fw-semibold list-cell--amount">{{ sale.total_sale | number:'1.2-2' }}</span>
       @if (canSeeMargin()) {
-        <span class="text-right">
+        <span class="text-right list-cell--drop">
           {{ sale.margin | number:'1.2-2' }}
           <span class="margin-pct" [class]="marginClass(sale)" *ngIf="(sale.total_sale ?? 0) > 0">{{ marginPct(sale) | number:'1.0-1' }}%</span>
         </span>
@@ -252,8 +256,12 @@
             [class.list-grid-status--unpaid]="sale.payment_status === 'NON PAYE' || !sale.payment_status"
             [class.list-grid-status--partial]="sale.payment_status === 'PARTIEL'">
         {{ sale.payment_status || 'NON PAYE' }}
+        <!-- Gabarit 14b : sous le seuil de changement de forme, la rangée du
+             bas porte l'état. Le statut de livraison y rejoint celui du
+             paiement, en lecture — sa modification reste dans le menu ⋯. -->
+        <span class="cell-delivery-status">{{ SALE_STATUS_LABELS[sale.status] || sale.status }}</span>
       </span>
-      <span>
+      <span class="list-cell--drop">
         <select class="status-select"
                 [class.bg-en-cours]="sale.status === 'EN COURS'"
                 [class.bg-livre]="sale.status === 'LIVRE'"
@@ -266,26 +274,49 @@
           <option *ngFor="let s of statusOptionsFor(sale)" [value]="s">{{ SALE_STATUS_LABELS[s] }}</option>
         </select>
       </span>
-      <span class="actions-cell" style="display: flex; gap: 5px; justify-content: flex-end">
+      <span class="actions-cell list-cell--actions" style="display: flex; gap: 5px; justify-content: flex-end">
+        <!-- Voir et Paiements restent sur la ligne à toutes les largeurs : ce
+             sont les deux gestes qu'on fait en parcourant la liste. -->
         <button class="btn-icon" (click)="openDetail(sale)" title="Voir" [disabled]="deletingSaleId() === sale.id"><app-icon name="view" [size]="15" /></button>
         <button class="btn-icon" (click)="openPayments(sale)" title="Paiements" [disabled]="deletingSaleId() === sale.id"><app-icon name="credit-card" [size]="15" /></button>
-        <!-- Refonte 2b, §14c état 4 : deux causes, même cadenas, l'infobulle dit
-             laquelle. La colonne garde ainsi la même largeur d'une ligne à
-             l'autre, au lieu de se rétrécir quand les boutons sont masqués. -->
-        <ng-container *ngIf="!isSaleLocked(sale); else lockedActions">
-          <a class="btn-icon text-primary" [routerLink]="['/sales', sale.id, 'edit']" title="Modifier" *ngIf="authService.hasPermission('edit sales')"><app-icon name="edit" [size]="15" /></a>
-          <app-row-lock *ngIf="!authService.hasPermission('edit sales')"
-            reason="Votre rôle ne permet pas de modifier une vente. Demandez à un administrateur." />
-          <button class="btn-icon text-danger" (click)="deleteSale(sale)" title="Supprimer" *ngIf="authService.hasPermission('delete sales')" [disabled]="deletingSaleId() === sale.id">
-            <span *ngIf="deletingSaleId() !== sale.id"><app-icon name="trash" [size]="15" /></span>
-            <span *ngIf="deletingSaleId() === sale.id" class="inline-spinner"></span>
-          </button>
-          <app-row-lock *ngIf="!authService.hasPermission('delete sales')"
-            reason="Votre rôle ne permet pas de supprimer une vente. Demandez à un administrateur." />
-        </ng-container>
-        <ng-template #lockedActions>
-          <span class="list-grid-lock" title="Vente clôturée par son statut — non modifiable"><app-icon name="lock" [size]="14" /></span>
-        </ng-template>
+
+        <!-- Refonte 2b, 8b : au-delà de deux boutons, le reste passe derrière
+             un ⋯ sous le seuil de réduction. Au-dessus, `display: contents`
+             les laisse dans la rangée comme s'il n'y avait pas de menu. -->
+        <app-row-overflow>
+          <!-- Refonte 2b, §14c état 4 : deux causes, même cadenas, l'infobulle
+               dit laquelle. La colonne garde ainsi la même largeur d'une ligne
+               à l'autre, au lieu de se rétrécir quand les boutons sont masqués. -->
+          <ng-container *ngIf="!isSaleLocked(sale); else lockedActions">
+            <a class="btn-icon ro-item text-primary" [routerLink]="['/sales', sale.id, 'edit']" title="Modifier" *ngIf="authService.hasPermission('edit sales')">
+              <app-icon name="edit" [size]="15" /><span class="ro-label">Modifier</span>
+            </a>
+            <app-row-lock *ngIf="!authService.hasPermission('edit sales')"
+              reason="Votre rôle ne permet pas de modifier une vente. Demandez à un administrateur." />
+            <button class="btn-icon ro-item ro-item--danger text-danger" (click)="deleteSale(sale)" title="Supprimer" *ngIf="authService.hasPermission('delete sales')" [disabled]="deletingSaleId() === sale.id">
+              <span *ngIf="deletingSaleId() !== sale.id"><app-icon name="trash" [size]="15" /></span>
+              <span *ngIf="deletingSaleId() === sale.id" class="inline-spinner"></span>
+              <span class="ro-label">Supprimer</span>
+            </button>
+            <app-row-lock *ngIf="!authService.hasPermission('delete sales')"
+              reason="Votre rôle ne permet pas de supprimer une vente. Demandez à un administrateur." />
+          </ng-container>
+          <ng-template #lockedActions>
+            <span class="list-grid-lock" title="Vente clôturée par son statut — non modifiable"><app-icon name="lock" [size]="14" /></span>
+          </ng-template>
+
+          <!-- Le statut de livraison : sa colonne tombe sous le seuil, mais il
+               doit rester modifiable. `ro-keep-open` empêche le menu de se
+               refermer pendant le choix. -->
+          <label class="ro-field ro-keep-open">
+            <span>Changer le statut</span>
+            <select [ngModel]="sale.status"
+                    [disabled]="isSaleLocked(sale)"
+                    (change)="updateSaleStatus(sale, $event.target)">
+              <option *ngFor="let s of statusOptionsFor(sale)" [value]="s">{{ SALE_STATUS_LABELS[s] }}</option>
+            </select>
+          </label>
+        </app-row-overflow>
       </span>
     </div>
 
