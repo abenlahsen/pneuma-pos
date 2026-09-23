@@ -312,4 +312,35 @@ class ShipmentChangeRequestApiTest extends TestCase
 
         $response->assertOk()->assertJsonCount(1, 'data');
     }
+
+    // -------------------------------------------------------------------------
+    // La lettre au transporteur — refonte 2b, 9d
+    // -------------------------------------------------------------------------
+
+    public function test_show_carries_the_parcel_count_and_the_signatory(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+        $requestModel = $this->createRequestForSale();
+
+        $response = $this->getJson("/api/shipment-change-requests/{$requestModel->id}")->assertOk();
+
+        // Le nombre de colis annoncé au transporteur vient de la vente.
+        $response->assertJsonPath('sale.total_quantity', 4);
+
+        // Le signataire, avec sa fonction : un nom seul n'apprend pas au
+        // transporteur qui engage la boutique.
+        $response->assertJsonPath('creator.id', $this->user->id);
+        $response->assertJsonPath('creator.name', $this->user->name);
+        $this->assertNotNull($response->json('creator.role'));
+    }
+
+    public function test_a_request_without_an_author_reports_no_signatory(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+        $requestModel = $this->createRequestForSale(['created_by' => null]);
+
+        $this->getJson("/api/shipment-change-requests/{$requestModel->id}")
+            ->assertOk()
+            ->assertJsonPath('creator', null);
+    }
 }

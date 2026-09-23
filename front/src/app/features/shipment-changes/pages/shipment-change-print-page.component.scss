@@ -1,0 +1,466 @@
+@use '../../_variables' as *;
+
+/* Refonte 2b, 9d, maquette 18c — la lettre au transporteur.
+
+   Deux règles gouvernent ce fichier :
+
+   1. AUCUNE couleur d'interface sur la feuille. Elle part par fax, par photo
+      ou en noir et blanc : l'encre, des gris, le logo. Les variables de la
+      palette s'arrêtent à la barre d'actions ; la feuille est en valeurs
+      neutres explicites, pour qu'un changement de palette ne la teinte pas.
+
+   2. La feuille fait UNE page, jamais deux. Elle est dimensionnée en A4 réel
+      et ses signatures sont poussées en bas par `margin-top: auto` — voir le
+      bloc @media print, qui est la partie qui compte. */
+
+// ── L'encre du papier, hors palette ─────────────────────────────────────────
+$paper-ink: #111;
+$paper-text: #333;
+$paper-grey: #555;
+$paper-faint: #666;
+$paper-rule: #bbb;
+$paper-rule-light: #ccc;
+
+.scp-screen {
+  min-height: calc(100vh - #{$topbar-height});
+  background: $bg-body;
+}
+
+/* ── La barre d'actions ─────────────────────────────────────────────────── */
+.scp-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-height: 56px;
+  padding: 0 18px;
+  background: $bg-subtle;
+  border-bottom: 1px solid $border-strong;
+}
+
+.scp-bar-title {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.scp-bar-ref {
+  font-size: 12px;
+  font-weight: 600;
+  color: $text-muted;
+  font-variant-numeric: tabular-nums;
+}
+
+.scp-bar-end {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.scp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid $border-color;
+  background: $bg-card;
+  color: $text-dark;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  &--primary {
+    border-color: $primary;
+    background: $primary;
+    color: $bg-card;
+    font-weight: 700;
+  }
+}
+
+.scp-state {
+  margin: 0;
+  padding: 1.75rem 18px;
+  font-size: 12.5px;
+  color: $text-muted;
+}
+
+/* ── La scène et la feuille ─────────────────────────────────────────────── */
+.scp-stage {
+  display: flex;
+  justify-content: center;
+  padding: 24px 18px 40px;
+}
+
+.scp-paper {
+  /* A4 réel. La hauteur fixe est ce qui permet aux signatures de tomber en bas
+     de page, et `overflow: hidden` ce qui interdit une seconde feuille. */
+  width: 210mm;
+  height: 297mm;
+  box-sizing: border-box;
+  padding: 15mm 16mm 12mm;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  color: $paper-ink;
+  border: 1px solid $border-color;
+  box-shadow: $shadow-modal;
+}
+
+/* ── En-tête ────────────────────────────────────────────────────────────── */
+.scp-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  padding-bottom: 5mm;
+  border-bottom: 2px solid $paper-ink;
+}
+
+.scp-logo {
+  height: 42px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.scp-logo-text {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.scp-head-right {
+  margin-left: auto;
+  text-align: right;
+}
+
+.scp-kicker {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: $paper-grey;
+}
+
+.scp-ref {
+  display: block;
+  margin-top: 6px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.scp-place {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  color: #444;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── De / À l'attention de ──────────────────────────────────────────────── */
+.scp-parties {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  padding: 5mm 0;
+  border-bottom: 1px solid $paper-rule;
+}
+
+.scp-label {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: $paper-grey;
+}
+
+.scp-party { min-width: 0; }
+
+.scp-party-name {
+  display: block;
+  margin-top: 6px;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.scp-party-lines {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: $paper-text;
+}
+
+/* ── Le cadre épais : ce que le transporteur saisit ─────────────────────── */
+.scp-frame {
+  margin-top: 6mm;
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) repeat(3, minmax(0, 1fr));
+  border: 2px solid $paper-ink;
+}
+
+.scp-frame-main {
+  padding: 14px 16px;
+  border-right: 1px solid $paper-ink;
+  min-width: 0;
+}
+
+.scp-frame-cell {
+  padding: 14px;
+  border-right: 1px solid $paper-rule;
+  min-width: 0;
+
+  &:last-child { border-right: 0; }
+}
+
+/* Le numéro domine la page : chasse fixe, 25 px. C'est la seule chose que le
+   transporteur recopie dans son système. */
+.scp-shipment {
+  display: block;
+  margin-top: 6px;
+  font: 700 25px/1 ui-monospace, Menlo, Consolas, monospace;
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+}
+
+.scp-frame-value {
+  display: block;
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Avant / après ──────────────────────────────────────────────────────── */
+.scp-changes { margin-top: 7mm; }
+
+.scp-change {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) 22px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 12px 0;
+  border-bottom: 1px solid $paper-rule-light;
+
+  &--head {
+    margin-top: 8px;
+    padding: 7px 0;
+    border-bottom: 1px solid $paper-ink;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: $paper-grey;
+  }
+}
+
+.scp-change-field {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+/* L'ancienne valeur barrée et grisée, la nouvelle en gras : lisible même sur
+   une photo floue, et sans dépendre d'une couleur. */
+.scp-change-old {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: $paper-faint;
+  text-decoration: line-through;
+  overflow-wrap: anywhere;
+}
+
+.scp-change-arrow {
+  font-size: 13px;
+  color: $paper-ink;
+}
+
+.scp-change-new {
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+/* ── Motif ──────────────────────────────────────────────────────────────── */
+.scp-reason {
+  margin-top: 6mm;
+
+  p {
+    margin: 7px 0 0;
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: #222;
+  }
+}
+
+/* ── Signatures ─────────────────────────────────────────────────────────── */
+/* `margin-top: auto` les colle au bas de la feuille : c'est ce qui les garde
+   sur la première page quel que soit le nombre de modifications. */
+.scp-signatures {
+  margin-top: auto;
+  padding-top: 8mm;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+
+.scp-sign {
+  height: 118px;
+  padding: 10px 12px;
+  border: 1px solid $paper-ink;
+  display: flex;
+  flex-direction: column;
+
+  /* Pointillés : la case que le transporteur remplit, pas celle qu'on remplit. */
+  &--carrier { border: 1px dashed #888; }
+}
+
+.scp-sign-name {
+  margin-top: auto;
+  font-size: 11px;
+  color: $paper-grey;
+}
+
+.scp-sign-boxes {
+  margin-top: auto;
+  display: flex;
+  gap: 18px;
+  font-size: 11px;
+  color: $paper-grey;
+}
+
+/* ── Quand les modifications sont nombreuses ────────────────────────────── */
+/* Mesuré au navigateur sur une feuille A4 réelle : la mise en page ci-dessus
+   tient jusqu'à SIX lignes de modification (contenu 1121 px pour 1121 px de
+   page). À sept, elle dépasse de 25 px et rogne les mentions légales ; vers
+   dix, elle rognerait le bloc des signatures.
+
+   La feuille se resserre donc au lieu de déborder. Les enfants de
+   `.scp-changes` sont le libellé, l'en-tête, puis les lignes : la septième
+   ligne est le neuvième enfant, la dixième le douzième. */
+.scp-paper:has(.scp-change:nth-child(9)) {
+  .scp-changes { margin-top: 5mm; }
+  .scp-change { padding: 8px 0; }
+  .scp-change--head { margin-top: 6px; padding: 5px 0; }
+  .scp-reason { margin-top: 4mm; }
+  .scp-signatures { padding-top: 5mm; }
+  .scp-legal { margin-top: 4mm; }
+}
+
+.scp-paper:has(.scp-change:nth-child(12)) {
+  .scp-changes { margin-top: 4mm; }
+  .scp-change { padding: 5px 0; }
+  .scp-change-old,
+  .scp-change-field { font-size: 11.5px; }
+  .scp-change-new { font-size: 12.5px; }
+  .scp-reason {
+    margin-top: 3mm;
+    p { font-size: 11.5px; line-height: 1.5; }
+  }
+  .scp-sign { height: 96px; }
+}
+
+/* ── Mentions légales ───────────────────────────────────────────────────── */
+.scp-legal {
+  margin-top: 6mm;
+  padding-top: 3mm;
+  border-top: 1px solid $paper-rule;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 9.5px;
+  color: $paper-grey;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Écran étroit : la feuille se met à l'échelle ───────────────────────── */
+@include below-reduce {
+  .scp-stage { padding: 16px 12px 32px; }
+
+  .scp-paper {
+    /* La feuille garde ses proportions A4 mais rentre dans la fenêtre : on la
+       réduit, on ne la reflue pas — ce qui s'imprime doit rester ce qu'on voit. */
+    transform: scale(0.72);
+    transform-origin: top center;
+    margin-bottom: -83mm; // 297mm × 0,28, pour que la page ne garde pas le vide
+  }
+}
+
+@include below-reshape {
+  .scp-paper {
+    transform: scale(0.46);
+    margin-bottom: -160mm; // 297mm × 0,54
+  }
+
+  .scp-bar-end { margin-left: 0; }
+}
+
+/* ── L'impression : la partie qui compte ────────────────────────────────── */
+@media print {
+  /* styles.scss masque tout et remonte la chaîne d'ancêtres de `.print-area`,
+     mais il impose aussi `width: 100% !important` et `overflow: visible
+     !important` à cette classe. Ces deux règles dissoudraient la mise en page
+     A4 — d'où les `!important` ci-dessous, que la spécificité du sélecteur de
+     composant fait gagner. */
+  .scp-screen {
+    min-height: 0;
+    background: #fff;
+  }
+
+  .scp-stage {
+    padding: 0;
+    display: block;
+  }
+
+  .scp-paper {
+    /* 296 et non 297 : un bloc exactement aussi haut que la page bascule sur
+       une seconde feuille au moindre arrondi sous-pixel. Le millimètre retiré
+       est la marge de sécurité qui garantit « une page, jamais deux ». */
+    width: 210mm !important;
+    height: 296mm !important;
+    max-width: none !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  .scp-paper * {
+    /* Les gris doivent sortir en gris, pas en aplats économisés. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* La feuille porte ses propres marges de 15 mm : celles de la page doivent
+   donc être nulles, sinon elles s'ajoutent et la poussent sur une seconde
+   feuille.
+
+   Page NOMMÉE, et non `@page` tout court. Un `@page` global fuiterait hors de
+   ce composant : Angular garde les styles d'un composant dans le document une
+   fois chargés, et `document-print` (ventes, achats, fiches d'intervention)
+   met `padding: 0` à l'impression en comptant sur les marges du navigateur —
+   il sortirait bord à bord. Le nom confine la règle aux pages que cette
+   feuille engendre.
+
+   Limite connue : Firefox n'implémente pas encore les pages nommées et
+   appliquera ses marges par défaut. Le bouton « Télécharger PDF » n'est pas
+   concerné — il passe par html2canvas, qui pagine lui-même. */
+.scp-paper { page: shipment-change-letter; }
+
+@page shipment-change-letter {
+  size: A4 portrait;
+  margin: 0;
+}

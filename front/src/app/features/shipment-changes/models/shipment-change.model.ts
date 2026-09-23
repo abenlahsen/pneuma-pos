@@ -37,6 +37,8 @@ export interface ShipmentChangeRequest {
     client: string;
     tracking_number: string | null;
     total_sale: string;
+    /** Nombre de colis annoncé au transporteur — refonte 2b, 9d. */
+    total_quantity?: number;
   } | null;
   carrier_id: number | null;
   carrier?: { id: number; name: string; phone?: string | null; email?: string | null } | null;
@@ -47,6 +49,8 @@ export interface ShipmentChangeRequest {
   carrier_response: string | null;
   reason: string | null;
   items?: ShipmentChangeItem[];
+  /** Le signataire de la lettre, avec sa fonction — refonte 2b, 9d. */
+  creator?: { id: number; name: string; role: string | null } | null;
   created_at?: string;
   updated_at?: string;
 }

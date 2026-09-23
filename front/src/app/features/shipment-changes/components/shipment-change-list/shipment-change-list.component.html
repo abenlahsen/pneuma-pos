@@ -36,7 +36,11 @@
       </span>
 
       <span class="actions-cell list-cell--actions">
-        <button type="button" class="btn-icon" title="Imprimer" (click)="print.emit(r)"><app-icon name="print" [size]="15" /></button>
+        <!-- Refonte 2b, 9d : l'aperçu est une page, donc un lien — il s'ouvre
+             dans un onglet au clic du milieu, et son adresse se partage. -->
+        <a class="btn-icon" title="Imprimer" [routerLink]="['/shipment-changes', r.id, 'print']">
+          <app-icon name="print" [size]="15" />
+        </a>
 
         <ng-container *ngIf="canEdit && !isClosed(r); else closedActions">
           <app-row-overflow>

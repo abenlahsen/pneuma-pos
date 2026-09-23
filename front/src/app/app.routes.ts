@@ -69,6 +69,17 @@ export const routes: Routes = [
       import('./features/sales/sale-detail-page/sale-detail-page.component').then((m) => m.SaleDetailPageComponent),
   },
   {
+    // Refonte 2b, 9d : l'aperçu de la lettre au transporteur sort de la modale
+    // et devient adressable, sur le modèle du relevé client.
+    path: 'shipment-changes/:id/print',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'view shipment-changes' },
+    loadComponent: () =>
+      import('./features/shipment-changes/pages/shipment-change-print-page.component').then(
+        (m) => m.ShipmentChangePrintPageComponent,
+      ),
+  },
+  {
     path: 'service-orders',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view service-orders' },

@@ -150,7 +150,6 @@
           [canEdit]="authService.hasPermission('edit shipment-changes')"
           [canDelete]="authService.hasPermission('delete shipment-changes')"
           (add)="openShipmentAddForm()"
-          (print)="openShipmentPrint($event)"
           (edit)="openShipmentEditForm($event)"
           (statusChange)="changeShipmentStatus($event)"
           (delete)="deleteShipmentRequest($event)"
@@ -255,12 +254,6 @@
     </ng-container>
   </app-side-panel>
 }
-
-<app-shipment-change-print
-  *ngIf="shipmentPrintDoc()"
-  [request]="shipmentPrintDoc()!"
-  (closed)="shipmentPrintDoc.set(null)"
-/>
 
 <!-- Refonte 2b, gabarit 15c : la confirmation remplace le confirm() natif. -->
 <app-confirm-delete

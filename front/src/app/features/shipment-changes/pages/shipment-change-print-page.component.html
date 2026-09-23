@@ -1,0 +1,171 @@
+<div class="scp-screen">
+
+  <!-- ── La barre, sur le modèle du relevé client. Absente du papier. ────── -->
+  <div class="scp-bar no-print">
+    <button type="button" class="scp-btn" (click)="back()">
+      <app-icon name="arrow-left" [size]="14" /> Retour
+    </button>
+
+    <span class="scp-bar-title">
+      Demande de modification d'expédition
+      @if (request(); as req) {
+        <span class="scp-bar-ref">{{ reference(req) }}</span>
+      }
+    </span>
+
+    <span class="scp-bar-end">
+      <button type="button" class="scp-btn" (click)="print()" [disabled]="!request()">
+        <app-icon name="print" [size]="14" /> Imprimer
+      </button>
+      <button type="button" class="scp-btn scp-btn--primary" (click)="downloadPdf()"
+              [disabled]="generatingPdf() || !request()">
+        @if (generatingPdf()) {
+          Génération…
+        } @else {
+          <app-icon name="download" [size]="14" /> Télécharger PDF
+        }
+      </button>
+    </span>
+  </div>
+
+  @if (loadError()) {
+    <app-list-error
+      class="no-print"
+      title="La demande n'a pas pu être chargée."
+      [cause]="loadError()!"
+      [detail]="loadErrorDetail()"
+      (retry)="reload()" />
+  }
+
+  @if (loading()) {
+    <p class="scp-state no-print">Chargement du document…</p>
+  }
+
+  <!-- ── La feuille A4 ───────────────────────────────────────────────────── -->
+  @if (request(); as req) {
+    <div class="scp-stage">
+      <!-- `print-area` est l'opt-in du bloc @media print global de styles.scss :
+           il masque tout le reste et remonte la chaîne d'ancêtres de ce nœud,
+           ce qui sort le rail et la barre haute de la feuille. -->
+      <div class="scp-paper print-area" #printZone>
+
+        <!-- En-tête : logo à gauche, référence à droite -->
+        <header class="scp-head">
+          @if (settings()?.logo_url) {
+            <img class="scp-logo" [src]="settings()!.logo_url!" [alt]="settings()?.company_name ?? ''">
+          } @else {
+            <span class="scp-logo-text">{{ settings()?.company_name }}</span>
+          }
+          <span class="scp-head-right">
+            <span class="scp-kicker">Demande de modification d'expédition</span>
+            <span class="scp-ref">{{ reference(req) }}</span>
+            <span class="scp-place">{{ placeAndDate(req) }}</span>
+          </span>
+        </header>
+
+        <!-- De / À l'attention de -->
+        <section class="scp-parties">
+          <span class="scp-party">
+            <span class="scp-label">De</span>
+            <span class="scp-party-name">{{ settings()?.legal_name || settings()?.company_name }}</span>
+            <span class="scp-party-lines">
+              @if (settings()?.address) { {{ settings()?.address }} }
+              @if (settings()?.address && settings()?.city) { · }
+              @if (settings()?.city) { {{ settings()?.city }} }
+              <br>
+              @if (settings()?.phone) { {{ settings()?.phone }} }
+              @if (settings()?.phone && settings()?.email) { · }
+              @if (settings()?.email) { {{ settings()?.email }} }
+            </span>
+          </span>
+          <span class="scp-party">
+            <span class="scp-label">À l'attention de</span>
+            <span class="scp-party-name">{{ req.carrier?.name || 'Transporteur' }} · Service modification</span>
+            <span class="scp-party-lines">
+              @if (req.carrier?.phone) { {{ req.carrier?.phone }} }
+              @if (req.carrier?.phone && req.carrier?.email) { · }
+              @if (req.carrier?.email) { {{ req.carrier?.email }} }
+            </span>
+          </span>
+        </section>
+
+        <!-- Le cadre épais : ce que le transporteur saisit dans son système -->
+        <section class="scp-frame">
+          <span class="scp-frame-main">
+            <span class="scp-label">N° d'expédition</span>
+            <span class="scp-shipment">{{ req.shipment_number || '—' }}</span>
+          </span>
+          <span class="scp-frame-cell">
+            <span class="scp-label">Vente</span>
+            <span class="scp-frame-value">n° {{ req.sale_id }}</span>
+          </span>
+          <span class="scp-frame-cell">
+            <span class="scp-label">Expédiée le</span>
+            <span class="scp-frame-value">{{ fmtDate(req.sale?.date) }}</span>
+          </span>
+          <span class="scp-frame-cell">
+            <span class="scp-label">Colis</span>
+            <span class="scp-frame-value">
+              @if (parcelCount() !== null) { {{ parcelCount() }} } @else { — }
+            </span>
+          </span>
+        </section>
+
+        <!-- Avant / après : barré et gris, flèche, gras -->
+        <section class="scp-changes">
+          <span class="scp-label">Modifications demandées</span>
+
+          <div class="scp-change scp-change--head">
+            <span>Élément</span><span>Valeur actuelle</span><span></span><span>Nouvelle valeur</span>
+          </div>
+
+          @for (item of req.items; track item.id ?? $index) {
+            <div class="scp-change">
+              <span class="scp-change-field">{{ fieldLabel(item) }}</span>
+              <span class="scp-change-old">{{ item.old_value || '—' }}</span>
+              <span class="scp-change-arrow" aria-hidden="true">→</span>
+              <span class="scp-change-new">{{ item.new_value }}</span>
+            </div>
+          }
+        </section>
+
+        @if (req.reason) {
+          <section class="scp-reason">
+            <span class="scp-label">Motif</span>
+            <p>{{ req.reason }}</p>
+          </section>
+        }
+
+        <!-- Les signatures, poussées en bas de la feuille -->
+        <section class="scp-signatures">
+          <span class="scp-sign">
+            <span class="scp-label">Cachet et signature de l'expéditeur</span>
+            @if (signatory()) {
+              <span class="scp-sign-name">{{ signatory() }}</span>
+            }
+          </span>
+          <span class="scp-sign scp-sign--carrier">
+            <span class="scp-label">Réservé au transporteur</span>
+            <span class="scp-sign-boxes">
+              <span>&#9744; Acceptée</span>
+              <span>&#9744; Refusée</span>
+              <span>Date : ____ / ____</span>
+            </span>
+          </span>
+        </section>
+
+        <footer class="scp-legal">
+          @if (settings()?.legal_name || settings()?.company_name) {
+            <span>{{ settings()?.legal_name || settings()?.company_name }}</span>
+          }
+          @if (settings()?.rc) { <span>RC {{ settings()?.rc }}</span> }
+          @if (settings()?.ice) { <span>ICE {{ settings()?.ice }}</span> }
+          @if (settings()?.tax_id) { <span>IF {{ settings()?.tax_id }}</span> }
+          @if (settings()?.cnss) { <span>CNSS {{ settings()?.cnss }}</span> }
+          @if (settings()?.patente) { <span>Patente {{ settings()?.patente }}</span> }
+        </footer>
+
+      </div>
+    </div>
+  }
+</div>

@@ -4,13 +4,14 @@ import { RowOverflowComponent } from '../../../../shared/row-overflow/row-overfl
 import { RowLockComponent } from '../../../../shared/list-state';
 import { IconComponent } from '../../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { ShipmentChangeRequest } from '../../models/shipment-change.model';
 import { ShipmentChangeStatus, SHIPMENT_CHANGE_STATUSES, SHIPMENT_CHANGE_STATUS_LABELS } from '../../../../core/constants/status.constants';
 
 @Component({
   selector: 'app-shipment-change-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent, RowOverflowComponent, RowLockComponent],
+  imports: [CommonModule, FormsModule, RouterLink, IconComponent, RowOverflowComponent, RowLockComponent],
   templateUrl: './shipment-change-list.component.html',
   styleUrl: './shipment-change-list.component.scss',
 })
@@ -35,7 +36,6 @@ export class ShipmentChangeListComponent {
   @Input() canDelete = false;
 
   @Output() add = new EventEmitter<void>();
-  @Output() print = new EventEmitter<ShipmentChangeRequest>();
   @Output() edit = new EventEmitter<ShipmentChangeRequest>();
   @Output() statusChange = new EventEmitter<{ request: ShipmentChangeRequest; status: ShipmentChangeStatus }>();
   @Output() delete = new EventEmitter<ShipmentChangeRequest>();

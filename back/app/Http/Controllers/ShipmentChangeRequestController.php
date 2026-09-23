@@ -51,7 +51,9 @@ class ShipmentChangeRequestController extends Controller
 
     public function show(ShipmentChangeRequest $shipmentChangeRequest): JsonResponse
     {
-        $shipmentChangeRequest->load(['sale', 'carrier', 'items']);
+        // `creator.roles` : la lettre au transporteur porte le signataire et sa
+        // fonction (refonte 2b, 9d).
+        $shipmentChangeRequest->load(['sale', 'carrier', 'items', 'creator.roles']);
 
         return response()->json(
             (new ShipmentChangeRequestResource($shipmentChangeRequest))->resolve()

@@ -15,6 +15,11 @@ export class ShipmentChangeService {
 
   constructor(private http: HttpClient) {}
 
+  /** Une demande seule — la page d'impression s'ouvre sur son identifiant. */
+  get(id: number): Observable<ShipmentChangeRequest> {
+    return this.http.get<ShipmentChangeRequest>(`${this.apiUrl}/${id}`);
+  }
+
   getForSale(saleId: number): Observable<{ data: ShipmentChangeRequest[] }> {
     return this.http.get<{ data: ShipmentChangeRequest[] }>(
       `${environment.apiUrl}/sales/${saleId}/shipment-change-requests`,

@@ -11,7 +11,6 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ShipmentChangeService } from '../../shipment-changes/data-access/shipment-change.service';
 import { ShipmentChangeListComponent } from '../../shipment-changes/components/shipment-change-list/shipment-change-list.component';
 import { ShipmentChangeFormComponent } from '../../shipment-changes/components/shipment-change-form/shipment-change-form.component';
-import { ShipmentChangePrintComponent } from '../../shipment-changes/components/shipment-change-print/shipment-change-print.component';
 import { ShipmentChangeRequest, ShipmentChangeRequestPayload } from '../../shipment-changes/models/shipment-change.model';
 import { ShipmentChangeStatus } from '../../../core/constants/status.constants';
 import { isTypingTarget } from '../../../core/utils/detail-navigator';
@@ -27,7 +26,6 @@ import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
     DocumentPrintComponent,
     ShipmentChangeListComponent,
     ShipmentChangeFormComponent,
-    ShipmentChangePrintComponent,
     SidePanelComponent,
     IconComponent, ConfirmDeleteComponent],
   templateUrl: './sale-detail.component.html',
@@ -64,7 +62,6 @@ export class SaleDetailComponent implements OnInit, OnChanges {
   loadingShipmentRequests = signal(false);
   showShipmentForm = signal(false);
   editingShipmentRequest = signal<ShipmentChangeRequest | null>(null);
-  shipmentPrintDoc = signal<ShipmentChangeRequest | null>(null);
 
   constructor(
     public authService: AuthService,
@@ -87,7 +84,6 @@ export class SaleDetailComponent implements OnInit, OnChanges {
     this.printDoc.set(null);
     this.shipmentRequests.set([]);
     this.closeShipmentForm();
-    this.shipmentPrintDoc.set(null);
     this.loadShipmentRequests();
   }
 
@@ -107,7 +103,7 @@ export class SaleDetailComponent implements OnInit, OnChanges {
   }
 
   private hasNestedPanelOpen(): boolean {
-    return !!this.printDoc() || this.showShipmentForm() || !!this.shipmentPrintDoc();
+    return !!this.printDoc() || this.showShipmentForm();
   }
 
   private loadShipmentRequests(): void {
@@ -148,10 +144,6 @@ export class SaleDetailComponent implements OnInit, OnChanges {
         this.loadShipmentRequests();
       },
     });
-  }
-
-  openShipmentPrint(request: ShipmentChangeRequest): void {
-    this.shipmentPrintDoc.set(request);
   }
 
   changeShipmentStatus(event: { request: ShipmentChangeRequest; status: ShipmentChangeStatus }): void {

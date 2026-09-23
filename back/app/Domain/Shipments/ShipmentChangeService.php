@@ -40,7 +40,7 @@ class ShipmentChangeService
     public function listForSale(Sale $sale): Collection
     {
         return $sale->shipmentChangeRequests()
-            ->with(['sale', 'carrier', 'items'])
+            ->with(['sale', 'carrier', 'items', 'creator.roles'])
             ->orderByDesc('date')
             ->orderByDesc('id')
             ->get();
