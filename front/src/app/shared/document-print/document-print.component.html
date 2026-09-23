@@ -20,11 +20,16 @@
       <!-- EN-TÊTE -->
       <header class="doc-header">
         <div class="doc-header-logo">
-          <img *ngIf="settings()?.logo_url"
+          <!-- `(error)` et non seulement la présence de l'URL : celle-ci est
+               construite depuis le chemin en base, sans vérifier que le fichier
+               existe. Sans ce gestionnaire, un logo disparu du stockage laisse
+               un trou en tête du document au lieu du nom de l'entreprise. -->
+          <img *ngIf="showLogo()"
                [src]="settings()!.logo_url!"
                [alt]="settings()?.company_name"
+               (error)="logoFailed.set(true)"
                class="company-logo">
-          <div class="company-name-fallback" *ngIf="!settings()?.logo_url">
+          <div class="company-name-fallback" *ngIf="!showLogo()">
             {{ settings()?.company_name }}
           </div>
         </div>

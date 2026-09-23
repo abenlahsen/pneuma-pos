@@ -65,6 +65,20 @@ export class DocumentPrintComponent implements OnInit {
   loadingSettings = signal(true);
   generatingPdf = signal(false);
 
+  /**
+   * Le logo n'a pas pu être chargé. `logo_url` est assemblée à partir du
+   * chemin enregistré sans vérifier que le fichier existe : une image
+   * supprimée du stockage donne une URL valide et un trou en haut du
+   * document. Le repli sur le nom de l'entreprise ne se déclenchait que si
+   * l'URL était absente — jamais si elle menait à une 404.
+   */
+  readonly logoFailed = signal(false);
+
+  /** Vrai seulement si une image est annoncée ET qu'elle s'est chargée. */
+  showLogo(): boolean {
+    return !!this.settings()?.logo_url && !this.logoFailed();
+  }
+
   ngOnInit(): void {
     this.printService.getSettings().subscribe({
       next: (s) => { this.settings.set(s); this.loadingSettings.set(false); },
