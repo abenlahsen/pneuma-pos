@@ -1,223 +1,229 @@
-<div class="page-wrapper">
-  <div class="page-header">
-    <div class="header-left">
-      <h1 class="page-title"><app-icon name="trending-up" [size]="14" /> Historique KPIs</h1>
-      <span class="total-badge">{{ totalItems() }} snapshot{{ totalItems() > 1 ? 's' : '' }}</span>
-    </div>
-    <app-auto-refresh-control pageKey="kpi-history" [defaultIntervalMs]="300000" (refresh)="load()" />
-  </div>
+<div class="kh-screen">
 
-  <!-- Filters -->
-  <div class="filters-card">
-    <div class="filters-row">
-      <div class="filter-group">
-        <label class="filter-label">Du</label>
-        <input type="date" class="form-control" [ngModel]="filterFrom()" (ngModelChange)="filterFrom.set($event)" />
-      </div>
-      <div class="filter-group">
-        <label class="filter-label">Au</label>
-        <input type="date" class="form-control" [ngModel]="filterTo()" (ngModelChange)="filterTo.set($event)" />
-      </div>
-      <div class="filter-actions">
-        <button class="btn-primary" (click)="applyFilters()"><app-icon name="search" [size]="14" /> Filtrer</button>
-        <button class="btn-secondary" (click)="resetFilters()">Réinitialiser</button>
-      </div>
-    </div>
-  </div>
+  <!-- ── La barre ─────────────────────────────────────────────────────────── -->
+  <div class="kh-bar">
+    <span class="kh-title">Historique KPI</span>
+    <span class="kh-count">{{ totalItems() }} instantané{{ totalItems() > 1 ? 's' : '' }}</span>
 
-  <!-- Table -->
-  <div class="table-card">
-    <!-- Refonte 2b, §14c état 3 : sans cela, un serveur muet passe pour une absence de données. -->
-    @if (loadError()) {
-      <app-list-error
-        title="L'historique n'a pas pu être chargé."
-        [cause]="loadError()!"
-        [detail]="loadErrorDetail()"
-        [lastLoadedAt]="lastLoadedAt()"
-        (retry)="load()" />
+    <!-- Refonte 2b, 9c : les deux champs Du / Au deviennent un jeton, comme
+         sur Ventes — repliés tant qu'aucune période n'est posée. -->
+    @if (hasPeriod()) {
+      <span class="kh-chip">
+        {{ periodLabel() }}
+        <button type="button" (click)="clearPeriod()" title="Retirer la période">
+          <app-icon name="close" [size]="11" />
+        </button>
+      </span>
     }
 
-    @if (loading()) {
-      <div class="loading-state">Chargement…</div>
-    } @else if (snapshots().length === 0 && !loadError()) {
-      <div class="empty-state">Aucun snapshot disponible</div>
-    } @else if (snapshots().length > 0) {
-      <div class="table-scroll">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>DATE</th>
-              <th class="text-right">CA DU JOUR</th>
-              <th class="text-right">CA ACHATS JOUR</th>
-              <th class="text-right">MARGE BRUTE JOUR</th>
-              <th class="text-right">MARGE NETTE JOUR</th>
-              <th class="text-right">PNEUS VENDUS</th>
-              <th class="text-right">STOCK VALEUR</th>
-              <th class="text-right">TRÉSORERIE</th>
-              <th class="text-center">DÉTAIL</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (snap of snapshots(); track snap.id) {
-              <tr>
-                <td class="date-cell">{{ fmtDate(snap.snapshot_date) }}</td>
-                <td class="text-right num-cell">{{ fmt(snap.data.sales_today_amount) }} DH</td>
-                <td class="text-right num-cell">{{ fmt(snap.data.purchases_today_amount) }} DH</td>
-                <td class="text-right num-cell" [class.positive]="snap.data.margin_today > 0" [class.negative]="snap.data.margin_today < 0">
-                  {{ fmt(snap.data.margin_today) }} DH
-                </td>
-                <td class="text-right num-cell" [class.positive]="snap.data.net_margin_today > 0" [class.negative]="snap.data.net_margin_today < 0">
-                  {{ fmt(snap.data.net_margin_today) }} DH
-                </td>
-                <td class="text-right num-cell">{{ fmtInt(snap.data.tyres_today) }}</td>
-                <td class="text-right num-cell">{{ fmt(snap.data.stock_value) }} DH</td>
-                <td class="text-right num-cell" [class.positive]="snap.data.cash_balance > 0">
-                  {{ fmt(snap.data.cash_balance) }} DH
-                </td>
-                <td class="text-center">
-                  <button class="btn-icon" (click)="openDetail(snap)" title="Détail"><app-icon name="view" [size]="14" /></button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+    <button type="button" class="kh-btn" (click)="periodOpen.set(!periodOpen())">
+      <app-icon name="filter" [size]="14" />
+      Période
+    </button>
 
-      <!-- Pagination -->
-      @if (totalPages() > 1) {
-        <div class="pagination">
-          <button class="page-btn" [disabled]="page() === 1" (click)="goPage(page() - 1)"><app-icon name="chevron-left" [size]="14" /></button>
-          @for (p of pages; track p) {
-            <button class="page-btn" [class.active]="p === page()" (click)="goPage(p)">{{ p }}</button>
-          }
-          <button class="page-btn" [disabled]="page() === totalPages()" (click)="goPage(page() + 1)"><app-icon name="chevron-right" [size]="14" /></button>
-        </div>
+    @if (missingCount() > 0) {
+      <span class="kh-alert" title="La tâche planifiée de 00:05 n'a pas tourné ces jours-là.">
+        {{ missingCount() }} jour{{ missingCount() > 1 ? 's' : '' }} ouvré{{ missingCount() > 1 ? 's' : '' }} sans instantané
+      </span>
+    }
+
+    <span class="kh-bar-end">
+      <app-auto-refresh-control pageKey="kpi-history" [defaultIntervalMs]="300000" (refresh)="load()" />
+    </span>
+  </div>
+
+  @if (periodOpen()) {
+    <div class="kh-period">
+      <label class="kh-field">
+        <span>Du</span>
+        <input type="date" [ngModel]="filterFrom()" (ngModelChange)="filterFrom.set($event)" name="from">
+      </label>
+      <label class="kh-field">
+        <span>Au</span>
+        <input type="date" [ngModel]="filterTo()" (ngModelChange)="filterTo.set($event)" name="to">
+      </label>
+      <button type="button" class="kh-btn kh-btn--primary" (click)="applyFilters()">Appliquer</button>
+      @if (hasPeriod()) {
+        <button type="button" class="kh-btn" (click)="clearPeriod()">Réinitialiser</button>
       }
-    }
-  </div>
-</div>
+    </div>
+  }
 
-<!-- Detail modal -->
-@if (selectedSnapshot()) {
-  <div class="modal-overlay" (click)="closeDetail()">
-    <div class="modal-container" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <div class="modal-title-group">
-          <h2 class="modal-title"><app-icon name="trending-up" [size]="14" /> Snapshot du {{ fmtDate(selectedSnapshot()!.snapshot_date) }}</h2>
+  @if (loadError()) {
+    <app-list-error
+      title="L'historique n'a pas pu être chargé."
+      [cause]="loadError()!"
+      [detail]="loadErrorDetail()"
+      [lastLoadedAt]="lastLoadedAt()"
+      (retry)="load()" />
+  }
+
+  <!-- ── Le corps : la liste, le détail ───────────────────────────────────── -->
+  @if (!loadError()) {
+    <div class="kh-body">
+
+      <aside class="kh-list">
+        <div class="kh-row kh-row--head">
+          <span>Jour</span>
+          <span class="text-right">CA</span>
+          <span class="text-right">Marge nette</span>
+          <span class="text-right">Pneus</span>
         </div>
-        <button class="btn-icon" (click)="closeDetail()"><app-icon name="close" [size]="14" /></button>
-      </div>
 
-      <div class="modal-tabs">
-        <button class="tab-btn" [class.active]="detailTab() === 'global'" (click)="detailTab.set('global')">Global</button>
-        <button class="tab-btn" [class.active]="detailTab() === 'commerciaux'" (click)="detailTab.set('commerciaux')">Par commercial</button>
-      </div>
+        <div class="kh-rows">
+          @if (loading()) {
+            <!-- Refonte 2b, §14c état 1 : la directive est posée sur la vraie
+                 ligne, qui garde donc sa grille et ses largeurs de colonne. -->
+            @for (row of skeletonRows; track $index) {
+              <div class="kh-row" appSkeletonRow [cells]="4" [seed]="$index"></div>
+            }
+          } @else if (days().length === 0) {
+            <div class="kh-state">Aucun instantané sur cette période.</div>
+          }
 
-      <div class="modal-body">
-        @if (detailTab() === 'global') {
-          <!-- Période KPIs -->
-          <div class="detail-section">
-            <h3 class="section-title">Performance</h3>
-            <table class="detail-table">
-              <thead>
-                <tr>
-                  <th>INDICATEUR</th>
-                  <th class="text-right">AUJOURD'HUI</th>
-                  <th class="text-right">MOIS</th>
-                  <th class="text-right">ANNÉE</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (row of globalRows(selectedSnapshot()!.data); track row.label) {
-                  <tr>
-                    <td class="label-cell">{{ row.label }}</td>
-                    <td class="text-right num-cell">{{ row.today }}</td>
-                    <td class="text-right num-cell">{{ row.month }}</td>
-                    <td class="text-right num-cell">{{ row.year }}</td>
-                  </tr>
+          @for (day of days(); track day.date) {
+            @if (day.kind === 'snapshot') {
+              <button
+                type="button"
+                class="kh-row kh-row--day"
+                [class.kh-row--on]="day.date === selectedDate()"
+                (click)="select(day.date)">
+                <span class="kh-day">{{ shortDay(day.date) }}</span>
+                <span class="text-right kh-num">{{ fmtInt(day.snapshot!.data.sales_today_amount) }}</span>
+                <span class="text-right kh-num"
+                      [class.kh-num--loss]="day.snapshot!.data.net_margin_today < 0">
+                  {{ fmtInt(day.snapshot!.data.net_margin_today) }}
+                </span>
+                <span class="text-right kh-num">{{ fmtInt(day.snapshot!.data.tyres_today) }}</span>
+              </button>
+            } @else {
+              <!-- Un trou dans les dates se voit, et se qualifie : fermeture de
+                   la boutique, ou tâche planifiée qui n'a pas tourné. -->
+              <div class="kh-row kh-row--gap" [class.kh-row--missing]="day.kind === 'missing'">
+                <span class="kh-day kh-day--gap">{{ shortDay(day.date) }}</span>
+                @if (day.kind === 'closed') {
+                  <span class="kh-gap-label">Fermé</span>
+                } @else {
+                  <span class="kh-gap-label kh-gap-label--alert">
+                    <app-icon name="alert-triangle" [size]="12" /> Aucun instantané
+                  </span>
                 }
-              </tbody>
-            </table>
+              </div>
+            }
+          }
+        </div>
+
+        @if (totalPages() > 1) {
+          <div class="kh-pages">
+            <button type="button" class="kh-page" [disabled]="page() === 1" (click)="goPage(page() - 1)">
+              <app-icon name="chevron-left" [size]="14" />
+            </button>
+            <span class="kh-page-label">Page {{ page() }} / {{ totalPages() }}</span>
+            <button type="button" class="kh-page" [disabled]="page() === totalPages()" (click)="goPage(page() + 1)">
+              <app-icon name="chevron-right" [size]="14" />
+            </button>
+          </div>
+        }
+
+        <p class="kh-list-note">
+          Quatre colonnes au lieu de huit : les autres sont dans le détail. ↑ ↓ passent d'un jour à l'autre.
+        </p>
+      </aside>
+
+      <!-- ── Le détail, empilé et sans onglets ─────────────────────────────── -->
+      <section class="kh-detail">
+        @if (selected(); as snap) {
+          <div class="kh-detail-head">
+            <span class="kh-detail-title">{{ longDay(snap.snapshot_date.slice(0, 10)) }}</span>
+            @if (snapshotTaken(snap)) {
+              <span class="kh-detail-meta">{{ snapshotTaken(snap) }}</span>
+            }
+            <span class="kh-nav">
+              <button type="button" [disabled]="!hasOlder()" (click)="step(1)" title="Jour précédent">
+                <app-icon name="chevron-down" [size]="14" />
+              </button>
+              <button type="button" [disabled]="!hasNewer()" (click)="step(-1)" title="Jour suivant">
+                <app-icon name="chevron-up" [size]="14" />
+              </button>
+            </span>
           </div>
 
-          <!-- Stock & trésorerie -->
-          <div class="detail-section">
-            <h3 class="section-title">Stock & Trésorerie</h3>
-            <div class="stock-grid">
-              @for (row of stockRows(selectedSnapshot()!.data); track row.label) {
-                <div class="stock-card">
-                  <span class="stock-label">{{ row.label }}</span>
-                  <span class="stock-value">{{ row.value }}</span>
+          <div class="kh-detail-scroll">
+            <!-- 1. La performance -->
+            <div class="kh-perf kh-perf--head">
+              <span>Performance</span>
+              <span class="text-right">Ce jour</span>
+              <span class="text-right">Mois à date</span>
+              <span class="text-right">Année à date</span>
+            </div>
+            @for (row of globalRows(snap.data); track row.label) {
+              <div class="kh-perf">
+                <span class="kh-perf-label">{{ row.label }}</span>
+                <span class="text-right kh-perf-lead">{{ row.today }}</span>
+                <span class="text-right kh-num">{{ row.month }}</span>
+                <span class="text-right kh-num">{{ row.year }}</span>
+              </div>
+            }
+
+            <!-- 2. Stock et trésorerie, en bande -->
+            <div class="kh-strip">
+              <span class="kh-cell">
+                <span class="kh-cell-label">Valeur du stock</span>
+                <span class="kh-cell-value">{{ fmtInt(snap.data.stock_value) }}</span>
+                <span class="kh-cell-sub">{{ fmtInt(snap.data.stock_quantity) }} articles</span>
+              </span>
+              <span class="kh-cell">
+                <span class="kh-cell-label">Trésorerie</span>
+                <span class="kh-cell-value">{{ fmtInt(snap.data.cash_balance) }}</span>
+              </span>
+              <span class="kh-cell kh-cell--due">
+                <span class="kh-cell-label">Impayés clients</span>
+                <span class="kh-cell-value">{{ fmtInt(snap.data.unpaid_sales) }}</span>
+              </span>
+              <span class="kh-cell">
+                <span class="kh-cell-label">Dû fournisseurs</span>
+                <span class="kh-cell-value">{{ fmtInt(snap.data.unpaid_purchases) }}</span>
+              </span>
+            </div>
+
+            <!-- 3. Par commercial — les deux tableaux fusionnés -->
+            @if (snap.data.sales_by_commercial.length || serviceTotal(snap.data)) {
+              <div class="kh-com kh-com--head">
+                <span>Par commercial · mois à date</span>
+                <span class="text-right">CA</span>
+                <span class="text-right">Pneus</span>
+                <span class="text-right">Marge</span>
+                <span class="text-right">Impayés</span>
+                <span class="text-right">Taux</span>
+              </div>
+              @for (c of snap.data.sales_by_commercial; track c.commercial_name) {
+                <div class="kh-com">
+                  <span class="kh-com-name">{{ c.commercial_name }}</span>
+                  <span class="text-right kh-com-lead">{{ fmtInt(c.total_sales) }}</span>
+                  <span class="text-right kh-num">{{ fmtInt(c.total_tyres) }}</span>
+                  <span class="text-right kh-num">{{ fmtInt(c.total_margin) }}</span>
+                  <span class="text-right kh-num">{{ fmtInt(c.total_unpaid) }}</span>
+                  <span class="text-right kh-num">{{ fmtRate(c.margin_rate ?? 0) }} %</span>
                 </div>
               }
-            </div>
+              <!-- Le service auto devient une ligne de total sous les vendeurs.
+                   Sa ventilation par vendeur reste dans Reporting. -->
+              @if (serviceTotal(snap.data); as service) {
+                <div class="kh-com kh-com--service">
+                  <span class="kh-com-sub">dont service auto</span>
+                  <span class="text-right kh-num">{{ fmtInt(service.ca) }}</span>
+                  <span class="text-right kh-num">{{ fmtInt(service.orders) }} ordres</span>
+                  <span class="text-right kh-num">{{ fmtInt(service.margin) }}</span>
+                  <span class="text-right kh-num">{{ fmtInt(service.unpaid) }}</span>
+                  <span class="text-right kh-num">{{ fmtRate(service.rate) }} %</span>
+                </div>
+              }
+            }
           </div>
+        } @else if (!loading()) {
+          <p class="kh-state">Sélectionnez un jour pour en voir le détail.</p>
         }
-
-        @if (detailTab() === 'commerciaux') {
-          <!-- Ventes par commercial (mois) -->
-          @if ((selectedSnapshot()?.data?.sales_by_commercial?.length ?? 0) > 0) {
-            <div class="detail-section">
-              <h3 class="section-title">Ventes — mois</h3>
-              <table class="detail-table">
-                <thead>
-                  <tr>
-                    <th>COMMERCIAL</th>
-                    <th class="text-right">CA</th>
-                    <th class="text-right">PNEUS</th>
-                    <th class="text-right">MARGE</th>
-                    <th class="text-right">IMPAYÉS</th>
-                    <th class="text-right">TAUX MARGE</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (c of selectedSnapshot()!.data.sales_by_commercial; track c.commercial_name) {
-                    <tr>
-                      <td>{{ c.commercial_name }}</td>
-                      <td class="text-right num-cell">{{ fmt(c.total_sales) }} DH</td>
-                      <td class="text-right num-cell">{{ fmtInt(c.total_tyres) }}</td>
-                      <td class="text-right num-cell">{{ fmt(c.total_margin) }} DH</td>
-                      <td class="text-right num-cell">{{ fmt(c.total_unpaid) }} DH</td>
-                      <td class="text-right num-cell">{{ c.margin_rate }}%</td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
-
-          <!-- Service Auto par commercial (mois) -->
-          @if ((selectedSnapshot()?.data?.service_by_commercial?.length ?? 0) > 0) {
-            <div class="detail-section">
-              <h3 class="section-title">Service Auto — mois</h3>
-              <table class="detail-table">
-                <thead>
-                  <tr>
-                    <th>COMMERCIAL</th>
-                    <th class="text-right">CA</th>
-                    <th class="text-right">ORDRES</th>
-                    <th class="text-right">MARGE</th>
-                    <th class="text-right">IMPAYÉS</th>
-                    <th class="text-right">TAUX MARGE</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (c of selectedSnapshot()!.data.service_by_commercial; track c.commercial_name) {
-                    <tr>
-                      <td>{{ c.commercial_name }}</td>
-                      <td class="text-right num-cell">{{ fmt(c.total_ca) }} DH</td>
-                      <td class="text-right num-cell">{{ fmtInt(c.total_orders) }}</td>
-                      <td class="text-right num-cell">{{ fmt(c.total_margin) }} DH</td>
-                      <td class="text-right num-cell">{{ fmt(c.total_unpaid) }} DH</td>
-                      <td class="text-right num-cell">{{ c.margin_rate }}%</td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
-        }
-      </div>
+      </section>
     </div>
-  </div>
-}
+  }
+</div>

@@ -244,7 +244,20 @@ export const routes: Routes = [
       import('./features/activity-log/pages/activity-log-page.component').then((m) => m.ActivityLogPageComponent),
   },
   {
+    // Refonte 2b, 9c : le jour sélectionné vit dans l'URL, pour qu'un lien vers
+    // une journée précise se partage. Le détail n'est pas un autre écran, c'est
+    // la moitié droite de celui-ci — d'où une seule route portant le paramètre.
+    //
+    // `latest` est le sentinelle « le jour le plus récent » : il ne peut pas se
+    // résoudre avant que les données arrivent. Une seule entrée de route plutôt
+    // que deux, pour que passer d'un jour à l'autre ne soit qu'un changement de
+    // paramètre — et ne détruise pas le composant à chaque flèche.
     path: 'kpi-history',
+    pathMatch: 'full',
+    redirectTo: 'kpi-history/latest',
+  },
+  {
+    path: 'kpi-history/:date',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view activity-log' },
     loadComponent: () =>
