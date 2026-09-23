@@ -64,6 +64,9 @@ class SaleResource extends JsonResource
                     'name' => $this->linkedClient->name,
                     'phone' => $this->linkedClient->phone,
                     'city' => $this->linkedClient->city,
+                    // L'adresse de livraison : la demande de modification
+                    // d'expédition la préremplit, et elle n'était pas exposée.
+                    'address' => $this->linkedClient->address,
                 ] : null
             ),
             'commercial_id' => $this->commercial_id,

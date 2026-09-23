@@ -57,14 +57,69 @@ export class ShipmentChangeFormComponent implements OnInit {
     }
   }
 
+  /**
+   * L'ordre dans lequel une nouvelle ligne se sert. Il va du plus courant au
+   * plus rare : une demande de modification porte presque toujours sur
+   * l'adresse ou le destinataire, rarement sur le mode de paiement.
+   *
+   * `other` ferme la marche et n'est jamais « pris » : c'est le seul champ
+   * qu'une demande peut porter plusieurs fois.
+   */
+  private static readonly FIELD_ORDER: ShipmentChangeField[] = [
+    'address',
+    'recipient_name',
+    'recipient_phone',
+    'city',
+    'amount',
+    'payment_method',
+    'other',
+  ];
+
   addItem(): void {
-    const field: ShipmentChangeField = 'payment_method';
+    const field = this.firstFreeField();
     this.items.update(list => [...list, {
       field,
       custom_label: null,
       old_value: this.prefillOldValue(field),
       new_value: '',
     }]);
+  }
+
+  /**
+   * Le premier champ que personne n'a encore pris. Sans ça, chaque ligne
+   * démarrait sur le mode de paiement — y compris la deuxième, alors que la
+   * première venait de le prendre.
+   */
+  private firstFreeField(): ShipmentChangeField {
+    const pris = new Set(this.items().map(item => item.field));
+    return ShipmentChangeFormComponent.FIELD_ORDER.find(f => f === 'other' || !pris.has(f)) ?? 'other';
+  }
+
+  /**
+   * Un champ déjà porté par une AUTRE ligne : le sélecteur le grise. `other`
+   * échappe à la règle, et une ligne ne se bloque jamais elle-même.
+   */
+  isFieldTaken(field: ShipmentChangeField, index: number): boolean {
+    if (field === 'other') return false;
+    return this.items().some((item, i) => i !== index && item.field === field);
+  }
+
+  /**
+   * L'ancienne valeur se verrouille quand elle vient du préremplissage : c'est
+   * alors un constat tiré de la vente, pas une saisie.
+   *
+   * Elle reste modifiable dans les deux cas où personne ne peut la deviner :
+   * une ligne « Autre », qui ne préremplit rien par nature, et un champ dont
+   * la source est vide — la plupart des clients n'ont pas d'adresse
+   * enregistrée. Sans ça, la lettre partirait chez le transporteur avec une
+   * valeur actuelle vide, impossible à renseigner.
+   */
+  isOldValueLocked(item: ShipmentChangeItem): boolean {
+    return item.field !== 'other' && !!item.old_value?.trim();
+  }
+
+  setOldValue(index: number, value: string): void {
+    this.items.update(list => list.map((item, i) => i === index ? { ...item, old_value: value } : item));
   }
 
   removeItem(index: number): void {
@@ -79,6 +134,11 @@ export class ShipmentChangeFormComponent implements OnInit {
 
   private prefillOldValue(field: ShipmentChangeField): string {
     switch (field) {
+      // L'adresse manquait : c'est pourtant le motif le plus courant d'une
+      // demande de modification. Elle vient du client lié, la vente n'en
+      // portant pas.
+      case 'address':
+        return this.sale?.linked_client?.address?.trim() || '';
       case 'recipient_name':
         return this.sale?.linked_client?.name?.trim() || this.sale?.client?.trim() || '';
       case 'recipient_phone':

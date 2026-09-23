@@ -73,47 +73,122 @@
   }
 }
 
-.items-table {
-  overflow-x: auto;
+/* ── Une modification, trois rangées ────────────────────────────────────────
+   Le tableau de quatre colonnes ne tenait pas dans les 480 px du volet : il
+   défilait horizontalement, et l'ancienne et la nouvelle valeur ne se
+   lisaient jamais ensemble. Empilées, elles se lisent comme sur la lettre —
+   barré, flèche, gras. */
+.sc-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
+.sc-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 11px 12px;
+  border: 1px solid $border-strong;
+  background: $bg-card;
+}
 
-  th {
-    text-align: left;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: $text-muted;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    padding: 0.5rem 0.6rem;
-    border-bottom: 1px solid $border-color;
-  }
+.sc-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-  td {
-    padding: 0.4rem 0.6rem;
-    vertical-align: top;
-    border-bottom: 1px solid $border-subtle;
-  }
+.sc-field {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  padding: 0 9px;
+  border: 1px solid $border-color;
+  background: $bg-card;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $text-dark;
 
-  input, select {
-    width: 100%;
-    padding: 0.5rem 0.6rem;
-    border: 1px solid $border-color;
-    border-radius: 0;
-    font-size: 0.875rem;
-    font-family: inherit;
-    background: $bg-card;
+  /* Un champ déjà pris par une autre ligne. */
+  option:disabled { color: $text-light; }
+}
 
-    &:focus {
-      outline: none;
-      border-color: $primary;
-    }
-  }
+.sc-drop {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid $border-color;
+  background: $bg-card;
+  color: $text-muted;
+  cursor: pointer;
 
-  input.mt-1 { margin-top: 0.4rem; }
+  &:hover { border-color: $expense-color; color: $expense-color; }
+}
+
+.sc-custom {
+  width: 100%;
+  height: 32px;
+  padding: 0 9px;
+  border: 1px solid $border-color;
+  background: $bg-card;
+  font: inherit;
+  font-size: 12.5px;
+  color: $text-dark;
+}
+
+.sc-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sc-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: $text-muted;
+}
+
+.sc-old,
+.sc-new {
+  width: 100%;
+  height: 32px;
+  padding: 0 9px;
+  border: 1px solid $border-color;
+  background: $bg-card;
+  font: inherit;
+  font-size: 12.5px;
+  color: $text-dark;
+
+  &:focus { outline: none; border-color: $text-dark; }
+}
+
+/* L'ancienne valeur, quand elle vient du préremplissage : un constat, pas une
+   saisie. Barrée et grisée, comme sur la lettre 18c.
+
+   Sans le modificateur, c'est un champ ordinaire — le cas d'une ligne
+   « Autre » ou d'une source vide, où l'utilisateur doit pouvoir écrire. */
+.sc-old--locked {
+  background: $bg-subtle;
+  color: $text-muted;
+  text-decoration: line-through;
+  cursor: default;
+}
+
+.sc-new { font-weight: 600; }
+
+/* La flèche entre les deux : verticale, puisque les rangées sont empilées. */
+.sc-arrow {
+  display: flex;
+  justify-content: center;
+  color: $text-muted;
+  margin: -2px 0;
 }
 
 .empty-state.small {

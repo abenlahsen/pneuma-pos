@@ -32,40 +32,57 @@
       <button type="button" class="btn btn-secondary btn-sm add-item-btn" (click)="addItem()">+ Ajouter une modification</button>
     </div>
 
-    <div class="items-table" *ngIf="items().length; else noItems">
-      <table>
-        <thead>
-          <tr>
-            <th>Élément</th>
-            <th>Ancienne valeur</th>
-            <th>Nouvelle valeur *</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let item of items(); let i = index">
-            <td>
-              <select [ngModel]="item.field" [ngModelOptions]="{standalone: true}" (ngModelChange)="onFieldChange(i, $event)">
-                <option *ngFor="let opt of fieldOptions" [ngValue]="opt.value">{{ opt.label }}</option>
-              </select>
-              <input *ngIf="item.field === 'other'" type="text" class="mt-1" placeholder="Libellé personnalisé"
-                     [ngModel]="item.custom_label" [ngModelOptions]="{standalone: true}"
-                     (ngModelChange)="item.custom_label = $event">
-            </td>
-            <td>
-              <input type="text" [ngModel]="item.old_value" [ngModelOptions]="{standalone: true}"
-                     (ngModelChange)="item.old_value = $event" placeholder="Valeur actuelle">
-            </td>
-            <td>
-              <input type="text" [ngModel]="item.new_value" [ngModelOptions]="{standalone: true}"
-                     (ngModelChange)="item.new_value = $event" placeholder="Nouvelle valeur" required>
-            </td>
-            <td>
-              <button type="button" class="btn-icon" (click)="removeItem(i)" title="Supprimer"><app-icon name="close" [size]="14" /></button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- Refonte 2b : le tableau de quatre colonnes ne tenait pas dans les
+         480 px du volet. Chaque modification devient une fiche de trois
+         rangées — l'élément, l'ancienne valeur, la nouvelle — avec la même
+         lecture barré → gras que la lettre envoyée au transporteur. -->
+    <div class="sc-items" *ngIf="items().length; else noItems">
+      <div class="sc-item" *ngFor="let item of items(); let i = index">
+
+        <div class="sc-head">
+          <select class="sc-field" [ngModel]="item.field" [ngModelOptions]="{standalone: true}"
+                  (ngModelChange)="onFieldChange(i, $event)">
+            <!-- Un champ pris par une autre ligne est grisé : une demande ne
+                 modifie pas deux fois le même élément. `other` fait exception. -->
+            <option *ngFor="let opt of fieldOptions" [ngValue]="opt.value"
+                    [disabled]="isFieldTaken(opt.value, i)">{{ opt.label }}</option>
+          </select>
+          <button type="button" class="sc-drop" (click)="removeItem(i)" title="Retirer cette modification">
+            <app-icon name="close" [size]="14" />
+          </button>
+        </div>
+
+        <input *ngIf="item.field === 'other'" type="text" class="sc-custom"
+               placeholder="Libellé de l'élément" [ngModel]="item.custom_label"
+               [ngModelOptions]="{standalone: true}" (ngModelChange)="item.custom_label = $event">
+
+        <label class="sc-row">
+          <span class="sc-label">Valeur actuelle</span>
+          <!-- Verrouillée quand elle vient du préremplissage — c'est un constat
+               tiré de la vente, barré et grisé comme sur la lettre. Saisissable
+               quand personne ne peut la deviner : ligne « Autre », ou source
+               vide côté client. -->
+          <input type="text" class="sc-old"
+                 [class.sc-old--locked]="isOldValueLocked(item)"
+                 [readonly]="isOldValueLocked(item)"
+                 [attr.tabindex]="isOldValueLocked(item) ? -1 : null"
+                 [ngModel]="item.old_value" [ngModelOptions]="{standalone: true}"
+                 (ngModelChange)="setOldValue(i, $event)"
+                 [placeholder]="isOldValueLocked(item) ? '' : 'À renseigner — rien de connu côté vente'">
+        </label>
+
+        <span class="sc-arrow" aria-hidden="true">
+          <app-icon name="chevron-down" [size]="15" />
+        </span>
+
+        <label class="sc-row">
+          <span class="sc-label">Nouvelle valeur *</span>
+          <input type="text" class="sc-new" [ngModel]="item.new_value"
+                 [ngModelOptions]="{standalone: true}" (ngModelChange)="item.new_value = $event"
+                 placeholder="Ce qu'il faut mettre à la place" required>
+        </label>
+
+      </div>
     </div>
     <ng-template #noItems>
       <div class="empty-state small">Aucune modification ajoutée.</div>

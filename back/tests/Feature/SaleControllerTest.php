@@ -639,6 +639,38 @@ class SaleControllerTest extends TestCase
             ->assertJsonCount(1, 'data');
     }
 
+    /**
+     * L'adresse du client lié — refonte 2b. La ressource exposait le nom, le
+     * téléphone et la ville, mais pas l'adresse : la demande de modification
+     * d'expédition ne pouvait donc pas la préremplir, alors que c'est le motif
+     * de modification le plus courant.
+     */
+    public function test_show_exposes_the_linked_client_address(): void
+    {
+        $client = Client::query()->create([
+            'name' => 'Client Avec Adresse',
+            'address' => '12 rue des Pneus, Casablanca',
+            'created_by' => $this->user->id,
+            'updated_by' => $this->user->id,
+            'is_active' => true,
+        ]);
+
+        $sale = $this->createSale(['client_id' => $client->id]);
+
+        $this->getJson("/api/sales/{$sale->id}", $this->authHeaders())
+            ->assertOk()
+            ->assertJsonPath('linked_client.address', '12 rue des Pneus, Casablanca');
+    }
+
+    public function test_show_returns_a_null_address_when_the_client_has_none(): void
+    {
+        $sale = $this->createSale();
+
+        $this->getJson("/api/sales/{$sale->id}", $this->authHeaders())
+            ->assertOk()
+            ->assertJsonPath('linked_client.address', null);
+    }
+
     public function test_show_returns_sale_with_commercial()
     {
         $commercial = $this->createCommercial();
