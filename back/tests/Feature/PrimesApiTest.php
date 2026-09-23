@@ -210,6 +210,108 @@ class PrimesApiTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
+    // Cancelled rows
+    // -------------------------------------------------------------------------
+
+    public function test_a_cancelled_sale_earns_no_bonus(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+        $this->seedFebruary2014();
+
+        $before = (int) $this->getJson('/api/primes-commerciaux?year=2014&month=2')
+            ->assertOk()->json('shop_total_tyres');
+
+        // La même vente, annulée : ses pneus sortent du compte.
+        $cancelled = $this->createSale('2014-02-05');
+        SaleItem::query()->create([
+            'sale_id' => $cancelled->id,
+            'product_id' => $this->tyre->id,
+            'quantity' => 6,
+            'purchase_price' => 200,
+            'selling_price' => 400,
+            'discount' => 0,
+            'total_purchase' => 1200,
+            'total_sale' => 2400,
+            'margin' => 1200,
+        ]);
+        $cancelled->update(['status' => 'ANNULE']);
+
+        $response = $this->getJson('/api/primes-commerciaux?year=2014&month=2')->assertOk();
+
+        $this->assertSame($before, (int) $response->json('shop_total_tyres'));
+
+        // La série jour par jour compte de la même façon, sinon la jauge ment.
+        $daily = collect($response->json('daily'))->keyBy('date');
+        $this->assertSame(0, $daily['2014-02-05']['total_tyres']);
+        $this->assertSame($before, $daily->sum('total_tyres'));
+    }
+
+    public function test_a_cancelled_service_order_earns_no_bonus(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+        $this->seedFebruary2014();
+
+        $before = (int) $this->getJson('/api/primes-commerciaux?year=2014&month=2')
+            ->assertOk()->json('shop_total_tyres');
+
+        $order = ServiceOrder::query()->create([
+            'date' => '2014-02-06',
+            'vehicle' => 'Peugeot 208',
+            'mileage' => 40000,
+            'total_amount' => 1200,
+            'discount' => 0,
+            'net_amount' => 1200,
+            'status' => 'ANNULE',
+            'payment_status' => 'NON PAYE',
+            'commercial_id' => $this->commercial->id,
+            'created_by' => $this->admin->id,
+        ]);
+        ServiceItem::query()->create([
+            'service_order_id' => $order->id,
+            'item_type' => 'part',
+            'product_id' => $this->tyre->id,
+            'product_name' => 'Pneu 195/65R15',
+            'quantity' => 3,
+            'unit_price' => 400,
+            'parts_cost' => 0,
+            'labor_cost' => 0,
+            'line_total' => 1200,
+            'sort_order' => 0,
+        ]);
+
+        $this->getJson('/api/primes-commerciaux?year=2014&month=2')
+            ->assertOk()
+            ->assertJsonPath('shop_total_tyres', $before);
+    }
+
+    public function test_the_history_leaves_cancelled_sales_out_too(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+        $this->seedFebruary2014();
+
+        $cancelled = $this->createSale('2014-02-18');
+        SaleItem::query()->create([
+            'sale_id' => $cancelled->id,
+            'product_id' => $this->tyre->id,
+            'quantity' => 5,
+            'purchase_price' => 200,
+            'selling_price' => 400,
+            'discount' => 0,
+            'total_purchase' => 1000,
+            'total_sale' => 2000,
+            'margin' => 1000,
+        ]);
+        $cancelled->update(['status' => 'ANNULE']);
+
+        // Février vu depuis mars : le mois d'historique compte comme l'écran.
+        $current = $this->getJson('/api/primes-commerciaux?year=2014&month=2')->assertOk();
+        $fromMarch = $this->getJson('/api/primes-commerciaux?year=2014&month=3')->assertOk();
+
+        $this->assertSame(9, (int) $current->json('shop_total_tyres'));
+        $this->assertSame(9, (int) $fromMarch->json('history.0.shop_total_tyres'));
+    }
+
+    // -------------------------------------------------------------------------
     // History — the threshold that applied then
     // -------------------------------------------------------------------------
 

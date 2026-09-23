@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Reporting\MonthlyReportService;
+use App\Enums\SaleStatus;
+use App\Enums\ServiceOrderStatus;
 use App\Models\CompanySetting;
 use App\Models\PrimeThreshold;
 use Carbon\Carbon;
@@ -25,6 +27,13 @@ class PrimesController extends Controller
         $settings = CompanySetting::first();
         $primeThreshold = (int) ($settings?->prime_threshold ?? 0);
 
+        // Cancelled sales and cancelled service orders are excluded everywhere
+        // in this controller — per commercial, in the daily series and in the
+        // six-month history. A cancelled sale used to count towards the
+        // collective threshold and towards its seller's bonus, while the
+        // dashboard and the monthly report already left it out; the three
+        // screens now agree on what a sold tyre is.
+
         // Tyre qty per commercial from Sales
         $saleTyresSub = DB::table('sale_items')
             ->join('products', 'sale_items.product_id', '=', 'products.id')
@@ -36,6 +45,7 @@ class PrimesController extends Controller
             ->leftJoin('users', 'sales.commercial_id', '=', 'users.id')
             ->leftJoinSub($saleTyresSub, 'st', 'st.sale_id', '=', 'sales.id')
             ->whereBetween('sales.date', [$start, $end])
+            ->where('sales.status', '!=', SaleStatus::ANNULE->value)
             ->selectRaw('sales.commercial_id,
                 COALESCE(users.name, "Non assigné") as commercial_name,
                 COALESCE(users.prime_per_tyre, 0) as prime_per_tyre,
@@ -51,6 +61,7 @@ class PrimesController extends Controller
             ->where('products.type', 'tyre')
             ->where('service_items.item_type', 'part')
             ->whereBetween('service_orders.date', [$start, $end])
+            ->where('service_orders.status', '!=', ServiceOrderStatus::ANNULE->value)
             ->selectRaw('service_orders.commercial_id, SUM(service_items.quantity) as so_tyres')
             ->groupBy('service_orders.commercial_id')
             ->get()
@@ -170,6 +181,7 @@ class PrimesController extends Controller
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->where('products.type', 'tyre')
             ->whereBetween('sales.date', [$start, $end])
+            ->where('sales.status', '!=', SaleStatus::ANNULE->value)
             ->sum('sale_items.quantity');
 
         $service = (int) DB::table('service_items')
@@ -178,6 +190,7 @@ class PrimesController extends Controller
             ->where('products.type', 'tyre')
             ->where('service_items.item_type', 'part')
             ->whereBetween('service_orders.date', [$start, $end])
+            ->where('service_orders.status', '!=', ServiceOrderStatus::ANNULE->value)
             ->sum('service_items.quantity');
 
         return $sales + $service;
@@ -190,10 +203,9 @@ class PrimesController extends Controller
      * series as a calendar (pace since the 1st, gauge), and a sparse array
      * would let a closed day pass for a missing one.
      *
-     * The filters are deliberately the SAME as the totals above — no status
-     * exclusion — so that `sum(daily.total_tyres) === shop_total_tyres`. Both
-     * therefore count cancelled sales and cancelled service orders, unlike the
-     * dashboard and the monthly report, which exclude them.
+     * The filters are deliberately the SAME as the totals above, cancellation
+     * included, so that `sum(daily.total_tyres)` always equals
+     * `shop_total_tyres`. Any divergence here would make the gauge lie.
      *
      * @return array<int, array{date: string, sale_tyres: int, so_tyres: int, total_tyres: int}>
      */
@@ -204,6 +216,7 @@ class PrimesController extends Controller
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->where('products.type', 'tyre')
             ->whereBetween('sales.date', [$start, $end])
+            ->where('sales.status', '!=', SaleStatus::ANNULE->value)
             ->selectRaw('DATE(sales.date) as d, SUM(sale_items.quantity) as qty')
             ->groupBy('d')
             ->pluck('qty', 'd');
@@ -214,6 +227,7 @@ class PrimesController extends Controller
             ->where('products.type', 'tyre')
             ->where('service_items.item_type', 'part')
             ->whereBetween('service_orders.date', [$start, $end])
+            ->where('service_orders.status', '!=', ServiceOrderStatus::ANNULE->value)
             ->selectRaw('DATE(service_orders.date) as d, SUM(service_items.quantity) as qty')
             ->groupBy('d')
             ->pluck('qty', 'd');
