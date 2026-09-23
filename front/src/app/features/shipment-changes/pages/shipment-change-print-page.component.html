@@ -14,11 +14,12 @@
     </span>
 
     <span class="scp-bar-end">
-      <button type="button" class="scp-btn" (click)="print()" [disabled]="!request()">
+      <button type="button" class="scp-btn" (click)="print()"
+              [disabled]="!request() || overflows()">
         <app-icon name="print" [size]="14" /> Imprimer
       </button>
       <button type="button" class="scp-btn scp-btn--primary" (click)="downloadPdf()"
-              [disabled]="generatingPdf() || !request()">
+              [disabled]="generatingPdf() || !request() || overflows()">
         @if (generatingPdf()) {
           Génération…
         } @else {
@@ -41,6 +42,16 @@
     <p class="scp-state no-print">Chargement du document…</p>
   }
 
+  <!-- La feuille coupe en silence ce qui dépasse, en commençant par le bas —
+       les signatures. Le dire, et interdire d'imprimer tant que ça dure. -->
+  @if (overflows()) {
+    <p class="scp-overflow no-print">
+      <app-icon name="alert-triangle" [size]="15" />
+      Le document dépasse une page : raccourcissez le motif ou répartissez les
+      modifications sur deux demandes.
+    </p>
+  }
+
   <!-- ── La feuille A4 ───────────────────────────────────────────────────── -->
   @if (request(); as req) {
     <div class="scp-stage">
@@ -51,10 +62,16 @@
 
         <!-- En-tête : logo à gauche, référence à droite -->
         <header class="scp-head">
-          @if (settings()?.logo_url) {
-            <img class="scp-logo" [src]="settings()!.logo_url!" [alt]="settings()?.company_name ?? ''">
+          <!-- `(error)` et non seulement la présence de l'URL : celle-ci est
+               construite depuis le chemin en base, sans vérifier que le
+               fichier existe. Une image manquante laisserait un trou là où le
+               transporteur cherche l'expéditeur. -->
+          @if (showLogo()) {
+            <img class="scp-logo" [src]="settings()!.logo_url!"
+                 [alt]="settings()?.company_name ?? ''"
+                 (error)="logoFailed.set(true)">
           } @else {
-            <span class="scp-logo-text">{{ settings()?.company_name }}</span>
+            <span class="scp-logo-text">{{ settings()?.legal_name || settings()?.company_name }}</span>
           }
           <span class="scp-head-right">
             <span class="scp-kicker">Demande de modification d'expédition</span>

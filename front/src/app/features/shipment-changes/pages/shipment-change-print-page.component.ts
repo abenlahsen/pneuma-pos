@@ -1,4 +1,12 @@
-import { Component, ElementRef, OnInit, ViewChild, inject, signal } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  OnInit,
+  ViewChild,
+  afterRenderEffect,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IconComponent } from '../../../shared/icon/icon.component';
@@ -47,6 +55,60 @@ export class ShipmentChangePrintPageComponent implements OnInit {
 
   readonly loadError = signal<string | null>(null);
   readonly loadErrorDetail = signal<string | null>(null);
+
+  /**
+   * Le logo n'a pas pu être chargé. `logo_url` est construite à partir du
+   * chemin enregistré, sans vérifier que le fichier existe : une image
+   * supprimée du stockage donne une URL valide et un trou à l'écran. Sur une
+   * lettre envoyée à un tiers, ce trou est en haut à gauche, à l'endroit
+   * exact où l'on identifie l'expéditeur.
+   *
+   * On retombe alors sur le nom de l'entreprise en toutes lettres.
+   */
+  readonly logoFailed = signal(false);
+
+  /** Vrai seulement si une image est annoncée ET qu'elle s'est chargée. */
+  showLogo(): boolean {
+    return !!this.settings()?.logo_url && !this.logoFailed();
+  }
+
+  // ── Le dépassement d'une page ──────────────────────────────────────────────
+  //
+  // La feuille est de hauteur fixe et `overflow: hidden` — c'est ce qui garantit
+  // « une page, jamais deux ». Mais ce qui dépasse est alors coupé en silence,
+  // et ce sont les signatures et les mentions légales qui partent en premier,
+  // puisqu'elles sont en bas. Une lettre sans signature ne revient pas signée du
+  // transporteur et ne vaut rien comme preuve : on constate le dépassement au
+  // lieu de l'espérer.
+
+  readonly overflows = signal(false);
+
+  /**
+   * `afterRenderEffect` couvre les deux moments : une fois la feuille rendue,
+   * puis à chaque fois que ce qu'elle contient change. C'est le premier
+   * composant de l'application à mesurer son propre DOM — il n'y a donc pas
+   * d'autre exemple à côté duquel se ranger.
+   *
+   * Il ne boucle pas : `overflows` est écrit dans ce rappel, jamais lu.
+   */
+  private readonly watchOverflow = afterRenderEffect(() => {
+    // Les paramètres sont une dépendance au même titre que la demande : ils
+    // arrivent par un second appel et remplissent l'en-tête « De » ainsi que
+    // les mentions légales, donc ils changent la hauteur après coup.
+    this.request();
+    this.settings();
+    this.measureOverflow();
+  });
+
+  /**
+   * Publique parce que le test la rappelle après avoir simulé la géométrie :
+   * jsdom ne calcule aucune mise en page.
+   */
+  measureOverflow(): void {
+    const zone = this.printZoneRef?.nativeElement;
+    // Une tolérance d'un pixel : un arrondi sous-pixel n'est pas un dépassement.
+    this.overflows.set(!!zone && zone.scrollHeight > zone.clientHeight + 1);
+  }
 
   ngOnInit(): void {
     this.printService.getSettings().subscribe({
@@ -112,6 +174,9 @@ export class ShipmentChangePrintPageComponent implements OnInit {
   async downloadPdf(): Promise<void> {
     const zone = this.printZoneRef?.nativeElement;
     if (this.generatingPdf() || !zone) return;
+    // html2canvas capture l'élément TEL QU'IL EST RENDU, donc déjà rogné par
+    // `overflow: hidden` : le PDF serait amputé exactement comme la feuille.
+    if (this.overflows()) return;
 
     this.generatingPdf.set(true);
     try {
@@ -122,6 +187,7 @@ export class ShipmentChangePrintPageComponent implements OnInit {
   }
 
   print(): void {
+    if (this.overflows()) return;
     window.print();
   }
 

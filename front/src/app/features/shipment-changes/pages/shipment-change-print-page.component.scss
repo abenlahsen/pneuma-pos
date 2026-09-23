@@ -90,6 +90,22 @@ $paper-rule-light: #ccc;
   color: $text-muted;
 }
 
+/* Le bandeau de dépassement. Hors de `.scp-paper`, donc sans le moindre effet
+   sur la géométrie qu'il commente. */
+.scp-overflow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  padding: 11px 18px;
+  border-bottom: 1px solid $warning-border;
+  background: $warning-bg;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: $warning-dark;
+}
+
 /* ── La scène et la feuille ─────────────────────────────────────────────── */
 .scp-stage {
   display: flex;
