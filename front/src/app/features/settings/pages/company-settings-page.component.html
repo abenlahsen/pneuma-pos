@@ -139,6 +139,62 @@
             </div>
           }
 
+          <!-- ── Jours de fermeture — refonte 2b, 9b ── -->
+          @if (activeSection() === 'opening') {
+            <div class="st-block">
+              <span class="st-block-title">Fermeture hebdomadaire</span>
+              <span class="st-block-hint">Les jours où la boutique ne vend pas, toutes les semaines. Décocher les sept revient à ouvrir tous les jours.</span>
+              <div class="st-week">
+                @for (day of weekdays; track day.value) {
+                  <label class="st-day" [class.st-day--on]="isClosedOn(day.value)">
+                    <input type="checkbox" [checked]="isClosedOn(day.value)" (change)="toggleWeekday(day.value)">
+                    <span class="st-day-name">{{ day.label }}</span>
+                  </label>
+                }
+              </div>
+              <p class="st-note">{{ closingSummary() }}</p>
+            </div>
+
+            <div class="st-block">
+              <span class="st-block-title">Fermetures exceptionnelles</span>
+              <span class="st-block-hint">Fêtes, congés annuels, inventaire — les dates qui ne suivent pas le rythme de la semaine.</span>
+
+              <div class="st-holiday-add">
+                <label class="st-field">
+                  <span>Ajouter une date</span>
+                  <input type="date" [ngModel]="holidayDraft()" (ngModelChange)="holidayDraft.set($event)"
+                         name="holiday_draft" id="holiday_draft" class="st-num">
+                </label>
+                <button type="button" class="st-btn" [disabled]="!holidayDraft()" (click)="addHoliday()">Ajouter</button>
+              </div>
+
+              @if (sortedHolidays().length) {
+                <ul class="st-holidays">
+                  @for (date of sortedHolidays(); track date) {
+                    <li class="st-holiday">
+                      <span class="st-holiday-date">{{ date }}</span>
+                      <span class="st-holiday-label">{{ holidayLabel(date) }}</span>
+                      <button type="button" class="st-holiday-drop" (click)="removeHoliday(date)"
+                              [attr.aria-label]="'Retirer le ' + date">
+                        <app-icon name="close" [size]="14" />
+                      </button>
+                    </li>
+                  }
+                </ul>
+              } @else {
+                <p class="st-note">Aucune fermeture exceptionnelle enregistrée.</p>
+              }
+            </div>
+
+            <div class="st-block">
+              <p class="st-note">
+                Ces jours servent à compter les jours ouvrés restants dans le mois — c'est ce qui permet à l'écran
+                des primes d'annoncer le rythme nécessaire et la date d'atteinte de l'objectif.
+                <a routerLink="/primes">Voir le suivi des primes →</a>
+              </p>
+            </div>
+          }
+
           <!-- ── Documents et logo ── -->
           @if (activeSection() === 'documents') {
             <div class="st-block">

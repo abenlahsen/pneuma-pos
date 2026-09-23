@@ -68,6 +68,15 @@ export class SettingsService {
         return;
       }
 
+      // Les listes (jours de fermeture, jours fériés) partent en JSON et sont
+      // décodées par la requête côté Laravel. `closed_weekdays[]` répété ne
+      // saurait pas dire « aucun jour » : sans entrée, la clé disparaîtrait et
+      // vaudrait « ne change rien », donc on ne pourrait jamais vider la liste.
+      if (Array.isArray(value)) {
+        formData.append(key, JSON.stringify(value));
+        return;
+      }
+
       formData.append(key, String(value));
     });
 

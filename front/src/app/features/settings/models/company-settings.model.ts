@@ -30,6 +30,14 @@ export interface CompanySettings {
   navbar_variant: NavbarVariant;
   content_width: ContentWidth;
   prime_threshold: number;
+  /**
+   * Jours de fermeture hebdomadaires, 0 (dimanche) à 6 (samedi) — la
+   * numérotation de `Date#getDay`. Une liste vide est une boutique ouverte
+   * sept jours sur sept, pas une absence de réglage.
+   */
+  closed_weekdays: number[];
+  /** Fermetures exceptionnelles, en `YYYY-MM-DD`. */
+  holidays: string[];
   created_at?: string | null;
   updated_at?: string | null;
 }
@@ -51,14 +59,23 @@ export interface UpdateCompanySettingsPayload {
   patente: string | null;
   remove_logo?: boolean;
   remove_favicon?: boolean;
-  theme_mode: ThemeMode;
-  primary_color: string;
-  accent_color: string;
-  surface_color: string;
-  menu_layout: MenuLayout;
-  navbar_variant: NavbarVariant;
-  content_width: ContentWidth;
+  /**
+   * Thème et disposition — facultatifs depuis la refonte 2b, 7a : le
+   * personnalisateur a été retiré de l'écran et la page n'envoie plus aucun de
+   * ces champs. Les déclarer obligatoires obligeait `emptyPayload()` à mentir
+   * par un `as`, qui a fini par masquer une vraie erreur de type. L'API les
+   * accepte toujours, d'où leur maintien ici.
+   */
+  theme_mode?: ThemeMode;
+  primary_color?: string;
+  accent_color?: string;
+  surface_color?: string;
+  menu_layout?: MenuLayout;
+  navbar_variant?: NavbarVariant;
+  content_width?: ContentWidth;
   prime_threshold?: number;
+  closed_weekdays: number[];
+  holidays: string[];
 }
 
 export const DEFAULT_COMPANY_THEME_SETTINGS: Pick<

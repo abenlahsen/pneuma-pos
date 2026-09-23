@@ -17,6 +17,27 @@ class UpdateCompanySettingsRequest extends FormRequest
             'remove_logo' => filter_var($this->input('remove_logo'), FILTER_VALIDATE_BOOLEAN),
             'remove_favicon' => filter_var($this->input('remove_favicon'), FILTER_VALIDATE_BOOLEAN),
         ]);
+
+        // Le formulaire des Paramètres part en multipart/form-data, à cause du
+        // logo. Une liste vide ne s'y exprime pas : `closed_weekdays[]` sans
+        // entrée n'envoie rien, et la clé absente vaudrait « ne change pas »,
+        // donc une boutique ouverte sept jours sur sept n'aurait jamais pu être
+        // enregistrée. Les deux listes voyagent en JSON et sont décodées ici.
+        foreach (['closed_weekdays', 'holidays'] as $key) {
+            $value = $this->input($key);
+
+            if (! is_string($value)) {
+                continue;
+            }
+
+            $decoded = json_decode($value, true);
+
+            // Une chaîne qui ne décode pas en tableau est laissée telle quelle :
+            // la règle `array` la rejettera, plutôt que de la vider en silence.
+            if (is_array($decoded)) {
+                $this->merge([$key => $decoded]);
+            }
+        }
     }
 
     public function rules()
@@ -48,6 +69,13 @@ class UpdateCompanySettingsRequest extends FormRequest
             'navbar_variant' => ['nullable', 'in:default,compact,flat'],
             'content_width' => ['nullable', 'in:full,boxed,compact'],
             'prime_threshold' => ['nullable', 'integer', 'min:0'],
+
+            // Refonte 2b, 9b : quand la boutique est fermée. 0 = dimanche,
+            // 6 = samedi, la numérotation de Date#getDay côté navigateur.
+            'closed_weekdays' => ['nullable', 'array', 'max:7'],
+            'closed_weekdays.*' => ['integer', 'between:0,6'],
+            'holidays' => ['nullable', 'array', 'max:365'],
+            'holidays.*' => ['date_format:Y-m-d'],
         ];
     }
 }

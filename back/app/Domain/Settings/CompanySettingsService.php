@@ -3,6 +3,7 @@
 namespace App\Domain\Settings;
 
 use App\Models\CompanySetting;
+use App\Models\PrimeThreshold;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -40,7 +41,7 @@ class CompanySettingsService
     /**
      * @param array<string, mixed> $data
      */
-    public function update(array $data): CompanySetting
+    public function update(array $data, ?int $userId = null): CompanySetting
     {
         $settings = CompanySetting::query()->first();
 
@@ -78,10 +79,40 @@ class CompanySettingsService
 
         unset($data['logo'], $data['favicon'], $data['remove_logo'], $data['remove_favicon']);
 
+        $previousThreshold = (int) ($settings->prime_threshold ?? 0);
+
         $settings->fill($data);
         $settings->save();
 
+        $this->recordThresholdChange($previousThreshold, $settings, $userId);
+
         return $settings->fresh();
+    }
+
+    /**
+     * Refonte 2b, 9b — append the new threshold to `prime_thresholds`.
+     *
+     * `company_settings.prime_threshold` keeps only the current value, so the
+     * Primes screen could not say what applied in a past month. Every change
+     * is appended here instead.
+     *
+     * Effective from today, not from the first of the month: a threshold
+     * raised mid-month took effect when it was set, and back-dating it would
+     * silently rewrite the verdict on the days already elapsed.
+     */
+    private function recordThresholdChange(int $previous, CompanySetting $settings, ?int $userId): void
+    {
+        $current = (int) ($settings->prime_threshold ?? 0);
+
+        if ($current === $previous) {
+            return;
+        }
+
+        PrimeThreshold::query()->create([
+            'threshold' => $current,
+            'effective_from' => now()->toDateString(),
+            'created_by' => $userId,
+        ]);
     }
 
     private function deleteFile(?string $path): void

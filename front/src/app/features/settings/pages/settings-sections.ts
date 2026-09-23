@@ -9,6 +9,7 @@
  */
 export type SettingsSectionId =
   | 'identity'
+  | 'opening'
   | 'documents'
   | 'primes';
 
@@ -34,6 +35,7 @@ export const SETTINGS_GROUPS: SettingsGroup[] = [
     label: 'Entreprise',
     entries: [
       { label: 'Identité et contact', section: 'identity' },
+      { label: 'Jours de fermeture', section: 'opening' },
       { label: 'Documents et logo', section: 'documents' },
     ],
   },
@@ -71,6 +73,10 @@ export const SECTION_HEADERS: Record<SettingsSectionId, { title: string; hint: s
   identity: {
     title: 'Identité et contact',
     hint: 'Ces informations apparaissent sur les devis, les factures et les bons de livraison.',
+  },
+  opening: {
+    title: 'Jours de fermeture',
+    hint: "Les jours où la boutique ne vend pas. Ils servent à compter les jours ouvrés restants dans le mois, et donc la projection de l'objectif de primes.",
   },
   documents: {
     title: 'Documents et logo',

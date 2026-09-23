@@ -28,7 +28,8 @@ class CompanySettingsController extends Controller
 
     public function update(UpdateCompanySettingsRequest $request): JsonResponse
     {
-        $settings = $this->companySettingsService->update($request->validated());
+        // L'auteur suit le changement de seuil dans `prime_thresholds`.
+        $settings = $this->companySettingsService->update($request->validated(), $request->user()?->id);
 
         return response()->json((new CompanySettingsResource($settings))->resolve($request));
     }

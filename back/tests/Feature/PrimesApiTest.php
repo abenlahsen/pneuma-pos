@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Brand;
 use App\Models\CompanySetting;
+use App\Models\PrimeThreshold;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
@@ -206,6 +207,62 @@ class PrimesApiTest extends TestCase
         $this->getJson('/api/primes-commerciaux?year=2014&month=2')
             ->assertOk()
             ->assertJsonPath('prime_threshold', 900);
+    }
+
+    // -------------------------------------------------------------------------
+    // History — the threshold that applied then
+    // -------------------------------------------------------------------------
+
+    public function test_history_covers_the_six_months_before_the_one_shown(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+
+        $history = $this->getJson('/api/primes-commerciaux?year=2014&month=2')
+            ->assertOk()
+            ->json('history');
+
+        $this->assertCount(6, $history);
+        // Février 2014 → janvier 2014 en premier, août 2013 en dernier.
+        $this->assertSame([2014, 1], [$history[0]['year'], $history[0]['month']]);
+        $this->assertSame([2013, 8], [$history[5]['year'], $history[5]['month']]);
+    }
+
+    public function test_history_reports_the_threshold_in_force_at_each_month_end(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+
+        // Le seuil passe de 400 à 700 le 10 janvier 2014.
+        PrimeThreshold::query()->create(['threshold' => 400, 'effective_from' => '2013-11-01']);
+        PrimeThreshold::query()->create(['threshold' => 700, 'effective_from' => '2014-01-10']);
+
+        $history = collect(
+            $this->getJson('/api/primes-commerciaux?year=2014&month=2')->assertOk()->json('history')
+        )->keyBy(fn ($month) => "{$month['year']}-{$month['month']}");
+
+        // Janvier se termine après le changement : c'est 700 qui valait alors.
+        $this->assertSame(700, $history['2014-1']['prime_threshold']);
+        // Décembre et novembre se terminent avant : 400.
+        $this->assertSame(400, $history['2013-12']['prime_threshold']);
+        $this->assertSame(400, $history['2013-11']['prime_threshold']);
+        // Octobre précède toute ligne enregistrée : le seuil est inconnu, pas nul.
+        $this->assertNull($history['2013-10']['prime_threshold']);
+    }
+
+    public function test_history_counts_tyres_the_same_way_as_the_current_month(): void
+    {
+        Sanctum::actingAs($this->admin, [], 'web');
+        $this->seedFebruary2014();
+
+        // Vue depuis mars, février devient le premier mois de l'historique et
+        // doit porter exactement le total que l'écran affichait en février.
+        $current = $this->getJson('/api/primes-commerciaux?year=2014&month=2')->assertOk();
+        $fromMarch = $this->getJson('/api/primes-commerciaux?year=2014&month=3')->assertOk();
+
+        $this->assertSame(
+            (int) $current->json('shop_total_tyres'),
+            (int) $fromMarch->json('history.0.shop_total_tyres'),
+        );
+        $this->assertSame(9, (int) $fromMarch->json('history.0.shop_total_tyres'));
     }
 
     // -------------------------------------------------------------------------

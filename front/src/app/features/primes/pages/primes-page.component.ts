@@ -2,6 +2,7 @@ import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { PrimeService } from '../data-access/prime.service';
+import { SettingsService } from '../../settings/data-access/settings.service';
 import { PrimeHistoryMonth, PrimeRow, PrimesResponse } from '../models/prime.model';
 
 import {
@@ -31,18 +32,14 @@ function isoDay(date: Date): string {
  * manque-t-il, et en combien de jours », et seulement ensuite à « combien
  * touche chacun ».
  *
- * Deux choses que la maquette demande ne sont pas affichées, faute de données —
- * elles sont masquées, jamais simulées :
+ * Les jours ouvrés viennent des jours de fermeture de `company-settings`
+ * (`closed_weekdays`, `holidays`). Tant que ce chargement n'a pas répondu, la
+ * projection reste éteinte plutôt que de tourner sur une semaine supposée.
  *
- *   • la PROJECTION (date d'atteinte, hachures de la jauge) demande les jours
- *     ouvrés restants, donc les jours de fermeture de la boutique. Rien ne les
- *     porte : `company_settings` ne contient ni horaires ni calendrier. Ce que
- *     l'écran montre à la place est mesuré, pas extrapolé — un rythme par jour
- *     CALENDAIRE, nommé comme tel.
- *
- *   • l'HISTORIQUE des six derniers mois demande le seuil qui s'appliquait
- *     alors. `prime_threshold` est une colonne unique de `company_settings`,
- *     sans historique : le seuil d'un mois passé n'existe nulle part.
+ * L'historique vient de `prime_thresholds`, qui garde le seuil et sa date de
+ * prise d'effet. Un mois antérieur à la première ligne revient sans seuil : la
+ * table a commencé à compter le jour de sa création et ne récupère rien
+ * d'avant. Ces mois-là s'affichent en tiret, sans verdict.
  */
 @Component({
   selector: 'app-primes-page',
@@ -79,14 +76,20 @@ export class PrimesPageComponent implements OnInit {
   private readonly today = isoDay(this.now);
 
   /**
-   * Les jours de fermeture de la boutique. Nul, et il n'y a aujourd'hui aucun
-   * moyen de les connaître : c'est ce qui tient la projection masquée. Le jour
-   * où `company-settings` les portera, ce signal les recevra et le bloc de
-   * projection s'allumera sans autre changement.
+   * Les jours de fermeture hebdomadaires, 0 (dimanche) à 6 (samedi). Nul tant
+   * que `company-settings` n'a pas répondu — c'est ce qui tient la projection
+   * éteinte à ce moment-là. Une liste vide est une réponse : la boutique ouvre
+   * tous les jours.
    */
   readonly closingDays = signal<number[] | null>(null);
 
-  constructor(private primeService: PrimeService) {}
+  /** Les fermetures exceptionnelles, en `YYYY-MM-DD`. */
+  readonly holidays = signal<string[]>([]);
+
+  constructor(
+    private primeService: PrimeService,
+    private settingsService: SettingsService,
+  ) {}
 
   // ── Le mois ────────────────────────────────────────────────────────────────
 
@@ -107,14 +110,40 @@ export class PrimesPageComponent implements OnInit {
     return this.isCurrentMonth() ? this.today : days[days.length - 1].date;
   });
 
+  /** Les jours déjà comptés : du 1er à aujourd'hui, ou le mois entier s'il est clos. */
   readonly elapsedDays = computed(() => {
     const days = this.days();
-    if (!days.length) return 0;
-    return this.isCurrentMonth() ? this.now.getDate() : days.length;
+    if (!days.length) return [];
+    const stop = this.isCurrentMonth() ? this.now.getDate() : days.length;
+    return days.slice(0, stop);
   });
 
-  readonly remainingDays = computed(() =>
-    this.isCurrentMonth() ? Math.max(this.days().length - this.now.getDate(), 0) : 0,
+  /** Les jours qui restent : après aujourd'hui, et rien pour un mois clos. */
+  readonly futureDays = computed(() =>
+    this.isCurrentMonth() ? this.days().slice(this.now.getDate()) : [],
+  );
+
+  // ── Jours ouvrés ───────────────────────────────────────────────────────────
+
+  /**
+   * Un jour ouvré est un jour où la boutique vend : ni fermeture hebdomadaire,
+   * ni fermeture exceptionnelle. Faux pour tout le monde tant que les jours de
+   * fermeture ne sont pas connus — c'est `canProject()` qui garde l'écran de
+   * s'en servir avant.
+   */
+  isWorkingDay(iso: string): boolean {
+    const closed = this.closingDays();
+    if (closed === null) return false;
+    if (this.holidays().includes(iso)) return false;
+    return !closed.includes(new Date(`${iso}T00:00:00`).getDay());
+  }
+
+  readonly workingDaysElapsed = computed(
+    () => this.elapsedDays().filter((day) => this.isWorkingDay(day.date)).length,
+  );
+
+  readonly workingDaysRemaining = computed(
+    () => this.futureDays().filter((day) => this.isWorkingDay(day.date)).length,
   );
 
   // ── L'objectif ─────────────────────────────────────────────────────────────
@@ -126,28 +155,84 @@ export class PrimesPageComponent implements OnInit {
   readonly reached = computed(() => this.hasThreshold() && this.realized() >= this.threshold());
 
   /**
-   * Moyenne par jour écoulé. C'est une mesure, pas une extrapolation : elle
-   * décrit le mois tel qu'il s'est passé, jours de fermeture inclus.
+   * Moyenne par jour ouvré écoulé. C'est une mesure, pas une extrapolation :
+   * elle décrit le mois tel qu'il s'est passé.
    */
   readonly currentPace = computed(() => {
-    const days = this.elapsedDays();
+    const days = this.workingDaysElapsed();
     return days > 0 ? this.realized() / days : null;
   });
 
-  /** Ce qu'il faudrait faire par jour restant pour franchir le seuil. */
+  /** Ce qu'il faudrait faire par jour ouvré restant pour franchir le seuil. */
   readonly requiredPace = computed(() => {
-    const left = this.remainingDays();
+    const left = this.workingDaysRemaining();
     return this.gap() > 0 && left > 0 ? this.gap() / left : null;
   });
 
+  // ── Projection ─────────────────────────────────────────────────────────────
+
   /**
-   * La jauge se cale sur le plus grand des deux — seuil ou réalisé. Tant que le
-   * seuil n'est pas atteint, il est au bout de la barre : la barre doit aller
-   * jusqu'au bout. Une fois franchi, il recule et le dépassement se voit.
+   * Là où le mois finira si le rythme tient. Nul sans jours de fermeture
+   * connus, sans rythme mesurable, ou sur un mois déjà clos — dans ces trois
+   * cas il n'y a rien à projeter, et l'écran n'affiche rien.
    */
-  readonly gaugeMax = computed(() => Math.max(this.threshold(), this.realized(), 1));
+  readonly projectedTotal = computed(() => {
+    const pace = this.currentPace();
+    if (!this.canProject() || pace === null || !this.isCurrentMonth()) return null;
+    return Math.round(this.realized() + pace * this.workingDaysRemaining());
+  });
+
+  /**
+   * Le jour où le compteur franchit le seuil au rythme actuel. Nul si le seuil
+   * est déjà atteint, ou si le rythme ne suffit pas d'ici la fin du mois.
+   *
+   * On annonce le jour ouvré LE PLUS PROCHE du franchissement, pas le premier
+   * dont le cumul de fin de journée dépasse le seuil. Avec 203 pneus à 46,5
+   * par jour, il faut 4,4 jours ouvrés : le 4e est le 22/09, le 5e le 23/09
+   * (le dimanche 20 étant sauté), et le franchissement tombe dans le premier
+   * tiers du 23. C'est le 22 qui est annoncé — la lecture de la maquette 18a.
+   *
+   * Le revers assumé : au soir du jour annoncé le cumul projeté peut être
+   * légèrement sous le seuil (883 sur 900 dans cet exemple). L'annonce est
+   * donc optimiste d'une demi-journée au plus. Passer `Math.round` en
+   * `Math.ceil` ci-dessous rend l'annonce strictement atteignable, au prix
+   * d'un jour entier de retard pour quelques pneus.
+   */
+  readonly projectedDate = computed(() => {
+    const pace = this.currentPace();
+    if (!this.canProject() || pace === null || pace <= 0) return null;
+    if (!this.hasThreshold() || this.reached()) return null;
+
+    const working = this.futureDays().filter((day) => this.isWorkingDay(day.date));
+    const needed = Math.max(Math.round(this.gap() / pace), 1);
+
+    return working[needed - 1]?.date ?? null;
+  });
+
+  /**
+   * La jauge se cale sur le plus grand des trois — seuil, réalisé, projection.
+   * Tant que le seuil n'est pas atteint et qu'on ne projette pas, il est au
+   * bout de la barre : la barre doit aller jusqu'au bout. Dès qu'il est
+   * dépassé, ou qu'une projection va plus loin, il recule et l'écart se voit.
+   */
+  readonly gaugeMax = computed(() =>
+    Math.max(this.threshold(), this.realized(), this.projectedTotal() ?? 0, 1),
+  );
   readonly fillPct = computed(() => Math.min((this.realized() / this.gaugeMax()) * 100, 100));
   readonly thresholdPct = computed(() => (this.threshold() / this.gaugeMax()) * 100);
+
+  /** La projection franchit-elle le seuil ? Faux s'il n'y en a pas. */
+  readonly projectionMakesIt = computed(() => {
+    const projected = this.projectedTotal();
+    return this.hasThreshold() && projected !== null && projected >= this.threshold();
+  });
+
+  /** La largeur des hachures : ce que la projection ajoute au réalisé. */
+  readonly projectionPct = computed(() => {
+    const projected = this.projectedTotal();
+    if (projected === null) return 0;
+    return Math.max((projected / this.gaugeMax()) * 100 - this.fillPct(), 0);
+  });
 
   // ── La répartition ─────────────────────────────────────────────────────────
 
@@ -188,6 +273,19 @@ export class PrimesPageComponent implements OnInit {
   });
 
   /**
+   * Ce que la prime coûterait si le mois finissait sur la projection. Le coût
+   * suit le nombre de pneus, donc il se met à l'échelle dans le même rapport —
+   * répartir la projection commercial par commercial supposerait que chacun
+   * garde sa part, ce que rien ne garantit.
+   */
+  readonly costAtProjection = computed(() => {
+    const projected = this.projectedTotal();
+    const realized = this.realized();
+    if (projected === null || realized <= 0) return null;
+    return (this.costAtRealized() * projected) / realized;
+  });
+
+  /**
    * Les taux sont par commercial ; la règle ne se résume en une phrase que
    * s'ils coïncident. Deux membres plutôt qu'un `as` de gabarit : un taux
    * uniforme de 0 est une valeur, pas une absence.
@@ -199,23 +297,54 @@ export class PrimesPageComponent implements OnInit {
 
   readonly hasUniformRate = computed(() => this.uniformRate() !== null);
 
-  // ── Ce qui reste masqué ────────────────────────────────────────────────────
-
-  /** Voir l'en-tête de classe : sans jours de fermeture, pas de projection. */
+  /** Sans jours de fermeture connus, rien ne se projette. */
   readonly canProject = computed(() => this.closingDays() !== null);
+
+  // ── Les six derniers mois ──────────────────────────────────────────────────
 
   readonly history = computed(() => this.response()?.history ?? []);
 
-  /** Un mois passé se lit contre le seuil qui valait alors, pas contre l'actuel. */
+  /**
+   * Un mois passé se lit contre le seuil qui valait ALORS, jamais contre
+   * l'actuel. Faute de seuil connu, la barre se cale sur le plus gros mois de
+   * la série : elle reste comparable aux autres sans prétendre à un verdict.
+   */
   histPct(past: PrimeHistoryMonth): number {
-    const scale = Math.max(past.prime_threshold, past.shop_total_tyres, 1);
-    return (past.shop_total_tyres / scale) * 100;
+    const scale = past.prime_threshold
+      ? Math.max(past.prime_threshold, past.shop_total_tyres)
+      : Math.max(...this.history().map((month) => month.shop_total_tyres), 1);
+    return (past.shop_total_tyres / Math.max(scale, 1)) * 100;
+  }
+
+  histReached(past: PrimeHistoryMonth): boolean {
+    return past.prime_threshold !== null && past.shop_total_tyres >= past.prime_threshold;
+  }
+
+  /** `{year: 2026, month: 8}` → `Août`. */
+  histLabel(past: PrimeHistoryMonth): string {
+    return MONTH_NAMES[past.month - 1];
   }
 
   // ── Chargement ─────────────────────────────────────────────────────────────
 
   ngOnInit(): void {
+    this.loadClosingDays();
     this.loadData();
+  }
+
+  /**
+   * Les jours de fermeture, d'où sortent les jours ouvrés. Un échec laisse
+   * `closingDays` à null, donc la projection éteinte : mieux vaut ne rien
+   * annoncer que de compter sur une semaine supposée.
+   */
+  private loadClosingDays(): void {
+    this.settingsService.getCompanySettings().subscribe({
+      next: (settings) => {
+        this.closingDays.set(settings.closed_weekdays ?? [0]);
+        this.holidays.set(settings.holidays ?? []);
+      },
+      error: () => {},
+    });
   }
 
   loadData(): void {

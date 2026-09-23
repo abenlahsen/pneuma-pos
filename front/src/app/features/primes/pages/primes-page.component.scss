@@ -169,13 +169,14 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Le rythme est une mesure, pas une projection : la sous-ligne le nomme, pour
-   qu'on ne le lise pas comme une prévision. */
 .pr-pace-sub {
   display: block;
   margin-top: 2px;
   font-size: 11.5px;
   color: $text-muted;
+
+  &--ok { font-weight: 600; color: $income-color; }
+  &--short { font-weight: 600; color: $warning-color; }
 }
 
 // ── La jauge ─────────────────────────────────────────────────────────────────
@@ -199,6 +200,19 @@
 }
 
 .pr-gauge-fill { background: $text-dark; }
+
+/* La projection est en hachures et non en aplat : elle n'a pas le même statut
+   que le réalisé, et la trame le dit sans avoir besoin d'une légende. */
+.pr-gauge-projection {
+  position: absolute;
+  top: 9px;
+  height: 12px;
+  background: repeating-linear-gradient(
+    90deg,
+    $border-color 0 4px,
+    transparent 4px 7px
+  );
+}
 
 .pr-gauge-mark {
   position: absolute;
@@ -422,7 +436,7 @@
 // ── L'historique, quand l'API saura le dire ──────────────────────────────────
 .pr-hist {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr) 54px;
+  grid-template-columns: 72px minmax(0, 1fr) 62px;
   align-items: center;
   gap: 8px;
   padding: 6px 0;
@@ -454,6 +468,16 @@
   font-size: 12px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  color: $text-secondary;
+
+  &--ok { color: $income-color; }
+}
+
+/* Le verdict : ✓ quand le seuil du mois est franchi, un tiret quand ce seuil
+   n'est pas connu. Jamais de ✗ — un mois manqué se lit déjà à sa barre. */
+.pr-hist-mark {
+  margin-left: 3px;
+  color: inherit;
 }
 
 // ── Étroit ───────────────────────────────────────────────────────────────────

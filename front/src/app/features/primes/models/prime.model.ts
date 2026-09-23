@@ -31,16 +31,15 @@ export interface PrimeDay {
 /**
  * Un mois passé, avec le seuil qui s'appliquait alors.
  *
- * L'API ne renvoie pas encore ce bloc : `prime_threshold` est une colonne
- * unique de `company_settings`, sans historique ni journal de ses changements,
- * donc le seuil d'un mois écoulé n'est nulle part. Le type est posé pour que le
- * panneau s'allume le jour où le backend saura le dire — il ne se simule pas.
+ * `prime_threshold` est nul pour un mois antérieur à la première ligne de
+ * `prime_thresholds` : la table a commencé à compter le jour de sa création et
+ * ne récupère rien d'avant. L'écran y affiche un tiret, sans verdict.
  */
 export interface PrimeHistoryMonth {
   year: number;
   month: number;
   shop_total_tyres: number;
-  prime_threshold: number;
+  prime_threshold: number | null;
 }
 
 export interface PrimesResponse {
@@ -54,5 +53,6 @@ export interface PrimesResponse {
   daily: PrimeDay[];
   /** Marge nette du mois, pour la part que coûte la prime. */
   net_margin: number;
-  history?: PrimeHistoryMonth[];
+  /** Les six mois précédents, du plus récent au plus ancien. */
+  history: PrimeHistoryMonth[];
 }

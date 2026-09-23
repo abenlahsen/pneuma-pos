@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Domain\Reporting\MonthlyReportService;
 use App\Models\CompanySetting;
+use App\Models\PrimeThreshold;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -124,7 +125,62 @@ class PrimesController extends Controller
             'data'       => $data,
             'daily'      => $this->dailyTyres($start, $end),
             'net_margin' => $this->reportService->netMargin($year, $month),
+            'history'    => $this->history($start),
         ]);
+    }
+
+    /**
+     * The six months before the one being shown — refonte 2b, 9b.
+     *
+     * Each month carries the threshold that applied AT ITS END, read from
+     * `prime_thresholds`. A month older than the first recorded value comes
+     * back with `prime_threshold: null`: the table starts counting from the
+     * day it was created and recovers nothing from before. The screen shows a
+     * dash there rather than a verdict it cannot support.
+     *
+     * @return array<int, array{year: int, month: int, shop_total_tyres: int, prime_threshold: int|null}>
+     */
+    private function history(Carbon $currentStart): array
+    {
+        $months = [];
+
+        for ($back = 1; $back <= 6; $back++) {
+            $monthStart = $currentStart->copy()->subMonthsNoOverflow($back);
+            $monthEnd = $monthStart->copy()->endOfMonth();
+
+            $months[] = [
+                'year' => $monthStart->year,
+                'month' => $monthStart->month,
+                'shop_total_tyres' => $this->tyresBetween($monthStart, $monthEnd->copy()->endOfDay()),
+                'prime_threshold' => PrimeThreshold::inForceOn($monthEnd->toDateString()),
+            ];
+        }
+
+        return $months;
+    }
+
+    /**
+     * Total tyres over a range — the same measurement as `shop_total_tyres`,
+     * so a past month and the current one are counted identically.
+     */
+    private function tyresBetween(Carbon $start, Carbon $end): int
+    {
+        $sales = (int) DB::table('sale_items')
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->where('products.type', 'tyre')
+            ->whereBetween('sales.date', [$start, $end])
+            ->sum('sale_items.quantity');
+
+        $service = (int) DB::table('service_items')
+            ->join('products', 'service_items.product_id', '=', 'products.id')
+            ->join('service_orders', 'service_items.service_order_id', '=', 'service_orders.id')
+            ->where('products.type', 'tyre')
+            ->where('service_items.item_type', 'part')
+            ->whereBetween('service_orders.date', [$start, $end])
+            ->sum('service_items.quantity');
+
+        return $sales + $service;
     }
 
     /**

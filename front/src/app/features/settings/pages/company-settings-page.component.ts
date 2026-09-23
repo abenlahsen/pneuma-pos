@@ -21,9 +21,33 @@ const SECTION_FIELDS: Record<SettingsSectionId, (keyof UpdateCompanySettingsPayl
     'address', 'city', 'state', 'postal_code', 'country',
     'tax_id', 'rc', 'ice', 'cnss', 'patente',
   ],
+  opening: ['closed_weekdays', 'holidays'],
   documents: ['remove_logo', 'remove_favicon'],
   primes: ['prime_threshold'],
 };
+
+/** Les sept cases, dans l'ordre où une semaine se lit ici. */
+export const WEEKDAYS: { value: number; label: string; short: string }[] = [
+  { value: 1, label: 'Lundi', short: 'Lun' },
+  { value: 2, label: 'Mardi', short: 'Mar' },
+  { value: 3, label: 'Mercredi', short: 'Mer' },
+  { value: 4, label: 'Jeudi', short: 'Jeu' },
+  { value: 5, label: 'Vendredi', short: 'Ven' },
+  { value: 6, label: 'Samedi', short: 'Sam' },
+  { value: 0, label: 'Dimanche', short: 'Dim' },
+];
+
+/**
+ * Deux valeurs de champ sont-elles la même ? Les listes se comparent par leur
+ * contenu : `!==` sur deux tableaux compare des références, et la section
+ * « Jours de fermeture » se serait déclarée modifiée en permanence.
+ */
+function sameValue(a: unknown, b: unknown): boolean {
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return a.length === b.length && a.every((item, i) => item === b[i]);
+  }
+  return a === b;
+}
 
 @Component({
   selector: 'app-company-settings-page',
@@ -72,7 +96,7 @@ export class CompanySettingsPageComponent implements OnInit {
   readonly dirtyFields = computed(() => {
     const current = this.form();
     const saved = this.saved();
-    return SECTION_FIELDS[this.activeSection()].filter((field) => current[field] !== saved[field]);
+    return SECTION_FIELDS[this.activeSection()].filter((field) => !sameValue(current[field], saved[field]));
   });
 
   readonly hasPendingFiles = computed(
@@ -181,6 +205,67 @@ export class CompanySettingsPageComponent implements OnInit {
     this.form.update((current) => ({ ...current, [key]: value }));
   }
 
+  // ── Jours de fermeture — refonte 2b, 9b ────────────────────────────────────
+
+  readonly weekdays = WEEKDAYS;
+
+  /** Le champ de saisie d'une date à ajouter aux fermetures exceptionnelles. */
+  readonly holidayDraft = signal('');
+
+  isClosedOn(day: number): boolean {
+    return this.form().closed_weekdays.includes(day);
+  }
+
+  toggleWeekday(day: number): void {
+    const current = this.form().closed_weekdays;
+    const next = current.includes(day)
+      ? current.filter((value) => value !== day)
+      : [...current, day].sort((a, b) => a - b);
+    this.updateField('closed_weekdays', next);
+  }
+
+  /** Les fermetures exceptionnelles, toujours de la plus proche à la plus lointaine. */
+  readonly sortedHolidays = computed(() => [...this.form().holidays].sort());
+
+  addHoliday(): void {
+    const date = this.holidayDraft().trim();
+    if (!date) return;
+
+    const current = this.form().holidays;
+    // Une date déjà présente n'est pas une erreur, elle n'a simplement rien à
+    // ajouter — on vide la saisie et on s'arrête.
+    if (!current.includes(date)) {
+      this.updateField('holidays', [...current, date].sort());
+    }
+    this.holidayDraft.set('');
+  }
+
+  removeHoliday(date: string): void {
+    this.updateField('holidays', this.form().holidays.filter((value) => value !== date));
+  }
+
+  /** `2026-01-01` → `jeudi 1 janvier 2026`. */
+  holidayLabel(date: string): string {
+    const parsed = new Date(`${date}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) return date;
+    return parsed.toLocaleDateString('fr-MA', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }
+
+  /** « Fermé le dimanche », « Ouverte tous les jours » — la phrase de contrôle. */
+  readonly closingSummary = computed(() => {
+    const days = this.form().closed_weekdays;
+    if (!days.length) return 'La boutique est ouverte tous les jours de la semaine.';
+
+    const names = WEEKDAYS.filter((day) => days.includes(day.value)).map((day) => day.label.toLowerCase());
+    const list = names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} et ${names.at(-1)}`;
+    return `Fermée le ${list}.`;
+  });
+
   onLogoSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     this.selectedLogoFile.set(file);
@@ -261,7 +346,9 @@ function emptyPayload(): UpdateCompanySettingsPayload {
     remove_logo: false,
     remove_favicon: false,
     prime_threshold: 0,
-  } as UpdateCompanySettingsPayload;
+    closed_weekdays: [0],
+    holidays: [],
+  };
 }
 
 function mapSettingsToPayload(settings: CompanySettings): UpdateCompanySettingsPayload {
@@ -283,5 +370,9 @@ function mapSettingsToPayload(settings: CompanySettings): UpdateCompanySettingsP
     remove_logo: false,
     remove_favicon: false,
     prime_threshold: settings.prime_threshold ?? 0,
-  } as UpdateCompanySettingsPayload;
+    // `?? [0]` et non `?? []` : une réponse sans le champ est un backend qui
+    // n'a pas encore la colonne, pas une boutique ouverte sept jours sur sept.
+    closed_weekdays: settings.closed_weekdays ?? [0],
+    holidays: settings.holidays ?? [],
+  };
 }

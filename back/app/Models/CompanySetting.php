@@ -34,12 +34,62 @@ class CompanySetting extends Model
         'navbar_variant',
         'content_width',
         'prime_threshold',
+        'closed_weekdays',
+        'holidays',
     ];
 
     protected $appends = [
         'logo_url',
         'favicon_url',
     ];
+
+    /**
+     * Days of the week the shop is closed, 0 (Sunday) to 6 (Saturday) — the
+     * same numbering as JavaScript's Date#getDay, so the front reads them as
+     * they come.
+     *
+     * The default is Sunday rather than an empty list: the row written before
+     * these columns existed holds null, and returning [] there would tell the
+     * Primes projection that the shop never closes — a stronger claim than
+     * "not yet answered".
+     *
+     * Written as an Attribute rather than an `array` cast because the cast
+     * cannot express that default on read.
+     */
+    protected function closedWeekdays(): Attribute
+    {
+        return Attribute::make(
+            get: function (?string $value): array {
+                $decoded = json_decode((string) $value, true);
+
+                if (! is_array($decoded)) {
+                    return [0];
+                }
+
+                $days = array_filter(
+                    array_map('intval', $decoded),
+                    fn (int $day) => $day >= 0 && $day <= 6,
+                );
+                sort($days);
+
+                return array_values(array_unique($days));
+            },
+            set: fn (?array $value) => json_encode(array_values($value ?? [0])),
+        );
+    }
+
+    /** Exceptional closures, as `Y-m-d` strings. */
+    protected function holidays(): Attribute
+    {
+        return Attribute::make(
+            get: function (?string $value): array {
+                $decoded = json_decode((string) $value, true);
+
+                return is_array($decoded) ? array_values(array_map('strval', $decoded)) : [];
+            },
+            set: fn (?array $value) => json_encode(array_values($value ?? [])),
+        );
+    }
 
     public function cityRelation(): BelongsTo
     {

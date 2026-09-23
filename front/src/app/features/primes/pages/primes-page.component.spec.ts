@@ -38,6 +38,7 @@ function makeResponse(overrides: Partial<PrimesResponse> = {}): PrimesResponse {
     data: [makeRow()],
     daily: daysOf(9, 2026),
     net_margin: 122_000,
+    history: [],
     ...overrides,
   };
 }
@@ -45,12 +46,19 @@ function makeResponse(overrides: Partial<PrimesResponse> = {}): PrimesResponse {
 describe('PrimesPageComponent', () => {
   let comp: PrimesPageComponent;
   let mockService: { getPrimes: ReturnType<typeof vi.fn> };
+  let mockSettings: { getCompanySettings: ReturnType<typeof vi.fn> };
+
+  /** Fermée le dimanche, aucun férié — le réglage par défaut. */
+  function settingsOf(closed: number[] = [0], holidays: string[] = []) {
+    return of({ closed_weekdays: closed, holidays } as never);
+  }
 
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(TODAY);
     mockService = { getPrimes: vi.fn().mockReturnValue(of(makeResponse())) };
-    comp = new PrimesPageComponent(mockService as never);
+    mockSettings = { getCompanySettings: vi.fn().mockReturnValue(settingsOf()) };
+    comp = new PrimesPageComponent(mockService as never, mockSettings as never);
   });
 
   afterEach(() => {
@@ -92,14 +100,38 @@ describe('PrimesPageComponent', () => {
   // ── Le rythme, mesuré et non extrapolé ─────────────────────────────────────
 
   describe('rythme', () => {
-    it('compte les jours écoulés du mois en cours, pas le mois entier', () => {
+    // Septembre 2026 commence un mardi ; les dimanches tombent les 6, 13, 20
+    // et 27. Au 17, il s'est écoulé 15 jours ouvrés et il en reste 11.
+    it('compte en jours ouvrés, pas en jours calendaires', () => {
       comp.ngOnInit();
 
       expect(comp.isCurrentMonth()).toBe(true);
-      expect(comp.elapsedDays()).toBe(17);
-      expect(comp.remainingDays()).toBe(13);
-      expect(comp.currentPace()).toBeCloseTo(697 / 17, 6);
-      expect(comp.requiredPace()).toBeCloseTo(203 / 13, 6);
+      expect(comp.elapsedDays()).toHaveLength(17);
+      expect(comp.futureDays()).toHaveLength(13);
+      expect(comp.workingDaysElapsed()).toBe(15);
+      expect(comp.workingDaysRemaining()).toBe(11);
+      expect(comp.currentPace()).toBeCloseTo(697 / 15, 6);
+      expect(comp.requiredPace()).toBeCloseTo(203 / 11, 6);
+    });
+
+    it('retire aussi les fermetures exceptionnelles', () => {
+      // Deux fériés en semaine, un troisième un dimanche déjà fermé : il ne
+      // doit pas être compté deux fois.
+      mockSettings.getCompanySettings.mockReturnValue(
+        settingsOf([0], ['2026-09-10', '2026-09-24', '2026-09-13']),
+      );
+      comp.ngOnInit();
+
+      expect(comp.workingDaysElapsed()).toBe(14);
+      expect(comp.workingDaysRemaining()).toBe(10);
+    });
+
+    it('une boutique ouverte sept jours sur sept a autant de jours ouvrés que de jours', () => {
+      mockSettings.getCompanySettings.mockReturnValue(settingsOf([]));
+      comp.ngOnInit();
+
+      expect(comp.workingDaysElapsed()).toBe(17);
+      expect(comp.workingDaysRemaining()).toBe(13);
     });
 
     it('sur un mois clos, tout le mois est écoulé et rien ne reste', () => {
@@ -110,9 +142,10 @@ describe('PrimesPageComponent', () => {
       comp.ngOnInit();
 
       expect(comp.isCurrentMonth()).toBe(false);
-      expect(comp.elapsedDays()).toBe(31);
-      expect(comp.remainingDays()).toBe(0);
-      // Plus de jour restant : il n'y a plus de rythme à exiger.
+      expect(comp.elapsedDays()).toHaveLength(31);
+      expect(comp.futureDays()).toHaveLength(0);
+      expect(comp.workingDaysRemaining()).toBe(0);
+      // Plus de jour ouvré restant : il n'y a plus de rythme à exiger.
       expect(comp.requiredPace()).toBeNull();
     });
 
@@ -132,21 +165,74 @@ describe('PrimesPageComponent', () => {
 
   // ── Ce qui reste masqué ────────────────────────────────────────────────────
 
-  describe('projection et historique', () => {
-    it('ne projette pas : les jours de fermeture ne sont nulle part', () => {
+  describe('projection', () => {
+    it('projette la fin du mois au rythme des jours ouvrés écoulés', () => {
+      comp.ngOnInit();
+
+      expect(comp.canProject()).toBe(true);
+      // 697 + (697 / 15) × 11 = 1208, le chiffre de la maquette 18a.
+      expect(comp.projectedTotal()).toBe(1208);
+      expect(comp.projectionMakesIt()).toBe(true);
+    });
+
+    it('donne le jour ouvré où le compteur franchit le seuil', () => {
+      comp.ngOnInit();
+
+      // Il manque 203 pneus à 46,47 par jour ouvré, soit 4,4 jours ouvrés.
+      // Les jours ouvrés restants sont 18, 19, 21 (dimanche 20 sauté), 22, 23 :
+      // le plus proche du franchissement est le 4e, le 22.
+      expect(comp.projectedDate()).toBe('2026-09-22');
+    });
+
+    it('saute les fériés comme les dimanches dans le compte à rebours', () => {
+      // Le 21 devient férié : le 4e jour ouvré restant recule d'un cran.
+      mockSettings.getCompanySettings.mockReturnValue(settingsOf([0], ['2026-09-21']));
+      comp.ngOnInit();
+
+      // Le 21 est à venir : les jours écoulés ne bougent pas, les restants si.
+      expect(comp.workingDaysElapsed()).toBe(15);
+      expect(comp.workingDaysRemaining()).toBe(10);
+      expect(comp.projectedDate()).toBe('2026-09-23');
+    });
+
+    it('n’annonce pas de date quand le rythme ne suffit pas', () => {
+      mockService.getPrimes.mockReturnValue(of(makeResponse({ shop_total_tyres: 120 })));
+      comp.ngOnInit();
+
+      expect(comp.projectedDate()).toBeNull();
+      expect(comp.projectionMakesIt()).toBe(false);
+    });
+
+    it('ne projette rien tant que les jours de fermeture sont inconnus', () => {
+      mockSettings.getCompanySettings.mockReturnValue(throwError(() => ({ status: 500 })));
       comp.ngOnInit();
 
       expect(comp.closingDays()).toBeNull();
       expect(comp.canProject()).toBe(false);
+      expect(comp.projectedTotal()).toBeNull();
+      expect(comp.projectedDate()).toBeNull();
+      expect(comp.costAtProjection()).toBeNull();
     });
 
-    it('n’invente pas d’historique quand l’API n’en renvoie pas', () => {
+    it('ne projette pas un mois déjà clos', () => {
+      mockService.getPrimes.mockReturnValue(
+        of(makeResponse({ month: 8, daily: daysOf(8, 2026) })),
+      );
+      comp.selectedMonth.set(8);
       comp.ngOnInit();
 
-      expect(comp.history()).toEqual([]);
+      expect(comp.projectedTotal()).toBeNull();
     });
 
-    it('affiche l’historique le jour où l’API le renvoie, seuil d’alors compris', () => {
+    it('met le coût à l’échelle de la projection', () => {
+      comp.ngOnInit();
+
+      expect(comp.costAtProjection()).toBeCloseTo((284 * 25 * 1208) / 697, 6);
+    });
+  });
+
+  describe('historique', () => {
+    it('compare chaque mois au seuil qui valait alors, pas à celui d’aujourd’hui', () => {
       mockService.getPrimes.mockReturnValue(
         of(
           makeResponse({
@@ -159,29 +245,67 @@ describe('PrimesPageComponent', () => {
       );
       comp.ngOnInit();
 
-      expect(comp.history()).toHaveLength(2);
-      // Août est au-dessus de SON seuil, juillet non : la barre se cale sur le
-      // seuil du mois, jamais sur celui d'aujourd'hui.
-      expect(comp.histPct(comp.history()[0])).toBe(100);
-      expect(comp.histPct(comp.history()[1])).toBeCloseTo((612 / 900) * 100, 6);
+      const [aout, juillet] = comp.history();
+      expect(comp.histReached(aout)).toBe(true);
+      expect(comp.histReached(juillet)).toBe(false);
+      expect(comp.histPct(aout)).toBe(100);
+      expect(comp.histPct(juillet)).toBeCloseTo((612 / 900) * 100, 6);
+      expect(comp.histLabel(aout)).toBe('Août');
+    });
+
+    it('un mois sans seuil connu n’a pas de verdict', () => {
+      mockService.getPrimes.mockReturnValue(
+        of(
+          makeResponse({
+            history: [
+              { year: 2026, month: 8, shop_total_tyres: 661, prime_threshold: null },
+              { year: 2026, month: 7, shop_total_tyres: 400, prime_threshold: null },
+            ],
+          }),
+        ),
+      );
+      comp.ngOnInit();
+
+      const [aout, juillet] = comp.history();
+      expect(comp.histReached(aout)).toBe(false);
+      expect(comp.histReached(juillet)).toBe(false);
+      // Faute de seuil, les barres se calent sur le plus gros mois de la série
+      // pour rester comparables entre elles.
+      expect(comp.histPct(aout)).toBe(100);
+      expect(comp.histPct(juillet)).toBeCloseTo((400 / 661) * 100, 6);
     });
   });
 
   // ── La jauge ───────────────────────────────────────────────────────────────
 
   describe('jauge', () => {
-    it('cale l’échelle sur le seuil tant qu’il n’est pas atteint', () => {
+    it('fait tenir la projection dans l’échelle', () => {
+      comp.ngOnInit();
+
+      // Ce sont les proportions de la maquette 18a : 57,7 % de réalisé, le
+      // seuil à 74,4 %, le reste en hachures.
+      expect(comp.gaugeMax()).toBe(1208);
+      expect(comp.fillPct()).toBeCloseTo((697 / 1208) * 100, 6);
+      expect(comp.thresholdPct()).toBeCloseTo((900 / 1208) * 100, 6);
+      expect(comp.projectionPct()).toBeCloseTo(100 - (697 / 1208) * 100, 6);
+    });
+
+    it('sans projection, le seuil est au bout de la barre', () => {
+      mockSettings.getCompanySettings.mockReturnValue(throwError(() => ({ status: 500 })));
       comp.ngOnInit();
 
       expect(comp.gaugeMax()).toBe(900);
       expect(comp.thresholdPct()).toBe(100);
       expect(comp.fillPct()).toBeCloseTo((697 / 900) * 100, 6);
+      expect(comp.projectionPct()).toBe(0);
     });
 
     it('recule le seuil dans la barre dès qu’il est dépassé', () => {
+      // Un mois clos : pas de projection, l'échelle est le réalisé seul.
       mockService.getPrimes.mockReturnValue(
-        of(makeResponse({ shop_total_tyres: 1200, prime_eligible: true })),
+        of(makeResponse({ month: 8, daily: daysOf(8, 2026), shop_total_tyres: 1200, prime_eligible: true })),
       );
+      comp.selectedMonth.set(8);
       comp.ngOnInit();
 
       expect(comp.gaugeMax()).toBe(1200);

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\City;
 use App\Models\CompanySetting;
+use App\Models\PrimeThreshold;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -401,5 +402,101 @@ class CompanySettingsApiTest extends TestCase
                 'email',
                 'primary_color',
             ]);
+    }
+
+    // -------------------------------------------------------------------------
+    // Jours de fermeture — refonte 2b, 9b
+    // -------------------------------------------------------------------------
+
+    public function test_closing_days_default_to_sunday_only(): void
+    {
+        CompanySetting::query()->create(['company_name' => 'Sans fermeture']);
+
+        $this->authenticateWithPermissions(['view settings']);
+
+        $this->getJson($this->baseUrl)
+            ->assertOk()
+            ->assertJsonPath('closed_weekdays', [0])
+            ->assertJsonPath('holidays', []);
+    }
+
+    public function test_update_persists_closing_days_and_holidays(): void
+    {
+        $this->authenticateWithPermissions(['edit settings']);
+
+        $this->putJson($this->baseUrl, [
+            'company_name' => 'Pneuma',
+            'closed_weekdays' => [0, 5],
+            'holidays' => ['2026-01-01', '2026-07-30'],
+        ])
+            ->assertOk()
+            ->assertJsonPath('closed_weekdays', [0, 5])
+            ->assertJsonPath('holidays', ['2026-01-01', '2026-07-30']);
+    }
+
+    public function test_a_shop_open_every_day_is_an_empty_list_not_a_default(): void
+    {
+        $this->authenticateWithPermissions(['edit settings']);
+
+        $this->putJson($this->baseUrl, [
+            'company_name' => 'Pneuma',
+            'closed_weekdays' => [],
+        ])
+            ->assertOk()
+            ->assertJsonPath('closed_weekdays', []);
+    }
+
+    public function test_update_rejects_impossible_closing_days(): void
+    {
+        $this->authenticateWithPermissions(['edit settings']);
+
+        $this->putJson($this->baseUrl, [
+            'company_name' => 'Pneuma',
+            'closed_weekdays' => [7],
+            'holidays' => ['31/12/2026'],
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['closed_weekdays.0', 'holidays.0']);
+    }
+
+    // -------------------------------------------------------------------------
+    // Historique du seuil de prime — refonte 2b, 9b
+    // -------------------------------------------------------------------------
+
+    public function test_changing_the_prime_threshold_appends_a_history_row(): void
+    {
+        CompanySetting::query()->create(['company_name' => 'Pneuma', 'prime_threshold' => 400]);
+
+        $user = $this->authenticateWithPermissions(['edit settings']);
+        $before = PrimeThreshold::query()->count();
+
+        $this->putJson($this->baseUrl, [
+            'company_name' => 'Pneuma',
+            'prime_threshold' => 900,
+        ])->assertOk();
+
+        $this->assertSame($before + 1, PrimeThreshold::query()->count());
+
+        $row = PrimeThreshold::query()->latest('id')->first();
+        $this->assertSame(900, $row->threshold);
+        // Daté du jour du changement, pas du premier du mois : un seuil relevé
+        // en cours de mois n'a pas valu pour les jours déjà écoulés.
+        $this->assertSame(now()->toDateString(), $row->effective_from->toDateString());
+        $this->assertSame($user->id, $row->created_by);
+    }
+
+    public function test_saving_settings_without_touching_the_threshold_writes_nothing(): void
+    {
+        CompanySetting::query()->create(['company_name' => 'Pneuma', 'prime_threshold' => 400]);
+
+        $this->authenticateWithPermissions(['edit settings']);
+        $before = PrimeThreshold::query()->count();
+
+        $this->putJson($this->baseUrl, [
+            'company_name' => 'Pneuma renommé',
+            'prime_threshold' => 400,
+        ])->assertOk();
+
+        $this->assertSame($before, PrimeThreshold::query()->count());
     }
 }

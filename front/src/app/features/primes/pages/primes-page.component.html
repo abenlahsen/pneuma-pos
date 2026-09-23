@@ -17,7 +17,9 @@
       </button>
     </span>
 
-    <span class="pr-asof" *ngIf="closingDate()">Arrêté au {{ formatDay(closingDate()) }}</span>
+    <span class="pr-asof" *ngIf="closingDate()">
+      Arrêté au {{ formatDay(closingDate()) }}<ng-container *ngIf="canProject() && isCurrentMonth()"> · {{ workingDaysRemaining() }} jours ouvrés restants</ng-container>
+    </span>
   </div>
 
   <app-list-error
@@ -45,7 +47,7 @@
           <ng-container *ngIf="!reached()">
             <span class="pr-gap-lead">Il manque {{ gap() }} pneus</span>
             <span class="pr-gap-sub" *ngIf="requiredPace() as pace">
-              soit {{ formatRate(pace) }} par jour calendaire sur les {{ remainingDays() }} jours restants
+              soit {{ formatRate(pace) }} par jour ouvré sur les {{ workingDaysRemaining() }} restants
             </span>
             <span class="pr-gap-sub" *ngIf="!requiredPace()">le mois est clos sur ce compte</span>
           </ng-container>
@@ -57,21 +59,25 @@
 
         <span class="pr-pace" *ngIf="currentPace() as pace">
           <span class="pr-pace-label">Rythme actuel</span>
-          <span class="pr-pace-value">{{ formatRate(pace) }} / jour</span>
-          <span class="pr-pace-sub">moyenne par jour calendaire écoulé</span>
-          <!-- La maquette 18a met ici « Projection 1 208 — objectif atteint le
-               22/09 ». Elle demande les jours ouvrés restants, donc les jours de
-               fermeture de la boutique, que rien ne porte : ni `company_settings`
-               ni aucune autre table. Rien n'est affiché plutôt qu'une projection
-               calculée sur une règle inventée. -->
+          <span class="pr-pace-value">{{ formatRate(pace) }} / jour ouvré</span>
+          <!-- La projection ne s'affiche que si les jours de fermeture sont
+               connus : sans eux, il n'y a pas de jour ouvré à projeter. -->
+          <span class="pr-pace-sub" *ngIf="projectedTotal() as projected"
+                [class.pr-pace-sub--ok]="projectionMakesIt()"
+                [class.pr-pace-sub--short]="hasThreshold() && !projectionMakesIt()">
+            Projection {{ projected }}<ng-container *ngIf="projectedDate()"> — objectif atteint le {{ formatDay(projectedDate()) }}</ng-container><ng-container *ngIf="hasThreshold() && !projectionMakesIt()"> — sous l'objectif</ng-container>
+          </span>
+          <span class="pr-pace-sub" *ngIf="!canProject()">moyenne par jour ouvré écoulé</span>
         </span>
       </div>
 
-      <!-- La jauge : réalisé en plein, trait vertical au seuil. Les hachures de
-           projection de la maquette 18a attendent la même donnée manquante. -->
+      <!-- La jauge : réalisé en plein, projection en hachures, trait vertical
+           au seuil. -->
       <div class="pr-gauge" *ngIf="hasThreshold()">
         <span class="pr-gauge-track"></span>
         <span class="pr-gauge-fill" [style.width.%]="fillPct()"></span>
+        <span class="pr-gauge-projection" *ngIf="projectionPct() > 0"
+              [style.left.%]="fillPct()" [style.width.%]="projectionPct()"></span>
         <span class="pr-gauge-mark" [style.left.%]="thresholdPct()"></span>
         <!-- Pas de repère « aujourd'hui N » sous la barre : le grand chiffre
              au-dessus le dit déjà, et il déborderait du cadre à 0 comme à 100 %. -->
@@ -79,7 +85,8 @@
       </div>
 
       <p class="pr-goal-note" *ngIf="hasThreshold()">
-        La barre pleine est le réalisé. Le compteur additionne les ventes et le service auto, comme le calcul de la prime.
+        La barre pleine est le réalisé.<ng-container *ngIf="projectionPct() > 0"> Les hachures sont la projection au rythme des jours ouvrés déjà écoulés.</ng-container>
+        Le compteur additionne les ventes et le service auto, comme le calcul de la prime.
       </p>
 
       <p class="pr-goal-note pr-goal-note--warn" *ngIf="!hasThreshold()">
@@ -177,10 +184,9 @@
             <span>Au réalisé</span>
             <strong>{{ formatAmount(costAtRealized()) }}</strong>
           </span>
-          <!-- « À la projection » attend les jours ouvrés restants. -->
-          <span class="pr-kv" *ngIf="canProject()">
+          <span class="pr-kv" *ngIf="costAtProjection() as projected">
             <span>À la projection</span>
-            <strong>—</strong>
+            <strong>{{ formatAmount(projected) }}</strong>
           </span>
           <span class="pr-kv">
             <span>Part de la marge nette</span>
@@ -192,20 +198,25 @@
           </p>
         </div>
 
-        <!-- Les six derniers mois demandent le seuil qui s'appliquait alors.
-             `prime_threshold` est une colonne unique de `company_settings`, sans
-             historique : ce bloc reste vide tant que l'API ne sait pas le dire. -->
         <div class="pr-panel" *ngIf="history().length">
           <span class="pr-panel-title">Six derniers mois</span>
           <span class="pr-hist" *ngFor="let past of history()">
-            <span class="pr-hist-month">{{ past.month }}/{{ past.year }}</span>
+            <span class="pr-hist-month">{{ histLabel(past) }}</span>
             <span class="pr-hist-track">
               <span class="pr-hist-fill"
                     [style.width.%]="histPct(past)"
-                    [class.pr-hist-fill--ok]="past.shop_total_tyres >= past.prime_threshold"></span>
+                    [class.pr-hist-fill--ok]="histReached(past)"></span>
             </span>
-            <span class="pr-hist-value">{{ past.shop_total_tyres }}</span>
+            <span class="pr-hist-value" [class.pr-hist-value--ok]="histReached(past)">
+              {{ past.shop_total_tyres }}
+              <!-- Un mois antérieur à la première ligne de `prime_thresholds`
+                   n'a pas de seuil connu : un tiret, et aucun verdict. -->
+              <span class="pr-hist-mark" *ngIf="past.prime_threshold === null"
+                    title="Seuil inconnu pour ce mois : il précède le premier enregistré.">–</span>
+              <span class="pr-hist-mark" *ngIf="histReached(past)">✓</span>
+            </span>
           </span>
+          <p class="pr-panel-note">Le seuil d'un mois passé est celui qui s'appliquait alors : il a pu changer.</p>
         </div>
 
         <div class="pr-panel">

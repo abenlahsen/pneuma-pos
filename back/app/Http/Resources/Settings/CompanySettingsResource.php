@@ -39,6 +39,8 @@ class CompanySettingsResource extends JsonResource
             'navbar_variant' => $this->resource->navbar_variant ?? 'default',
             'content_width' => $this->resource->content_width ?? 'full',
             'prime_threshold' => (int) ($this->resource->prime_threshold ?? 0),
+            'closed_weekdays' => $this->resource->closed_weekdays,
+            'holidays' => $this->resource->holidays,
             'created_at' => $this->resource->created_at,
             'updated_at' => $this->resource->updated_at,
         ];
