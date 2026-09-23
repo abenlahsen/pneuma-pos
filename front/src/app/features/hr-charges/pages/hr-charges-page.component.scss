@@ -1,8 +1,84 @@
 @use '../../_variables' as *;
 
 @use '../../_page-layout' as layout;
-@include layout.page-layout();
+
+// page-layout() est retiré, comme sur le journal d'activité et les primes :
+// cet écran ne lui prenait que la coque, l'en-tête et trois boutons — repris
+// ci-dessous — pour 13 ko de CSS compilé. Avec la barre de filtres en plus, la
+// feuille franchissait la limite dure de 20 ko du budget de style. Il n'a ni
+// tableau, ni modale, ni panneau de filtres, ni pagination.
 @include layout.list-row-pattern();
+
+// Les deux listes de filtres sortaient au rendu natif du navigateur : cet
+// écran n'avait aucune règle pour sa barre.
+@include layout.filter-bar($chips: false, $search: false);
+
+// ── Ce que page-layout() portait et que cet écran utilise ───────────────────
+.page-container {
+  max-width: 100%;
+  margin: 1.5rem auto;
+  padding: 0 1.25rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+
+  .title-section {
+    h1 {
+      margin: 0;
+      color: $text-dark;
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      margin: 0.25rem 0 0;
+      color: $text-muted;
+      font-size: 0.875rem;
+    }
+  }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &-primary {
+    background: $primary;
+    color: $bg-card;
+    &:hover { filter: brightness(0.93); }
+  }
+}
+
+.btn-icon {
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid $border-subtle;
+  background: $bg-card;
+  cursor: pointer;
+
+  &:hover { background: $bg-subtle; border-color: $border-color; }
+  &[disabled] { opacity: 0.5; cursor: not-allowed; }
+}
+
+.text-right { text-align: right; }
 
 /* Refonte 2b, 7c — la bande est fixe, la répartition passe à droite.
    Partaient : les cadrans générés par *ngFor, dont le nombre cassait la
@@ -169,11 +245,17 @@
 /* ── Refonte 2b, 9a : Charges RH au motif de ligne ──────────────────────── */
 .hr-grid {
   /* Cinq colonnes : la date et le compte ont rejoint la sous-ligne, où ils
-     qualifient la charge sans être des critères de tri (règle 3). */
-  grid-template-columns: minmax(0, 1fr) 150px 130px 190px 72px;
+     qualifient la charge sans être des critères de tri (règle 3).
 
-  /* Deux tombent sous $bp-reduce — type de charge et description — et
-     descendent dans le repli. */
+     La dernière piste vaut 104 px : au-dessus de $bp-reduce le menu ⋯ n'existe
+     pas encore, donc `app-row-overflow` projette ses trois boutons directement
+     dans la rangée — trois carrés de 30 px et deux écarts de 5 px font 100 px,
+     que 72 px ne pouvaient pas contenir. */
+  grid-template-columns: minmax(0, 1fr) 150px 130px 190px 104px;
+
+  /* Deux colonnes tombent sous $bp-reduce — type de charge et description — et
+     descendent dans le repli. Les trois actions se replient en même temps
+     derrière le ⋯ : un seul bouton, 72 px suffisent. */
   @include below-reduce {
     grid-template-columns: minmax(0, 1fr) 130px 72px;
   }
@@ -200,9 +282,5 @@
   }
 }
 
-/* Le libellé du menu ⋯ n'existe qu'une fois replié. */
-.ro-label { display: none; }
-
-@include below-reduce {
-  .ro-label { display: inline; }
-}
+/* `.ro-label` n'est plus déclaré ici : le composant `app-row-overflow` porte
+   lui-même la règle, comme `.ro-item` et `.ro-field`. */

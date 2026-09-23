@@ -623,7 +623,7 @@
   .actions-cell { white-space: nowrap; }
   .col-id     { width: 3.5rem; }
   .col-client { width: 10rem; max-width: 10rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .cell-id { font-size: 0.78rem; font-variant-numeric: tabular-nums; color: $text-muted; font-weight: 500; white-space: nowrap; }
+  .cell-id { font-size: 12.5px; font-variant-numeric: tabular-nums; color: $text-muted; font-weight: 500; white-space: nowrap; }
   .text-right   { text-align: right !important; }
   .text-center  { text-align: center !important; }
   .fw-medium    { font-weight: 500; }
@@ -657,7 +657,7 @@
     align-items: center;
     background: $bg-subtle;
 
-    .pagination-info { color: $text-muted; font-size: 0.8rem; font-weight: 500; }
+    .pagination-info { color: $text-muted; font-size: 12px; font-weight: 500; }
     .pagination { display: flex; gap: 0.25rem; }
   }
 
@@ -667,7 +667,7 @@
     background: $bg-card;
     color: $text-dark;
     border-radius: 0;
-    font-size: 0.82rem;
+    font-size: 12.5px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.15s;
@@ -836,6 +836,13 @@
   padding: 0 18px;
   border-bottom: 1px solid $border-subtle;
 
+  // La taille par defaut d'une cellule. Sans elle, toute cellule sans classe
+  // de taille heritait des 16 px du body — la date, la quantite, la marge et
+  // le montant sortaient trop gros sur Ventes. Les chiffres sont alignes en
+  // colonne : une liste se lit verticalement.
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+
   &:hover { background: $bg-subtle; }
 
   // Liseré gauche de 3px : une ligne qui demande une action (règle 5 du
@@ -859,6 +866,24 @@
   color: $text-dark;
   text-decoration: none;
   &:hover { text-decoration: underline; }
+
+  // Le nom est tantôt posé sur cette classe, tantôt porté par un lien ou un
+  // bouton à l'intérieur. Sans cette remise à zéro, le navigateur dessine son
+  // cadre gris par défaut autour du bouton — c'est arrivé sur Produits, et
+  // rien n'empêchait que ça recommence ailleurs.
+  a,
+  button {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover { text-decoration: underline; }
+  }
 }
 
 .list-grid-tag {
@@ -927,6 +952,29 @@
 
 .list-cell--identity { min-width: 0; }
 
+// Le seul chiffre qui depasse le corps de la ligne : c'est lui qu'on cherche
+// en parcourant une liste. Declare ici et non seulement sous $bp-reshape, ou
+// il n'etait qu'un effet de la mise en fiche.
+.list-cell--amount {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+// Date et identifiant : deux qualifiants, plus petits que le corps de la
+// ligne. L'identifiant est en plus attenue — on le lit rarement, on le
+// cherche quand on le cherche.
+.cell-date { font-size: 12.5px; }
+
+// La rangée d'actions se range ici, et non écran par écran : elle a la même
+// forme partout, et Ventes la portait encore en style en ligne. L'écart de
+// 5 px est la mesure sur laquelle les largeurs de colonne Actions sont
+// calculées — quatre boutons de 30 px et trois écarts font 135 px.
+.list-cell--actions {
+  display: flex;
+  gap: 5px;
+  justify-content: flex-end;
+}
+
 // Visible seulement quand des colonnes sont tombées — sinon l'information
 // serait écrite deux fois sur la même ligne.
 .list-grid-sub--fold { display: none; }
@@ -957,7 +1005,16 @@
 @include below-reshape {
   .list-grid-header { display: none; }
 
-  .list-grid-row {
+  // La classe est doublée volontairement. Chaque écran déclare ses propres
+  // `grid-template-columns` sur sa classe de grille (`.sales-grid`,
+  // `.clients-grid`…), APRÈS l'inclusion du mixin et à spécificité égale :
+  // l'ordre d'écriture tranchait, et c'est la grille de l'écran qui gagnait.
+  // Résultat, sous 900 px les zones du gabarit 14b étaient bien appliquées
+  // mais posées sur les pistes du desktop — l'état et les boutons partaient
+  // se loger dans des colonnes qui n'existaient plus. Doubler la classe rend
+  // cette règle plus spécifique que n'importe quelle grille d'écran, ce qui
+  // est exactement ce qu'on veut : ici, ce n'est plus l'écran qui décide.
+  .list-grid-row.list-grid-row {
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
       'identity amount'
@@ -1008,4 +1065,161 @@
 
   .list-grid-name { font-size: 14.5px; }
 }
+}
+
+// ── La barre de filtres ─────────────────────────────────────────────────────
+//
+//   @use '../../_page-layout' as layout;
+//   @include layout.filter-bar();
+//
+// Troisième mixin du fichier, et opt-in comme `list-row-pattern()` : la barre
+// n'existe que sur trois écrans, la faire porter à `page-layout()` la
+// facturerait aux vingt autres — dont plusieurs frôlent déjà la limite dure de
+// 20 ko du budget de style.
+//
+// Elle était écrite trois fois, et mal : Ventes la tenait sous le nom
+// `.filter-bar`, le Journal d'activité sous `.filters-bar` avec d'autres
+// mesures, et les Charges RH n'avaient rien du tout — leurs deux `<select>`
+// sortaient au rendu natif du navigateur. Un seul nom désormais, et les
+// mesures sont celles de Ventes : c'est l'écran de référence, son rendu ne
+// doit pas bouger.
+// Les trois parties sont optionnelles : un ecran ne paie que ce qu'il affiche.
+// Ventes n'a pas de liste deroulante dans sa barre, le Journal et les Charges
+// RH n'ont ni jeton ni champ de recherche a icone. Un mixin monolithique leur
+// facturait a tous les 2,3 ko complets — assez pour faire franchir la limite
+// dure de 20 ko a deux d'entre eux.
+@mixin filter-bar($chips: true, $search: true, $fields: true) {
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 11px 18px;
+  border-bottom: 1px solid $border-color;
+  background: $bg-subtle;
+}
+
+// Le champ de recherche porte son icône : c'est un conteneur, pas un input nu.
+@if $search {
+.filter-bar-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  width: 270px;
+  max-width: 100%;
+  padding: 0 11px;
+  background: $bg-card;
+  border: 1px solid $border-color;
+
+  app-icon { color: $text-muted; flex-shrink: 0; }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 12.5px;
+    color: $text-dark;
+
+    &::placeholder { color: $text-light; }
+  }
+}
+
+}
+
+// Un filtre posé, qu'on retire d'un clic sur sa croix.
+@if $chips {
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 10px;
+  background: $bg-card;
+  border: 1px solid $text-dark;
+  font-size: 12px;
+  font-weight: 600;
+  color: $text-dark;
+  white-space: nowrap;
+
+  button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: $text-muted;
+    font: inherit;
+    font-weight: 400;
+    display: inline-flex;
+
+    &:hover { color: $expense-color; }
+  }
+
+  // Filtre « à problème » (impayé, retard) : le seul cas où un jeton porte du
+  // rouge, jamais un filtre neutre.
+  &--alert {
+    background: $overdue-bg;
+    border-color: $expense-color;
+    color: $expense-color;
+
+    button {
+      color: $expense-color;
+      &:hover { color: $alert-ink; }
+    }
+  }
+}
+
+}
+
+// Une liste déroulante de filtre. `appearance: none` retire le rendu natif du
+// navigateur — le cadre gris bombé qui ne ressemble à rien d'autre dans
+// l'application — et le chevron est redessiné au trait de 1,5, comme les
+// icônes Lucide du reste de l'interface.
+@if $fields {
+.filter-select {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 32px;
+  min-width: 160px;
+  padding: 0 30px 0 11px;
+  border: 1px solid $border-color;
+  border-radius: 0;
+  background-color: $bg-card;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234a5c75' stroke-width='1.5' stroke-linecap='square'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  background-size: 14px 14px;
+  font: inherit;
+  font-size: 12.5px;
+  color: $text-dark;
+  cursor: pointer;
+  outline: none;
+
+  // Un filtre actif se voit sans avoir à lire sa valeur : le cadre passe à
+  // l'encre, comme le jeton.
+  &--active {
+    border-color: $text-dark;
+    font-weight: 600;
+  }
+}
+
+// Champ libre de la barre — une date, un montant.
+.filter-input {
+  height: 32px;
+  padding: 0 11px;
+  border: 1px solid $border-color;
+  border-radius: 0;
+  background: $bg-card;
+  font: inherit;
+  font-size: 12.5px;
+  color: $text-dark;
+  outline: none;
+
+  &:focus { border-color: $text-dark; }
+}
+}
+
 }

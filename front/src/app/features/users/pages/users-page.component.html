@@ -81,10 +81,10 @@
         <span class="list-grid-sub" *ngIf="user.roles.length === 0">Aucun rôle</span>
       </span>
 
-      <span class="list-cell--drop">{{ user.created_at | date:'dd/MM/yyyy' }}</span>
+      <span class="cell-date list-cell--drop">{{ user.created_at | date:'dd/MM/yyyy' }}</span>
 
       <span class="actions-cell list-cell--actions">
-        <button class="btn-icon text-primary" (click)="openEditForm(user)" title="Modifier" *ngIf="authService.hasPermission('edit users')"><app-icon name="edit" [size]="15" /></button>
+        <button class="btn-icon" (click)="openEditForm(user)" title="Modifier" *ngIf="authService.hasPermission('edit users')"><app-icon name="edit" [size]="15" /></button>
         <app-row-lock *ngIf="!authService.hasPermission('edit users')"
           reason="Votre rôle ne permet pas de modifier un utilisateur. Demandez à un administrateur." />
         <button class="btn-icon text-danger" (click)="deleteUser(user)" title="Supprimer" *ngIf="authService.hasPermission('delete users')"><app-icon name="trash" [size]="15" /></button>

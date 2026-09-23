@@ -12,11 +12,10 @@
 
 .text-right { text-align: right; }
 
-.actions-cell {
-  display: flex;
-  gap: 4px;
-  justify-content: flex-end;
-}
+// `.actions-cell` n'a plus de règle locale : le mixin de ligne porte désormais
+// la rangée d'actions sur `.list-cell--actions`, que cet écran déclare déjà.
+// Deux règles de même spécificité pour la même chose se départageaient à
+// l'ordre d'injection des styles — un écart d'un pixel qui changeait tout seul.
 
 
 // ── Page header ───────────────────────────────────────────────────────────────
@@ -27,30 +26,15 @@
   margin-bottom: 1.25rem;
 }
 
-// ── Filters bar ───────────────────────────────────────────────────────────────
-.filters-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+// ── Barre de filtres ─────────────────────────────────────────────────────────
+// Elle était écrite ici sous le nom `.filters-bar`, avec ses propres mesures :
+// 2,1 rem de haut, filets `$border-subtle`, anneau de focus rouge. Elle prend
+// désormais celles de Ventes, qui est l'écran de référence — d'où un léger
+// changement de rendu ici, voulu : une seule barre, une seule apparence.
+@include layout.filter-bar($chips: false, $search: false);
 
-  .filter-input,
-  .filter-select {
-    height: 2.1rem;
-    padding: 0 0.65rem;
-    border: 1px solid $border-subtle;
-    border-radius: 0;
-    font-size: 0.875rem;
-    background: $bg-card;
-    color: $text-dark;
-    outline: none;
-
-    &:focus { border-color: $primary; box-shadow: 0 0 0 2px rgba(255, 45, 55, 0.12); }
-  }
-
-  .filter-search { min-width: 200px; }
-  .filter-select { min-width: 160px; }
-}
+// La recherche est plus large que les autres champs de cette barre.
+.filter-search { min-width: 200px; }
 
 .btn-apply,
 .btn-reset {

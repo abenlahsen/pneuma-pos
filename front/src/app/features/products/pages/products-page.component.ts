@@ -7,6 +7,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Product, ProductFilters } from '../models/product.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { IconComponent } from '../../../shared/icon/icon.component';
+import { RowOverflowComponent } from '../../../shared/row-overflow/row-overflow.component';
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
 import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
@@ -23,7 +24,7 @@ import {
 @Component({
   selector: 'app-products-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, FormsModule, RouterLink, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, RowOverflowComponent, ConfirmDeleteComponent],
   templateUrl: './products-page.component.html',
   styleUrls: ['./products-page.component.scss'],
 })
@@ -89,6 +90,17 @@ export class ProductsPageComponent implements OnInit {
    * run-flat, renforcé et marquage tenaient six colonnes à eux seuls, pour
    * qualifier un objet que personne ne trie sur ces critères.
    */
+  /**
+   * Ce que portent la dimension et la référence — les deux colonnes qui
+   * tombent sous $bp-reduce. Visible seulement une fois qu'elles sont parties :
+   * l'écrire en permanence le dirait deux fois sur la même ligne.
+   */
+  foldedSubLineFor(product: Product): string {
+    return [this.dimensionFor(product), product.reference]
+      .filter((part): part is string => !!part && part !== '—')
+      .join(' · ');
+  }
+
   subLineFor(product: Product): string {
     const parts: string[] = [];
 

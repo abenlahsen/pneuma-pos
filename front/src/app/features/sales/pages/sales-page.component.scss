@@ -39,75 +39,14 @@
 // Remplace la grille de 15 champs en permanence visible : recherche +
 // jetons retirables pour les filtres actifs + bouton qui déplie le panneau
 // .filters-section existant (mixin, inchangé) pour le reste des champs.
-.filter-bar {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 11px 18px;
-  border-bottom: 1px solid $border-color;
-  background: $bg-subtle;
-}
-
-.filter-bar-search {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 32px;
-  width: 270px;
-  max-width: 100%;
-  padding: 0 11px;
-  background: #fff;
-  border: 1px solid $border-color;
-
-  app-icon { color: $text-muted; flex-shrink: 0; }
-
-  input {
-    flex: 1;
-    min-width: 0;
-    border: none;
-    outline: none;
-    background: transparent;
-    font-size: 12.5px;
-    color: $text-dark;
-    &::placeholder { color: $text-light; }
-  }
-}
-
-.filter-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  height: 32px;
-  padding: 0 10px;
-  background: #fff;
-  border: 1px solid $text-dark;
-  font-size: 12px;
-  font-weight: 600;
-  color: $text-dark;
-  white-space: nowrap;
-
-  button {
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    color: $text-muted;
-    font: inherit;
-    font-weight: 400;
-    display: inline-flex;
-    &:hover { color: $expense-color; }
-  }
-
-  // Filtre "à problème" (ex. impayé) : le seul cas où un jeton porte du
-  // rouge, jamais un filtre neutre.
-  &--alert {
-    background: #fdeff1;
-    border-color: #c2181f;
-    color: #c2181f;
-    button { color: #c2181f; &:hover { color: #8f1218; } }
-  }
-}
+//
+// Le conteneur, la recherche, les jetons, les listes et les champs libres
+// vivent maintenant dans `filter-bar()` — ils étaient réécrits sur chaque
+// écran. Ne restent ici que les deux pièces propres à Ventes : le bouton qui
+// déplie le panneau, et le compte de résultats.
+// Pas de $fields : les listes deroulantes de Ventes sont dans le panneau
+// deplie, ou elles portent .form-control.
+@include layout.filter-bar($fields: false);
 
 .filter-toggle {
   display: inline-flex;
@@ -143,13 +82,17 @@
 // Seule la définition des colonnes est propre à Ventes.
 @include layout.list-row-pattern();
 
+/* La dernière piste vaut 140 px et non 120 : sur desktop la rangée porte
+   quatre boutons de 30 px et trois espaces de 5 px, soit 135 px. À 120 px elle
+   débordait. Sous $bp-reduce il ne reste que Voir, Paiements et ⋯ — 120 px y
+   suffisent, et la grille les garde. */
 .sales-grid {
-  grid-template-columns: 52px 84px minmax(0, 1fr) 78px 118px 118px 98px 112px 120px;
+  grid-template-columns: 52px 84px minmax(0, 1fr) 78px 118px 118px 98px 112px 140px;
 
   /* Sans la permission « view margins », la colonne Marge n'est pas rendue :
      la grille doit compter une piste de moins, sinon tout se décale. */
   &--no-margin {
-    grid-template-columns: 52px 84px minmax(0, 1fr) 78px 118px 98px 112px 120px;
+    grid-template-columns: 52px 84px minmax(0, 1fr) 78px 118px 98px 112px 140px;
   }
 
   /* Refonte 2b, 8b : quatre colonnes tombent sous $bp-reduce — n° de vente,
@@ -179,21 +122,19 @@
 // margin-mid/high héritent du gris de la cellule (README §3 Ventes).
 .margin-pct {
   display: inline;
-  font-size: 0.72rem;
+  font-size: 11.5px;
   font-weight: 600;
-  color: #4a5c75;
-  &.margin-low { color: #c2181f; }
+  color: $text-muted;
+
+  // Le seul cas coloré : sous le seuil. Au-dessus, le taux qualifie la marge
+  // sans demander d'action — il n'a pas à tirer l'œil.
+  &.margin-low { color: $expense-color; }
 }
 
 /* ── Refonte 2b, 8b : le menu ⋯ ─────────────────────────────────────────── */
 
-/* Le libellé accompagne l'icône dans le menu déroulant, et nulle part
-   ailleurs : sur la ligne, l'infobulle suffit et la place manque. */
-.ro-label { display: none; }
-
-@include below-reduce {
-  .ro-label { display: inline; }
-}
+/* `.ro-label` n'est plus déclaré ici : le composant `app-row-overflow` porte
+   lui-même la règle, comme `.ro-item` et `.ro-field`. */
 
 /* Gabarit 14b : sous le seuil de changement de forme, la rangée du bas porte
    l'état. Le statut de livraison rejoint la cellule d'état du paiement plutôt

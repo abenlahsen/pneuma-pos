@@ -103,40 +103,58 @@
       (clearAll)="resetFilters()" />
 
     <div class="list-grid-row products-grid" *ngFor="let product of products()">
-      <span>{{ dimensionFor(product) }}</span>
+      <span class="list-cell--drop">{{ dimensionFor(product) }}</span>
 
-      <span style="min-width: 0">
+      <span class="list-cell--identity">
         <span class="list-grid-name">
-          <button type="button" (click)="goToEdit(product)">{{ nameFor(product) }}</button>
-          <span class="list-grid-tag" *ngIf="!product.is_active">INACTIF</span>
-          <span class="list-grid-tag" *ngIf="product.type !== 'tyre'">{{ typeLabel(product.type) }}</span>
+          <!-- Un lien, pas un bouton : c'est une navigation, et le nom du
+               client sur Ventes en est déjà un. -->
+          <a [routerLink]="['/products', product.id, 'edit']">{{ nameFor(product) }}</a>
+          <span class="list-grid-tag pr-tag" *ngIf="!product.is_active">INACTIF</span>
+          <span class="list-grid-tag pr-tag" *ngIf="product.type !== 'tyre'">{{ typeLabel(product.type) }}</span>
         </span>
         <span class="list-grid-sub">{{ subLineFor(product) }}</span>
+        <!-- Refonte 2b, 8b : ce que portent les colonnes tombées, et rien que
+             ça — les y écrire aussi au-dessus du seuil ferait le doublon. -->
+        <span class="list-grid-sub list-grid-sub--fold">{{ foldedSubLineFor(product) }}</span>
       </span>
 
-      <span>{{ product.reference || '—' }}</span>
+      <span class="list-cell--drop">{{ product.reference || '—' }}</span>
 
-      <span class="actions-cell" style="display: flex; gap: 5px; justify-content: flex-end">
+      <!-- L'état ne prend pas de colonne : il n'apparaît qu'une fois la rangée
+           devenue fiche, où il occupe l'emplacement `status` du gabarit 14b.
+           Au-dessus du seuil, c'est l'étiquette INACTIF qui le porte. -->
+      <span class="list-grid-status pr-status">{{ product.is_active ? 'Actif' : 'Inactif' }}</span>
+
+      <!-- Gabarit 14a : au-delà de deux boutons, les actions passent derrière
+           un menu ⋯. Seul « Ouvrir » reste sur la ligne — c'est le geste
+           courant ; activer, modifier et supprimer descendent dans le menu. -->
+      <span class="actions-cell list-cell--actions">
         <button class="btn-icon" (click)="goToEdit(product)" title="Ouvrir la fiche produit">
           <app-icon name="view" [size]="15" />
         </button>
-        <ng-container *ngIf="authService.hasPermission('edit products')">
-          <button class="btn-icon" (click)="toggleActive(product)"
-            [title]="product.is_active ? 'Désactiver' : 'Activer'">
-            <app-icon [name]="product.is_active ? 'check-circle' : 'circle'" [size]="15" />
+
+        <app-row-overflow>
+          <ng-container *ngIf="authService.hasPermission('edit products')">
+            <button type="button" class="btn-icon ro-item" (click)="toggleActive(product)"
+              [title]="product.is_active ? 'Désactiver' : 'Activer'">
+              <app-icon [name]="product.is_active ? 'check-circle' : 'circle'" [size]="15" />
+              <span class="ro-label">{{ product.is_active ? 'Désactiver' : 'Activer' }}</span>
+            </button>
+            <a class="btn-icon ro-item" [routerLink]="['/products', product.id, 'edit']" title="Modifier">
+              <app-icon name="edit" [size]="15" /><span class="ro-label">Modifier</span>
+            </a>
+          </ng-container>
+          <app-row-lock *ngIf="!authService.hasPermission('edit products')"
+            reason="Votre rôle ne permet pas de modifier un produit. Demandez à un administrateur." />
+
+          <button type="button" class="btn-icon ro-item ro-item--danger" (click)="deleteProduct(product)"
+            title="Supprimer" *ngIf="authService.hasPermission('delete products')">
+            <app-icon name="trash" [size]="15" /><span class="ro-label">Supprimer</span>
           </button>
-          <a class="btn-icon text-primary" [routerLink]="['/products', product.id, 'edit']" title="Modifier">
-            <app-icon name="edit" [size]="15" />
-          </a>
-        </ng-container>
-        <app-row-lock *ngIf="!authService.hasPermission('edit products')"
-          reason="Votre rôle ne permet pas de modifier un produit. Demandez à un administrateur." />
-        <button class="btn-icon text-danger" (click)="deleteProduct(product)" title="Supprimer"
-          *ngIf="authService.hasPermission('delete products')">
-          <app-icon name="trash" [size]="15" />
-        </button>
-        <app-row-lock *ngIf="!authService.hasPermission('delete products')"
-          reason="Votre rôle ne permet pas de supprimer un produit. Demandez à un administrateur." />
+          <app-row-lock *ngIf="!authService.hasPermission('delete products')"
+            reason="Votre rôle ne permet pas de supprimer un produit. Demandez à un administrateur." />
+        </app-row-overflow>
       </span>
     </div>
 

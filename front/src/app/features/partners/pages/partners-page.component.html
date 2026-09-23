@@ -83,7 +83,7 @@
       <span class="text-right list-cell--amount">{{ p.alignment_price != null ? (p.alignment_price | number:'1.2-2') : '—' }}</span>
 
       <span class="actions-cell list-cell--actions">
-        <button class="btn-icon text-primary" (click)="openEditForm(p)" title="Modifier" *ngIf="authService.hasPermission('edit partners')"><app-icon name="edit" [size]="15" /></button>
+        <button class="btn-icon" (click)="openEditForm(p)" title="Modifier" *ngIf="authService.hasPermission('edit partners')"><app-icon name="edit" [size]="15" /></button>
         <app-row-lock *ngIf="!authService.hasPermission('edit partners')"
           reason="Votre rôle ne permet pas de modifier un partenaire. Demandez à un administrateur." />
         <button class="btn-icon text-danger" (click)="deletePartner(p)" title="Supprimer" *ngIf="authService.hasPermission('delete partners')"><app-icon name="trash" [size]="15" /></button>

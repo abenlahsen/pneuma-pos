@@ -27,13 +27,19 @@
 
   <div class="alert alert-danger" *ngIf="errorMessage()">{{ errorMessage() }}</div>
 
-  <div class="filters-bar">
-    <select [(ngModel)]="filterEmployeeId" (ngModelChange)="applyFilters()">
+  <!-- Deux filtres seulement : pas de bouton « Filtres », les deux listes
+       restent visibles. Le cadre passe à l'encre dès qu'une valeur est posée. -->
+  <div class="filter-bar">
+    <select class="filter-select"
+            [class.filter-select--active]="filterEmployeeId() !== null"
+            [(ngModel)]="filterEmployeeId" (ngModelChange)="applyFilters()">
       <option [ngValue]="null">Tous les employés</option>
       <option *ngFor="let emp of filters().employees" [ngValue]="emp.id">{{ emp.name }}</option>
     </select>
 
-    <select [(ngModel)]="filterSubcategory" (ngModelChange)="applyFilters()">
+    <select class="filter-select"
+            [class.filter-select--active]="filterSubcategory() !== ''"
+            [(ngModel)]="filterSubcategory" (ngModelChange)="applyFilters()">
       <option value="">Tous les types de charge</option>
       <option *ngFor="let sub of filters().subcategories" [value]="sub.name">{{ sub.name }}</option>
     </select>

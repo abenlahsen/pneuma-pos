@@ -6,7 +6,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "node -e \"require('fs').rmSync('.angular/cache',{recursive:true,force:true})\" && ng test",
+    "test:fast": "ng test"
   },
   "private": true,
   "packageManager": "npm@10.9.4",

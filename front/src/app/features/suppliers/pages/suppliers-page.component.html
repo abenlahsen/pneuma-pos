@@ -126,7 +126,7 @@
     <div class="list-grid-row suppliers-grid"
          *ngFor="let supplier of suppliers()"
          [class.list-grid-row--action]="unpaidFor(supplier) > 0">
-      <span style="min-width: 0">
+      <span class="list-cell--identity">
         <span class="list-grid-name">
           <button type="button" (click)="viewSupplier(supplier)">{{ supplier.name }}</button>
           <span class="list-grid-tag" *ngIf="supplier.payment_terms_days == null">SANS DÉLAI</span>
@@ -138,11 +138,11 @@
 
       <span class="text-right fw-semibold">{{ unpaidFor(supplier) ? (unpaidFor(supplier) | number:'1.0-0') : '—' }}</span>
 
-      <span class="actions-cell" style="display: flex; gap: 5px; justify-content: flex-end">
+      <span class="actions-cell list-cell--actions">
         <button class="btn-icon" (click)="viewSupplier(supplier)" title="Voir la fiche">
           <app-icon name="view" [size]="15" />
         </button>
-        <button class="btn-icon text-primary" (click)="openEditForm(supplier)" title="Modifier"
+        <button class="btn-icon" (click)="openEditForm(supplier)" title="Modifier"
           *ngIf="authService.hasPermission('edit suppliers')">
           <app-icon name="edit" [size]="15" />
         </button>

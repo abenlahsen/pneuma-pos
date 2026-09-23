@@ -1,3 +1,7 @@
+// `_variables` réexporte les deux seuils : sans lui, `below-reduce` et
+// `below-reshape` n'existent pas dans cette feuille.
+@use '../../_variables' as *;
+
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
 @include layout.list-row-pattern();
@@ -10,5 +14,25 @@
 
 /* Refonte 2b, étape 4 — seules les colonnes sont propres à Produits. */
 .products-grid {
+  /* 148 px d'actions : quatre carrés de 30 px et trois écarts de 5 px, le
+     menu ⋯ n'existant pas encore à cette largeur. */
   grid-template-columns: 126px minmax(0, 1fr) 210px 148px;
+
+  /* Dimension et référence tombent, et les trois actions se replient derrière
+     le ⋯ : il ne reste que « Ouvrir » et le menu, soit 71 px. */
+  @include below-reduce {
+    grid-template-columns: minmax(0, 1fr) 76px;
+  }
+}
+
+/* L'état ne prend pas de piste au-dessus du seuil de changement de forme :
+   l'étiquette INACTIF le dit déjà dans le nom. Sous le seuil, c'est le mixin
+   qui le rallume — sa règle `.list-grid-row > .list-grid-status` est plus
+   spécifique que celle-ci, et l'emporte sans media query ici. */
+.pr-status { display: none; }
+
+/* Et réciproquement : une fois la rangée devenue fiche, l'état a sa place à
+   lui, l'étiquette ferait double emploi. */
+@include below-reshape {
+  .pr-tag { display: none; }
 }

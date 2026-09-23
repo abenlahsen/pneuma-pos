@@ -134,8 +134,5 @@
   }
 }
 
-.ro-label { display: none; }
-
-@include below-reduce {
-  .ro-label { display: inline; }
-}
+/* `.ro-label` n'est plus déclaré ici : le composant `app-row-overflow` porte
+   lui-même la règle, comme `.ro-item` et `.ro-field`. */

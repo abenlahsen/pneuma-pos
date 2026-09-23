@@ -20,6 +20,23 @@
   display: contents;
 }
 
+/* Corollaire du `display: contents` ci-dessus : TOUT ce qui est projeté tombe
+   dans la rangée d'actions tant que le menu n'existe pas. Un champ n'y a rien
+   à faire — sur Ventes, « Changer le statut » et son <select> venaient doubler
+   une colonne Statut déjà présente, et faisaient déborder la colonne Actions.
+   La règle est ici et non dans chaque écran : c'est le composant qui projette,
+   c'est à lui de garantir ce qu'il laisse passer. */
+::ng-deep .ro-field {
+  display: none;
+}
+
+/* Même raison pour le libellé d'une action : tant que le menu n'existe pas, le
+   bouton est un carré d'icône et son texte ferait déborder la colonne. Il était
+   redéclaré à l'identique dans chaque écran ; il vit ici désormais. */
+::ng-deep .ro-label {
+  display: none;
+}
+
 @include below-reduce {
   :host {
     display: inline-flex;
@@ -92,7 +109,13 @@
     &--danger { color: $expense-color; }
   }
 
-  /* Le sélecteur de statut : une ligne de menu qui porte un champ. */
+  /* Le libellé accompagne l'icône dès que l'action est une ligne de menu. */
+  ::ng-deep .ro-label {
+    display: inline;
+  }
+
+  /* Le sélecteur de statut : une ligne de menu qui porte un champ. Il
+     réapparaît ici, et ici seulement — le menu existe, il a la place. */
   ::ng-deep .ro-field {
     display: flex;
     flex-direction: column;

@@ -230,7 +230,7 @@
          *ngFor="let sale of sales()"
          [class.list-grid-row--action]="sale.payment_status === 'NON PAYE'">
       <span class="cell-id list-cell--drop">{{ sale.id }}</span>
-      <span>{{ sale.date | date:'dd/MM/yy' }}</span>
+      <span class="cell-date">{{ sale.date | date:'dd/MM/yy' }}</span>
       <span class="list-cell--identity">
         <span class="list-grid-name">
           <a *ngIf="sale.client_id" [routerLink]="['/clients', sale.client_id]">{{ getClientName(sale) }}</a>
@@ -274,7 +274,7 @@
           <option *ngFor="let s of statusOptionsFor(sale)" [value]="s">{{ SALE_STATUS_LABELS[s] }}</option>
         </select>
       </span>
-      <span class="actions-cell list-cell--actions" style="display: flex; gap: 5px; justify-content: flex-end">
+      <span class="actions-cell list-cell--actions">
         <!-- Voir et Paiements restent sur la ligne à toutes les largeurs : ce
              sont les deux gestes qu'on fait en parcourant la liste. -->
         <button class="btn-icon" (click)="openDetail(sale)" title="Voir" [disabled]="deletingSaleId() === sale.id"><app-icon name="view" [size]="15" /></button>

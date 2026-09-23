@@ -105,7 +105,7 @@
 
     <div class="list-grid-row clients-grid"
          *ngFor="let client of clients(); trackBy: trackByClientId">
-      <span style="min-width: 0">
+      <span class="list-cell--identity">
         <span class="list-grid-name">
           <a [routerLink]="['/clients', client.id]">{{ client.name }}</a>
           <span class="list-grid-tag" *ngIf="client.is_active === false">INACTIF</span>
@@ -118,7 +118,7 @@
 
       <span class="text-right fw-semibold">{{ client.credit_limit ? (client.credit_limit | number:'1.0-0') : '—' }}</span>
 
-      <span class="actions-cell" style="display: flex; gap: 5px; justify-content: flex-end">
+      <span class="actions-cell list-cell--actions">
         <button class="btn-icon" type="button" (click)="openEditModal(client)" title="Modifier">
           <app-icon name="edit" [size]="15" />
         </button>
