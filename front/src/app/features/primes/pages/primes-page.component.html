@@ -1,20 +1,25 @@
 <div class="page-container">
+  <!-- Refonte 2b, 9b : la navigation par mois passe dans la barre de titre,
+       au même endroit que celle du Reporting et des Charges RH. -->
   <div class="header">
     <div class="title-section">
-      <h1>Primes Commerciaux</h1>
-      <p class="subtitle">Calcul des primes mensuelles par commercial basé sur les pneus vendus.</p>
+      <h1>Primes commerciaux</h1>
+      <p class="subtitle">L'objectif est collectif : tant que la boutique n'a pas atteint son seuil, personne ne touche rien.</p>
     </div>
+
+    <span class="pr-month">
+      <button type="button" class="pr-month-btn" (click)="prevMonth()" aria-label="Mois précédent">
+        <app-icon name="chevron-left" [size]="15" />
+      </button>
+      <span class="pr-month-label">{{ monthLabel() }}</span>
+      <button type="button" class="pr-month-btn" (click)="nextMonth()" [disabled]="isCurrentMonth()" aria-label="Mois suivant">
+        <app-icon name="chevron-right" [size]="15" />
+      </button>
+    </span>
+
+    <span class="pr-asof" *ngIf="closingDate()">Arrêté au {{ formatDay(closingDate()) }}</span>
   </div>
 
-  <!-- Month navigation -->
-  <div class="month-nav">
-    <button class="nav-btn" (click)="prevMonth()">&#8592;</button>
-    <span class="month-label">{{ monthLabel() }}</span>
-    <button class="nav-btn" (click)="nextMonth()" [disabled]="isCurrentMonth()">&#8594;</button>
-  </div>
-
-  <!-- Loading -->
-  <!-- Refonte 2b, §14c état 3 : sans cela, un serveur muet passe pour une absence de données. -->
   <app-list-error
     *ngIf="loadError()"
     title="Les primes n'ont pas pu être chargées."
@@ -23,100 +28,196 @@
     [lastLoadedAt]="lastLoadedAt()"
     (retry)="loadData()" />
 
-  <div *ngIf="loading()" class="loading-state">
-    <div class="spinner"></div>
-    Chargement...
-  </div>
+  <ng-container *ngIf="!loadError()">
 
-  <ng-container *ngIf="!loading() && response() as res">
+    <!-- ── L'objectif collectif ─────────────────────────────────────────── -->
+    <section class="pr-goal" *ngIf="!loading()">
+      <div class="pr-goal-top">
+        <span class="pr-score">
+          <span class="pr-score-label">Objectif collectif · pneus vendus</span>
+          <span class="pr-score-value">
+            <strong>{{ realized() }}</strong>
+            <span class="pr-score-target" *ngIf="hasThreshold()">/ {{ threshold() }}</span>
+          </span>
+        </span>
 
-    <!-- Threshold banner -->
-    <div class="threshold-banner" [class.eligible]="res.prime_eligible" [class.not-eligible]="!res.prime_eligible">
-      <div class="banner-left">
-        <span class="banner-icon"><app-icon name="target" [size]="14" /></span>
-        <span class="banner-text">
-          Objectif collectif : <strong>{{ res.prime_threshold }} pneus</strong> / mois
+        <span class="pr-gap" *ngIf="hasThreshold()">
+          <ng-container *ngIf="!reached()">
+            <span class="pr-gap-lead">Il manque {{ gap() }} pneus</span>
+            <span class="pr-gap-sub" *ngIf="requiredPace() as pace">
+              soit {{ formatRate(pace) }} par jour calendaire sur les {{ remainingDays() }} jours restants
+            </span>
+            <span class="pr-gap-sub" *ngIf="!requiredPace()">le mois est clos sur ce compte</span>
+          </ng-container>
+          <ng-container *ngIf="reached()">
+            <span class="pr-gap-lead pr-gap-lead--ok">Seuil franchi — {{ realized() - threshold() }} pneus au-delà</span>
+            <span class="pr-gap-sub">la prime est due à chacun</span>
+          </ng-container>
+        </span>
+
+        <span class="pr-pace" *ngIf="currentPace() as pace">
+          <span class="pr-pace-label">Rythme actuel</span>
+          <span class="pr-pace-value">{{ formatRate(pace) }} / jour</span>
+          <span class="pr-pace-sub">moyenne par jour calendaire écoulé</span>
+          <!-- La maquette 18a met ici « Projection 1 208 — objectif atteint le
+               22/09 ». Elle demande les jours ouvrés restants, donc les jours de
+               fermeture de la boutique, que rien ne porte : ni `company_settings`
+               ni aucune autre table. Rien n'est affiché plutôt qu'une projection
+               calculée sur une règle inventée. -->
         </span>
       </div>
-      <div class="banner-right">
-        <span class="status-badge" [class.badge-success]="res.prime_eligible" [class.badge-danger]="!res.prime_eligible">
-          <ng-container *ngIf="res.prime_eligible">
-            <app-icon name="check" [size]="14" /> Atteint — {{ res.shop_total_tyres }} pneus vendus
-          </ng-container>
-          <ng-container *ngIf="!res.prime_eligible">
-            <app-icon name="close" [size]="14" /> Non atteint — {{ res.shop_total_tyres }} / {{ res.prime_threshold }} pneus
-          </ng-container>
-        </span>
-      </div>
-    </div>
 
-    <!-- Summary card -->
-    <div class="summary-cards">
-      <div class="summary-card">
-        <div class="summary-value">{{ res.shop_total_tyres }}</div>
-        <div class="summary-label">Pneus vendus (total shop)</div>
+      <!-- La jauge : réalisé en plein, trait vertical au seuil. Les hachures de
+           projection de la maquette 18a attendent la même donnée manquante. -->
+      <div class="pr-gauge" *ngIf="hasThreshold()">
+        <span class="pr-gauge-track"></span>
+        <span class="pr-gauge-fill" [style.width.%]="fillPct()"></span>
+        <span class="pr-gauge-mark" [style.left.%]="thresholdPct()"></span>
+        <!-- Pas de repère « aujourd'hui N » sous la barre : le grand chiffre
+             au-dessus le dit déjà, et il déborderait du cadre à 0 comme à 100 %. -->
+        <span class="pr-gauge-mark-label" [style.left.%]="thresholdPct()">SEUIL {{ threshold() }}</span>
       </div>
-      <div class="summary-card">
-        <div class="summary-value">{{ res.summary.total_commerciaux }}</div>
-        <div class="summary-label">Commerciaux actifs</div>
-      </div>
-      <div class="summary-card highlight" [class.eligible]="res.prime_eligible">
-        <div class="summary-value">{{ formatAmount(res.summary.total_primes) }} DH</div>
-        <div class="summary-label">Total primes du mois</div>
-      </div>
-    </div>
 
-    <!-- Table -->
-    <div class="card">
-      <div class="card-body">
-        <div *ngIf="res.data.length === 0" class="empty-state">
-          Aucune vente enregistrée pour ce mois.
+      <p class="pr-goal-note" *ngIf="hasThreshold()">
+        La barre pleine est le réalisé. Le compteur additionne les ventes et le service auto, comme le calcul de la prime.
+      </p>
+
+      <p class="pr-goal-note pr-goal-note--warn" *ngIf="!hasThreshold()">
+        Aucun seuil n'est configuré : sans objectif collectif, aucune prime n'est due.
+        Il se règle dans <strong>Paramètres</strong>.
+      </p>
+    </section>
+
+    <!-- ── La répartition et le panneau de droite ───────────────────────── -->
+    <div class="pr-body">
+      <div class="pr-main">
+        <div class="pr-caption">
+          <span class="pr-caption-title">Répartition</span>
+          <span class="pr-caption-rule" *ngIf="hasUniformRate()">
+            Prime de {{ formatAmount(uniformRate()!) }} DH par pneu, versée à chacun si le seuil collectif est atteint
+          </span>
+          <span class="pr-caption-rule" *ngIf="!hasUniformRate()">
+            Chaque commercial a son propre taux, versé si le seuil collectif est atteint
+          </span>
         </div>
 
-        <table *ngIf="res.data.length > 0" class="table">
-          <thead>
-            <tr>
-              <th>Commercial</th>
-              <th class="text-right">Pneus (Ventes)</th>
-              <th class="text-right">Pneus (Service)</th>
-              <th class="text-right">Total pneus</th>
-              <th class="text-right">Prime / pneu</th>
-              <th class="text-right">Prime totale</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let row of res.data" [class.row-disabled]="!res.prime_eligible">
-              <td class="commercial-name">{{ row.commercial_name }}</td>
-              <td class="text-right">{{ row.sale_tyres }}</td>
-              <td class="text-right">{{ row.so_tyres }}</td>
-              <td class="text-right"><strong>{{ row.total_tyres }}</strong></td>
-              <td class="text-right">{{ formatAmount(row.prime_per_tyre) }} DH</td>
-              <td class="text-right prime-amount" [class.prime-zero]="!res.prime_eligible">
-                {{ formatAmount(row.prime_total) }} DH
-              </td>
-            </tr>
-          </tbody>
-          <tfoot>
-            <tr class="total-row">
-              <td colspan="3"><strong>Total</strong></td>
-              <td class="text-right"><strong>{{ res.shop_total_tyres }}</strong></td>
-              <td></td>
-              <td class="text-right"><strong>{{ formatAmount(res.summary.total_primes) }} DH</strong></td>
-            </tr>
-          </tfoot>
-        </table>
+        <div class="list-grid-header pr-grid">
+          <span>Commercial</span>
+          <span class="text-right list-cell--drop">Ventes</span>
+          <span class="text-right list-cell--drop">Service</span>
+          <span class="text-right">Total</span>
+          <span>Part du collectif</span>
+          <span class="text-right">{{ reached() ? 'Prime due' : 'Prime si atteint' }}</span>
+        </div>
+
+        <ng-container *ngIf="loading()">
+          <div class="list-grid-row pr-grid" appSkeletonRow [cells]="6" [seed]="i"
+               *ngFor="let row of skeletonRows; let i = index"></div>
+        </ng-container>
+
+        <!-- Aucun filtre sur cet écran : seul le vide franc a un sens ici. -->
+        <app-list-empty
+          *ngIf="!loading() && !rows().length"
+          blankTitle="Aucun pneu vendu sur ce mois." />
+
+        <ng-container *ngIf="!loading()">
+          <div class="list-grid-row pr-grid" *ngFor="let row of rows()">
+            <span class="list-cell--identity">
+              <span class="list-grid-name">{{ row.commercial_name }}</span>
+              <!-- Règle 3 du motif de ligne : le taux qualifie la ligne sans être
+                   une colonne — il est par commercial, la légende ne peut pas le
+                   dire pour tout le monde. -->
+              <span class="list-grid-sub">{{ formatAmount(row.prime_per_tyre) }} DH par pneu</span>
+              <!-- Refonte 2b, 8b : ce que portent les colonnes tombées sous 1200 px. -->
+              <span class="list-grid-sub list-grid-sub--fold">{{ foldedSubLineFor(row) }}</span>
+              <!-- Ce que le passage en fiche fait tomber en plus, sous 900 px. -->
+              <span class="list-grid-sub pr-sub--card">{{ cardSubLineFor(row) }}</span>
+            </span>
+
+            <span class="text-right list-cell--drop pr-num">{{ row.sale_tyres }}</span>
+            <span class="text-right list-cell--drop pr-num">{{ row.so_tyres }}</span>
+            <span class="text-right pr-total-tyres">{{ row.total_tyres }}</span>
+
+            <span class="pr-share">
+              <span class="pr-share-track">
+                <span class="pr-share-fill" [style.width.%]="sharePct(row)"></span>
+              </span>
+              <span class="pr-share-pct">{{ formatRate(sharePct(row)) }} %</span>
+            </span>
+
+            <!-- La ligne ne se grise plus : seule la colonne de prime change
+                 d'encre selon que le seuil est franchi ou non. -->
+            <span class="text-right list-cell--amount pr-prime" [class.pr-prime--due]="reached()">
+              {{ formatAmount(primeIfReached(row)) }}
+            </span>
+          </div>
+
+          <div class="list-grid-row pr-grid pr-shop" *ngIf="rows().length">
+            <span>Boutique</span>
+            <span class="text-right list-cell--drop">{{ shopSaleTyres() }}</span>
+            <span class="text-right list-cell--drop">{{ shopSoTyres() }}</span>
+            <span class="text-right pr-total-tyres">{{ realized() }}</span>
+            <span></span>
+            <span class="text-right">{{ formatAmount(costAtRealized()) }}</span>
+          </div>
+        </ng-container>
+
+        <p class="pr-main-note" *ngIf="!loading() && rows().length && !reached() && hasThreshold()">
+          Les primes s'affichent en gris parce que le seuil n'est pas franchi : ce sont celles qui
+          seraient dues au compteur actuel. Elles passent en encre le jour où la boutique atteint
+          {{ threshold() }} pneus — sans griser les lignes, qui restent lisibles.
+        </p>
       </div>
-    </div>
 
-    <!-- Ineligible notice -->
-    <div *ngIf="!res.prime_eligible && res.prime_threshold > 0" class="ineligible-notice">
-      L'objectif de <strong>{{ res.prime_threshold }} pneus</strong> n'a pas été atteint ce mois-ci
-      ({{ res.shop_total_tyres }} vendus). Aucune prime n'est due.
-    </div>
+      <!-- ── Le panneau de droite ──────────────────────────────────────── -->
+      <aside class="pr-side" *ngIf="!loading()">
+        <div class="pr-panel">
+          <span class="pr-panel-title">Coût de la prime</span>
+          <span class="pr-kv">
+            <span>Au réalisé</span>
+            <strong>{{ formatAmount(costAtRealized()) }}</strong>
+          </span>
+          <!-- « À la projection » attend les jours ouvrés restants. -->
+          <span class="pr-kv" *ngIf="canProject()">
+            <span>À la projection</span>
+            <strong>—</strong>
+          </span>
+          <span class="pr-kv">
+            <span>Part de la marge nette</span>
+            <strong *ngIf="marginShare() as share">{{ formatRate(share) }} %</strong>
+            <strong *ngIf="!marginShare()" class="pr-kv-none">—</strong>
+          </span>
+          <p class="pr-panel-note" *ngIf="!marginShare()">
+            La marge nette du mois est nulle ou négative : la prime ne s'y rapporte pas.
+          </p>
+        </div>
 
-    <div *ngIf="res.prime_threshold === 0" class="ineligible-notice notice-warning">
-      Aucun seuil configuré. Rendez-vous dans <strong>Paramètres</strong> pour définir l'objectif mensuel.
-    </div>
+        <!-- Les six derniers mois demandent le seuil qui s'appliquait alors.
+             `prime_threshold` est une colonne unique de `company_settings`, sans
+             historique : ce bloc reste vide tant que l'API ne sait pas le dire. -->
+        <div class="pr-panel" *ngIf="history().length">
+          <span class="pr-panel-title">Six derniers mois</span>
+          <span class="pr-hist" *ngFor="let past of history()">
+            <span class="pr-hist-month">{{ past.month }}/{{ past.year }}</span>
+            <span class="pr-hist-track">
+              <span class="pr-hist-fill"
+                    [style.width.%]="histPct(past)"
+                    [class.pr-hist-fill--ok]="past.shop_total_tyres >= past.prime_threshold"></span>
+            </span>
+            <span class="pr-hist-value">{{ past.shop_total_tyres }}</span>
+          </span>
+        </div>
 
+        <div class="pr-panel">
+          <span class="pr-panel-title">Règle</span>
+          <p class="pr-panel-text">
+            <ng-container *ngIf="hasThreshold()">Seuil de {{ threshold() }} pneus par mois pour la boutique. </ng-container>
+            <ng-container *ngIf="hasUniformRate()">Prime de {{ formatAmount(uniformRate()!) }} DH par pneu vendu, ventes et service auto confondus. </ng-container>
+            <ng-container *ngIf="!hasUniformRate()">Prime au taux propre à chaque commercial, ventes et service auto confondues. </ng-container>
+            Réglable dans Paramètres.
+          </p>
+        </div>
+      </aside>
+    </div>
   </ng-container>
 </div>

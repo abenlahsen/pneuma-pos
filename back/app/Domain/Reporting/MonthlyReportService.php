@@ -53,6 +53,21 @@ class MonthlyReportService
         ];
     }
 
+    /**
+     * Net margin of a single month — gross margin minus expenses.
+     *
+     * Refonte 2b, 9b : the Primes screen shows the bonus cost as a share of the
+     * net margin. It goes through computePeriod() rather than re-deriving the
+     * formula so the two screens can never disagree on what "marge nette"
+     * means; the extra blocks it computes are the price of that guarantee.
+     */
+    public function netMargin(int $year, int $month): float
+    {
+        $monthStart = Carbon::createFromDate($year, $month, 1)->startOfDay();
+
+        return (float) $this->computePeriod($monthStart)['margin']['net'];
+    }
+
     private function periodMeta(Carbon $monthStart): array
     {
         return [

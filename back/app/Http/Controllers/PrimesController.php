@@ -2,19 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Reporting\MonthlyReportService;
 use App\Models\CompanySetting;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PrimesController extends Controller
 {
+    public function __construct(private MonthlyReportService $reportService) {}
+
     public function index(Request $request): JsonResponse
     {
         $year  = (int) ($request->input('year', now()->year));
         $month = (int) ($request->input('month', now()->month));
 
-        $start = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfDay();
+        $start = Carbon::createFromDate($year, $month, 1)->startOfDay();
         $end   = $start->copy()->endOfMonth()->endOfDay();
 
         $settings = CompanySetting::first();
@@ -117,7 +121,62 @@ class PrimesController extends Controller
                 'total_primes'      => round($totalPrimes, 2),
                 'total_commerciaux' => $data->count(),
             ],
-            'data' => $data,
+            'data'       => $data,
+            'daily'      => $this->dailyTyres($start, $end),
+            'net_margin' => $this->reportService->netMargin($year, $month),
         ]);
+    }
+
+    /**
+     * Tyres sold day by day over the month — refonte 2b, 9b.
+     *
+     * Every day of the month is present, zeros included: the screen reads the
+     * series as a calendar (pace since the 1st, gauge), and a sparse array
+     * would let a closed day pass for a missing one.
+     *
+     * The filters are deliberately the SAME as the totals above — no status
+     * exclusion — so that `sum(daily.total_tyres) === shop_total_tyres`. Both
+     * therefore count cancelled sales and cancelled service orders, unlike the
+     * dashboard and the monthly report, which exclude them.
+     *
+     * @return array<int, array{date: string, sale_tyres: int, so_tyres: int, total_tyres: int}>
+     */
+    private function dailyTyres(Carbon $start, Carbon $end): array
+    {
+        $saleDaily = DB::table('sale_items')
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->where('products.type', 'tyre')
+            ->whereBetween('sales.date', [$start, $end])
+            ->selectRaw('DATE(sales.date) as d, SUM(sale_items.quantity) as qty')
+            ->groupBy('d')
+            ->pluck('qty', 'd');
+
+        $soDaily = DB::table('service_items')
+            ->join('products', 'service_items.product_id', '=', 'products.id')
+            ->join('service_orders', 'service_items.service_order_id', '=', 'service_orders.id')
+            ->where('products.type', 'tyre')
+            ->where('service_items.item_type', 'part')
+            ->whereBetween('service_orders.date', [$start, $end])
+            ->selectRaw('DATE(service_orders.date) as d, SUM(service_items.quantity) as qty')
+            ->groupBy('d')
+            ->pluck('qty', 'd');
+
+        $days = [];
+
+        for ($day = $start->copy(); $day->lte($end); $day->addDay()) {
+            $key       = $day->toDateString();
+            $saleTyres = (int) ($saleDaily[$key] ?? 0);
+            $soTyres   = (int) ($soDaily[$key] ?? 0);
+
+            $days[] = [
+                'date'        => $key,
+                'sale_tyres'  => $saleTyres,
+                'so_tyres'    => $soTyres,
+                'total_tyres' => $saleTyres + $soTyres,
+            ];
+        }
+
+        return $days;
     }
 }
