@@ -1,5 +1,8 @@
 @use '../../../_variables' as *;
 
+@use '../../../_page-layout' as layout;
+@include layout.list-row-pattern();
+
 .section-header {
   display: flex;
   align-items: center;
@@ -119,3 +122,20 @@
 }
 
 .btn-sm { padding: 0.4rem 0.75rem; }
+
+/* ── Refonte 2b, 9a : les demandes au motif de ligne ────────────────────── */
+.sc-rows { border: 1px solid $border-strong; }
+
+.sc-grid {
+  grid-template-columns: minmax(0, 1fr) 96px 132px 108px;
+
+  @include below-reduce {
+    grid-template-columns: minmax(0, 1fr) 132px 108px;
+  }
+}
+
+.ro-label { display: none; }
+
+@include below-reduce {
+  .ro-label { display: inline; }
+}

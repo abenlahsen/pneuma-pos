@@ -1,11 +1,11 @@
-<div class="modal-overlay" (click)="onCancel()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2><app-icon name="refresh" [size]="14" /> Nouveau Transfert</h2>
-      <button (click)="onCancel()" class="btn-close"><app-icon name="close" [size]="14" /></button>
-    </div>
+<!-- Refonte 2b, 9a : la modale écrite à la main passe par la coque 15b.
+     Cinq champs, largement sous le seuil de dix du §5b. -->
+<app-referential-modal
+  referential="transfert"
+  [title]="'Transfert entre comptes'"
+  (dismiss)="onCancel()">
 
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-body">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" id="transfer-form">
       <div class="form-row">
         <div class="form-group">
           <label for="tf-source">De (Compte source) *</label>
@@ -43,12 +43,12 @@
         <textarea id="tf-desc" formControlName="description" rows="2" placeholder="Ex: Transfert de caisse vers banque..."></textarea>
       </div>
 
-      <div class="modal-footer">
-        <button type="button" (click)="onCancel()" class="btn btn-cancel">Annuler</button>
-        <button type="submit" [disabled]="form.invalid" class="btn btn-submit">
-          Effectuer le transfert
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
+  </form>
+
+  <ng-container actions>
+    <button type="button" (click)="onCancel()" class="rf-btn">Annuler</button>
+    <button type="submit" form="transfer-form" [disabled]="form.invalid" class="rf-btn rf-btn--solid">
+      {{ 'Transférer' }}
+    </button>
+  </ng-container>
+</app-referential-modal>

@@ -85,64 +85,58 @@
     }
 
     <ng-container>
-      <div class="table-scroll">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>DATE / HEURE</th>
-              <th>TYPE</th>
-              <th>ACTION</th>
-              <th>DESCRIPTION</th>
-              <th>UTILISATEUR</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            @if (loading() && logs().length === 0) {
-              @for (row of skeletonRows; track $index) {
-                <tr appSkeletonCells [cells]="6" [seed]="$index"></tr>
-              }
-            }
-
-            @for (log of logs(); track log.id) {
-              <tr>
-                <td class="cell-date">{{ log.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
-                <td>
-                  <span class="entity-badge" [class]="entityClass(log.entity_type)">
-                    {{ entityTypeLabel(log.entity_type) }}
-                  </span>
-                </td>
-                <td>
-                  <span class="action-badge" [class]="actionClass(log.action)">
-                    {{ actionLabel(log.action) }}
-                  </span>
-                </td>
-                <td class="cell-description">{{ log.description }}</td>
-                <td class="cell-user">{{ log.user_name || '—' }}</td>
-                <td class="cell-actions">
-                  @if (log.properties) {
-                    <button class="btn-detail" (click)="openDetail(log)" title="Voir le détail">
-                      <app-icon name="view" [size]="14" />
-                    </button>
-                  }
-                </td>
-              </tr>
-            } @empty {
-              @if (!loading() && !loadError()) {
-                <tr>
-                  <td colspan="6" class="state-cell">
-                    <app-list-empty
-                      blankTitle="Aucune activité enregistrée pour le moment."
-                      noMatchTitle="Aucune entrée ne correspond"
-                      [filters]="activeFilters()"
-                      (clearAll)="resetFilters()" />
-                  </td>
-                </tr>
-              }
-            }
-          </tbody>
-        </table>
+      <div class="list-grid-header al-grid">
+        <span>Activité</span>
+        <span class="list-cell--drop">Type</span>
+        <span>Action</span>
+        <span class="text-right"></span>
       </div>
+
+      @if (loading() && logs().length === 0) {
+        @for (row of skeletonRows; track $index) {
+          <div class="list-grid-row al-grid" appSkeletonRow [cells]="4" [seed]="$index"></div>
+        }
+      }
+
+      @for (log of logs(); track log.id) {
+        <div class="list-grid-row al-grid">
+          <span class="list-cell--identity">
+            <span class="list-grid-name">{{ log.description }}</span>
+            <!-- Règle 3 : la date et l'auteur qualifient l'entrée sans qu'on
+                 trie dessus — le journal est déjà chronologique. -->
+            <span class="list-grid-sub">{{ log.created_at | date:'dd/MM/yyyy HH:mm' }} · {{ log.user_name || 'Utilisateur supprimé' }}</span>
+            <span class="list-grid-sub list-grid-sub--fold">{{ entityTypeLabel(log.entity_type) }}</span>
+          </span>
+
+          <span class="list-cell--drop">
+            <span class="entity-badge" [class]="entityClass(log.entity_type)">
+              {{ entityTypeLabel(log.entity_type) }}
+            </span>
+          </span>
+
+          <span class="list-grid-status">
+            <span class="action-badge" [class]="actionClass(log.action)">
+              {{ actionLabel(log.action) }}
+            </span>
+          </span>
+
+          <span class="actions-cell list-cell--actions">
+            @if (log.properties) {
+              <button class="btn-icon" (click)="openDetail(log)" title="Voir le détail">
+                <app-icon name="view" [size]="15" />
+              </button>
+            }
+          </span>
+        </div>
+      } @empty {
+        @if (!loading() && !loadError()) {
+          <app-list-empty
+            blankTitle="Aucune activité enregistrée pour le moment."
+            noMatchTitle="Aucune entrée ne correspond"
+            [filters]="activeFilters()"
+            (clearAll)="resetFilters()" />
+        }
+      }
 
       <!-- Pagination -->
       @if (lastPage() > 1) {
@@ -164,19 +158,19 @@
 </div>
 
 <!-- Modal de détail -->
+<!-- Refonte 2b, 9a : la modale de détail passe en volet 15d, en lecture
+     seule. Le tableau avant/après reste un tableau : c'est une comparaison
+     colonne à colonne, elle ne se lit pas autrement. Élargi à 760 px pour
+     lui laisser ses deux colonnes de valeurs. -->
 @if (selectedLog(); as log) {
-  <div class="modal-overlay" (click)="closeDetail()">
-    <div class="detail-modal" (click)="$event.stopPropagation()">
-      <div class="detail-modal-header">
-        <div class="detail-modal-title">
-          <span class="entity-badge" [class]="entityClass(log.entity_type)">{{ entityTypeLabel(log.entity_type) }}</span>
-          <span class="action-badge" [class]="actionClass(log.action)">{{ actionLabel(log.action) }}</span>
-          <strong>{{ log.entity_label }}</strong>
-        </div>
-        <button class="btn-close" (click)="closeDetail()"><app-icon name="close" [size]="14" /></button>
-      </div>
+  <app-side-panel
+    kicker="Journal d'activité"
+    [title]="log.entity_label || actionLabel(log.action)"
+    [subtitle]="entityTypeLabel(log.entity_type) + ' · ' + actionLabel(log.action)"
+    [width]="760"
+    (dismiss)="closeDetail()">
 
-      <div class="detail-modal-meta">
+      <div class="al-detail-meta">
         <span>{{ log.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
         @if (log.user_name) {
           <span class="meta-sep">·</span>
@@ -186,7 +180,7 @@
         <span class="detail-description">{{ log.description }}</span>
       </div>
 
-      <div class="detail-modal-body">
+      <div class="al-detail-body">
         <!-- Paiement -->
         @if (isPaymentAction(log)) {
           <div class="payment-detail">
@@ -269,6 +263,13 @@
           </table>
         }
       </div>
-    </div>
-  </div>
+
+    <ng-container actions>
+      <span class="al-foot-meta">
+        {{ log.created_at | date:'dd/MM/yyyy HH:mm' }}
+        @if (log.user_name) { · {{ log.user_name }} }
+      </span>
+      <button type="button" class="al-btn" (click)="closeDetail()">Fermer</button>
+    </ng-container>
+  </app-side-panel>
 }

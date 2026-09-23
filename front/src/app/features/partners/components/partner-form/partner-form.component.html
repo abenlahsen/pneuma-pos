@@ -1,49 +1,57 @@
-<form (ngSubmit)="onSubmit()" #form="ngForm" class="form-container">
-  <div class="form-section">
-    <h3 class="section-title">Informations</h3>
-    <div class="form-grid">
-      <div class="form-control">
-        <label>Nom du Partenaire *</label>
-        <input type="text" name="name" [(ngModel)]="formData.name" required placeholder="Ex: Garage Atlas">
-      </div>
-      <div class="form-control">
-        <label>Ville</label>
-        <select name="city" [(ngModel)]="formData.city">
-          <option value="">— Sélectionner —</option>
-          <option *ngFor="let c of cities" [value]="c">{{ c }}</option>
-        </select>
-      </div>
-      <div class="form-control">
-        <label>Téléphone</label>
-        <input type="text" name="phone" [(ngModel)]="formData.phone" placeholder="Numéro fixe">
-      </div>
-      <div class="form-control">
-        <label>Mobile</label>
-        <input type="text" name="mobile" [(ngModel)]="formData.mobile" placeholder="Numéro mobile">
-      </div>
-      <div class="form-control full-width">
-        <label>Adresse</label>
-        <input type="text" name="address" [(ngModel)]="formData.address" placeholder="Adresse complète">
-      </div>
-    </div>
-  </div>
+<!-- Refonte 2b, 9a : la modale écrite en ligne dans partners-page passe par la
+     coque 15b. Sept champs, sous le seuil de dix du §5b, rangés en deux
+     colonnes pour que la boîte ne défile pas — ce que le gabarit interdit. -->
+<app-referential-modal
+  referential="partenaire"
+  [title]="partner ? 'Modifier ' + partner.name : 'Nouveau partenaire'"
+  (dismiss)="cancel.emit()">
 
-  <div class="form-section">
-    <h3 class="section-title">Tarification des Services</h3>
-    <div class="form-grid">
-      <div class="form-control">
-        <label>Montage + Equilibrage (DH/pneu)</label>
-        <input type="number" name="montage_price" [(ngModel)]="formData.montage_price" step="0.01" min="0" placeholder="Ex: 50.00">
-      </div>
-      <div class="form-control">
-        <label>Parallélisme (DH)</label>
-        <input type="number" name="alignment_price" [(ngModel)]="formData.alignment_price" step="0.01" min="0" placeholder="Ex: 150.00">
-      </div>
-    </div>
-  </div>
+  <form (ngSubmit)="onSubmit()" #form="ngForm" class="pf-grid" id="partenaire-form">
+    <label class="rf-field pf-field--wide">
+      <span>Nom du partenaire *</span>
+      <input type="text" name="name" [(ngModel)]="formData.name" required placeholder="Ex: Garage Atlas">
+    </label>
 
-  <div class="form-actions">
-    <button type="button" class="btn btn-secondary" (click)="cancel.emit()">Annuler</button>
-    <button type="submit" class="btn btn-primary" [disabled]="!form.valid">Enregistrer</button>
-  </div>
-</form>
+    <label class="rf-field">
+      <span>Ville</span>
+      <select name="city" [(ngModel)]="formData.city">
+        <option value="">— Sélectionner —</option>
+        <option *ngFor="let c of cities" [value]="c">{{ c }}</option>
+      </select>
+    </label>
+
+    <label class="rf-field">
+      <span>Téléphone</span>
+      <input type="text" name="phone" [(ngModel)]="formData.phone" placeholder="Numéro fixe">
+    </label>
+
+    <label class="rf-field">
+      <span>Mobile</span>
+      <input type="text" name="mobile" [(ngModel)]="formData.mobile" placeholder="Numéro mobile">
+    </label>
+
+    <label class="rf-field pf-field--wide">
+      <span>Adresse</span>
+      <input type="text" name="address" [(ngModel)]="formData.address" placeholder="Adresse complète">
+    </label>
+
+    <span class="pf-section pf-field--wide">Tarification des services</span>
+
+    <label class="rf-field">
+      <span>Montage + équilibrage (DH/pneu)</span>
+      <input type="number" name="montage_price" [(ngModel)]="formData.montage_price" step="0.01" min="0" placeholder="Ex: 50.00">
+    </label>
+
+    <label class="rf-field">
+      <span>Parallélisme (DH)</span>
+      <input type="number" name="alignment_price" [(ngModel)]="formData.alignment_price" step="0.01" min="0" placeholder="Ex: 150.00">
+    </label>
+  </form>
+
+  <ng-container actions>
+    <button type="button" class="rf-btn" (click)="cancel.emit()">Annuler</button>
+    <button type="submit" form="partenaire-form" class="rf-btn rf-btn--solid" [disabled]="!form.valid">
+      {{ partner ? 'Mettre à jour' : 'Créer le partenaire' }}
+    </button>
+  </ng-container>
+</app-referential-modal>

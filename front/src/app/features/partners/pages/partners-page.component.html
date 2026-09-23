@@ -42,119 +42,58 @@
   </div>
 
   <div class="card table-card">
-    <div class="table-responsive">
-      <table class="table">
-        <thead>
-          <tr>
-            <th class="text-center">Actions</th>
-            <th class="sortable" (click)="toggleSort('name')">
-              Nom
-              <app-sort-icon [active]="sortBy() === 'name'" [dir]="sortDirection()" />
-            </th>
-            <th class="sortable" (click)="toggleSort('city')">
-              Ville
-              <app-sort-icon [active]="sortBy() === 'city'" [dir]="sortDirection()" />
-            </th>
-            <th class="sortable" (click)="toggleSort('phone')">
-              Téléphone
-              <app-sort-icon [active]="sortBy() === 'phone'" [dir]="sortDirection()" />
-            </th>
-            <th class="sortable text-right" (click)="toggleSort('montage_price')">
-              Montage+Equil. (DH)
-              <app-sort-icon [active]="sortBy() === 'montage_price'" [dir]="sortDirection()" />
-            </th>
-            <th class="sortable text-right" (click)="toggleSort('alignment_price')">
-              Parallélisme (DH)
-              <app-sort-icon [active]="sortBy() === 'alignment_price'" [dir]="sortDirection()" />
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Refonte 2b, §14c : chargement, erreur, liste vide. -->
-          <tr *ngIf="loadError()">
-            <td colspan="6" class="state-cell">
-              <app-list-error
-                title="Les partenaires n'ont pas pu être chargés."
-                [cause]="loadError()!"
-                [detail]="loadErrorDetail()"
-                [lastLoadedAt]="lastLoadedAt()"
-                (retry)="loadData()" />
-            </td>
-          </tr>
-
-          <ng-container *ngIf="loading() && partners().length === 0">
-            <tr appSkeletonCells [cells]="6" [seed]="i"
-                *ngFor="let row of skeletonRows; let i = index"></tr>
-          </ng-container>
-
-          <tr *ngIf="!loading() && !loadError() && partners().length === 0">
-            <td colspan="6" class="state-cell">
-              <app-list-empty
-                blankTitle="Aucun partenaire enregistré pour le moment."
-                noMatchTitle="Aucun partenaire ne correspond"
-                [filters]="activeFilters()"
-                (clearAll)="resetFilters()" />
-            </td>
-          </tr>
-          <tr *ngFor="let p of partners()">
-            <td class="text-center actions-cell">
-              <button
-                class="btn-icon btn-sm text-primary"
-                (click)="openEditForm(p)"
-                title="Modifier"
-                *ngIf="authService.hasPermission('edit partners')"
-                [disabled]="deletingPartnerId() === p.id"
-              >
-                <app-icon name="edit" [size]="14" />
-              </button>
-              <button
-                class="btn-icon btn-sm text-danger"
-                (click)="deletePartner(p)"
-                title="Supprimer"
-                *ngIf="authService.hasPermission('delete partners')"
-                [disabled]="deletingPartnerId() === p.id"
-              >
-                <span *ngIf="deletingPartnerId() !== p.id"><app-icon name="trash" [size]="14" /></span>
-                <span *ngIf="deletingPartnerId() === p.id" class="inline-spinner"></span>
-              </button>
-            </td>
-            <td class="fw-semibold">{{ p.name }}</td>
-            <td>{{ p.city || '-' }}</td>
-            <td>{{ p.phone || '-' }}</td>
-            <td class="text-right">{{ p.montage_price != null ? (p.montage_price | number:'1.2-2') : '-' }}</td>
-            <td class="text-right">{{ p.alignment_price != null ? (p.alignment_price | number:'1.2-2') : '-' }}</td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="list-grid-header partners-grid">
+      <button type="button" class="sortable" (click)="toggleSort('name')">Partenaire <app-sort-icon [active]="sortBy() === 'name'" [dir]="sortDirection()" /></button>
+      <button type="button" class="sortable list-cell--drop text-right" (click)="toggleSort('montage_price')">Montage <app-sort-icon [active]="sortBy() === 'montage_price'" [dir]="sortDirection()" /></button>
+      <button type="button" class="sortable text-right" (click)="toggleSort('alignment_price')">Parallélisme <app-sort-icon [active]="sortBy() === 'alignment_price'" [dir]="sortDirection()" /></button>
+      <span class="text-right">Actions</span>
     </div>
 
-    <div class="pagination-wrapper" *ngIf="total() > 0">
-      <div class="pagination-info">
-        {{ (currentPage() - 1) * perPage() + 1 }} à {{ currentPage() * perPage() > total() ? total() : currentPage() * perPage() }}
-        sur {{ total() }}
-      </div>
-      <div class="pagination">
-        <button class="btn-page" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">&laquo;</button>
-        <button class="btn-page" *ngFor="let pg of pages" [class.active]="pg === currentPage()" (click)="goToPage(pg)">
-          {{ pg }}
-        </button>
-        <button class="btn-page" [disabled]="currentPage() === lastPage()" (click)="goToPage(currentPage() + 1)">&raquo;</button>
-      </div>
-    </div>
-  </div>
-</div>
+    <!-- Refonte 2b, §14c état 3 : sans cela, un serveur muet passe pour une
+         absence de données. -->
+    <app-list-error
+      *ngIf="loadError()"
+      title="Les partenaires n'ont pas pu être chargés."
+      [cause]="loadError()!"
+      [detail]="loadErrorDetail()"
+      [lastLoadedAt]="lastLoadedAt()"
+      (retry)="loadData()" />
 
-<div class="modal-overlay" *ngIf="showForm()" (click)="closeForm()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>{{ editingPartner() ? 'Modifier Partenaire' : 'Nouveau Partenaire' }}</h2>
-      <button class="btn-icon" (click)="closeForm()">X</button>
+    <ng-container *ngIf="loading() && partners().length === 0">
+      <div class="list-grid-row partners-grid" appSkeletonRow [cells]="4" [seed]="i"
+           *ngFor="let row of skeletonRows; let i = index"></div>
+    </ng-container>
+
+    <app-list-empty
+      *ngIf="!loading() && !loadError() && partners().length === 0"
+      blankTitle="Aucun partenaire enregistré pour le moment."
+      noMatchTitle="Aucun partenaire ne correspond"
+      [filters]="activeFilters()"
+      (clearAll)="resetFilters()" />
+
+    <div class="list-grid-row partners-grid" *ngFor="let p of partners()">
+      <span class="list-cell--identity">
+        <span class="list-grid-name">{{ p.name }}</span>
+        <!-- Règle 3 : ville et téléphone qualifient sans qu'on trie dessus. -->
+        <span class="list-grid-sub">{{ subLineFor(p) }}</span>
+        <span class="list-grid-sub list-grid-sub--fold">{{ foldedSubLineFor(p) }}</span>
+      </span>
+
+      <span class="list-cell--drop text-right">{{ p.montage_price != null ? (p.montage_price | number:'1.2-2') : '—' }}</span>
+      <span class="text-right list-cell--amount">{{ p.alignment_price != null ? (p.alignment_price | number:'1.2-2') : '—' }}</span>
+
+      <span class="actions-cell list-cell--actions">
+        <button class="btn-icon text-primary" (click)="openEditForm(p)" title="Modifier" *ngIf="authService.hasPermission('edit partners')"><app-icon name="edit" [size]="15" /></button>
+        <app-row-lock *ngIf="!authService.hasPermission('edit partners')"
+          reason="Votre rôle ne permet pas de modifier un partenaire. Demandez à un administrateur." />
+        <button class="btn-icon text-danger" (click)="deletePartner(p)" title="Supprimer" *ngIf="authService.hasPermission('delete partners')"><app-icon name="trash" [size]="15" /></button>
+        <app-row-lock *ngIf="!authService.hasPermission('delete partners')"
+          reason="Votre rôle ne permet pas de supprimer un partenaire. Demandez à un administrateur." />
+      </span>
     </div>
-    <div class="modal-body">
-      <app-partner-form [partner]="editingPartner()" (save)="onFormSubmit($event)" (cancel)="closeForm()"></app-partner-form>
-    </div>
-  </div>
-</div>
+@if (showForm()) {
+  <app-partner-form [partner]="editingPartner()" (save)="onFormSubmit($event)" (cancel)="closeForm()" />
+}
 
 <!-- Refonte 2b, gabarit 15c : la confirmation remplace le confirm() natif. -->
 <app-confirm-delete

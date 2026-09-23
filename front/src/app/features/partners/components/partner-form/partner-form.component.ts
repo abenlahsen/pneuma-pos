@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ReferentialModalComponent } from '../../../../shared/referential-modal/referential-modal.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Partner, PartnerPayload } from '../../models/partner.model';
@@ -7,9 +8,9 @@ import { CityService } from '../../../../core/services/city.service';
 @Component({
   selector: 'app-partner-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReferentialModalComponent],
   templateUrl: './partner-form.component.html',
-  styleUrls: ['../../../sales/sale-form/sale-form.component.scss']
+  styleUrl: './partner-form.component.scss',
 })
 export class PartnerFormComponent implements OnInit {
   @Input() partner: Partner | null = null;

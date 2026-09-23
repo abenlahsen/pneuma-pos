@@ -1,11 +1,11 @@
-<div class="modal-overlay" (click)="onCancel()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2><app-icon [name]="isEdit() ? 'edit' : 'plus'" [size]="16" /> {{ isEdit() ? 'Modifier' : 'Nouveau' }} Compte</h2>
-      <button (click)="onCancel()" class="btn-close"><app-icon name="close" [size]="14" /></button>
-    </div>
+<!-- Refonte 2b, 9a : la modale écrite à la main passe par la coque 15b.
+     Cinq champs, largement sous le seuil de dix du §5b. -->
+<app-referential-modal
+  referential="compte"
+  [title]="isEdit() ? 'Modifier le compte' : 'Nouveau compte'"
+  (dismiss)="onCancel()">
 
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-body">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" id="account-form">
       <div class="form-row">
         <div class="form-group">
           <label for="acc-name">Nom du compte *</label>
@@ -40,12 +40,12 @@
         <textarea id="acc-desc" formControlName="description" rows="2" placeholder="Notes..."></textarea>
       </div>
 
-      <div class="modal-footer">
-        <button type="button" (click)="onCancel()" class="btn btn-cancel">Annuler</button>
-        <button type="submit" [disabled]="form.invalid" class="btn btn-submit">
-          {{ isEdit() ? 'Mettre à jour' : 'Ajouter' }}
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
+  </form>
+
+  <ng-container actions>
+    <button type="button" (click)="onCancel()" class="rf-btn">Annuler</button>
+    <button type="submit" form="account-form" [disabled]="form.invalid" class="rf-btn rf-btn--solid">
+      {{ isEdit() ? 'Mettre à jour' : 'Ajouter' }}
+    </button>
+  </ng-container>
+</app-referential-modal>

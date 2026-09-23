@@ -438,3 +438,11 @@
   .sd-main { overflow: visible; border-right: 0; }
   .sd-side { overflow: visible; background: $bg-card; }
 }
+
+/* Refonte 2b, 9a : le pied du volet de demande d'expédition. */
+.sd-panel-hint {
+  flex: 1;
+  min-width: 0;
+  font-size: 11.5px;
+  color: $text-muted;
+}

@@ -1,5 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RowOverflowComponent } from '../../../../shared/row-overflow/row-overflow.component';
+import { RowLockComponent } from '../../../../shared/list-state';
 import { IconComponent } from '../../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { ShipmentChangeRequest } from '../../models/shipment-change.model';
@@ -8,11 +10,24 @@ import { ShipmentChangeStatus, SHIPMENT_CHANGE_STATUSES, SHIPMENT_CHANGE_STATUS_
 @Component({
   selector: 'app-shipment-change-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent],
+  imports: [CommonModule, FormsModule, IconComponent, RowOverflowComponent, RowLockComponent],
   templateUrl: './shipment-change-list.component.html',
   styleUrl: './shipment-change-list.component.scss',
 })
 export class ShipmentChangeListComponent {
+  /**
+   * Règle 3 du motif de ligne : la date, le transporteur et le numéro
+   * d'expédition qualifient la demande sans qu'on trie jamais dessus — une
+   * vente en compte rarement plus de trois.
+   */
+  subLineFor(request: ShipmentChangeRequest): string {
+    return [
+      request.date ? new Date(request.date).toLocaleDateString('fr-FR') : null,
+      request.carrier?.name || null,
+      request.shipment_number || null,
+    ].filter((p): p is string => !!p).join(' · ');
+  }
+
   @Input() requests: ShipmentChangeRequest[] = [];
   @Input() loading = false;
   @Input() canCreate = false;

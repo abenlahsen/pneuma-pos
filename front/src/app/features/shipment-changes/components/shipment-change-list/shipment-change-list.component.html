@@ -10,44 +10,58 @@
     Aucune demande de modification pour cette vente.
   </div>
 
-  <div class="table-responsive" *ngIf="requests.length > 0">
-    <table class="table table-sm text-left">
-      <thead>
-        <tr>
-          <th>N°</th>
-          <th>Date</th>
-          <th>Transporteur</th>
-          <th>N° Expédition</th>
-          <th class="text-center">Modifications</th>
-          <th>Statut</th>
-          <th class="text-right">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let r of requests">
-          <td>DM-{{ r.id }}</td>
-          <td>{{ r.date | date:'dd/MM/yyyy' }}</td>
-          <td>{{ r.carrier?.name || '-' }}</td>
-          <td>{{ r.shipment_number || '-' }}</td>
-          <td class="text-center">{{ r.items?.length || 0 }}</td>
-          <td>
-            <span class="badge" [ngClass]="statusClass(r.status)">{{ statusLabels[r.status] }}</span>
-          </td>
-          <td class="text-right actions-cell">
-            <button type="button" class="btn-icon" title="Imprimer" (click)="print.emit(r)"><app-icon name="print" [size]="14" /></button>
-            <button type="button" class="btn-icon" title="Modifier" *ngIf="canEdit && !isClosed(r)" (click)="edit.emit(r)"><app-icon name="edit" [size]="14" /></button>
-            <select
-              class="status-select"
-              *ngIf="canEdit && !isClosed(r)"
-              [ngModel]="r.status"
-              (ngModelChange)="onStatusSelect(r, $event)"
-              title="Changer le statut">
-              <option *ngFor="let s of allStatuses" [value]="s">{{ statusLabels[s] }}</option>
-            </select>
-            <button type="button" class="btn-icon danger" title="Supprimer" *ngIf="canDelete && !isClosed(r)" (click)="delete.emit(r)"><app-icon name="trash" [size]="14" /></button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- Refonte 2b, 9a : le <table> passe au motif de ligne. -->
+  <div class="sc-rows" *ngIf="requests.length > 0">
+    <div class="list-grid-header sc-grid">
+      <span>Demande</span>
+      <span class="list-cell--drop text-center">Articles</span>
+      <span>Statut</span>
+      <span class="text-right">Actions</span>
+    </div>
+
+    <div class="list-grid-row sc-grid" *ngFor="let r of requests">
+      <span class="list-cell--identity">
+        <span class="list-grid-name">DM-{{ r.id }}</span>
+        <!-- Règle 3 : date, transporteur et n° d'expédition qualifient la
+             demande sans qu'on trie dessus — la liste en compte rarement plus
+             de trois, attachée à une seule vente. -->
+        <span class="list-grid-sub">{{ subLineFor(r) }}</span>
+        <span class="list-grid-sub list-grid-sub--fold">{{ r.items?.length || 0 }} article(s)</span>
+      </span>
+
+      <span class="list-cell--drop text-center">{{ r.items?.length || 0 }}</span>
+
+      <span class="list-grid-status">
+        <span class="badge" [ngClass]="statusClass(r.status)">{{ statusLabels[r.status] }}</span>
+      </span>
+
+      <span class="actions-cell list-cell--actions">
+        <button type="button" class="btn-icon" title="Imprimer" (click)="print.emit(r)"><app-icon name="print" [size]="15" /></button>
+
+        <ng-container *ngIf="canEdit && !isClosed(r); else closedActions">
+          <app-row-overflow>
+            <button type="button" class="btn-icon ro-item" title="Modifier" (click)="edit.emit(r)">
+              <app-icon name="edit" [size]="15" /><span class="ro-label">Modifier</span>
+            </button>
+            <button type="button" class="btn-icon ro-item ro-item--danger" title="Supprimer"
+                    *ngIf="canDelete" (click)="delete.emit(r)">
+              <app-icon name="trash" [size]="15" /><span class="ro-label">Supprimer</span>
+            </button>
+            <!-- Le statut suit le même chemin que sur Ventes : sa colonne
+                 tombe, sa modification reste accessible. -->
+            <label class="ro-field ro-keep-open">
+              <span>Changer le statut</span>
+              <select [ngModel]="r.status" (ngModelChange)="onStatusSelect(r, $event)">
+                <option *ngFor="let s of allStatuses" [value]="s">{{ statusLabels[s] }}</option>
+              </select>
+            </label>
+          </app-row-overflow>
+        </ng-container>
+
+        <ng-template #closedActions>
+          <app-row-lock reason="Cette demande est clôturée : son statut ne se modifie plus." />
+        </ng-template>
+      </span>
+    </div>
   </div>
 </div>

@@ -4,12 +4,13 @@ import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { ActivityLogService } from '../data-access/activity-log.service';
 import { ActivityLog, ActivityLogFilters, ActivityLogParams, ActivityLogSnapshot } from '../models/activity-log.model';
+import { SidePanelComponent } from '../../../shared/side-panel/side-panel.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import {
   ActiveFilter,
   ListEmptyComponent,
   ListErrorComponent,
-  SkeletonCellsComponent,
+  SkeletonRowComponent,
   describeLoadError,
   frenchDate,
 } from '../../../shared/list-state';
@@ -61,7 +62,7 @@ export interface FieldRow {
 @Component({
   selector: 'app-activity-log-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent],
+  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, SidePanelComponent],
   templateUrl: './activity-log-page.component.html',
   styleUrls: ['./activity-log-page.component.scss'],
 })

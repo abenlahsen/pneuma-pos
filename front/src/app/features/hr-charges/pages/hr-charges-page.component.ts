@@ -119,14 +119,27 @@ export class HrChargesPageComponent implements OnInit {
   }
 
   /**
-   * Refonte 2b, 9a : ce que les colonnes tombées sous $bp-reduce portaient —
-   * date, compte et description. Le type de charge reste en sous-ligne fixe,
-   * il qualifie la ligne à toutes les largeurs.
+   * Règle 3 du motif de ligne : la date et le compte qualifient la charge sans
+   * qu'on trie jamais dessus. Ils tiennent donc la sous-ligne à toutes les
+   * largeurs, et ont quitté les colonnes — y rester les aurait écrits deux
+   * fois sur la même ligne.
    */
-  foldedSubLineFor(charge: HrCharge): string {
+  subLineFor(charge: HrCharge): string {
     const parts: (string | null)[] = [
       charge.date ? new Date(charge.date).toLocaleDateString('fr-FR') : null,
       charge.account?.name || null,
+    ];
+    return parts.filter((p): p is string => !!p).join(' · ');
+  }
+
+  /**
+   * Refonte 2b, 9a : ce que les colonnes tombées sous $bp-reduce portaient —
+   * le type de charge et la description. Rien de ce que la sous-ligne fixe dit
+   * déjà, sous peine de l'écrire une troisième fois.
+   */
+  foldedSubLineFor(charge: HrCharge): string {
+    const parts: (string | null)[] = [
+      charge.subcategory || null,
       charge.description || null,
     ];
     return parts.filter((p): p is string => !!p).join(' · ');

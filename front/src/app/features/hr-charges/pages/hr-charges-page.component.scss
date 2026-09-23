@@ -168,12 +168,14 @@
 
 /* ── Refonte 2b, 9a : Charges RH au motif de ligne ──────────────────────── */
 .hr-grid {
-  grid-template-columns: minmax(0, 1fr) 140px 104px 120px 120px 160px 72px;
+  /* Cinq colonnes : la date et le compte ont rejoint la sous-ligne, où ils
+     qualifient la charge sans être des critères de tri (règle 3). */
+  grid-template-columns: minmax(0, 1fr) 150px 130px 190px 72px;
 
-  /* Quatre colonnes tombent sous $bp-reduce — le type de charge reste en
-     sous-ligne fixe, date, compte et description descendent dans le repli. */
+  /* Deux tombent sous $bp-reduce — type de charge et description — et
+     descendent dans le repli. */
   @include below-reduce {
-    grid-template-columns: minmax(0, 1fr) 120px 72px;
+    grid-template-columns: minmax(0, 1fr) 130px 72px;
   }
 }
 

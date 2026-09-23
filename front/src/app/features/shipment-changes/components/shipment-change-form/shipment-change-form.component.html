@@ -1,4 +1,6 @@
-<form (ngSubmit)="onSubmit()" #form="ngForm" class="form-container">
+<!-- Refonte 2b, 9a : les boutons vivent dans le pied de la coque de volet
+     (voir sale-detail). Le `form` les y relie par son identifiant. -->
+<form (ngSubmit)="onSubmit()" #form="ngForm" id="shipment-change-form" class="form-container">
   <div class="form-section">
     <h3 class="section-title">Expédition</h3>
     <div class="form-grid">
@@ -70,8 +72,4 @@
     </ng-template>
   </div>
 
-  <div class="form-actions">
-    <button type="button" class="btn btn-secondary" (click)="cancel.emit()">Annuler</button>
-    <button type="submit" class="btn btn-primary" [disabled]="!canSubmit">Enregistrer</button>
-  </div>
 </form>

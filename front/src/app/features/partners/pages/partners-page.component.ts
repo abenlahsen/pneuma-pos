@@ -11,19 +11,20 @@ import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
 import { CityService } from '../../../core/services/city.service';
 import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
 import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
+import { RowLockComponent } from '../../../shared/list-state';
 
 import {
   ActiveFilter,
   ListEmptyComponent,
   ListErrorComponent,
-  SkeletonCellsComponent,
+  SkeletonRowComponent,
   describeLoadError,
 } from '../../../shared/list-state';
 
 @Component({
   selector: 'app-partners-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, PartnerFormComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, FormsModule, PartnerFormComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ConfirmDeleteComponent],
   templateUrl: './partners-page.component.html',
   styleUrls: ['./partners-page.component.scss'],
 })
@@ -54,6 +55,22 @@ export class PartnersPageComponent implements OnInit {
   readonly loadError = signal<string | null>(null);
   readonly loadErrorDetail = signal<string | null>(null);
   readonly lastLoadedAt = signal<Date | null>(null);
+
+  /**
+   * Règle 3 du motif de ligne : la ville et le téléphone qualifient le
+   * partenaire sans qu'on trie jamais dessus — ils tiennent la sous-ligne à
+   * toutes les largeurs plutôt qu'une colonne chacun.
+   */
+  subLineFor(partner: Partner): string {
+    return [partner.city, partner.phone, partner.mobile]
+      .filter((p): p is string => !!p)
+      .join(' · ');
+  }
+
+  /** Ce que la colonne tombée sous $bp-reduce portait : le prix de montage. */
+  foldedSubLineFor(partner: Partner): string {
+    return partner.montage_price != null ? `montage ${partner.montage_price} DH/pneu` : '';
+  }
 
   readonly activeFilters = computed<ActiveFilter[]>(() => {
     const applied: ActiveFilter[] = [];

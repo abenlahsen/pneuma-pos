@@ -78,15 +78,13 @@
       <div class="list-grid-header hr-grid">
         <span>Employé</span>
         <span class="list-cell--drop">Type de charge</span>
-        <span class="list-cell--drop">Date</span>
         <span class="text-right">Montant</span>
-        <span class="list-cell--drop">Compte</span>
         <span class="list-cell--drop">Description</span>
         <span class="text-right">Actions</span>
       </div>
 
       <ng-container *ngIf="loading()">
-        <div class="list-grid-row hr-grid" appSkeletonRow [cells]="7" [seed]="i"
+        <div class="list-grid-row hr-grid" appSkeletonRow [cells]="5" [seed]="i"
              *ngFor="let row of skeletonRows; let i = index"></div>
       </ng-container>
 
@@ -100,15 +98,17 @@
       <div class="list-grid-row hr-grid" *ngFor="let charge of charges()">
         <span class="list-cell--identity">
           <span class="list-grid-name">{{ charge.employee_name }}</span>
-          <span class="list-grid-sub">{{ charge.subcategory }}</span>
-          <!-- Refonte 2b, 8b : ce que les colonnes tombées portaient. -->
+          <!-- Règle 3 du motif de ligne : ce qui qualifie sans être un critère
+               de tri descend en sous-ligne. La date et le compte quittent donc
+               les colonnes — les y garder les aurait écrits deux fois. -->
+          <span class="list-grid-sub">{{ subLineFor(charge) }}</span>
+          <!-- Refonte 2b, 8b : ce que les colonnes tombées portaient, et rien
+               de ce que la sous-ligne fixe dit déjà. -->
           <span class="list-grid-sub list-grid-sub--fold">{{ foldedSubLineFor(charge) }}</span>
         </span>
 
         <span class="list-cell--drop">{{ charge.subcategory }}</span>
-        <span class="list-cell--drop">{{ charge.date | date: 'dd/MM/yyyy' }}</span>
         <span class="text-right list-cell--amount">{{ formatAmount(charge.amount) }}</span>
-        <span class="list-cell--drop">{{ charge.account?.name || '—' }}</span>
         <span class="list-cell--drop">{{ charge.description || '—' }}</span>
 
         <span class="actions-cell list-cell--actions">
@@ -132,9 +132,7 @@
       <div class="list-grid-row hr-grid hr-total" *ngIf="charges().length">
         <span>Total du mois</span>
         <span class="list-cell--drop"></span>
-        <span class="list-cell--drop"></span>
         <span class="text-right">{{ formatAmount(summary()?.total || 0) }}</span>
-        <span class="list-cell--drop"></span>
         <span class="list-cell--drop"></span>
         <span></span>
       </div>

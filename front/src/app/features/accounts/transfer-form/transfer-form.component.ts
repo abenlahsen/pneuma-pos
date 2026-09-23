@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReferentialModalComponent } from '../../../shared/referential-modal/referential-modal.component';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Account, TransferPayload } from '../../../core/models/account.model';
@@ -7,7 +8,7 @@ import { Account, TransferPayload } from '../../../core/models/account.model';
 @Component({
   selector: 'app-transfer-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, IconComponent],
+  imports: [CommonModule, ReactiveFormsModule, IconComponent, ReferentialModalComponent],
   templateUrl: './transfer-form.component.html',
   styleUrls: ['./transfer-form.component.scss']
 })

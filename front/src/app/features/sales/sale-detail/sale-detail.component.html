@@ -240,11 +240,19 @@
     [subtitle]="'Vente ' + sale.id"
     (dismiss)="closeShipmentForm()">
     <app-shipment-change-form
+      #shipmentForm
       [sale]="sale"
       [request]="editingShipmentRequest()"
       (save)="onShipmentFormSubmit($event)"
       (cancel)="closeShipmentForm()"
     />
+
+    <ng-container actions>
+      <span class="sd-panel-hint">La demande ne modifie pas la vente : elle en trace la demande.</span>
+      <button type="button" class="sd-btn" (click)="closeShipmentForm()">Annuler</button>
+      <button type="submit" form="shipment-change-form" class="sd-btn sd-btn--dark"
+              [disabled]="!shipmentForm.canSubmit">Enregistrer</button>
+    </ng-container>
   </app-side-panel>
 }
 

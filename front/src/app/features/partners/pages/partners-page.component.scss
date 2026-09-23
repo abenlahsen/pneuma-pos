@@ -1,8 +1,23 @@
+@use '../../_variables' as *;
+
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
+@include layout.list-row-pattern();
 
 /* Refonte 2b, §14c : la cellule qui porte un état occupe toute la ligne et
    laisse le composant gérer son propre espacement. */
 .state-cell {
   padding: 0;
+}
+
+/* ── Refonte 2b, 9a : Partenaires au motif de ligne ─────────────────────── */
+.partners-grid {
+  /* Ville, téléphone et mobile ont rejoint la sous-ligne : ce sont des
+     qualifiants, pas des critères de tri. Restent les deux tarifs, sur
+     lesquels on trie réellement. */
+  grid-template-columns: minmax(0, 1fr) 140px 150px 96px;
+
+  @include below-reduce {
+    grid-template-columns: minmax(0, 1fr) 150px 96px;
+  }
 }
