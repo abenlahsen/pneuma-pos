@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"><style>body{margin:0;background:#dfe7f2;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}a{color:#c2181f}a:hover{color:#8f1218}code{font:500 11.5px ui-monospace,Menlo,monospace;background:#f4f8fd;border:1px solid #cfdcec;padding:1px 5px}</style></helmet>
+
+<section style="padding:36px 40px 52px;display:flex;flex-direction:column;gap:20px">
+
+<div style="display:flex;align-items:baseline;gap:10px">
+<span style="font:700 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#0c1e33;color:#fff;border-radius:4px;letter-spacing:.06em">19</span>
+<span style="font:700 13px/1.2 'Inter',sans-serif;color:#0c1e33">IMPRIMÉ DE VENTE ET D'ACHAT — grammaire de la lettre 18c</span>
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e">Un seul composant, <code>document-print</code>, imprime les factures, bons de livraison, bons d'achat et fiches d'intervention. Il reçoit déjà la même structure pour tous : titre, numéro, tiers, lignes, totaux, transport, notes. La refonte garde cette structure et lui applique la hiérarchie de 18c : encre seule, un chiffre dominant, les mentions légales en pied.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Le chiffre dominant est le net à payer</strong>, comme le n° d'expédition sur la lettre : c'est ce que le client cherche. Il passe dans un cadre épais en haut à droite, à côté du numéro de document, au lieu d'être en bas du tableau. Le badge de paiement coloré devient une mention en capitales, lisible en noir et blanc.</p>
+</div>
+
+<div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap">
+
+<div id="19a" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter',sans-serif;color:#41546e"><a href="#19a" style="font:700 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(12,30,51,.1);color:#0c1e33;border-radius:5px;text-decoration:none">19a</a>Facture de vente — A4</div>
+
+<div style="width:794px;height:1123px;background:#fff;color:#111;border:1px solid #adc2da;box-shadow:0 10px 25px rgba(12,30,51,.14);padding:52px 58px 40px;box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+
+  <div style="display:flex;align-items:flex-start;gap:24px;padding-bottom:18px;border-bottom:2px solid #111">
+    <div>
+      <img src="assets/logo.png" alt="PNEU.MA" style="height:40px;width:auto;display:block">
+      <span style="display:block;margin-top:10px;font-size:11px;line-height:1.6;color:#333">PNEU.MA SARL · Bd. Mohammed V, 214, Casablanca<br>0522 00 00 00 · contact@pneu.ma</span>
+    </div>
+    <div style="margin-left:auto;text-align:right">
+      <span style="display:block;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#555">Facture</span>
+      <span style="display:block;margin-top:6px;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums">F-2026-0517</span>
+      <span style="display:block;margin-top:3px;font-size:12px;color:#444;font-variant-numeric:tabular-nums">Casablanca, le 02/07/2026 · vente n° 4182</span>
+    </div>
+  </div>
+
+  <div style="margin-top:20px;display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:24px;align-items:stretch">
+    <div style="padding:2px 0">
+      <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#555">Client</span>
+      <span style="display:block;margin-top:6px;font-size:14.5px;font-weight:700">Garage Atlas Pneus</span>
+      <span style="display:block;margin-top:3px;font-size:12px;line-height:1.6;color:#333">Km 8, route de Rabat, Casablanca<br>0661 24 88 03 · ICE 001428739000047</span>
+    </div>
+    <div style="border:2px solid #111;padding:13px 15px;display:flex;flex-direction:column;justify-content:space-between">
+      <span style="font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#555">Net à payer</span>
+      <span style="margin-top:6px;font-size:27px;font-weight:700;letter-spacing:-.01em;line-height:1;font-variant-numeric:tabular-nums">17 556,48 <span style="font-size:13px;font-weight:600">DH</span></span>
+      <span style="margin-top:7px;font-size:10.5px;font-weight:700;letter-spacing:.1em;color:#111">PARTIEL · RESTE DÛ 15 196,48</span>
+    </div>
+  </div>
+
+  <div style="margin-top:26px">
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) 54px 96px 56px 108px;gap:10px;padding:7px 0;border-bottom:1px solid #111;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#555">
+      <span>Désignation</span><span style="text-align:right">Qté</span><span style="text-align:right">P. unit.</span><span style="text-align:right">Rem.</span><span style="text-align:right">Total</span>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) 54px 96px 56px 108px;gap:10px;align-items:baseline;padding:11px 0;border-bottom:1px solid #ddd">
+      <span style="min-width:0"><span style="display:block;font-size:13px;font-weight:600">Michelin Primacy 4</span><span style="display:block;margin-top:2px;font-size:11px;color:#555;font-variant-numeric:tabular-nums">205/55R16 91V · DOT 2425</span></span>
+      <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">8</span>
+      <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">1 180,00</span>
+      <span style="text-align:right;font-size:12px;font-variant-numeric:tabular-nums;color:#444">8 %</span>
+      <span style="text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">8 684,80</span>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) 54px 96px 56px 108px;gap:10px;align-items:baseline;padding:11px 0;border-bottom:1px solid #ddd">
+      <span style="min-width:0"><span style="display:block;font-size:13px;font-weight:600">Bridgestone Turanza T005</span><span style="display:block;margin-top:2px;font-size:11px;color:#555;font-variant-numeric:tabular-nums">225/45R17 94Y · DOT 1125</span></span>
+      <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">4</span>
+      <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">1 420,00</span>
+      <span style="text-align:right;font-size:12px;font-variant-numeric:tabular-nums;color:#444">8 %</span>
+      <span style="text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">5 225,60</span>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) 54px 96px 56px 108px;gap:10px;align-items:baseline;padding:11px 0;border-bottom:1px solid #111">
+      <span style="min-width:0"><span style="display:block;font-size:13px;font-weight:600">Montage et équilibrage</span><span style="display:block;margin-top:2px;font-size:11px;color:#555">Prestation</span></span>
+      <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">12</span>
+      <span style="text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">60,00</span>
+      <span style="text-align:right;font-size:12px;color:#888">—</span>
+      <span style="text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">720,00</span>
+    </div>
+  </div>
+
+  <div style="margin-top:14px;display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:24px">
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 18px;align-content:start">
+      <span><span style="display:block;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#555">Transporteur</span><span style="display:block;margin-top:3px;font-size:12px">Rapide Log</span></span>
+      <span><span style="display:block;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#555">N° de suivi</span><span style="display:block;margin-top:3px;font:600 12px ui-monospace,Menlo,monospace">RL-88412093</span></span>
+      <span><span style="display:block;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#555">Livraison</span><span style="display:block;margin-top:3px;font-size:12px;font-variant-numeric:tabular-nums">04/07/2026</span></span>
+      <span><span style="display:block;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#555">Paiement</span><span style="display:block;margin-top:3px;font-size:12px">Espèce, chèque</span></span>
+    </div>
+    <div>
+      <span style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px;color:#333"><span>Total HT</span><span style="font-variant-numeric:tabular-nums">14 630,40</span></span>
+            <span style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #111;font-size:12px;color:#333"><span>TVA 20 %</span><span style="font-variant-numeric:tabular-nums">2 926,08</span></span>
+      <span style="display:flex;justify-content:space-between;padding:8px 0 4px;font-size:13.5px;font-weight:700"><span>Net à payer</span><span style="font-variant-numeric:tabular-nums">17 556,48</span></span>
+      <span style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px;color:#333"><span>Déjà payé</span><span style="font-variant-numeric:tabular-nums">2 360,00</span></span>
+      <span style="display:flex;justify-content:space-between;padding:3px 0;font-size:12.5px;font-weight:700"><span>Reste dû</span><span style="font-variant-numeric:tabular-nums">15 196,48</span></span>
+    </div>
+  </div>
+
+  <p style="margin:18px 0 0;font-size:11.5px;line-height:1.6;color:#333">Arrêtée la présente facture à la somme de <strong style="font-weight:600;color:#111">dix-sept mille cinq cent cinquante-six dirhams et quarante-huit centimes</strong> toutes taxes comprises.</p>
+
+  <div style="margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:28px">
+    <div style="height:96px;border:1px solid #111;padding:9px 12px;display:flex;flex-direction:column">
+      <span style="font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#555">Cachet et signature</span>
+      <span style="margin-top:auto;font-size:10.5px;color:#555">K. Amrani · commercial</span>
+    </div>
+    <div style="height:96px;border:1px dashed #888;padding:9px 12px;display:flex;flex-direction:column">
+      <span style="font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#555">Reçu par le client</span>
+      <span style="margin-top:auto;font-size:10.5px;color:#555">Nom, date et signature</span>
+    </div>
+  </div>
+
+  <div style="margin-top:18px;padding-top:9px;border-top:1px solid #bbb;display:flex;flex-wrap:wrap;gap:4px 16px;font-size:9.5px;color:#555;font-variant-numeric:tabular-nums">
+    <span>PNEU.MA SARL</span><span>RC 481223</span><span>ICE 002345678000091</span><span>IF 40218873</span><span>CNSS 8812340</span><span>Patente 34102218</span>
+  </div>
+</div>
+</div>
+
+<div style="flex:1;min-width:280px;max-width:430px;display:flex;flex-direction:column;gap:10px;padding-top:24px">
+  <p style="margin:0;font:600 12.5px/1.65 'Inter',sans-serif;color:#0c1e33">Ce qui change</p>
+  <p style="margin:0;font:400 12px/1.65 'Inter',sans-serif;color:#41546e">Le net à payer quitte le bas du tableau pour un cadre épais en tête, avec le reste dû en dessous. La ligne de totaux détaillée reste en bas, pour le contrôle.</p>
+  <p style="margin:0;font:400 12px/1.65 'Inter',sans-serif;color:#41546e">L'émetteur passe sous le logo en une ligne : les deux colonnes Émetteur / Destinataire de même poids disparaissent, le client prend la place.</p>
+  <p style="margin:0;font:400 12px/1.65 'Inter',sans-serif;color:#41546e">Le tableau perd ses cellules : filets d'un pixel, dimension et DOT en sous-ligne, remise en colonne seulement quand une ligne en porte une (comportement actuel de <code>hasDiscounts()</code>).</p>
+  <p style="margin:0;font:400 12px/1.65 'Inter',sans-serif;color:#41546e">Le badge vert / orange / rouge du paiement devient une mention en capitales dans le cadre du net. Elle reste lisible en noir et blanc.</p>
+  <p style="margin:0;font:400 12px/1.65 'Inter',sans-serif;color:#41546e">« Transport et suivi » passe à gauche des totaux, sans titre de section. Le n° de suivi est en chasse fixe, comme sur la lettre.</p>
+  <p style="margin:0;font:400 12px/1.65 'Inter',sans-serif;color:#41546e">Deux ajouts à valider : le montant en toutes lettres, d'usage sur une facture au Maroc, et la case « Reçu par le client » pour un bon de livraison signé au retour.</p>
+  <p style="margin:6px 0 0;font:600 12.5px/1.65 'Inter',sans-serif;color:#0c1e33">Même gabarit pour les autres documents</p>
+  <p style="margin:0;font:400 12px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">Bon de livraison</strong> : sans prix ni totaux ; le cadre de tête porte le nombre de colis. <strong style="font-weight:600;color:#0c1e33">Achat</strong> : le tiers est le fournisseur et le cadre porte le total dû au fournisseur. <strong style="font-weight:600;color:#0c1e33">Fiche d'intervention</strong> : véhicule et kilométrage sous le client, la plaque en chasse fixe.</p>
+</div>
+</div>
+
+</section>
+
+</x-dc>
+</body>
+</html>

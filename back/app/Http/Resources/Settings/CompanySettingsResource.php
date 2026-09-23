@@ -41,6 +41,7 @@ class CompanySettingsResource extends JsonResource
             'prime_threshold' => (int) ($this->resource->prime_threshold ?? 0),
             'closed_weekdays' => $this->resource->closed_weekdays,
             'holidays' => $this->resource->holidays,
+            'vat_rate' => (float) ($this->resource->vat_rate ?? 20),
             'created_at' => $this->resource->created_at,
             'updated_at' => $this->resource->updated_at,
         ];

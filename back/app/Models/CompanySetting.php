@@ -36,6 +36,7 @@ class CompanySetting extends Model
         'prime_threshold',
         'closed_weekdays',
         'holidays',
+        'vat_rate',
     ];
 
     protected $appends = [

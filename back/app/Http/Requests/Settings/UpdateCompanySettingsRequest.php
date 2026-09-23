@@ -76,6 +76,10 @@ class UpdateCompanySettingsRequest extends FormRequest
             'closed_weekdays.*' => ['integer', 'between:0,6'],
             'holidays' => ['nullable', 'array', 'max:365'],
             'holidays.*' => ['date_format:Y-m-d'],
+
+            // Refonte 2b, 10a : le taux de TVA porte sur la facture. Entre 0
+            // et 100 : un taux nul est un regime d'exoneration, pas une erreur.
+            'vat_rate' => ['nullable', 'numeric', 'between:0,100'],
         ];
     }
 }
