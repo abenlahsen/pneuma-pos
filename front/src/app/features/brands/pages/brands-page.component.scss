@@ -1,8 +1,39 @@
+@use '../../_variables' as *;
+
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
 
-/* Refonte 2b, §14c : la cellule qui porte un état occupe toute la ligne et
-   laisse le composant gérer son propre espacement. */
-.state-cell {
-  padding: 0;
+// Refonte 2b, étape 11 : Marques au motif de ligne. Liste courte, sans
+// montant : la barre ne porte qu'une recherche.
+@include layout.filter-bar($chips: false, $fields: false);
+@include layout.list-row-pattern();
+
+/* Cinq pistes : logo, nom, statut, date de création, actions. La dernière est
+   mesurée sur son contenu réel au-dessus de $bp-reduce — trois boutons de
+   30 px et deux écarts de 5 px font 100 px. */
+.brands-grid {
+  grid-template-columns: 52px minmax(0, 1fr) 110px 110px 104px;
+
+  /* Sous $bp-reduce, le logo et la date tombent ; la date rejoint la
+     sous-ligne. Restent le nom, le statut, et Modifier suivi du ⋯. */
+  @include below-reduce {
+    grid-template-columns: minmax(0, 1fr) 110px 72px;
+  }
+}
+
+.brand-logo {
+  display: block;
+  max-width: 40px;
+  max-height: 28px;
+  object-fit: contain;
+}
+
+/* Une marque inactive reste lisible, mais passe au second plan. */
+.brands-row--inactive .list-grid-name { color: $text-muted; }
+
+.filter-result-count {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: $text-muted;
+  font-variant-numeric: tabular-nums;
 }

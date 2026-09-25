@@ -14,14 +14,17 @@ import {
   ActiveFilter,
   ListEmptyComponent,
   ListErrorComponent,
-  SkeletonCellsComponent,
+  RowLockComponent,
+  SkeletonRowComponent,
   describeLoadError,
 } from '../../../shared/list-state';
+import { IconComponent } from '../../../shared/icon/icon.component';
+import { RowOverflowComponent } from '../../../shared/row-overflow/row-overflow.component';
 
 @Component({
   selector: 'app-brands-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, BrandFormComponent, AutoRefreshControlComponent, SortIconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, FormsModule, BrandFormComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, RowOverflowComponent, ConfirmDeleteComponent],
   templateUrl: './brands-page.component.html',
   styleUrls: ['./brands-page.component.scss'],
 })
