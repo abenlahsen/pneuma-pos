@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard, guestGuard } from './core/guards/auth.guard';
 import { permissionGuard } from './core/guards/permission.guard';
+import { documentPrintGuard } from './features/documents/document-print.guard';
 
 export const routes: Routes = [
   {
@@ -77,6 +78,16 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/shipment-changes/pages/shipment-change-print-page.component').then(
         (m) => m.ShipmentChangePrintPageComponent,
+      ),
+  },
+  {
+    // Refonte 2b, étape 10 : l'imprimé de vente, d'achat et d'intervention
+    // sort de sa modale, comme la lettre. La permission dépend du type.
+    path: 'documents/:type/:id/print',
+    canActivate: [authGuard, documentPrintGuard],
+    loadComponent: () =>
+      import('./features/documents/pages/document-print-page.component').then(
+        (m) => m.DocumentPrintPageComponent,
       ),
   },
   {

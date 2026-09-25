@@ -58,6 +58,12 @@ export interface Sale {
   discount?: number;
   tax?: number;
   total?: number;
+  /**
+   * Montant encaissé sur CETTE vente, d'après les allocations (renvoyé par
+   * `show` ; la resource l'écrit en chaîne décimale, que les consommateurs
+   * convertissent). Contrairement à `payments`, il compte la part imputée
+   * d'un règlement réparti sur plusieurs ventes.
+   */
   paid_amount?: number;
   due_amount?: number;
   amount_paid?: number;
@@ -84,7 +90,7 @@ export interface Sale {
   /** Distinct methods of the payments actually recorded against this sale (derived, read-only). */
   payment_methods?: string[];
   commercial_id?: number | null;
-  commercial?: { id: number; name: string } | null;
+  commercial?: { id: number; name: string; role?: string | null } | null;
   creator?: { id: number; name: string } | null;
   status: SaleStatus;
   payment_status: PaymentStatus;

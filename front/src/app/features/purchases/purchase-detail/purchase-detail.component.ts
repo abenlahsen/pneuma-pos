@@ -1,10 +1,9 @@
 import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, SimpleChanges, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { Purchase } from '../../../core/models/purchase.model';
 import { Product } from '../../../core/models/product.model';
-import { DocumentPrintComponent, PrintDocument, PrintLine } from '../../../shared/document-print/document-print.component';
 import { paymentMethodClass } from '../../../core/constants/payment-method.constants';
 import { AuthService } from '../../../core/services/auth.service';
 // Return-related calls live only on this (features/purchases) copy of PurchaseService —
@@ -18,7 +17,7 @@ import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 @Component({
   selector: 'app-purchase-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, DocumentPrintComponent, IconComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, RouterLink, IconComponent, ConfirmDeleteComponent],
   templateUrl: './purchase-detail.component.html',
   styleUrls: ['../../sales/sale-detail/sale-detail.component.scss', './purchase-detail.component.scss']
 })
@@ -54,7 +53,6 @@ export class PurchaseDetailComponent implements OnInit, OnChanges {
   /** Échec d'une action : la fiche reste affichée. */
   readonly actionError = signal('');
 
-  printDoc = signal<PrintDocument | null>(null);
   returns = signal<PurchaseReturn[]>([]);
   loadingReturns = signal(false);
   readonly paymentMethodClass = paymentMethodClass;
@@ -65,6 +63,7 @@ export class PurchaseDetailComponent implements OnInit, OnChanges {
   constructor(
     private returnsService: PurchaseReturnsService,
     public authService: AuthService,
+    private router?: Router,
   ) {}
 
   ngOnInit(): void {
@@ -80,7 +79,6 @@ export class PurchaseDetailComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     const change = changes['purchase'];
     if (!change || change.firstChange) return;
-    this.printDoc.set(null);
     this.returns.set([]);
     this.loadReturns();
   }
@@ -100,8 +98,13 @@ export class PurchaseDetailComponent implements OnInit, OnChanges {
     }
   }
 
+  /**
+   * Plus aucun panneau imbriqué : l'aperçu d'impression, seul candidat, est
+   * devenu une page. Gardé pour que ← / → aient un point d'arrêt si un volet
+   * revient.
+   */
   private hasNestedPanelOpen(): boolean {
-    return !!this.printDoc();
+    return false;
   }
 
   // ── Refonte 2b, gabarit 16b ───────────────────────────────────────────────
@@ -181,67 +184,19 @@ export class PurchaseDetailComponent implements OnInit, OnChanges {
     });
   }
 
+  /**
+   * Refonte 2b, étape 10 : le bon d'achat s'imprime sur sa propre page,
+   * `/documents/purchase/:id/print`, qui relit l'achat par son `show` et le
+   * met en forme dans features/documents/print-builders (buildPurchasePrint) :
+   * adresse du fournisseur, modes de paiement, déjà payé et reste dû.
+   */
   openPrint(): void {
-    const lines: PrintLine[] = (this.purchase.items || []).map(item => {
-      const product = this.getProduct(item);
-      return {
-        label: this.printLabel(product, `Produit #${item.product_id}`),
-        reference: this.printReference(product),
-        details: this.printDetails(product),
-        qty: item.quantity,
-        unit_price: Number(item.unit_price ?? 0),
-        discount: 0,
-        total: Number(item.unit_price ?? 0) * Number(item.quantity),
-      };
-    });
-
-    this.printDoc.set({
-      type: 'purchase',
-      doc_number: String(this.purchase.id),
-      date: this.purchase.date,
-      party_label: 'Fournisseur',
-      party_name: this.purchase.supplier?.name || '-',
-      party_phone: this.purchase.supplier?.phone || null,
-      lines,
-      total_ht: Number(this.purchase.total_price ?? 0),
-      discount_global: Number(this.purchase.discount ?? 0),
-      net_amount: Number(this.purchase.net_amount ?? this.purchase.total_price ?? 0),
-      status: this.purchase.status,
-      payment_status: this.purchase.payment_status,
-      commercial: this.purchase.commercial?.name || null,
-    });
+    if (!this.purchase?.id) return;
+    this.router?.navigate(['/documents', 'purchase', this.purchase.id, 'print']);
   }
 
   getProduct(item: any): any {
     return item.linkedProduct || item.linked_product;
-  }
-
-  private printLabel(product: any, fallback: string): string {
-    if (product?.type !== 'tyre') return product?.reference || fallback;
-    const parts: string[] = [];
-    if (product.brand?.name) parts.push(product.brand.name);
-    if (product.profile) parts.push(product.profile);
-    return parts.join(' ') || product?.reference || fallback;
-  }
-
-  private printReference(product: any): string | undefined {
-    if (product?.type !== 'tyre') return product?.profile || undefined;
-    const t = product?.tyre;
-    if (t?.tire_width && t?.tire_height && t?.tire_diameter) {
-      return `${t.tire_width}/${t.tire_height}R${t.tire_diameter}`;
-    }
-    return undefined;
-  }
-
-  private printDetails(product: any): string | undefined {
-    if (product?.type !== 'tyre') return undefined;
-    const t = product?.tyre;
-    if (!t) return undefined;
-    const parts: string[] = [];
-    if (t.tire_load_index) parts.push(t.tire_load_index);
-    if (t.tire_speed_index) parts.push(t.tire_speed_index);
-    if (t.tire_marking) parts.push(t.tire_marking);
-    return parts.length ? parts.join(' · ') : undefined;
   }
 
   /**

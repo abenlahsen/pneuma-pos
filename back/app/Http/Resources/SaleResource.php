@@ -75,6 +75,13 @@ class SaleResource extends JsonResource
                 fn () => $this->commercial ? [
                     'id' => $this->commercial->id,
                     'name' => $this->commercial->name,
+                    // Refonte 2b, 10a : la facture signe « nom · fonction ».
+                    // Seulement quand `commercial.roles` est chargé : la liste
+                    // ne le charge pas, et getRoleNames() y ferait une requête
+                    // par vente.
+                    'role' => $this->commercial->relationLoaded('roles')
+                        ? $this->commercial->getRoleNames()->first()
+                        : null,
                 ] : null,
                 null
             ),
@@ -95,6 +102,15 @@ class SaleResource extends JsonResource
             'margin' => $this->formatMoneyValue($this->margin),
             'items' => $this->whenLoaded('items'),
             'payments' => $this->whenLoaded('payments'),
+            // Le montant réellement encaissé sur CETTE vente. La relation
+            // `payments` est historique : elle ignore les règlements répartis
+            // sur plusieurs ventes, et y compte le chèque entier au lieu de la
+            // part imputée. Les allocations font foi — c'est ce que la facture
+            // imprime en « Déjà payé ».
+            'paid_amount' => $this->when(
+                $this->relationLoaded('allocations'),
+                fn () => $this->formatMoneyValue($this->allocations->sum('amount'))
+            ),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];

@@ -129,7 +129,11 @@ export function montantEnLettres(montant: number): string {
     centimes = 0;
   }
 
-  const partieDirhams = `${nombreEnLettres(dirhams)} dirham${dirhams > 1 ? 's' : ''}`;
+  // « million » et « milliard » sont des noms : quand rien ne les suit, ils
+  // appellent « de » devant l'unité — un million DE dirhams, deux milliards
+  // DE dirhams. Suivis d'autre chose, non : un million deux cents dirhams.
+  const de = dirhams >= 1_000_000 && dirhams % 1_000_000 === 0 ? 'de ' : '';
+  const partieDirhams = `${nombreEnLettres(dirhams)} ${de}dirham${dirhams > 1 ? 's' : ''}`;
   if (centimes === 0) return partieDirhams;
 
   return `${partieDirhams} et ${nombreEnLettres(centimes)} centime${centimes > 1 ? 's' : ''}`;

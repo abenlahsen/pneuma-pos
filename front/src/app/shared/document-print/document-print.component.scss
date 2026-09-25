@@ -1,356 +1,525 @@
-@use '../../features/_variables' as *;
+/* Refonte 2b, étape 10, maquette 19a — l'imprimé de vente, d'achat et
+   d'intervention.
 
-// ── Overlay & Modal ──────────────────────────────────────────────────────────
-.print-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 2000;
-  background: rgba(0, 0, 0, 0.65);
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 1rem;
-  overflow-y: auto;
-}
+   Trois règles gouvernent ce fichier :
 
-.print-modal {
-  background: #f0f0f0;
-  border-radius: 8px;
-  width: 100%;
-  max-width: 860px;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 1rem;
-}
+   1. AUCUNE couleur d'interface sur la feuille : l'encre, des gris, le logo.
+      Aucune variable de palette n'entre ici ; un changement de thème ne doit
+      pas teinter une facture.
 
-// ── Barre d'actions ──────────────────────────────────────────────────────────
-.print-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+   2. La feuille SUIT LA HAUTEUR DE SON CONTENU. C'est l'inverse de la lettre
+      au transporteur (18c), qui tient toujours sur une page : une facture de
+      40 lignes passe sur deux ou trois pages. L'en-tête du tableau se répète,
+      aucune ligne n'est coupée, et la clôture (totaux, montant en lettres,
+      signatures) passe entière sur la page suivante si elle ne tient pas.
 
-  h3 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #333;
-  }
-}
+   3. Le bloc @media print est la partie qui compte. Le bloc global de
+      styles.scss remet `display: revert !important` à tout ce qui est sous
+      `.print-area` — ce qui ramène chaque grille et chaque flex à `block`.
+      Chaque conteneur qui dépend de son `display` le réaffirme donc plus bas,
+      avec `!important` : la spécificité d'un sélecteur de composant l'emporte
+      sur `.print-area *`. */
 
-.print-actions-right {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
+// ── L'encre du papier, hors palette ─────────────────────────────────────────
+$ink: #111;
+$text: #333;
+$grey: #555;
+$faint: #888;
+$rule: #bbb;
+$rule-light: #ddd;
 
-.btn {
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: opacity 0.15s;
+// Hauteur réservée aux mentions légales au bas de chaque page imprimée.
+$legal-height: 12mm;
 
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
-  &:hover:not(:disabled) { opacity: 0.85; }
-}
+:host { display: block; }
 
-.btn-primary {
-  background: #ff2d37;
-  color: #fff;
-  border-color: #ff2d37;
-}
-
-.btn-outline {
-  background: #fff;
-  color: #333;
-  border-color: #ccc;
-}
-
-.btn-ghost {
-  background: transparent;
-  color: #555;
-  border-color: transparent;
-}
-
-// ── Feuille A4 ───────────────────────────────────────────────────────────────
-.print-paper {
-  background: #fff;
-  padding: 12mm 14mm;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.18);
-  border-radius: 4px;
-  font-family: 'Segoe UI', Arial, sans-serif;
-  font-size: 10pt;
-  color: #111;
+.dp-sheet {
+  width: 210mm;
   min-height: 297mm;
+  box-sizing: border-box;
+  padding: 15mm;
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  background: #fff;
+  color: $ink;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
-// ── En-tête ──────────────────────────────────────────────────────────────────
-.doc-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-}
-
-.company-logo {
-  max-height: 70px;
-  max-width: 200px;
-  object-fit: contain;
-}
-
-.company-name-fallback {
-  font-size: 15pt;
-  font-weight: 700;
-  color: #222;
-}
-
-.doc-header-title {
-  text-align: right;
-
-  .doc-type-title {
-    font-size: 18pt;
-    font-weight: 700;
-    color: #ff2d37;
-    margin: 0 0 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-  }
-
-  .doc-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    font-size: 9pt;
-    color: #555;
-
-    .doc-number { font-weight: 600; color: #222; }
-  }
-}
-
-.doc-divider {
-  border-top: 2px solid #ff2d37;
-}
-
-// ── Parties émetteur / destinataire ──────────────────────────────────────────
-.doc-parties {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-
-  h4 {
-    font-size: 7.5pt;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #999;
-    margin: 0 0 5px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 3px;
-  }
-
-  p {
-    margin: 2px 0;
-    font-size: 9.5pt;
-    color: #333;
-  }
-
-  .company-name,
-  .party-name {
-    font-weight: 600;
-    font-size: 10.5pt;
-    color: #111;
-  }
-}
-
-// ── Tableau lignes ───────────────────────────────────────────────────────────
-.doc-lines { flex: 1; }
-
-.lines-table {
+/* La table englobante n'a de rôle qu'à l'impression (son <tfoot> répété). À
+   l'écran elle doit être transparente. */
+.dp-frame {
   width: 100%;
   border-collapse: collapse;
-  font-size: 9.5pt;
-
-  thead tr {
-    background: #ff2d37;
-    color: #fff;
-
-    th {
-      padding: 6px 8px;
-      font-weight: 600;
-      font-size: 8.5pt;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-  }
-
-  tbody tr {
-    border-bottom: 1px solid #f0f0f0;
-
-    &:last-child { border-bottom: 2px solid #ddd; }
-    &:nth-child(even) { background: #fafafa; }
-
-    td { padding: 5px 8px; }
-  }
-
-  .col-label { width: 45%; }
-  .line-ref { font-size: 8.5pt; color: #777; }
-  .line-details { font-size: 8.5pt; color: #777; }
-  .text-muted { color: #888; }
-  .text-center { text-align: center; }
-  .text-right { text-align: right; }
+  border-spacing: 0;
 }
 
-// ── Totaux ───────────────────────────────────────────────────────────────────
-.doc-totals {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1.5rem;
+.dp-frame-cell {
+  padding: 0;
+  vertical-align: top;
 }
 
-.totals-spacer { flex: 1; }
+.dp-frame-foot { display: none; }
 
-.totals-block {
-  min-width: 240px;
+.dp-line { display: block; }
 
-  .total-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 4px 0;
-    font-size: 9.5pt;
-    border-bottom: 1px solid #f0f0f0;
-
-    &.discount-row { color: #c00; }
-
-    &.total-net {
-      font-size: 12pt;
-      font-weight: 700;
-      border-top: 2px solid #222;
-      border-bottom: none;
-      padding-top: 6px;
-      margin-top: 2px;
-    }
-  }
-
-  .payment-status-row {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 6px;
-  }
-}
-
-.status-badge {
-  padding: 3px 10px;
-  border-radius: 4px;
-  font-weight: 600;
-  font-size: 8.5pt;
+.dp-label {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  color: $grey;
 
-  &.paid    { background: #d1fae5; color: #065f46; }
-  &.partial { background: #fef3c7; color: #92400e; }
-  &.unpaid  { background: #fee2e2; color: #991b1b; }
-}
-
-// ── Transport & Suivi ────────────────────────────────────────────────────────
-.doc-transport {
-  .section-label {
-    font-size: 7.5pt;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #999;
-    margin: 0 0 6px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 3px;
+  &--small {
+    font-size: 9px;
+    letter-spacing: 0.14em;
   }
 }
 
-.transport-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px 1rem;
+.dp-mono {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-weight: 600;
 }
 
-.transport-item {
+/* ── En-tête ────────────────────────────────────────────────────────────── */
+.dp-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  padding-bottom: 18px;
+  border-bottom: 2px solid $ink;
+}
+
+.dp-issuer { min-width: 0; }
+
+.dp-logo {
+  display: block;
+  height: 40px;
+  width: auto;
+}
+
+.dp-logo-text {
+  display: block;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.dp-issuer-lines {
+  display: block;
+  margin-top: 10px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: $text;
+}
+
+.dp-head-right {
+  margin-left: auto;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.dp-kicker {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: $grey;
+}
+
+.dp-number {
+  display: block;
+  margin-top: 6px;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.dp-place {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  color: #444;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Le tiers et le chiffre dominant ────────────────────────────────────── */
+.dp-parties {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 250px;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.dp-party {
+  min-width: 0;
+  padding: 2px 0;
+}
+
+.dp-party-name {
+  display: block;
+  margin-top: 6px;
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.dp-party-lines,
+.dp-vehicle {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: $text;
+}
+
+.dp-vehicle {
+  margin-top: 6px;
+  color: $ink;
+}
+
+/* Le cadre épais : c'est ce que le client cherche en premier. */
+.dp-headline {
+  border: 2px solid $ink;
+  padding: 13px 15px;
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  justify-content: space-between;
 }
 
-.transport-label {
-  font-size: 7.5pt;
-  color: #999;
+.dp-headline-amount {
+  display: block;
+  margin-top: 6px;
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dp-headline-unit {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Remplace le badge coloré : lisible en noir et blanc. */
+.dp-headline-state {
+  display: block;
+  margin-top: 7px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+/* ── Les lignes : sans cellules, un filet par ligne ─────────────────────── */
+.dp-lines {
+  margin-top: 26px;
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+.dp-col-qty { width: 54px; }
+.dp-col-price { width: 96px; }
+.dp-col-discount { width: 56px; }
+.dp-col-total { width: 108px; }
+
+.dp-lines th {
+  padding: 7px 0 7px 10px;
+  border-bottom: 1px solid $ink;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  color: $grey;
+  text-align: left;
 }
 
-.transport-value {
-  font-size: 9.5pt;
-  color: #222;
-  font-weight: 500;
+.dp-lines td {
+  padding: 11px 0 11px 10px;
+  border-bottom: 1px solid $rule-light;
+  vertical-align: baseline;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
 }
 
-// ── Notes ────────────────────────────────────────────────────────────────────
-.doc-notes {
-  background: #f8f8f8;
-  border-left: 3px solid #ddd;
-  padding: 0.5rem 0.75rem;
-  border-radius: 2px;
+.dp-lines th:first-child,
+.dp-lines td:first-child { padding-left: 0; }
 
-  h4 { margin: 0 0 4px; font-size: 8pt; color: #888; text-transform: uppercase; }
-  p  { margin: 0; font-size: 9pt; }
+/* Le filet d'encre sous la dernière ligne ferme le tableau. */
+.dp-lines tbody tr:last-child td { border-bottom-color: $ink; }
+
+.dp-lines .dp-num { text-align: right; }
+
+.dp-td-label { overflow-wrap: anywhere; }
+
+.dp-item {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
 }
 
-// ── Pied de page légal ───────────────────────────────────────────────────────
-.doc-footer {
-  margin-top: auto;
+.dp-item-details {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: $grey;
+}
 
-  .footer-legal,
-  .footer-contact {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 16px;
-    font-size: 7.5pt;
-    padding: 4px 0;
+.dp-discount {
+  font-size: 12px;
+  color: #444;
+}
+
+.dp-line-total {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.dp-td-empty {
+  color: $faint;
+  font-style: italic;
+}
+
+/* ── Notes ──────────────────────────────────────────────────────────────── */
+.dp-notes {
+  margin-top: 14px;
+
+  p {
+    margin: 5px 0 0;
+    font-size: 11.5px;
+    line-height: 1.6;
+    color: $text;
+    white-space: pre-line;
+  }
+}
+
+/* ── La clôture : infos et totaux, montant en lettres, signatures ───────── */
+.dp-closing { padding-top: 14px; }
+
+.dp-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 250px;
+  gap: 24px;
+}
+
+.dp-info {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 18px;
+  align-content: start;
+}
+
+.dp-info-item { min-width: 0; }
+
+.dp-info-value {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.dp-total-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 0;
+  font-size: 12px;
+  color: $text;
+  font-variant-numeric: tabular-nums;
+
+  /* Le filet d'encre sépare la décomposition du net. */
+  &--net {
+    margin-top: 0;
+    padding: 8px 0 4px;
+    border-top: 1px solid $ink;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: $ink;
   }
 
-  .footer-legal {
+  &--sub { padding: 3px 0; }
+
+  &--due {
+    padding: 3px 0;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: $ink;
+  }
+}
+
+.dp-words {
+  margin: 18px 0 0;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: $text;
+
+  strong {
     font-weight: 600;
-    color: #333;
-  }
-
-  .footer-contact {
-    color: #666;
+    color: $ink;
   }
 }
 
-// ── Impression navigateur ────────────────────────────────────────────────────
+.dp-signatures {
+  margin-top: 10mm;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+
+.dp-sign {
+  height: 96px;
+  box-sizing: border-box;
+  padding: 9px 12px;
+  border: 1px solid $ink;
+  display: flex;
+  flex-direction: column;
+
+  /* Pointillés : la case que le destinataire remplit. */
+  &--receipt { border: 1px dashed $faint; }
+}
+
+.dp-sign-name {
+  display: block;
+  margin-top: auto;
+  font-size: 10.5px;
+  color: $grey;
+}
+
+/* ── Mentions légales ───────────────────────────────────────────────────── */
+/* À l'écran : au bas de la feuille. À l'impression : au bas de chaque page. */
+.dp-legal {
+  margin-top: auto;
+  padding-top: 9px;
+  border-top: 1px solid $rule;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 9.5px;
+  color: $grey;
+  font-variant-numeric: tabular-nums;
+}
+
+/* L'espace entre le contenu et le pied, à l'écran. */
+.dp-frame { margin-bottom: 18px; }
+
+/* ── La capture PDF ─────────────────────────────────────────────────────── */
+/* PrintService pose `.pdf-capture` sur un ancêtre le temps de la génération :
+   html2canvas dessine le texte par morceaux au canevas, qui ignore les
+   chiffres tabulaires et perd les alternates contextuelles à chaque coupure.
+   On les retire de la mise en page mesurée elle-même. */
+:host-context(.pdf-capture) .dp-sheet,
+:host-context(.pdf-capture) .dp-sheet * {
+  font-variant-numeric: normal !important;
+  font-feature-settings: "calt" 0 !important;
+}
+
+/* ── L'impression ───────────────────────────────────────────────────────── */
 @media print {
-  .no-print { display: none !important; }
-
-  .print-modal-overlay {
-    position: static;
-    background: none;
-    padding: 0;
-    display: block;
+  .dp-sheet {
+    /* Les marges sont celles de la page nommée (15 mm) : la feuille n'en
+       ajoute pas, et ne force aucune hauteur — elle suit son contenu. */
+    width: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    display: block !important;
   }
 
-  .print-modal {
-    background: none;
-    padding: 0;
-    box-shadow: $shadow-modal;
-    gap: 0;
+  .dp-frame {
+    display: table !important;
+    margin-bottom: 0;
   }
 
-  .print-paper {
-    box-shadow: none;
-    padding: 0;
-    min-height: unset;
+  /* Le <tfoot> se répète au bas de chaque page : sa hauteur réserve la place
+     des mentions légales, qui se posent dessus. */
+  .dp-frame-foot { display: table-footer-group !important; }
+  .dp-foot-spacer { height: $legal-height; }
+
+  .dp-legal {
+    /* `fixed` à l'impression : Chromium répète l'élément sur chaque page. */
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    background: #fff;
+    display: flex !important;
   }
+
+  /* Les conteneurs qui dépendent de leur display — voir la règle 3 en tête. */
+  .dp-head,
+  .dp-headline,
+  .dp-sign,
+  .dp-total-row { display: flex !important; }
+
+  .dp-parties,
+  .dp-summary,
+  .dp-info,
+  .dp-signatures { display: grid !important; }
+
+  .dp-line,
+  .dp-label,
+  .dp-logo,
+  .dp-logo-text,
+  .dp-issuer-lines,
+  .dp-kicker,
+  .dp-number,
+  .dp-place,
+  .dp-party-name,
+  .dp-party-lines,
+  .dp-vehicle,
+  .dp-headline-amount,
+  .dp-headline-state,
+  .dp-item,
+  .dp-item-details,
+  .dp-info-value,
+  .dp-sign-name { display: block !important; }
+
+  /* Le tableau : l'en-tête se répète, une ligne ne se coupe jamais. */
+  .dp-lines thead { display: table-header-group !important; }
+  .dp-lines tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .dp-head,
+  .dp-parties,
+  .dp-notes {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* La clôture est un seul ensemble : si elle ne tient pas sur la page en
+     cours, elle passe entière sur la suivante. */
+  .dp-closing {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .dp-sheet * {
+    /* Les gris doivent sortir en gris, pas en aplats économisés. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* Page NOMMÉE, comme la lettre (18c) mais avec la sienne : un `@page` global
+   fuirait hors de ce composant, puisqu'Angular garde les styles d'un
+   composant dans le document une fois chargés. Ici les marges sont celles de
+   la page — 15 mm — et non celles de la feuille, pour qu'elles s'appliquent
+   à CHAQUE page d'un document qui en fait plusieurs.
+
+   Limite connue : Firefox n'implémente pas les pages nommées et appliquera
+   ses marges par défaut. Le PDF n'est pas concerné — PrintService pagine
+   lui-même. */
+.dp-sheet { page: document-sheet; }
+
+@page document-sheet {
+  size: A4 portrait;
+  margin: 15mm;
 }

@@ -28,7 +28,7 @@ export interface ServiceOrder {
   client_id?: number | null;
   vehicle_id?: number | null;
   vehicle_data?: { id: number; plate: string; brand: string; model_name: string; circulation_month: number; circulation_year: number; display_name?: string } | null;
-  client_record?: { id: number; name: string; phone?: string | null } | null;
+  client_record?: { id: number; name: string; phone?: string | null; address?: string | null; city?: string | null } | null;
   date: string;
   vehicle: string;
   mileage?: number | null;
@@ -42,7 +42,7 @@ export interface ServiceOrder {
   payment_status: PaymentStatus;
   notes?: string | null;
   commercial_id?: number | null;
-  commercial?: { id: number; name: string } | null;
+  commercial?: { id: number; name: string; role?: string | null } | null;
   creator?: { id: number; name: string } | null;
   total_paid?: number;
   remaining?: number;

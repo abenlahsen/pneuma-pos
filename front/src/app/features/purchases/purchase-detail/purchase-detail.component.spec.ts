@@ -52,58 +52,20 @@ describe('PurchaseDetailComponent', () => {
     });
   });
 
+  // La mise en forme du bon d'achat est testée dans features/documents/print-builders.spec.ts.
   describe('openPrint', () => {
-    it('sets printDoc signal (not null)', () => {
-      comp.purchase = { id: 10, date: '2026-05-01', items: [], total_price: 0 } as any;
-      comp.openPrint();
-      expect(comp.printDoc()).not.toBeNull();
-    });
+    it('navigue vers la page d’impression de l’achat', () => {
+      const navigate = vi.fn();
+      comp = new PurchaseDetailComponent(
+        { getReturns: vi.fn(() => of([])), deleteReturn: vi.fn() } as any,
+        { hasPermission: () => true } as any,
+        { navigate } as any,
+      );
+      comp.purchase = { id: 42, items: [] } as any;
 
-    it('sets type=purchase and party_label=Fournisseur', () => {
-      comp.purchase = { id: 10, date: '2026-05-01', items: [], total_price: 0 } as any;
       comp.openPrint();
-      const doc = comp.printDoc()!;
-      expect(doc.type).toBe('purchase');
-      expect(doc.party_label).toBe('Fournisseur');
-    });
 
-    it('sets doc_number from purchase.id', () => {
-      comp.purchase = { id: 42, date: '2026-05-01', items: [], total_price: 0 } as any;
-      comp.openPrint();
-      expect(comp.printDoc()!.doc_number).toBe('42');
-    });
-
-    it('uses supplier.name as party_name', () => {
-      comp.purchase = { id: 1, date: '2026-05-01', items: [], total_price: 0, supplier: { name: 'Fournisseur SA' } } as any;
-      comp.openPrint();
-      expect(comp.printDoc()!.party_name).toBe('Fournisseur SA');
-    });
-
-    it('falls back to "-" when supplier is absent', () => {
-      comp.purchase = { id: 1, date: '2026-05-01', items: [], total_price: 0, supplier: null } as any;
-      comp.openPrint();
-      expect(comp.printDoc()!.party_name).toBe('-');
-    });
-
-    it('maps line label from linkedProduct.reference and sets discount=0, total=price×qty', () => {
-      comp.purchase = {
-        id: 1, date: '2026-05-01', total_price: 200,
-        items: [{ linkedProduct: { reference: 'REF-001' }, product_id: 5, quantity: 2, unit_price: 100 }],
-      } as any;
-      comp.openPrint();
-      const line = comp.printDoc()!.lines[0];
-      expect(line.label).toBe('REF-001');
-      expect(line.discount).toBe(0);
-      expect(line.total).toBe(200);
-    });
-
-    it('falls back to "Produit #id" when linkedProduct has no reference', () => {
-      comp.purchase = {
-        id: 1, date: '2026-05-01', total_price: 50,
-        items: [{ product_id: 7, quantity: 1, unit_price: 50 }],
-      } as any;
-      comp.openPrint();
-      expect(comp.printDoc()!.lines[0].label).toBe('Produit #7');
+      expect(navigate).toHaveBeenCalledWith(['/documents', 'purchase', 42, 'print']);
     });
   });
 
@@ -118,12 +80,10 @@ describe('PurchaseDetailComponent', () => {
       const getReturns = vi.fn(() => of([]));
       comp = new PurchaseDetailComponent({ getReturns, deleteReturn: vi.fn() } as any, { hasPermission: () => true } as any);
       comp.purchase = { id: 12, items: [] } as any;
-      comp.printDoc.set({} as any);
 
       comp.ngOnChanges({ purchase: { previousValue: { id: 11 }, currentValue: comp.purchase, firstChange: false, isFirstChange: () => false } });
 
       expect(getReturns).toHaveBeenCalledWith(12);
-      expect(comp.printDoc()).toBeNull();
     });
 
     it('ngOnChanges ignores the first change (ngOnInit handles the initial load)', () => {
@@ -150,8 +110,6 @@ describe('PurchaseDetailComponent', () => {
       expect(next).toHaveBeenCalledTimes(1);
 
       comp.onKeydown(keydown('ArrowRight', document.createElement('textarea')));
-      comp.printDoc.set({} as any);
-      comp.onKeydown(keydown('ArrowRight'));
       expect(next).toHaveBeenCalledTimes(1);
     });
   });

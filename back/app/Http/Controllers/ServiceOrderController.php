@@ -57,12 +57,15 @@ class ServiceOrderController extends Controller
     public function show(ServiceOrder $serviceOrder): JsonResponse
     {
         $serviceOrder->load([
-            'commercial',
+            'commercial.roles',
             'items.product' => fn ($q) => $q->with('service')->withSum('stocks', 'quantity'),
             'payments',
-            'clientRecord',
+            'clientRecord.cityRelation',
             'vehicle',
         ]);
+        // Refonte 2b, 10a : la fiche imprimée porte « déjà payé » et « reste
+        // dû ». La resource les expose dès que cette somme est chargée.
+        $serviceOrder->loadSum('payments', 'amount');
 
         return response()->json(
             (new ServiceOrderResource($serviceOrder))->resolve()

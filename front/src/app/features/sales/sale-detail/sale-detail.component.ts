@@ -1,11 +1,10 @@
 import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, SimpleChanges, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { SidePanelComponent } from '../../../shared/side-panel/side-panel.component';
 import { Sale } from '../../../core/models/sale.model';
 import { Product } from '../../../core/models/product.model';
-import { DocumentPrintComponent, PrintDocument, PrintLine } from '../../../shared/document-print/document-print.component';
 import { paymentMethodClass } from '../../../core/constants/payment-method.constants';
 import { AuthService } from '../../../core/services/auth.service';
 import { ShipmentChangeService } from '../../shipment-changes/data-access/shipment-change.service';
@@ -23,7 +22,6 @@ import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
   imports: [
     CommonModule,
     RouterLink,
-    DocumentPrintComponent,
     ShipmentChangeListComponent,
     ShipmentChangeFormComponent,
     SidePanelComponent,
@@ -55,7 +53,6 @@ export class SaleDetailComponent implements OnInit, OnChanges {
   /** Refonte 2b, 16b : l'encaissement se déclenche depuis la barre de la fiche. */
   @Output() collect = new EventEmitter<void>();
 
-  printDoc = signal<PrintDocument | null>(null);
   readonly paymentMethodClass = paymentMethodClass;
 
   shipmentRequests = signal<ShipmentChangeRequest[]>([]);
@@ -66,6 +63,7 @@ export class SaleDetailComponent implements OnInit, OnChanges {
   constructor(
     public authService: AuthService,
     private shipmentChangeService: ShipmentChangeService,
+    private router?: Router,
   ) {}
 
   ngOnInit(): void {
@@ -81,7 +79,6 @@ export class SaleDetailComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     const change = changes['sale'];
     if (!change || change.firstChange) return;
-    this.printDoc.set(null);
     this.shipmentRequests.set([]);
     this.closeShipmentForm();
     this.loadShipmentRequests();
@@ -103,7 +100,7 @@ export class SaleDetailComponent implements OnInit, OnChanges {
   }
 
   private hasNestedPanelOpen(): boolean {
-    return !!this.printDoc() || this.showShipmentForm();
+    return this.showShipmentForm();
   }
 
   private loadShipmentRequests(): void {
@@ -166,42 +163,14 @@ export class SaleDetailComponent implements OnInit, OnChanges {
     });
   }
 
+  /**
+   * Refonte 2b, étape 10 : la facture (ou le bon de vente) s'imprime sur sa
+   * propre page, `/documents/sale/:id/print`, qui relit la vente par son
+   * `show` et la met en forme dans features/documents/print-builders.
+   */
   openPrint(): void {
-    const lines: PrintLine[] = (this.sale.items || []).map(item => {
-      const product = this.getProduct(item);
-      return {
-        label: this.printLabel(product, item.product_name || `Produit #${item.product_id}`),
-        reference: this.printReference(product),
-        details: this.printDetails(product),
-        qty: item.quantity,
-        unit_price: Number(item.selling_price ?? item.unit_price ?? 0),
-        discount: Number(item.discount || 0),
-        total: this.lineTotal(item),
-      };
-    });
-
-    this.printDoc.set({
-      type: 'sale',
-      doc_number: String(this.sale.id),
-      date: this.sale.date,
-      party_label: 'Client',
-      party_name: this.clientName,
-      party_phone: this.clientPhone,
-      party_city: this.clientCity,
-      lines,
-      total_ht: Number(this.sale.total_sale ?? this.sale.total ?? 0),
-      net_amount: Number(this.sale.total_sale ?? this.sale.total ?? 0),
-      status: this.sale.status,
-      payment_status: this.sale.payment_status,
-      notes: this.sale.comments || null,
-      commercial: this.sale.commercial?.name || null,
-      carrier: this.sale.carrier?.name || null,
-      tracking_number: this.sale.tracking_number || null,
-      partner: this.sale.partner?.name || null,
-      service: this.sale.service || null,
-      delivery_date: this.sale.delivery_date || null,
-      payment_method: this.sale.payment_methods?.length ? this.sale.payment_methods.join(', ') : null,
-    });
+    if (!this.sale?.id) return;
+    this.router?.navigate(['/documents', 'sale', this.sale.id, 'print']);
   }
 
   get clientName(): string {
@@ -286,34 +255,6 @@ export class SaleDetailComponent implements OnInit, OnChanges {
     if (product?.id) {
       window.open(`/products/${product.id}/edit`, '_blank', 'noopener');
     }
-  }
-
-  private printLabel(product: any, fallback: string): string {
-    if (product?.type !== 'tyre') return product?.reference || fallback;
-    const parts: string[] = [];
-    if (product.brand?.name) parts.push(product.brand.name);
-    if (product.profile) parts.push(product.profile);
-    return parts.join(' ') || product?.reference || fallback;
-  }
-
-  private printReference(product: any): string | undefined {
-    if (product?.type !== 'tyre') return product?.profile || undefined;
-    const t = product?.tyre;
-    if (t?.tire_width && t?.tire_height && t?.tire_diameter) {
-      return `${t.tire_width}/${t.tire_height}R${t.tire_diameter}`;
-    }
-    return undefined;
-  }
-
-  private printDetails(product: any): string | undefined {
-    if (product?.type !== 'tyre') return undefined;
-    const t = product?.tyre;
-    if (!t) return undefined;
-    const parts: string[] = [];
-    if (t.tire_load_index) parts.push(t.tire_load_index);
-    if (t.tire_speed_index) parts.push(t.tire_speed_index);
-    if (t.tire_marking) parts.push(t.tire_marking);
-    return parts.length ? parts.join(' · ') : undefined;
   }
 
   lineTotal(item: any): number {

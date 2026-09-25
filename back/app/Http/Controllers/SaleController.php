@@ -165,7 +165,16 @@ class SaleController extends Controller
     {
         return response()->json(
             (new SaleResource(
-                $sale->loadMissing(['linkedClient.cityRelation', 'commercial', 'creator', 'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'payments', 'allocations.payment'])
+                // Refonte 2b, 10a : la page d'impression se recharge seule depuis
+                // cet endpoint. Il lui faut le transporteur et le partenaire
+                // (absents jusqu'ici, la fiche les tenait de la liste), le lot
+                // de stock qui porte le DOT, et le rôle du commercial.
+                $sale->loadMissing([
+                    'linkedClient.cityRelation', 'commercial.roles', 'creator',
+                    'linkedCarrier', 'linkedPartner',
+                    'items.linkedProduct.brand', 'items.linkedProduct.tyre', 'items.stock',
+                    'payments', 'allocations.payment',
+                ])
             ))->resolve()
         );
     }

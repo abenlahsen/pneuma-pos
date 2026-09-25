@@ -322,6 +322,36 @@ class PurchaseReturnTest extends TestCase
         $this->assertDatabaseHas('purchases', ['id' => $this->purchase->id, 'payment_status' => 'PAYE']);
     }
 
+    /**
+     * Refonte 2b, 10a — le bon d'achat imprimé lit « total dû au fournisseur »
+     * et « déjà payé » sur `show`. Ce doivent être les deux chiffres que
+     * compare refreshPaymentStatus() : retours déduits du total, remboursement
+     * retranché du payé. Sinon la feuille dirait « reste dû 0 » ou « trop
+     * payé 400 » sur un achat que l'écran marque PAYÉ pour une autre raison.
+     */
+    public function test_show_exposes_effective_total_and_net_paid_for_the_printed_purchase(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $this->payFull(); // 1000 payés sur 1000
+
+        // 3 pneus retournés (300 DH), 100 DH remboursés en espèces.
+        $this->postJson("/api/purchases/{$this->purchase->id}/returns", $this->validPayload([
+            'quantity' => 3,
+            'refund' => [
+                'amount' => 100.00,
+                'account_id' => $this->account->id,
+                'date' => '2026-04-20',
+                'method' => 'Espèces',
+            ],
+        ]))->assertCreated();
+
+        $response = $this->getJson("/api/purchases/{$this->purchase->id}")->assertOk();
+
+        $this->assertEqualsWithDelta(700.0, (float) $response->json('effective_net_amount'), 0.001);
+        $this->assertEqualsWithDelta(900.0, (float) $response->json('paid_amount'), 0.001);
+    }
+
     public function test_update_on_purchase_with_returns_is_rejected(): void
     {
         Sanctum::actingAs($this->user, [], 'web');

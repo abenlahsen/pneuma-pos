@@ -32,6 +32,11 @@ class ServiceOrderResource extends JsonResource
                 'id' => $this->clientRecord->id,
                 'name' => $this->clientRecord->name,
                 'phone' => $this->clientRecord->phone,
+                // L'adresse du client, sous son nom, sur la fiche imprimée.
+                'address' => $this->clientRecord->address,
+                'city' => $this->clientRecord->relationLoaded('cityRelation')
+                    ? $this->clientRecord->city
+                    : null,
             ] : null),
             'date' => $this->date instanceof \DateTimeInterface
                 ? $this->date->format('Y-m-d')
@@ -72,6 +77,12 @@ class ServiceOrderResource extends JsonResource
                 fn () => $this->commercial ? [
                     'id' => $this->commercial->id,
                     'name' => $this->commercial->name,
+                    // Signataire de la fiche imprimée : « nom · fonction ».
+                    // Seulement si `commercial.roles` est chargé (show), pour
+                    // ne pas coûter une requête par ligne dans la liste.
+                    'role' => $this->commercial->relationLoaded('roles')
+                        ? $this->commercial->getRoleNames()->first()
+                        : null,
                 ] : null
             ),
             'creator' => $this->when(

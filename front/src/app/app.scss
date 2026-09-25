@@ -120,3 +120,20 @@ app-bottom-bar {
     padding: 0.75rem;
   }
 }
+
+// Refonte 2b, étape 10 — à l'impression, la coquille disparaît et ne doit rien
+// laisser derrière elle : ni le fond de l'application, ni la marge intérieure
+// du contenu. Sans cela, la feuille imprimée (facture, lettre au
+// transporteur) est décalée de 1,5 rem et cernée d'une bande de couleur, et
+// une page calée au millimètre comme la lettre déborde sur une seconde.
+@media print {
+  .app-shell,
+  .main-content,
+  .main-content__inner {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+}

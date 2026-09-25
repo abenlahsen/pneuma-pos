@@ -38,6 +38,11 @@ export interface CompanySettings {
   closed_weekdays: number[];
   /** Fermetures exceptionnelles, en `YYYY-MM-DD`. */
   holidays: string[];
+  /**
+   * Taux de TVA de la facture, en pourcentage (20 par défaut). Les ventes
+   * sont enregistrées TTC : la facture en reconstitue le hors-taxe.
+   */
+  vat_rate?: number | string | null;
   created_at?: string | null;
   updated_at?: string | null;
 }

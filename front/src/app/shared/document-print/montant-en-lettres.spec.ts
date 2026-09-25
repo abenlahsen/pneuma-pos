@@ -111,6 +111,18 @@ describe('montantEnLettres', () => {
     expect(montantEnLettres(1000)).toBe('mille dirhams');
   });
 
+  it('met « de » entre un million rond et l’unité, qui est un nom', () => {
+    expect(montantEnLettres(1_000_000)).toBe('un million de dirhams');
+    expect(montantEnLettres(2_000_000)).toBe('deux millions de dirhams');
+    expect(montantEnLettres(1_000_000_000)).toBe('un milliard de dirhams');
+    expect(montantEnLettres(1_000_000.5)).toBe('un million de dirhams et cinquante centimes');
+  });
+
+  it('ne met pas « de » quand un autre nombre suit le million', () => {
+    expect(montantEnLettres(1_000_200)).toBe('un million deux cents dirhams');
+    expect(montantEnLettres(3_001_000)).toBe('trois millions mille dirhams');
+  });
+
   it('dit zéro plutôt que rien', () => {
     expect(montantEnLettres(0)).toBe('zéro dirham');
   });

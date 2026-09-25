@@ -1,0 +1,123 @@
+@use '../../_variables' as *;
+
+/* Refonte 2b, étape 10 — la page de l'imprimé. La barre reprend celle de la
+   lettre au transporteur (18c) ; la feuille elle-même est dans
+   shared/document-print, qui porte ses propres règles d'impression. */
+
+.dpp-screen {
+  min-height: calc(100vh - #{$topbar-height});
+  background: $bg-body;
+}
+
+.dpp-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-height: 56px;
+  padding: 0 18px;
+  background: $bg-subtle;
+  border-bottom: 1px solid $border-strong;
+}
+
+.dpp-bar-title {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.dpp-bar-ref {
+  font-size: 12px;
+  font-weight: 600;
+  color: $text-muted;
+  font-variant-numeric: tabular-nums;
+}
+
+.dpp-bar-end {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.dpp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid $border-color;
+  background: $bg-card;
+  color: $text-dark;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  &--primary {
+    border-color: $primary;
+    background: $primary;
+    color: $bg-card;
+    font-weight: 700;
+  }
+}
+
+.dpp-state {
+  margin: 0;
+  padding: 1.75rem 18px;
+  font-size: 12.5px;
+  color: $text-muted;
+}
+
+/* ── La scène ───────────────────────────────────────────────────────────── */
+.dpp-stage {
+  display: flex;
+  justify-content: center;
+  padding: 24px 18px 40px;
+}
+
+.dpp-paper {
+  border: 1px solid $border-color;
+  box-shadow: $shadow-modal;
+}
+
+/* Écran étroit : la feuille se réduit, elle ne reflue pas — ce qui s'imprime
+   doit rester ce qu'on voit. Sa hauteur étant libre, on ne compense pas
+   l'espace vide par une marge négative : `zoom` le fait de lui-même. */
+@include below-reduce {
+  .dpp-stage { padding: 16px 12px 32px; }
+  .dpp-paper { zoom: 0.72; }
+}
+
+@include below-reshape {
+  .dpp-paper { zoom: 0.46; }
+  .dpp-bar-end { margin-left: 0; }
+}
+
+/* Pendant la génération du PDF (classe posée par PrintService), la feuille
+   repasse à l'échelle 1 : la pagination se mesure en millimètres réels. */
+.dpp-paper.pdf-capture { zoom: 1 !important; }
+
+/* ── L'impression ───────────────────────────────────────────────────────── */
+@media print {
+  .dpp-screen {
+    min-height: 0;
+    background: #fff;
+  }
+
+  .dpp-stage {
+    padding: 0;
+    display: block;
+  }
+
+  /* styles.scss impose `width: 100% !important` à `.print-area` : c'est ce
+     qu'on veut ici, la feuille remplit la zone utile de chaque page. */
+  .dpp-paper {
+    border: 0 !important;
+    box-shadow: none !important;
+    zoom: 1 !important;
+  }
+}

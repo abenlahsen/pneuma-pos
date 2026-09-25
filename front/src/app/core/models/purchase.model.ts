@@ -25,6 +25,10 @@ export interface Purchase {
   total_price?: number;
   discount?: number;
   net_amount?: number;
+  /** Renvoyés par `show` : net retours déduits, et payé moins remboursé. */
+  effective_net_amount?: number;
+  paid_amount?: number;
+  returned_amount?: number;
   items?: PurchaseItem[];
   status: PurchaseStatus;
   payment_status: PaymentStatus;

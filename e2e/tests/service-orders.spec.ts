@@ -82,7 +82,7 @@ test.describe('Service Auto', () => {
     await expect(page.locator('label', { hasText: 'Pièces (DH)' })).not.toBeVisible();
   });
 
-  test('le bouton Imprimer ouvre l\'aperçu PDF', async ({ page }) => {
+  test('le bouton Imprimer ouvre la page d\'impression', async ({ page }) => {
     const firstBtn = page.locator('button[title="Voir"]').first();
     test.skip(await firstBtn.count() === 0, 'Aucune ligne dans le tableau');
 
@@ -90,7 +90,9 @@ test.describe('Service Auto', () => {
     await expect(page.locator('.modal-overlay')).toBeVisible();
 
     await page.locator('.modal-overlay').getByRole('button', { name: /Imprimer/ }).first().click();
-    await expect(page.locator('.print-modal-overlay')).toBeVisible();
+    // Refonte 2b, étape 10 : l'aperçu a quitté sa modale pour sa propre page.
+    await expect(page).toHaveURL(/\/documents\/service_order\/\d+\/print$/);
+    await expect(page.locator('.dp-sheet')).toBeVisible();
     await expect(page.getByRole('button', { name: /Télécharger PDF/ })).toBeVisible();
   });
 });

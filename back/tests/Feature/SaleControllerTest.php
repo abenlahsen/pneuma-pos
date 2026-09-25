@@ -662,6 +662,37 @@ class SaleControllerTest extends TestCase
             ->assertJsonPath('linked_client.address', '12 rue des Pneus, Casablanca');
     }
 
+    /**
+     * Refonte 2b, 10a — la page d'impression se recharge seule depuis `show`.
+     * Il lui faut le transporteur, le DOT du lot, le rôle du commercial, et
+     * un « déjà payé » qui compte la part imputée d'un règlement réparti sur
+     * plusieurs ventes, pas le chèque entier ni zéro.
+     */
+    public function test_show_carries_what_the_printed_invoice_needs(): void
+    {
+        $carrier = Carrier::query()->create(['name' => 'Rapide Log', 'user_id' => $this->user->id]);
+        $commercial = $this->createCommercial('K. Amrani');
+        $commercial->assignRole('Commercial');
+
+        $sale = $this->createSale([
+            'carrier_id' => $carrier->id,
+            'commercial_id' => $commercial->id,
+        ]);
+        $this->sharedStock->update(['dot' => '2425']);
+
+        // 150 imputés par un règlement propre à la vente, 250 par un
+        // règlement multi-ventes dont le `sale_id` reste nul.
+        $this->createPaymentForSale($sale, 'Espèces', 150);
+        $this->createPaymentForSale($sale, 'Chèque', 250, linkPaymentToSale: false);
+
+        $this->getJson("/api/sales/{$sale->id}", $this->authHeaders())
+            ->assertOk()
+            ->assertJsonPath('carrier.name', 'Rapide Log')
+            ->assertJsonPath('commercial.role', 'Commercial')
+            ->assertJsonPath('items.0.stock.dot', '2425')
+            ->assertJsonPath('paid_amount', '400.00');
+    }
+
     public function test_show_returns_a_null_address_when_the_client_has_none(): void
     {
         $sale = $this->createSale();

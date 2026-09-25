@@ -73,7 +73,17 @@ class PurchaseController extends Controller
 
     public function show(Purchase $purchase): JsonResponse
     {
-        return response()->json($this->purchaseService->loadRelations($purchase));
+        $purchase = $this->purchaseService->loadRelations($purchase);
+
+        // Refonte 2b, 10a : le bon d'achat imprime « total dû au fournisseur »,
+        // « déjà payé » et « reste dû ». Ce sont les deux chiffres contre
+        // lesquels refreshPaymentStatus() compare — retours déduits, et
+        // remboursements du fournisseur retranchés de ce qui a été payé — et
+        // non net_amount brut ni la simple somme des paiements.
+        $purchase->setAttribute('effective_net_amount', $purchase->effectiveNetAmount());
+        $purchase->setAttribute('paid_amount', $purchase->netPaidAmount());
+
+        return response()->json($purchase);
     }
 
     public function update(Request $request, Purchase $purchase): JsonResponse

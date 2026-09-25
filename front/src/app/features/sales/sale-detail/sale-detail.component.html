@@ -225,11 +225,6 @@
 </div>
 
 
-<app-document-print
-  *ngIf="printDoc()"
-  [document]="printDoc()!"
-  (closed)="printDoc.set(null)"
-/>
 
 <!-- Refonte 2b : la demande de modification passe par la coque de volet. -->
 @if (showShipmentForm()) {

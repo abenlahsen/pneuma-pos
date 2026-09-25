@@ -227,6 +227,23 @@ class ServiceOrderApiTest extends TestCase
             ->assertJsonPath('id', $this->order->id);
     }
 
+    /**
+     * Refonte 2b, 10a — la fiche imprimée porte « déjà payé » et « reste dû »,
+     * ainsi que la fonction du signataire. `show` ne les exposait pas : la
+     * resource n'écrit total_paid que si la somme des paiements est chargée.
+     */
+    public function test_show_carries_paid_amount_and_commercial_role_for_the_printed_sheet(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+        $this->createPayment(80.00);
+
+        $this->getJson("/api/service-orders/{$this->order->id}")
+            ->assertOk()
+            ->assertJsonPath('total_paid', 80)
+            ->assertJsonPath('remaining', 120)
+            ->assertJsonPath('commercial.role', 'Administrator');
+    }
+
     public function test_show_returns_404_for_unknown_order(): void
     {
         Sanctum::actingAs($this->user, [], 'web');

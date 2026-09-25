@@ -236,11 +236,6 @@
 </div>
 
 
-<app-document-print
-  *ngIf="printDoc()"
-  [document]="printDoc()!"
-  (closed)="printDoc.set(null)"
-/>
 
 <!-- Refonte 2b, gabarit 15c : la confirmation remplace le confirm() natif. -->
 <app-confirm-delete

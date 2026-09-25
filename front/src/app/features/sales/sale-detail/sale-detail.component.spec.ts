@@ -79,91 +79,26 @@ describe('SaleDetailComponent', () => {
     });
   });
 
+  // La mise en forme du document est testée dans features/documents/print-builders.spec.ts.
   describe('openPrint', () => {
-    it('sets printDoc signal (not null)', () => {
-      comp.sale = { id: 5, date: '2026-05-01', items: [], total_sale: 0 } as any;
+    it('navigue vers la page d’impression de la vente', () => {
+      const navigate = vi.fn();
+      comp = new SaleDetailComponent(mockAuthService as any, mockShipmentChangeService as any, { navigate } as any);
+      comp.sale = { id: 99, items: [] } as any;
+
       comp.openPrint();
-      expect(comp.printDoc()).not.toBeNull();
+
+      expect(navigate).toHaveBeenCalledWith(['/documents', 'sale', 99, 'print']);
     });
 
-    it('sets type=sale and party_label=Client', () => {
-      comp.sale = { id: 5, date: '2026-05-01', items: [], total_sale: 0 } as any;
-      comp.openPrint();
-      const doc = comp.printDoc()!;
-      expect(doc.type).toBe('sale');
-      expect(doc.party_label).toBe('Client');
-    });
+    it('ne navigue pas sans vente chargée', () => {
+      const navigate = vi.fn();
+      comp = new SaleDetailComponent(mockAuthService as any, mockShipmentChangeService as any, { navigate } as any);
+      comp.sale = { items: [] } as any;
 
-    it('sets doc_number from sale.id', () => {
-      comp.sale = { id: 99, date: '2026-05-01', items: [], total_sale: 0 } as any;
       comp.openPrint();
-      expect(comp.printDoc()!.doc_number).toBe('99');
-    });
 
-    it('uses linkedProduct.reference as line label (highest priority)', () => {
-      comp.sale = {
-        id: 1, date: '2026-05-01', total_sale: 300,
-        items: [{ linkedProduct: { reference: 'REF-100' }, product_name: 'Pneu', quantity: 3, selling_price: 100, discount: 0, total: 300 }],
-      } as any;
-      comp.openPrint();
-      expect(comp.printDoc()!.lines[0].label).toBe('REF-100');
-    });
-
-    it('falls back to product_name when linkedProduct has no reference', () => {
-      comp.sale = {
-        id: 1, date: '2026-05-01', total_sale: 100,
-        items: [{ product_name: 'Pneu 205/55R16', product_id: 3, quantity: 1, selling_price: 100, discount: 0, total: 100 }],
-      } as any;
-      comp.openPrint();
-      expect(comp.printDoc()!.lines[0].label).toBe('Pneu 205/55R16');
-    });
-
-    it('falls back to "Produit #id" when neither reference nor product_name', () => {
-      comp.sale = {
-        id: 1, date: '2026-05-01', total_sale: 50,
-        items: [{ product_id: 9, quantity: 1, selling_price: 50, discount: 0, total: 50 }],
-      } as any;
-      comp.openPrint();
-      expect(comp.printDoc()!.lines[0].label).toBe('Produit #9');
-    });
-
-    it('maps line discount from item.discount', () => {
-      comp.sale = {
-        id: 1, date: '2026-05-01', total_sale: 180,
-        items: [{ product_name: 'X', quantity: 2, selling_price: 100, discount: 10, total: 180 }],
-      } as any;
-      comp.openPrint();
-      expect(comp.printDoc()!.lines[0].discount).toBe(10);
-    });
-
-    it('includes carrier and tracking_number transport fields', () => {
-      comp.sale = {
-        id: 1, date: '2026-05-01', items: [], total_sale: 0,
-        carrier: { name: 'Transit Express' }, tracking_number: 'TRK-999',
-        partner: null, service: null, delivery_date: null, payment_methods: [],
-      } as any;
-      comp.openPrint();
-      const doc = comp.printDoc()!;
-      expect(doc.carrier).toBe('Transit Express');
-      expect(doc.tracking_number).toBe('TRK-999');
-    });
-
-    it('joins payment_methods into the print document payment_method field', () => {
-      comp.sale = {
-        id: 1, date: '2026-05-01', items: [], total_sale: 0,
-        payment_methods: ['Chèque', 'Virement'],
-      } as any;
-      comp.openPrint();
-      expect(comp.printDoc()!.payment_method).toBe('Chèque, Virement');
-    });
-
-    it('leaves the print payment_method null when there are no recorded payments', () => {
-      comp.sale = {
-        id: 1, date: '2026-05-01', items: [], total_sale: 0,
-        payment_methods: [],
-      } as any;
-      comp.openPrint();
-      expect(comp.printDoc()!.payment_method).toBeNull();
+      expect(navigate).not.toHaveBeenCalled();
     });
   });
 
@@ -178,13 +113,11 @@ describe('SaleDetailComponent', () => {
       const getForSale = vi.fn(() => ({ subscribe: () => {} }));
       comp = new SaleDetailComponent(mockAuthService as any, { getForSale } as any);
       comp.sale = { id: 7, items: [] } as any;
-      comp.printDoc.set({} as any);
       comp.showShipmentForm.set(true);
 
       comp.ngOnChanges({ sale: { previousValue: { id: 7 }, currentValue: comp.sale, firstChange: false, isFirstChange: () => false } });
 
       expect(getForSale).toHaveBeenCalledWith(7);
-      expect(comp.printDoc()).toBeNull();
       expect(comp.showShipmentForm()).toBe(false);
     });
 

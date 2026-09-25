@@ -1,0 +1,55 @@
+<div class="dpp-screen">
+
+  <!-- ── La barre, sur le modèle de la lettre. Absente du papier. ──────── -->
+  <div class="dpp-bar no-print">
+    <button type="button" class="dpp-btn" (click)="back()">
+      <app-icon name="arrow-left" [size]="14" /> Retour
+    </button>
+
+    <span class="dpp-bar-title">
+      @if (document(); as doc) {
+        {{ doc.title }}
+        <span class="dpp-bar-ref">{{ doc.doc_number }}</span>
+      } @else {
+        Document
+      }
+    </span>
+
+    <span class="dpp-bar-end">
+      <button type="button" class="dpp-btn" (click)="print()" [disabled]="!canOutput()">
+        <app-icon name="print" [size]="14" /> Imprimer
+      </button>
+      <button type="button" class="dpp-btn dpp-btn--primary" (click)="downloadPdf()"
+              [disabled]="generatingPdf() || !canOutput()">
+        @if (generatingPdf()) {
+          Génération…
+        } @else {
+          <app-icon name="download" [size]="14" /> Télécharger PDF
+        }
+      </button>
+    </span>
+  </div>
+
+  @if (loadError()) {
+    <app-list-error
+      class="no-print"
+      title="Le document n'a pas pu être chargé."
+      [cause]="loadError()!"
+      [detail]="loadErrorDetail()"
+      (retry)="load()" />
+  }
+
+  @if (loading()) {
+    <p class="dpp-state no-print">Chargement du document…</p>
+  }
+
+  @if (document(); as doc) {
+    <div class="dpp-stage">
+      <!-- `print-area` est l'opt-in du bloc @media print global de styles.scss :
+           il masque tout le reste, dont le rail et la barre haute. -->
+      <div class="dpp-paper print-area" #sheet>
+        <app-document-print [document]="doc" [settings]="settings()" />
+      </div>
+    </div>
+  }
+</div>
