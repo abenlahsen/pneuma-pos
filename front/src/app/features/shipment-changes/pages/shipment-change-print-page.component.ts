@@ -20,6 +20,7 @@ import {
 } from '../models/shipment-change.model';
 
 import { ListErrorComponent, describeLoadError } from '../../../shared/list-state';
+import { issuerNameOf } from '../../../shared/document-print/issuer-name';
 
 /**
  * La lettre au transporteur — refonte 2b, 9d, maquette 18c.
@@ -66,6 +67,14 @@ export class ShipmentChangePrintPageComponent implements OnInit {
    * On retombe alors sur le nom de l'entreprise en toutes lettres.
    */
   readonly logoFailed = signal(false);
+
+  /**
+   * L'expéditeur : « PNEU.MA SARL AU » et non la seule forme juridique quand
+   * la raison sociale n'est que « SARL AU » — voir issuerNameOf().
+   */
+  issuerName(): string {
+    return issuerNameOf(this.settings());
+  }
 
   /** Vrai seulement si une image est annoncée ET qu'elle s'est chargée. */
   showLogo(): boolean {

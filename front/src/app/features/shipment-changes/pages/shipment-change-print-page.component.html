@@ -71,7 +71,7 @@
                  [alt]="settings()?.company_name ?? ''"
                  (error)="logoFailed.set(true)">
           } @else {
-            <span class="scp-logo-text">{{ settings()?.legal_name || settings()?.company_name }}</span>
+            <span class="scp-logo-text">{{ issuerName() }}</span>
           }
           <span class="scp-head-right">
             <span class="scp-kicker">Demande de modification d'expédition</span>
@@ -84,7 +84,7 @@
         <section class="scp-parties">
           <span class="scp-party">
             <span class="scp-label">De</span>
-            <span class="scp-party-name">{{ settings()?.legal_name || settings()?.company_name }}</span>
+            <span class="scp-party-name">{{ issuerName() }}</span>
             <span class="scp-party-lines">
               @if (settings()?.address) { {{ settings()?.address }} }
               @if (settings()?.address && settings()?.city) { · }
@@ -172,8 +172,8 @@
         </section>
 
         <footer class="scp-legal">
-          @if (settings()?.legal_name || settings()?.company_name) {
-            <span>{{ settings()?.legal_name || settings()?.company_name }}</span>
+          @if (issuerName()) {
+            <span>{{ issuerName() }}</span>
           }
           @if (settings()?.rc) { <span>RC {{ settings()?.rc }}</span> }
           @if (settings()?.ice) { <span>ICE {{ settings()?.ice }}</span> }

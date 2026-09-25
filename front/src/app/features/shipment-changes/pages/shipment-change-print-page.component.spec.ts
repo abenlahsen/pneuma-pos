@@ -147,6 +147,16 @@ describe('ShipmentChangePrintPageComponent', () => {
       expect(comp.placeAndDate(makeRequest())).toBe('Le 17/09/2026');
     });
 
+    it('signe « PNEU.MA SARL AU » quand la raison sociale n’est que la forme juridique', () => {
+      Object.assign(comp, { settings: () => ({ company_name: 'PNEU.MA', legal_name: 'SARL AU' }) });
+      expect(comp.issuerName()).toBe('PNEU.MA SARL AU');
+    });
+
+    it('garde la raison sociale seule quand elle contient déjà le nom', () => {
+      Object.assign(comp, { settings: () => ({ company_name: 'PNEU.MA', legal_name: 'PNEU.MA SARL' }) });
+      expect(comp.issuerName()).toBe('PNEU.MA SARL');
+    });
+
     it('rend une date absente par un tiret, jamais par une date inventée', () => {
       expect(comp.fmtDate(null)).toBe('—');
       expect(comp.fmtDate('2026-09-16')).toBe('16/09/2026');
