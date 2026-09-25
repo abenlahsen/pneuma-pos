@@ -7,47 +7,34 @@
   grid-template-columns: repeat(4, 1fr);
 }
 
-// Payment-method badges (aggregated from the purchase's actual payments).
-// Kept as a dedicated `-method` namespace rather than reusing badge-blue /
-// badge-purple etc. so this column never visually collides with the
-// status/category badges elsewhere in the row.
-.method-badges {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  white-space: normal; // .table td forces nowrap — allow wrapping here
-  max-width: 13rem;
-}
-.badge-method {
-  background: rgba(100, 116, 139, 0.1);
-  color: #475569; // neutral fallback for legacy/unmapped values
+// ── Refonte 2b, étape 11 : le motif de ligne partagé ─────────────────────────
+// La barre et la ligne viennent des mixins. Ne restent ici que les pièces
+// propres à Achats : les deux jeux d'onglets, l'en-tête de groupe fournisseur
+// et les retours sous leur achat.
+@include layout.filter-bar($chips: false, $search: false, $fields: false);
+@include layout.list-row-pattern();
 
-  &.method-especes  { background: rgba($income-color, 0.12); color: #065f46; }
-  &.method-cheque   { background: rgba($invoice-color, 0.10); color: #1d4ed8; }
-  &.method-virement { background: rgba(139, 92, 246, 0.10); color: #6d28d9; }
-  &.method-effet    { background: rgba(245, 158, 11, 0.12); color: #92400e; }
-  &.method-carte    { background: rgba(236, 72, 153, 0.10); color: #9d174d; }
-}
+/* Sept pistes au-dessus de $bp-reduce. La dernière est mesurée sur son
+   contenu réel : « Régler » (62 px), l'écart de 5 px et l'œil de 30 px font
+   97 px — 104 px laissent la marge d'un chiffre plus large. */
+.pur-grid {
+  grid-template-columns: 76px minmax(0, 1fr) 72px 104px 112px 118px 104px;
 
-// ── Refonte 2b : achats groupés par fournisseur ──────────────────────────────
-// Styles locaux à l'écran (mêmes raisons que les autres écrans refaits).
-.pur-bar {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 11px 18px;
-  border: 1px solid #cfdcec;
-  border-bottom: none;
-  background: #f4f8fd;
+  /* Refonte 2b, 8b : la quantité et le total tombent. Ce qui reste — date,
+     achat, reste dû, retard, actions — est ce qu'on lit pour décider de
+     régler ; le total rejoint la sous-ligne. */
+  @include below-reduce {
+    grid-template-columns: 76px minmax(0, 1fr) 112px 118px 104px;
+  }
 }
 
+/* ── La barre : deux jeux d'onglets ──────────────────────────────────────── */
 .pur-bar-label {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #4a5c75;
+  color: $text-muted;
 }
 
 .segmented {
@@ -56,17 +43,17 @@
   button {
     height: 30px;
     padding: 0 11px;
-    border: 1px solid #cfdcec;
+    border: 1px solid $border-color;
     border-left: none;
-    background: #fff;
-    color: #41546e;
+    background: $bg-card;
+    color: $text-secondary;
     font-family: inherit;
     font-size: 11.5px;
     font-weight: 700;
     cursor: pointer;
 
-    &:first-child { border-left: 1px solid #cfdcec; }
-    &.active { border-color: #0c1e33; background: #0c1e33; color: #fff; }
+    &:first-child { border-left: 1px solid $border-color; }
+    &.active { border-color: $text-dark; background: $text-dark; color: $bg-card; }
   }
 }
 
@@ -76,9 +63,9 @@
   gap: 7px;
   height: 30px;
   padding: 0 11px;
-  border: 1px solid #adc2da;
-  background: #fff;
-  color: #0c1e33;
+  border: 1px solid $border-color;
+  background: $bg-card;
+  color: $text-dark;
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 600;
@@ -88,57 +75,33 @@
 .pur-count {
   margin-left: auto;
   font-size: 11.5px;
-  color: #4a5c75;
+  color: $text-muted;
   font-variant-numeric: tabular-nums;
 }
 
-.pur-grid {
-  border: 1px solid #cfdcec;
-  background: #fff;
-}
-
-.pur-head,
-.pur-row,
-.ret-row {
-  display: grid;
-  grid-template-columns: 76px minmax(0, 1fr) 84px 112px 118px 120px 142px;
-  align-items: center;
-  gap: 12px;
-  padding: 0 18px;
-}
-
-.pur-head {
-  padding-top: 7px;
-  padding-bottom: 7px;
-  border-bottom: 1px solid #0c1e33;
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-  color: #4a5c75;
-}
-
-.num { text-align: right; }
-
+/* ── L'en-tête de groupe fournisseur ─────────────────────────────────────── */
+/* Pas une ligne de liste : ni `list-grid-row`, ni repli du mixin. */
 .pur-band {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 9px 18px;
-  border-top: 1px solid #cfdcec;
-  border-bottom: 1px solid #cfdcec;
-  background: #f4f8fd;
+  border-bottom: 1px solid $border-subtle;
+  background: $bg-subtle;
 }
+
+.pur-band-name { min-width: 0; }
 
 .pur-supplier {
   font-size: 13.5px;
   font-weight: 700;
-  color: #0c1e33;
+  color: $text-dark;
 }
 
 .pur-band-sub {
+  margin-left: 12px;
   font-size: 11.5px;
-  color: #4a5c75;
+  color: $text-muted;
   font-variant-numeric: tabular-nums;
 }
 
@@ -147,7 +110,8 @@
   font-size: 14px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: #c2181f;
+  white-space: nowrap;
+  color: $expense-color;
 }
 
 .pur-band-action {
@@ -155,55 +119,22 @@
   align-items: center;
   height: 30px;
   padding: 0 11px;
-  border: 1px solid #0c1e33;
-  background: #0c1e33;
-  color: #fff;
+  border: 1px solid $text-dark;
+  background: $text-dark;
+  color: $bg-card;
   font-size: 12px;
   font-weight: 700;
+  white-space: nowrap;
   text-decoration: none;
 }
 
-.pur-row {
-  min-height: 56px;
-  border-bottom: 1px solid #e7eef8;
-  &:hover { background: $bg-subtle; }
-
-  &--old {
-    border-left: 3px solid #8a5a00;
-    margin-left: -3px;
-  }
-}
-
-.pur-date {
-  font-size: 12px;
-  color: #4a5c75;
-  font-variant-numeric: tabular-nums;
-}
-
-.pur-object { min-width: 0; }
-
-.pur-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: #0c1e33;
-}
-
-.pur-tag {
-  padding: 1px 5px;
-  border: 1px solid #cfdcec;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: #4a5c75;
-}
+/* ── La ligne d'achat ────────────────────────────────────────────────────── */
+/* Risque légal : le liseré du motif, dans la couleur du seuil et non du dû.
+   En ombre intérieure et non en bordure à marge négative : la carte rogne ce
+   qui dépasse à gauche, et le liseré disparaissait. */
+.pur-row--old { box-shadow: inset 3px 0 0 $warning-color; }
 
 .pur-sub {
-  display: block;
-  font-size: 11.5px;
-  color: #4a5c75;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -214,70 +145,58 @@
   padding: 0;
   border: none;
   background: none;
-  color: #2f4fb8;
+  color: $invoice-color;
   font: inherit;
   font-weight: 600;
   cursor: pointer;
   text-decoration: underline;
 }
 
-.pur-net,
 .pur-due {
-  font-size: 13.5px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  color: #0c1e33;
+  color: $expense-color;
+  &--zero { color: $income-color; }
 }
 
-.pur-due {
-  color: #c2181f;
-  &--zero { color: #15616d; }
-}
+/* Le reste dû est aligné à droite, le retard à gauche : sans respiration, les
+   deux chiffres se lisaient d'un bloc (« 2 700 9 j »). Retiré sous $bp-reshape,
+   où le retard passe sur sa propre rangée. */
+.pur-delay { padding-left: 14px; }
 
-.pur-age {
-  font-size: 12px;
-  font-weight: 700;
-  color: #0c1e33;
-  font-variant-numeric: tabular-nums;
-}
-
-.pur-age-note {
-  display: block;
-  font-size: 10px;
-  font-weight: 600;
-  color: #4a5c75;
-
-  &--old { color: #8a5a00; }
-}
-
-.pur-actions {
-  display: flex;
-  gap: 6px;
-  justify-content: flex-end;
-  align-items: center;
-}
+/* La date a sa colonne tant qu'il y a une grille : elle ne rejoint la
+   sous-ligne que sous $bp-reshape. */
+.pur-fold-date { display: none; }
 
 .pur-settle {
   height: 30px;
   padding: 0 10px;
-  border: 1px solid #adc2da;
-  background: #fff;
-  color: #0c1e33;
+  border: 1px solid $border-color;
+  background: $bg-card;
+  color: $text-dark;
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
 }
 
+/* ── Les retours sous leur achat ─────────────────────────────────────────── */
 .ret-row {
+  display: grid;
+  align-items: center;
+  gap: 12px;
   min-height: 44px;
-  border-bottom: 1px solid #e7eef8;
+  padding: 0 18px;
+  border-bottom: 1px solid $border-subtle;
   background: $bg-subtle;
   font-size: 12px;
-  color: #41546e;
+  color: $text-secondary;
   font-variant-numeric: tabular-nums;
 
   &--hidden { display: none; }
+
+  @include below-reduce {
+    gap: 10px;
+    padding: 0 14px;
+  }
 }
 
 .ret-object {
@@ -286,3 +205,38 @@
   white-space: nowrap;
 }
 
+/* ── Sous $bp-reshape : la fiche empilée ─────────────────────────────────── */
+/* Le mixin porte les quatre emplacements : achat, reste dû en haut à droite,
+   retard en état, actions. Ne restent ici que l'en-tête de groupe, qui passe
+   sur deux rangées, et les retours, qui deviennent une ligne simple. */
+@include below-reshape {
+  .pur-fold-date { display: inline; }
+
+  .pur-delay { padding-left: 0; }
+
+  /* « Régler » prend la hauteur des cibles du gabarit 14b, comme l'œil. */
+  .pur-settle { height: $touch-target-mobile; }
+
+  .pur-band {
+    flex-wrap: wrap;
+    padding: 11px 14px;
+  }
+
+  .pur-band-name { flex: 1 1 100%; }
+
+  .pur-band-sub {
+    display: block;
+    margin: 2px 0 0;
+  }
+
+  .pur-band-due { margin-left: 0; }
+
+  .ret-row:not(.ret-row--hidden) {
+    display: flex;
+    gap: 10px;
+    padding: 9px 14px;
+
+    > :empty { display: none; }
+    > .ret-object { flex: 1; }
+  }
+}

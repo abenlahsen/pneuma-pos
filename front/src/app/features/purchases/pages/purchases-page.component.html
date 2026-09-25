@@ -154,21 +154,21 @@
     </div>
   </div>
 
-  <!-- Deux jeux de filtres distincts : r&egrave;glement et r&eacute;ception (refonte 2b) -->
-  <div class="pur-bar">
-    <span class="pur-bar-label">R&egrave;glement</span>
+  <!-- Deux jeux de filtres distincts : règlement et réception (refonte 2b). -->
+  <div class="filter-bar">
+    <span class="pur-bar-label">Règlement</span>
     <div class="segmented">
       <button type="button" [class.active]="settlementTab() === ''" (click)="setSettlementTab('')">TOUS</button>
-      <button type="button" [class.active]="settlementTab() === 'due'" (click)="setSettlementTab('due')">RESTE &Agrave; PAYER</button>
+      <button type="button" [class.active]="settlementTab() === 'due'" (click)="setSettlementTab('due')">RESTE À PAYER</button>
       <button type="button" [class.active]="settlementTab() === 'legal_risk'" (click)="setSettlementTab('legal_risk')">&gt; {{ oldDebtDays }} J</button>
-      <button type="button" [class.active]="settlementTab() === 'paid'" (click)="setSettlementTab('paid')">R&Eacute;GL&Eacute;S</button>
+      <button type="button" [class.active]="settlementTab() === 'paid'" (click)="setSettlementTab('paid')">RÉGLÉS</button>
     </div>
 
-    <span class="pur-bar-label">R&eacute;ception</span>
+    <span class="pur-bar-label">Réception</span>
     <div class="segmented">
       <button type="button" [class.active]="receptionTab() === ''" (click)="setReceptionTab('')">TOUTES</button>
       <button type="button" [class.active]="receptionTab() === 'expected'" (click)="setReceptionTab('expected')">ATTENDUES</button>
-      <button type="button" [class.active]="receptionTab() === 'received'" (click)="setReceptionTab('received')">RE&Ccedil;UES</button>
+      <button type="button" [class.active]="receptionTab() === 'received'" (click)="setReceptionTab('received')">REÇUES</button>
     </div>
 
     <button type="button" class="chip-toggle" (click)="showFilters.set(!showFilters())">
@@ -176,101 +176,116 @@
     </button>
 
     <span class="pur-count">
-      {{ total() }} fournisseur(s) &middot; {{ groupsPurchaseCount() }} achat(s) &middot; {{ groupsDueTotal() | number:'1.0-0' }} DH dus
+      {{ total() }} fournisseur(s) · {{ groupsPurchaseCount() }} achat(s) · {{ groupsDueTotal() | number:'1.0-0' }} DH dus
     </span>
   </div>
 
-  <!-- Achats group&eacute;s par fournisseur -->
-  <div class="pur-grid">
-    <div class="pur-head">
+  <!-- Refonte 2b, étape 11 : le motif de ligne partagé, à la place de la
+       grille locale `.pur-row`. Maquette 8a : groupés par fournisseur, le
+       reste dû est le montant, le retard est l'état. -->
+  <div class="card table-card">
+    <div class="list-grid-header pur-grid">
       <span>Date</span>
-      <span>Achat</span>
-      <span class="num">Qt&eacute;</span>
-      <span class="num">Net</span>
-      <span class="num">Reste d&ucirc;</span>
-      <span class="num">&Acirc;ge</span>
-      <span class="num">Actions</span>
+      <span>Achat · BL · facture</span>
+      <span class="text-right list-cell--drop">Qté</span>
+      <span class="text-right list-cell--drop">Total DH</span>
+      <span class="text-right">Reste dû DH</span>
+      <span class="pur-delay">Retard</span>
+      <span class="text-right">Actions</span>
     </div>
 
-    <!-- Refonte 2b, §14c : chargement, erreur, liste vide. -->
+    <!-- Refonte 2b, §14c : chargement, erreur, liste vide — dans cet ordre. -->
     <app-list-error
       *ngIf="loadError()"
-      title="Les achats n'ont pas pu &ecirc;tre charg&eacute;s."
+      title="Les achats n'ont pas pu être chargés."
       [cause]="loadError()!"
       [detail]="loadErrorDetail()"
       [lastLoadedAt]="lastLoadedAt()"
       (retry)="loadData()" />
 
+    <!-- `*ngIf` et non `[hidden]` : `.list-grid-row` pose `display: grid`, qui
+         l'emporte sur le `display: none` de l'attribut. -->
     <ng-container *ngIf="loading() && groups().length === 0">
-      <div class="pur-row" appSkeletonRow [cells]="7" [seed]="i"
+      <div class="list-grid-row pur-grid" appSkeletonRow [cells]="7" [seed]="i"
            *ngFor="let row of skeletonRows; let i = index"></div>
     </ng-container>
 
+    <app-list-empty
+      *ngIf="!loading() && !loadError() && groups().length === 0"
+      blankTitle="Aucun achat enregistré pour le moment."
+      noMatchTitle="Aucun achat ne correspond"
+      [filters]="activeFilters()"
+      (clearAll)="clearAllFilters()" />
+
     <!-- Les groupes déjà chargés restent visibles pendant un rechargement :
          le squelette ne remplace que la toute première attente. -->
-    <ng-container>
-      <ng-container *ngFor="let group of groups()">
-        <div class="pur-band">
+    <ng-container *ngFor="let group of groups()">
+      <!-- En-tête de groupe : ce n'est pas une ligne de liste, il ne porte
+           donc aucune classe du motif de ligne. -->
+      <div class="pur-band">
+        <span class="pur-band-name">
           <span class="pur-supplier">{{ group.supplier_name }}</span>
           <span class="pur-band-sub">
-            {{ group.due_count }} achat(s) d&ucirc;(s) sur {{ group.purchases_count }}<ng-container *ngIf="group.terms_days !== null"> &middot; d&eacute;lai contractuel {{ group.terms_days }} j</ng-container><ng-container *ngIf="group.terms_days === null"> &middot; aucun d&eacute;lai contractuel renseign&eacute;</ng-container><ng-container *ngIf="group.oldest_days > 0"> &middot; plus ancien {{ group.oldest_days }} j</ng-container>
+            {{ group.due_count }} achat(s) dû(s) sur {{ group.purchases_count }}<ng-container *ngIf="group.terms_days !== null"> · délai contractuel {{ group.terms_days }} j</ng-container><ng-container *ngIf="group.terms_days === null"> · aucun délai contractuel renseigné</ng-container><ng-container *ngIf="group.oldest_days > 0"> · plus ancien {{ group.oldest_days }} j</ng-container>
           </span>
-          <span class="pur-band-due">{{ group.due_total | number:'1.0-0' }} DH</span>
-          <a class="pur-band-action" *ngIf="group.supplier_id && group.due_total > 0"
-            [routerLink]="['/suppliers', group.supplier_id]">R&eacute;gler le fournisseur</a>
+        </span>
+        <span class="pur-band-due">{{ group.due_total | number:'1.0-0' }} DH</span>
+        <a class="pur-band-action" *ngIf="group.supplier_id && group.due_total > 0"
+          [routerLink]="['/suppliers', group.supplier_id]">Régler le fournisseur</a>
+      </div>
+
+      <ng-container *ngFor="let row of group.purchases">
+        <div class="list-grid-row pur-grid" [class.pur-row--old]="isOldDebt(row)">
+          <span class="cell-date">{{ row.date | date:'dd/MM/yy' }}</span>
+
+          <span class="list-cell--identity">
+            <span class="list-grid-name">
+              <a [routerLink]="['/achats', row.id]">Achat {{ row.id }}</a>
+              <span class="list-grid-tag" *ngIf="row.with_invoice">FACTURÉ</span>
+              <span class="list-grid-tag">{{ receptionLabel(row.status) }}</span>
+            </span>
+            <span class="list-grid-sub pur-sub"><ng-container *ngIf="row.bl_number">{{ row.bl_number }} · </ng-container><ng-container *ngIf="row.invoice_number">{{ row.invoice_number }} · </ng-container>{{ row.quantity }} article(s)<ng-container *ngFor="let m of row.payment_methods"> · {{ m }}</ng-container><button type="button" class="pur-returns-toggle" *ngIf="row.returns.length" (click)="toggleReturns(row.id)">{{ row.returns.length }} retour(s)</button></span>
+            <!-- Refonte 2b, 8b : ce que les colonnes tombées portaient. -->
+            <span class="list-grid-sub list-grid-sub--fold"><span class="pur-fold-date">{{ row.date | date:'dd/MM/yy' }} · </span>total {{ row.net_amount | number:'1.0-0' }} DH</span>
+          </span>
+
+          <span class="text-right list-cell--drop">{{ row.quantity | number:'1.0-0' }}</span>
+          <span class="text-right list-cell--drop">{{ row.net_amount | number:'1.0-0' }}</span>
+          <span class="text-right list-cell--amount pur-due" [class.pur-due--zero]="row.remaining <= 0.004">{{ row.remaining | number:'1.0-0' }}</span>
+
+          <span class="list-grid-status pur-delay"
+                [class.list-grid-status--paid]="row.remaining <= 0.004"
+                [class.list-grid-status--partial]="isOldDebt(row)">
+            {{ row.days }} j
+            <span class="list-grid-sub" *ngIf="delayNote(row) as note">{{ note }}</span>
+          </span>
+
+          <span class="actions-cell list-cell--actions">
+            <button type="button" class="pur-settle" *ngIf="row.remaining > 0.004 && authService.hasPermission('manage purchase-payments')" (click)="openRowPayments(row)">Régler</button>
+            <!-- Refonte 2b, §14c état 4 : il reste à payer mais le rôle ne le
+                 permet pas — un cadenas le dit, au lieu d'une case vide. -->
+            <app-row-lock *ngIf="row.remaining > 0.004 && !authService.hasPermission('manage purchase-payments')"
+              reason="Votre rôle ne permet pas d'enregistrer un règlement fournisseur. Demandez à un administrateur." />
+            <button type="button" class="btn-icon" title="Ouvrir" (click)="openRowDetail(row)"><app-icon name="view" [size]="15" /></button>
+          </span>
         </div>
 
-        <ng-container *ngFor="let row of group.purchases">
-          <div class="pur-row" [class.pur-row--old]="isOldDebt(row)">
-            <span class="pur-date">{{ row.date | date:'dd/MM/yy' }}</span>
-            <span class="pur-object">
-              <span class="pur-title">
-                Achat {{ row.id }}
-                <span class="pur-tag" *ngIf="row.with_invoice">FACTUR&Eacute;</span>
-                <span class="pur-tag">{{ row.status }}</span>
-              </span>
-              <span class="pur-sub"><ng-container *ngIf="row.bl_number">{{ row.bl_number }} &middot; </ng-container><ng-container *ngIf="row.invoice_number">{{ row.invoice_number }} &middot; </ng-container>{{ row.quantity }} article(s)<ng-container *ngFor="let m of row.payment_methods"> &middot; {{ m }}</ng-container><button type="button" class="pur-returns-toggle" *ngIf="row.returns.length" (click)="toggleReturns(row.id)">{{ row.returns.length }} retour(s)</button></span>
-            </span>
-            <span class="num">{{ row.quantity | number:'1.0-0' }}</span>
-            <span class="num pur-net">{{ row.net_amount | number:'1.0-0' }}</span>
-            <span class="num pur-due" [class.pur-due--zero]="row.remaining <= 0.004">{{ row.remaining | number:'1.0-0' }}</span>
-            <span class="num pur-age">
-              {{ row.days }} j
-              <span class="pur-age-note pur-age-note--old" *ngIf="isOldDebt(row)">&gt; {{ oldDebtDays }} j</span>
-              <span class="pur-age-note" *ngIf="!isOldDebt(row) && row.days_left !== null && row.remaining > 0.004">{{ row.days_left >= 0 ? row.days_left + ' j restants' : 'd&eacute;lai d&eacute;pass&eacute;' }}</span>
-            </span>
-            <span class="num pur-actions">
-              <button type="button" class="pur-settle" *ngIf="row.remaining > 0.004 && authService.hasPermission('manage purchase-payments')" (click)="openRowPayments(row)">R&eacute;gler</button>
-              <!-- Refonte 2b, §14c état 4 : il reste à payer mais le rôle ne le
-                   permet pas — un cadenas le dit, au lieu d'une case vide. -->
-              <app-row-lock *ngIf="row.remaining > 0.004 && !authService.hasPermission('manage purchase-payments')"
-                reason="Votre r&ocirc;le ne permet pas d'enregistrer un r&egrave;glement fournisseur. Demandez &agrave; un administrateur." />
-              <button type="button" class="btn-icon" title="Ouvrir" (click)="openRowDetail(row)"><app-icon name="view" [size]="14" /></button>
-            </span>
-          </div>
-
-          <div class="ret-row" *ngFor="let ret of row.returns" [class.ret-row--hidden]="!returnsVisible(row.id)">
-            <span></span>
-            <span class="ret-object">Retour {{ ret.id }}<ng-container *ngIf="ret.reason"> &middot; {{ ret.reason }}</ng-container><ng-container *ngIf="ret.refund_amount > 0"> &middot; rembours&eacute;</ng-container></span>
-            <span class="num">&minus;{{ ret.quantity | number:'1.0-0' }}</span>
-            <span class="num">&minus;{{ ret.amount | number:'1.0-0' }}</span>
-            <span class="num">{{ ret.refund_amount > 0 ? ('&minus;' + (ret.refund_amount | number:'1.0-0')) : '&mdash;' }}</span>
-            <span class="num">{{ ret.date | date:'dd/MM/yy' }}</span>
-            <span></span>
-          </div>
-        </ng-container>
+        <!-- Les retours sous leur achat : même pistes que la ligne, mais ce
+             n'est pas une ligne de liste — pas de motif de ligne. -->
+        <div class="ret-row pur-grid" *ngFor="let ret of row.returns" [class.ret-row--hidden]="!returnsVisible(row.id)">
+          <span class="cell-date">{{ ret.date | date:'dd/MM/yy' }}</span>
+          <span class="ret-object">Retour {{ ret.id }}<ng-container *ngIf="ret.reason"> · {{ ret.reason }}</ng-container><ng-container *ngIf="ret.refund_amount > 0"> · remboursé</ng-container></span>
+          <span class="text-right list-cell--drop">−{{ ret.quantity | number:'1.0-0' }}</span>
+          <span class="text-right list-cell--drop">−{{ ret.amount | number:'1.0-0' }}</span>
+          <span class="text-right">{{ ret.refund_amount > 0 ? ('−' + (ret.refund_amount | number:'1.0-0')) : '—' }}</span>
+          <span></span>
+          <span></span>
+        </div>
       </ng-container>
-
-      <app-list-empty
-        *ngIf="!loading() && !loadError() && groups().length === 0"
-        blankTitle="Aucun achat enregistr&eacute; pour le moment."
-        noMatchTitle="Aucun achat ne correspond"
-        [filters]="activeFilters()"
-        (clearAll)="clearAllFilters()" />
     </ng-container>
 
     <div class="pagination-wrapper" *ngIf="total() > 0">
-      <div class="pagination-info">{{ total() }} fournisseur(s) &middot; page {{ currentPage() }} / {{ lastPage() }}</div>
+      <div class="pagination-info">{{ total() }} fournisseur(s) · page {{ currentPage() }} / {{ lastPage() }}</div>
       <div class="pagination">
         <button class="btn-page" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">&laquo;</button>
         <button class="btn-page" *ngFor="let page of pages()" [class.active]="page === currentPage()" (click)="goToPage(page)">{{ page }}</button>

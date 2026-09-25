@@ -106,6 +106,23 @@ export class PurchasesPageComponent implements OnInit {
     return row.remaining > 0.004 && row.days > this.oldDebtDays;
   }
 
+  /** L'étiquette de réception, en capitales et accentuée : « REÇU », « TERMINÉ ». */
+  receptionLabel(status: string): string {
+    return (PURCHASE_STATUS_LABELS[status as PurchaseStatus] ?? status).toUpperCase();
+  }
+
+  /**
+   * La sous-ligne de la cellule Retard — maquette 8a. Le risque légal prime,
+   * puis le règlement, puis l'échéance contractuelle quand le fournisseur en a
+   * une. Sous 900 px c'est l'état de la fiche empilée : elle doit se suffire.
+   */
+  delayNote(row: PurchaseGroupRow): string | null {
+    if (this.isOldDebt(row)) return `> ${this.oldDebtDays} j légal`;
+    if (row.remaining <= 0.004) return 'réglé';
+    if (row.days_left === null) return null;
+    return row.days_left >= 0 ? `${row.days_left} j restants` : 'délai dépassé';
+  }
+
   /** Une ligne de groupe suffit pour ouvrir la fiche ou le règlement existants. */
   openRowDetail(row: PurchaseGroupRow): void {
     // La fiche est une route : elle charge l'achat elle-même, inutile de le
