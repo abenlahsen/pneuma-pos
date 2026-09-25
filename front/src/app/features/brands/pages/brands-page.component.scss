@@ -1,7 +1,7 @@
 @use '../../_variables' as *;
 
 @use '../../_page-layout' as layout;
-@include layout.page-layout();
+@include layout.page-layout($table: false, $filters-panel: false);
 
 // Refonte 2b, étape 11 : Marques au motif de ligne. Liste courte, sans
 // montant : la barre ne porte qu'une recherche.

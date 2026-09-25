@@ -9,7 +9,19 @@
 // 25 écrans de liste dans l'ancienne palette. Il lit désormais la source.
 @use './variables' as *;
 
-@mixin page-layout() {
+// Refonte 2b, étape 11 — deux parties optionnelles, actives par défaut pour
+// que les écrans encore en <table> ne changent pas :
+//
+//   $table          les règles de `.table` et `.table-responsive` ;
+//   $filters-panel  le panneau de filtres déplié (`.filters-section`,
+//                   `.form-group`, `.filter-actions`).
+//
+// Un écran passé au motif de ligne et à la barre de filtres n'utilise plus
+// ni l'un ni l'autre. Les lui facturer quand même faisait franchir la limite
+// dure de 20 ko à Achats, Rôles et Service Auto :
+//
+//   @include layout.page-layout($table: false, $filters-panel: false);
+@mixin page-layout($table: true, $filters-panel: true) {
 
   // ── Shell ────────────────────────────────────────────────────────────────
   .page-container {
@@ -343,6 +355,7 @@
     }
   }
 
+  @if $filters-panel {
   // ── Filters section ───────────────────────────────────────────────────────
   .filters-section {
     margin-bottom: 1.75rem;
@@ -443,6 +456,7 @@
     gap: 0.4rem;
     align-self: flex-end;
   }
+  }
 
   // ── Table ─────────────────────────────────────────────────────────────────
   .table-card {
@@ -453,6 +467,7 @@
     box-shadow: none;
   }
 
+  @if $table {
   .table-responsive { overflow-x: auto; }
 
   .table {
@@ -497,6 +512,7 @@
       font-weight: 400;
       font-size: 0.74rem;
     }
+  }
   }
 
   // ── Badges ────────────────────────────────────────────────────────────────
@@ -749,6 +765,7 @@
       .card-value { font-size: 1.05rem; }
     }
 
+    @if $filters-panel {
     .filters-section {
       margin-bottom: 1.1rem;
       .card-body { padding: 0.875rem; }
@@ -756,10 +773,13 @@
     }
 
     .filter-actions { grid-column: 1 / -1; justify-content: flex-end; }
+    }
 
+    @if $table {
     .table {
       th, td { padding: 0.45rem 0.6rem; font-size: 0.76rem; }
       th { font-size: 0.65rem; }
+    }
     }
 
     .pagination-wrapper {
@@ -778,8 +798,10 @@
 
   @media (max-width: 480px) {
     .summary-cards { grid-template-columns: 1fr; }
+    @if $filters-panel {
     .filters-section .filters-grid,
     .filters-section .filters-row { grid-template-columns: 1fr; }
+    }
     .header .actions .btn { font-size: 0.75rem; }
   }
 }

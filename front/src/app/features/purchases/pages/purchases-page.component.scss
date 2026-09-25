@@ -1,7 +1,7 @@
 @use '../../_variables' as *;
 
 @use '../../_page-layout' as layout;
-@include layout.page-layout();
+@include layout.page-layout($table: false);
 
 .summary-cards {
   grid-template-columns: repeat(4, 1fr);
@@ -57,19 +57,26 @@
   }
 }
 
-.chip-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
+/* « Filtres » et « Régler » : le même bouton clair, à la taille près.
+   Regroupés : cette feuille frôle la limite dure de 20 ko. */
+.chip-toggle,
+.pur-settle {
   height: 30px;
-  padding: 0 11px;
+  padding: 0 10px;
   border: 1px solid $border-color;
   background: $bg-card;
   color: $text-dark;
   font-family: inherit;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.chip-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
 }
 
 .pur-count {
@@ -115,11 +122,8 @@
 }
 
 .pur-band-action {
-  display: inline-flex;
-  align-items: center;
-  height: 30px;
   padding: 0 11px;
-  border: 1px solid $text-dark;
+  line-height: 30px;
   background: $text-dark;
   color: $bg-card;
   font-size: 12px;
@@ -134,19 +138,18 @@
    qui dépasse à gauche, et le liseré disparaissait. */
 .pur-row--old { box-shadow: inset 3px 0 0 $warning-color; }
 
-.pur-sub {
+.pur-sub,
+.ret-object {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+/* Un lien dans la sous-ligne : `all: unset` retire le rendu de bouton. */
 .pur-returns-toggle {
+  all: unset;
   margin-left: 6px;
-  padding: 0;
-  border: none;
-  background: none;
   color: $invoice-color;
-  font: inherit;
   font-weight: 600;
   cursor: pointer;
   text-decoration: underline;
@@ -166,18 +169,6 @@
    sous-ligne que sous $bp-reshape. */
 .pur-fold-date { display: none; }
 
-.pur-settle {
-  height: 30px;
-  padding: 0 10px;
-  border: 1px solid $border-color;
-  background: $bg-card;
-  color: $text-dark;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
 /* ── Les retours sous leur achat ─────────────────────────────────────────── */
 .ret-row {
   display: grid;
@@ -192,17 +183,6 @@
   font-variant-numeric: tabular-nums;
 
   &--hidden { display: none; }
-
-  @include below-reduce {
-    gap: 10px;
-    padding: 0 14px;
-  }
-}
-
-.ret-object {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* ── Sous $bp-reshape : la fiche empilée ─────────────────────────────────── */
