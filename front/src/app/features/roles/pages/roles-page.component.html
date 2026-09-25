@@ -15,58 +15,64 @@
     </div>
   </div>
 
+  <!-- Refonte 2b, étape 11 : motif de ligne, à la place du <table>. Pas de
+       barre de filtres : l'écran n'a jamais eu de filtre, les rôles tiennent
+       en une poignée de lignes. -->
   <div class="card table-card">
-    <div class="table-responsive">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Nom du Rôle</th>
-            <th>Permissions</th>
-            <th class="text-center">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Refonte 2b, §14c : chargement, erreur, liste vide. -->
-          <tr *ngIf="loadError()">
-            <td colspan="3" class="state-cell">
-              <app-list-error
-                title="Les rôles n'ont pas pu être chargés."
-                [cause]="loadError()!"
-                [detail]="loadErrorDetail()"
-                [lastLoadedAt]="lastLoadedAt()"
-                (retry)="loadData()" />
-            </td>
-          </tr>
+    <div class="list-grid-header roles-grid">
+      <span>Rôle</span>
+      <span class="list-cell--drop">Modules couverts</span>
+      <span class="text-right">Actions</span>
+    </div>
 
-          <ng-container *ngIf="loading() && roles().length === 0">
-            <tr appSkeletonCells [cells]="3" [seed]="i"
-                *ngFor="let row of skeletonRows; let i = index"></tr>
-          </ng-container>
+    <!-- Refonte 2b, §14c : chargement, erreur, liste vide — dans cet ordre. -->
+    <app-list-error
+      *ngIf="loadError()"
+      title="Les rôles n'ont pas pu être chargés."
+      [cause]="loadError()!"
+      [detail]="loadErrorDetail()"
+      [lastLoadedAt]="lastLoadedAt()"
+      (retry)="loadData()" />
 
-          <tr *ngIf="!loading() && !loadError() && roles().length === 0">
-            <td colspan="3" class="state-cell">
-              <app-list-empty blankTitle="Aucun rôle enregistré pour le moment." />
-            </td>
-          </tr>
-          <tr *ngFor="let role of roles()">
-            <td>
-              <div class="fw-semibold">{{ role.name }}</div>
-            </td>
-            <td>
-              <div class="permissions-tags">
-                <span class="tag" *ngFor="let perm of role.permissions">
-                  {{ perm.name }}
-                </span>
-                <span class="text-muted" *ngIf="role.permissions.length === 0">Aucune permission</span>
-              </div>
-            </td>
-            <td class="text-center actions-cell">
-              <button class="btn-icon btn-sm text-primary" (click)="openEditForm(role)" title="Modifier" *ngIf="authService.hasPermission('edit roles')"><app-icon name="edit" [size]="14" /></button>
-              <button class="btn-icon btn-sm text-danger" (click)="deleteRole(role)" title="Supprimer" *ngIf="authService.hasPermission('delete roles')"><app-icon name="trash" [size]="14" /></button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- `*ngIf` et non `[hidden]` : `.list-grid-row` pose `display: grid`, qui
+         l'emporte sur le `display: none` de l'attribut. -->
+    <ng-container *ngIf="loading() && roles().length === 0">
+      <div class="list-grid-row roles-grid" appSkeletonRow [cells]="3" [seed]="i"
+           *ngFor="let row of skeletonRows; let i = index"></div>
+    </ng-container>
+
+    <app-list-empty
+      *ngIf="!loading() && !loadError() && roles().length === 0"
+      blankTitle="Aucun rôle enregistré pour le moment." />
+
+    <div class="list-grid-row roles-grid" *ngFor="let role of roles()">
+      <span class="list-cell--identity">
+        <!-- Le nom ouvre le formulaire : un lien, jamais un bouton. Le rôle
+             système n'a pas de formulaire à ouvrir. -->
+        <span class="list-grid-name">
+          <a href="" *ngIf="canEditRole(role)" (click)="$event.preventDefault(); openEditForm(role)">{{ role.name }}</a>
+          <ng-container *ngIf="!canEditRole(role)">{{ role.name }}</ng-container>
+          <span class="list-grid-tag" *ngIf="isSystemRole(role)">SYSTÈME</span>
+        </span>
+        <span class="list-grid-sub">{{ permissionCountLabel(role) }}</span>
+      </span>
+
+      <span class="list-cell--drop roles-modules">{{ roleModules(role) || '—' }}</span>
+
+      <span class="actions-cell list-cell--actions">
+        <!-- Refonte 2b, §14c état 4 : le rôle système garde la place des deux
+             boutons sous un seul cadenas, et l'infobulle dit pourquoi. -->
+        <app-row-lock *ngIf="isSystemRole(role)"
+          reason="Rôle système : l'application lui attribue toutes les permissions, il ne se modifie ni ne se supprime." />
+        <ng-container *ngIf="!isSystemRole(role)">
+          <button class="btn-icon" (click)="openEditForm(role)" title="Modifier" *ngIf="authService.hasPermission('edit roles')"><app-icon name="edit" [size]="15" /></button>
+          <app-row-lock *ngIf="!authService.hasPermission('edit roles')"
+            reason="Votre rôle ne permet pas de modifier un rôle. Demandez à un administrateur." />
+          <button class="btn-icon text-danger" (click)="deleteRole(role)" title="Supprimer" *ngIf="authService.hasPermission('delete roles')"><app-icon name="trash" [size]="15" /></button>
+          <app-row-lock *ngIf="!authService.hasPermission('delete roles')"
+            reason="Votre rôle ne permet pas de supprimer un rôle. Demandez à un administrateur." />
+        </ng-container>
+      </span>
     </div>
   </div>
 

@@ -13,14 +13,15 @@ import { PermissionFormComponent } from '../components/permission-form/permissio
 import {
   ListEmptyComponent,
   ListErrorComponent,
-  SkeletonCellsComponent,
+  SkeletonRowComponent,
+  RowLockComponent,
   describeLoadError,
 } from '../../../shared/list-state';
 
 @Component({
   selector: 'app-roles-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent, ConfirmDeleteComponent, RoleFormComponent, PermissionFormComponent],
+  imports: [CommonModule, FormsModule, AutoRefreshControlComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ConfirmDeleteComponent, RoleFormComponent, PermissionFormComponent],
   templateUrl: './roles-page.component.html',
   styleUrls: ['./roles-page.component.scss'],
 })
@@ -114,6 +115,26 @@ export class RolesPageComponent implements OnInit {
       'cash-flow': 'Cash Flow',
       users: 'Utilisateurs',
       roles: 'Rôles',
+      // Refonte 2b, étape 11 : la colonne Modules affiche ces libellés ; sans
+      // eux, la moitié des modules sortait en identifiant anglais.
+      accounts: 'Comptes',
+      'activity-log': "Journal d'activité",
+      brands: 'Marques',
+      clients: 'Clients',
+      'hr-charges': 'Charges RH',
+      margins: 'Marges',
+      primes: 'Primes',
+      products: 'Produits',
+      'purchase-payments': 'Règlements fournisseurs',
+      reporting: 'Reporting',
+      'sale-payments': 'Encaissements',
+      'service-orders': 'Service Auto',
+      'service-payments': 'Paiements Service Auto',
+      settings: 'Paramètres',
+      'shipment-changes': "Modifications d'expédition",
+      stock: 'Stock',
+      'stock-movements': 'Mouvements de stock',
+      'transaction-categories': 'Catégories de transaction',
     };
 
     return labels[resource] || resource;
@@ -129,6 +150,42 @@ export class RolesPageComponent implements OnInit {
     };
 
     return labels[action] || action;
+  }
+
+  // ── Refonte 2b, étape 11 : la ligne de liste ──────────────────────────────
+
+  /**
+   * Le rôle système. RoleService (backend) refuse de le renommer ou de le
+   * supprimer, et le seeder lui réattribue toutes les permissions à chaque
+   * déploiement : le modifier ici serait défait au suivant.
+   */
+  isSystemRole(role: Role): boolean {
+    return role.name === 'Administrator';
+  }
+
+  canEditRole(role: Role): boolean {
+    return !this.isSystemRole(role) && this.authService.hasPermission('edit roles');
+  }
+
+  permissionCountLabel(role: Role): string {
+    const n = role.permissions.length;
+    if (n === 0) return 'Aucune permission';
+    return `${n} permission${n > 1 ? 's' : ''}`;
+  }
+
+  /**
+   * Les modules que le rôle touche, dans l'ordre de ses permissions : la
+   * version lisible des 83 étiquettes que la colonne affichait une à une.
+   */
+  roleModules(role: Role): string {
+    const labels: string[] = [];
+    for (const perm of role.permissions) {
+      const parts = perm.name.split(' ');
+      const resource = parts.length > 1 ? parts.slice(1).join(' ') : perm.name;
+      const label = this.getResourceLabel(resource);
+      if (!labels.includes(label)) labels.push(label);
+    }
+    return labels.join(', ');
   }
 
   openAddForm(): void {

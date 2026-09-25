@@ -3,38 +3,30 @@
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
 
-// Internal tokens (mirror _page-layout internals)
+// Refonte 2b, étape 11 : Rôles au motif de ligne.
+@include layout.list-row-pattern();
 
-// ── Table-card spacing ───────────────────────────────────────────────────────
 .table-card {
   margin-bottom: 1.5rem;
 }
 
-// ── Column widths in the roles table ────────────────────────────────────────
-.table {
-  th:nth-child(1), td:nth-child(1) { width: 180px; white-space: nowrap; }
-  th:nth-child(2), td:nth-child(2) { width: 99%; }   // greedy: takes all remaining space
-  th:nth-child(3), td:nth-child(3) { width: 80px; white-space: nowrap; }
+/* Trois pistes : le rôle et son nombre de permissions, les modules qu'il
+   couvre, les actions (deux boutons de 30 px et un écart, 65 px). */
+.roles-grid {
+  grid-template-columns: 240px minmax(0, 1fr) 72px;
+
+  /* Sous $bp-reduce, les modules tombent : le nombre de permissions, en
+     sous-ligne, suffit à distinguer les rôles. */
+  @include below-reduce {
+    grid-template-columns: minmax(0, 1fr) 72px;
+  }
 }
 
-// ── Permission tags in the roles table ──────────────────────────────────────
-.permissions-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-}
-
-.tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.15rem 0.55rem;
-  border-radius: 999px;
-  font-size: 0.68rem;
-  font-weight: 600;
-  background: rgba($invoice-color, 0.08);
-  color: #1d4ed8;
-  border: 1px solid rgba($invoice-color, 0.18);
+.roles-modules {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+  color: $text-secondary;
 }
 
 // ── Permissions reference card ───────────────────────────────────────────────
@@ -269,9 +261,4 @@
     flex-direction: column;
     align-items: flex-start;
   }
-}
-
-/* Refonte 2b, §14c : la cellule qui porte un état occupe toute la ligne. */
-.state-cell {
-  padding: 0;
 }
