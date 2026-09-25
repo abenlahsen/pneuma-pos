@@ -1,197 +1,95 @@
 @use '../../_variables' as *;
 
 @use '../../_page-layout' as layout;
-@include layout.page-layout();
+@include layout.page-layout($table: false, $filters-panel: false);
 
 // ── Service orders modal is wider ─────────────────────────────────────────────
 .modal-container { max-width: 1200px; }
 
-// ── Design tokens (mirror _page-layout) ──────────────────────────────────────
+// ── Refonte 2b, étape 11 : barre de filtres et motif de ligne ─────────────────
+// La barre et la ligne viennent des mixins. L'ancien panneau de filtres, le
+// `.data-table` local et ses cellules disparaissent.
+@include layout.filter-bar($chips: false);
+@include layout.list-row-pattern();
 
-// ── Filters section: pas de .card-body wrapper dans ce template ──────────────
-.filters-section {
-  padding: 1rem 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.875rem;
-}
+/* Huit pistes au-dessus de $bp-reduce. La dernière porte quatre boutons de
+   30 px et trois écarts de 5 px, soit 135 px — comme Ventes. */
+.so-grid {
+  grid-template-columns: 76px minmax(0, 1fr) minmax(0, 1fr) 112px 118px 96px 112px 140px;
 
-.filters-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
-  gap: 0.75rem;
-}
-
-.filter-actions {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: flex-end;
-  padding-top: 0.25rem;
-  border-top: 1px solid $border-subtle;
-}
-
-// ── Filter group (alias de form-group pour les filtres) ───────────────────────
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-
-  label {
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: $text-muted;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  .form-control {
-    padding: 0.45rem 0.7rem;
-    border: 1px solid $border-color;
-    font-size: 0.875rem;
-    color: $text-dark;
-    background: $bg-card;
-    width: 100%;
-    transition: border-color 0.18s, box-shadow 0.18s;
-
-    &:focus {
-      outline: none;
-      border-color: $primary;
-      box-shadow: 0 0 0 3px rgba(255, 45, 55, 0.1);
-    }
+  /* Sous $bp-reduce, les prestations, la marge et le statut tombent : restent
+     la date, le véhicule, le net, le paiement, et Voir, Paiements puis ⋯. */
+  @include below-reduce {
+    grid-template-columns: 76px minmax(0, 1fr) 112px 96px 104px;
   }
 }
 
-// ── Data table (alias de .table pour ce module) ───────────────────────────────
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-
-  th {
-    background: $bg-subtle;
-    font-weight: 700;
-    font-size: 0.65rem;
-    color: $text-light;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    padding: 0.6rem 0.875rem;
-    border-bottom: 2px solid $border-subtle;
-    white-space: nowrap;
-    text-align: left;
-  }
-
-  td {
-    padding: 0.65rem 0.875rem;
-    border-bottom: 1px solid $border-subtle;
-    font-size: 0.8125rem;
-    color: $text-dark;
-    vertical-align: middle;
-  }
-
-  tr:last-child td { border-bottom: none; }
-  tbody tr:hover td { background: $bg-subtle; }
+/* Le bouton de réinitialisation du mixin, à la hauteur des champs de la barre. */
+.filter-bar .btn-reset {
+  height: 32px;
+  font-size: 12.5px;
 }
 
-// ── Table cells ───────────────────────────────────────────────────────────────
-.amount-cell {
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  text-align: right;
-  letter-spacing: -0.01em;
+/* La plaque en chasse fixe, comme sur la vue Atelier. Préfixée par
+   `.list-grid-name` : le mixin y remet la police du lien à `inherit`. */
+.list-grid-name .so-plate {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  letter-spacing: 0.02em;
 }
 
+/* Sans plaque ni véhicule saisi, la ligne reste ouvrable mais le dit. */
+.list-grid-name .so-plate--missing {
+  font-family: inherit;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: $text-muted;
+}
+
+/* Une liste déroulante prend la largeur de sa plus longue option : celle des
+   clients s'étirait sur une demi-ligne. */
+.filter-select { max-width: 220px; }
+
+.so-model {
+  font-size: 12px;
+  font-weight: 500;
+  color: $text-muted;
+}
+
+.so-services {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+  color: $text-secondary;
+}
+
+/* Le pourcentage de marge ne se colore que sous le seuil, comme sur Ventes. */
 .margin-pct {
   display: block;
-  font-size: 0.72rem;
+  font-size: 11.5px;
   font-weight: 600;
-  letter-spacing: 0;
-  &.margin-low  { color: $expense-color; }
-  &.margin-mid  { color: #d97706; }
-  &.margin-high { color: #16a34a; }
-}
-
-.status-cell { white-space: nowrap; }
-
-// ── Client / vehicle cells ────────────────────────────────────────────────────
-.client-name {
-  font-weight: 600;
-  font-size: 0.875rem;
-  color: $text-dark;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.client-linked { font-size: 0.8rem; opacity: 0.7; }
-
-.client-phone {
-  font-size: 0.78rem;
   color: $text-muted;
-  margin-top: 0.1rem;
+  &.margin-low { color: $expense-color; }
 }
 
-.vehicle-name {
-  font-weight: 600;
-  font-size: 0.875rem;
-  color: $text-dark;
-}
+/* L'état de l'intervention rejoint celui du paiement sous $bp-reshape. */
+.so-order-status { display: none; }
 
-.mileage {
-  font-size: 0.78rem;
-  color: $text-muted;
-  margin-top: 0.1rem;
-}
+@include below-reshape {
+  .so-order-status {
+    display: inline;
+    margin-left: 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: $text-secondary;
 
-// ── Service type badges ───────────────────────────────────────────────────────
-.service-types {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-}
-
-.badge-type {
-  background: rgba(255, 45, 55, 0.08);
-  color: $primary;
-}
-
-.badge-part-type {
-  background: rgba(217, 119, 6, 0.10);
-  color: $warning-color;
-}
-
-.badge-more {
-  background: $bg-subtle;
-  color: $text-muted;
-  border: 1px solid $border-color;
-}
-
-// ── Action buttons ────────────────────────────────────────────────────────────
-.action-buttons {
-  display: flex;
-  gap: 0.3rem;
-  justify-content: center;
-}
-
-.btn-icon--danger {
-  &:hover {
-    background: #fee2e2 !important;
-    border-color: #fca5a5 !important;
-    color: $expense-color;
+    &::before {
+      content: '·';
+      margin-right: 8px;
+      color: $border-color;
+    }
   }
-}
-
-// ── Loading / empty states ────────────────────────────────────────────────────
-.loading-state {
-  padding: 3rem;
-  text-align: center;
-  color: $text-muted;
-  font-size: 0.9rem;
-}
-
-.empty-state {
-  padding: 3rem;
-  text-align: center;
-  color: $text-light;
-  font-size: 0.9rem;
 }
 
 // ── Summary card content wrapper ──────────────────────────────────────────────

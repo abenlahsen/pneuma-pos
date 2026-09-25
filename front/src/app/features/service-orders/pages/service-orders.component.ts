@@ -13,11 +13,13 @@ import { ServicePaymentPanelComponent } from '../service-payment-panel/service-p
 import { AuthService } from '../../../core/services/auth.service';
 import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
 import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
+import { RowOverflowComponent } from '../../../shared/row-overflow/row-overflow.component';
 import {
   ActiveFilter,
   ListEmptyComponent,
   ListErrorComponent,
-  SkeletonCellsComponent,
+  RowLockComponent,
+  SkeletonRowComponent,
   describeLoadError,
   frenchDate,
 } from '../../../shared/list-state';
@@ -30,7 +32,7 @@ import {
     FormsModule,
     ServiceOrderFormComponent,
     ServiceOrderDetailComponent,
-    ServicePaymentPanelComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent, ConfirmDeleteComponent],
+    ServicePaymentPanelComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, RowOverflowComponent, ConfirmDeleteComponent],
   templateUrl: './service-orders.component.html',
   styleUrls: ['./service-orders.component.scss'],
 })
@@ -606,6 +608,32 @@ export class ServiceOrdersComponent implements OnInit {
         alert('Erreur lors de la mise à jour du statut');
       },
     });
+  }
+
+  // ── Refonte 2b, étape 11 : la ligne de la vue Liste ───────────────────────
+
+  /**
+   * Terminée mais pas soldée : c'est la colonne « À facturer » de la vue
+   * Atelier. Dans la liste, le liseré du motif la signale.
+   */
+  isToInvoice(order: ServiceOrder): boolean {
+    return order.status === 'TERMINE' && order.payment_status !== 'PAYE';
+  }
+
+  /** Sous la plaque : le client, le kilométrage et l'auteur de l'intervention. */
+  subLineFor(order: ServiceOrder): string {
+    const parts: string[] = [order.client_record?.name || 'Client de passage'];
+    if (order.mileage) parts.push(`${Number(order.mileage).toLocaleString('fr-FR')} km`);
+    if (order.creator?.name) parts.push(`par ${order.creator.name}`);
+    return parts.join(' · ');
+  }
+
+  /** Ce que portaient les colonnes tombées sous $bp-reduce : prestations et marge. */
+  foldedSubLineFor(order: ServiceOrder): string {
+    const labels = this.orderProductLabels(order);
+    const services = labels.slice(0, 2).join(', ') + (labels.length > 2 ? ` +${labels.length - 2}` : '');
+    const margin = `marge ${Number(order.margin || 0).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} DH`;
+    return [services, margin].filter(Boolean).join(' · ');
   }
 
   marginPct(order: ServiceOrder): number {
