@@ -12,104 +12,83 @@
     </div>
   </div>
 
-  <div class="card filters-section">
-    <div class="card-body" style="padding: 1rem 1.5rem">
-      <div style="display: flex; gap: 1rem; align-items: flex-end;">
-        <div class="form-group" style="flex: 1;">
-          <label>Rechercher</label>
-          <input
-            type="text"
-            class="form-control"
-            [ngModel]="filterSearch()"
-            (ngModelChange)="filterSearch.set($event)"
-            placeholder="Nom ou téléphone..."
-            (keyup.enter)="applyFilters()"
-          />
-        </div>
-        <div class="filter-actions">
-          <button class="btn btn-filter" (click)="applyFilters()" title="Rechercher"><app-icon name="search" [size]="14" /></button>
-          <button class="btn btn-reset" (click)="resetFilters()" title="Réinitialiser"><app-icon name="close" [size]="14" /></button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div class="card table-card">
-    <div class="table-responsive">
-      <table class="table">
-        <thead>
-          <tr>
-            <th class="text-center">Actions</th>
-            <th class="sortable" (click)="toggleSort('name')">
-              Société
-              <app-sort-icon [active]="sortBy() === 'name'" [dir]="sortDirection()" />
-            </th>
-            <th class="sortable" (click)="toggleSort('phone')">
-              Téléphone
-              <app-sort-icon [active]="sortBy() === 'phone'" [dir]="sortDirection()" />
-            </th>
-            <th class="sortable" (click)="toggleSort('email')">
-              Email
-              <app-sort-icon [active]="sortBy() === 'email'" [dir]="sortDirection()" />
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Refonte 2b, §14c : chargement, erreur, liste vide. -->
-          <tr *ngIf="loadError()">
-            <td colspan="4" class="state-cell">
-              <app-list-error
-                title="Les transporteurs n'ont pas pu être chargés."
-                [cause]="loadError()!"
-                [detail]="loadErrorDetail()"
-                [lastLoadedAt]="lastLoadedAt()"
-                (retry)="loadData()" />
-            </td>
-          </tr>
-
-          <ng-container *ngIf="loading() && carriers().length === 0">
-            <tr appSkeletonCells [cells]="4" [seed]="i"
-                *ngFor="let row of skeletonRows; let i = index"></tr>
-          </ng-container>
-
-          <tr *ngIf="!loading() && !loadError() && carriers().length === 0">
-            <td colspan="4" class="state-cell">
-              <app-list-empty
-                blankTitle="Aucun transporteur enregistré pour le moment."
-                noMatchTitle="Aucun transporteur ne correspond"
-                [filters]="activeFilters()"
-                (clearAll)="resetFilters()" />
-            </td>
-          </tr>
-          <tr *ngFor="let c of carriers()">
-            <td class="text-center actions-cell">
-              <button
-                class="btn-icon btn-sm text-primary"
-                (click)="openEditForm(c)"
-                title="Modifier"
-                *ngIf="authService.hasPermission('edit carriers')"
-                [disabled]="deletingCarrierId() === c.id"
-              >
-                <app-icon name="edit" [size]="14" />
-              </button>
-              <button
-                class="btn-icon btn-sm text-danger"
-                (click)="deleteCarrier(c)"
-                title="Supprimer"
-                *ngIf="authService.hasPermission('delete carriers')"
-                [disabled]="deletingCarrierId() === c.id"
-              >
-                <span *ngIf="deletingCarrierId() !== c.id"><app-icon name="trash" [size]="14" /></span>
-                <span *ngIf="deletingCarrierId() === c.id" class="inline-spinner"></span>
-              </button>
-            </td>
-            <td class="fw-semibold">{{ c.name }}</td>
-            <td>{{ c.phone || '-' }}</td>
-            <td>{{ c.email || '-' }}</td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- Refonte 2b, étape 11 : la barre de filtres du mixin, à la place du
+         panneau à un seul champ et de ses styles en ligne. -->
+    <div class="filter-bar">
+      <label class="filter-bar-search">
+        <app-icon name="search" [size]="14" />
+        <input type="text"
+               [ngModel]="filterSearch()"
+               (ngModelChange)="filterSearch.set($event)"
+               placeholder="Nom ou téléphone…"
+               (keyup.enter)="applyFilters()" />
+      </label>
+      <span class="filter-result-count">{{ total() }} transporteur(s)</span>
     </div>
+
+    <!-- Refonte 2b, étape 11 : motif de ligne, à la place du <table>. -->
+    <div class="list-grid-header carriers-grid">
+      <button type="button" class="sortable" (click)="toggleSort('name')">Société <app-sort-icon [active]="sortBy() === 'name'" [dir]="sortDirection()" /></button>
+      <button type="button" class="sortable list-cell--drop" (click)="toggleSort('phone')">Téléphone <app-sort-icon [active]="sortBy() === 'phone'" [dir]="sortDirection()" /></button>
+      <button type="button" class="sortable list-cell--drop" (click)="toggleSort('email')">Email <app-sort-icon [active]="sortBy() === 'email'" [dir]="sortDirection()" /></button>
+      <span class="text-right">Actions</span>
+    </div>
+
+    <!-- Refonte 2b, §14c : chargement, erreur, liste vide — dans cet ordre. -->
+    <app-list-error
+      *ngIf="loadError()"
+      title="Les transporteurs n'ont pas pu être chargés."
+      [cause]="loadError()!"
+      [detail]="loadErrorDetail()"
+      [lastLoadedAt]="lastLoadedAt()"
+      (retry)="loadData()" />
+
+    <!-- `*ngIf` et non `[hidden]` : `.list-grid-row` pose `display: grid`, qui
+         l'emporte sur le `display: none` de l'attribut. -->
+    <ng-container *ngIf="loading() && carriers().length === 0">
+      <div class="list-grid-row carriers-grid" appSkeletonRow [cells]="4" [seed]="i"
+           *ngFor="let row of skeletonRows; let i = index"></div>
+    </ng-container>
+
+    <app-list-empty
+      *ngIf="!loading() && !loadError() && carriers().length === 0"
+      blankTitle="Aucun transporteur enregistré pour le moment."
+      noMatchTitle="Aucun transporteur ne correspond"
+      [filters]="activeFilters()"
+      (clearAll)="resetFilters()" />
+
+    <div class="list-grid-row carriers-grid" *ngFor="let c of carriers()">
+      <span class="list-cell--identity">
+        <!-- Le nom ouvre le formulaire : un lien, jamais un bouton. -->
+        <span class="list-grid-name">
+          <a href="" *ngIf="authService.hasPermission('edit carriers')" (click)="$event.preventDefault(); openEditForm(c)">{{ c.name }}</a>
+          <ng-container *ngIf="!authService.hasPermission('edit carriers')">{{ c.name }}</ng-container>
+        </span>
+        <!-- Refonte 2b, 8b : ce que les colonnes tombées portaient. -->
+        <span class="list-grid-sub list-grid-sub--fold">{{ contactLine(c) }}</span>
+      </span>
+
+      <span class="list-cell--drop">{{ c.phone || '—' }}</span>
+      <span class="list-cell--drop carriers-email">{{ c.email || '—' }}</span>
+
+      <span class="actions-cell list-cell--actions">
+        <button class="btn-icon" (click)="openEditForm(c)" title="Modifier"
+                *ngIf="authService.hasPermission('edit carriers')" [disabled]="deletingCarrierId() === c.id">
+          <app-icon name="edit" [size]="15" />
+        </button>
+        <app-row-lock *ngIf="!authService.hasPermission('edit carriers')"
+          reason="Votre rôle ne permet pas de modifier un transporteur. Demandez à un administrateur." />
+        <button class="btn-icon text-danger" (click)="deleteCarrier(c)" title="Supprimer"
+                *ngIf="authService.hasPermission('delete carriers')" [disabled]="deletingCarrierId() === c.id">
+          <span *ngIf="deletingCarrierId() !== c.id"><app-icon name="trash" [size]="15" /></span>
+          <span *ngIf="deletingCarrierId() === c.id" class="inline-spinner"></span>
+        </button>
+        <app-row-lock *ngIf="!authService.hasPermission('delete carriers')"
+          reason="Votre rôle ne permet pas de supprimer un transporteur. Demandez à un administrateur." />
+      </span>
+    </div>
+
 
     <div class="pagination-wrapper" *ngIf="total() > 0">
       <div class="pagination-info">

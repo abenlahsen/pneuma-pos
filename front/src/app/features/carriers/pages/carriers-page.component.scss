@@ -1,8 +1,34 @@
+@use '../../_variables' as *;
+
 @use '../../_page-layout' as layout;
 @include layout.page-layout();
 
-/* Refonte 2b, §14c : la cellule qui porte un état occupe toute la ligne et
-   laisse le composant gérer son propre espacement. */
-.state-cell {
-  padding: 0;
+// Refonte 2b, étape 11 : Transporteurs au motif de ligne. Liste courte, sans
+// montant ni état : la barre ne porte qu'une recherche.
+@include layout.filter-bar($chips: false, $fields: false);
+@include layout.list-row-pattern();
+
+/* Quatre pistes : société, téléphone, email, actions. Deux boutons de 30 px
+   et un écart de 5 px font 65 px ; la colonne en a 72. */
+.carriers-grid {
+  grid-template-columns: minmax(0, 1fr) 150px minmax(0, 1fr) 72px;
+
+  /* Sous $bp-reduce, le téléphone et l'email tombent et rejoignent la
+     sous-ligne. Sous 900 px, la rangée du haut porte le nom seul. */
+  @include below-reduce {
+    grid-template-columns: minmax(0, 1fr) 72px;
+  }
+}
+
+.carriers-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filter-result-count {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: $text-muted;
+  font-variant-numeric: tabular-nums;
 }

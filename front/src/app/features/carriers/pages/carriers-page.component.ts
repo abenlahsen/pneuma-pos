@@ -15,14 +15,15 @@ import {
   ActiveFilter,
   ListEmptyComponent,
   ListErrorComponent,
-  SkeletonCellsComponent,
+  RowLockComponent,
+  SkeletonRowComponent,
   describeLoadError,
 } from '../../../shared/list-state';
 
 @Component({
   selector: 'app-carriers-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, CarrierFormComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonCellsComponent, ListEmptyComponent, ListErrorComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, FormsModule, CarrierFormComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ConfirmDeleteComponent],
   templateUrl: './carriers-page.component.html',
   styleUrls: ['./carriers-page.component.scss'],
 })
@@ -146,6 +147,11 @@ export class CarriersPageComponent implements OnInit {
   openAddForm(): void {
     this.editingCarrier.set(null);
     this.showForm.set(true);
+  }
+
+  /** La sous-ligne repliée : téléphone et email, quand leurs colonnes tombent. */
+  contactLine(c: Carrier): string {
+    return [c.phone, c.email].filter(Boolean).join(' · ') || 'Aucun contact renseigné';
   }
 
   openEditForm(c: Carrier): void {
