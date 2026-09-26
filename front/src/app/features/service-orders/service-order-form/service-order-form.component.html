@@ -1,342 +1,398 @@
-<div class="form-container">
-  <div class="form-header">
-    <h2>{{ isEditing ? 'Modifier l\'intervention' : 'Nouvelle intervention' }}</h2>
-    <button class="btn-icon" (click)="onCancel()"><app-icon name="close" [size]="14" /></button>
-  </div>
+<!-- Refonte 2b, 12a, maquette 20a : l'intervention en un écran, sur le
+     gabarit 15a — barre de 60 px, corps en deux colonnes, pied de 64 px. -->
+<form (ngSubmit)="onSubmit()" class="so-editor" autocomplete="off">
 
-  <form (ngSubmit)="onSubmit()" #orderForm="ngForm">
+  <!-- ── Rangée 1 : la barre ────────────────────────────────────────────── -->
+  <header class="so-bar">
+    <button type="button" class="so-back" (click)="onCancel()">
+      <app-icon name="chevron-left" [size]="15" /> Atelier
+    </button>
 
-    <!-- Section 1 : Client & Véhicule -->
-    <div class="form-section">
-      <h3 class="section-title">Client & Véhicule</h3>
+    <span class="so-identity">
+      <span class="so-title">
+        @if (plate()) {
+          <span class="so-plate">{{ plate() }}</span>
+          <span class="so-vehicle">{{ vehicleName() }}</span>
+        } @else if (vehicleName()) {
+          <span class="so-plate so-plate--text">{{ vehicleName() }}</span>
+        } @else {
+          <span class="so-plate so-plate--text">{{ isEditing ? 'Intervention ' + serviceOrder!.id : 'Nouvelle intervention' }}</span>
+        }
+      </span>
+      <span class="so-meta">
+        @if (isEditing) {
+          Intervention {{ serviceOrder!.id }}<ng-container *ngIf="openedAt()"> · {{ openedAt() }}</ng-container><ng-container *ngIf="mechanicName()"> · {{ mechanicName() }}</ng-container>
+        } @else {
+          Pas encore enregistrée<ng-container *ngIf="mechanicName()"> · {{ mechanicName() }}</ng-container>
+        }
+      </span>
+    </span>
 
-      <div class="client-panel">
-        <div class="client-panel-header">
-          <div>
-            <h4>Client enregistré</h4>
-            <p>Liez un client existant ou saisissez le nom manuellement ci-dessous.</p>
-          </div>
-          <div class="client-panel-actions">
-            <button type="button" class="btn btn-secondary" (click)="openQuickCreate()">Créer rapidement</button>
-            <button
-              type="button"
-              class="btn btn-secondary"
-              *ngIf="selectedClient()"
-              (click)="clearSelectedClient()"
-            >Dissocier</button>
-          </div>
-        </div>
+    <!-- L'état en trois étapes. Une intervention annulée n'est sur aucune. -->
+    @if (step() === 'cancelled') {
+      <span class="so-steps"><span class="so-step so-step--cancelled">ANNULÉE</span></span>
+    } @else {
+      <span class="so-steps">
+        <span class="so-step" [class.so-step--on]="step() === 'in_progress' || step() === 'new'"
+              [class.so-step--done]="step() === 'finished' || step() === 'invoiced'">1 · EN COURS</span>
+        <span class="so-step-link"></span>
+        <span class="so-step" [class.so-step--on]="step() === 'finished'"
+              [class.so-step--done]="step() === 'invoiced'">2 · TERMINÉE</span>
+        <span class="so-step-link"></span>
+        <span class="so-step" [class.so-step--on]="step() === 'invoiced'">3 · FACTURÉE</span>
+      </span>
+    }
 
-        <div class="client-search-box">
-          <label>Recherche client</label>
-          <input
-            type="text"
-            name="clientSearch"
-            [ngModel]="clientSearch()"
-            (ngModelChange)="onClientSearchInput($event)"
-            (focus)="showClientSuggestions.set(true)"
-            placeholder="Nom, téléphone ou ville"
-            autocomplete="off"
-          />
-
-          <div class="client-results" *ngIf="showClientSuggestions() && filteredClients().length > 0">
-            <button
-              type="button"
-              class="client-result"
-              *ngFor="let c of filteredClients()"
-              (click)="selectClient(c)"
-            >
-              <span class="result-name">{{ c.name }}</span>
-              <span class="result-meta">{{ c.phone || 'Sans téléphone' }}<ng-container *ngIf="c.city"> — {{ c.city }}</ng-container></span>
-            </button>
-            <div class="helper-text" *ngIf="loadingClients()">Chargement des clients…</div>
-          </div>
-        </div>
-
-        <app-quick-client-form
-          *ngIf="showQuickCreate()"
-          [initialName]="clientSearch()"
-          (clientCreated)="onQuickClientCreated($event)"
-          (cancelled)="showQuickCreate.set(false)"
-        />
-
-        <div class="selected-client" *ngIf="selectedClient()">
-          <div>
-            <strong>{{ selectedClient()!.name }}</strong>
-            <p>{{ selectedClient()!.phone || 'Sans téléphone' }}</p>
-          </div>
-          <span class="badge-link">Lié</span>
-        </div>
-      </div>
-
-      <!-- Véhicule via sélecteur (client lié) -->
-      <ng-container *ngIf="client_id()">
-        <app-vehicle-selector
-          [clientId]="client_id()"
-          [required]="false"
-          [selectedVehicleId]="vehicle_id()"
-          (vehicleSelected)="onVehicleSelected($event)"
-        />
-        <div class="form-group" style="margin-top: 0.5rem;">
-          <label>Kilométrage (km)</label>
-          <input
-            type="number"
-            [ngModel]="mileage()"
-            (ngModelChange)="mileage.set($event ? +$event : null)"
-            name="mileage"
-            placeholder="Ex: 85000"
-            min="0"
-            class="form-control"
-          />
-        </div>
-      </ng-container>
-
-      <!-- Véhicule texte libre (pas de client lié) -->
-      <div class="form-grid" *ngIf="!client_id()">
-        <div class="form-group">
-          <label>Véhicule <span class="required">*</span></label>
-          <input
-            type="text"
-            [ngModel]="vehicle()"
-            (ngModelChange)="vehicle.set($event)"
-            name="vehicle"
-            placeholder="Ex: Dacia Logan 2018"
-            required
-            class="form-control"
-          />
-        </div>
-        <div class="form-group">
-          <label>Kilométrage (km)</label>
-          <input
-            type="number"
-            [ngModel]="mileage()"
-            (ngModelChange)="mileage.set($event ? +$event : null)"
-            name="mileage_no_client"
-            placeholder="Ex: 85000"
-            min="0"
-            class="form-control"
-          />
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 2 : Prestations & Pièces -->
-    <div class="form-section">
-      <div class="section-header">
-        <h3 class="section-title">
-          Prestations & Pièces
-          <span class="badge-count">{{ lines().length }}</span>
-        </h3>
-        <div class="add-buttons">
-          <button type="button" class="btn-add btn-add-service" (click)="addServiceLine()">
-            <app-icon name="wrench" [size]="14" /> Prestation
-          </button>
-          <button type="button" class="btn-add btn-add-part" (click)="addPartLine()">
-            <app-icon name="wrench" [size]="14" /> Pièce
-          </button>
-        </div>
-      </div>
-
-      <div class="quick-chips" *ngIf="quickServiceChips().length > 0">
-        <button type="button" class="chip" *ngFor="let p of quickServiceChips()" (click)="addQuickServiceLine(p)">
-          + {{ p.profile }}
+    <span class="so-bar-end">
+      @if (isEditing) {
+        <button type="button" class="so-btn" (click)="print.emit()">
+          <app-icon name="print" [size]="14" /> Imprimer
         </button>
-      </div>
+      }
+      @if (isEditing && canDelete) {
+        <button type="button" class="so-btn so-btn--icon" title="Supprimer l'intervention" (click)="remove.emit()">
+          <app-icon name="trash" [size]="14" />
+        </button>
+      }
+    </span>
+  </header>
 
-      <div class="lines-list">
-        <div
-          class="line-row"
-          *ngFor="let line of lines(); let i = index; trackBy: trackByIndex"
-          [class.line-row--service]="line.item_type === 'service'"
-          [class.line-row--part]="line.item_type === 'part'"
-        >
-          <!-- Ligne PRESTATION — une seule ligne -->
-          <ng-container *ngIf="line.item_type === 'service'">
-            <div class="line-inline">
-              <span class="line-badge badge-service"><app-icon name="wrench" [size]="14" /> #{{ i + 1 }}</span>
-              <div class="line-field-type autocomplete-wrapper">
-                <input
-                  type="text"
-                  class="form-control"
-                  [name]="'svc_type_' + i"
-                  [ngModel]="asService(line).service_type"
-                  (ngModelChange)="onServiceTypeInput(i, $event)"
-                  (focus)="activeServiceDropdown.set(i)"
-                  (blur)="closeServiceDropdown()"
-                  placeholder="Prestation…"
-                  autocomplete="off"
-                />
-                <div class="service-suggestions" *ngIf="activeServiceDropdown() === i && serviceProducts().length > 0">
-                  <button type="button" class="suggestion-item"
-                    *ngFor="let p of filteredServiceSuggestions(asService(line).service_type)"
-                    (mousedown)="selectServiceFromCatalog(i, p)">
-                    <span class="sug-name">{{ p.profile }}</span>
-                    <span class="sug-price" *ngIf="p.selling_price">{{ p.selling_price | number:'1.2-2' }} DH</span>
-                  </button>
-                </div>
-              </div>
-              <input type="number" class="form-control line-field-qty"
-                [name]="'svc_qty_' + i" [ngModel]="asService(line).quantity"
-                (ngModelChange)="updateLine(i, { quantity: +$event || 1 })"
-                min="1" step="1" placeholder="Qté" aria-label="Quantité" />
-              <input type="number" class="form-control line-field-price"
-                [name]="'svc_purchase_' + i" [ngModel]="asService(line).purchase_price"
-                (ngModelChange)="updateLine(i, { purchase_price: +$event || 0 })"
-                min="0" step="0.01" placeholder="PA DH" aria-label="Prix d'achat" />
-              <input type="number" class="form-control line-field-mo"
-                [name]="'labor_' + i" [ngModel]="asService(line).labor_cost"
-                (ngModelChange)="updateLine(i, { labor_cost: +$event || 0 })"
-                min="0" step="0.01" placeholder="PV DH" aria-label="Main d'œuvre" />
-              <div class="line-total-value">{{ serviceLineTotal(asService(line)) | number:'1.2-2' }} DH</div>
-              <button type="button" class="btn-remove-line" (click)="removeLine(i)"
-                [disabled]="lines().length === 1" title="Supprimer"><app-icon name="close" [size]="14" /></button>
-            </div>
-          </ng-container>
+  <!-- ── Rangée 2 : le corps ────────────────────────────────────────────── -->
+  <div class="so-body">
 
-          <!-- Ligne PIÈCE — une seule ligne -->
-          <ng-container *ngIf="line.item_type === 'part'">
-            <div class="line-inline">
-              <span class="line-badge badge-part"><app-icon name="wrench" [size]="14" /> #{{ i + 1 }}</span>
-              <div class="line-field-search autocomplete-wrapper">
-                <ng-container *ngIf="!asPart(line).product_id">
-                  <input type="text" class="form-control"
-                    [name]="'part_search_' + i"
-                    [ngModel]="asPart(line).searchQuery"
-                    (ngModelChange)="searchPartsFor(i, $event)"
-                    placeholder="Rechercher pièce…"
-                    autocomplete="off" />
-                  <span class="search-spinner" *ngIf="asPart(line).searching"><app-icon name="clock" [size]="14" /></span>
-                  <div class="parts-dropdown" *ngIf="asPart(line).searchResults.length > 0">
-                    <div class="part-result-item" *ngFor="let part of asPart(line).searchResults" (mousedown)="selectPart(i, part)">
-                      <div class="part-result-main">
-                        <span class="part-name">{{ part.name }}</span>
-                        <span class="part-ref" *ngIf="part.reference">Réf: {{ part.reference }}</span>
-                      </div>
-                      <div class="part-result-stock" [class.stock-ok]="part.total_quantity > 0" [class.stock-empty]="part.total_quantity === 0">
-                        {{ part.total_quantity }}
-                      </div>
-                    </div>
-                  </div>
-                </ng-container>
-                <ng-container *ngIf="asPart(line).product_id">
-                  <div class="selected-part-tag">
-                    <app-icon name="check" [size]="14" /> {{ asPart(line).product_name }}
-                    <span class="part-tag-ref" *ngIf="asPart(line).product_reference">({{ asPart(line).product_reference }})</span>
-                    <button type="button" class="btn-clear-part" (click)="clearPartSelection(i)"><app-icon name="close" [size]="14" /></button>
-                  </div>
-                  <span class="stock-badge"
-                    [class.stock-badge--ok]="asPart(line).total_quantity > 0 && asPart(line).quantity <= asPart(line).total_quantity"
-                    [class.stock-badge--warn]="asPart(line).total_quantity > 0 && asPart(line).quantity > asPart(line).total_quantity"
-                    [class.stock-badge--empty]="asPart(line).total_quantity === 0">
-                    Stock: {{ asPart(line).total_quantity }}
-                  </span>
-                </ng-container>
-              </div>
-              <input type="number" class="form-control line-field-qty"
-                [name]="'part_qty_' + i" [ngModel]="asPart(line).quantity"
-                (ngModelChange)="updateLine(i, { quantity: +$event || 1 })"
-                min="1" step="1" placeholder="Qté" aria-label="Quantité" />
-              <input type="number" class="form-control line-field-price"
-                [name]="'part_purchase_' + i" [ngModel]="asPart(line).purchase_price"
-                (ngModelChange)="updateLine(i, { purchase_price: +$event || 0 })"
-                min="0" step="0.01" placeholder="PA DH" aria-label="Prix d'achat" />
-              <input type="number" class="form-control line-field-price"
-                [name]="'part_price_' + i" [ngModel]="asPart(line).unit_price"
-                (ngModelChange)="updateLine(i, { unit_price: +$event || 0 })"
-                min="0" step="0.01" placeholder="PV DH" aria-label="Prix unitaire" />
-              <div class="line-total-value">{{ partLineTotal(asPart(line)) | number:'1.2-2' }} DH</div>
-              <button type="button" class="btn-remove-line" (click)="removeLine(i)"
-                [disabled]="lines().length === 1" title="Supprimer"><app-icon name="close" [size]="14" /></button>
-            </div>
-          </ng-container>
-
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 3 : Suivi -->
-    <div class="form-section">
-      <h3 class="section-title">Suivi</h3>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Date <span class="required">*</span></label>
-          <input
-            type="date"
-            [ngModel]="date()"
-            (ngModelChange)="date.set($event)"
-            name="date"
-            required
-            class="form-control"
-          />
-        </div>
-        <div class="form-group">
-          <label>Statut</label>
-          <select
-            [ngModel]="status()"
-            (ngModelChange)="status.set($event)"
-            name="status"
-            class="form-control"
-          >
-            <option *ngFor="let s of SERVICE_ORDER_STATUSES" [value]="s">{{ SERVICE_ORDER_STATUS_LABELS[s] }}</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Commercial *</label>
-          <select
-            [ngModel]="commercial_id()"
-            (ngModelChange)="commercial_id.set($event ? +$event : null)"
-            name="commercial_id"
-            class="form-control"
-            required
-          >
-            <option [ngValue]="null">-- Sélectionner un commercial --</option>
-            <option *ngFor="let c of initialCommercials" [value]="c.id">{{ c.name }}</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Remise (%)</label>
-          <input
-            type="number"
-            [ngModel]="discount()"
-            (ngModelChange)="discount.set(+$event || 0)"
-            name="discount"
-            min="0"
-            max="100"
-            step="0.01"
-            class="form-control"
-          />
-        </div>
-        <div class="form-group form-group--full">
-          <label>Notes internes</label>
-          <textarea
-            [ngModel]="notes()"
-            (ngModelChange)="notes.set($event)"
-            name="notes"
-            placeholder="Notes pour usage interne..."
-            rows="2"
-            class="form-control"
-          ></textarea>
-        </div>
-      </div>
-    </div>
-
-    <div class="form-actions">
-      <div class="stock-block-msg" *ngIf="hasStockError()">
-        <app-icon name="x-circle" [size]="14" /> {{ stockErrorMessage() }}
-      </div>
-      <div class="footer-totals" *ngIf="totalAmount() > 0">
-        <span class="footer-total-label">Total Achat : <strong>{{ totalPurchase() | number:'1.2-2' }} DH</strong></span>
-        <span class="footer-total-label">Total Vente : <strong>{{ totalAmount() | number:'1.2-2' }} DH</strong></span>
-        <span class="footer-discount" *ngIf="discount() > 0">remise {{ discount() }}%</span>
-        <span class="footer-total-net" *ngIf="discount() > 0">Net : {{ netAmount() | number:'1.2-2' }} DH</span>
-        <span class="footer-margin" [class.footer-margin--negative]="totalMargin() < 0">
-          Marge : {{ totalMargin() | number:'1.2-2' }} DH
+    <!-- Colonne gauche : les travaux -->
+    <section class="so-work">
+      <div class="so-work-head">
+        <span class="so-section-title">Travaux</span>
+        <span class="so-count">
+          {{ serviceCount() }} prestation{{ serviceCount() > 1 ? 's' : '' }} · {{ partCount() }} pièce{{ partCount() > 1 ? 's' : '' }}
+        </span>
+        <span class="so-work-add">
+          <button type="button" class="so-btn so-btn--ink" [class.so-btn--chosen]="addType() === 'service'" (click)="setAddType('service')">+ Prestation</button>
+          <button type="button" class="so-btn so-btn--ink" [class.so-btn--chosen]="addType() === 'part'" (click)="setAddType('part')">+ Pièce</button>
         </span>
       </div>
-      <button type="button" class="btn btn-secondary" (click)="onCancel()">Annuler</button>
-      <button type="submit" class="btn btn-primary" [disabled]="orderForm.invalid || !hasValidLines() || hasStockError() || !vehicleValid()">
-        {{ isEditing ? 'Enregistrer' : 'Créer l\'intervention' }}
-      </button>
-    </div>
-  </form>
-</div>
+
+      @if (quickServiceChips().length) {
+        <div class="so-chips">
+          <span class="so-chips-label">Fréquentes</span>
+          @for (chip of quickServiceChips(); track chip.id) {
+            <button type="button" class="so-chip" (click)="addQuickServiceLine(chip)">+ {{ chip.profile }}</button>
+          }
+        </div>
+      }
+
+      <div class="so-grid so-grid-head">
+        <span></span>
+        <span>Désignation</span>
+        <span class="so-num">Qté</span>
+        <span class="so-num">Coût DH</span>
+        <span class="so-num">Prix DH</span>
+        <span class="so-num">Total DH</span>
+        <span></span>
+      </div>
+
+      <div class="so-lines">
+        @for (line of lines(); track $index; let i = $index) {
+          <div class="so-grid so-line" [class.so-line--short]="isShortage(line)">
+
+            @if (line.item_type === 'service') {
+              <span class="so-type" title="Prestation"><app-icon name="wrench" [size]="14" /></span>
+              <span class="so-designation">
+                <span class="so-name-field">
+                  <input type="text" class="so-name-input" [name]="'service_type_' + i"
+                         [ngModel]="asService(line).service_type"
+                         (ngModelChange)="onServiceTypeInput(i, $event)"
+                         (focus)="activeServiceDropdown.set(i)"
+                         (blur)="closeServiceDropdownSoon()"
+                         placeholder="Nom de la prestation" />
+                  @if (activeServiceDropdown() === i && filteredServiceSuggestions(asService(line).service_type).length) {
+                    <span class="so-suggest">
+                      @for (p of filteredServiceSuggestions(asService(line).service_type); track p.id) {
+                        <button type="button" class="so-suggest-item" (mousedown)="selectServiceFromCatalog(i, p)">
+                          <span>{{ p.profile }}</span>
+                          <span class="so-suggest-meta">{{ (p.selling_price || 0) | number:'1.2-2' }} DH</span>
+                        </button>
+                      }
+                    </span>
+                  }
+                </span>
+                <span class="so-sub">Prestation{{ isCatalogService(line) ? ' · catalogue' : '' }}</span>
+              </span>
+              <input type="number" class="so-cell-input" min="1" [name]="'qty_' + i"
+                     [ngModel]="line.quantity" (ngModelChange)="updateLine(i, { quantity: +$event || 1 })" />
+              <input type="number" class="so-cell-input so-cell-input--cost" min="0" step="0.01" [name]="'cost_' + i"
+                     [ngModel]="line.purchase_price" (ngModelChange)="updateLine(i, { purchase_price: +$event || 0 })" />
+              <input type="number" class="so-cell-input" min="0" step="0.01" [name]="'price_' + i"
+                     [ngModel]="asService(line).labor_cost" (ngModelChange)="updateLine(i, { labor_cost: +$event || 0 })" />
+            } @else {
+              <span class="so-type so-type--part" title="Pièce"><app-icon name="package" [size]="14" /></span>
+              <span class="so-designation">
+                <span class="so-name">{{ asPart(line).product_name || 'Pièce' }}</span>
+                <span class="so-sub" [class.so-sub--short]="isShortage(line)">
+                  Pièce<ng-container *ngIf="asPart(line).product_reference"> · réf. {{ asPart(line).product_reference }}</ng-container>
+                  @if (asPart(line).product_id) {
+                    · <span [class.so-stock-ok]="!isShortage(line)">{{ stockLabel(asPart(line)) }}</span>
+                  }
+                </span>
+              </span>
+              <input type="number" class="so-cell-input" min="1" [name]="'qty_' + i"
+                     [class.so-cell-input--short]="isShortage(line)"
+                     [ngModel]="line.quantity" (ngModelChange)="updateLine(i, { quantity: +$event || 1 })" />
+              <input type="number" class="so-cell-input so-cell-input--cost" min="0" step="0.01" [name]="'cost_' + i"
+                     [ngModel]="line.purchase_price" (ngModelChange)="updateLine(i, { purchase_price: +$event || 0 })" />
+              <input type="number" class="so-cell-input" min="0" step="0.01" [name]="'price_' + i"
+                     [ngModel]="asPart(line).unit_price" (ngModelChange)="updateLine(i, { unit_price: +$event || 0 })" />
+            }
+
+            <span class="so-num so-line-total">{{ lineTotal(line) | number:'1.2-2' }}</span>
+            <button type="button" class="so-remove" title="Retirer" (click)="removeLine(i)">
+              <app-icon name="close" [size]="13" />
+            </button>
+          </div>
+        }
+
+        <!-- La ligne d'ajout : le type choisi par « + Prestation » ou « + Pièce »,
+             la recherche, Entrée pour ajouter. -->
+        <div class="so-grid so-line so-line--add">
+          <span class="so-type so-type--empty"></span>
+          <span class="so-add-field">
+            <label class="so-add-input">
+              <app-icon name="search" [size]="15" />
+              <input #addInput type="text" name="addQuery"
+                     [ngModel]="addQuery()" (ngModelChange)="onAddQueryInput($event)"
+                     (focus)="addOpen.set(true)" (blur)="closeAdd()"
+                     (keydown.enter)="$event.preventDefault(); commitAdd()"
+                     [placeholder]="addType() === 'part' ? 'Ajouter une pièce : nom, référence…' : 'Ajouter une prestation : nom, référence…'" />
+            </label>
+
+            @if (addOpen() && addType() === 'service' && addServiceSuggestions().length) {
+              <span class="so-suggest">
+                @for (p of addServiceSuggestions(); track p.id) {
+                  <button type="button" class="so-suggest-item" (mousedown)="addServiceFromCatalog(p)">
+                    <span>{{ p.profile }}</span>
+                    <span class="so-suggest-meta">{{ (p.selling_price || 0) | number:'1.2-2' }} DH</span>
+                  </button>
+                }
+              </span>
+            }
+            @if (addOpen() && addType() === 'part' && (addPartResults().length || addSearching() || addQuery().length >= 2)) {
+              <span class="so-suggest">
+                @if (addSearching()) {
+                  <span class="so-suggest-state">Recherche…</span>
+                } @else if (!addPartResults().length) {
+                  <span class="so-suggest-state">Aucune pièce ne correspond à « {{ addQuery() }} ».</span>
+                }
+                @for (part of addPartResults(); track part.id) {
+                  <button type="button" class="so-suggest-item" (mousedown)="addPartFromSearch(part)">
+                    <span>{{ part.name }}<ng-container *ngIf="part.reference"> · {{ part.reference }}</ng-container></span>
+                    <span class="so-suggest-meta" [class.so-suggest-meta--short]="part.total_quantity <= 0">{{ part.total_quantity }} en stock</span>
+                  </button>
+                }
+              </span>
+            }
+          </span>
+          <span class="so-add-hint">
+            Entrée pour ajouter · la ligne garde le type choisi ({{ addType() === 'part' ? 'pièce' : 'prestation' }})
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Colonne droite : client, suivi, totaux, paiements -->
+    <aside class="so-side">
+
+      <section class="so-panel">
+        <span class="so-section-title">Client et véhicule</span>
+
+        @if (selectedClient(); as client) {
+          <span class="so-client">
+            <a class="so-client-name" [routerLink]="['/clients', client.id]">{{ client.name }} →</a>
+            <button type="button" class="so-link" (click)="clearSelectedClient()">Changer</button>
+          </span>
+          <span class="so-client-meta">
+            {{ client.phone || 'Sans téléphone' }}
+            @if (clientBalance() !== null) {
+              · solde dû <span [class.so-due]="clientBalance()! > 0">{{ clientBalance() | number:'1.0-0' }} DH</span>
+            }
+          </span>
+          <div class="so-vehicle-select">
+            <app-vehicle-selector
+              [clientId]="client_id()"
+              [required]="false"
+              [selectedVehicleId]="vehicle_id()"
+              (vehicleSelected)="onVehicleSelected($event)" />
+          </div>
+        } @else {
+          <span class="so-client-search">
+            <input type="text" class="so-input" name="clientSearch"
+                   [ngModel]="clientSearch()" (ngModelChange)="onClientSearchInput($event)"
+                   (focus)="showClientSuggestions.set(true)"
+                   placeholder="Client : nom, téléphone ou ville" />
+            @if (showClientSuggestions() && filteredClients().length) {
+              <span class="so-suggest">
+                @for (c of filteredClients(); track c.id) {
+                  <button type="button" class="so-suggest-item" (mousedown)="selectClient(c)">
+                    <span>{{ c.name }}</span>
+                    <span class="so-suggest-meta">{{ c.phone || 'Sans téléphone' }}</span>
+                  </button>
+                }
+              </span>
+            }
+          </span>
+          <button type="button" class="so-link" (click)="openQuickCreate()">+ Nouveau client</button>
+          <app-quick-client-form
+            *ngIf="showQuickCreate()"
+            [initialName]="clientSearch()"
+            (clientCreated)="onQuickClientCreated($event)"
+            (cancelled)="showQuickCreate.set(false)" />
+
+          <label class="so-row-field">
+            <span>Véhicule *</span>
+            <input type="text" class="so-input" name="vehicle"
+                   [ngModel]="vehicle()" (ngModelChange)="vehicle.set($event)"
+                   placeholder="Ex : Dacia Logan 2018" />
+          </label>
+        }
+
+        <label class="so-row-field">
+          <span>Kilométrage</span>
+          <input type="number" class="so-input so-input--num" name="mileage" min="0"
+                 [ngModel]="mileage()" (ngModelChange)="mileage.set($event ? +$event : null)" />
+          <em>km</em>
+        </label>
+        @if (lastVisit()) {
+          <span class="so-last-visit">{{ lastVisitLabel() }}</span>
+        }
+      </section>
+
+      <section class="so-panel">
+        <span class="so-section-title">Suivi</span>
+        <label class="so-row-field">
+          <span>Mécanicien *</span>
+          <select class="so-input" name="commercial_id"
+                  [ngModel]="commercial_id()" (ngModelChange)="commercial_id.set($event ? +$event : null)">
+            <option [ngValue]="null">— Choisir —</option>
+            @for (c of initialCommercials; track c.id) {
+              <option [ngValue]="c.id">{{ c.name }}</option>
+            }
+          </select>
+        </label>
+        <label class="so-row-field">
+          <span>Date</span>
+          <input type="date" class="so-input" name="date" [ngModel]="date()" (ngModelChange)="date.set($event)" />
+        </label>
+        <label class="so-row-field">
+          <span>Remise</span>
+          <input type="number" class="so-input so-input--num" name="discount" min="0" max="100" step="0.5"
+                 [ngModel]="discount()" (ngModelChange)="discount.set(+$event || 0)" />
+          <em>%</em>
+        </label>
+        <label class="so-col-field">
+          <span>Notes internes</span>
+          <textarea class="so-input" rows="2" name="notes" [ngModel]="notes()" (ngModelChange)="notes.set($event)"></textarea>
+        </label>
+      </section>
+
+      <section class="so-panel so-panel--totals">
+        <span class="so-total-row"><span>Prestations</span><span>{{ servicesTotal() | number:'1.2-2' }}</span></span>
+        <span class="so-total-row"><span>Pièces</span><span>{{ partsTotal() | number:'1.2-2' }}</span></span>
+        @if (discountAmount() > 0) {
+          <span class="so-total-row"><span>Remise {{ discount() }} %</span><span>− {{ discountAmount() | number:'1.2-2' }}</span></span>
+        }
+        <span class="so-total-row so-total-row--net"><span>Total</span><span>{{ netAmount() | number:'1.2-2' }}</span></span>
+        @if (canSeeMargin) {
+          <span class="so-total-row so-total-row--margin">
+            <span>Marge</span>
+            <span>{{ netMargin() | number:'1.2-2' }} · {{ netMarginPct() | number:'1.1-1' }} %</span>
+          </span>
+        }
+      </section>
+
+      <section class="so-panel so-panel--payments">
+        <span class="so-section-title">Paiements</span>
+        @if (payments.length) {
+          @for (p of payments; track p.id) {
+            <span class="so-payment">
+              <span>{{ p.date | date:'dd/MM' }} · {{ p.method || '—' }}</span>
+              <span>{{ p.amount | number:'1.2-2' }}</span>
+            </span>
+          }
+          <span class="so-total-row so-total-row--due">
+            <span>Reste dû</span>
+            <span [class.so-due]="remaining() > 0">{{ remaining() | number:'1.2-2' }}</span>
+          </span>
+        } @else {
+          <p class="so-note">
+            Aucun paiement. L'encaissement s'ouvre une fois l'intervention terminée, dans le volet d'encaissement.
+          </p>
+        }
+      </section>
+    </aside>
+  </div>
+
+  <!-- ── Rangée 3 : le pied ─────────────────────────────────────────────── -->
+  <footer class="so-foot">
+    @if (shortLines().length) {
+      <span class="so-shortage">
+        <app-icon name="alert-triangle" [size]="15" /> {{ shortageSummary() }}
+      </span>
+      <button type="button" class="so-btn so-btn--ochre" (click)="orderPart.emit(shortLines()[0])">Commander la pièce</button>
+    }
+
+    <span class="so-foot-hint">
+      @if (missingHint()) {
+        {{ missingHint() }}
+      } @else if (dirty()) {
+        Modifications non enregistrées
+      } @else if (isEditing) {
+        Enregistré
+      }
+    </span>
+
+    @switch (step()) {
+      @case ('new') {
+        <button type="button" class="so-btn so-btn--lg" (click)="onCancel()">Annuler</button>
+        <button type="submit" class="so-btn so-btn--lg so-btn--primary" [disabled]="!canSave() || busy">
+          Enregistrer l'intervention
+        </button>
+      }
+      @case ('in_progress') {
+        <button type="button" class="so-btn so-btn--lg" (click)="cancelOrder.emit()">Annuler l'intervention</button>
+        @if (dirty()) {
+          <button type="submit" class="so-btn so-btn--lg" [disabled]="!canSave() || busy">Enregistrer</button>
+        }
+        <button type="button" class="so-btn so-btn--lg so-btn--primary" [disabled]="!canSave() || busy" (click)="finish()">
+          Terminer l'intervention
+        </button>
+      }
+      @case ('finished') {
+        <button type="button" class="so-btn so-btn--lg" (click)="cancelOrder.emit()">Annuler l'intervention</button>
+        @if (dirty()) {
+          <button type="submit" class="so-btn so-btn--lg" [disabled]="!canSave() || busy">Enregistrer</button>
+        }
+        <button type="button" class="so-btn so-btn--lg so-btn--info" [disabled]="busy || (dirty() && !canSave())" (click)="collectPayment()">
+          Facturer
+        </button>
+      }
+      @case ('invoiced') {
+        @if (dirty()) {
+          <button type="submit" class="so-btn so-btn--lg" [disabled]="!canSave() || busy">Enregistrer</button>
+        }
+        @if (remaining() > 0) {
+          <button type="button" class="so-btn so-btn--lg so-btn--primary" [disabled]="busy || (dirty() && !canSave())" (click)="collectPayment()">
+            Encaisser {{ remaining() | number:'1.2-2' }} DH
+          </button>
+        } @else {
+          <button type="button" class="so-btn so-btn--lg" (click)="collectPayment()">Voir les paiements</button>
+          <span class="so-settled">Soldée</span>
+        }
+      }
+      @case ('cancelled') {
+        <button type="button" class="so-btn so-btn--lg so-btn--primary" [disabled]="!canSave() || busy" (click)="reopen()">
+          Rétablir l'intervention
+        </button>
+      }
+    }
+  </footer>
+</form>

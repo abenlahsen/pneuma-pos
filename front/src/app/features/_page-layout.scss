@@ -14,14 +14,17 @@
 //
 //   $table          les règles de `.table` et `.table-responsive` ;
 //   $filters-panel  le panneau de filtres déplié (`.filters-section`,
-//                   `.form-group`, `.filter-actions`).
+//                   `.form-group`, `.filter-actions`) ;
+//   $modal          la modale écrite à la main (`.modal-overlay` et sa
+//                   suite) — un écran dont les formulaires sont passés en
+//                   page ou dans les coques partagées n'en a plus (12a).
 //
 // Un écran passé au motif de ligne et à la barre de filtres n'utilise plus
 // ni l'un ni l'autre. Les lui facturer quand même faisait franchir la limite
 // dure de 20 ko à Achats, Rôles et Service Auto :
 //
 //   @include layout.page-layout($table: false, $filters-panel: false);
-@mixin page-layout($table: true, $filters-panel: true) {
+@mixin page-layout($table: true, $filters-panel: true, $modal: true) {
 
   // ── Shell ────────────────────────────────────────────────────────────────
   .page-container {
@@ -693,6 +696,7 @@
     &:disabled { opacity: 0.4; cursor: not-allowed; }
   }
 
+  @if $modal {
   // ── Modal ─────────────────────────────────────────────────────────────────
   .modal-overlay {
     position: fixed;
@@ -740,6 +744,7 @@
     gap: 0.75rem;
     background: $bg-subtle;
     border-radius: 0;
+  }
   }
 
   // ── Responsive ────────────────────────────────────────────────────────────
@@ -789,11 +794,13 @@
 
     .btn-page { padding: 0.3rem 0.55rem; font-size: 0.78rem; }
 
+    @if $modal {
     .modal-overlay { padding: 0.5rem; }
     .modal-container { max-height: 95vh; }
     .modal-header { padding: 0.875rem 1.25rem; h2 { font-size: 1rem; } }
     .modal-body { padding: 1rem; }
     .modal-footer { padding: 0.875rem 1.25rem; }
+    }
   }
 
   @media (max-width: 480px) {

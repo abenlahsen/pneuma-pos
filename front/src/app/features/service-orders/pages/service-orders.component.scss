@@ -1,10 +1,8 @@
 @use '../../_variables' as *;
 
 @use '../../_page-layout' as layout;
-@include layout.page-layout($table: false, $filters-panel: false);
+@include layout.page-layout($table: false, $filters-panel: false, $modal: false);
 
-// ── Service orders modal is wider ─────────────────────────────────────────────
-.modal-container { max-width: 1200px; }
 
 // ── Refonte 2b, étape 11 : barre de filtres et motif de ligne ─────────────────
 // La barre et la ligne viennent des mixins. L'ancien panneau de filtres, le
@@ -28,6 +26,20 @@
 .filter-bar .btn-reset {
   height: 32px;
   font-size: 12.5px;
+}
+
+/* « Annulées » : un interrupteur, à l'encre quand il est actif. */
+.filter-toggle {
+  height: 32px;
+  padding: 0 11px;
+  border: 1px solid $border-color;
+  background: $bg-card;
+  color: $text-secondary;
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+
+  &--on { border-color: $text-dark; background: $text-dark; color: $bg-card; font-weight: 600; }
 }
 
 /* La plaque en chasse fixe, comme sur la vue Atelier. Préfixée par

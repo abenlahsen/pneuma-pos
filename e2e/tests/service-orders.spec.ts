@@ -9,87 +9,89 @@ test.describe('Service Auto', () => {
     await expect(page.locator('div.loading-state')).not.toBeVisible({ timeout: 20_000 });
   });
 
-  test('affiche les 3 cartes de résumé financier', async ({ page }) => {
-    await expect(page.locator('.card-label', { hasText: 'CA TOTAL' })).toBeVisible();
-    await expect(page.locator('.card-label', { hasText: 'PAYÉ' })).toBeVisible();
-    await expect(page.locator('.card-label', { hasText: 'RESTE À PAYER' })).toBeVisible();
+  test('affiche les cartes de résumé financier', async ({ page }) => {
+    await expect(page.locator('.card-label', { hasText: /CA du mois/i })).toBeVisible();
+    await expect(page.locator('.card-label', { hasText: /Marge brute/i })).toBeVisible();
+    await expect(page.locator('.card-label', { hasText: /Encaissé/i })).toBeVisible();
   });
 
-  test('affiche la section filtres avec Client, Statut, Paiement', async ({ page }) => {
-    await expect(page.locator('label:has-text("Client")')).toBeVisible();
-    await expect(page.locator('label:has-text("Statut")')).toBeVisible();
+  // Refonte 2b, étape 11 : le panneau de filtres est devenu la barre du mixin.
+  test('affiche la barre de filtres avec Client, Statut, Paiement', async ({ page }) => {
+    await page.getByRole('button', { name: 'Liste' }).click();
+    const bar = page.locator('.filter-bar');
+    await expect(bar.getByRole('combobox', { name: 'Fiche client' })).toBeVisible();
+    await expect(bar.getByRole('combobox', { name: 'Statut' })).toBeVisible();
+    await expect(bar.getByRole('combobox', { name: 'Paiement', exact: true })).toBeVisible();
+    await expect(bar.getByRole('button', { name: 'Annulées' })).toBeVisible();
   });
 
-  test('affiche le tableau des interventions ou un état vide', async ({ page }) => {
-    const table = page.locator('table.data-table');
-    const emptyState = page.locator('div.empty-state');
-    await expect(table.or(emptyState).first()).toBeVisible({ timeout: 20_000 });
+  // Refonte 2b, étape 11 : la vue Liste est passée au motif de ligne.
+  test('affiche la liste des interventions ou un état vide', async ({ page }) => {
+    await page.getByRole('button', { name: 'Liste' }).click();
+    const rows = page.locator('.list-grid-row.so-grid:not([appskeletonrow])');
+    const empty = page.locator('app-list-empty');
+    await expect(rows.or(empty).first()).toBeVisible({ timeout: 20_000 });
   });
 
   test('le bouton "+ Nouvelle intervention" est visible pour admin', async ({ page }) => {
     await expect(page.getByRole('button', { name: /Nouvelle intervention/ })).toBeVisible();
   });
 
-  test('ouvre le formulaire de création d\'intervention', async ({ page }) => {
+  // Refonte 2b, 12a : la fiche et le formulaire ne sont plus des modales.
+  // L'intervention s'ouvre sur son écran, /service-auto/nouveau et /service-auto/:id.
+
+  test('« Nouvelle intervention » ouvre l\'écran de saisie', async ({ page }) => {
     await page.getByRole('button', { name: /Nouvelle intervention/ }).click();
-    await expect(page.locator('.modal-overlay, .form-overlay').first()).toBeVisible();
-    // Champ véhicule ou date attendu
-    await expect(page.locator('label:has-text("Véhicule"), label:has-text("Date"), label:has-text("Client")').first()).toBeVisible();
+    await expect(page).toHaveURL(/\/service-auto\/nouveau$/);
+    await expect(page.locator('.so-editor')).toBeVisible();
+    await expect(page.getByRole('button', { name: /\+ Prestation/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Enregistrer l'intervention/ })).toBeDisabled();
   });
 
-  test('ferme le formulaire avec Annuler', async ({ page }) => {
+  test('« Atelier » ramène à la liste sans rien enregistrer', async ({ page }) => {
     await page.getByRole('button', { name: /Nouvelle intervention/ }).click();
-    await expect(page.locator('.modal-overlay, .form-overlay').first()).toBeVisible();
-
-    await page.locator('.modal-overlay').getByRole('button', { name: /Annuler|Fermer|✕/ }).first().click();
-    await expect(page.locator('.modal-overlay')).not.toBeVisible();
+    await expect(page.locator('.so-editor')).toBeVisible();
+    await page.getByRole('button', { name: /Atelier/ }).first().click();
+    await expect(page).toHaveURL(/\/service-orders$/);
   });
 
-  test('le bouton Visualiser ouvre la modale de détail', async ({ page }) => {
-    const firstBtn = page.locator('button[title="Voir"]').first();
-    test.skip(await firstBtn.count() === 0, 'Aucune ligne dans le tableau');
-
-    await firstBtn.click();
-    await expect(page.locator('.modal-overlay')).toBeVisible();
-    await expect(page.locator('h2', { hasText: 'Détail de l\'intervention' })).toBeVisible();
-  });
-
-  test('le bouton Modifier dans le détail ouvre le formulaire de modification', async ({ page }) => {
-    const firstBtn = page.locator('button[title="Voir"]').first();
-    test.skip(await firstBtn.count() === 0, 'Aucune ligne dans le tableau');
-
-    await firstBtn.click();
-    await expect(page.locator('.modal-overlay')).toBeVisible();
-
-    const modifierBtn = page.locator('.modal-footer button', { hasText: 'Modifier' });
-    await expect(modifierBtn).toBeVisible();
-    await modifierBtn.click();
-
-    await expect(page.locator('h2', { hasText: 'Modifier l\'intervention' })).toBeVisible({ timeout: 20_000 });
-  });
-
-  test('le formulaire de prestation contient le champ Quantité', async ({ page }) => {
+  test('une prestation s\'ajoute par la ligne d\'ajout, et la grille est unique', async ({ page }) => {
     await page.getByRole('button', { name: /Nouvelle intervention/ }).click();
-    await expect(page.locator('.modal-overlay, .form-overlay').first()).toBeVisible();
+    await expect(page.locator('.so-editor')).toBeVisible();
 
-    await expect(page.getByLabel('Quantité').first()).toBeVisible();
-  });
+    const add = page.getByPlaceholder(/Ajouter une prestation/);
+    await add.fill('Contrôle climatisation');
+    await add.press('Enter');
 
-  test('le formulaire de prestation ne contient pas le champ Pièces (DH)', async ({ page }) => {
-    await page.getByRole('button', { name: /Nouvelle intervention/ }).click();
-    await expect(page.locator('.modal-overlay, .form-overlay').first()).toBeVisible();
-
+    await expect(page.locator('.so-line').filter({ hasText: 'Prestation' }).first()).toBeVisible();
+    // Plus de libellé qui change selon le type de ligne.
     await expect(page.locator('label', { hasText: 'Pièces (DH)' })).not.toBeVisible();
+    await expect(page.locator('.so-grid-head')).toContainText('Coût DH');
+  });
+
+  test('« Voir » ouvre l\'écran de l\'intervention', async ({ page }) => {
+    await page.getByRole('button', { name: 'Liste' }).click();
+    await expect(page.locator('.list-grid-row.so-grid:not([appskeletonrow])').or(page.locator('app-list-empty')).first())
+      .toBeVisible({ timeout: 20_000 });
+    const firstBtn = page.locator('button[title="Voir"]').first();
+    test.skip(await firstBtn.count() === 0, 'Aucune ligne dans le tableau');
+
+    await firstBtn.click();
+    await expect(page).toHaveURL(/\/service-auto\/\d+$/);
+    await expect(page.locator('.so-steps')).toBeVisible();
   });
 
   test('le bouton Imprimer ouvre la page d\'impression', async ({ page }) => {
+    await page.getByRole('button', { name: 'Liste' }).click();
+    await expect(page.locator('.list-grid-row.so-grid:not([appskeletonrow])').or(page.locator('app-list-empty')).first())
+      .toBeVisible({ timeout: 20_000 });
     const firstBtn = page.locator('button[title="Voir"]').first();
     test.skip(await firstBtn.count() === 0, 'Aucune ligne dans le tableau');
 
     await firstBtn.click();
-    await expect(page.locator('.modal-overlay')).toBeVisible();
+    await expect(page.locator('.so-editor')).toBeVisible();
 
-    await page.locator('.modal-overlay').getByRole('button', { name: /Imprimer/ }).first().click();
+    await page.locator('.so-bar').getByRole('button', { name: /Imprimer/ }).click();
     // Refonte 2b, étape 10 : l'aperçu a quitté sa modale pour sa propre page.
     await expect(page).toHaveURL(/\/documents\/service_order\/\d+\/print$/);
     await expect(page.locator('.dp-sheet')).toBeVisible();

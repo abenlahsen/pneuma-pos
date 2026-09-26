@@ -56,6 +56,10 @@ class ServiceOrderResource extends JsonResource
                     'purchase_price' => number_format((float) ($item->purchase_price ?? 0), 2, '.', ''),
                     'total_quantity' => $item->item_type === 'part' ? (int) ($item->product?->stocks_sum_quantity ?? 0) : null,
                     'stock_id' => $item->stock_id,
+                    // Refonte 2b, 12a : ce qui est déjà sorti du stock pour cette
+                    // ligne. `total_quantity` est le stock restant ; l'écran
+                    // additionne les deux pour dire ce qui était disponible.
+                    'deducted_quantity' => (int) ($item->deducted_quantity ?? 0),
                     'description' => $item->description,
                     'parts_cost' => number_format((float) $item->parts_cost, 2, '.', ''),
                     'labor_cost' => number_format((float) $item->labor_cost, 2, '.', ''),

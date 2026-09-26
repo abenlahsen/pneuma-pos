@@ -32,7 +32,9 @@ class StockDeductionService
 
             $stock->decrement('quantity', $deduct);
 
-            $item->updateQuietly(['stock_id' => $stock->id]);
+            // Ce qui est réellement sorti, et non la quantité demandée : la
+            // restauration doit rendre exactement ceci (refonte 2b, 12a).
+            $item->updateQuietly(['stock_id' => $stock->id, 'deducted_quantity' => $deduct]);
 
             $clientName = $order->client_id ? ($order->clientRecord?->name ?? null) : null;
             $reason = "Ordre #{$order->id} — {$order->vehicle}" . ($clientName ? " ({$clientName})" : '');
@@ -51,14 +53,26 @@ class StockDeductionService
     public function restoreForOrder(ServiceOrder $order, ?int $userId): void
     {
         foreach ($order->items()->where('item_type', 'part')->whereNotNull('stock_id')->get() as $item) {
+            // La quantité sortie à la déduction, et non celle de la ligne :
+            // pour une pièce en rupture, rendre la quantité demandée créait
+            // du stock qui n'avait jamais existé.
+            $returned = (int) $item->deducted_quantity;
+            if ($returned <= 0) {
+                continue;
+            }
+
             $stock = Stock::find($item->stock_id);
             if (! $stock) {
                 continue;
             }
 
             $before = (int) $stock->quantity;
-            $after = $before + (int) $item->quantity;
-            $stock->increment('quantity', (int) $item->quantity);
+            $after = $before + $returned;
+            $stock->increment('quantity', $returned);
+
+            // Restaurée une fois, la ligne ne l'est pas deux : une annulation
+            // suivie d'une modification ne rend pas le stock en double.
+            $item->updateQuietly(['deducted_quantity' => 0]);
 
             $clientName = $order->client_id ? ($order->clientRecord?->name ?? null) : null;
             $reason = "Ordre #{$order->id} — {$order->vehicle}" . ($clientName ? " ({$clientName})" : '');

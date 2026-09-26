@@ -7,6 +7,7 @@ import { ServiceOrderService } from '../data-access/service-order.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
 import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
+import { SidePanelComponent } from '../../../shared/side-panel/side-panel.component';
 
 const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Carte bancaire'];
 
@@ -19,7 +20,7 @@ interface AccountOption {
 @Component({
   selector: 'app-service-payment-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, FormsModule, IconComponent, ConfirmDeleteComponent, SidePanelComponent],
   templateUrl: './service-payment-panel.component.html',
   styleUrls: ['./service-payment-panel.component.scss'],
 })

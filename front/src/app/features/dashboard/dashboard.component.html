@@ -137,7 +137,7 @@
             <div class="todo-row" *ngFor="let row of g.rows; let i = index">
               <span class="todo-index">{{ i + 1 }}</span>
               <span class="todo-object">
-                <a class="todo-title" routerLink="/service-orders" [queryParams]="{ id: row.id }">
+                <a class="todo-title" [routerLink]="['/service-auto', row.id]">
                   Ordre {{ row.id }}<ng-container *ngIf="row.plate"> · {{ row.plate }}</ng-container><ng-container *ngIf="!row.plate && row.vehicle"> · {{ row.vehicle }}</ng-container>
                 </a>
                 <span class="todo-sub">
@@ -146,7 +146,7 @@
               </span>
               <span class="num todo-days">{{ row.days }} j</span>
               <span class="num todo-amount">{{ row.amount | number:'1.0-0' }}</span>
-              <a class="todo-action todo-action--info" routerLink="/service-orders" [queryParams]="{ id: row.id }">Facturer</a>
+              <a class="todo-action todo-action--info" [routerLink]="['/service-auto', row.id]">Facturer</a>
             </div>
             <div class="todo-more" *ngIf="g.count > g.rows.length">
               <span>{{ g.count - g.rows.length }} autre(s) ordre(s)</span>

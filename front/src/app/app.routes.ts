@@ -91,6 +91,25 @@ export const routes: Routes = [
       ),
   },
   {
+    // Refonte 2b, 12a : l'intervention en un écran, fiche et saisie réunies.
+    path: 'service-auto/nouveau',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'create service-orders' },
+    loadComponent: () =>
+      import('./features/service-orders/service-order-page/service-order-page.component').then(
+        (m) => m.ServiceOrderPageComponent,
+      ),
+  },
+  {
+    path: 'service-auto/:id',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'view service-orders' },
+    loadComponent: () =>
+      import('./features/service-orders/service-order-page/service-order-page.component').then(
+        (m) => m.ServiceOrderPageComponent,
+      ),
+  },
+  {
     path: 'service-orders',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view service-orders' },

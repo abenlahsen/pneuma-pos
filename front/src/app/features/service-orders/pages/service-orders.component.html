@@ -109,6 +109,12 @@
     <input type="date" class="filter-input" aria-label="Date au" title="Date au"
            [ngModel]="filterDateTo()" (ngModelChange)="filterDateTo.set($event); applyFilters()" />
 
+    <!-- Refonte 2b, 12a : une intervention annulée quitte l'atelier et, par
+         défaut, la liste. Ce bouton la fait revenir. -->
+    <button type="button" class="filter-toggle" *ngIf="viewMode() === 'list'"
+            [class.filter-toggle--on]="showCancelled()" [attr.aria-pressed]="showCancelled()"
+            (click)="toggleCancelled()">Annulées</button>
+
     <button type="button" class="btn btn-reset" (click)="resetFilters()">
       <app-icon name="close" [size]="13" /> Réinitialiser
     </button>
@@ -151,7 +157,7 @@
           <div class="board-card-actions">
             <button type="button" class="btn-board btn-board--primary"
               *ngIf="authService.hasPermission('edit service-orders')"
-              (click)="changeStatus(row.order, 'TERMINE')">Terminer</button>
+              (click)="openDetail(row.order)">Terminer</button>
             <button type="button" class="btn-board btn-board--secondary" (click)="openDetail(row.order)">Ouvrir</button>
           </div>
         </div>
@@ -185,7 +191,7 @@
             <span class="board-card-amount">{{ row.order.net_amount | number:'1.0-0' }} DH</span>
           </div>
           <div class="board-card-actions">
-            <button type="button" class="btn-board btn-board--info" (click)="openPayments(row.order)">Facturer</button>
+            <button type="button" class="btn-board btn-board--info" (click)="openDetail(row.order)">Facturer</button>
             <button type="button" class="btn-board btn-board--secondary" (click)="openDetail(row.order)">Ouvrir</button>
           </div>
         </div>
@@ -373,29 +379,6 @@
   </div>
 
 </div>
-
-<!-- Modal Formulaire -->
-<div *ngIf="showForm()" class="modal-overlay" (click)="closeForm()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <div *ngIf="loadingEdit()" class="loading-state">Chargement…</div>
-    <app-service-order-form
-      *ngIf="!loadingEdit()"
-      [serviceOrder]="editingOrder()"
-      [initialCommercials]="filterOptions().commercials"
-      (save)="onFormSubmit($event)"
-      (cancel)="closeForm()"
-    ></app-service-order-form>
-  </div>
-</div>
-
-<!-- Modal détail -->
-<app-service-order-detail
-  *ngIf="detailOrder()"
-  [serviceOrder]="detailOrder()!"
-  [canEdit]="authService.hasPermission('edit service-orders')"
-  (close)="closeDetail()"
-  (edit)="editFromDetail()"
-></app-service-order-detail>
 
 <!-- Panel paiements -->
 <app-service-payment-panel

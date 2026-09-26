@@ -16,6 +16,7 @@ class ServiceItem extends Model
         'unit_price',
         'purchase_price',
         'stock_id',
+        'deducted_quantity',
         'description',
         'parts_cost',
         'labor_cost',
@@ -30,6 +31,7 @@ class ServiceItem extends Model
         'purchase_price' => 'decimal:2',
         'line_total' => 'decimal:2',
         'quantity' => 'integer',
+        'deducted_quantity' => 'integer',
         'sort_order' => 'integer',
     ];
 

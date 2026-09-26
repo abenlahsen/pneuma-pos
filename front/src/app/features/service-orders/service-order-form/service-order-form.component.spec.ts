@@ -9,6 +9,7 @@ import { ServiceOrderService } from '../data-access/service-order.service';
 
 const clientServiceStub = {
   getClients: () => of([]),
+  getClientProfile: () => of({ outstanding_balance: 0 }),
 };
 
 const productServiceStub = {
@@ -17,6 +18,7 @@ const productServiceStub = {
 
 const serviceOrderServiceStub = {
   searchParts: () => of([]),
+  getServiceOrders: () => of({ data: [], total: 0, current_page: 1, last_page: 1, per_page: 5 }),
 };
 
 describe('ServiceOrderFormComponent', () => {
@@ -147,12 +149,15 @@ describe('ServiceOrderFormComponent', () => {
       expect((comp.lines()[0] as any).service_type).toBe('B');
     });
 
-    it('does NOT remove when only one line remains', () => {
+    // Refonte 2b, 12a : la ligne d'ajout tient lieu de ligne vide, on peut
+    // donc retirer la dernière. La validation, elle, ne change pas.
+    it('removes the last line too, and saving is then refused', () => {
       comp.lines.set([
         { item_type: 'service', service_type: 'A', description: '', quantity: 1, parts_cost: 0, labor_cost: 50, purchase_price: 0 },
       ]);
       comp.removeLine(0);
-      expect(comp.lines()).toHaveLength(1);
+      expect(comp.lines()).toHaveLength(0);
+      expect(comp.hasValidLines()).toBe(false);
     });
   });
 
@@ -295,10 +300,10 @@ describe('ServiceOrderFormComponent', () => {
       expect((comp.lines()[0] as any).description).toBe('Huile synthétique');
     });
 
-    it('starts with a single default service line when no serviceOrder', () => {
+    it('starts with no line when no serviceOrder — the add row stands in', () => {
       comp.ngOnInit();
-      expect(comp.lines()).toHaveLength(1);
-      expect(comp.lines()[0].item_type).toBe('service');
+      expect(comp.lines()).toHaveLength(0);
+      expect(comp.step()).toBe('new');
     });
   });
 
@@ -325,6 +330,7 @@ describe('ServiceOrderFormComponent', () => {
       comp.onSubmit();
 
       expect(emitted).toHaveLength(1);
+      emitted[0] = emitted[0].payload;
       expect(emitted[0].vehicle).toBe('Renault Clio');
       expect(emitted[0].mileage).toBe(45000);
       expect(emitted[0].discount).toBe(10);
@@ -340,23 +346,29 @@ describe('ServiceOrderFormComponent', () => {
     });
 
     it('converts empty notes to null', () => {
+      comp.vehicle.set('Clio');
+      comp.commercial_id.set(1);
       comp.notes.set('');
       comp.lines.set([{ item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 50, purchase_price: 0 }]);
       const emitted: any[] = [];
       comp.save.subscribe((p) => emitted.push(p));
       comp.onSubmit();
-      expect(emitted[0].notes).toBeNull();
+      expect(emitted[0].payload.notes).toBeNull();
     });
 
     it('converts empty item description to null for service lines', () => {
+      comp.vehicle.set('Clio');
+      comp.commercial_id.set(1);
       comp.lines.set([{ item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 50, purchase_price: 0 }]);
       const emitted: any[] = [];
       comp.save.subscribe((p) => emitted.push(p));
       comp.onSubmit();
-      expect(emitted[0].items[0].description).toBeNull();
+      expect(emitted[0].payload.items[0].description).toBeNull();
     });
 
     it('emits multiple items when multiple lines are set', () => {
+      comp.vehicle.set('Clio');
+      comp.commercial_id.set(1);
       comp.lines.set([
         { item_type: 'service', service_type: 'A', description: '', quantity: 1, parts_cost: 0, labor_cost: 80, purchase_price: 0 },
         { item_type: 'service', service_type: 'B', description: 'Details', quantity: 1, parts_cost: 0, labor_cost: 150, purchase_price: 0 },
@@ -364,7 +376,139 @@ describe('ServiceOrderFormComponent', () => {
       const emitted: any[] = [];
       comp.save.subscribe((p) => emitted.push(p));
       comp.onSubmit();
-      expect(emitted[0].items).toHaveLength(2);
+      expect(emitted[0].payload.items).toHaveLength(2);
+    });
+
+    it('refuses to save without a mechanic, as the API would', () => {
+      comp.vehicle.set('Clio');
+      comp.commercial_id.set(null);
+      comp.lines.set([{ item_type: 'service', service_type: 'X', description: '', quantity: 1, parts_cost: 0, labor_cost: 50, purchase_price: 0 }]);
+      const emitted: any[] = [];
+      comp.save.subscribe((p) => emitted.push(p));
+      comp.onSubmit();
+      expect(emitted).toHaveLength(0);
+      expect(comp.missingHint()).toBe('Choisissez le mécanicien.');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Refonte 2b, 12a — l'écran : états, rupture, ligne d'ajout
+  // -------------------------------------------------------------------------
+
+  describe('12a — état et actions', () => {
+    const order = (over: any = {}): any => ({
+      id: 612, date: '2026-09-17', vehicle: 'Dacia Logan', status: 'EN COURS', payment_status: 'NON PAYE',
+      discount: 0, commercial_id: 1, client_id: null, items: [
+        { item_type: 'service', service_type: 'Vidange', quantity: 1, labor_cost: 250, purchase_price: 0 },
+      ], ...over,
+    });
+
+    function open(over: any = {}, payments: any[] = []): void {
+      comp.serviceOrder = order(over);
+      comp.payments = payments;
+      comp.ngOnInit();
+    }
+
+    it('lit les trois étapes : en cours, terminée, facturée', () => {
+      open();
+      expect(comp.step()).toBe('in_progress');
+
+      open({ status: 'TERMINE' });
+      expect(comp.step()).toBe('finished');
+
+      open({ status: 'TERMINE' }, [{ id: 1, amount: 100 }]);
+      expect(comp.step()).toBe('invoiced');
+
+      open({ status: 'ANNULE' });
+      expect(comp.step()).toBe('cancelled');
+    });
+
+    it('« Terminer » enregistre avec le statut TERMINE', () => {
+      open();
+      const emitted: any[] = [];
+      comp.save.subscribe((p) => emitted.push(p));
+      comp.finish();
+      expect(emitted[0].payload.status).toBe('TERMINE');
+      expect(comp.status()).toBe('TERMINE');
+    });
+
+    it('« Facturer » ouvre l’encaissement, après avoir enregistré ce qui a changé', () => {
+      open({ status: 'TERMINE' });
+      const collected: any[] = [];
+      const saved: any[] = [];
+      comp.collect.subscribe(() => collected.push(true));
+      comp.save.subscribe((p) => saved.push(p));
+
+      comp.collectPayment();
+      expect(collected).toHaveLength(1);
+      expect(saved).toHaveLength(0);
+
+      comp.notes.set('Changé');
+      comp.collectPayment();
+      expect(saved).toHaveLength(1);
+      expect(saved[0].thenCollect).toBe(true);
+    });
+
+    it('n’est plus « modifié » une fois enregistré', () => {
+      open();
+      expect(comp.dirty()).toBe(false);
+      comp.discount.set(10);
+      expect(comp.dirty()).toBe(true);
+      comp.markSaved();
+      expect(comp.dirty()).toBe(false);
+    });
+
+    it('signale une pièce en rupture : « 1 en stock pour 2 demandées »', () => {
+      comp.lines.set([{
+        item_type: 'part', product_id: 7, stock_id: 3, product_name: 'Plaquettes avant', product_reference: 'BRE-1',
+        unit: 'pièce', quantity: 2, unit_price: 520, purchase_price: 310, total_quantity: 1,
+        searchQuery: '', searchResults: [], searching: false,
+      }]);
+      const line = comp.lines()[0] as any;
+      expect(comp.isShortage(line)).toBe(true);
+      expect(comp.stockLabel(line)).toBe('1 en stock pour 2 demandées');
+      expect(comp.shortageSummary()).toBe('Une pièce manque (Plaquettes avant, 1 sur 2)');
+    });
+
+    it('compte dans le stock disponible ce que l’intervention a déjà sorti', () => {
+      open({ items: [{ item_type: 'part', product_id: 7, product_name: 'Filtre', quantity: 1, unit_price: 110,
+        purchase_price: 58, total_quantity: 0, deducted_quantity: 1 }] });
+      const line = comp.lines()[0] as any;
+      expect(line.total_quantity).toBe(1);
+      expect(comp.isShortage(line)).toBe(false);
+    });
+
+    it('la ligne d’ajout : Entrée ajoute une prestation libre sous le nom tapé', () => {
+      comp.setAddType('service');
+      comp.onAddQueryInput('Contrôle climatisation');
+      comp.commitAdd();
+      const line = comp.lines()[0] as any;
+      expect(line.item_type).toBe('service');
+      expect(line.service_type).toBe('Contrôle climatisation');
+      expect(comp.addQuery()).toBe('');
+      expect(comp.addType()).toBe('service');
+    });
+
+    it('la ligne d’ajout : une pièce choisie reprend son coût et son stock', () => {
+      comp.addPartFromSearch({ id: 9, name: 'Huile 5W40', reference: 'TOT', unit: 'pièce', total_quantity: 14, stock_id: 2, purchase_price: 265 });
+      const line = comp.lines()[0] as any;
+      expect(line.item_type).toBe('part');
+      expect(line.purchase_price).toBe(265);
+      expect(line.total_quantity).toBe(14);
+    });
+
+    it('sépare prestations, pièces et remise dans les totaux', () => {
+      comp.lines.set([
+        { item_type: 'service', service_type: 'A', description: '', quantity: 1, parts_cost: 0, labor_cost: 600, purchase_price: 0 },
+        { item_type: 'part', product_id: 1, stock_id: 1, product_name: 'P', product_reference: '', unit: 'pièce',
+          quantity: 2, unit_price: 500, purchase_price: 300, total_quantity: 5, searchQuery: '', searchResults: [], searching: false },
+      ]);
+      comp.discount.set(10);
+      expect(comp.servicesTotal()).toBe(600);
+      expect(comp.partsTotal()).toBe(1000);
+      expect(comp.discountAmount()).toBeCloseTo(160);
+      expect(comp.netAmount()).toBeCloseTo(1440);
+      expect(comp.netMargin()).toBeCloseTo(840);
     });
   });
 

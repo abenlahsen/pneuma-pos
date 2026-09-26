@@ -18,6 +18,8 @@ export interface ServiceItem {
   purchase_price?: number;
   total_quantity?: number | null;
   stock_id?: number | null;
+  /** Quantité réellement sortie du stock pour cette ligne (refonte 2b, 12a). */
+  deducted_quantity?: number;
   // Commun
   line_total?: number;
   sort_order?: number;

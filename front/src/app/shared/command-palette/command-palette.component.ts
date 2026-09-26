@@ -313,8 +313,8 @@ function toServiceResult(order: ServiceOrder): PaletteResult {
     icon: 'wrench',
     label: plate,
     sub: [frenchDay(order.date), client, order.status].filter(Boolean).join(' · '),
-    route: '/service-orders',
-    queryParams: { id: String(order.id) },
+    // Refonte 2b, 12a : l'intervention a son écran.
+    route: `/service-auto/${order.id}`,
   };
 }
 

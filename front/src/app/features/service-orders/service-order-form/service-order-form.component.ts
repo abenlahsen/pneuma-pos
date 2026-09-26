@@ -1,5 +1,9 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
+import {
+  Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, ElementRef, ViewChild,
+  signal, computed, effect, inject,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { Subject, of } from 'rxjs';
@@ -8,6 +12,7 @@ import {
   PartSearchResult,
   ServiceOrder,
   ServiceOrderPayload,
+  ServicePayment,
 } from '../../../core/models/service-order.model';
 import { ServiceOrderStatus, SERVICE_ORDER_STATUSES, SERVICE_ORDER_STATUS_LABELS } from '../../../core/constants/status.constants';
 import { ServiceOrderService } from '../data-access/service-order.service';
@@ -18,14 +23,14 @@ import { Vehicle } from '../../../features/vehicles/models/vehicle.model';
 import { VehicleSelectorComponent } from '../../../shared/vehicle-selector/vehicle-selector.component';
 import { QuickClientFormComponent } from '../../../shared/quick-client-form/quick-client-form.component';
 
-interface ServiceProductOption {
+export interface ServiceProductOption {
   id: number;
   profile: string | null;
   reference: string | null;
   selling_price: number | null;
 }
 
-interface ServiceLineForm {
+export interface ServiceLineForm {
   item_type: 'service';
   service_type: string;
   description: string;
@@ -35,7 +40,7 @@ interface ServiceLineForm {
   labor_cost: number;
 }
 
-interface PartLineForm {
+export interface PartLineForm {
   item_type: 'part';
   product_id: number | null;
   stock_id: number | null;
@@ -51,24 +56,70 @@ interface PartLineForm {
   searching: boolean;
 }
 
-type AnyLineForm = ServiceLineForm | PartLineForm;
+export type AnyLineForm = ServiceLineForm | PartLineForm;
 
+/**
+ * Les états que suit la barre de titre — maquette 20a.
+ *
+ * La base ne connaît que trois statuts (EN COURS, TERMINE, ANNULE) : « facturée »
+ * n'en est pas un. On reprend donc la lecture de la vue Atelier, qui range en
+ * « Facturé » une intervention terminée qui a reçu au moins un paiement, et
+ * dont le bouton « Facturer » ouvre l'encaissement.
+ */
+export type ServiceOrderStep = 'new' | 'in_progress' | 'finished' | 'invoiced' | 'cancelled';
+
+/** Ce que l'écran demande à la page : enregistrer, en changeant ou non le statut. */
+export interface ServiceOrderSaveRequest {
+  payload: ServiceOrderPayload;
+  /** Après l'enregistrement, ouvrir l'encaissement (Facturer / Encaisser). */
+  thenCollect?: boolean;
+}
+
+/**
+ * L'intervention en un écran — refonte 2b, étape 12a, maquette 20a.
+ *
+ * La fiche (modale de consultation) et le formulaire (modale de saisie, trois
+ * sections empilées) ne font plus qu'un écran éditable, sur le gabarit 15a :
+ * barre de titre, lignes à gauche, client, suivi et totaux à droite, pied
+ * d'actions. Sur le pont, l'intervention se construit au fil du travail ;
+ * son état avance dans la barre.
+ *
+ * Toute la logique de l'ancien formulaire est conservée — recherche de pièces,
+ * catalogue de prestations, calculs, validation, client et véhicule. Ce qui
+ * change est la présentation : une grille de lignes unique pour les
+ * prestations et les pièces, une ligne d'ajout, et les actions qui suivent
+ * l'état.
+ */
 @Component({
   selector: 'app-service-order-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, VehicleSelectorComponent, QuickClientFormComponent, IconComponent],
+  imports: [CommonModule, FormsModule, RouterLink, VehicleSelectorComponent, QuickClientFormComponent, IconComponent],
   templateUrl: './service-order-form.component.html',
   styleUrls: ['./service-order-form.component.scss'],
 })
-export class ServiceOrderFormComponent implements OnInit, OnDestroy {
+export class ServiceOrderFormComponent implements OnInit, OnDestroy, OnChanges {
   readonly SERVICE_ORDER_STATUSES = SERVICE_ORDER_STATUSES;
   readonly SERVICE_ORDER_STATUS_LABELS = SERVICE_ORDER_STATUS_LABELS;
 
   @Input() serviceOrder: ServiceOrder | null = null;
   @Input() initialCommercials: { id: number; name: string }[] = [];
+  /** Les paiements enregistrés, tenus à jour par la page après un encaissement. */
+  @Input() payments: ServicePayment[] = [];
+  /** La marge n'est montrée qu'avec la permission « view margins ». */
+  @Input() canSeeMargin = false;
+  /** Un enregistrement est en cours : les actions attendent. */
+  @Input() busy = false;
+  @Input() canDelete = false;
 
-  @Output() save = new EventEmitter<ServiceOrderPayload>();
+  @Output() save = new EventEmitter<ServiceOrderSaveRequest>();
   @Output() cancel = new EventEmitter<void>();
+  @Output() cancelOrder = new EventEmitter<void>();
+  @Output() collect = new EventEmitter<void>();
+  @Output() print = new EventEmitter<void>();
+  @Output() remove = new EventEmitter<void>();
+  @Output() orderPart = new EventEmitter<PartLineForm>();
+
+  @ViewChild('addInput') addInputRef?: ElementRef<HTMLInputElement>;
 
   private clientService = inject(ClientService);
   private productService = inject(ProductService);
@@ -103,10 +154,8 @@ export class ServiceOrderFormComponent implements OnInit, OnDestroy {
   private readonly clientSearchSubject = new Subject<string>();
   private readonly destroy$ = new Subject<void>();
 
-  // Lines
-  lines = signal<AnyLineForm[]>([
-    { item_type: 'service', service_type: '', description: '', quantity: 1, purchase_price: 0, parts_cost: 0, labor_cost: 0 },
-  ]);
+  // Lines — l'écran démarre sans ligne : la ligne d'ajout en tient lieu.
+  lines = signal<AnyLineForm[]>([]);
 
   totalAmount = computed(() =>
     this.lines().reduce((sum, line) => {
@@ -161,7 +210,106 @@ export class ServiceOrderFormComponent implements OnInit, OnDestroy {
     ).join(' • ');
   });
 
+  // ── Refonte 2b, 12a : ce que l'écran ajoute ──────────────────────────────
+
+  /** Les sous-totaux de la colonne de droite. */
+  readonly servicesTotal = computed(() =>
+    this.lines().reduce((sum, l) => l.item_type === 'service' ? sum + this.serviceLineTotal(l) : sum, 0)
+  );
+
+  readonly partsTotal = computed(() =>
+    this.lines().reduce((sum, l) => l.item_type === 'part' ? sum + this.partLineTotal(l) : sum, 0)
+  );
+
+  readonly discountAmount = computed(() => Math.max(0, this.totalAmount() - this.netAmount()));
+
+  /** Marge après remise : c'est celle que l'intervention rapporte. */
+  readonly netMargin = computed(() => this.netAmount() - this.totalPurchase());
+
+  readonly netMarginPct = computed(() => {
+    const net = this.netAmount();
+    return net > 0 ? (this.netMargin() / net) * 100 : 0;
+  });
+
+  readonly serviceCount = computed(() => this.lines().filter(l => l.item_type === 'service').length);
+  readonly partCount = computed(() => this.lines().filter(l => l.item_type === 'part').length);
+
+  /** Les pièces dont la quantité dépasse le stock : fond ocre, et « Commander la pièce ». */
+  readonly shortLines = computed(() =>
+    this.lines().filter(l => this.isShortage(l)) as PartLineForm[]
+  );
+
+  readonly paidTotal = computed(() =>
+    (this.paymentsSignal() ?? []).reduce((sum, p) => sum + Number(p.amount || 0), 0)
+  );
+
+  readonly remaining = computed(() => Math.max(0, Math.round((this.netAmount() - this.paidTotal()) * 100) / 100));
+
+  /** L'étape de la barre de titre, et donc l'action principale du pied. */
+  readonly step = computed<ServiceOrderStep>(() => {
+    if (!this.serviceOrder) return 'new';
+    const status = this.status();
+    if (status === 'ANNULE') return 'cancelled';
+    if (status === 'EN COURS') return 'in_progress';
+    return this.paidTotal() > 0.004 ? 'invoiced' : 'finished';
+  });
+
+  readonly canSave = computed(() =>
+    this.hasValidLines() && this.vehicleValid() && this.commercial_id() !== null
+  );
+
+  /** Ce qui manque pour enregistrer, dit en clair au pied de l'écran. */
+  readonly missingHint = computed(() => {
+    if (!this.hasValidLines()) return 'Ajoutez au moins une prestation ou une pièce.';
+    if (!this.vehicleValid()) return 'Indiquez le véhicule, ou liez un client.';
+    if (this.commercial_id() === null) return 'Choisissez le mécanicien.';
+    return '';
+  });
+
+  // Ligne d'ajout
+  readonly addType = signal<'service' | 'part'>('service');
+  readonly addQuery = signal('');
+  readonly addOpen = signal(false);
+  readonly addPartResults = signal<PartSearchResult[]>([]);
+  readonly addSearching = signal(false);
+  private readonly addPartSearch$ = new Subject<string>();
+
+  readonly addServiceSuggestions = computed(() =>
+    this.addType() === 'service' ? this.filteredServiceSuggestions(this.addQuery()) : []
+  );
+
+  // Client : solde dû, et dernière visite du véhicule
+  readonly clientBalance = signal<number | null>(null);
+  readonly lastVisit = signal<ServiceOrder | null>(null);
+
+  /** Les paiements arrivent en entrée : on les suit en signal pour les calculs. */
+  private readonly paymentsSignal = signal<ServicePayment[]>([]);
+
+  /** L'instantané de ce qui serait enregistré, pour savoir si l'écran a changé. */
+  private readonly initialSnapshot = signal<string | null>(null);
+  readonly snapshot = computed(() => JSON.stringify(this.buildPayload()));
+  readonly dirty = computed(() => this.initialSnapshot() !== null && this.snapshot() !== this.initialSnapshot());
+
+  constructor() {
+    // La dernière visite suit le véhicule choisi.
+    effect(() => {
+      const vehicleId = this.vehicle_id();
+      this.loadLastVisit(vehicleId);
+    });
+
+    // Le solde dû suit le client lié.
+    effect(() => {
+      const clientId = this.client_id();
+      this.loadClientBalance(clientId);
+    });
+  }
+
+  ngOnChanges(): void {
+    this.paymentsSignal.set(this.payments ?? []);
+  }
+
   ngOnInit(): void {
+    this.paymentsSignal.set(this.payments ?? []);
     this.loadServiceProducts();
 
     if (this.serviceOrder) {
@@ -175,6 +323,13 @@ export class ServiceOrderFormComponent implements OnInit, OnDestroy {
       this.commercial_id.set(this.serviceOrder.commercial_id ?? null);
       this.client_id.set(this.serviceOrder.client_id ?? null);
       this.clientSearch.set(this.serviceOrder.client_record?.name ?? '');
+      if (this.serviceOrder.client_record && this.serviceOrder.client_id) {
+        this.selectedClient.set({
+          id: this.serviceOrder.client_id,
+          name: this.serviceOrder.client_record.name,
+          phone: this.serviceOrder.client_record.phone ?? '',
+        } as Client);
+      }
 
       if (this.serviceOrder.items?.length) {
         const mapped: AnyLineForm[] = this.serviceOrder.items.map(it => {
@@ -189,7 +344,10 @@ export class ServiceOrderFormComponent implements OnInit, OnDestroy {
               quantity: it.quantity ?? 1,
               unit_price: Number(it.unit_price) || 0,
               purchase_price: Number(it.purchase_price) || 0,
-              total_quantity: it.total_quantity ?? 0,
+              // Le stock restant ne compte plus ce que l'intervention a déjà
+              // sorti : on le rajoute, sinon une pièce prise au dernier
+              // exemplaire se lirait « 0 en stock pour 1 demandée ».
+              total_quantity: (it.total_quantity ?? 0) + (Number(it.deducted_quantity) || 0),
               searchQuery: it.product_name ?? '',
               searchResults: [],
               searching: false,
@@ -207,15 +365,25 @@ export class ServiceOrderFormComponent implements OnInit, OnDestroy {
         });
         this.lines.set(mapped);
       }
+    } else if (this.initialCommercials.length === 1) {
+      this.commercial_id.set(this.initialCommercials[0].id);
     }
 
     this.setupClientSearch();
+    this.setupAddPartSearch();
     this.loadClients();
+
+    this.initialSnapshot.set(this.snapshot());
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /** Après un enregistrement réussi, l'écran repart propre. */
+  markSaved(): void {
+    this.initialSnapshot.set(this.snapshot());
   }
 
   private loadServiceProducts(): void {
@@ -245,12 +413,6 @@ export class ServiceOrderFormComponent implements OnInit, OnDestroy {
           const found = list.find(c => c.id === this.client_id());
           if (found) {
             this.selectedClient.set(found);
-          } else if (this.serviceOrder?.client_record) {
-            this.selectedClient.set({
-              id: this.serviceOrder.client_id!,
-              name: this.serviceOrder.client_record.name,
-              phone: this.serviceOrder.client_record.phone ?? '',
-            } as Client);
           }
         }
       },
@@ -259,6 +421,45 @@ export class ServiceOrderFormComponent implements OnInit, OnDestroy {
         this.filteredClients.set([]);
       },
     });
+  }
+
+  private loadClientBalance(clientId: number | null): void {
+    this.clientBalance.set(null);
+    if (!clientId) return;
+    this.clientService.getClientProfile(clientId).subscribe({
+      next: (profile) => this.clientBalance.set(Number(profile?.outstanding_balance ?? 0)),
+      error: () => this.clientBalance.set(null),
+    });
+  }
+
+  /** La visite précédente du même véhicule — jamais l'intervention en cours. */
+  private loadLastVisit(vehicleId: number | null): void {
+    this.lastVisit.set(null);
+    if (!vehicleId) return;
+    this.serviceOrderService.getServiceOrders({
+      vehicle_id: String(vehicleId),
+      exclude_status: 'ANNULE',
+      per_page: '5',
+    }).subscribe({
+      next: (res) => {
+        const currentId = this.serviceOrder?.id;
+        const previous = (res.data ?? []).find(o => o.id !== currentId) ?? null;
+        this.lastVisit.set(previous);
+      },
+      error: () => this.lastVisit.set(null),
+    });
+  }
+
+  lastVisitLabel(): string {
+    const v = this.lastVisit();
+    if (!v) return '';
+    const parts: string[] = [];
+    if (v.mileage) parts.push(`${Number(v.mileage).toLocaleString('fr-FR')} km`);
+    const [, m, d] = (v.date ?? '').slice(0, 10).split('-');
+    const when = d && m ? `le ${d}/${m}` : '';
+    const what = (v.items ?? []).map(i => i.item_type === 'part' ? i.product_name : i.service_type)
+      .filter(Boolean).slice(0, 2).join(', ').toLowerCase();
+    return `Dernière visite ${[parts.join(''), when].filter(Boolean).join(', ')}${what ? ' — ' + what : ''}`;
   }
 
   private setupClientSearch(): void {
@@ -279,6 +480,24 @@ export class ServiceOrderFormComponent implements OnInit, OnDestroy {
     ).subscribe(clients => {
       this.filteredClients.set(clients.slice(0, 8));
     });
+  }
+
+  private setupAddPartSearch(): void {
+    this.addPartSearch$.pipe(
+      debounceTime(250),
+      distinctUntilChanged(),
+      switchMap(term => {
+        if (term.trim().length < 2) {
+          this.addSearching.set(false);
+          return of([] as PartSearchResult[]);
+        }
+        this.addSearching.set(true);
+        return this.serviceOrderService.searchParts(term.trim()).pipe(
+          finalize(() => this.addSearching.set(false)),
+        );
+      }),
+      takeUntil(this.destroy$),
+    ).subscribe(results => this.addPartResults.set(results));
   }
 
   // --- Quick client creation ---
@@ -311,8 +530,12 @@ export class ServiceOrderFormComponent implements OnInit, OnDestroy {
     }]);
   }
 
+  /**
+   * Retire une ligne. L'ancien formulaire gardait toujours une ligne vide ;
+   * ici la ligne d'ajout en tient lieu, on peut donc tout retirer — la
+   * validation (au moins une ligne valide) reste la même.
+   */
   removeLine(index: number): void {
-    if (this.lines().length === 1) return;
     this.lines.update(l => l.filter((_, i) => i !== index));
   }
 
@@ -410,6 +633,109 @@ export class ServiceOrderFormComponent implements OnInit, OnDestroy {
     this.activeServiceDropdown.set(-1);
   }
 
+  /** Au départ du champ : laisse le clic sur une suggestion arriver d'abord. */
+  closeServiceDropdownSoon(): void {
+    setTimeout(() => this.closeServiceDropdown(), 150);
+  }
+
+  // --- La ligne d'ajout (refonte 2b, 12a) ---
+
+  /** « + Prestation » et « + Pièce » choisissent le type, puis donnent la main à la ligne. */
+  setAddType(type: 'service' | 'part'): void {
+    this.addType.set(type);
+    this.addOpen.set(true);
+    if (type === 'part') this.addPartSearch$.next(this.addQuery());
+    setTimeout(() => this.addInputRef?.nativeElement.focus());
+  }
+
+  onAddQueryInput(value: string): void {
+    this.addQuery.set(value);
+    this.addOpen.set(true);
+    if (this.addType() === 'part') this.addPartSearch$.next(value);
+  }
+
+  /**
+   * Entrée : la première suggestion. Une prestation sans correspondance au
+   * catalogue s'ajoute en saisie libre, sous le nom tapé ; une pièce doit
+   * exister au catalogue.
+   */
+  commitAdd(): void {
+    const query = this.addQuery().trim();
+    if (this.addType() === 'service') {
+      const first = query ? this.addServiceSuggestions()[0] : undefined;
+      if (first) this.addServiceFromCatalog(first);
+      else if (query) this.addFreeService(query);
+      return;
+    }
+    const part = this.addPartResults()[0];
+    if (part) this.addPartFromSearch(part);
+  }
+
+  addServiceFromCatalog(product: ServiceProductOption): void {
+    this.addQuickServiceLine(product);
+    this.resetAdd();
+  }
+
+  addFreeService(name: string): void {
+    this.lines.update(l => [...l, {
+      item_type: 'service', service_type: name, description: '', quantity: 1,
+      purchase_price: 0, parts_cost: 0, labor_cost: 0,
+    }]);
+    this.resetAdd();
+  }
+
+  addPartFromSearch(part: PartSearchResult): void {
+    this.addPartLine();
+    this.selectPart(this.lines().length - 1, part);
+    this.resetAdd();
+  }
+
+  private resetAdd(): void {
+    this.addQuery.set('');
+    this.addPartResults.set([]);
+    this.addOpen.set(false);
+    // La ligne garde le type choisi : on enchaîne les pièces, ou les prestations.
+    setTimeout(() => this.addInputRef?.nativeElement.focus());
+  }
+
+  closeAdd(): void {
+    // Laisse le temps au clic sur une suggestion d'arriver avant de fermer.
+    setTimeout(() => this.addOpen.set(false), 150);
+  }
+
+  // --- Lecture d'une ligne ---
+
+  isShortage(line: AnyLineForm): boolean {
+    return line.item_type === 'part'
+      && !!line.product_id
+      && line.total_quantity < (Number(line.quantity) || 1);
+  }
+
+  isCatalogService(line: AnyLineForm): boolean {
+    if (line.item_type !== 'service') return false;
+    const name = line.service_type.trim().toLowerCase();
+    return !!name && this.serviceProducts().some(p => (p.profile ?? '').trim().toLowerCase() === name);
+  }
+
+  /** « 1 en stock pour 2 demandées » : ce qui manque, dit avec les deux chiffres. */
+  stockLabel(line: PartLineForm): string {
+    const qty = Number(line.quantity) || 1;
+    if (line.total_quantity < qty) {
+      return `${line.total_quantity} en stock pour ${qty} demandée${qty > 1 ? 's' : ''}`;
+    }
+    return `${line.total_quantity} en stock`;
+  }
+
+  /** Le résumé de la rupture au pied : « plaquettes, 1 sur 2 ». */
+  shortageSummary(): string {
+    const short = this.shortLines();
+    if (short.length === 1) {
+      const l = short[0];
+      return `Une pièce manque (${l.product_name}, ${l.total_quantity} sur ${Number(l.quantity) || 1})`;
+    }
+    return `${short.length} pièces manquent`;
+  }
+
   // --- Client ---
 
   onClientSearchInput(value: string): void {
@@ -443,7 +769,8 @@ export class ServiceOrderFormComponent implements OnInit, OnDestroy {
 
   // --- Submit ---
 
-  onSubmit(): void {
+  /** Le corps envoyé à l'API, pour un statut donné (celui de l'écran par défaut). */
+  buildPayload(status: ServiceOrderStatus = this.status()): ServiceOrderPayload {
     const items = this.lines().map((line, i) => {
       if (line.item_type === 'part') {
         return {
@@ -472,7 +799,7 @@ export class ServiceOrderFormComponent implements OnInit, OnDestroy {
       ? `${this.selectedVehicleObj()!.brand} ${this.selectedVehicleObj()!.model_name}`
       : this.vehicle();
 
-    const payload: ServiceOrderPayload = {
+    return {
       client_id: this.client_id(),
       vehicle_id: this.vehicle_id(),
       date: this.date(),
@@ -480,11 +807,45 @@ export class ServiceOrderFormComponent implements OnInit, OnDestroy {
       mileage: this.mileage(),
       items,
       discount: Number(this.discount()) || 0,
-      status: this.status(),
+      status,
       notes: this.notes() || null,
       commercial_id: this.commercial_id(),
     };
-    this.save.emit(payload);
+  }
+
+  /** Enregistre tel quel, sans changer l'état. */
+  onSubmit(): void {
+    if (!this.canSave() || this.busy) return;
+    this.save.emit({ payload: this.buildPayload() });
+  }
+
+  /** « Terminer l'intervention » : enregistre et passe au statut TERMINE. */
+  finish(): void {
+    if (!this.canSave() || this.busy) return;
+    this.status.set('TERMINE');
+    this.save.emit({ payload: this.buildPayload('TERMINE') });
+  }
+
+  /** « Rétablir » une intervention annulée : elle repart en cours. */
+  reopen(): void {
+    if (!this.canSave() || this.busy) return;
+    this.status.set('EN COURS');
+    this.save.emit({ payload: this.buildPayload('EN COURS') });
+  }
+
+  /**
+   * « Facturer » et « Encaisser » ouvrent le volet d'encaissement. Une
+   * modification non enregistrée l'est d'abord : on n'encaisse pas un
+   * montant que la base ne connaît pas.
+   */
+  collectPayment(): void {
+    if (this.busy) return;
+    if (this.dirty()) {
+      if (!this.canSave()) return;
+      this.save.emit({ payload: this.buildPayload(), thenCollect: true });
+      return;
+    }
+    this.collect.emit();
   }
 
   onCancel(): void {
@@ -501,6 +862,40 @@ export class ServiceOrderFormComponent implements OnInit, OnDestroy {
 
   partLineTotal(line: PartLineForm): number {
     return (Number(line.quantity) || 1) * (Number(line.unit_price) || 0);
+  }
+
+  lineTotal(line: AnyLineForm): number {
+    return line.item_type === 'part' ? this.partLineTotal(line) : this.serviceLineTotal(line);
+  }
+
+  /** « ouverte le 17/09 à 09:40 » — l'heure d'ouverture de la barre. */
+  openedAt(): string {
+    const at = this.serviceOrder?.created_at;
+    if (!at) return '';
+    const d = new Date(at);
+    if (Number.isNaN(d.getTime())) return '';
+    const two = (n: number) => String(n).padStart(2, '0');
+    return `ouverte le ${two(d.getDate())}/${two(d.getMonth() + 1)} à ${two(d.getHours())}:${two(d.getMinutes())}`;
+  }
+
+  mechanicName(): string {
+    const id = this.commercial_id();
+    return this.initialCommercials.find(c => c.id === id)?.name ?? this.serviceOrder?.commercial?.name ?? '';
+  }
+
+  /** La plaque en tête de barre ; à défaut le véhicule saisi. */
+  plate(): string {
+    return this.selectedVehicleObj()?.plate
+      || this.serviceOrder?.vehicle_data?.plate
+      || '';
+  }
+
+  vehicleName(): string {
+    const v = this.selectedVehicleObj();
+    if (v) return `${v.brand} ${v.model_name}`;
+    const data = this.serviceOrder?.vehicle_data;
+    if (data && data.id === this.vehicle_id()) return `${data.brand} ${data.model_name}`;
+    return this.vehicle();
   }
 
   get isEditing(): boolean {

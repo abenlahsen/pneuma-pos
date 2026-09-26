@@ -257,6 +257,14 @@ export class PurchasesPageComponent implements OnInit {
 
         // L'achat n'a pas d'écran plein de saisie : la fiche routée renvoie ici
         // avec ?edit=<id> pour rouvrir le formulaire de la liste.
+        // Refonte 2b, 12a : « Commander la pièce » depuis une intervention.
+        // La saisie d'achat n'a pas encore d'écran plein (12b) : on ouvre le
+        // formulaire de la liste.
+        if (params.get('nouveau')) {
+          this.openForm();
+          return;
+        }
+
         const editId = Number(params.get('edit'));
         if (Number.isFinite(editId) && editId > 0) {
           this.purchaseService.getPurchase(editId).subscribe({

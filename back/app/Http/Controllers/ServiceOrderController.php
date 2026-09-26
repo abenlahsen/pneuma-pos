@@ -264,6 +264,18 @@ class ServiceOrderController extends Controller
             $query->where('status', (string) $request->string('status'));
         }
 
+        // Refonte 2b, 12a : la vue Liste masque les interventions annulées par
+        // défaut, derrière un filtre « Annulées ».
+        if ($request->filled('exclude_status')) {
+            $query->where('status', '!=', (string) $request->string('exclude_status'));
+        }
+
+        // Refonte 2b, 12a : l'écran d'intervention affiche la dernière visite
+        // du véhicule.
+        if ($request->filled('vehicle_id')) {
+            $query->where('vehicle_id', $request->integer('vehicle_id'));
+        }
+
         if ($request->filled('payment_status')) {
             $query->where('payment_status', (string) $request->string('payment_status'));
         }

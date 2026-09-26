@@ -2,13 +2,11 @@ import { Component, OnInit, signal, computed, inject, DestroyRef } from '@angula
 import { CommonModule } from '@angular/common';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ServiceOrder, ServiceOrderFilters, ServiceOrderPayload, ServiceOrderSummary } from '../../../core/models/service-order.model';
 import { PaymentStatus, ServiceOrderStatus, SERVICE_ORDER_STATUSES, SERVICE_ORDER_STATUS_LABELS, PAYMENT_STATUSES, PAYMENT_STATUS_LABELS } from '../../../core/constants/status.constants';
 import { ServiceOrderService } from '../data-access/service-order.service';
-import { ServiceOrderFormComponent } from '../service-order-form/service-order-form.component';
-import { ServiceOrderDetailComponent } from '../service-order-detail/service-order-detail.component';
 import { ServicePaymentPanelComponent } from '../service-payment-panel/service-payment-panel.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
@@ -30,8 +28,6 @@ import {
   imports: [
     CommonModule,
     FormsModule,
-    ServiceOrderFormComponent,
-    ServiceOrderDetailComponent,
     ServicePaymentPanelComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, RowOverflowComponent, ConfirmDeleteComponent],
   templateUrl: './service-orders.component.html',
   styleUrls: ['./service-orders.component.scss'],
@@ -126,11 +122,13 @@ export class ServiceOrdersComponent implements OnInit {
   isExporting = signal(false);
 
   exportError = signal('');
-  showForm = signal(false);
-  loadingEdit = signal(false);
-  loadingDetail = signal(false);
-  editingOrder = signal<ServiceOrder | null>(null);
-  detailOrder = signal<ServiceOrder | null>(null);
+  /**
+   * Refonte 2b, 12a : les interventions annulées sont masquées par défaut ;
+   * le filtre « Annulées » les fait revenir. Un filtre de statut explicite
+   * l'emporte.
+   */
+  readonly showCancelled = signal(false);
+  private readonly router = inject(Router);
   paymentOrder = signal<ServiceOrder | null>(null);
   deletingId = signal<number | null>(null);
 
@@ -286,9 +284,7 @@ export class ServiceOrdersComponent implements OnInit {
         const id = Number(params.get('id'));
         if (!Number.isFinite(id) || id <= 0) return;
 
-        this.serviceOrderService.getServiceOrder(id).subscribe({
-          next: order => this.openDetail(order),
-        });
+        this.router.navigate(['/service-auto', id], { replaceUrl: true });
       });
   }
 
@@ -412,52 +408,26 @@ export class ServiceOrdersComponent implements OnInit {
     this.loadData();
   }
 
+  /**
+   * Refonte 2b, 12a : la fiche et le formulaire ne sont plus des modales. Une
+   * intervention s'ouvre, se crée et se modifie sur son écran,
+   * `/service-auto/nouveau` et `/service-auto/:id`.
+   */
   openAddForm(): void {
-    this.editingOrder.set(null);
-    this.showForm.set(true);
+    this.router.navigate(['/service-auto', 'nouveau']);
   }
 
   openDetail(order: ServiceOrder): void {
-    this.detailOrder.set(order);
-    this.loadingDetail.set(true);
-    this.serviceOrderService.getServiceOrder(order.id).subscribe({
-      next: (full) => {
-        this.detailOrder.set(full);
-        this.loadingDetail.set(false);
-      },
-      error: () => {
-        this.loadingDetail.set(false);
-        this.detailOrder.set(null);
-      },
-    });
-  }
-
-  closeDetail(): void {
-    this.detailOrder.set(null);
-    this.loadingDetail.set(false);
-  }
-
-  editFromDetail(): void {
-    const order = this.detailOrder();
-    if (!order) return;
-    this.closeDetail();
-    this.openEditForm(order);
+    this.router.navigate(['/service-auto', order.id]);
   }
 
   openEditForm(order: ServiceOrder): void {
-    this.editingOrder.set(null);
-    this.loadingEdit.set(true);
-    this.showForm.set(true);
-    this.serviceOrderService.getServiceOrder(order.id).subscribe({
-      next: (full) => {
-        this.editingOrder.set(full);
-        this.loadingEdit.set(false);
-      },
-      error: () => {
-        this.loadingEdit.set(false);
-        this.showForm.set(false);
-      },
-    });
+    this.openDetail(order);
+  }
+
+  toggleCancelled(): void {
+    this.showCancelled.update(v => !v);
+    this.applyFilters();
   }
 
   orderProductLabels(order: ServiceOrder): string[] {
@@ -475,34 +445,6 @@ export class ServiceOrdersComponent implements OnInit {
 
   getPartItems(order: ServiceOrder) {
     return (order.items ?? []).filter(i => i.item_type === 'part');
-  }
-
-  closeForm(): void {
-    this.showForm.set(false);
-    this.editingOrder.set(null);
-  }
-
-  onFormSubmit(payload: ServiceOrderPayload): void {
-    const editing = this.editingOrder();
-    if (editing) {
-      this.serviceOrderService.updateServiceOrder(editing.id, payload).subscribe({
-        next: () => {
-          this.closeForm();
-          this.loadData();
-          this.loadSummary();
-          this.loadBoard();
-        },
-      });
-    } else {
-      this.serviceOrderService.createServiceOrder(payload).subscribe({
-        next: () => {
-          this.closeForm();
-          this.loadData();
-          this.loadSummary();
-          this.loadBoard();
-        },
-      });
-    }
   }
 
   deleteOrder(order: ServiceOrder): void {
@@ -547,6 +489,7 @@ export class ServiceOrdersComponent implements OnInit {
     if (this.filterClientId()) f['client_id'] = String(this.filterClientId());
     if (this.filterProductId()) f['product_id'] = String(this.filterProductId());
     if (this.filterStatus()) f['status'] = this.filterStatus();
+    else if (!this.showCancelled()) f['exclude_status'] = 'ANNULE';
     if (this.filterPaymentStatus()) f['payment_status'] = this.filterPaymentStatus();
     if (this.filterPaymentMethod()) f['payment_method'] = this.filterPaymentMethod();
     if (this.filterCommercial()) f['commercial_id'] = this.filterCommercial();

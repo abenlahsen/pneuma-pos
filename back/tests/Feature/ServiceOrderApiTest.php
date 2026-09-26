@@ -244,6 +244,129 @@ class ServiceOrderApiTest extends TestCase
             ->assertJsonPath('commercial.role', 'Administrator');
     }
 
+    // -------------------------------------------------------------------------
+    // Refonte 2b, 12a — pièce en rupture : le stock rendu est celui sorti
+    // -------------------------------------------------------------------------
+
+    /** Une pièce, un seul lot de `$quantity` unités. */
+    private function createPartWithStock(int $quantity): array
+    {
+        $part = Product::query()->create([
+            'profile' => 'Plaquettes avant',
+            'reference' => 'BRE-'.fake()->unique()->numerify('#####'),
+            'type' => 'part',
+            'is_active' => true,
+            'unit' => 'pièce',
+        ]);
+
+        $stock = \App\Models\Stock::query()->create([
+            'product_id' => $part->id,
+            'quantity' => $quantity,
+            'purchase_price' => 310,
+            'user_id' => $this->user->id,
+        ]);
+
+        return [$part, $stock];
+    }
+
+    private function partOrderPayload(Product $part, int $quantity, array $overrides = []): array
+    {
+        return array_merge($this->validOrderPayload(), [
+            'items' => [[
+                'item_type' => 'part',
+                'product_id' => $part->id,
+                'quantity' => $quantity,
+                'unit_price' => 520,
+                'purchase_price' => 310,
+            ]],
+        ], $overrides);
+    }
+
+    public function test_a_part_short_of_stock_takes_only_what_the_lot_holds(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+        [$part, $stock] = $this->createPartWithStock(1);
+
+        $id = $this->postJson('/api/service-orders', $this->partOrderPayload($part, 2))
+            ->assertCreated()
+            ->json('id');
+
+        $this->assertSame(0, (int) $stock->fresh()->quantity);
+        $this->assertSame(1, (int) ServiceItem::query()->where('service_order_id', $id)->value('deducted_quantity'));
+    }
+
+    public function test_editing_an_order_short_of_stock_does_not_create_phantom_stock(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+        [$part, $stock] = $this->createPartWithStock(1);
+
+        $id = $this->postJson('/api/service-orders', $this->partOrderPayload($part, 2))->json('id');
+
+        // Avant : la restauration rendait 2 pour 1 sorti, puis la déduction en
+        // reprenait 2 sur les 2 ainsi fabriqués — le lot passait à 0 en
+        // apparence, mais l'annulation ci-dessous en faisait apparaître 2.
+        $this->putJson("/api/service-orders/{$id}", $this->partOrderPayload($part, 2))->assertOk();
+        $this->assertSame(0, (int) $stock->fresh()->quantity);
+
+        $this->putJson("/api/service-orders/{$id}", $this->partOrderPayload($part, 2, ['status' => 'ANNULE']))->assertOk();
+        $this->assertSame(1, (int) $stock->fresh()->quantity);
+    }
+
+    public function test_cancelling_twice_does_not_restore_stock_twice(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+        [$part, $stock] = $this->createPartWithStock(5);
+
+        $id = $this->postJson('/api/service-orders', $this->partOrderPayload($part, 2))->json('id');
+        $this->assertSame(3, (int) $stock->fresh()->quantity);
+
+        $order = ServiceOrder::findOrFail($id);
+        app(\App\Domain\ServiceOrders\StockDeductionService::class)->restoreForOrder($order, $this->user->id);
+        app(\App\Domain\ServiceOrders\StockDeductionService::class)->restoreForOrder($order, $this->user->id);
+
+        $this->assertSame(5, (int) $stock->fresh()->quantity);
+    }
+
+    // -------------------------------------------------------------------------
+    // Refonte 2b, 12a — filtres de la liste
+    // -------------------------------------------------------------------------
+
+    public function test_index_can_hide_cancelled_orders(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+        $cancelled = $this->createOrder(['status' => 'ANNULE']);
+
+        $ids = collect($this->getJson('/api/service-orders?exclude_status=ANNULE&per_page=100')->assertOk()->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($this->order->id));
+        $this->assertFalse($ids->contains($cancelled->id));
+    }
+
+    public function test_index_filters_by_vehicle(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+        $client = \App\Models\Client::query()->create([
+            'name' => 'Client Véhicule',
+            'created_by' => $this->user->id,
+            'updated_by' => $this->user->id,
+            'is_active' => true,
+        ]);
+        $vehicle = \App\Models\Vehicle::query()->create([
+            'client_id' => $client->id,
+            'plate' => '44821-A-12',
+            'brand' => 'Dacia',
+            'model_name' => 'Logan',
+            'circulation_month' => 1,
+            'circulation_year' => 2020,
+            'is_active' => true,
+        ]);
+        $mine = $this->createOrder(['vehicle_id' => $vehicle->id, 'client_id' => $client->id]);
+
+        $ids = collect($this->getJson("/api/service-orders?vehicle_id={$vehicle->id}")->assertOk()->json('data'))->pluck('id');
+
+        $this->assertEquals([$mine->id], $ids->all());
+    }
+
     public function test_show_returns_404_for_unknown_order(): void
     {
         Sanctum::actingAs($this->user, [], 'web');

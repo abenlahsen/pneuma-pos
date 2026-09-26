@@ -1,0 +1,44 @@
+<div class="sop-shell">
+  <p class="sop-loading" *ngIf="loading()">Chargement de l'intervention…</p>
+
+  <app-list-error
+    *ngIf="loadError()"
+    title="L'intervention n'a pas pu être chargée."
+    [cause]="loadError()!"
+    [detail]="loadErrorDetail()"
+    (retry)="load()" />
+
+  <p class="sop-save-error" *ngIf="saveError()">{{ saveError() }}</p>
+
+  @if (!loading() && !loadError()) {
+    <app-service-order-form
+      [serviceOrder]="order()"
+      [initialCommercials]="commercials()"
+      [payments]="payments()"
+      [canSeeMargin]="canSeeMargin"
+      [canDelete]="canDelete"
+      [busy]="saving()"
+      (save)="onSave($event)"
+      (cancel)="back()"
+      (cancelOrder)="onCancelOrder()"
+      (collect)="onCollect()"
+      (print)="onPrint()"
+      (remove)="onRemove()"
+      (orderPart)="onOrderPart($event)" />
+  }
+</div>
+
+@if (showPayments() && order(); as o) {
+  <app-service-payment-panel [serviceOrder]="o" (closed)="onPaymentsClosed()" />
+}
+
+<!-- Refonte 2b, gabarit 15c : la confirmation partagée. -->
+<app-confirm-delete
+  *ngIf="pendingDelete() as pending"
+  [title]="pending.title"
+  [consequence]="pending.consequence ?? ''"
+  [detail]="pending.detail ?? ''"
+  [confirmLabel]="pending.confirmLabel ?? 'Supprimer'"
+  [reasonRequired]="pending.reasonRequired ?? false"
+  (confirm)="runPendingDelete($event)"
+  (cancel)="pendingDelete.set(null)" />
