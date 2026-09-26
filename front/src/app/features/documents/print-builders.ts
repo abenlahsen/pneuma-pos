@@ -6,6 +6,9 @@ import {
   PrintInfo,
   PrintLine,
 } from '../../shared/document-print/document-print.component';
+import { signatoryOf } from '../../shared/document-print/signatory';
+
+export { signatoryOf };
 
 /**
  * De l'entité au document imprimé — refonte 2b, étape 10.
@@ -54,22 +57,6 @@ function addressLine(address: unknown, city: unknown): string {
   if (!a) return c;
   if (!c || a.toLowerCase().includes(c.toLowerCase())) return a;
   return `${a}, ${c}`;
-}
-
-/** Les rôles Spatie sont en anglais ; la signature est en français. */
-const ROLE_LABELS: Record<string, string> = {
-  Administrator: 'administrateur',
-  Manager: 'responsable',
-  Commercial: 'commercial',
-  Driver: 'chauffeur',
-};
-
-export function signatoryOf(person: { name?: string | null; role?: string | null } | null | undefined): string | null {
-  const name = text(person?.name);
-  if (!name) return null;
-  const role = text(person?.role);
-  if (!role) return name;
-  return `${name} · ${ROLE_LABELS[role] ?? role.toLowerCase()}`;
 }
 
 function info(label: string, value: unknown, mono = false): PrintInfo | null {

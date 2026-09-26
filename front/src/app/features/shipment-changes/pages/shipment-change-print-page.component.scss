@@ -458,6 +458,58 @@ $paper-rule-light: #ccc;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+
+  /* Le bloc global de styles.scss remet `display: revert !important` à tout
+     ce qui est sous `.print-area` : chaque flex et chaque grille retombait en
+     bloc, et la lettre imprimée sortait désarticulée — en-tête sur une ligne,
+     cadre éclaté, signatures superposées. On réaffirme ici chaque `display`
+     dont la mise en page dépend ; la spécificité du composant l'emporte sur
+     `.print-area *`. Même remède que document-print (étape 10). */
+  .scp-paper { display: flex !important; }
+
+  .scp-head,
+  .scp-sign,
+  .scp-sign-boxes,
+  .scp-legal { display: flex !important; }
+
+  .scp-parties,
+  .scp-frame,
+  .scp-change,
+  .scp-signatures { display: grid !important; }
+
+  .scp-head-right,
+  .scp-kicker,
+  .scp-ref,
+  .scp-place,
+  .scp-label,
+  .scp-party,
+  .scp-party-name,
+  .scp-party-lines,
+  .scp-frame-main,
+  .scp-frame-cell,
+  .scp-shipment,
+  .scp-frame-value,
+  .scp-sign-name { display: block !important; }
+}
+
+/* ── La capture PDF ─────────────────────────────────────────────────────── */
+/* PrintService pose `.pdf-capture` sur la feuille le temps de la génération.
+   Le cadre et l'ombre d'écran sortaient dans le PDF — 2 px de trop, qui
+   ouvraient une seconde page blanche — et la réduction d'écran étroit
+   faussait la capture. Les chiffres tabulaires et les alternates
+   contextuelles d'Inter, que le canevas ne dessine pas, trouaient le texte :
+   « DM- 2026- 0003 », « 16 /09/2026 ». */
+.scp-paper.pdf-capture {
+  border: 0;
+  box-shadow: none;
+  transform: none;
+  margin-bottom: 0;
+
+  &,
+  * {
+    font-variant-numeric: normal !important;
+    font-feature-settings: "calt" 0 !important;
+  }
 }
 
 /* La feuille porte ses propres marges de 15 mm : celles de la page doivent

@@ -88,7 +88,7 @@ describe('ShipmentChangePrintPageComponent', () => {
     });
 
     it('nomme le signataire avec sa fonction', () => {
-      expect(comp.signatory()).toBe('Y. Benali · manager');
+      expect(comp.signatory()).toBe('Y. Benali · responsable');
     });
 
     it('se contente du nom quand le rôle manque', () => {
@@ -155,6 +155,13 @@ describe('ShipmentChangePrintPageComponent', () => {
     it('garde la raison sociale seule quand elle contient déjà le nom', () => {
       Object.assign(comp, { settings: () => ({ company_name: 'PNEU.MA', legal_name: 'PNEU.MA SARL' }) });
       expect(comp.issuerName()).toBe('PNEU.MA SARL');
+    });
+
+    it('revient à la vente sur `/sales`, la route qui existe', () => {
+      const navigate = vi.fn();
+      Object.assign(comp, { router: { navigate } });
+      comp.back();
+      expect(navigate).toHaveBeenCalledWith(['/sales', makeRequest().sale_id]);
     });
 
     it('rend une date absente par un tiret, jamais par une date inventée', () => {

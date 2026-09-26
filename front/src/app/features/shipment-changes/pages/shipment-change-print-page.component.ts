@@ -21,6 +21,7 @@ import {
 
 import { ListErrorComponent, describeLoadError } from '../../../shared/list-state';
 import { issuerNameOf } from '../../../shared/document-print/issuer-name';
+import { signatoryOf } from '../../../shared/document-print/signatory';
 
 /**
  * La lettre au transporteur — refonte 2b, 9d, maquette 18c.
@@ -154,7 +155,9 @@ export class ShipmentChangePrintPageComponent implements OnInit {
   back(): void {
     const saleId = this.request()?.sale_id;
     // Retour à la vente d'où la demande est partie ; à défaut, à la liste.
-    this.router.navigate(saleId ? ['/ventes', saleId] : ['/ventes']);
+    // La route est `/sales` : `/ventes` n'existait pas et renvoyait, par le
+    // joker, au tableau de bord.
+    this.router.navigate(saleId ? ['/sales', saleId] : ['/sales']);
   }
 
   // ── Les deux champs que 18c ajoute ─────────────────────────────────────────
@@ -173,9 +176,9 @@ export class ShipmentChangePrintPageComponent implements OnInit {
 
   /** Le signataire, avec sa fonction. */
   signatory(): string | null {
-    const creator = this.request()?.creator;
-    if (!creator) return null;
-    return creator.role ? `${creator.name} · ${creator.role.toLowerCase()}` : creator.name;
+    // Le rôle en français, comme sur la facture : « administrateur » et non
+    // l'identifiant Spatie « administrator ».
+    return signatoryOf(this.request()?.creator);
   }
 
   // ── Actions ────────────────────────────────────────────────────────────────

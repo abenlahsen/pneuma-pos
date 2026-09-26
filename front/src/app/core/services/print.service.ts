@@ -93,48 +93,70 @@ export class PrintService {
     return this.settings$;
   }
 
-  private async generatePdf(element: HTMLElement): Promise<any> {
+  /**
+   * Pose le mode capture le temps d'une génération : la classe
+   * `.pdf-capture`, que chaque feuille interprète (échelle 1, cadre d'écran
+   * retiré, variantes typographiques coupées), puis deux images pour que la
+   * mise en page se refasse avant qu'on la mesure ou la capture.
+   */
+  private async withCaptureMode<T>(element: HTMLElement, run: () => Promise<T>): Promise<T> {
+    element.classList.add('pdf-capture');
+    try {
+      await nextFrame();
+      await nextFrame();
+      return await run();
+    } finally {
+      element.classList.remove('pdf-capture');
+    }
+  }
+
+  /**
+   * La lettre au transporteur (18c) : une feuille A4 de hauteur fixe,
+   * capturée d'un bloc et posée pleine page.
+   *
+   * Trois défauts corrigés (refonte 2b, après l'étape 11) :
+   *  - la capture comptait le cadre d'écran de la feuille, 2 px de trop : le
+   *    découpage en tranches de 297 mm ouvrait une seconde page blanche.
+   *    Une feuille qui tient à quelques millimètres près est désormais posée
+   *    sur une seule page ;
+   *  - l'image était en PNG — 10 Mo pour une page. En JPEG, quelques
+   *    centaines de Ko ;
+   *  - le texte sortait troué (« DM- 2026- 0003 », « 16 /09 ») : le mode
+   *    capture coupe les variantes qu'html2canvas ne sait pas dessiner.
+   *
+   * Au-delà d'une page — ce que la lettre interdit, mais ce service ne le
+   * suppose pas — l'image est encore découpée en tranches.
+   */
+  async downloadPdf(element: HTMLElement, filename: string): Promise<void> {
     const html2canvas = (await import('html2canvas')).default;
     const { jsPDF } = await import('jspdf');
 
-    const canvas = await html2canvas(element, {
+    const canvas = await this.withCaptureMode(element, () => html2canvas(element, {
       scale: 2,
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
-    });
+    }));
 
-    const imgData = canvas.toDataURL('image/png');
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = pageWidth;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const imgHeight = (canvas.height * pageWidth) / canvas.width;
 
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+    // Une feuille A4 à l'arrondi près : une seule page, ajustée.
+    if (imgHeight <= pageHeight + 3) {
+      pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, Math.min(imgHeight, pageHeight));
+    } else {
+      let offset = 0;
+      while (offset < imgHeight - 0.5) {
+        if (offset > 0) pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, -offset, pageWidth, imgHeight);
+        offset += pageHeight;
+      }
     }
 
-    return pdf;
-  }
-
-  /**
-   * La lettre au transporteur (18c) : une feuille de hauteur fixe, capturée
-   * d'un bloc. Le découpage en tranches de 297 mm ci-dessus ne sert qu'à
-   * elle — sur un document de plusieurs pages, il couperait des lignes.
-   */
-  async downloadPdf(element: HTMLElement, filename: string): Promise<void> {
-    const pdf = await this.generatePdf(element);
     pdf.save(`${filename}.pdf`);
   }
 
@@ -171,14 +193,8 @@ export class PrintService {
     //    variantes, le texte sortait troué — « 19 /05 », « X- FIT ».
     // Posé AVANT la mesure, il garantit que la mise en page mesurée est celle
     // qui est dessinée.
-    sheet.classList.add('pdf-capture');
-    try {
-      await nextFrame();
-      await nextFrame();
-      await this.renderDocumentPdf(content, footer, html2canvas, jsPDF, filename);
-    } finally {
-      sheet.classList.remove('pdf-capture');
-    }
+    await this.withCaptureMode(sheet, () =>
+      this.renderDocumentPdf(content, footer, html2canvas, jsPDF, filename));
   }
 
   private async renderDocumentPdf(
