@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -14,6 +14,28 @@ function getStoredToken(): string | null {
     const item = origin?.localStorage?.find((i: { name: string }) => i.name === 'auth_token');
     return item?.value ?? null;
   } catch { return null; }
+}
+
+/**
+ * Transporteurs — refonte 2b, étape 11. Motif de ligne au lieu d'un tableau,
+ * la barre de recherche du mixin (Entrée lance la recherche), le formulaire
+ * dans la modale de référentiel 15b, la suppression dans la confirmation 15c.
+ */
+const SEARCH = 'Nom ou téléphone…';
+
+/** Les vraies lignes — les squelettes n'ont pas de nom. */
+const carrierRows = (page: Page) => page.locator('.carriers-grid.list-grid-row').filter({ has: page.locator('.list-grid-name') });
+
+const carrierRow = (page: Page, name: string) =>
+  carrierRows(page).filter({ has: page.locator('.list-grid-name', { hasText: new RegExp(`^\\s*${name}\\s*$`) }) });
+
+/** Recherche un transporteur et attend la réponse. */
+async function searchCarrier(page: Page, name: string): Promise<void> {
+  await page.getByPlaceholder(SEARCH).fill(name);
+  await Promise.all([
+    page.waitForResponse(r => r.url().includes('/api/carriers') && r.request().method() === 'GET'),
+    page.getByPlaceholder(SEARCH).press('Enter'),
+  ]);
 }
 
 test.describe.serial('Transporteurs', () => {
@@ -33,16 +55,14 @@ test.describe.serial('Transporteurs', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/carriers');
-    await page.waitForLoadState('networkidle');
-    await expect(page.locator('h1')).toContainText('Transporteurs');
+    await expect(page.locator('h1')).toContainText('Transporteurs', { timeout: 15_000 });
+    await expect(carrierRows(page).first().or(page.locator('app-list-empty'))).toBeVisible({ timeout: 15_000 });
   });
 
   // ── Lecture ───────────────────────────────────────────────────────────────
 
-  test('affiche le tableau des transporteurs ou un état vide', async ({ page }) => {
-    const table = page.locator('table');
-    const emptyState = page.locator('td:has-text("Aucun transporteur trouvé.")');
-    await expect(table.or(emptyState).first()).toBeVisible();
+  test('affiche les transporteurs ou un état vide', async ({ page }) => {
+    await expect(carrierRows(page).first().or(page.locator('app-list-empty'))).toBeVisible();
   });
 
   test('le bouton "Nouveau Transporteur" est visible', async ({ page }) => {
@@ -55,32 +75,32 @@ test.describe.serial('Transporteurs', () => {
     test.setTimeout(60_000);
 
     await page.getByRole('button', { name: 'Nouveau Transporteur' }).click();
-    await expect(page.locator('.modal-container')).toBeVisible();
-    await expect(page.locator('.modal-container h2')).toContainText('Nouveau Transporteur');
+    const modal = page.getByRole('dialog', { name: 'Nouveau transporteur' });
+    await expect(modal).toBeVisible();
 
-    await page.fill('input[name="name"]', TEST_CARRIER);
-    await page.fill('input[name="phone"]', '0522111111');
-    await page.fill('input[name="email"]', 'e2e@transporteur.test');
+    await modal.locator('input[name="name"]').fill(TEST_CARRIER);
+    await modal.locator('input[name="phone"]').fill('0522111111');
+    await modal.locator('input[name="email"]').fill('e2e@transporteur.test');
 
-    // Pre-register GET listener before submit so we don't miss the auto-refresh
-    const refreshPromise = page.waitForResponse(r => r.url().includes('/api/carriers') && r.request().method() === 'GET');
-    await Promise.all([
-      page.waitForResponse(r => r.url().includes('/api/carriers') && r.request().method() !== 'GET'),
-      page.click('button[type="submit"]:has-text("Enregistrer")'),
+    const [postResp] = await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/carriers') && r.request().method() === 'POST'),
+      modal.getByRole('button', { name: 'Enregistrer' }).click(),
     ]);
-    await refreshPromise;
-    await expect(page.locator('.modal-overlay')).not.toBeVisible({ timeout: 10_000 });
-    await expect(page.locator('tbody td.fw-semibold', { hasText: TEST_CARRIER }).first()).toBeVisible({ timeout: 10_000 });
+    expect(postResp.status()).toBeLessThan(400);
+    await expect(modal).toBeHidden({ timeout: 10_000 });
+
+    await searchCarrier(page, TEST_CARRIER);
+    await expect(carrierRow(page, TEST_CARRIER)).toBeVisible({ timeout: 10_000 });
   });
 
   // ── Recherche ─────────────────────────────────────────────────────────────
 
-  test('rechercher le transporteur créé', async ({ page }) => {
-    await page.fill('input[placeholder="Nom ou téléphone..."]', TEST_CARRIER);
-    await page.keyboard.press('Enter');
-    await page.waitForLoadState('networkidle');
+  test('rechercher le transporteur créé, par son nom puis son téléphone', async ({ page }) => {
+    await searchCarrier(page, TEST_CARRIER);
+    await expect(carrierRow(page, TEST_CARRIER)).toBeVisible();
 
-    await expect(page.locator('tbody td.fw-semibold', { hasText: TEST_CARRIER }).first()).toBeVisible();
+    await searchCarrier(page, '0522111111');
+    await expect(carrierRow(page, TEST_CARRIER)).toBeVisible();
   });
 
   // ── Modification ──────────────────────────────────────────────────────────
@@ -88,29 +108,20 @@ test.describe.serial('Transporteurs', () => {
   test('modifier le transporteur créé', async ({ page }) => {
     test.setTimeout(60_000);
 
-    await page.fill('input[placeholder="Nom ou téléphone..."]', TEST_CARRIER);
-    await Promise.all([
-      page.waitForResponse(r => r.url().includes('/api/carriers') && r.request().method() === 'GET'),
-      page.click('button[title="Rechercher"]'),
-    ]);
+    await searchCarrier(page, TEST_CARRIER);
+    await carrierRow(page, TEST_CARRIER).locator('button[title="Modifier"]').click();
 
-    await page.locator('tbody tr', { hasText: TEST_CARRIER })
-      .locator('button[title="Modifier"]')
-      .click();
-    await expect(page.locator('.modal-container h2')).toContainText('Modifier Transporteur');
-
-    await page.fill('input[name="name"]', TEST_CARRIER_UPD);
+    const modal = page.getByRole('dialog', { name: `Modifier ${TEST_CARRIER}` });
+    await expect(modal).toBeVisible();
+    await modal.locator('input[name="name"]').fill(TEST_CARRIER_UPD);
     await Promise.all([
-      page.waitForResponse(r => r.url().includes('/api/carriers') && r.request().method() !== 'GET'),
-      page.click('button[type="submit"]:has-text("Enregistrer")'),
+      page.waitForResponse(r => r.url().includes('/api/carriers/') && r.request().method() === 'PUT'),
+      modal.getByRole('button', { name: 'Enregistrer' }).click(),
     ]);
+    await expect(modal).toBeHidden({ timeout: 10_000 });
 
-    // Re-search to get definitive fresh list
-    await Promise.all([
-      page.waitForResponse(r => r.url().includes('/api/carriers') && r.request().method() === 'GET'),
-      page.click('button[title="Rechercher"]'),
-    ]);
-    await expect(page.locator('tbody td', { hasText: TEST_CARRIER_UPD })).toBeVisible({ timeout: 10_000 });
+    await searchCarrier(page, TEST_CARRIER_UPD);
+    await expect(carrierRow(page, TEST_CARRIER_UPD)).toBeVisible({ timeout: 10_000 });
   });
 
   // ── Suppression (cleanup) ─────────────────────────────────────────────────
@@ -118,23 +129,18 @@ test.describe.serial('Transporteurs', () => {
   test('supprimer le transporteur de test', async ({ page }) => {
     test.setTimeout(60_000);
 
-    await page.fill('input[placeholder="Nom ou téléphone..."]', TEST_CARRIER_UPD);
+    await searchCarrier(page, TEST_CARRIER_UPD);
+    await carrierRow(page, TEST_CARRIER_UPD).locator('button[title="Supprimer"]').click();
+
+    // Gabarit 15c : la confirmation partagée, plus de confirm() natif.
+    const dialog = page.getByRole('alertdialog');
+    await expect(dialog).toContainText(TEST_CARRIER_UPD);
     await Promise.all([
-      page.waitForResponse(r => r.url().includes('/api/carriers') && r.request().method() === 'GET'),
-      page.click('button[title="Rechercher"]'),
+      page.waitForResponse(r => r.url().includes('/api/carriers/') && r.request().method() === 'DELETE'),
+      dialog.getByRole('button', { name: 'Supprimer' }).click(),
     ]);
 
-    page.once('dialog', (dialog) => dialog.accept());
-    await Promise.all([
-      page.waitForResponse(r => r.url().includes('/api/carriers') && r.request().method() === 'DELETE'),
-      page.locator('tbody tr', { hasText: TEST_CARRIER_UPD }).locator('button[title="Supprimer"]').click(),
-    ]);
-
-    // Re-search to get definitive fresh list
-    await Promise.all([
-      page.waitForResponse(r => r.url().includes('/api/carriers') && r.request().method() === 'GET'),
-      page.click('button[title="Rechercher"]'),
-    ]);
-    await expect(page.locator('tbody td', { hasText: TEST_CARRIER_UPD })).not.toBeVisible({ timeout: 10_000 });
+    await searchCarrier(page, TEST_CARRIER_UPD);
+    await expect(carrierRow(page, TEST_CARRIER_UPD)).toHaveCount(0, { timeout: 10_000 });
   });
 });

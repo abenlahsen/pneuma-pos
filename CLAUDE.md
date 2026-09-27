@@ -88,6 +88,8 @@ Config (`e2e/playwright.config.ts`): `timeout: 30_000` per test, `expect: { time
 - For reactive-form inputs (`formControlName`), prefer `page.getByPlaceholder(...)` over `page.locator('#id')` — reactive forms don't always emit a `name` attribute.
 - Scope `Annuler`/`Fermer` button clicks inside `.modal-overlay` to avoid matching filter-reset buttons with the same label.
 - Close modals explicitly at the end of serial tests that open but don't submit forms (otherwise the next `beforeEach` navigation may not reset SPA state cleanly).
+- Refonte 2b markup: lists are `.list-grid-row` rows (no `<table>`/`tbody`) — select real rows by what skeletons lack (`.list-grid-row` filtered by `has: .list-grid-name` or a link), and wait for `row.first().or(page.locator('app-list-empty'))`. Deletions go through the shared 15c confirmation (`getByRole('alertdialog')`, then « Supprimer »), never `window.confirm`. Referential forms (15b) are `getByRole('dialog', { name: <title> })`. Clients, suppliers, sales, purchases and products have routed editors/pages (`/x/new`, `/x/:id/edit`, `/x/:id`). The ⋯ row menu (`Autres actions`) only exists below the reduce breakpoint — open it only when visible. Settings has no `h1` (`.st-title`).
+- `API_RATE_LIMIT` (back `.env`, `config('app.api_rate_limit')`, default 60 req/min/user) must be raised locally (600) for the full suite: it drives every screen as the same admin and each screen fires several requests; at 60 it gets 429s.
 
 ## Architecture
 

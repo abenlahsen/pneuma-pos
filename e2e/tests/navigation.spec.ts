@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-const ROUTES = [
+// Refonte 2b : la plupart des écrans gardent un h1 ; les Paramètres (gabarit
+// 17a) portent leur titre dans une barre, sans h1.
+const ROUTES: { path: string; titre: string; selector?: string }[] = [
   { path: '/sales',           titre: 'Ventes' },
   { path: '/service-orders',  titre: 'Service Auto' },
   { path: '/achats',          titre: 'Achats' },
@@ -10,8 +12,11 @@ const ROUTES = [
   { path: '/brands',          titre: 'Marques' },
   { path: '/users',           titre: 'Gestion des Utilisateurs' },
   { path: '/roles',           titre: 'Gestion des Rôles' },
-  { path: '/settings',        titre: 'Paramètres' },
+  { path: '/settings',        titre: 'Paramètres', selector: '.st-title' },
   { path: '/accounts',        titre: 'Comptes' },
+  { path: '/cash-flow',       titre: 'Cash Flow' },
+  { path: '/carriers',        titre: 'Transporteurs' },
+  { path: '/reporting',       titre: 'Reporting Mensuel' },
 ];
 
 test.describe('Navigation', () => {
@@ -29,7 +34,7 @@ test.describe('Navigation', () => {
   for (const route of ROUTES) {
     test(`${route.path} — charge avec le titre "${route.titre}"`, async ({ page }) => {
       await page.goto(route.path, { waitUntil: 'domcontentloaded' });
-      await expect(page.locator('h1').first()).toContainText(route.titre, { timeout: 20_000 });
+      await expect(page.locator(route.selector ?? 'h1').first()).toContainText(route.titre, { timeout: 20_000 });
     });
   }
 

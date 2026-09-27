@@ -102,13 +102,14 @@ test.describe.serial('Ventes — accès par rôle (Manager & Commercial)', () =>
   async function openSaleFormAs(page: any, token: string): Promise<void> {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await page.evaluate((t: string) => localStorage.setItem('auth_token', t), token);
+    // Refonte 2b : la saisie est un écran plein (/sales/new), plus une modale ;
+    // le commercial et le partenaire restent visibles quand la logistique est repliée.
     await page.goto('/sales');
-    await page.waitForLoadState('networkidle');
-    await page.getByRole('button', { name: 'Nouvelle Vente' }).click();
-    await expect(page.locator('.modal-overlay')).toBeVisible();
-    await page.waitForLoadState('networkidle');
-    // La section "Logistique & Suivi" est repliée par défaut — l'ouvrir pour accéder au select commercial_id
-    await page.locator('h3.section-title.collapsible').click();
+    await page.getByRole('link', { name: 'Nouvelle Vente' }).click();
+    await expect(page).toHaveURL(/\/sales\/new$/);
+    await expect(page.locator('form.sale-form-screen')).toBeVisible({ timeout: 25_000 });
+    // Les commerciaux arrivent avec les options du formulaire : attendre qu'ils soient là.
+    await expect(page.locator('select[name="commercial_id"] option').nth(1)).toBeAttached({ timeout: 15_000 });
   }
 
   // ── Manager ────────────────────────────────────────────────────────────────

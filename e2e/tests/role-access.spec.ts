@@ -155,27 +155,32 @@ test.describe.serial('Accès par rôle — Manager & Commercial', () => {
     await expect(page.locator('.kpi-dashboard')).not.toBeVisible();
   });
 
-  // ── 4. Dashboard — raccourcis conditionnels ───────────────────────────────
+  // ── 4. Navigation selon le rôle ───────────────────────────────────────────
+  // Refonte 2b : les raccourcis du tableau de bord ont disparu. Le rail porte
+  // les écrans de travail ; Utilisateurs et Rôles sont passés dans la liste
+  // de gauche des Paramètres (17a). Chacun n'apparaît qu'avec sa permission.
 
-  test('Manager : les raccourcis /users et /roles sont absents', async ({ page }) => {
+  test('Manager : Utilisateurs et Rôles sont absents des Paramètres', async ({ page }) => {
+    await navigateAs(page, managerToken, '/settings');
+    await expect(page.locator('.st-nav .st-entry').first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('.st-nav a[href="/users"]')).not.toBeAttached();
+    await expect(page.locator('.st-nav a[href="/roles"]')).not.toBeAttached();
+  });
+
+  test('Manager : Ventes est dans le rail', async ({ page }) => {
     await navigateAs(page, managerToken, '/dashboard');
-    await expect(page.locator('#link-users')).not.toBeAttached();
-    await expect(page.locator('#link-roles')).not.toBeAttached();
+    await expect(page.locator('.rail a.rail-item[href="/sales"]')).toBeVisible();
   });
 
-  test('Manager : le raccourci /sales est visible', async ({ page }) => {
-    await navigateAs(page, managerToken, '/dashboard');
-    await expect(page.locator('#link-sales')).toBeVisible();
+  test('Commercial : Utilisateurs est dans les Paramètres', async ({ page }) => {
+    await navigateAs(page, commercialToken, '/settings');
+    await expect(page.locator('.st-nav a[href="/users"]')).toBeVisible({ timeout: 15_000 });
   });
 
-  test('Commercial : le raccourci /users est visible', async ({ page }) => {
-    await navigateAs(page, commercialToken, '/dashboard');
-    await expect(page.locator('#link-users')).toBeVisible();
-  });
-
-  test('Commercial : le raccourci /roles est absent', async ({ page }) => {
-    await navigateAs(page, commercialToken, '/dashboard');
-    await expect(page.locator('#link-roles')).not.toBeAttached();
+  test('Commercial : Rôles est absent des Paramètres', async ({ page }) => {
+    await navigateAs(page, commercialToken, '/settings');
+    await expect(page.locator('.st-nav .st-entry').first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('.st-nav a[href="/roles"]')).not.toBeAttached();
   });
 
   // ── 5. Marques — boutons d'action selon le rôle ───────────────────────────
@@ -183,21 +188,24 @@ test.describe.serial('Accès par rôle — Manager & Commercial', () => {
   test('Manager : les boutons Modifier et Supprimer sont visibles sur /brands', async ({ page }) => {
     await navigateAs(page, managerToken, '/brands');
 
-    // Wait for brand data AND permissions to load (permissions drive *ngIf on buttons)
-    const rows = page.locator('tbody tr').filter({ hasText: /[A-Z]/ });
-    const hasData = await rows.first().isVisible().catch(() => false);
-    test.skip(!hasData, 'Aucune marque en base — test ignoré');
+    // Refonte 2b : motif de ligne ; Supprimer est dans le menu ⋯ (gabarit 14a).
+    const rows = page.locator('.brands-grid.list-grid-row').filter({ has: page.locator('.list-grid-name') });
+    await expect(rows.first().or(page.locator('app-list-empty'))).toBeVisible({ timeout: 15_000 });
+    test.skip(await rows.count() === 0, 'Aucune marque en base — test ignoré');
 
     await expect(rows.first().locator('button[title="Modifier"]')).toBeVisible({ timeout: 12_000 });
+    // Le menu ⋯ n'existe que sous le seuil de réduction ; au-dessus, ses actions sont en ligne.
+    const more = rows.first().getByRole('button', { name: 'Autres actions' });
+    if (await more.isVisible()) await more.click();
     await expect(rows.first().locator('button[title="Supprimer"]')).toBeVisible();
   });
 
   test('Commercial : le bouton Supprimer est absent sur /brands (pas de delete brands)', async ({ page }) => {
     await navigateAs(page, commercialToken, '/brands');
 
-    const rows = page.locator('tbody tr').filter({ hasText: /[A-Z]/ });
-    const hasData = await rows.first().isVisible().catch(() => false);
-    test.skip(!hasData, 'Aucune marque en base — test ignoré');
+    const rows = page.locator('.brands-grid.list-grid-row').filter({ has: page.locator('.list-grid-name') });
+    await expect(rows.first().or(page.locator('app-list-empty'))).toBeVisible({ timeout: 15_000 });
+    test.skip(await rows.count() === 0, 'Aucune marque en base — test ignoré');
 
     await expect(rows.first().locator('button[title="Modifier"]')).toBeVisible({ timeout: 12_000 });
     await expect(rows.first().locator('button[title="Supprimer"]')).not.toBeAttached();

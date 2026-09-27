@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -14,6 +14,29 @@ function getStoredToken(): string | null {
     const item = origin?.localStorage?.find((i: { name: string }) => i.name === 'auth_token');
     return item?.value ?? null;
   } catch { return null; }
+}
+
+/**
+ * Marques — refonte 2b, étape 11. Motif de ligne au lieu d'un tableau, la
+ * barre de recherche du mixin (Entrée lance la recherche), le formulaire dans
+ * la modale de référentiel 15b, activer et supprimer derrière le menu ⋯, la
+ * suppression dans la confirmation 15c.
+ */
+const SEARCH = 'Nom de la marque…';
+
+/** Les vraies lignes — les squelettes n'ont pas de nom. */
+const brandRows = (page: Page) => page.locator('.brands-grid.list-grid-row').filter({ has: page.locator('.list-grid-name') });
+
+const brandRow = (page: Page, name: string) =>
+  brandRows(page).filter({ has: page.locator('.list-grid-name', { hasText: new RegExp(`^\\s*${name}\\s*$`) }) });
+
+/** Recherche une marque et attend la réponse. */
+async function searchBrand(page: Page, name: string): Promise<void> {
+  await page.getByPlaceholder(SEARCH).fill(name);
+  await Promise.all([
+    page.waitForResponse(r => r.url().includes('/api/brands') && r.request().method() === 'GET'),
+    page.getByPlaceholder(SEARCH).press('Enter'),
+  ]);
 }
 
 test.describe.serial('Marques', () => {
@@ -36,50 +59,39 @@ test.describe.serial('Marques', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/brands', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('h1')).toContainText('Marques', { timeout: 15_000 });
-    // Ensure initial loadBrands() GET completes before test body — prevents it from
-    // racing with search GETs and overwriting results.
-    await expect(page.locator('tbody')).not.toContainText('Chargement', { timeout: 15_000 });
+    await expect(brandRows(page).first().or(page.locator('app-list-empty'))).toBeVisible({ timeout: 15_000 });
   });
 
   // ── Lecture : données seedées ────────────────────────────────────────────
 
   test('affiche les marques seedées (MICHELIN, GOODYEAR, CONTINENTAL)', async ({ page }) => {
-    // Vérifier que des lignes existent
-    const rows = page.locator('tbody tr').filter({ hasNotText: 'Chargement' });
-    await expect(rows).not.toHaveCount(0);
-    // Rechercher MICHELIN (peut être en page 2+ selon le nb de marques)
-    await page.fill('input[placeholder="Nom de la marque..."]', 'MICHELIN');
-    await page.keyboard.press('Enter');
-    await page.waitForLoadState('networkidle');
-    await expect(page.locator('td .fw-semibold', { hasText: 'MICHELIN' }).first()).toBeVisible();
-    // Réinitialiser pour ne pas affecter le beforeEach du test suivant
-    await page.click('button[title="Réinitialiser"]');
-    await page.waitForLoadState('networkidle');
+    await expect(brandRows(page)).not.toHaveCount(0);
+    await expect(page.locator('.filter-result-count')).toContainText(/\d+ marque\(s\)/);
+    for (const name of ['MICHELIN', 'GOODYEAR', 'CONTINENTAL']) {
+      await searchBrand(page, name);
+      await expect(brandRow(page, name)).toBeVisible();
+    }
   });
 
   test('rechercher "MICHELIN" retourne exactement 1 résultat', async ({ page }) => {
-    await page.fill('input[placeholder="Nom de la marque..."]', 'MICHELIN');
-    await Promise.all([
-      page.waitForResponse(r => r.url().includes('/api/brands') && r.url().includes('search') && r.request().method() === 'GET'),
-      page.click('button[title="Rechercher"]'),
-    ]);
-    const rows = page.locator('tbody tr').filter({ hasNotText: 'Chargement' });
-    await expect(rows).toHaveCount(1);
-    await expect(page.locator('td .fw-semibold')).toContainText('MICHELIN');
+    await searchBrand(page, 'MICHELIN');
+    await expect(brandRows(page)).toHaveCount(1);
+    await expect(brandRows(page).first().locator('.list-grid-name')).toHaveText(/MICHELIN/);
   });
 
-  test('réinitialiser les filtres restaure la liste complète', async ({ page }) => {
+  test('une recherche sans résultat, puis « Tout effacer », restaure la liste', async ({ page }) => {
     test.setTimeout(60_000);
 
-    await page.fill('input[placeholder="Nom de la marque..."]', 'XXXXXXNOTFOUND');
+    await searchBrand(page, 'XXXXXXNOTFOUND');
+    const empty = page.locator('app-list-empty');
+    await expect(empty).toContainText('Aucune marque ne correspond');
+
     await Promise.all([
       page.waitForResponse(r => r.url().includes('/api/brands') && r.request().method() === 'GET'),
-      page.click('button[title="Rechercher"]'),
+      empty.getByRole('button', { name: 'Tout effacer' }).click(),
     ]);
-    await expect(page.locator('td:has-text("Aucune marque trouvée.")')).toBeVisible();
-
-    await page.click('button[title="Réinitialiser"]');
-    await expect(page.locator('td:has-text("Aucune marque trouvée.")')).not.toBeVisible({ timeout: 15_000 });
+    await expect(empty).toHaveCount(0);
+    await expect(brandRows(page)).not.toHaveCount(0);
   });
 
   // ── Création ─────────────────────────────────────────────────────────────
@@ -88,53 +100,38 @@ test.describe.serial('Marques', () => {
     test.setTimeout(60_000);
 
     await page.getByRole('button', { name: 'Nouvelle Marque' }).click();
-    await expect(page.locator('.modal-container')).toBeVisible();
+    const modal = page.getByRole('dialog', { name: 'Nouvelle marque' });
+    await expect(modal).toBeVisible();
 
-    await page.fill('input[name="name"]', TEST_BRAND);
+    await modal.locator('input[name="name"]').fill(TEST_BRAND);
     const [postResp] = await Promise.all([
       page.waitForResponse(r => r.url().includes('/api/brands') && r.request().method() === 'POST'),
-      page.click('button[type="submit"]:has-text("Enregistrer")'),
+      modal.getByRole('button', { name: 'Enregistrer' }).click(),
     ]);
     expect(postResp.status(), `POST /api/brands returned ${postResp.status()}`).toBeLessThan(400);
+    await expect(modal).toBeHidden({ timeout: 10_000 });
 
-    // Reload for a clean list — bypasses Angular CD timing issues after creation
-    await page.reload({ waitUntil: 'domcontentloaded' });
-    await expect(page.locator('h1')).toContainText('Marques', { timeout: 15_000 });
-    await expect(page.locator('tbody')).not.toContainText('Chargement', { timeout: 15_000 });
-    await page.fill('input[placeholder="Nom de la marque..."]', TEST_BRAND);
-    await Promise.all([
-      page.waitForResponse(r => r.url().includes('/api/brands') && r.url().includes('search') && r.request().method() === 'GET'),
-      page.click('button[title="Rechercher"]'),
-    ]);
-    await expect(page.locator('td .fw-semibold', { hasText: TEST_BRAND })).toBeVisible({ timeout: 10_000 });
+    await searchBrand(page, TEST_BRAND);
+    await expect(brandRow(page, TEST_BRAND)).toBeVisible({ timeout: 10_000 });
   });
 
   // ── Modification ──────────────────────────────────────────────────────────
 
   test('modifier la marque créée', async ({ page }) => {
-    // Chercher la marque de test
-    await page.fill('input[placeholder="Nom de la marque..."]', TEST_BRAND);
-    await page.keyboard.press('Enter');
-    await page.waitForLoadState('networkidle');
+    await searchBrand(page, TEST_BRAND);
+    await brandRow(page, TEST_BRAND).locator('button[title="Modifier"]').click();
 
-    // Cliquer sur le bouton Modifier de la ligne
-    await page.locator('tr', { hasText: TEST_BRAND }).locator('button[title="Modifier"]').click();
-    await expect(page.locator('.modal-container')).toBeVisible();
-    await expect(page.locator('.modal-container h2')).toContainText('Modifier');
-
-    // Changer le nom
-    await page.fill('input[name="name"]', TEST_BRAND_UPDATED);
+    const modal = page.getByRole('dialog', { name: `Modifier ${TEST_BRAND}` });
+    await expect(modal).toBeVisible();
+    await modal.locator('input[name="name"]').fill(TEST_BRAND_UPDATED);
     await Promise.all([
-      page.waitForResponse(r => r.url().includes('/api/brands') && r.request().method() === 'POST'),
-      page.click('button[type="submit"]:has-text("Enregistrer")'),
+      page.waitForResponse(r => r.url().includes('/api/brands/') && r.request().method() === 'POST'),
+      modal.getByRole('button', { name: 'Enregistrer' }).click(),
     ]);
-    await page.waitForLoadState('networkidle');
+    await expect(modal).toBeHidden({ timeout: 10_000 });
 
-    // Vérifier le nouveau nom
-    await page.fill('input[placeholder="Nom de la marque..."]', TEST_BRAND_UPDATED);
-    await page.keyboard.press('Enter');
-    await page.waitForLoadState('networkidle');
-    await expect(page.locator('td .fw-semibold', { hasText: TEST_BRAND_UPDATED })).toBeVisible();
+    await searchBrand(page, TEST_BRAND_UPDATED);
+    await expect(brandRow(page, TEST_BRAND_UPDATED)).toBeVisible();
   });
 
   // ── Suppression (cleanup) ─────────────────────────────────────────────────
@@ -142,25 +139,23 @@ test.describe.serial('Marques', () => {
   test('supprimer la marque de test', async ({ page }) => {
     test.setTimeout(60_000);
 
-    await page.fill('input[placeholder="Nom de la marque..."]', TEST_BRAND_UPDATED);
-    await Promise.all([
-      page.waitForResponse(r => r.url().includes('/api/brands') && r.request().method() === 'GET'),
-      page.click('button[title="Rechercher"]'),
-    ]);
-    await expect(page.locator('td .fw-semibold', { hasText: TEST_BRAND_UPDATED })).toBeVisible({ timeout: 5_000 });
+    await searchBrand(page, TEST_BRAND_UPDATED);
+    const row = brandRow(page, TEST_BRAND_UPDATED);
+    await expect(row).toBeVisible();
 
-    // Confirmer la boite de dialogue native (window.confirm)
-    page.once('dialog', (dialog) => dialog.accept());
+    // Le menu ⋯ (gabarit 14a) n'existe que sous le seuil de réduction ; au-dessus,
+    // ses actions sont en ligne. Puis la confirmation 15c.
+    const more = row.getByRole('button', { name: 'Autres actions' });
+    if (await more.isVisible()) await more.click();
+    await row.locator('button[title="Supprimer"]').click();
+    const dialog = page.getByRole('alertdialog');
+    await expect(dialog).toContainText(TEST_BRAND_UPDATED);
     await Promise.all([
-      page.waitForResponse(r => r.url().includes('/api/brands') && r.request().method() === 'DELETE'),
-      page.locator('tr', { hasText: TEST_BRAND_UPDATED }).locator('button[title="Supprimer"]').click(),
+      page.waitForResponse(r => r.url().includes('/api/brands/') && r.request().method() === 'DELETE'),
+      dialog.getByRole('button', { name: 'Supprimer' }).click(),
     ]);
 
-    // Re-search to get a definitive fresh list (avoids race with the component's auto-refresh GET)
-    await Promise.all([
-      page.waitForResponse(r => r.url().includes('/api/brands') && r.request().method() === 'GET'),
-      page.click('button[title="Rechercher"]'),
-    ]);
-    await expect(page.locator('td .fw-semibold', { hasText: TEST_BRAND_UPDATED })).not.toBeVisible({ timeout: 10_000 });
+    await searchBrand(page, TEST_BRAND_UPDATED);
+    await expect(brandRow(page, TEST_BRAND_UPDATED)).toHaveCount(0, { timeout: 10_000 });
   });
 });

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -14,6 +14,15 @@ function getStoredToken(): string | null {
     return item?.value ?? null;
   } catch { return null; }
 }
+
+/**
+ * Comptes — refonte 2b, 7b. Une bande de soldes, les comptes en lignes
+ * sélectionnables (`.ac-row`), la fiche d'un compte dans la même page, le
+ * formulaire dans la modale de référentiel 15b, la suppression dans la
+ * confirmation 15c.
+ */
+const accountRow = (page: Page, name: string) =>
+  page.locator('button.ac-row').filter({ has: page.locator('.ac-name-main', { hasText: new RegExp(`^${name}$`) }) });
 
 test.describe.serial('Comptes & Trésorerie', () => {
   test.beforeAll(async ({ request }) => {
@@ -32,20 +41,20 @@ test.describe.serial('Comptes & Trésorerie', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/accounts');
-    await page.waitForLoadState('networkidle');
-    await expect(page.locator('h1')).toContainText('Comptes');
+    await expect(page.locator('h1')).toContainText('Comptes', { timeout: 25_000 });
+    await expect(page.locator('.ac-loading')).toHaveCount(0, { timeout: 25_000 });
   });
 
   // ── Lecture ───────────────────────────────────────────────────────────────
 
-  test('affiche la liste des comptes ou un état vide', async ({ page }) => {
-    // Soit des cartes compte, soit un état vide
-    const accountCards = page.locator('.account-card, .card').filter({ hasNotText: 'Chargement' });
-    const emptyState   = page.locator(':has-text("Aucun compte")');
-    await expect(accountCards.first().or(emptyState)).toBeVisible();
+  test('affiche la bande des soldes et la liste des comptes, ou un état vide', async ({ page }) => {
+    for (const label of ['Solde total', 'Caisse', 'Banque', 'Comptes actifs']) {
+      await expect(page.locator('.ac-label', { hasText: new RegExp(`^${label}$`) })).toBeVisible();
+    }
+    await expect(page.locator('button.ac-row').first().or(page.locator('.ac-empty'))).toBeVisible();
   });
 
-  test('affiche les boutons "+ Nouveau Compte" et "🔄 Nouveau Transfert"', async ({ page }) => {
+  test('affiche les boutons "+ Nouveau Compte" et "Nouveau Transfert"', async ({ page }) => {
     await expect(page.getByRole('button', { name: /Nouveau Compte/ })).toBeVisible();
     await expect(page.getByRole('button', { name: /Nouveau Transfert/ })).toBeVisible();
   });
@@ -54,60 +63,59 @@ test.describe.serial('Comptes & Trésorerie', () => {
 
   test('ouvre le formulaire de création de compte', async ({ page }) => {
     await page.getByRole('button', { name: /Nouveau Compte/ }).click();
-    await expect(page.locator('.modal-overlay, .modal-container').first()).toBeVisible();
-    await expect(page.locator('label:has-text("Nom"), label:has-text("Type")').first()).toBeVisible();
-    // Fermer proprement la modale
-    await page.locator('.modal-overlay').locator('.btn-close, button:has-text("Annuler")').first().click();
+    const modal = page.getByRole('dialog', { name: 'Nouveau compte' });
+    await expect(modal).toBeVisible();
+    await expect(modal.getByPlaceholder('ex: Caisse principale')).toBeVisible();
+
+    await modal.getByRole('button', { name: 'Annuler' }).click();
+    await expect(modal).toBeHidden();
   });
 
   test('créer un compte de trésorerie', async ({ page }) => {
     test.setTimeout(60_000);
 
     await page.getByRole('button', { name: /Nouveau Compte/ }).click();
-    await expect(page.locator('.modal-content')).toBeVisible();
-
-    // Utiliser le placeholder pour trouver le champ Nom de manière fiable
-    await page.getByPlaceholder('ex: Caisse principale').fill(TEST_ACCOUNT);
+    const modal = page.getByRole('dialog', { name: 'Nouveau compte' });
+    await modal.getByPlaceholder('ex: Caisse principale').fill(TEST_ACCOUNT);
 
     const [postResp] = await Promise.all([
       page.waitForResponse(r => r.url().includes('/api/accounts') && r.request().method() === 'POST'),
-      page.locator('.modal-content').locator('button[type="submit"]').click(),
+      modal.getByRole('button', { name: 'Ajouter' }).click(),
     ]);
     expect(postResp.status()).toBeLessThan(400);
 
-    await expect(page.locator('.modal-overlay')).not.toBeVisible({ timeout: 10_000 });
-    await expect(page.locator('.account-card', { hasText: TEST_ACCOUNT }).first()).toBeVisible({ timeout: 10_000 });
+    await expect(modal).toBeHidden({ timeout: 10_000 });
+    await expect(accountRow(page, TEST_ACCOUNT)).toBeVisible({ timeout: 10_000 });
   });
 
   // ── Détail du compte ──────────────────────────────────────────────────────
 
-  test('cliquer sur un compte affiche ses détails et transactions', async ({ page }) => {
-    // Cliquer sur la première carte de compte disponible
-    const firstAccount = page.locator('.account-card, button.account-item, tr.account-row').first();
-    if (await firstAccount.isVisible()) {
-      await firstAccount.click();
-      await page.waitForLoadState('networkidle');
-      // Page de détail : cards Solde Actuel, Total Entrées, Total Sorties
-      await expect(page.locator(':has-text("Solde Actuel"), :has-text("Total Entrées")').first()).toBeVisible();
+  test('cliquer sur un compte affiche ses soldes et ses transactions', async ({ page }) => {
+    await accountRow(page, TEST_ACCOUNT).click();
+    await expect(page.locator('h1')).toHaveText(TEST_ACCOUNT);
+    for (const label of ['Solde actuel', 'Total entrées', 'Total sorties', 'Prévisionnel']) {
+      await expect(page.locator('.ac-label', { hasText: new RegExp(`^${label}$`) })).toBeVisible();
     }
+    // Un compte neuf : aucune transaction.
+    await expect(page.locator('.ac-empty', { hasText: 'Aucune transaction sur ce compte.' })).toBeVisible({ timeout: 15_000 });
+
+    await page.getByRole('button', { name: 'Retour' }).click();
+    await expect(page.locator('h1')).toHaveText('Comptes');
   });
 
   // ── Suppression (cleanup) ─────────────────────────────────────────────────
 
   test('supprimer le compte de test', async ({ page }) => {
-    // Chercher le compte créé
-    const accountItem = page.locator(':has-text("' + TEST_ACCOUNT + '")').first();
-    if (await accountItem.isVisible()) {
-      // Chercher le bouton Supprimer dans la même zone
-      const deleteBtn = page.locator('button[title="Supprimer"], button:has-text("Supprimer")')
-        .filter({ hasText: '' })
-        .first();
-      if (await deleteBtn.isVisible()) {
-        page.once('dialog', (dialog) => dialog.accept());
-        await deleteBtn.click();
-        await page.waitForLoadState('networkidle');
-        await expect(page.locator(':has-text("' + TEST_ACCOUNT + '")').first()).not.toBeVisible();
-      }
-    }
+    await accountRow(page, TEST_ACCOUNT).locator('[title="Supprimer"]').click();
+
+    // Gabarit 15c : la confirmation partagée, plus de confirm() natif.
+    const dialog = page.getByRole('alertdialog');
+    await expect(dialog).toContainText(TEST_ACCOUNT);
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/accounts/') && r.request().method() === 'DELETE'),
+      dialog.getByRole('button', { name: 'Supprimer' }).click(),
+    ]);
+
+    await expect(accountRow(page, TEST_ACCOUNT)).toHaveCount(0, { timeout: 10_000 });
   });
 });

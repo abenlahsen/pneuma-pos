@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -14,121 +14,139 @@ function getStoredToken(): string | null {
   } catch { return null; }
 }
 
+/**
+ * Ventes — refonte 2b. Cinq cadrans au lieu de huit, une barre de recherche
+ * avec un panneau « Filtres » replié, le motif de ligne au lieu d'un tableau,
+ * la saisie en écran plein (/sales/new) et la fiche en page (/sales/:id).
+ */
+
+/** Les vraies lignes de vente — les squelettes n'ont pas de bouton « Voir ». */
+const saleRows = (page: Page) => page.locator('.sales-grid.list-grid-row').filter({ has: page.locator('button[title="Voir"]') });
+
+/** Attend que la liste ait chargé : des lignes, ou l'état vide. */
+async function waitForList(page: Page): Promise<number> {
+  await expect(saleRows(page).first().or(page.locator('app-list-empty'))).toBeVisible({ timeout: 25_000 });
+  return saleRows(page).count();
+}
+
+/** Ouvre la fiche de la première vente par son bouton « Voir ». */
+async function openFirstSale(page: Page): Promise<string> {
+  const count = await waitForList(page);
+  test.skip(count === 0, 'Aucune vente dans la liste');
+  await saleRows(page).first().locator('button[title="Voir"]').click();
+  await expect(page).toHaveURL(/\/sales\/\d+$/);
+  const id = page.url().match(/\/sales\/(\d+)$/)![1];
+  await expect(page.locator('.sd-title')).toHaveText(`Vente ${id}`, { timeout: 25_000 });
+  return id;
+}
+
 test.describe('Ventes', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/sales');
-    await page.waitForLoadState('networkidle');
-    await expect(page.locator('h1')).toContainText('Ventes');
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('h1')).toContainText('Ventes', { timeout: 25_000 });
   });
 
-  test('affiche les 8 cartes de résumé', async ({ page }) => {
-    const cards = page.locator('.summary-card');
-    await expect(cards).toHaveCount(8);
-    await expect(page.locator('.card-label', { hasText: 'Pneus vendus aujourd\'hui' })).toBeVisible();
-    await expect(page.locator('.card-label', { hasText: 'Pneus vendus ce mois' })).toBeVisible();
-    await expect(page.locator('.card-label', { hasText: 'Impayé en cours' })).toBeVisible();
+  test('affiche les 5 cadrans de résumé', async ({ page }) => {
+    await expect(page.locator('.summary-card')).toHaveCount(5);
+    for (const label of [/^Pneus vendus/, /^Ventes en cours$/, /^CA /, /^Impayé$/, /^Sélection filtrée$/]) {
+      await expect(page.locator('.card-label', { hasText: label })).toBeVisible();
+    }
   });
 
-  test('affiche la section filtres avec les champs attendus', async ({ page }) => {
-    await expect(page.locator('.filters-section')).toBeVisible();
-    // Champs de filtre attendus
-    await expect(page.locator('label:has-text("Commercial")')).toBeVisible();
-    await expect(page.locator('label:has-text("Statut")')).toBeVisible();
+  test('affiche la recherche, puis les filtres Client, Commercial et Statut dans « Filtres »', async ({ page }) => {
+    await expect(page.locator('.filter-bar').getByPlaceholder('Client, produit, marque...')).toBeVisible();
+    await expect(page.locator('.filters-section')).toHaveCount(0);
+
+    await page.locator('.filter-toggle').click();
+    const panel = page.locator('.filters-section');
+    await expect(panel).toBeVisible();
+    for (const label of ['Client', 'Commercial', 'Statut', 'Paiement', 'Du', 'Au']) {
+      await expect(panel.locator('label', { hasText: new RegExp(`^${label}$`) })).toBeVisible();
+    }
   });
 
-  test('affiche le tableau des ventes ou un état vide', async ({ page }) => {
-    const table = page.locator('table');
-    const emptyState = page.locator('td:has-text("Aucune vente")');
-    await expect(table.or(emptyState).first()).toBeVisible();
+  test('affiche les ventes ou un état vide', async ({ page }) => {
+    const count = await waitForList(page);
+    if (count > 0) {
+      await expect(saleRows(page).first().locator('.list-grid-status')).not.toBeEmpty();
+    }
+  });
+
+  test('la recherche filtre la liste', async ({ page }) => {
+    const count = await waitForList(page);
+    test.skip(count === 0, 'Aucune vente dans la liste');
+
+    const client = (await saleRows(page).first().locator('.list-grid-name').textContent())!.replace(/FACTURE/, '').trim();
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/sales?') && r.url().includes('search=') && r.request().method() === 'GET'),
+      page.locator('.filter-bar').getByPlaceholder('Client, produit, marque...').fill(client).then(() => page.keyboard.press('Enter')),
+    ]);
+    await expect(saleRows(page).first()).toContainText(client);
+    await expect(page.locator('.filter-result-count')).toContainText(/\d+ vente\(s\)/);
   });
 
   test('le bouton "Nouvelle Vente" est visible pour admin', async ({ page }) => {
-    await expect(page.getByRole('button', { name: 'Nouvelle Vente' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Nouvelle Vente' })).toBeVisible();
   });
 
-  test('ouvre le formulaire de création de vente', async ({ page }) => {
-    await page.getByRole('button', { name: 'Nouvelle Vente' }).click();
-    await expect(page.locator('.modal-overlay')).toBeVisible();
-    // Le formulaire doit avoir un champ date et un champ client
-    await expect(page.locator('label:has-text("Date"), label:has-text("Client")').first()).toBeVisible();
+  test('« Nouvelle Vente » ouvre la saisie en écran plein', async ({ page }) => {
+    await page.getByRole('link', { name: 'Nouvelle Vente' }).click();
+    await expect(page).toHaveURL(/\/sales\/new$/);
+    await expect(page.locator('form.sale-form-screen')).toBeVisible({ timeout: 25_000 });
+    await expect(page.getByPlaceholder(/Marque, dimension \(2055516\)/)).toBeVisible();
   });
 
-  test('fermer le modal avec le bouton Annuler', async ({ page }) => {
-    await page.getByRole('button', { name: 'Nouvelle Vente' }).click();
-    await expect(page.locator('.modal-overlay')).toBeVisible();
+  test('« Annuler » quitte la saisie sans rien enregistrer', async ({ page }) => {
+    await page.getByRole('link', { name: 'Nouvelle Vente' }).click();
+    await expect(page.locator('form.sale-form-screen')).toBeVisible({ timeout: 25_000 });
 
-    await page.locator('.modal-overlay').getByRole('button', { name: /Annuler|Fermer|✕/ }).first().click();
-    await expect(page.locator('.modal-overlay')).not.toBeVisible();
+    await page.locator('form.sale-form-screen').getByRole('button', { name: 'Annuler' }).click();
+    await expect(page).not.toHaveURL(/\/sales\/new$/);
   });
 
-  test('le bouton Visualiser ouvre la modale de détail', async ({ page }) => {
-    const firstBtn = page.locator('button[title="Voir"]').first();
-    test.skip(await firstBtn.count() === 0, 'Aucune ligne dans le tableau');
-
-    await firstBtn.click();
-    await expect(page.locator('.modal-overlay')).toBeVisible();
-    await expect(page.locator('h2', { hasText: 'Détail de la vente' })).toBeVisible();
+  test('« Voir » ouvre la fiche de la vente', async ({ page }) => {
+    await openFirstSale(page);
+    await expect(page.locator('.sd-actions').getByRole('button', { name: 'Imprimer' })).toBeVisible();
   });
 
-  test('les flèches Précédent / Suivant naviguent entre les enregistrements dans le détail', async ({ page }) => {
-    const viewButtons = page.locator('button[title="Voir"]');
-    // The table is loaded asynchronously — wait for the first row before counting.
-    await viewButtons.first().waitFor({ state: 'visible', timeout: 15_000 }).catch(() => {});
-    const count = await viewButtons.count();
-    test.skip(count < 2, 'Au moins deux lignes sont nécessaires');
+  test('les flèches Précédent / Suivant naviguent entre les ventes de la fiche', async ({ page }) => {
+    test.slow();
+    const count = await waitForList(page);
+    test.skip(count < 2, 'Au moins deux ventes sont nécessaires');
 
-    await viewButtons.first().click();
-    const modal = page.locator('.modal-overlay').first();
-    await expect(modal).toBeVisible();
-
-    const prevBtn = modal.locator('.modal-nav button[aria-label="Précédent"]');
-    const nextBtn = modal.locator('.modal-nav button[aria-label="Suivant"]');
-    const position = modal.locator('.modal-nav-pos');
-
-    await expect(position).toHaveText(/^1 \/ \d+$/);
-    const recordNumber = modal.locator('.modal-nav-id');
-    await expect(recordNumber).toHaveText(/^N° \d+$/);
-    const firstNumber = await recordNumber.textContent();
-    await expect(prevBtn).toBeDisabled();
+    const firstId = await openFirstSale(page);
+    // La fiche hérite de l'ordre de la liste : la première ligne affichée
+    // n'est pas forcément la première de cet ordre.
+    const prevBtn = page.locator('.sd-nav button[aria-label="Précédent"]');
+    const nextBtn = page.locator('.sd-nav button[aria-label="Suivant"]');
     await expect(nextBtn).toBeEnabled();
 
     await nextBtn.click();
-    await expect(modal).toBeVisible();
-    await expect(position).toHaveText(/^2 \/ \d+$/);
-    expect(await recordNumber.textContent()).not.toBe(firstNumber);
+    await expect(page).not.toHaveURL(new RegExp(`/sales/${firstId}$`));
+    await expect(page.locator('.sd-title')).not.toHaveText(`Vente ${firstId}`);
     await expect(prevBtn).toBeEnabled();
 
     await page.keyboard.press('ArrowLeft');
-    await expect(position).toHaveText(/^1 \/ \d+$/);
-    await expect(prevBtn).toBeDisabled();
-
-    await modal.locator('.modal-footer-actions button', { hasText: 'Fermer' }).click();
-    await expect(modal).not.toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`/sales/${firstId}$`));
+    await expect(page.locator('.sd-title')).toHaveText(`Vente ${firstId}`);
   });
 
-  test('le bouton Modifier dans le détail ouvre le formulaire de modification', async ({ page }) => {
-    const firstBtn = page.locator('button[title="Voir"]').first();
-    test.skip(await firstBtn.count() === 0, 'Aucune ligne dans le tableau');
+  test('« Modifier » sur la fiche ouvre la saisie de la vente', async ({ page }) => {
+    const id = await openFirstSale(page);
+    const modifier = page.locator('.sd-actions').getByRole('button', { name: 'Modifier' });
+    test.skip(await modifier.count() === 0, 'Vente clôturée : pas de modification');
 
-    await firstBtn.click();
-    await expect(page.locator('.modal-overlay')).toBeVisible();
-
-    const modifierBtn = page.locator('.modal-footer button', { hasText: 'Modifier' });
-    await expect(modifierBtn).toBeVisible();
-    await modifierBtn.click();
-
-    await expect(page.locator('h2', { hasText: 'Modifier la vente' })).toBeVisible();
+    await modifier.click();
+    await expect(page).toHaveURL(new RegExp(`/sales/${id}/edit$`));
+    await expect(page.locator('form.sale-form-screen')).toBeVisible({ timeout: 25_000 });
   });
 
   test('le bouton Imprimer ouvre la page d\'impression', async ({ page }) => {
-    const firstBtn = page.locator('button[title="Voir"]').first();
-    test.skip(await firstBtn.count() === 0, 'Aucune ligne dans le tableau');
+    test.slow();
+    await openFirstSale(page);
 
-    // « Voir » ouvre la fiche vente en page (/sales/:id), plus en modale.
-    await firstBtn.click();
-    await expect(page).toHaveURL(/\/sales\/\d+$/);
-
-    await page.getByRole('button', { name: 'Imprimer', exact: true }).click();
+    await page.locator('.sd-actions').getByRole('button', { name: 'Imprimer', exact: true }).click();
     // Refonte 2b, étape 10 : l'aperçu a quitté sa modale pour sa propre page.
     await expect(page).toHaveURL(/\/documents\/sale\/\d+\/print$/);
     await expect(page.locator('.dp-sheet')).toBeVisible();
@@ -200,23 +218,21 @@ test.describe.serial('Ventes - Créé par', () => {
     if (createdClientId) await request.delete(`/api/clients/${createdClientId}`, { headers });
   });
 
-  test('affiche le nom du créateur dans la colonne "Créé par" après création d\'une vente', async ({ page }) => {
+  test('la vente créée garde son créateur (created_by)', async ({ request }) => {
     test.skip(!createdSaleId || !creatorName, 'Impossible de créer une vente de test (partenaire ou stock disponible manquant)');
+    const token = getStoredToken();
+    const headers = { Authorization: `Bearer ${token}`, Accept: 'application/json' };
 
-    await page.goto('/sales', { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('h1')).toContainText('Ventes');
-
-    await page.fill('input[placeholder="Nom du client..."]', CLIENT_NAME);
-    await page.keyboard.press('Enter');
-
-    const row = page.locator('tbody tr', { hasText: CLIENT_NAME });
-    await expect(row).toHaveCount(1, { timeout: 15_000 });
-
-    // 15e colonne du tableau : Actions, #, Date, Facture, Client, Ville,
-    // Commercial, Qte, Partenaire, Mode(s) paiement, Total Vente, Marge,
-    // Paiement, Statut, Créé par (index 0-based : 14).
-    const creatorCell = row.locator('td').nth(14);
-    await expect(creatorCell).toContainText(creatorName!, { timeout: 10_000 });
-    await expect(creatorCell).not.toContainText('-');
+    // Refonte 2b : la colonne « Créé par » a quitté la liste, et la fiche
+    // n'affiche pas le créateur. Le défaut d'origine était côté serveur
+    // (created_by perdu à l'extraction de SaleService) : on le vérifie là
+    // où la donnée existe encore, dans la liste de l'API.
+    const res = await request.get(`/api/sales?search=${CLIENT_NAME}&per_page=20`, { headers });
+    expect(res.ok()).toBe(true);
+    const rows = (await res.json()).data as { id: number; creator?: { name: string } | null }[];
+    const sale = rows.find(r => r.id === createdSaleId);
+    expect(sale, 'la vente de test doit apparaître dans la liste').toBeTruthy();
+    // `creator` est la relation portée par created_by : vide si la colonne est perdue.
+    expect(sale!.creator?.name).toBe(creatorName);
   });
 });

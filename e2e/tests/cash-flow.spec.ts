@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -13,6 +13,37 @@ function getStoredToken(): string | null {
     const item = origin?.localStorage?.find((i: { name: string }) => i.name === 'auth_token');
     return item?.value ?? null;
   } catch { return null; }
+}
+
+/**
+ * Cash Flow — refonte 2b. Une projection sur six semaines, un registre
+ * (`.register-row`) avec ses onglets TOUT / À VENIR / ENTRÉES / SORTIES, les
+ * filtres repliés derrière « Compte, catégorie, méthode », un volet droit
+ * (comptes, en jeu, dépenses du mois). Le formulaire de transaction reste une
+ * modale ; la suppression passe par la confirmation 15c.
+ */
+
+/** Les vraies lignes du registre — les squelettes n'ont pas de libellé. */
+const registerRows = (page: Page) => page.locator('.register-row').filter({ has: page.locator('.move-main') });
+const rowFor = (page: Page, description: string) => registerRows(page).filter({ hasText: description });
+
+/** Déplie le panneau des filtres. */
+async function openFilters(page: Page) {
+  await page.locator('.register-bar .filter-toggle').click();
+  const panel = page.locator('.filters-section');
+  await expect(panel).toBeVisible();
+  return panel;
+}
+
+/** Cherche une description dans le registre et attend la réponse. */
+async function searchRegister(page: Page, text: string) {
+  const panel = await openFilters(page);
+  const input = panel.locator('label', { hasText: /^Rechercher$/ }).locator('..').locator('input');
+  await input.fill(text);
+  await Promise.all([
+    page.waitForResponse(r => r.url().includes('/api/transactions') && r.url().includes('search=') && r.request().method() === 'GET'),
+    input.press('Enter'),
+  ]);
 }
 
 test.describe.serial('Cash Flow', () => {
@@ -41,33 +72,32 @@ test.describe.serial('Cash Flow', () => {
 
   // ── Lecture ────────────────────────────────────────────────────────────────
 
-  test('affiche les 3 cartes de résumé (Revenus, Dépenses, Solde)', async ({ page }) => {
-    await expect(page.locator('.card-label', { hasText: 'Revenus' })).toBeVisible();
-    await expect(page.locator('.card-label', { hasText: 'Dépenses' })).toBeVisible();
-    await expect(page.locator('.card-label', { hasText: 'Solde' })).toBeVisible();
+  test('affiche la trésorerie du jour, la projection et le volet des comptes', async ({ page }) => {
+    await expect(page.locator('.projection-label', { hasText: "Trésorerie aujourd'hui" })).toBeVisible();
+    await expect(page.locator('.week-cell').first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('.aside-title', { hasText: /^Comptes$/ })).toBeVisible();
+    await expect(page.locator('.aside-line--total .aside-name', { hasText: 'Disponible' })).toBeVisible();
   });
 
-  test('affiche la section "Transactions réalisées"', async ({ page }) => {
-    await expect(page.locator('.section-title', { hasText: 'Transactions réalisées' })).toBeVisible();
+  test('affiche le registre et ses onglets', async ({ page }) => {
+    const bar = page.locator('.register-bar');
+    for (const tab of ['TOUT', /^À VENIR/, 'ENTRÉES', 'SORTIES']) {
+      await expect(bar.getByRole('button', { name: tab })).toBeVisible();
+    }
+    await expect(page.locator('.register-count')).toContainText(/\d+ mouvement\(s\)/);
   });
 
-  test('affiche le tableau des transactions ou un état vide', async ({ page }) => {
-    const table = page.locator('table.table');
-    const emptyState = page.locator('td:has-text("Aucune transaction trouvée.")');
-    await expect(table.first().or(emptyState)).toBeVisible({ timeout: 15_000 });
+  test('affiche les mouvements ou un état vide', async ({ page }) => {
+    await expect(registerRows(page).first().or(page.locator('app-list-empty'))).toBeVisible({ timeout: 15_000 });
   });
 
   test('affiche tous les filtres attendus', async ({ page }) => {
-    await expect(page.locator('label:has-text("Rechercher")')).toBeVisible();
-    await expect(page.locator('label:has-text("Type")')).toBeVisible();
-    await expect(page.locator('label:has-text("Compte")')).toBeVisible();
-    await expect(page.locator('label:has-text("Catégorie")')).toBeVisible();
-    await expect(page.locator('label:has-text("Personne")')).toBeVisible();
-    await expect(page.locator('label:has-text("Partenaire")')).toBeVisible();
-    await expect(page.locator('label:has-text("Du")')).toBeVisible();
-    await expect(page.locator('label:has-text("Au")')).toBeVisible();
-    await expect(page.locator('label:has-text("Montant min")')).toBeVisible();
-    await expect(page.locator('label:has-text("Montant max")')).toBeVisible();
+    const panel = await openFilters(page);
+    for (const label of ['Rechercher', 'Type', 'Compte', 'Catégorie', 'Personne', 'Partenaire', 'Du', 'Au']) {
+      await expect(panel.locator('label', { hasText: new RegExp(`^${label}$`) })).toBeVisible();
+    }
+    await expect(panel.locator('label', { hasText: /^Montant min/ })).toBeVisible();
+    await expect(panel.locator('label', { hasText: /^Montant max/ })).toBeVisible();
   });
 
   test('affiche le bouton "+ Nouvelle Transaction"', async ({ page }) => {
@@ -78,36 +108,33 @@ test.describe.serial('Cash Flow', () => {
 
   test('ouvre le formulaire de nouvelle transaction', async ({ page }) => {
     await page.getByRole('button', { name: /Nouvelle Transaction/ }).click();
-    await expect(page.locator('.modal-overlay').first()).toBeVisible();
-    await expect(page.locator('label:has-text("Date")').first()).toBeVisible();
-    await expect(page.locator('label:has-text("Montant")').first()).toBeVisible();
-    await expect(page.locator('label:has-text("Méthode")').first()).toBeVisible();
+    const modal = page.locator('.modal-overlay').first();
+    await expect(modal).toBeVisible();
+    await expect(modal.locator('label:has-text("Date")').first()).toBeVisible();
+    await expect(modal.locator('label:has-text("Montant")').first()).toBeVisible();
+    await expect(modal.locator('label:has-text("Méthode")').first()).toBeVisible();
   });
 
   test('le champ Partenaire est un select (pas un champ texte libre)', async ({ page }) => {
     await page.getByRole('button', { name: /Nouvelle Transaction/ }).click();
     await expect(page.locator('.modal-overlay').first()).toBeVisible();
-    // Il doit exister un <select> pour le partenaire, pas un <input type=text>
     const partnerSelect = page.locator('#txn-partner');
     await expect(partnerSelect).toBeVisible();
-    const tagName = await partnerSelect.evaluate(el => el.tagName.toLowerCase());
-    expect(tagName).toBe('select');
+    expect(await partnerSelect.evaluate(el => el.tagName.toLowerCase())).toBe('select');
   });
 
   test('la liste des méthodes de paiement contient "Carte bancaire"', async ({ page }) => {
     await page.getByRole('button', { name: /Nouvelle Transaction/ }).click();
     await expect(page.locator('.modal-overlay').first()).toBeVisible();
-    const methodSelect = page.locator('#txn-method');
-    await expect(methodSelect).toBeVisible();
-    const options = await methodSelect.locator('option').allTextContents();
-    expect(options).toContain('Carte bancaire');
+    const options = await page.locator('#txn-method option').allTextContents();
+    expect(options.map(o => o.trim())).toContain('Carte bancaire');
   });
 
   test('ferme le formulaire avec Annuler', async ({ page }) => {
     await page.getByRole('button', { name: /Nouvelle Transaction/ }).click();
     await expect(page.locator('.modal-overlay').first()).toBeVisible();
     await page.locator('.modal-overlay').getByRole('button', { name: /Annuler/ }).first().click();
-    await expect(page.locator('.modal-overlay')).not.toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('.modal-overlay')).toHaveCount(0, { timeout: 5_000 });
   });
 
   // ── Création ──────────────────────────────────────────────────────────────
@@ -116,98 +143,90 @@ test.describe.serial('Cash Flow', () => {
     test.setTimeout(60_000);
 
     await page.getByRole('button', { name: /Nouvelle Transaction/ }).click();
-    await expect(page.locator('.modal-content')).toBeVisible();
+    const modal = page.locator('.modal-content');
+    await expect(modal).toBeVisible();
 
-    // Type → Dépense
-    await page.locator('.toggle-btn', { hasText: 'Dépense' }).click();
-
-    // Date → aujourd'hui (pré-remplie, on laisse)
-    // Montant
+    await modal.locator('.toggle-btn', { hasText: 'Dépense' }).click();
     await page.locator('#txn-amount').fill('150');
-    // Compte (premier compte disponible)
-    const accountSelect = page.locator('#txn-account');
-    await accountSelect.selectOption({ index: 1 });
-    // Catégorie
+    await page.locator('#txn-account').selectOption({ index: 1 });
     await page.locator('#txn-category').selectOption({ index: 1 });
-    // Méthode
     await page.locator('#txn-method').selectOption({ label: 'Espèces' });
-    // Personne
     await page.locator('#txn-person').selectOption({ index: 1 });
-    // Description
     await page.locator('#txn-description').fill(TEST_DESCRIPTION);
 
     const [postResp] = await Promise.all([
       page.waitForResponse(r => r.url().includes('/api/transactions') && r.request().method() === 'POST'),
-      page.locator('.modal-content').locator('button[type="submit"]').click(),
+      modal.locator('button[type="submit"]').click(),
     ]);
     expect(postResp.status()).toBeLessThan(400);
 
-    await expect(page.locator('.modal-overlay')).not.toBeVisible({ timeout: 10_000 });
-    // La transaction doit apparaître dans les transactions réalisées
-    await expect(page.locator('td', { hasText: TEST_DESCRIPTION }).first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('.modal-overlay')).toHaveCount(0, { timeout: 10_000 });
+    await expect(rowFor(page, TEST_DESCRIPTION).first()).toBeVisible({ timeout: 10_000 });
   });
 
   // ── Filtres ────────────────────────────────────────────────────────────────
 
+  test('l\'onglet SORTIES retrouve la dépense créée', async ({ page }) => {
+    await expect(registerRows(page).first().or(page.locator('app-list-empty'))).toBeVisible({ timeout: 15_000 });
+    await page.locator('.register-bar').getByRole('button', { name: 'SORTIES' }).click();
+    await expect(rowFor(page, TEST_DESCRIPTION).first()).toBeVisible({ timeout: 10_000 });
+    await expect(rowFor(page, TEST_DESCRIPTION).first().locator('.cell-out')).toContainText('150');
+  });
+
   test('filtrer par type "Dépenses" retrouve la transaction créée', async ({ page }) => {
-    const typeSelect = page.locator('label:has-text("Type")').locator('..').locator('select');
-    await typeSelect.selectOption({ value: 'expense' });
-    await page.waitForLoadState('networkidle');
-    await expect(page.locator('td', { hasText: TEST_DESCRIPTION }).first()).toBeVisible({ timeout: 10_000 });
+    const panel = await openFilters(page);
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/transactions') && r.url().includes('type=expense') && r.request().method() === 'GET'),
+      panel.locator('label', { hasText: /^Type$/ }).locator('..').locator('select').selectOption({ value: 'expense' }),
+    ]);
+    await expect(rowFor(page, TEST_DESCRIPTION).first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('filtrer par recherche texte retrouve la transaction créée', async ({ page }) => {
-    const searchInput = page.locator('label:has-text("Rechercher")').locator('..').locator('input');
-    await searchInput.fill(TEST_DESCRIPTION);
-    await searchInput.press('Enter');
-    await page.waitForLoadState('networkidle');
-    await expect(page.locator('td', { hasText: TEST_DESCRIPTION }).first()).toBeVisible({ timeout: 10_000 });
+    await searchRegister(page, TEST_DESCRIPTION);
+    await expect(rowFor(page, TEST_DESCRIPTION).first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('réinitialiser les filtres efface la recherche', async ({ page }) => {
-    const searchInput = page.locator('label:has-text("Rechercher")').locator('..').locator('input');
-    await searchInput.fill('quelque chose qui ne correspond pas');
-    await page.getByRole('button', { name: '✕' }).last().click();
-    await page.waitForLoadState('networkidle');
-    // Après reset, le champ doit être vide
-    await expect(searchInput).toHaveValue('');
+    await searchRegister(page, 'quelque chose qui ne correspond pas');
+    const panel = page.locator('.filters-section');
+    await panel.locator('button[title="Réinitialiser"]').click();
+    await expect(panel.locator('label', { hasText: /^Rechercher$/ }).locator('..').locator('input')).toHaveValue('');
   });
 
-  // ── Section "Transactions à venir" ────────────────────────────────────────
+  // ── Échéances à venir ──────────────────────────────────────────────────────
 
-  test('la section "Transactions à venir" est conditionnellement visible', async ({ page }) => {
-    // La section n'apparaît que s'il y a des transactions pending
-    const pendingSection = page.locator('.pending-section');
-    const isVisible = await pendingSection.isVisible();
-    // On ne force pas l'assertion — juste vérifier que si elle est visible, le header aussi
-    if (isVisible) {
-      await expect(page.locator('.pending-title', { hasText: 'Transactions à venir' })).toBeVisible();
+  test('l\'onglet À VENIR ne montre que des échéances attendues ou prévues', async ({ page }) => {
+    await expect(registerRows(page).first().or(page.locator('app-list-empty'))).toBeVisible({ timeout: 15_000 });
+    await page.locator('.register-bar').getByRole('button', { name: /^À VENIR/ }).click();
+
+    // L'onglet filtre en mémoire : attendre que les mouvements réalisés soient partis.
+    await expect(registerRows(page).and(page.locator(':not(.register-row--pending)'))).toHaveCount(0, { timeout: 10_000 });
+    const count = await registerRows(page).count();
+    for (let i = 0; i < count; i++) {
+      await expect(registerRows(page).nth(i).locator('.move-main')).toContainText(/ATTENDU|PRÉVU/);
     }
   });
 
   // ── Suppression ────────────────────────────────────────────────────────────
 
   test('supprimer la transaction de test', async ({ page }) => {
-    test.setTimeout(30_000);
+    test.setTimeout(60_000);
 
-    // Chercher via le filtre description pour isoler notre transaction
-    const searchInput = page.locator('label:has-text("Rechercher")').locator('..').locator('input');
-    await searchInput.fill(TEST_DESCRIPTION);
-    await searchInput.press('Enter');
-    await page.waitForLoadState('networkidle');
+    await searchRegister(page, TEST_DESCRIPTION);
+    const row = rowFor(page, TEST_DESCRIPTION).first();
+    await expect(row).toBeVisible({ timeout: 10_000 });
+    await row.locator('button[title="Supprimer"]').click();
 
-    const deleteBtn = page.locator('tr', { hasText: TEST_DESCRIPTION })
-      .locator('button[title="Supprimer"]')
-      .first();
-    await expect(deleteBtn).toBeVisible({ timeout: 10_000 });
-
+    // Gabarit 15c : la confirmation partagée, plus de confirm() natif.
+    const dialog = page.getByRole('alertdialog');
+    await expect(dialog).toBeVisible();
     const [delResp] = await Promise.all([
       page.waitForResponse(r => r.url().includes('/api/transactions/') && r.request().method() === 'DELETE'),
-      page.once('dialog', d => d.accept()) as unknown as Promise<void>,
-      deleteBtn.click(),
+      dialog.getByRole('button', { name: 'Supprimer' }).click(),
     ]);
     expect(delResp.status()).toBeLessThan(400);
 
-    await expect(page.locator('td', { hasText: TEST_DESCRIPTION })).not.toBeVisible({ timeout: 10_000 });
+    await expect(rowFor(page, TEST_DESCRIPTION)).toHaveCount(0, { timeout: 10_000 });
   });
 });
