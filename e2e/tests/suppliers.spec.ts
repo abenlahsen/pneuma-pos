@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -14,6 +14,28 @@ function getStoredToken(): string | null {
     const item = origin?.localStorage?.find((i: { name: string }) => i.name === 'auth_token');
     return item?.value ?? null;
   } catch { return null; }
+}
+
+/**
+ * Refonte 2b : l'annuaire passe au motif de ligne (`.list-grid-row`), la
+ * saisie à un écran routé (/suppliers/new, /suppliers/:id/edit, étape 8) qui
+ * ramène sur la fiche, et la suppression à la confirmation partagée 15c.
+ */
+const SEARCH = 'input[placeholder="Nom, contact ou email..."]';
+
+/** La ligne d'annuaire d'un fournisseur, par son nom. */
+const supplierRow = (page: Page, name: string) =>
+  page.locator('.suppliers-grid.list-grid-row').filter({ has: page.getByRole('button', { name, exact: true }) });
+
+/** Recherche dans l'annuaire et attend la réponse. */
+async function searchSupplier(page: Page, name: string): Promise<void> {
+  await page.fill(SEARCH, name);
+  // Entrée plutôt que la loupe : sous la table des impayés, la loupe tombe
+  // au ras de la fenêtre, où la barre du bas la recouvre.
+  await Promise.all([
+    page.waitForResponse(r => r.url().includes('/api/suppliers') && r.url().includes('search=') && r.request().method() === 'GET'),
+    page.press(SEARCH, 'Enter'),
+  ]);
 }
 
 test.describe.serial('Fournisseurs', () => {
@@ -39,10 +61,9 @@ test.describe.serial('Fournisseurs', () => {
 
   // ── Lecture ───────────────────────────────────────────────────────────────
 
-  test('affiche le tableau des fournisseurs ou un état vide', async ({ page }) => {
-    const table = page.locator('table');
-    const emptyState = page.locator('td:has-text("Aucun fournisseur trouvé.")');
-    await expect(table.or(emptyState).first()).toBeVisible();
+  test('affiche l\'annuaire des fournisseurs ou un état vide', async ({ page }) => {
+    const rows = page.locator('.suppliers-grid.list-grid-row').filter({ has: page.locator('.list-grid-name button') });
+    await expect(rows.first().or(page.locator('app-list-empty'))).toBeVisible({ timeout: 15_000 });
   });
 
   test('le bouton "Nouveau Fournisseur" est visible', async ({ page }) => {
@@ -55,8 +76,8 @@ test.describe.serial('Fournisseurs', () => {
     test.setTimeout(60_000);
 
     await page.getByRole('button', { name: 'Nouveau Fournisseur' }).click();
-    await expect(page.locator('.modal-container')).toBeVisible();
-    await expect(page.locator('.modal-container h2')).toContainText('Nouveau Fournisseur');
+    await expect(page).toHaveURL(/\/suppliers\/new$/);
+    await expect(page.locator('.sf-title')).toHaveText('Nouveau fournisseur');
 
     await page.fill('input[name="name"]', TEST_SUPPLIER);
     await page.fill('input[name="contact_person"]', 'Mohamed E2E');
@@ -65,22 +86,20 @@ test.describe.serial('Fournisseurs', () => {
 
     const [postResp] = await Promise.all([
       page.waitForResponse(r => r.url().includes('/api/suppliers') && r.request().method() === 'POST'),
-      page.click('button[type="submit"]:has-text("Enregistrer")'),
+      page.getByRole('button', { name: 'Créer le fournisseur' }).click(),
     ]);
     expect(postResp.status()).toBeLessThan(400);
 
-    await expect(page.locator('.modal-overlay')).not.toBeVisible({ timeout: 10_000 });
-    await expect(page.locator('tbody td', { hasText: TEST_SUPPLIER }).first()).toBeVisible({ timeout: 10_000 });
+    // La création ramène sur la fiche neuve.
+    await expect(page).toHaveURL(/\/suppliers\/\d+$/, { timeout: 10_000 });
+    await expect(page.getByText(TEST_SUPPLIER).first()).toBeVisible({ timeout: 10_000 });
   });
 
   // ── Recherche ─────────────────────────────────────────────────────────────
 
   test('rechercher le fournisseur créé', async ({ page }) => {
-    await page.fill('input[placeholder="Nom, contact ou email..."]', TEST_SUPPLIER);
-    await page.keyboard.press('Enter');
-    await page.waitForLoadState('networkidle');
-
-    await expect(page.locator('tbody td', { hasText: TEST_SUPPLIER }).first()).toBeVisible();
+    await searchSupplier(page, TEST_SUPPLIER);
+    await expect(supplierRow(page, TEST_SUPPLIER)).toBeVisible();
   });
 
   // ── Modification ──────────────────────────────────────────────────────────
@@ -88,44 +107,38 @@ test.describe.serial('Fournisseurs', () => {
   test('modifier le fournisseur créé', async ({ page }) => {
     test.setTimeout(60_000);
 
-    await page.fill('input[placeholder="Nom, contact ou email..."]', TEST_SUPPLIER);
-    await Promise.all([
-      page.waitForResponse(r => r.url().includes('/api/suppliers') && r.request().method() === 'GET'),
-      page.click('button[title="Rechercher"]'),
-    ]);
-
-    await page.locator('tbody tr', { hasText: TEST_SUPPLIER })
-      .locator('button[title="Modifier"]')
-      .click();
-    await expect(page.locator('.modal-container h2')).toContainText('Modifier Fournisseur');
+    await searchSupplier(page, TEST_SUPPLIER);
+    await supplierRow(page, TEST_SUPPLIER).locator('button[title="Modifier"]').click();
+    await expect(page).toHaveURL(/\/suppliers\/\d+\/edit$/);
+    await expect(page.locator('.sf-title')).toHaveText(`Modifier ${TEST_SUPPLIER}`);
 
     await page.fill('input[name="name"]', TEST_SUPPLIER_UPD);
     await Promise.all([
-      page.waitForResponse(r => r.url().includes('/api/suppliers') && r.request().method() !== 'GET'),
-      page.click('button[type="submit"]:has-text("Enregistrer")'),
+      page.waitForResponse(r => r.url().includes('/api/suppliers') && r.request().method() === 'PUT'),
+      page.getByRole('button', { name: 'Mettre à jour' }).click(),
     ]);
 
-    // Re-search to get definitive fresh list
-    await Promise.all([
-      page.waitForResponse(r => r.url().includes('/api/suppliers') && r.request().method() === 'GET'),
-      page.click('button[title="Rechercher"]'),
-    ]);
-    await expect(page.locator('tbody td', { hasText: TEST_SUPPLIER_UPD }).first()).toBeVisible({ timeout: 10_000 });
+    // L'éditeur ramène sur la fiche ; l'annuaire doit montrer le nouveau nom.
+    await expect(page).toHaveURL(/\/suppliers\/\d+$/, { timeout: 10_000 });
+    await page.goto('/suppliers');
+    await searchSupplier(page, TEST_SUPPLIER_UPD);
+    await expect(supplierRow(page, TEST_SUPPLIER_UPD)).toBeVisible({ timeout: 10_000 });
   });
 
   // ── Suppression (cleanup) ─────────────────────────────────────────────────
 
   test('supprimer le fournisseur de test', async ({ page }) => {
-    await page.fill('input[placeholder="Nom, contact ou email..."]', TEST_SUPPLIER_UPD);
-    await page.keyboard.press('Enter');
-    await page.waitForLoadState('networkidle');
+    await searchSupplier(page, TEST_SUPPLIER_UPD);
+    await supplierRow(page, TEST_SUPPLIER_UPD).locator('button[title="Supprimer"]').click();
 
-    page.once('dialog', (dialog) => dialog.accept());
-    await page.locator('tbody tr', { hasText: TEST_SUPPLIER_UPD })
-      .locator('button[title="Supprimer"]')
-      .click();
-    await page.waitForLoadState('networkidle');
+    // Gabarit 15c : la confirmation partagée, plus de confirm() natif.
+    const dialog = page.getByRole('alertdialog');
+    await expect(dialog).toContainText(TEST_SUPPLIER_UPD);
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/suppliers/') && r.request().method() === 'DELETE'),
+      dialog.getByRole('button', { name: 'Supprimer' }).click(),
+    ]);
 
-    await expect(page.locator('tbody td', { hasText: TEST_SUPPLIER_UPD })).not.toBeVisible();
+    await expect(supplierRow(page, TEST_SUPPLIER_UPD)).toHaveCount(0, { timeout: 10_000 });
   });
 });

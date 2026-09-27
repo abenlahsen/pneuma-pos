@@ -1,4 +1,11 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+
+/**
+ * Refonte 2b : le catalogue passe au motif de ligne (`.list-grid-row`) au lieu
+ * d'un tableau. Les vraies lignes portent le lien vers la fiche produit ; les
+ * squelettes de chargement n'en ont pas.
+ */
+const productRows = (page: Page) => page.locator('.list-grid-row').filter({ has: page.locator('a[href*="/products/"]') });
 
 test.describe('Produits', () => {
   test.beforeEach(async ({ page }) => {
@@ -9,7 +16,7 @@ test.describe('Produits', () => {
 
   test('charge le catalogue avec les pneus seedés', async ({ page }) => {
     // Vérifier qu'au moins une ligne de produit est visible
-    const rows = page.locator('tbody tr').filter({ hasNotText: 'Chargement' });
+    const rows = productRows(page);
     await expect(rows.first()).toBeVisible({ timeout: 15_000 });
     // La pagination ne s'affiche que si total > 0
     const paginationInfo = page.locator('.pagination-info');
@@ -35,7 +42,7 @@ test.describe('Produits', () => {
     await page.waitForLoadState('networkidle');
 
     // Vérifier que des résultats apparaissent
-    const rows = page.locator('tbody tr').filter({ hasNotText: 'Chargement' });
+    const rows = productRows(page);
     await expect(rows.first()).toBeVisible();
 
     // Vérifier le compteur dans la pagination (≥ 1 MICHELIN seedé)
@@ -52,7 +59,7 @@ test.describe('Produits', () => {
     await page.click('.search-btn');
     await page.waitForLoadState('networkidle');
 
-    const rows = page.locator('tbody tr').filter({ hasNotText: 'Chargement' });
+    const rows = productRows(page);
     await expect(rows.first()).toBeVisible();
     // La pagination doit afficher un résultat
     const paginationInfo = page.locator('.pagination-info');
@@ -64,7 +71,7 @@ test.describe('Produits', () => {
     await page.click('.search-btn');
     await page.waitForLoadState('networkidle');
 
-    const rows = page.locator('tbody tr').filter({ hasNotText: 'Chargement' });
+    const rows = productRows(page);
     await expect(rows.first()).toBeVisible();
   });
 
@@ -73,7 +80,7 @@ test.describe('Produits', () => {
     await page.click('.search-btn');
     await page.waitForLoadState('networkidle');
 
-    const rows = page.locator('tbody tr').filter({ hasNotText: 'Chargement' });
+    const rows = productRows(page);
     await expect(rows.first()).toBeVisible();
     const paginationInfo = page.locator('.pagination-info');
     await expect(paginationInfo).toContainText('entrées');

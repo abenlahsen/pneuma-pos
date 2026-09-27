@@ -1,4 +1,43 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+
+/**
+ * Achats — refonte 2b. La liste est groupée par fournisseur (maquette 8a) :
+ * motif de ligne au lieu d'un tableau, deux barres de filtres rapides
+ * (règlement, réception) et un panneau « Filtres » replié. La fiche d'achat
+ * est une route (/achats/:id), la saisie un écran plein (/achats/nouveau).
+ */
+
+/** Les vraies lignes d'achat — les squelettes n'ont pas de lien. */
+const purchaseRows = (page: Page) => page.locator('.list-grid-row').filter({ has: page.locator('a[href^="/achats/"]') });
+
+/** Attend que la liste ait chargé : des lignes, ou l'état vide. */
+async function waitForList(page: Page): Promise<number> {
+  await expect(purchaseRows(page).first().or(page.locator('app-list-empty'))).toBeVisible({ timeout: 25_000 });
+  return purchaseRows(page).count();
+}
+
+/** Déplie le panneau « Filtres ». */
+async function openFilters(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Filtres' }).click();
+  await expect(page.locator('.filters-section')).toBeVisible();
+}
+
+/** Attend la requête de la liste groupée qui porte ce paramètre. */
+function waitForGrouped(page: Page, param: string) {
+  return page.waitForResponse(r => r.url().includes('/api/purchases-grouped') && r.url().includes(param) && r.request().method() === 'GET');
+}
+
+/** Ouvre la fiche du premier achat de la liste, par l'œil de sa ligne. */
+async function openFirstPurchase(page: Page): Promise<string> {
+  const count = await waitForList(page);
+  test.skip(count === 0, 'Aucun achat dans la liste');
+  const row = purchaseRows(page).first();
+  const id = (await row.locator('a[href^="/achats/"]').first().textContent())!.replace(/\D/g, '');
+  await row.locator('button[title="Ouvrir"]').click();
+  await expect(page).toHaveURL(new RegExp(`/achats/${id}$`));
+  await expect(page.locator('.sd-title')).toHaveText(`Achat ${id}`, { timeout: 25_000 });
+  return id;
+}
 
 test.describe('Achats', () => {
   test.beforeEach(async ({ page }) => {
@@ -13,18 +52,26 @@ test.describe('Achats', () => {
     await expect(page.locator('.card-label, .summary-label', { hasText: 'Reste à Payer' })).toBeVisible();
   });
 
-  test('affiche les filtres : Fournisseur, Statut, Paiement, dates', async ({ page }) => {
-    await expect(page.locator('label:has-text("Fournisseur")')).toBeVisible();
-    await expect(page.locator('label:has-text("Statut")')).toBeVisible();
-    await expect(page.locator('label').filter({ hasText: /^Paiement$/ })).toBeVisible();
-    await expect(page.locator('label:has-text("Du")')).toBeVisible();
-    await expect(page.locator('label:has-text("Au")')).toBeVisible();
+  test('affiche les filtres rapides, puis Fournisseur, Statut, Paiement et dates dans « Filtres »', async ({ page }) => {
+    const bar = page.locator('.filter-bar');
+    await expect(bar.getByRole('button', { name: 'RESTE À PAYER' })).toBeVisible();
+    await expect(bar.getByRole('button', { name: 'ATTENDUES' })).toBeVisible();
+    await expect(bar.getByRole('button', { name: 'REÇUES' })).toBeVisible();
+
+    await openFilters(page);
+    const panel = page.locator('.filters-section');
+    for (const label of ['Fournisseur', 'Statut', 'Du', 'Au']) {
+      await expect(panel.locator('label', { hasText: new RegExp(`^${label}$`) })).toBeVisible();
+    }
+    await expect(panel.locator('label').filter({ hasText: /^Paiement$/ })).toBeVisible();
   });
 
-  test('affiche le tableau des achats ou un état vide', async ({ page }) => {
-    const table = page.locator('table');
-    const emptyState = page.locator('td:has-text("Aucun achat trouvé.")');
-    await expect(table.or(emptyState).first()).toBeVisible();
+  test('affiche les achats groupés par fournisseur, ou un état vide', async ({ page }) => {
+    const count = await waitForList(page);
+    if (count > 0) {
+      await expect(page.locator('.pur-band').first()).toBeVisible();
+      await expect(page.locator('.pur-supplier').first()).not.toBeEmpty();
+    }
   });
 
   test('le bouton "+ Nouvel achat" est visible', async ({ page }) => {
@@ -38,98 +85,93 @@ test.describe('Achats', () => {
     await expect(page.getByRole('button', { name: /Enregistrer l'achat/ })).toBeVisible();
   });
 
-  test('le bouton Visualiser ouvre la modale de détail', async ({ page }) => {
-    const firstBtn = page.locator('button[title="Visualiser"]').first();
-    const count = await firstBtn.count();
-    test.skip(count === 0, 'Aucune ligne dans le tableau');
-
-    await firstBtn.click();
-    await expect(page.locator('.modal-overlay')).toBeVisible();
-    await expect(page.locator('h2', { hasText: 'Détail de l\'achat' })).toBeVisible();
+  test('l\'œil d\'une ligne ouvre la fiche d\'achat', async ({ page }) => {
+    await openFirstPurchase(page);
+    await expect(page.getByRole('button', { name: 'Imprimer' })).toBeVisible();
   });
 
-  test('les flèches Précédent / Suivant naviguent entre les enregistrements dans le détail', async ({ page }) => {
-    const viewButtons = page.locator('button[title="Visualiser"]');
-    // The table is loaded asynchronously — wait for the first row before counting.
-    await viewButtons.first().waitFor({ state: 'visible', timeout: 15_000 }).catch(() => {});
-    const count = await viewButtons.count();
-    test.skip(count < 2, 'Au moins deux lignes sont nécessaires');
+  test('les flèches Précédent / Suivant naviguent entre les achats de la fiche', async ({ page }) => {
+    test.slow();
+    const count = await waitForList(page);
+    test.skip(count < 2, 'Au moins deux achats sont nécessaires');
 
-    await viewButtons.first().click();
-    const modal = page.locator('.modal-overlay').first();
-    await expect(modal).toBeVisible();
-
-    const prevBtn = modal.locator('.modal-nav button[aria-label="Précédent"]');
-    const nextBtn = modal.locator('.modal-nav button[aria-label="Suivant"]');
-    const position = modal.locator('.modal-nav-pos');
-
-    await expect(position).toHaveText(/^1 \/ \d+$/);
-    const recordNumber = modal.locator('.modal-nav-id');
-    await expect(recordNumber).toHaveText(/^N° \d+$/);
-    const firstNumber = await recordNumber.textContent();
-    await expect(prevBtn).toBeDisabled();
+    const firstId = await openFirstPurchase(page);
+    // La fiche hérite de l'ordre de la liste (ListContextService) : la
+    // première ligne affichée n'est pas forcément la première de cet ordre,
+    // on ne suppose donc rien de « Précédent » au départ.
+    const prevBtn = page.locator('.sd-nav button[aria-label="Précédent"]');
+    const nextBtn = page.locator('.sd-nav button[aria-label="Suivant"]');
     await expect(nextBtn).toBeEnabled();
 
     await nextBtn.click();
-    await expect(modal).toBeVisible();
-    await expect(position).toHaveText(/^2 \/ \d+$/);
-    expect(await recordNumber.textContent()).not.toBe(firstNumber);
+    await expect(page).not.toHaveURL(new RegExp(`/achats/${firstId}$`));
+    await expect(page.locator('.sd-title')).not.toHaveText(`Achat ${firstId}`);
     await expect(prevBtn).toBeEnabled();
 
     await page.keyboard.press('ArrowLeft');
-    await expect(position).toHaveText(/^1 \/ \d+$/);
-    await expect(prevBtn).toBeDisabled();
-
-    await modal.locator('.modal-footer-actions button', { hasText: 'Fermer' }).click();
-    await expect(modal).not.toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`/achats/${firstId}$`));
+    await expect(page.locator('.sd-title')).toHaveText(`Achat ${firstId}`);
   });
 
-  test('le bouton Modifier dans le détail ouvre le formulaire de modification', async ({ page }) => {
-    const firstBtn = page.locator('button[title="Visualiser"]').first();
-    test.skip(await firstBtn.count() === 0, 'Aucune ligne dans le tableau');
+  test('« Modifier » sur la fiche ouvre la saisie d\'achat', async ({ page }) => {
+    const id = await openFirstPurchase(page);
+    const modifier = page.locator('.sd-actions').getByRole('button', { name: 'Modifier' });
+    test.skip(await modifier.count() === 0, 'Achat annulé : pas de modification');
 
-    await firstBtn.click();
-    await expect(page.locator('.modal-overlay')).toBeVisible();
-
-    const modifierBtn = page.locator('.modal-footer button', { hasText: 'Modifier' });
-    await expect(modifierBtn).toBeVisible();
-    await modifierBtn.click();
-
-    await expect(page.locator('h2', { hasText: 'Modifier Achat' })).toBeVisible();
+    await modifier.click();
+    await expect(page).toHaveURL(new RegExp(`/achats/${id}/modifier$`));
+    await expect(page.locator('.pf-editor')).toBeVisible({ timeout: 25_000 });
   });
 
-  test('filtrer par statut "En cours"', async ({ page }) => {
-    const statusSelect = page.locator('label:has-text("Statut")').locator('..').locator('select');
-    await statusSelect.selectOption({ label: 'En cours' });
-    await page.waitForLoadState('networkidle');
-    // Vérifier que la page ne crashe pas et reste cohérente
-    await expect(page.locator('h1')).toContainText('Achats');
+  test('filtrer par statut « En cours » ne garde que des achats attendus', async ({ page }) => {
+    await waitForList(page);
+    await openFilters(page);
+    const [response] = await Promise.all([
+      waitForGrouped(page, 'status=EN'),
+      page.locator('.filters-section label', { hasText: /^Statut$/ }).locator('..').locator('select').selectOption({ label: 'En cours' }),
+    ]);
+    expect(response.ok()).toBe(true);
+
+    const count = await waitForList(page);
+    for (let i = 0; i < count; i++) {
+      await expect(purchaseRows(page).nth(i).locator('.list-grid-tag', { hasText: 'ATTENDU' })).toBeVisible();
+    }
   });
 
-  test('filtrer par paiement "Non payé"', async ({ page }) => {
-    const paymentSelect = page.locator('label').filter({ hasText: /^Paiement$/ }).locator('..').locator('select');
-    await paymentSelect.selectOption({ label: 'Non payé' });
-    await page.waitForLoadState('networkidle');
-    await expect(page.locator('h1')).toContainText('Achats');
+  test('filtrer par paiement « Non payé »', async ({ page }) => {
+    await waitForList(page);
+    await openFilters(page);
+    const [response] = await Promise.all([
+      waitForGrouped(page, 'payment_status=NON'),
+      page.locator('.filters-section label').filter({ hasText: /^Paiement$/ }).locator('..').locator('select').selectOption({ label: 'Non payé' }),
+    ]);
+    expect(response.ok()).toBe(true);
+    await waitForList(page);
   });
 
   test('filtrer par plage de dates', async ({ page }) => {
-    // Du 01/01/2025 au aujourd'hui
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    await page.fill('input[type="date"]:first-of-type', '2025-01-01');
-    await page.fill('input[type="date"]:last-of-type', today);
-    await page.waitForLoadState('networkidle');
-    await expect(page.locator('h1')).toContainText('Achats');
+    await waitForList(page);
+    await openFilters(page);
+    const today = new Date().toISOString().split('T')[0];
+    const panel = page.locator('.filters-section');
+
+    await Promise.all([
+      waitForGrouped(page, 'date_from=2025-01-01'),
+      panel.locator('label', { hasText: /^Du$/ }).locator('..').locator('input[type="date"]').fill('2025-01-01'),
+    ]);
+    const [response] = await Promise.all([
+      waitForGrouped(page, `date_to=${today}`),
+      panel.locator('label', { hasText: /^Au$/ }).locator('..').locator('input[type="date"]').fill(today),
+    ]);
+    expect(response.ok()).toBe(true);
+    await waitForList(page);
   });
 
   test('le bouton Imprimer ouvre la page d\'impression', async ({ page }) => {
-    const firstBtn = page.locator('button[title="Visualiser"]').first();
-    test.skip(await firstBtn.count() === 0, 'Aucune ligne dans le tableau');
+    test.slow();
+    await openFirstPurchase(page);
 
-    await firstBtn.click();
-    await expect(page.locator('.modal-overlay')).toBeVisible();
-
-    await page.locator('.modal-overlay').getByRole('button', { name: /Imprimer/ }).first().click();
+    await page.getByRole('button', { name: 'Imprimer' }).click();
     // Refonte 2b, étape 10 : l'aperçu a quitté sa modale pour sa propre page.
     await expect(page).toHaveURL(/\/documents\/purchase\/\d+\/print$/);
     await expect(page.locator('.dp-sheet')).toBeVisible();
