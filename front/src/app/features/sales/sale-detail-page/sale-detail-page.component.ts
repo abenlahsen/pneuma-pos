@@ -10,6 +10,7 @@ import { Sale } from '../../../core/models/sale.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { ListContextService, Neighbours } from '../../../core/services/list-context.service';
 import { ListErrorComponent, describeLoadError } from '../../../shared/list-state';
+import { LatestRequest } from '../../../core/utils/latest-request';
 
 /**
  * Refonte 2b, étape 6b — hôte routé de <app-sale-detail>, qui cesse d'être une
@@ -58,14 +59,17 @@ export class SaleDetailPageComponent implements OnInit {
     this.load(id);
   }
 
+  // Une seule requête vivante par flux : une réponse périmée n'écrase plus la récente.
+  private readonly loadRequest = new LatestRequest(); // l'enregistrement affiché
+
   load(id: number): void {
+    this.loadRequest.cancel();
     this.loading.set(true);
     this.loadError.set(null);
 
-    this.saleService
+    this.loadRequest.run(this.saleService
       .getSale(id)
-      .pipe(finalize(() => this.loading.set(false)))
-      .subscribe({
+      .pipe(finalize(() => this.loading.set(false))), {
         next: (sale) => {
           this.sale.set(sale);
           this.neighbours.set(this.listContext.neighbours('sales', sale.id));

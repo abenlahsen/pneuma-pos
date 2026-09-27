@@ -1,4 +1,4 @@
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { PrimesPageComponent } from './primes-page.component';
 import { PrimeDay, PrimeRow, PrimesResponse } from '../models/prime.model';
 
@@ -448,6 +448,24 @@ describe('PrimesPageComponent', () => {
 
       expect(comp.loadError()).toBeTruthy();
       expect(comp.loading()).toBe(false);
+    });
+  });
+
+  describe('changement de mois rapide', () => {
+    it('n\'affiche jamais les primes d\'un mois périmé', () => {
+      const first = new Subject<ReturnType<typeof makeResponse>>();
+      const second = new Subject<ReturnType<typeof makeResponse>>();
+      mockService.getPrimes.mockReturnValueOnce(first).mockReturnValueOnce(second);
+
+      comp.loadData();
+      comp.loadData();
+
+      expect(first.observed).toBe(false);
+      const latest = makeResponse();
+      second.next(latest);
+      first.next(makeResponse());
+
+      expect(comp.response()).toBe(latest);
     });
   });
 });

@@ -26,6 +26,7 @@ import {
   describeLoadError,
   frenchDate,
 } from '../../../shared/list-state';
+import { LatestRequest } from '../../../core/utils/latest-request';
 
 @Component({
   selector: 'app-sales-page',
@@ -233,11 +234,15 @@ export class SalesPageComponent implements OnInit {
       });
   }
 
+  // Une seule requête vivante par flux : une réponse périmée n'écrase plus la récente.
+  private readonly listRequest = new LatestRequest(); // la liste
+  private readonly summaryRequest = new LatestRequest(); // le résumé
+
   loadData(): void {
     this.loading.set(true);
     const filters = this.buildFilters();
 
-    this.saleService.getSales(filters).subscribe({
+    this.listRequest.run(this.saleService.getSales(filters), {
       next: (response) => {
         this.sales.set(response.data);
         this.currentPage.set(response.current_page);
@@ -267,7 +272,7 @@ export class SalesPageComponent implements OnInit {
       },
     });
 
-    this.saleService.getSummary(filters).subscribe({
+    this.summaryRequest.run(this.saleService.getSummary(filters), {
       next: (summary) => {
         this.summary.set(summary);
         this.summaryLoaded.set(true);

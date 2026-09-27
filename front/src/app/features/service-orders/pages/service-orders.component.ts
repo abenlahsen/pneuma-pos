@@ -21,6 +21,7 @@ import {
   describeLoadError,
   frenchDate,
 } from '../../../shared/list-state';
+import { LatestRequest } from '../../../core/utils/latest-request';
 
 @Component({
   selector: 'app-service-orders',
@@ -288,9 +289,14 @@ export class ServiceOrdersComponent implements OnInit {
       });
   }
 
+  // Une seule requête vivante par flux : une réponse périmée n'écrase plus la récente.
+  private readonly listRequest = new LatestRequest(); // la liste
+  private readonly summaryRequest = new LatestRequest(); // le résumé
+  private readonly boardRequest = new LatestRequest(); // le tableau de l'atelier
+
   loadData(): void {
     this.loading.set(true);
-    this.serviceOrderService.getServiceOrders(this.buildFilters()).subscribe({
+    this.listRequest.run(this.serviceOrderService.getServiceOrders(this.buildFilters()), {
       next: (res) => {
         this.serviceOrders.set(res.data);
         this.total.set(res.total);
@@ -311,7 +317,7 @@ export class ServiceOrdersComponent implements OnInit {
   }
 
   loadSummary(): void {
-    this.serviceOrderService.getSummary(this.buildFilters()).subscribe({
+    this.summaryRequest.run(this.serviceOrderService.getSummary(this.buildFilters()), {
       next: (s) => {
         this.summary.set(s);
         this.summaryLoaded.set(true);
@@ -326,7 +332,7 @@ export class ServiceOrdersComponent implements OnInit {
     const filters = this.buildFilters();
     delete filters['page'];
     filters['per_page'] = '500';
-    this.serviceOrderService.getServiceOrders(filters).subscribe({
+    this.boardRequest.run(this.serviceOrderService.getServiceOrders(filters), {
       next: (res) => {
         this.boardOrders.set(res.data);
         this.loadingBoard.set(false);

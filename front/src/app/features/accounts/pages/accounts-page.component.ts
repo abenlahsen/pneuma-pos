@@ -19,6 +19,7 @@ import {
   ListErrorComponent,
   describeLoadError,
 } from '../../../shared/list-state';
+import { LatestRequest } from '../../../core/utils/latest-request';
 
 @Component({
   selector: 'app-accounts-page',
@@ -237,11 +238,15 @@ export class AccountsPageComponent implements OnInit {
     this.viewingSalePaymentId.set(null);
   }
 
+  // Une seule requête vivante par flux : une réponse périmée n'écrase plus la récente.
+  private readonly transactionsRequest = new LatestRequest(); // les transactions du compte
+  private readonly accountSummaryRequest = new LatestRequest(); // le résumé du compte
+
   loadAccountTransactions(account: Account) {
     this.loadingTransactions.set(true);
     const filter = { account_id: account.id.toString(), per_page: '100' };
 
-    this.cashFlowService.getTransactions(filter).subscribe({
+    this.transactionsRequest.run(this.cashFlowService.getTransactions(filter), {
       next: (res) => {
         this.accountTransactions.set(res.data);
         this.loadingTransactions.set(false);
@@ -249,7 +254,7 @@ export class AccountsPageComponent implements OnInit {
       error: () => this.loadingTransactions.set(false)
     });
 
-    this.cashFlowService.getSummary(filter).subscribe(summary => {
+    this.accountSummaryRequest.run(this.cashFlowService.getSummary(filter), summary => {
       this.accountSummary.set(summary);
     });
   }

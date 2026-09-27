@@ -12,6 +12,7 @@ import { Purchase } from '../../../core/models/purchase.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { ListContextService, Neighbours } from '../../../core/services/list-context.service';
 import { ListErrorComponent, describeLoadError } from '../../../shared/list-state';
+import { LatestRequest } from '../../../core/utils/latest-request';
 
 /**
  * Refonte 2b, étape 6b — hôte routé de <app-purchase-detail>. Route :
@@ -58,14 +59,17 @@ export class PurchaseDetailPageComponent implements OnInit {
     this.load(id);
   }
 
+  // Une seule requête vivante par flux : une réponse périmée n'écrase plus la récente.
+  private readonly loadRequest = new LatestRequest(); // l'enregistrement affiché
+
   load(id: number): void {
+    this.loadRequest.cancel();
     this.loading.set(true);
     this.loadError.set(null);
 
-    this.purchaseService
+    this.loadRequest.run(this.purchaseService
       .getPurchase(id)
-      .pipe(finalize(() => this.loading.set(false)))
-      .subscribe({
+      .pipe(finalize(() => this.loading.set(false))), {
         next: (purchase) => {
           this.purchase.set(purchase);
           this.neighbours.set(this.listContext.neighbours('purchases', purchase.id));

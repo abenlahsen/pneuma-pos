@@ -25,6 +25,7 @@ import {
   describeLoadError,
   frenchDate,
 } from '../../../shared/list-state';
+import { LatestRequest } from '../../../core/utils/latest-request';
 
 @Component({
   selector: 'app-purchases-page',
@@ -299,16 +300,21 @@ export class PurchasesPageComponent implements OnInit {
     };
   }
 
+  // Une seule requête vivante par flux : une réponse périmée n'écrase plus la récente.
+  private readonly listRequest = new LatestRequest(); // la liste
+  private readonly contextRequest = new LatestRequest(); // l'ordre légué à la fiche
+  private readonly summaryRequest = new LatestRequest(); // le résumé
+
   loadData(): void {
     this.loading.set(true);
     const filters = this.buildFilters();
 
-    this.purchaseService.getGrouped({
+    this.listRequest.run(this.purchaseService.getGrouped({
       ...filters,
       settlement: this.settlementTab(),
       reception: this.receptionTab(),
       per_page: '15',
-    }).subscribe({
+    }), {
       next: (response) => {
         this.groups.set(response.data);
         this.currentPage.set(response.current_page);
@@ -328,7 +334,7 @@ export class PurchasesPageComponent implements OnInit {
       },
     });
 
-    this.purchaseService.getPurchases(filters).subscribe({
+    this.contextRequest.run(this.purchaseService.getPurchases(filters), {
       next: (response) => {
         // La liste plate reste chargée pour la navigation Précédent / Suivant
         // dans la fiche ; c'est la vue groupée qui pilote la pagination.
@@ -349,7 +355,7 @@ export class PurchasesPageComponent implements OnInit {
       }
     });
 
-    this.purchaseService.getSummary(filters).subscribe({
+    this.summaryRequest.run(this.purchaseService.getSummary(filters), {
       next: (summary) => this.summary.set(summary),
     });
   }

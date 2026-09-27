@@ -11,6 +11,7 @@ import {
   SkeletonRowComponent,
   describeLoadError,
 } from '../../../shared/list-state';
+import { LatestRequest } from '../../../core/utils/latest-request';
 
 const MONTH_NAMES = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -347,9 +348,12 @@ export class PrimesPageComponent implements OnInit {
     });
   }
 
+  // Une seule requête vivante par flux : une réponse périmée n'écrase plus la récente.
+  private readonly primesRequest = new LatestRequest(); // les primes du mois
+
   loadData(): void {
     this.loading.set(true);
-    this.primeService.getPrimes(this.selectedYear(), this.selectedMonth()).subscribe({
+    this.primesRequest.run(this.primeService.getPrimes(this.selectedYear(), this.selectedMonth()), {
       next: (res) => {
         this.response.set(res);
         this.loading.set(false);

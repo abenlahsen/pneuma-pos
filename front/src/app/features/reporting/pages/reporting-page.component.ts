@@ -3,6 +3,7 @@ import { IconComponent } from '../../../shared/icon/icon.component';
 import { CommonModule, formatNumber } from '@angular/common';
 import { ReportingService } from '../data-access/reporting.service';
 import { MonthlyReport, ReportPeriodData } from '../models/reporting.model';
+import { LatestRequest } from '../../../core/utils/latest-request';
 
 const MONTH_NAMES = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -240,10 +241,13 @@ export class ReportingPageComponent implements OnInit {
     this.loadData();
   }
 
+  // Une seule requête vivante par flux : une réponse périmée n'écrase plus la récente.
+  private readonly reportRequest = new LatestRequest(); // le rapport du mois
+
   loadData(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.reportingService.getMonthly(this.selectedYear(), this.selectedMonth()).subscribe({
+    this.reportRequest.run(this.reportingService.getMonthly(this.selectedYear(), this.selectedMonth()), {
       next: (res) => {
         this.report.set(res);
         this.loading.set(false);

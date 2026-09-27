@@ -40,6 +40,7 @@ import { TransactionCategoryService } from '../../transaction-categories/data-ac
 import { TransactionCategory } from '../../transaction-categories/models/transaction-category.model';
 import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
 import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
+import { LatestRequest } from '../../../core/utils/latest-request';
 
 @Component({
   selector: 'app-cash-flow-page',
@@ -323,12 +324,17 @@ export class CashFlowPageComponent implements OnInit {
     });
   }
 
+  // Une seule requête vivante par flux : une réponse périmée n'écrase plus la récente.
+  private readonly listRequest = new LatestRequest(); // la liste
+  private readonly pendingRequest = new LatestRequest(); // les transactions à venir
+  private readonly summaryRequest = new LatestRequest(); // le résumé
+
   loadData(): void {
     this.loading.set(true);
     this.loadingPending.set(true);
     const filters = this.buildFilters();
 
-    this.cashFlowService.getTransactions({ ...filters, status: 'settled' }).subscribe({
+    this.listRequest.run(this.cashFlowService.getTransactions({ ...filters, status: 'settled' }), {
       next: (response) => {
         this.transactions.set((response as PaginatedResponse<Transaction>).data);
         this.currentPage.set(response.current_page);
@@ -346,7 +352,7 @@ export class CashFlowPageComponent implements OnInit {
       },
     });
 
-    this.cashFlowService.getTransactions({ ...filters, status: 'pending', page: '1', per_page: '500' }).subscribe({
+    this.pendingRequest.run(this.cashFlowService.getTransactions({ ...filters, status: 'pending', page: '1', per_page: '500' }), {
       next: (response) => {
         this.pendingTransactions.set((response as PaginatedResponse<Transaction>).data);
         this.loadingPending.set(false);
@@ -354,7 +360,7 @@ export class CashFlowPageComponent implements OnInit {
       error: () => this.loadingPending.set(false),
     });
 
-    this.cashFlowService.getSummary(filters).subscribe({
+    this.summaryRequest.run(this.cashFlowService.getSummary(filters), {
       next: (summary) => {
         this.summary.set(summary);
         this.summaryLoaded.set(true);

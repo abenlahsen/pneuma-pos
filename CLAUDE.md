@@ -159,6 +159,8 @@ Each payment creation (Payment, PurchasePayment, ServicePayment) auto-creates a 
 
 **State management**: Angular signals only (no NgRx). Components use `signal<T>` for local state and `computed()` for derived values. Auth state lives in `AuthService` with token in `localStorage` under key `auth_token`.
 
+**Stale responses** (`core/utils/latest-request.ts`): any load whose parameters change while a request is in flight (search, filters, sort, page, month stepper, prev/next, selected account) goes through a `LatestRequest` slot — `this.listRequest.run(this.service.getX(filters), { next, error })` — which unsubscribes the previous request (HttpClient aborts it) before starting the new one, so a slower, older response can never overwrite the latest. One slot per independent stream (list, summary…). A `finalize()` in the source also runs on cancellation: call `slot.cancel()` before `loading.set(true)` in that case. Used by every list page, Reporting, Primes, the account transactions and the sale/purchase pages.
+
 **Zoneless Angular**: The app runs **without zone.js**. All mutable component state must use `signal()` and derived state must use `computed()` — plain class properties will not trigger change detection. Never use plain boolean/object properties for state that affects the template.
 
 **Routing** (`front/src/app/app.routes.ts`): All feature routes are lazy-loaded via `loadComponent()`. Root (`/`) redirects to `/dashboard`. Purchases route is `/achats` (French); the purchase entry is a full-screen editor at `/achats/nouveau` and `/achats/:id/modifier` (refonte 2b, 12b — no longer a modal on the list). Wildcard redirects to `/dashboard`.

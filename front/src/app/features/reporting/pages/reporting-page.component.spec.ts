@@ -1,4 +1,4 @@
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { ReportingPageComponent } from './reporting-page.component';
 import { MonthlyReport, ReportPeriodData } from '../models/reporting.model';
 
@@ -152,6 +152,29 @@ describe('ReportingPageComponent', () => {
         { method: 'Espèces', collections: 300, supplierPayments: 0 },
         { method: 'Virement', collections: 0, supplierPayments: 150 },
       ]);
+    });
+  });
+
+  describe('changement de mois rapide', () => {
+    it('n\'affiche jamais un mois périmé sous l\'étiquette du mois choisi', () => {
+      const august = new Subject<MonthlyReport>();
+      const september = new Subject<MonthlyReport>();
+      mockService.getMonthly.mockReturnValueOnce(august).mockReturnValueOnce(september);
+
+      comp.selectedYear.set(2026);
+      comp.selectedMonth.set(8);
+      comp.loadData();
+      comp.selectedMonth.set(9);
+      comp.loadData();
+
+      expect(august.observed).toBe(false);
+      const sept = makeReport();
+      sept.period.month = 9;
+      september.next(sept);
+      august.next(makeReport()); // la réponse d'août, plus lente, arrive après
+
+      expect(comp.report()?.period.month).toBe(9);
+      expect(comp.loading()).toBe(false);
     });
   });
 });
