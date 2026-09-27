@@ -69,6 +69,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | API rate limit
+    |--------------------------------------------------------------------------
+    |
+    | Requests per minute and per user on the authenticated API (the `api`
+    | limiter in AppServiceProvider). 60 in production. The e2e suite drives
+    | every screen in a row as the same admin — each redesigned screen fires
+    | several requests on load — and needs a higher ceiling locally.
+    |
+    */
+
+    'api_rate_limit' => (int) env('API_RATE_LIMIT', 60),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |
