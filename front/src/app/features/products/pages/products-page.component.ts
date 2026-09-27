@@ -20,6 +20,7 @@ import {
   SkeletonRowComponent,
   describeLoadError,
 } from '../../../shared/list-state';
+import { LatestRequest } from '../../../core/utils/latest-request';
 
 @Component({
   selector: 'app-products-page',
@@ -169,11 +170,14 @@ export class ProductsPageComponent implements OnInit {
     }
   }
 
+  // Une seule requête vivante par flux : une réponse périmée n'écrase plus la récente.
+  private readonly listRequest = new LatestRequest(); // la liste
+
   loadData(): void {
     this.loading.set(true);
     const filters = this.buildFilters();
 
-    this.productService.getProducts(filters).subscribe({
+    this.listRequest.run(this.productService.getProducts(filters), {
       next: (response) => {
         this.products.set(response.data);
         this.currentPage.set(Number(response.current_page ?? 1) || 1);

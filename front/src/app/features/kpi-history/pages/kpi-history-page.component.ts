@@ -10,6 +10,7 @@ import { KpiDay } from '../models/kpi-day.model';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 
 import { ListErrorComponent, SkeletonRowComponent, describeLoadError } from '../../../shared/list-state';
+import { LatestRequest } from '../../../core/utils/latest-request';
 
 const WEEKDAY_SHORT = ['Dim.', 'Lun.', 'Mar.', 'Mer.', 'Jeu.', 'Ven.', 'Sam.'];
 
@@ -115,16 +116,18 @@ export class KpiHistoryPageComponent implements OnInit {
 
   // ── Chargement ─────────────────────────────────────────────────────────────
 
+  // Une seule requête vivante par flux : une réponse périmée n'écrase plus la récente.
+  private readonly historyRequest = new LatestRequest(); // l'historique
+
   load(): void {
     this.loading.set(true);
-    this.svc
+    this.historyRequest.run(this.svc
       .getHistory({
         from: this.filterFrom() || undefined,
         to: this.filterTo() || undefined,
         page: this.page(),
         per_page: this.perPage,
-      })
-      .subscribe({
+      }), {
         next: (res) => {
           this.snapshots.set(res.data);
           this.totalPages.set(res.meta.last_page);

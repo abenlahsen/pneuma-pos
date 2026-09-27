@@ -19,6 +19,7 @@ import {
   SkeletonRowComponent,
   describeLoadError,
 } from '../../../shared/list-state';
+import { LatestRequest } from '../../../core/utils/latest-request';
 
 @Component({
   selector: 'app-carriers-page',
@@ -80,20 +81,22 @@ export class CarriersPageComponent implements OnInit {
     this.loadData();
   }
 
+  // Une seule requête vivante par flux : une réponse périmée n'écrase plus la récente.
+  private readonly listRequest = new LatestRequest(); // la liste
+
   loadData(): void {
     this.loading.set(true);
     const page = Number(this.currentPage() ?? 1) || 1;
     const perPage = Number(this.perPage() ?? 100) || 100;
 
-    this.service
+    this.listRequest.run(this.service
       .getCarriers({
         page: page.toString(),
         per_page: perPage.toString(),
         search: this.filterSearch(),
         sort_by: this.sortBy(),
         sort_direction: this.sortDirection(),
-      })
-      .subscribe({
+      }), {
         next: (res) => {
           const p = res as PaginatedResponse<Carrier>;
           this.carriers.set(p.data);

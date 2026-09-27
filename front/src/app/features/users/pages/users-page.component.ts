@@ -20,6 +20,7 @@ import {
   SkeletonRowComponent,
   describeLoadError,
 } from '../../../shared/list-state';
+import { LatestRequest } from '../../../core/utils/latest-request';
 
 @Component({
   selector: 'app-users-page',
@@ -123,6 +124,9 @@ export class UsersPageComponent implements OnInit {
     this.loadRoles();
   }
 
+  // Une seule requête vivante par flux : une réponse périmée n'écrase plus la récente.
+  private readonly listRequest = new LatestRequest(); // la liste
+
   loadData(): void {
     this.loading.set(true);
     const filters: Record<string, string> = {
@@ -134,7 +138,7 @@ export class UsersPageComponent implements OnInit {
       filters['search'] = this.filterSearch();
     }
 
-    this.userService.getUsers(filters).subscribe({
+    this.listRequest.run(this.userService.getUsers(filters), {
       next: (response) => {
         const paginated = response as PaginatedResponse<ManagedUser>;
         this.users.set(paginated.data);

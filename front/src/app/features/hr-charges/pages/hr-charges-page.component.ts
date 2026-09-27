@@ -29,6 +29,7 @@ import {
   SkeletonRowComponent,
   describeLoadError,
 } from '../../../shared/list-state';
+import { LatestRequest } from '../../../core/utils/latest-request';
 
 @Component({
   selector: 'app-hr-charges-page',
@@ -185,6 +186,10 @@ export class HrChargesPageComponent implements OnInit {
     this.loadData();
   }
 
+  // Une seule requête vivante par flux : une réponse périmée n'écrase plus la récente.
+  private readonly listRequest = new LatestRequest(); // la liste
+  private readonly summaryRequest = new LatestRequest(); // le résumé
+
   loadData(): void {
     this.loading.set(true);
     const year = this.selectedYear();
@@ -192,7 +197,7 @@ export class HrChargesPageComponent implements OnInit {
     const employeeId = this.filterEmployeeId();
     const subcategory = this.filterSubcategory() || null;
 
-    this.hrChargeService.list(year, month, employeeId, subcategory).subscribe({
+    this.listRequest.run(this.hrChargeService.list(year, month, employeeId, subcategory), {
       next: (res) => {
         this.charges.set(res.data);
         this.loading.set(false);
@@ -207,7 +212,7 @@ export class HrChargesPageComponent implements OnInit {
       },
     });
 
-    this.hrChargeService.summary(year, month, employeeId, subcategory).subscribe({
+    this.summaryRequest.run(this.hrChargeService.summary(year, month, employeeId, subcategory), {
       next: (res) => this.summary.set(res),
     });
   }

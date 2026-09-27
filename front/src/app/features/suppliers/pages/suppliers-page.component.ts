@@ -19,6 +19,7 @@ import {
   SkeletonRowComponent,
   describeLoadError,
 } from '../../../shared/list-state';
+import { LatestRequest } from '../../../core/utils/latest-request';
 
 @Component({
   selector: 'app-suppliers-page',
@@ -142,6 +143,9 @@ export class SuppliersPageComponent implements OnInit {
     });
   }
 
+  // Une seule requête vivante par flux : une réponse périmée n'écrase plus la récente.
+  private readonly listRequest = new LatestRequest(); // la liste
+
   loadData(): void {
     this.loading.set(true);
     const page = Number(this.currentPage() ?? 1) || 1;
@@ -155,7 +159,7 @@ export class SuppliersPageComponent implements OnInit {
       sort_direction: this.sortDirection(),
     };
 
-    this.supplierService.getSuppliers(filters).subscribe({
+    this.listRequest.run(this.supplierService.getSuppliers(filters), {
       next: (response) => {
         const paginated = response as PaginatedResponse<Supplier>;
         this.suppliers.set(paginated.data);

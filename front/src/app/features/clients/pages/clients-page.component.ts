@@ -16,6 +16,7 @@ import {
   SkeletonRowComponent,
   describeLoadError,
 } from '../../../shared/list-state';
+import { LatestRequest } from '../../../core/utils/latest-request';
 
 @Component({
   selector: 'app-clients-page',
@@ -126,6 +127,9 @@ export class ClientsPageComponent implements OnInit {
     this.loadClients();
   }
 
+  // Une seule requête vivante par flux : une réponse périmée n'écrase plus la récente.
+  private readonly listRequest = new LatestRequest(); // la liste
+
   loadClients(): void {
     this.loading.set(true);
     this.errorMessage.set('');
@@ -133,13 +137,12 @@ export class ClientsPageComponent implements OnInit {
     const page = Number(this.currentPage() ?? 1) || 1;
     const perPage = Number(this.perPage() ?? 100) || 100;
 
-    this.clientService
+    this.listRequest.run(this.clientService
       .getClientsResponse({
         ...this.filters,
         page,
         per_page: perPage,
-      })
-      .subscribe({
+      }), {
         next: (response) => {
           this.clients.set(response.data ?? []);
           this.currentPage.set(Number(response.current_page ?? 1) || 1);

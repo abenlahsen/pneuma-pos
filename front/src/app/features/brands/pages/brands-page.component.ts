@@ -20,6 +20,7 @@ import {
 } from '../../../shared/list-state';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { RowOverflowComponent } from '../../../shared/row-overflow/row-overflow.component';
+import { LatestRequest } from '../../../core/utils/latest-request';
 
 @Component({
   selector: 'app-brands-page',
@@ -87,6 +88,9 @@ export class BrandsPageComponent implements OnInit {
     this.loadData();
   }
 
+  // Une seule requête vivante par flux : une réponse périmée n'écrase plus la récente.
+  private readonly listRequest = new LatestRequest(); // la liste
+
   loadData(): void {
     this.loading.set(true);
     const page = Number(this.currentPage() ?? 1) || 1;
@@ -103,7 +107,7 @@ export class BrandsPageComponent implements OnInit {
       filters['search'] = this.filterSearch();
     }
 
-    this.brandService.getBrands(filters).subscribe({
+    this.listRequest.run(this.brandService.getBrands(filters), {
       next: (response) => {
         this.brands.set(response.data);
         this.currentPage.set(Number(response.current_page ?? 1) || 1);

@@ -14,6 +14,7 @@ import {
   describeLoadError,
   frenchDate,
 } from '../../../shared/list-state';
+import { LatestRequest } from '../../../core/utils/latest-request';
 
 const FIELD_LABELS: Record<string, string> = {
   date: 'Date',
@@ -132,6 +133,9 @@ export class ActivityLogPageComponent implements OnInit {
     this.loadData();
   }
 
+  // Une seule requête vivante par flux : une réponse périmée n'écrase plus la récente.
+  private readonly listRequest = new LatestRequest(); // la liste
+
   loadData(): void {
     this.loading.set(true);
     const params: ActivityLogParams = {
@@ -145,7 +149,7 @@ export class ActivityLogPageComponent implements OnInit {
     if (this.filterDateTo()) params.date_to = this.filterDateTo();
     if (this.filterSearch()) params.search = this.filterSearch();
 
-    this.activityLogService.getLogs(params).subscribe({
+    this.listRequest.run(this.activityLogService.getLogs(params), {
       next: (res) => {
         this.logs.set(res.data);
         this.currentPage.set(res.current_page);
