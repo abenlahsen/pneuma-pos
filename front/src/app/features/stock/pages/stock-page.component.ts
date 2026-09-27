@@ -3,7 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { Subscription, finalize } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { StockService } from '../data-access/stock.service';
 import { Stock, StockFilters, StockGroup, StockLot, StockMovement, StockSummary } from '../models/stock.model';
@@ -184,12 +184,24 @@ export class StockPageComponent implements OnInit {
     this.loadData();
   }
 
+  /**
+   * Les requêtes de liste et de résumé en vol. Un nouveau chargement les
+   * abandonne (HttpClient annule alors la requête) : sans quoi une réponse
+   * périmée — le chargement initial, plus lent qu'une recherche lancée
+   * aussitôt — arrivait après la réponse filtrée et l'écrasait.
+   */
+  private listRequest?: Subscription;
+  private summaryRequest?: Subscription;
+
   loadData(): void {
+    this.listRequest?.unsubscribe();
+    this.summaryRequest?.unsubscribe();
+
     this.loading.set(true);
     this.loadingSummary.set(true);
     const filters = this.buildFilters();
 
-    this.stockService.getGrouped(filters).subscribe({
+    this.listRequest = this.stockService.getGrouped(filters).subscribe({
       next: (response) => {
         this.groups.set(response.data ?? []);
         this.currentPage.set(Number(response.current_page ?? 1) || 1);
@@ -207,7 +219,7 @@ export class StockPageComponent implements OnInit {
       },
     });
 
-    this.stockService.getSummary(filters).subscribe({
+    this.summaryRequest = this.stockService.getSummary(filters).subscribe({
       next: (summary) => {
         this.summary.set(summary);
         this.summaryLoaded.set(true);

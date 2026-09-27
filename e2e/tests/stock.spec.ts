@@ -23,13 +23,10 @@ async function search(page: Page, query: string): Promise<void> {
 
 test.describe('Stock', () => {
   test.beforeEach(async ({ page }) => {
-    // La page n'annule pas une requête de liste en vol : si la recherche part
-    // avant la fin du chargement initial, la réponse initiale, plus tardive,
-    // écrase le résultat filtré. On attend donc ce premier chargement.
-    await Promise.all([
-      page.waitForResponse(r => r.url().includes('/api/stocks-grouped') && r.request().method() === 'GET', { timeout: 25_000 }),
-      page.goto('/stock'),
-    ]);
+    // Pas d'attente du chargement initial : les recherches partent aussitôt,
+    // pendant qu'il est encore en vol. La page doit l'abandonner — une réponse
+    // initiale plus lente écrasait autrefois le résultat filtré.
+    await page.goto('/stock');
     await page.waitForLoadState('domcontentloaded');
     await expect(page.locator('h1')).toContainText('Stock', { timeout: 15_000 });
   });
