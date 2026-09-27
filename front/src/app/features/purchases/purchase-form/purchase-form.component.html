@@ -1,170 +1,270 @@
-<div *ngIf="loadingForm()" class="loading-overlay">
-  <span>Chargement…</span>
-</div>
+<!-- Refonte 2b, 12b, maquette 20b : la saisie d'achat en écran plein, sur le
+     gabarit 15a — barre de 60 px, trois colonnes, pied de 64 px. -->
+<form (ngSubmit)="onSubmit()" class="pf-editor" autocomplete="off">
 
-<form *ngIf="!loadingForm()" (ngSubmit)="onSubmit()" #form="ngForm" class="p-6">
-
-  <div class="form-section">
-    <h3 class="section-title">Informations Générales</h3>
-    <div class="info-grid">
-      <div class="form-group">
-        <label>Date *</label>
-        <input type="date" class="form-control" [(ngModel)]="formData.date" name="date" required>
-      </div>
-      <div class="form-group checkbox-control">
-        <label>Avec Facture</label>
-        <input type="checkbox" name="with_invoice" [(ngModel)]="formData.with_invoice">
-      </div>
-      <div class="form-group">
-        <label>Fournisseur *</label>
-        <select class="form-control" [(ngModel)]="formData.supplier_id" name="supplier_id" required>
-          <option [ngValue]="null">-- Sélectionner un fournisseur --</option>
-          <option *ngFor="let sup of suppliers()" [ngValue]="sup.id">{{ sup.name }}</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>N° BL</label>
-        <input type="text" class="form-control" [(ngModel)]="formData.bl_number" name="bl_number" placeholder="Ex: BL-2026-0456">
-      </div>
-      <div class="form-group" *ngIf="formData.with_invoice">
-        <label>N° Facture</label>
-        <input type="text" class="form-control" [(ngModel)]="formData.invoice_number" name="invoice_number" placeholder="Ex: FAC-2026-0123">
-      </div>
-      <div class="form-group">
-        <label>Commercial *</label>
-        <select class="form-control" [(ngModel)]="formData.commercial_id" name="commercial_id" required>
-          <option [ngValue]="null">-- Sélectionner un commercial --</option>
-          <option *ngFor="let comm of commercials()" [ngValue]="comm.id">{{ comm.name }}</option>
-        </select>
-      </div>
-      <div class="form-group" *ngIf="purchase">
-        <label>Statut</label>
-        <select class="form-control" [(ngModel)]="formData.status" name="status">
-          <option *ngFor="let s of statusOptions" [value]="s">{{ PURCHASE_STATUS_LABELS[s] }}</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Statut Paiement</label>
-        <select class="form-control" [(ngModel)]="formData.payment_status" name="payment_status">
-          <option *ngFor="let s of PAYMENT_STATUSES" [value]="s">{{ PAYMENT_STATUS_LABELS[s] }}</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-md-12 mb-4">
-      <div class="form-section">
-        <h3 class="section-title">Produits</h3>
-        
-        <div class="items-table mb-3" *ngIf="formData.items && formData.items.length > 0">
-          <table class="table table-sm">
-            <thead>
-              <tr>
-                <th>Produit</th>
-                <th>Stock</th>
-                <th>Qté</th>
-                <th>PU Achat</th>
-                <th>Total Achat</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of formData.items; let i = index" [class.table-active]="editingItemIndex === i">
-                <td>
-                  {{ getProduct(item) ? formatProductLabel(getProduct(item)) : 'Produit #' + item.product_id }}
-                  <button class="product-link" type="button" (click)="openProductView(item)" *ngIf="getProduct(item)" title="Voir le produit"><app-icon name="external-link" [size]="14" /></button>
-                </td>
-                <td>{{ item.stock ? formatStockLabel(item.stock) : 'Stock #' + item.stock_id }}</td>
-                <td>{{ item.quantity }}</td>
-                <td>{{ item.unit_price | number:'1.2-2' }}</td>
-                <td>{{ (item.unit_price * item.quantity) | number:'1.2-2' }}</td>
-                <td>
-                  <button type="button" class="btn-icon text-primary mr-1" title="Modifier" (click)="editItem(i)"><app-icon name="edit" [size]="14" /></button>
-                  <button type="button" class="btn-icon text-danger" title="Supprimer" (click)="removeItem(i)"><app-icon name="trash" [size]="14" /></button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="totals-block mt-2">
-            <div class="totals-row">
-              <span class="totals-label">Sous-total</span>
-              <span class="totals-value">{{ totalAmount | number:'1.2-2' }} DH</span>
-            </div>
-            <div class="totals-row totals-remise">
-              <span class="totals-label">Remise (%)</span>
-              <input type="number" class="form-control remise-input" name="discount"
-                [(ngModel)]="formData.discount" min="0" max="100" step="0.01" placeholder="0">
-            </div>
-            <div class="totals-row totals-net" *ngIf="(formData.discount ?? 0) > 0">
-              <span class="totals-label">Montant remise</span>
-              <span class="totals-value text-warning">- {{ discountAmount | number:'1.2-2' }} DH</span>
-            </div>
-            <div class="totals-row totals-total">
-              <span class="totals-label font-weight-bold">Net à payer</span>
-              <span class="totals-value font-weight-bold">{{ netAmount | number:'1.2-2' }} DH</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="item-adder">
-          <div class="row align-items-end">
-            <div class="col-md-2 mb-2">
-              <div class="form-group">
-                <label>Recherche produit</label>
-                <input type="text" class="form-control" [ngModel]="productSearch()" (ngModelChange)="productSearch.set($event)" (input)="searchProducts()" name="productSearch" placeholder="Recherche..." autocomplete="off">
-              </div>
-            </div>
-            <div class="col-md-3 mb-2">
-              <div class="form-group">
-                <label>Produit</label>
-                <select class="form-control" [(ngModel)]="currentItem.product_id" (change)="onProductSelected($event)" name="cur_product_id">
-                  <option [value]="0">-- Sélectionner --</option>
-                  <option *ngFor="let p of products()" [value]="p.id">{{ formatProductLabel(p) }}</option>
-                </select>
-              </div>
-            </div>
-            <div class="col-md-3 mb-2">
-              <div class="form-group">
-                <label>Stock</label>
-                <select class="form-control" name="cur_stock_id" [(ngModel)]="currentItem.stock_id" (ngModelChange)="onStockSelected()">
-                  <option [ngValue]="null">-- Sélectionner --</option>
-                  <option *ngFor="let s of stocks()" [ngValue]="s.id">{{ formatStockLabel(s) }}</option>
-                </select>
-              </div>
-            </div>
-            <div class="col-md-1 mb-2">
-              <div class="form-group">
-                <label>Qté</label>
-                <input type="number" class="form-control" name="cur_quantity" [(ngModel)]="currentItem.quantity" min="1">
-              </div>
-            </div>
-            <div class="col-md-2 mb-2">
-              <div class="form-group">
-                <label>PU Achat (DH)</label>
-                <input type="number" class="form-control" name="cur_unit_price" [(ngModel)]="currentItem.unit_price" step="0.01">
-              </div>
-            </div>
-            <div class="col-md-1 mb-2">
-              <button type="button" class="btn btn-primary w-100" style="height: 38px; padding: 0.375rem 0.5rem; margin-bottom: 2px;" [disabled]="!currentItem.product_id || !currentItem.stock_id" (click)="addItem()">
-                @if (editingItemIndex !== null) { <app-icon name="check" [size]="14" /> } @else { + }
-              </button>
-            </div>
-            <div class="col-md-1 mb-2" *ngIf="editingItemIndex !== null">
-              <button type="button" class="btn btn-secondary w-100" style="height: 38px; padding: 0.375rem 0.5rem; margin-bottom: 2px;" (click)="cancelItemEdit()"><app-icon name="close" [size]="14" /></button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="form-actions mt-4 text-right">
-    <button type="button" class="btn btn-secondary mr-2" (click)="cancel.emit()" [disabled]="loading()">Annuler</button>
-    <button type="submit" class="btn btn-primary"
-      [disabled]="loading() || !formData.date || !formData.supplier_id || !formData.commercial_id || !formData.items || formData.items.length === 0">
-      {{ loading() ? 'Enregistrement...' : 'Enregistrer' }}
+  <!-- ── Rangée 1 : la barre ────────────────────────────────────────────── -->
+  <header class="pf-bar">
+    <button type="button" class="pf-back" (click)="cancel.emit()">
+      <app-icon name="chevron-left" [size]="15" /> Achats
     </button>
-  </div>
-</form>
+    <span class="pf-identity">
+      <span class="pf-title">{{ isEditing() ? 'Achat ' + purchase!.id : 'Nouvel achat' }}</span>
+      <span class="pf-meta">
+        {{ isEditing() ? 'Modification' : 'Pas encore enregistré' }} · {{ date() | date:'dd/MM/yyyy' }}<ng-container *ngIf="supplier()"> · {{ supplier()!.name }}</ng-container>
+      </span>
+    </span>
+  </header>
 
+  <!-- ── Rangée 2 : les trois colonnes ──────────────────────────────────── -->
+  <div class="pf-body">
+
+    <!-- Gauche : la recherche -->
+    <section class="pf-catalog">
+      <div class="pf-search">
+        <label class="pf-search-input">
+          <app-icon name="search" [size]="17" />
+          <input type="text" name="query" [ngModel]="query()" (ngModelChange)="onQuery($event)"
+                 placeholder="Dimension (2055516), marque, référence…" />
+        </label>
+        <span class="pf-search-hint">
+          @if (searching()) {
+            Recherche…
+          } @else if (results().length) {
+            {{ results().length }} référence{{ results().length > 1 ? 's' : '' }}
+          } @else if (query()) {
+            Aucun produit ne correspond.
+          }
+          <ng-container *ngIf="supplierId()"> Les produits déjà achetés chez ce fournisseur remontent en premier.</ng-container>
+        </span>
+      </div>
+
+      <div class="pf-results">
+        @for (p of supplierResults(); track p.id) {
+          <ng-container *ngTemplateOutlet="resultRow; context: { $implicit: p }" />
+        }
+        @if (supplierId() && supplierResults().length && otherResults().length) {
+          <span class="pf-results-group">Autres fournisseurs</span>
+        }
+        @for (p of otherResults(); track p.id) {
+          <ng-container *ngTemplateOutlet="resultRow; context: { $implicit: p }" />
+        }
+        @if (!results().length && !query() && !searching()) {
+          <p class="pf-results-empty">
+            Tapez une dimension (2055516), une marque ou une référence.
+            <ng-container *ngIf="!supplierId()"> Choisissez d'abord le fournisseur pour voir ce que vous lui achetez d'habitude.</ng-container>
+          </p>
+        }
+      </div>
+
+      <div class="pf-create">
+        Produit introuvable ?
+        <button type="button" class="pf-link" (click)="openNewProduct()">Créer un produit sans quitter l'achat.</button>
+      </div>
+    </section>
+
+    <ng-template #resultRow let-p>
+      <div class="pf-result">
+        <span class="pf-result-name">
+          <span class="pf-result-title">{{ productLabel(p, p.id) }}</span>
+          <span class="pf-result-sub">
+            <ng-container *ngIf="p.dimension">{{ p.dimension }} · </ng-container>stock {{ p.stock_total }}<ng-container *ngIf="(p.supplier_last_purchase || p.last_purchase) as last"> · dernier achat {{ money(last.unit_price) }} DH</ng-container>
+          </span>
+        </span>
+        @if (isAdded(p)) {
+          <span class="pf-added">AJOUTÉ</span>
+        } @else {
+          <button type="button" class="pf-add" (click)="addProduct(p)">Ajouter</button>
+        }
+      </div>
+    </ng-template>
+
+    <!-- Centre : les lignes -->
+    <section class="pf-lines">
+      <div class="pf-grid pf-grid-head">
+        <span>Produit</span>
+        <span>Dépôt de réception</span>
+        <span class="pf-num">Qté</span>
+        <span class="pf-num">PU achat</span>
+        <span class="pf-num">Total</span>
+        <span></span>
+      </div>
+
+      @for (line of lines(); track $index; let i = $index) {
+        <div class="pf-line" [class.pf-line--rise]="priceRise(line) !== null">
+          <div class="pf-grid">
+            <span class="pf-product">
+              <span class="pf-product-name">{{ productLabel(line.info, line.product_id) }}</span>
+              <span class="pf-product-sub">
+                <ng-container *ngIf="line.info?.dimension">{{ line.info!.dimension }} · </ng-container>
+                @if (line.info?.last_sale_price) {
+                  dernier PV {{ money(line.info!.last_sale_price!) }}
+                  @if (lineMarginPct(line) !== null) {
+                    · marge <span [class.pf-margin-low]="lineMarginPct(line)! < 10">{{ lineMarginPct(line)! | number:'1.1-1' }} %</span>
+                  }
+                } @else if (line.info) {
+                  pas de prix de vente connu
+                }
+              </span>
+            </span>
+
+            @if (line.info?.lots?.length) {
+              <select class="pf-input" [name]="'lot_' + i"
+                      [ngModel]="line.stock_id" (ngModelChange)="updateLine(i, { stock_id: $event })">
+                @for (lot of line.info!.lots; track lot.id) {
+                  <option [ngValue]="lot.id">{{ lotLabel(lot) }}</option>
+                }
+              </select>
+            } @else if (line.info) {
+              <span class="pf-no-lot">
+                Aucun lot ·
+                <button type="button" class="pf-link" (click)="openProduct(line.product_id)">créer un lot</button>
+              </span>
+            } @else {
+              <span class="pf-no-lot">Chargement…</span>
+            }
+
+            <input type="number" class="pf-input pf-input--num" min="1" [name]="'qty_' + i"
+                   [ngModel]="line.quantity" (ngModelChange)="updateLine(i, { quantity: +$event || 0 })" />
+            <input type="number" class="pf-input pf-input--num" min="0" step="0.01" [name]="'price_' + i"
+                   [class.pf-input--rise]="priceRise(line) !== null"
+                   [ngModel]="line.unit_price" (ngModelChange)="updateLine(i, { unit_price: +$event || 0 })" />
+            <span class="pf-num pf-line-total">{{ lineTotal(line) | number:'1.2-2' }}</span>
+            <button type="button" class="pf-remove" title="Retirer" (click)="removeLine(i)">
+              <app-icon name="close" [size]="13" />
+            </button>
+          </div>
+
+          <!-- La hausse est signalée pendant la saisie. -->
+          @if (priceRise(line) !== null) {
+            <p class="pf-rise">
+              <app-icon name="alert-triangle" [size]="14" /> {{ priceRiseLabel(line) }}
+            </p>
+          }
+        </div>
+      } @empty {
+        <p class="pf-lines-empty">Aucune ligne. Cherchez un produit à gauche et ajoutez-le.</p>
+      }
+    </section>
+
+    <!-- Droite : fournisseur, documents, totaux, règlement -->
+    <aside class="pf-side">
+      <section class="pf-panel">
+        <span class="pf-section-title">Fournisseur</span>
+        <select class="pf-input" name="supplier_id"
+                [ngModel]="supplierId()" (ngModelChange)="onSupplierChange($event)">
+          <option [ngValue]="null">— Choisir le fournisseur —</option>
+          @for (s of suppliers(); track s.id) {
+            <option [ngValue]="s.id">{{ s.name }}</option>
+          }
+        </select>
+
+        @if (supplierId()) {
+          @if (alreadyDue() !== null) {
+            <span class="pf-kv"><span>Déjà dû</span><strong [class.pf-due]="alreadyDue()! > 0">{{ alreadyDue() | number:'1.2-2' }}</strong></span>
+          }
+          <span class="pf-kv">
+            <span>Délai contractuel</span>
+            <strong>{{ termsDays() !== null && termsDays() !== undefined ? termsDays() + ' jours' : 'non renseigné' }}</strong>
+          </span>
+          @if (dueAfter() !== null) {
+            <p class="pf-note" [class.pf-note--warn]="oldDebtCount() > 0">
+              <ng-container *ngIf="oldDebtCount() > 0">{{ oldDebtCount() }} achat{{ oldDebtCount() > 1 ? 's' : '' }} au-delà de 90 jours. </ng-container>
+              Cet achat portera le total dû à {{ money(dueAfter()!) }} DH.
+            </p>
+          }
+        }
+      </section>
+
+      <section class="pf-panel">
+        <span class="pf-section-title">Documents</span>
+        <span class="pf-segmented">
+          <button type="button" [class.active]="withInvoice()" (click)="withInvoice.set(true)">Avec facture</button>
+          <button type="button" [class.active]="!withInvoice()" (click)="withInvoice.set(false)">BL seul</button>
+        </span>
+        <label class="pf-row-field">
+          <span>Date</span>
+          <input type="date" class="pf-input" name="date" [ngModel]="date()" (ngModelChange)="date.set($event)" />
+        </label>
+        <label class="pf-row-field">
+          <span>N° BL</span>
+          <input type="text" class="pf-input" name="bl_number" [ngModel]="blNumber()" (ngModelChange)="blNumber.set($event)" />
+        </label>
+        @if (withInvoice()) {
+          <label class="pf-row-field">
+            <span>N° facture</span>
+            <input type="text" class="pf-input" name="invoice_number" [ngModel]="invoiceNumber()" (ngModelChange)="invoiceNumber.set($event)" />
+          </label>
+        }
+        <label class="pf-row-field">
+          <span>Réception</span>
+          @if (receptionLocked()) {
+            <em class="pf-locked">{{ purchase!.status === 'TERMINE' ? 'Terminé' : 'Annulé' }} — ne se change plus ici</em>
+          } @else {
+            <span class="pf-segmented pf-segmented--inline">
+              <button type="button" [class.active]="reception() === 'expected'" (click)="reception.set('expected')">Attendue</button>
+              <button type="button" [class.active]="reception() === 'received'" (click)="reception.set('received')">Reçue</button>
+            </span>
+          }
+        </label>
+        <label class="pf-row-field">
+          <span>Commercial</span>
+          <select class="pf-input" name="commercial_id" [ngModel]="commercialId()" (ngModelChange)="commercialId.set($event)">
+            <option [ngValue]="null">—</option>
+            @for (c of commercials(); track c.id) {
+              <option [ngValue]="c.id">{{ c.name }}</option>
+            }
+          </select>
+        </label>
+      </section>
+
+      <section class="pf-panel pf-panel--totals">
+        <span class="pf-total-row pf-total-row--muted">
+          <span>{{ totalQuantity() }} article{{ totalQuantity() > 1 ? 's' : '' }}<ng-container *ngIf="tyreCount() && tyreCount() !== totalQuantity()"> · {{ tyreCount() }} pneus</ng-container></span>
+          <span>{{ linesTotal() | number:'1.2-2' }}</span>
+        </span>
+        <label class="pf-total-row pf-total-row--muted">
+          <span>Remise</span>
+          <span class="pf-discount">
+            <input type="number" class="pf-input pf-input--num pf-input--sm" name="discount" min="0" max="100" step="0.5"
+                   [ngModel]="discount()" (ngModelChange)="discount.set(+$event || 0)" /> %
+          </span>
+        </label>
+        @if (discountAmount() > 0) {
+          <span class="pf-total-row pf-total-row--muted"><span></span><span>− {{ discountAmount() | number:'1.2-2' }}</span></span>
+        }
+        <span class="pf-total-row pf-total-row--net"><span>Total dû au fournisseur</span><span>{{ netAmount() | number:'1.2-2' }}</span></span>
+        @if (dueDate()) {
+          <span class="pf-total-row pf-total-row--muted"><span>Échéance</span><span>{{ dueDate() | date:'dd/MM/yyyy' }}</span></span>
+        }
+      </section>
+
+      <section class="pf-panel pf-panel--last">
+        <span class="pf-section-title">Règlement</span>
+        <span class="pf-segmented">
+          <button type="button" [class.active]="!payNow()" (click)="payNow.set(false)">À crédit</button>
+          <button type="button" [class.active]="payNow()" (click)="payNow.set(true)">Payé maintenant</button>
+        </span>
+        @if (payNow()) {
+          <p class="pf-note">L'encaissement du paiement s'ouvre dans le volet, une fois l'achat enregistré.</p>
+        }
+      </section>
+    </aside>
+  </div>
+
+  <!-- ── Rangée 3 : le pied ─────────────────────────────────────────────── -->
+  <footer class="pf-foot">
+    <span class="pf-foot-hint">
+      @if (errorMessage) {
+        <span class="pf-foot-error">{{ errorMessage }}</span>
+      } @else if (missingHint()) {
+        {{ missingHint() }}
+      } @else {
+        Le stock entre à l'enregistrement, que la réception soit attendue ou reçue.
+      }
+    </span>
+    <button type="button" class="pf-btn" (click)="cancel.emit()">Annuler</button>
+    <button type="submit" class="pf-btn pf-btn--primary" [disabled]="!canSave() || busy">
+      {{ busy ? 'Enregistrement…' : "Enregistrer l'achat" }}
+    </button>
+  </footer>
+</form>

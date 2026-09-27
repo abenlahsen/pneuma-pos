@@ -10,7 +10,6 @@ import { ListContextService } from '../../../core/services/list-context.service'
 import { Purchase, PurchaseGroupRow, PurchaseSummary, PurchaseSupplierGroup } from '../models/purchase.model';
 import { PURCHASE_STATUSES, PURCHASE_STATUS_LABELS, PURCHASE_STATUS_TRANSITIONS, PAYMENT_STATUSES, PAYMENT_STATUS_LABELS, PurchaseStatus } from '../../../core/constants/status.constants';
 import { PAYMENT_METHODS, paymentMethodClass } from '../../../core/constants/payment-method.constants';
-import { PurchaseFormComponent } from '../purchase-form/purchase-form.component';
 import { PurchasePaymentsComponent } from '../purchase-payments/purchase-payments.component';
 import { PurchaseReturnComponent } from '../purchase-return/purchase-return.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
@@ -29,7 +28,7 @@ import {
 @Component({
   selector: 'app-purchases-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, PurchaseFormComponent, PurchasePaymentsComponent, PurchaseReturnComponent, AutoRefreshControlComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, FormsModule, RouterLink, PurchasePaymentsComponent, PurchaseReturnComponent, AutoRefreshControlComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ConfirmDeleteComponent],
   templateUrl: './purchases-page.component.html',
   styleUrls: ['./purchases-page.component.scss']
 })
@@ -228,8 +227,6 @@ export class PurchasesPageComponent implements OnInit {
   isExporting = signal(false);
   exportError = signal('');
 
-  isFormOpen = signal<boolean>(false);
-  selectedPurchase = signal<Purchase | null>(null);
   paymentPurchase = signal<Purchase | null>(null);
   returnPurchase = signal<Purchase | null>(null);
 
@@ -255,21 +252,11 @@ export class PurchasesPageComponent implements OnInit {
           return;
         }
 
-        // L'achat n'a pas d'écran plein de saisie : la fiche routée renvoie ici
-        // avec ?edit=<id> pour rouvrir le formulaire de la liste.
-        // Refonte 2b, 12a : « Commander la pièce » depuis une intervention.
-        // La saisie d'achat n'a pas encore d'écran plein (12b) : on ouvre le
-        // formulaire de la liste.
-        if (params.get('nouveau')) {
-          this.openForm();
-          return;
-        }
-
+        // Refonte 2b, 12b : la saisie d'achat a son écran. L'ancien ?edit=<id>
+        // (étape 6) y mène encore, pour les liens déjà écrits.
         const editId = Number(params.get('edit'));
         if (Number.isFinite(editId) && editId > 0) {
-          this.purchaseService.getPurchase(editId).subscribe({
-            next: purchase => this.openForm(purchase),
-          });
+          this.router.navigate(['/achats', editId, 'modifier'], { replaceUrl: true });
         }
       });
   }
@@ -422,20 +409,9 @@ export class PurchasesPageComponent implements OnInit {
     return this.authService.hasPermission('cancel purchases') && purchase.status !== 'ANNULE';
   }
 
+  /** Refonte 2b, 12b : la saisie d'achat est un écran, plus une modale. */
   openForm(purchase: Purchase | null = null): void {
-    this.selectedPurchase.set(purchase);
-    this.isFormOpen.set(true);
-  }
-
-  closeForm(): void {
-    this.isFormOpen.set(false);
-    this.selectedPurchase.set(null);
-  }
-
-  onFormSaved(): void {
-    this.closeForm();
-    this.loadData();
-    this.loadFilters();
+    this.router.navigate(purchase ? ['/achats', purchase.id, 'modifier'] : ['/achats', 'nouveau']);
   }
 
   openPayments(purchase: Purchase): void {

@@ -103,7 +103,7 @@ export class PurchaseDetailPageComponent implements OnInit {
    */
   editPurchase(): void {
     const purchase = this.purchase();
-    if (purchase) this.router.navigate(['/achats'], { queryParams: { edit: purchase.id } });
+    if (purchase) this.router.navigate(['/achats', purchase.id, 'modifier']);
   }
 
   /** Un retour comme un règlement change le dû : la fiche se recharge. */

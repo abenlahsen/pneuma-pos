@@ -295,18 +295,6 @@
   </div>
 </div>
 
-<div class="modal-overlay" *ngIf="isFormOpen()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>{{ selectedPurchase() ? 'Modifier Achat' : 'Nouvel Achat' }}</h2>
-      <button class="btn-icon" (click)="closeForm()"><app-icon name="close" [size]="14" /></button>
-    </div>
-    <div class="modal-body p-0">
-      <app-purchase-form [purchase]="selectedPurchase()" (save)="onFormSaved()" (cancel)="closeForm()"></app-purchase-form>
-    </div>
-  </div>
-</div>
-
 <app-purchase-payments
   *ngIf="paymentPurchase()"
   [purchase]="paymentPurchase()!"

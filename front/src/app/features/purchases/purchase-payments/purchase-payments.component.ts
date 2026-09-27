@@ -10,13 +10,14 @@ import { AccountService } from '../../../core/services/account.service';
 import { PurchasePaymentDetailComponent } from '../components/purchase-payment-detail/purchase-payment-detail.component';
 import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
 import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
+import { SidePanelComponent } from '../../../shared/side-panel/side-panel.component';
 
 const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Effet', 'Carte bancaire'];
 
 @Component({
   selector: 'app-purchase-payments',
   standalone: true,
-  imports: [CommonModule, FormsModule, PurchasePaymentDetailComponent, IconComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, FormsModule, PurchasePaymentDetailComponent, IconComponent, ConfirmDeleteComponent, SidePanelComponent],
   templateUrl: './purchase-payments.component.html',
   styleUrl: './purchase-payments.component.scss',
 })

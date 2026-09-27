@@ -185,12 +185,9 @@ export class ServiceOrderPageComponent implements OnInit {
     if (order) this.router.navigate(['/documents', 'service_order', order.id, 'print']);
   }
 
-  /**
-   * « Commander la pièce » : la saisie d'achat. Elle n'a pas encore d'écran
-   * plein (étape 12b) ; en attendant, la liste des achats ouvre son formulaire.
-   */
+  /** « Commander la pièce » : la saisie d'achat (12b). */
   onOrderPart(_line: PartLineForm): void {
-    this.router.navigate(['/achats'], { queryParams: { nouveau: 1 } });
+    this.router.navigate(['/achats', 'nouveau']);
   }
 
   back(): void {

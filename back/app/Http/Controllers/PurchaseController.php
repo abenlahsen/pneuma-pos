@@ -164,6 +164,24 @@ class PurchaseController extends Controller
         return response()->json($this->purchaseService->filters());
     }
 
+    /**
+     * Refonte 2b, 12b : la recherche de la saisie d'achat — produits, lots,
+     * dernier prix d'achat (général et chez le fournisseur), dernier prix de
+     * vente. Voir PurchaseCatalogService.
+     */
+    public function catalog(Request $request, \App\Domain\Purchases\PurchaseCatalogService $catalog): JsonResponse
+    {
+        $validated = $request->validate([
+            'q' => 'nullable|string|max:100',
+            'supplier_id' => 'nullable|integer',
+            'ids' => 'nullable|array|max:100',
+            'ids.*' => 'integer',
+            'exclude_purchase_id' => 'nullable|integer',
+        ]);
+
+        return response()->json(['data' => $catalog->search($validated)]);
+    }
+
     public function export(Request $request): StreamedResponse
     {
         $filters = $request->except(['page', 'per_page']);

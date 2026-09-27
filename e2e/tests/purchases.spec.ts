@@ -31,10 +31,11 @@ test.describe('Achats', () => {
     await expect(page.getByRole('button', { name: /Nouvel achat/ })).toBeVisible();
   });
 
-  test('ouvre le formulaire de création d\'achat', async ({ page }) => {
+  test('ouvre la saisie d\'achat en écran plein (refonte 2b, 12b)', async ({ page }) => {
     await page.getByRole('button', { name: /Nouvel achat/ }).click();
-    await expect(page.locator('.modal-overlay, .form-overlay').first()).toBeVisible();
-    await expect(page.locator('label:has-text("Fournisseur"), label:has-text("Date")').first()).toBeVisible();
+    await expect(page).toHaveURL(/\/achats\/nouveau$/);
+    await expect(page.locator('.pf-editor')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Enregistrer l'achat/ })).toBeVisible();
   });
 
   test('le bouton Visualiser ouvre la modale de détail', async ({ page }) => {

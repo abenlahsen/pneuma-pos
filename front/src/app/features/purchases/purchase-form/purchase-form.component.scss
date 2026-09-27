@@ -1,262 +1,449 @@
 @use '../../_variables' as *;
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
+/* Refonte 2b, 12b, maquette 20b — la saisie d'achat en écran plein.
 
+   Gabarit 15a, comme la saisie de vente : barre de 60 px, pied de 64 px, et un
+   corps en trois colonnes — la recherche (400 px), les lignes, puis 360 px
+   pour le fournisseur, les documents, les totaux et le règlement. Sous
+   $bp-reduce, la colonne de droite passe sous les lignes et l'écran défile. */
 
+$ochre-ink: #7a4f00;
 
-// ── Loading state ─────────────────────────────────────────────────────────────
-.loading-overlay {
+:host { display: block; }
+
+.pf-editor {
+  display: grid;
+  grid-template-rows: 60px minmax(0, 1fr) 64px;
+  /* La fenêtre moins la barre haute et la marge intérieure du contenu. */
+  height: calc(100vh - #{$topbar-height} - 3rem);
+  background: $bg-card;
+  border: 1px solid $border-color;
+}
+
+/* ── La barre ─────────────────────────────────────────────────────────── */
+.pf-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 20px;
+  background: $bg-subtle;
+  border-bottom: 1px solid $border-strong;
+}
+
+.pf-back,
+.pf-btn,
+.pf-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid $border-color;
+  background: $bg-card;
+  color: $text-dark;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
+}
+
+.pf-identity { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.pf-title { font-size: 17px; font-weight: 700; }
+.pf-meta { font-size: 11.5px; color: $text-muted; font-variant-numeric: tabular-nums; }
+
+/* ── Le corps ─────────────────────────────────────────────────────────── */
+.pf-body {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr) 320px;
+  min-height: 0;
+}
+
+.pf-catalog,
+.pf-lines,
+.pf-side {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Gauche : la recherche. */
+.pf-catalog {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid $border-strong;
+  background: $bg-subtle;
+}
+
+.pf-search {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid $border-strong;
+}
+
+.pf-search-input {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid $text-dark;
+  background: $bg-card;
+  color: $text-muted;
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    color: $text-dark;
+  }
+}
+
+.pf-search-hint {
+  display: block;
+  margin-top: 7px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: $text-muted;
+}
+
+.pf-results { flex: 1; }
+
+.pf-results-group {
+  display: block;
+  padding: 10px 16px 6px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: $text-muted;
+  border-bottom: 1px solid $border-strong;
+}
+
+.pf-results-empty {
+  margin: 0;
+  padding: 16px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: $text-secondary;
+}
+
+.pf-result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid $border-subtle;
+  background: $bg-card;
+}
+
+.pf-result-name { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+
+.pf-result-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: $text-dark;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pf-result-sub {
+  font-size: 11.5px;
+  color: $text-muted;
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-add { height: 30px; border-color: $text-dark; font-weight: 700; }
+
+.pf-added {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: $income-color;
+}
+
+.pf-create {
+  padding: 12px 16px;
+  border-top: 1px solid $border-strong;
+  font-size: 12px;
+  color: $text-secondary;
+}
+
+.pf-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: $invoice-color;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Centre : les lignes. */
+.pf-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px 52px 84px 92px 30px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+}
+
+.pf-grid-head {
+  padding-top: 9px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid $text-dark;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: $text-muted;
+}
+
+.pf-num { text-align: right; }
+
+.pf-line {
+  border-bottom: 1px solid $border-subtle;
+
+  > .pf-grid { min-height: 58px; }
+
+  /* Une hausse de prix : la ligne garde son fond, la bande dit pourquoi. */
+  &--rise { background: $warning-bg; }
+}
+
+.pf-product { display: flex; flex-direction: column; min-width: 0; }
+
+.pf-product-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: $text-dark;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pf-product-sub {
+  font-size: 11.5px;
+  color: $text-muted;
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-margin-low { color: $expense-color; font-weight: 600; }
+
+.pf-no-lot { font-size: 12px; color: $ochre-ink; }
+
+.pf-input {
+  width: 100%;
+  height: 34px;
+  box-sizing: border-box;
+  padding: 0 8px;
+  border: 1px solid $border-color;
+  background: $bg-card;
+  font: inherit;
+  font-size: 13px;
+  color: $text-dark;
+
+  &:focus { outline: none; border-color: $text-dark; }
+  /* Le texte d'un select ne passe pas sous sa flèche. */
+  @at-root select#{&} { padding-right: 24px; text-overflow: ellipsis; }
+  &--num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  &--sm { width: 70px; height: 30px; }
+  /* Le bord ocre : le prix saisi dépasse le dernier prix d'achat connu. */
+  &--rise { border-color: $warning-border; border-width: 2px; }
+}
+
+.pf-line-total { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.pf-remove {
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3rem;
-  color: $text-muted;
-  font-size: 0.9rem;
-}
-
-// ── Utility shims ─────────────────────────────────────────────────────────────
-.p-6  { padding: 1.5rem; }
-.mb-4 { margin-bottom: 1rem; }
-.mb-2 { margin-bottom: 0.5rem; }
-.mt-4 { margin-top: 1rem; }
-.mr-2 { margin-right: 0.5rem; }
-.text-right { text-align: right; }
-.text-muted { color: $text-muted; font-size: 0.8125rem; display: block; margin-top: 0.25rem; }
-
-// ── Buttons ───────────────────────────────────────────────────────────────────
-.btn {
-  padding: 0.55rem 1.1rem;
-  border-radius: 0;
-  border: 1.5px solid transparent;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  font-size: 0.875rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  white-space: nowrap;
-
-  &-primary {
-    background: $primary;
-    color: white;
-    border-color: $primary;
-    box-shadow: none;
-
-    &:hover { background: $primary-dark; box-shadow: none; }
-    &:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
-  }
-
-  &-secondary {
-    background: $bg-card;
-    color: $border-strong;
-    border-color: $border-color;
-    box-shadow: none;
-
-    &:hover { background: $bg-subtle; border-color: #bcc6d4; }
-  }
-}
-
-.btn-icon {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1rem;
-  padding: 0.25rem 0.4rem;
-  border-radius: 0;
-  color: $text-muted;
-  transition: background 0.15s, color 0.15s;
-
-  &:hover { background: rgba($expense-color, 0.08); color: $expense-color; }
-}
-
-.text-danger  { color: $expense-color; }
-.text-warning { color: #a16207; }
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-}
-
-// ── Form section ──────────────────────────────────────────────────────────────
-.form-section {
-  background: $bg-subtle;
-  padding: 1.25rem;
-  border-radius: 0;
-  border: 1px solid $border-subtle;
-  margin-bottom: 1.25rem;
-}
-
-.section-title {
-  margin: 0 0 1rem;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: $text-light;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding-bottom: 0.625rem;
-  border-bottom: 1px solid $border-subtle;
-}
-
-// ── Info grid ─────────────────────────────────────────────────────────────────
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 0.875rem;
-
-  .form-group.checkbox-control {
-    flex-direction: row;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 1.25rem;
-
-    input[type='checkbox'] {
-      width: 1.1rem;
-      height: 1.1rem;
-      accent-color: $primary;
-      cursor: pointer;
-    }
-  }
-}
-
-// ── Bootstrap-style grid shims ────────────────────────────────────────────────
-.row           { display: flex; flex-wrap: wrap; margin: 0 -0.5rem; }
-.align-items-end { align-items: flex-end; }
-.w-100         { width: 100%; }
-.btn-block     { width: 100%; }
-.col-md-6  { flex: 0 0 50%;      max-width: 50%;      padding: 0 0.5rem; }
-.col-md-4  { flex: 0 0 33.3333%; max-width: 33.3333%; padding: 0 0.5rem; }
-.col-md-3  { flex: 0 0 25%;      max-width: 25%;      padding: 0 0.5rem; }
-.col-md-2  { flex: 0 0 16.6666%; max-width: 16.6666%; padding: 0 0.5rem; }
-.col-md-1  { flex: 0 0 8.3333%;  max-width: 8.3333%;  padding: 0 0.5rem; }
-
-// ── Form group ────────────────────────────────────────────────────────────────
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-
-  label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: $text-muted;
-    letter-spacing: 0.01em;
-  }
-
-  .form-control {
-    padding: 0.55rem 0.75rem;
-    border: 1.5px solid $border-color;
-    border-radius: 0;
-    font-size: 0.875rem;
-    color: $text-dark;
-    background: $bg-card;
-    transition: border-color 0.15s, box-shadow 0.15s;
-
-    &::placeholder { color: $text-light; }
-
-    &:focus {
-      outline: none;
-      border-color: $primary;
-      box-shadow: 0 0 0 3px rgba(255, 45, 55, 0.1);
-    }
-  }
-}
-
-// ── Totals block ──────────────────────────────────────────────────────────────
-.totals-block {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.4rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid $border-subtle;
-}
-
-.totals-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  min-width: 280px;
-  justify-content: flex-end;
-}
-
-.totals-label {
-  font-size: 0.875rem;
-  color: $text-muted;
-  white-space: nowrap;
-}
-
-.totals-value {
-  font-size: 0.9rem;
-  font-weight: 600;
-  min-width: 110px;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  color: $border-strong;
-}
-
-.totals-total {
-  .totals-label {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: $text-dark;
-  }
-
-  .totals-value {
-    font-size: 1rem;
-    font-weight: 800;
-    color: $text-dark;
-    letter-spacing: -0.01em;
-  }
-}
-
-.totals-remise .totals-label {
-  color: $text-muted;
-}
-
-.remise-input {
-  width: 80px;
-  text-align: right;
-  padding: 0.3rem 0.5rem;
-  border: 1.5px solid $border-color;
-  border-radius: 0;
-  font-size: 0.875rem;
-  color: $text-dark;
+  border: 1px solid $border-strong;
   background: $bg-card;
-  transition: border-color 0.15s, box-shadow 0.15s;
-
-  &:focus {
-    outline: none;
-    border-color: $primary;
-    box-shadow: 0 0 0 3px rgba(255, 45, 55, 0.1);
-  }
-}
-
-// ── Product link ──────────────────────────────────────────────────────────────
-.product-link {
-  background: none;
-  border: none;
-  padding: 0;
-  color: $primary;
-  font-size: 0.8rem;
-  margin-left: 0.35rem;
-  opacity: 0.75;
+  color: $alert-ink;
   cursor: pointer;
-  transition: opacity 0.15s;
-
-  &:hover { opacity: 1; text-decoration: underline; }
 }
 
-// ── Responsive ────────────────────────────────────────────────────────────────
-@media (max-width: 768px) {
-  .col-md-6, .col-md-4, .col-md-3, .col-md-2, .col-md-1 {
-    flex: 0 0 100%;
-    max-width: 100%;
+.pf-rise {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  padding: 0 14px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: $ochre-ink;
+}
+
+.pf-lines-empty {
+  margin: 0;
+  padding: 24px 20px;
+  font-size: 12.5px;
+  color: $text-muted;
+}
+
+/* Droite : fournisseur, documents, totaux, règlement. */
+.pf-side {
+  border-left: 1px solid $border-strong;
+  background: $bg-subtle;
+}
+
+.pf-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 14px 18px;
+  border-bottom: 1px solid $border-strong;
+
+  &--totals { gap: 0; background: $bg-card; border-bottom-color: $text-dark; }
+  &--last { border-bottom: 0; }
+}
+
+.pf-section-title {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: $text-muted;
+}
+
+.pf-kv {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: $text-secondary;
+
+  strong { color: $text-dark; font-variant-numeric: tabular-nums; }
+}
+
+.pf-due { color: $expense-color !important; }
+
+.pf-note {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: $text-secondary;
+
+  &--warn { color: $ochre-ink; font-weight: 600; }
+}
+
+.pf-segmented {
+  display: flex;
+
+  button {
+    flex: 1;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid $border-color;
+    background: $bg-card;
+    color: $text-secondary;
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+
+    + button { border-left: 0; }
+    &.active { border-color: $text-dark; background: $text-dark; color: $bg-card; }
   }
 
-  .form-actions {
-    flex-direction: column-reverse;
-    .btn { width: 100%; justify-content: center; }
+  &--inline { flex: 1; }
+}
+
+.pf-row-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  > span:first-child { width: 80px; flex-shrink: 0; font-size: 12px; color: $text-secondary; }
+}
+
+.pf-locked { font-size: 12px; font-style: normal; color: $text-muted; }
+
+.pf-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+  font-size: 12.5px;
+  color: $text-dark;
+  font-variant-numeric: tabular-nums;
+
+  &--muted { color: $text-secondary; }
+
+  &--net {
+    margin-top: 4px;
+    padding: 9px 0 4px;
+    border-top: 1px solid $border-strong;
+    font-weight: 700;
+
+    > span:last-child { font-size: 21px; }
+  }
+}
+
+.pf-discount { display: inline-flex; align-items: center; gap: 5px; }
+
+/* ── Le pied ──────────────────────────────────────────────────────────── */
+.pf-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px;
+  border-top: 1px solid $text-dark;
+  background: $bg-card;
+}
+
+.pf-foot-hint { flex: 1; font-size: 11.5px; color: $text-muted; }
+.pf-foot-error { color: $expense-color; font-weight: 600; }
+
+.pf-btn { height: 40px; padding: 0 16px; font-size: 13.5px; }
+
+.pf-btn--primary {
+  border-color: $primary;
+  background: $primary;
+  color: #fff;
+  font-weight: 700;
+}
+
+/* ── Sous $bp-reduce : la colonne de droite passe sous les lignes ─────── */
+@include below-reduce {
+  .pf-editor {
+    height: auto;
+    min-height: calc(100vh - #{$topbar-height} - 2rem);
+    grid-template-rows: auto auto auto;
+  }
+
+  .pf-body {
+    grid-template-columns: 300px minmax(0, 1fr);
+    grid-template-areas:
+      'catalog lines'
+      'catalog side';
+  }
+
+  .pf-catalog { grid-area: catalog; }
+  .pf-lines { grid-area: lines; }
+  .pf-side { grid-area: side; border-left: 0; border-top: 1px solid $text-dark; }
+
+  .pf-catalog,
+  .pf-lines,
+  .pf-side { overflow: visible; }
+
+
+
+  .pf-foot {
+    position: sticky;
+    bottom: 0;
+    min-height: 64px;
+    flex-wrap: wrap;
+    padding: 10px 16px;
   }
 }

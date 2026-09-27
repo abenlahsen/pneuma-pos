@@ -11,6 +11,7 @@ import {
   PurchaseReturn,
   PurchaseReturnPayload,
   PurchaseSupplierGroup,
+  PurchaseCatalogProduct,
 } from '../models/purchase.model';
 import { PurchaseStatus } from '../../../core/constants/status.constants';
 
@@ -85,6 +86,16 @@ export class PurchaseService {
       suppliers: { id: number; name: string }[];
       commercials: { id: number; name: string }[];
     }>('/api/purchases-filters');
+  }
+
+  /** Refonte 2b, 12b : la recherche de la saisie d'achat. */
+  getCatalog(params: { q?: string; supplier_id?: number | null; ids?: number[]; exclude_purchase_id?: number | null }): Observable<{ data: PurchaseCatalogProduct[] }> {
+    let http = new HttpParams();
+    if (params.q) http = http.set('q', params.q);
+    if (params.supplier_id) http = http.set('supplier_id', String(params.supplier_id));
+    if (params.exclude_purchase_id) http = http.set('exclude_purchase_id', String(params.exclude_purchase_id));
+    for (const id of params.ids ?? []) http = http.append('ids[]', String(id));
+    return this.http.get<{ data: PurchaseCatalogProduct[] }>('/api/purchase-catalog', { params: http });
   }
 
   getPurchase(id: number): Observable<Purchase> {

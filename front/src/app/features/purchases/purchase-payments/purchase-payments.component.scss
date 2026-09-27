@@ -1,432 +1,163 @@
 @use '../../_variables' as *;
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
+/* Refonte 2b, 12b — le règlement d'un achat dans le volet 15d. La coque vient
+   de app-side-panel ; ne restent ici que les pièces du corps, sur les mesures
+   de l'encaissement d'intervention (service-payment-panel). */
 
-// ── Overlay ───────────────────────────────────────────────────────────────────
-.panel-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba($text-dark, 0.35);
-  z-index: 100;
-  backdrop-filter: blur(1px);
-}
-
-// ── Panel ─────────────────────────────────────────────────────────────────────
-.payment-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  height: 100vh;
-  width: 720px;
-  max-width: 100vw;
-  background: $bg-card;
-  border-left: 1px solid $border-subtle;
-  z-index: 101;
-  display: flex;
-  flex-direction: column;
-  box-shadow: $shadow-panel;
-  overflow: hidden;
-}
-
-// ── Header ────────────────────────────────────────────────────────────────────
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid $border-subtle;
-  background: $bg-subtle;
-  flex-shrink: 0;
-}
-
-.panel-title {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-
-  .panel-icon { font-size: 1.4rem; }
-
-  h3 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 700;
-    color: $text-dark;
-    letter-spacing: -0.01em;
-  }
-
-  .panel-subtitle {
-    margin: 0.1rem 0 0;
-    font-size: 0.8rem;
-    color: $text-muted;
-  }
-}
-
-.btn-close {
-  background: none;
-  border: 1.5px solid $border-color;
-  border-radius: 0;
-  width: 2rem;
-  height: 2rem;
-  cursor: pointer;
+.ppp-state {
+  padding: 1rem 0;
+  font-size: 12.5px;
   color: $text-muted;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s;
-
-  &:hover { background: $border-subtle; color: $text-dark; border-color: #bcc6d4; }
 }
 
-// ── Body ──────────────────────────────────────────────────────────────────────
-.panel-body {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 1.5rem;
+.ppp-summary {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-}
-
-// ── Summary ───────────────────────────────────────────────────────────────────
-.summary-section {
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid $border-strong;
   background: $bg-subtle;
-  border-radius: 0;
-  padding: 1rem 1.25rem;
-  border: 1px solid $border-subtle;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
 }
 
-.summary-row {
+.ppp-kv {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  font-size: 0.875rem;
-  color: $text-muted;
+  font-size: 12.5px;
+  color: $text-secondary;
 
-  strong {
-    color: $border-strong;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.01em;
-  }
+  strong { color: $text-dark; font-variant-numeric: tabular-nums; }
 
-  .text-success { color: #15803d; }
-  .text-danger  { color: $expense-color; }
+  &--due strong { color: $expense-color; font-size: 15px; }
+  &--over { color: $warning-color; strong { color: $warning-color; } }
 }
 
-.overpaid-warning {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(237, 137, 54, 0.1);
-  border: 1px solid rgba(237, 137, 54, 0.3);
-  border-radius: 0;
-  padding: 0.4rem 0.6rem;
-  font-size: 0.875rem;
-  color: #c05621;
-  font-weight: 600;
+.ppp-paid { color: $income-color !important; }
 
-  strong { color: #c05621; font-variant-numeric: tabular-nums; }
-}
-
-.progress-bar-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.25rem;
-}
-
-.progress-bar {
-  flex: 1;
-  height: 6px;
+.ppp-progress {
+  display: block;
+  height: 4px;
+  margin-top: 4px;
   background: $border-subtle;
-  border-radius: 999px;
-  overflow: hidden;
 }
 
-.progress-fill {
+.ppp-progress-fill {
+  display: block;
   height: 100%;
-  background: #22c55e;
-  border-radius: 999px;
-  transition: width 0.35s ease;
+  background: $income-color;
 }
 
-.progress-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: $text-muted;
-  min-width: 2.5rem;
-  text-align: right;
-}
-
-.status-row {
-  display: flex;
-  justify-content: flex-end;
-}
-
-// ── Badges ────────────────────────────────────────────────────────────────────
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.65rem;
-  border-radius: 999px;
-  font-size: 0.6875rem;
+.ppp-section {
+  margin: 1.1rem 0 0.5rem;
+  font-size: 9.5px;
   font-weight: 700;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-
-  &-success { background: rgba(34, 197, 94, 0.10);  color: #15803d; }
-  &-warning { background: rgba(234, 179, 8, 0.12);  color: #a16207; }
-  &-danger  { background: rgba($expense-color, 0.10);  color: $expense-color; }
-}
-
-.badge-multi {
-  display: inline-block;
-  margin-left: 0.4rem;
-  padding: 0.05rem 0.4rem;
-  font-size: 0.625rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #a16207;
-  background: rgba(234, 179, 8, 0.12);
-  border-radius: 0;
-  vertical-align: middle;
-}
-
-.text-muted {
   color: $text-muted;
 }
 
-// ── Payments list ─────────────────────────────────────────────────────────────
-.payments-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.875rem;
-}
+.ppp-rows { border-top: 1px solid $text-dark; }
 
-.list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.list-title {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: $text-muted;
-}
-
-.empty-state {
-  text-align: center;
-  color: $text-muted;
-  font-size: 0.875rem;
-  padding: 1.5rem;
-  background: $bg-subtle;
-  border-radius: 0;
-  border: 1.5px dashed $border-color;
-}
-
-.payments-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.875rem;
-  border: 1px solid $border-subtle;
-  border-radius: 0;
-  overflow: hidden;
-
-  th {
-    text-align: left;
-    color: $text-light;
-    font-size: 0.6875rem;
-    font-weight: 700;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    padding: 0.6rem 0.75rem;
-    border-bottom: 2px solid $border-subtle;
-    background: $bg-subtle;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  td {
-    padding: 0.55rem 0.75rem;
-    color: $border-strong;
-    border-bottom: 1px solid $border-subtle;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-
-    &:last-child { width: 2.5rem; min-width: 2.5rem; text-align: center; }
-  }
-
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover td { background: $bg-subtle; }
-
-  .amount-cell {
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.01em;
-  }
-}
-
-.actions-cell {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  justify-content: flex-end;
-}
-
-.btn-delete,
-.btn-view {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.25rem;
-  font-size: 0.9rem;
-  opacity: 0.5;
-  color: $text-muted;
-  transition: opacity 0.15s, color 0.15s;
-
-  &:hover { opacity: 1; color: $expense-color; }
-}
-
-.btn-view:hover { color: $primary; }
-
-// ── Add payment form ──────────────────────────────────────────────────────────
-.add-payment-form {
-  background: $bg-subtle;
-  border-radius: 0;
-  padding: 1.25rem;
-  border: 1.5px solid $border-subtle;
-
-  h4 {
-    margin: 0 0 1rem;
-    font-size: 0.9375rem;
-    font-weight: 700;
-    color: $text-dark;
-    letter-spacing: -0.01em;
-  }
-}
-
-.form-grid {
+.ppp-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-}
+  grid-template-columns: 84px minmax(0, 1fr) 100px 64px;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  border-bottom: 1px solid $border-subtle;
+  font-size: 12.5px;
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-
-  &--full { grid-column: 1 / -1; }
-
-  label {
-    font-size: 0.8rem;
-    font-weight: 600;
+  &--head {
+    min-height: 30px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
     color: $text-muted;
   }
-
-  .required { color: $primary; }
 }
 
-.form-control {
-  border: 1.5px solid $border-color;
-  border-radius: 0;
-  padding: 0.55rem 0.75rem;
-  font-size: 0.875rem;
-  color: $text-dark;
-  background: $bg-card;
-  width: 100%;
-  box-sizing: border-box;
-  transition: border-color 0.15s, box-shadow 0.15s;
+.ppp-num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.ppp-date { font-variant-numeric: tabular-nums; color: $text-muted; }
 
-  &::placeholder { color: $text-light; }
-
-  &:focus {
-    outline: none;
-    border-color: $primary;
-    box-shadow: 0 0 0 3px rgba(255, 45, 55, 0.1);
-  }
-}
-
-.form-hint {
-  font-size: 0.75rem;
+.ppp-multi {
+  margin-left: 6px;
+  padding: 1px 5px;
+  border: 1px solid $border-strong;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   color: $text-muted;
-  font-style: italic;
 }
 
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 0.875rem;
-}
+.ppp-actions { display: flex; gap: 4px; justify-content: flex-end; }
 
-// ── Buttons ───────────────────────────────────────────────────────────────────
-.btn {
-  padding: 0.55rem 1.1rem;
-  border-radius: 0;
-  border: 1.5px solid transparent;
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: all 0.15s;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  white-space: nowrap;
-
-  &-sm { padding: 0.35rem 0.8rem; font-size: 0.8rem; }
-
-  &-primary {
-    background: $primary;
-    color: white;
-    border-color: $primary;
-    box-shadow: none;
-
-    &:hover:not(:disabled) { background: #e8000b; box-shadow: none; }
-    &:disabled { opacity: 0.55; cursor: not-allowed; }
-  }
-
-  &-secondary {
-    background: $bg-card;
-    color: $border-strong;
-    border-color: $border-color;
-    box-shadow: none;
-
-    &:hover { background: $bg-subtle; border-color: #bcc6d4; }
-  }
-}
-
-.loading-state {
+.ppp-icon {
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 1;
-  color: $text-muted;
-  font-size: 0.9rem;
+  border: 1px solid $border-strong;
+  background: $bg-card;
+  color: $text-secondary;
+  cursor: pointer;
+
+  &--danger { color: $alert-ink; }
 }
 
-@media (max-width: 480px) {
-  .panel-body    { padding: 1rem; }
-  .panel-header  { padding: 1rem; }
+.ppp-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+}
 
-  .add-payment-form { padding: 1rem; }
+.ppp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 
-  .form-grid { grid-template-columns: 1fr; }
+  > span { font-size: 11.5px; font-weight: 600; color: $text-secondary; }
+  > em { font-size: 11px; font-style: normal; color: $text-muted; }
 
-  .form-actions {
-    flex-direction: column-reverse;
-    gap: 0.5rem;
-    .btn { width: 100%; justify-content: center; }
+  input,
+  select {
+    height: 34px;
+    padding: 0 9px;
+    border: 1px solid $border-color;
+    background: $bg-card;
+    font: inherit;
+    font-size: 13px;
+    color: $text-dark;
+
+    &:focus { outline: none; border-color: $text-dark; }
+  }
+}
+
+.ppp-foot-summary {
+  flex: 1;
+  font-size: 12px;
+  color: $text-muted;
+
+  strong { color: $expense-color; font-variant-numeric: tabular-nums; }
+}
+
+.ppp-btn {
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid $border-color;
+  background: $bg-card;
+  color: $text-dark;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  &--solid {
+    border-color: $primary;
+    background: $primary;
+    color: #fff;
+    font-weight: 700;
   }
 }

@@ -29,6 +29,9 @@ export interface Purchase {
   /** Running totals maintained by supplier returns (see PurchaseReturn) — gross value, undiscounted. */
   returned_quantity?: number;
   returned_amount?: number;
+  /** Renvoyés par `show` : net retours déduits, et payé moins remboursé. */
+  effective_net_amount?: number;
+  paid_amount?: number;
   items?: PurchaseItem[];
   status: PurchaseStatus;
   payment_status: PaymentStatus;
@@ -198,3 +201,40 @@ export interface PurchaseReturnPayload {
   items: { purchase_item_id: number; quantity: number }[];
   refund?: PurchaseReturnRefundPayload | null;
 }
+
+/** Refonte 2b, 12b — un achat antérieur du produit (voir PurchaseCatalogService). */
+export interface CatalogPurchaseRef {
+  unit_price: number;
+  date: string;
+  purchase_id: number;
+  supplier_id: number | null;
+  supplier_name: string | null;
+}
+
+/** Un lot de stock : le « dépôt de réception » d'une ligne d'achat. */
+export interface CatalogLot {
+  id: number;
+  depot: string | null;
+  zone: string | null;
+  dot: string | null;
+  quantity: number;
+  purchase_price: number;
+}
+
+/** Refonte 2b, 12b — un produit tel que la saisie d'achat le voit. */
+export interface PurchaseCatalogProduct {
+  id: number;
+  type: 'tyre' | 'part';
+  brand: string | null;
+  profile: string | null;
+  reference: string | null;
+  dimension: string | null;
+  stock_total: number;
+  lots: CatalogLot[];
+  last_purchase: CatalogPurchaseRef | null;
+  supplier_last_purchase: CatalogPurchaseRef | null;
+  bought_from_supplier: boolean;
+  /** Le dernier prix facturé : le catalogue ne porte aucun prix de vente. */
+  last_sale_price: number | null;
+}
+

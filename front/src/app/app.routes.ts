@@ -194,6 +194,25 @@ export const routes: Routes = [
       import('./features/purchases/pages/purchases-page.component').then((m) => m.PurchasesPageComponent),
   },
   {
+    // Refonte 2b, 12b : la saisie d'achat en écran plein.
+    path: 'achats/nouveau',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'create purchases' },
+    loadComponent: () =>
+      import('./features/purchases/purchase-form-page/purchase-form-page.component').then(
+        (m) => m.PurchaseFormPageComponent,
+      ),
+  },
+  {
+    path: 'achats/:id/modifier',
+    canActivate: [authGuard, permissionGuard],
+    data: { permission: 'edit purchases' },
+    loadComponent: () =>
+      import('./features/purchases/purchase-form-page/purchase-form-page.component').then(
+        (m) => m.PurchaseFormPageComponent,
+      ),
+  },
+  {
     path: 'achats/:id',
     canActivate: [authGuard, permissionGuard],
     data: { permission: 'view purchases' },
