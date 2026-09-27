@@ -1,123 +1,160 @@
-<div class="modal-overlay" (click)="close()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>Retour fournisseur — Achat #{{ purchase.id }}</h2>
-      <button class="btn-icon" (click)="close()"><app-icon name="close" [size]="14" /></button>
-    </div>
+<!-- Refonte 2b, 12c (maquette 20c) : le retour fournisseur quitte sa modale
+     pour le volet 15d, par-dessus la fiche d'achat. Quatre colonnes, un
+     compteur borné, la contrepartie en choix segmenté. -->
+<app-side-panel
+  kicker="Retour fournisseur"
+  [title]="panelTitle()"
+  [width]="640"
+  (dismiss)="close()">
 
-    <div class="modal-body" *ngIf="!loading(); else loadingTpl">
-      <div class="error-banner" *ngIf="errorMessage()"><app-icon name="alert-triangle" [size]="14" /> {{ errorMessage() }}</div>
+  @if (loading()) {
+    <div class="pr-state">Chargement de l'achat…</div>
+  } @else {
+    @if (errorMessage()) {
+      <div class="pr-error"><app-icon name="alert-triangle" [size]="14" /> {{ errorMessage() }}</div>
+    }
 
-      <div class="empty-state" *ngIf="lines().length === 0">
-        <p>Tous les articles de cet achat ont déjà été retournés.</p>
+    @if (lines().length === 0) {
+      <div class="pr-state">Tous les articles de cet achat ont déjà été retournés.</div>
+    } @else {
+      <!-- Les lignes : seul le retournable reste en colonne, c'est la borne du compteur. -->
+      <div class="pr-rows">
+        <div class="pr-row pr-row--head">
+          <span>Article</span>
+          <span class="pr-num">Retournable</span>
+          <span class="pr-center">À retourner</span>
+          <span class="pr-num">Montant</span>
+        </div>
+
+        @for (line of lines(); track line.item.id) {
+          <div class="pr-row">
+            <span class="pr-article">
+              <span class="pr-name">{{ line.name }}</span>
+              <span class="pr-sub">
+                @if (line.dimension) { {{ line.dimension }} · }
+                acheté {{ line.item.quantity }}
+                @if (line.alreadyReturned > 0) { · déjà retourné {{ line.alreadyReturned }} }
+                · {{ line.item.unit_price | number:'1.0-2' }} DH
+              </span>
+            </span>
+            <span class="pr-num pr-remaining">{{ line.remaining }}</span>
+            <span class="pr-counter" [class.pr-counter--zero]="line.quantity === 0">
+              <button type="button" aria-label="Retourner un de moins"
+                      [disabled]="line.quantity === 0" (click)="step(line, -1)">−</button>
+              <input type="number" min="0" [max]="line.remaining" step="1"
+                     [attr.aria-label]="'Quantité à retourner, ' + line.name"
+                     [ngModel]="line.quantity" (ngModelChange)="setQuantity(line, $event)" />
+              <button type="button" aria-label="Retourner un de plus"
+                      [disabled]="line.quantity >= line.remaining" (click)="step(line, 1)">+</button>
+            </span>
+            <span class="pr-num pr-amount">
+              {{ line.quantity > 0 ? (line.quantity * line.item.unit_price | number:'1.2-2') : '—' }}
+            </span>
+          </div>
+        }
+      </div>
+      <button type="button" class="pr-link" (click)="returnAllRemaining()">Tout retourner</button>
+
+      <!-- Date et motif, côte à côte. -->
+      <div class="pr-pair">
+        <label class="pr-field">
+          <span>Date du retour</span>
+          <input type="date" [ngModel]="date()" (ngModelChange)="date.set($event)" />
+        </label>
+        <label class="pr-field">
+          <span>Motif</span>
+          <select [ngModel]="reasonChoice()" (ngModelChange)="reasonChoice.set($event)">
+            @for (r of reasons; track r) { <option [value]="r">{{ r }}</option> }
+            <option [value]="otherReason">{{ otherReason }}</option>
+          </select>
+        </label>
+        @if (reasonChoice() === otherReason) {
+          <label class="pr-field pr-field--full">
+            <span>Précisez le motif</span>
+            <input type="text" maxlength="1000" placeholder="Client désisté, erreur de référence…"
+                   [ngModel]="reasonOther()" (ngModelChange)="reasonOther.set($event)" />
+          </label>
+        }
       </div>
 
-      <ng-container *ngIf="lines().length > 0">
-        <div class="section-header">
-          <h3 class="section-title">Articles à retourner</h3>
-          <button class="btn btn-secondary btn-sm" (click)="returnAllRemaining()">Tout retourner</button>
+      <!-- La contrepartie. -->
+      <div class="pr-block">
+        <h3 class="pr-section">Contrepartie</h3>
+        <div class="pr-seg" role="group" aria-label="Contrepartie du retour">
+          <button type="button" [class.pr-seg--on]="counterpart() === 'deduct'"
+                  (click)="setCounterpart('deduct')">Déduire du dû</button>
+          <button type="button" [class.pr-seg--on]="counterpart() === 'refund'"
+                  [disabled]="!canSubmitRefund()"
+                  [title]="canSubmitRefund() ? '' : 'Rien n\'a été payé sur cet achat : il n\'y a rien à rembourser.'"
+                  (click)="setCounterpart('refund')">Remboursement reçu</button>
         </div>
 
-        <div class="table-wrapper">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Produit</th>
-                <th class="col-right">Qté achetée</th>
-                <th class="col-right">Déjà retournée</th>
-                <th class="col-right">Qté à retourner</th>
-                <th class="col-right">PU</th>
-                <th class="col-right">Total ligne</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let line of lines()">
-                <td>{{ line.label }}</td>
-                <td class="col-right num">{{ line.item.quantity }}</td>
-                <td class="col-right num">{{ line.alreadyReturned }}</td>
-                <td class="col-right">
-                  <span class="allocation-input">
-                    <input
-                      type="number"
-                      class="form-control form-control--sm"
-                      [ngModel]="line.quantity"
-                      (ngModelChange)="setQuantity(line, $event)"
-                      [max]="line.remaining"
-                      min="0"
-                    />
-                    <span class="text-muted">/ {{ line.remaining }}</span>
-                  </span>
-                </td>
-                <td class="col-right num">{{ line.item.unit_price | number:'1.2-2' }} DH</td>
-                <td class="col-right num">{{ (line.quantity * line.item.unit_price) | number:'1.2-2' }} DH</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="allocation-summary">
-          <span>Total du retour</span>
-          <strong>{{ totalQuantity() }} article(s) — {{ totalAmount() | number:'1.2-2' }} DH</strong>
-        </div>
-
-        <h3 class="section-title mt-4">Détails</h3>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Date du retour *</label>
-            <input type="date" class="form-control" [ngModel]="date()" (ngModelChange)="date.set($event)" />
-          </div>
-          <div class="form-group form-group--full">
-            <label>Motif</label>
-            <input type="text" class="form-control" placeholder="Client désisté, défaut fournisseur…" [ngModel]="reason()" (ngModelChange)="reason.set($event)" />
-          </div>
-        </div>
-
-        <ng-container *ngIf="canSubmitRefund()">
-          <h3 class="section-title">Remboursement</h3>
-          <label class="checkbox-line">
-            <input type="checkbox" [ngModel]="refundEnabled()" (ngModelChange)="toggleRefund($event)" />
-            Le fournisseur rembourse maintenant ({{ availableToRefund() | number:'1.2-2' }} DH disponible)
-          </label>
-
-          <div class="form-grid mt-3" *ngIf="refundEnabled()">
-            <div class="form-group">
-              <label>Montant remboursé (DH) *</label>
-              <input type="number" class="form-control" min="0.01" [max]="availableToRefund()" step="0.01"
-                [ngModel]="refundAmount()" (ngModelChange)="refundAmount.set($event)" />
-            </div>
-            <div class="form-group">
-              <label>Compte crédité *</label>
-              <select class="form-control" [ngModel]="refundAccountId()" (ngModelChange)="refundAccountId.set($event)">
-                <option [ngValue]="0" disabled>-- Sélectionner un compte --</option>
-                <option *ngFor="let acc of accounts()" [ngValue]="acc.id">{{ acc.name }}</option>
+        @if (counterpart() === 'deduct') {
+          <p class="pr-note">
+            @if (totalQuantity() === 0) {
+              Choisissez les articles à retourner : le dû à {{ supplierName() }} baissera de leur montant.
+            } @else if (supplierDueAfter() !== null) {
+              Le dû à {{ supplierName() }} passe de {{ supplierDue() | number:'1.2-2' }}
+              à <strong>{{ supplierDueAfter() | number:'1.2-2' }}</strong> DH.
+            } @else {
+              Le reste dû sur cet achat passe de {{ dueEffect().before | number:'1.2-2' }}
+              à <strong>{{ dueEffect().after | number:'1.2-2' }}</strong> DH.
+            }
+            @if (totalQuantity() > 0 && dueEffect().lost > 0.01) {
+              <span class="pr-warn">
+                Cet achat est déjà réglé{{ dueEffect().deducted > 0.01 ? ' en partie' : '' }} :
+                {{ dueEffect().lost | number:'1.2-2' }} DH ne se déduisent de rien. Demandez un remboursement.
+              </span>
+            }
+            @if (!canSubmitRefund()) {
+              Rien n'a été payé sur cet achat : il n'y a rien à rembourser.
+            }
+          </p>
+        } @else {
+          <div class="pr-grid">
+            <label class="pr-field">
+              <span>Montant remboursé (DH)</span>
+              <input type="number" min="0.01" [max]="availableToRefund()" step="0.01"
+                     [ngModel]="refundAmount()" (ngModelChange)="refundAmount.set($event)" />
+              <em>{{ availableToRefund() | number:'1.2-2' }} DH payés et pas encore remboursés.</em>
+            </label>
+            <label class="pr-field">
+              <span>Compte crédité</span>
+              <select [ngModel]="refundAccountId()" (ngModelChange)="refundAccountId.set($event)">
+                <option [ngValue]="0" disabled>— Sélectionner un compte —</option>
+                @for (acc of accounts(); track acc.id) { <option [ngValue]="acc.id">{{ acc.name }}</option> }
               </select>
-            </div>
-            <div class="form-group">
-              <label>Date du remboursement *</label>
-              <input type="date" class="form-control" [ngModel]="refundDate()" (ngModelChange)="refundDate.set($event)" />
-            </div>
-            <div class="form-group">
-              <label>Méthode</label>
-              <select class="form-control" [ngModel]="refundMethod()" (ngModelChange)="refundMethod.set($event)">
-                <option *ngFor="let m of paymentMethods" [value]="m">{{ m }}</option>
+            </label>
+            <label class="pr-field">
+              <span>Date du remboursement</span>
+              <input type="date" [ngModel]="refundDate()" (ngModelChange)="refundDate.set($event)" />
+            </label>
+            <label class="pr-field">
+              <span>Méthode</span>
+              <select [ngModel]="refundMethod()" (ngModelChange)="refundMethod.set($event)">
+                @for (m of paymentMethods; track m) { <option [value]="m">{{ m }}</option> }
               </select>
-            </div>
+            </label>
           </div>
-        </ng-container>
-      </ng-container>
-    </div>
+        }
+      </div>
+    }
+  }
 
-    <ng-template #loadingTpl>
-      <div class="modal-body empty-state"><p>Chargement…</p></div>
-    </ng-template>
-
-    <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="close()">Annuler</button>
-      <button
-        class="btn btn-primary"
-        (click)="submit()"
-        [disabled]="submitting() || loading() || totalQuantity() === 0"
-      >{{ submitting() ? 'Enregistrement…' : 'Enregistrer le retour' }}</button>
-    </div>
-  </div>
-</div>
+  <ng-container actions>
+    @if (!loading() && lines().length > 0) {
+      <span class="pr-total">
+        <span class="pr-total-label">{{ totalLabel() }}</span>
+        <strong>{{ totalAmount() | number:'1.2-2' }} DH</strong>
+      </span>
+      <button type="button" class="pr-btn" (click)="close()" [disabled]="submitting()">Annuler</button>
+      <button type="button" class="pr-btn pr-btn--solid" (click)="submit()"
+              [disabled]="submitting() || totalQuantity() === 0">
+        {{ submitting() ? 'Enregistrement…' : 'Enregistrer le retour' }}
+      </button>
+    } @else {
+      <span class="pr-total"></span>
+      <button type="button" class="pr-btn" (click)="close()">Fermer</button>
+    }
+  </ng-container>
+</app-side-panel>

@@ -1,5 +1,5 @@
 import { of } from 'rxjs';
-import { PurchaseReturnComponent } from './purchase-return.component';
+import { PurchaseReturnComponent, returnDueEffect } from './purchase-return.component';
 import { Purchase, PurchaseReturn } from '../models/purchase.model';
 
 function makePurchaseItem(overrides: Partial<any> = {}) {
@@ -22,13 +22,14 @@ describe('PurchaseReturnComponent', () => {
     createReturn: ReturnType<typeof vi.fn>;
   };
   let mockAccountService: { getAccounts: ReturnType<typeof vi.fn> };
+  let mockSupplierService: { getSupplierProfile: ReturnType<typeof vi.fn> };
 
-  function init(purchaseItems: any[], existingReturns: PurchaseReturn[] = [], payments: any[] = []) {
+  function init(purchaseItems: any[], existingReturns: PurchaseReturn[] = [], payments: any[] = [], extra: Partial<Purchase> = {}) {
     mockPurchaseService.getPurchase.mockReturnValue(
-      of({ id: 10, items: purchaseItems, payments } as unknown as Purchase),
+      of({ id: 10, items: purchaseItems, payments, ...extra } as unknown as Purchase),
     );
     mockPurchaseService.getReturns.mockReturnValue(of(existingReturns));
-    comp = new PurchaseReturnComponent(mockPurchaseService as any, mockAccountService as any);
+    comp = new PurchaseReturnComponent(mockPurchaseService as any, mockAccountService as any, mockSupplierService as any);
     comp.purchase = { id: 10 } as Purchase;
     comp.ngOnInit();
   }
@@ -40,6 +41,7 @@ describe('PurchaseReturnComponent', () => {
       createReturn: vi.fn(),
     };
     mockAccountService = { getAccounts: vi.fn(() => of([])) };
+    mockSupplierService = { getSupplierProfile: vi.fn(() => of({ outstanding_balance: 180500 })) };
   });
 
   describe('ngOnInit', () => {
@@ -217,6 +219,74 @@ describe('PurchaseReturnComponent', () => {
       expect(comp.errorMessage()).toBe('Stock insuffisant.');
       expect(comp.submitting()).toBe(false);
       expect(savedSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── Refonte 2b, 12c ────────────────────────────────────────────────────
+  describe('le compteur − / +', () => {
+    it('reste borné entre 0 et le retournable', () => {
+      init([makePurchaseItem({ id: 1, quantity: 2 })]);
+      comp.step(comp.lines()[0], -1);
+      expect(comp.lines()[0].quantity).toBe(0);
+      comp.step(comp.lines()[0], 1);
+      comp.step(comp.lines()[0], 1);
+      comp.step(comp.lines()[0], 1);
+      expect(comp.lines()[0].quantity).toBe(2);
+    });
+  });
+
+  describe('le motif', () => {
+    it('envoie l\'option choisie, ou le texte libre sous « Autre »', () => {
+      init([makePurchaseItem()]);
+      expect(comp.reason()).toBe('Défaut de fabrication');
+      comp.reasonChoice.set('Autre');
+      expect(comp.reason()).toBeNull();
+      comp.reasonOther.set('  Référence erronée ');
+      expect(comp.reason()).toBe('Référence erronée');
+    });
+  });
+
+  describe('la contrepartie', () => {
+    it('déduit du dû par défaut, sans remboursement dans le corps envoyé', () => {
+      init([makePurchaseItem({ id: 1, quantity: 10 })], [], [{ id: 1, amount: 500 }]);
+      expect(comp.counterpart()).toBe('deduct');
+      comp.setQuantity(comp.lines()[0], 1);
+      mockPurchaseService.createReturn.mockReturnValue(of({} as PurchaseReturn));
+      comp.submit();
+      expect(mockPurchaseService.createReturn).toHaveBeenCalledWith(10, expect.objectContaining({ refund: null, reason: 'Défaut de fabrication' }));
+    });
+
+    it('refuse « Remboursement reçu » quand rien n\'a été payé', () => {
+      init([makePurchaseItem()]);
+      comp.setCounterpart('refund');
+      expect(comp.counterpart()).toBe('deduct');
+    });
+
+    it('lit le payé net des remboursements sur la fiche quand elle le donne', () => {
+      const ret: PurchaseReturn = {
+        id: 1, purchase_id: 10, date: '2026-04-01', total_quantity: 1, total_amount: 100, refund_amount: 100,
+        items: [{ id: 1, purchase_return_id: 1, purchase_item_id: 1, product_id: 5, stock_id: 5, quantity: 1, unit_price: 100 }],
+      };
+      init([makePurchaseItem({ id: 1, quantity: 10 })], [ret], [{ id: 1, amount: 9999 }], { paid_amount: 400 });
+      expect(comp.availableToRefund()).toBe(400);
+    });
+  });
+
+  describe('le dû avant et après', () => {
+    it('baisse le dû fournisseur du montant retourné, net de la remise', () => {
+      init([makePurchaseItem({ id: 1, quantity: 64, unit_price: 516 })], [], [],
+        { net_amount: 33024, effective_net_amount: 33024, discount: 0, supplier: { id: 3, name: 'Michelin Maroc' } as any });
+      comp.setQuantity(comp.lines()[0], 4);
+      expect(mockSupplierService.getSupplierProfile).toHaveBeenCalledWith(3);
+      expect(comp.supplierDue()).toBe(180500);
+      expect(comp.supplierDueAfter()).toBe(178436);
+    });
+
+    it('ne déduit rien de ce qui est déjà réglé', () => {
+      expect(returnDueEffect({ effectiveNet: 1000, netPaid: 1000, discountPct: 0, returnGross: 200 }))
+        .toEqual({ before: 0, after: 0, deducted: 0, lost: 200 });
+      expect(returnDueEffect({ effectiveNet: 1000, netPaid: 900, discountPct: 10, returnGross: 200 }))
+        .toEqual({ before: 100, after: 0, deducted: 100, lost: 80 });
     });
   });
 });

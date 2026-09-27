@@ -136,13 +136,26 @@ test.describe('Achats', () => {
     await expect(page.getByRole('button', { name: /Télécharger PDF/ })).toBeVisible();
   });
 
-  test('le bouton Retour fournisseur ouvre la modale de retour et liste les lignes', async ({ page }) => {
-    const returnBtn = page.locator('button[title="Retour fournisseur"]').first();
-    test.skip(await returnBtn.count() === 0, 'Aucun achat éligible au retour dans le tableau');
+  test('« Retour fournisseur » ouvre le volet de retour sur la fiche d\'achat (refonte 2b, 12c)', async ({ page }) => {
+    // Deux navigations (liste, puis fiche) : le test a droit au triple du délai.
+    test.slow();
+    // Un achat reçu (seul statut qui accepte un retour), lu par l'API avec la session du navigateur.
+    const id = await page.evaluate(async () => {
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch('/api/purchases?per_page=20&status=RECU', { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } });
+      const rows: { id: number; status: string }[] = (await res.json()).data ?? [];
+      return rows.find(r => r.status === 'RECU')?.id ?? null;
+    });
+    test.skip(id === null, 'Aucun achat éligible au retour');
 
-    await returnBtn.click();
-    await expect(page.locator('.modal-overlay')).toBeVisible();
-    await expect(page.locator('h2', { hasText: 'Retour fournisseur' })).toBeVisible();
-    await expect(page.locator('.table-wrapper table, .empty-state').first()).toBeVisible();
+    await page.goto(`/achats/${id}`);
+    await page.getByRole('button', { name: 'Retour fournisseur' }).first().click();
+    const panel = page.getByRole('dialog', { name: new RegExp(`Achat ${id}`) });
+    await expect(panel).toBeVisible();
+    await expect(panel.getByText("Chargement de l'achat…")).toBeHidden({ timeout: 30_000 });
+    await expect(panel.locator('.pr-row:not(.pr-row--head), .pr-state').first()).toBeVisible();
+    await expect(panel.getByRole('button', { name: 'Déduire du dû' }).or(panel.locator('.pr-state')).first()).toBeVisible();
+    await panel.locator('.pr-btn', { hasText: /Annuler|Fermer/ }).click();
+    await expect(panel).toBeHidden();
   });
 });
