@@ -24,9 +24,6 @@ class StockService
      */
     private $movements;
 
-    /**
-     * @param StockMovementService $movements
-     */
     public function __construct(StockMovementService $movements)
     {
         $this->movements = $movements;
@@ -47,7 +44,16 @@ class StockService
             return $query->get();
         }
 
-        return $query->paginate((int) ($filters['per_page'] ?? 50));
+        $page = $query->paginate((int) ($filters['per_page'] ?? 50));
+
+        // Le stock n'entre qu'à la réception : ce qu'un achat attendu doit
+        // apporter à ce lot est dit à part, jamais compté dans `quantity`.
+        $expected = $this->expectedByStock($page->getCollection()->pluck('id')->all());
+        $page->getCollection()->each(
+            fn (Stock $lot) => $lot->setAttribute('expected_quantity', $expected[$lot->id] ?? 0)
+        );
+
+        return $page;
     }
 
     /**
@@ -284,8 +290,9 @@ class StockService
 
         $sold30 = $this->soldQuantities($productIds, 30);
         $sold180 = $this->soldQuantities($productIds, 180);
+        $expected = $this->expectedByStock($lots->flatten()->pluck('id')->all());
 
-        return collect($productIds)->map(function (int $productId) use ($lots, $sold30, $sold180) {
+        return collect($productIds)->map(function (int $productId) use ($lots, $sold30, $sold180, $expected) {
             $productLots = $lots->get($productId, collect());
             $product = $productLots->first()?->product;
             $tyre = $product?->tyre;
@@ -315,6 +322,8 @@ class StockService
                 'runflat' => (bool) ($tyre?->tire_runflat ?? false),
                 'marking' => $tyre?->tire_marking,
                 'quantity' => $quantity,
+                // Attendu sur des achats pas encore réceptionnés — à part, jamais disponible.
+                'expected_quantity' => (int) $productLots->sum(fn (Stock $lot) => $expected[$lot->id] ?? 0),
                 'value' => $value,
                 'unit_price' => $quantity > 0 ? round($value / $quantity, 2) : null,
                 'lots_count' => $productLots->count(),
@@ -328,11 +337,38 @@ class StockService
                     'depot' => $lot->depot,
                     'zone' => $lot->zone,
                     'quantity' => (int) $lot->quantity,
+                    'expected_quantity' => (int) ($expected[$lot->id] ?? 0),
                     'purchase_price' => round((float) $lot->purchase_price, 2),
                     'value' => round($lot->quantity * (float) $lot->purchase_price, 2),
                 ])->values()->all(),
             ];
         });
+    }
+
+    /**
+     * Quantités attendues par lot : les lignes des achats « En cours » dont le
+     * stock n'est pas encore entré (`stock_applied` faux). Les achats « En
+     * cours » d'avant la règle, déjà comptés en stock, n'y figurent pas.
+     *
+     * @param  array<int, int>  $stockIds
+     * @return array<int, int>
+     */
+    public function expectedByStock(array $stockIds): array
+    {
+        if ($stockIds === []) {
+            return [];
+        }
+
+        return DB::table('purchase_items')
+            ->join('purchases', 'purchases.id', '=', 'purchase_items.purchase_id')
+            ->whereIn('purchase_items.stock_id', $stockIds)
+            ->where('purchases.status', 'EN COURS')
+            ->where('purchases.stock_applied', false)
+            ->groupBy('purchase_items.stock_id')
+            ->selectRaw('purchase_items.stock_id, SUM(purchase_items.quantity) as expected')
+            ->pluck('expected', 'purchase_items.stock_id')
+            ->map(fn ($quantity) => (int) $quantity)
+            ->all();
     }
 
     /**
@@ -406,16 +442,16 @@ class StockService
     {
         $filters['in_stock'] = 1;
 
-        $fileName = 'stock-disponible-' . now()->format('Y-m-d-His') . '.xlsx';
+        $fileName = 'stock-disponible-'.now()->format('Y-m-d-His').'.xlsx';
         $headers = [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+            'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
             'Cache-Control' => 'max-age=0, no-store, no-cache, must-revalidate',
             'Pragma' => 'public',
         ];
 
         return response()->streamDownload(function () use ($filters) {
-            $spreadsheet = new Spreadsheet();
+            $spreadsheet = new Spreadsheet;
             $sheet = $spreadsheet->getActiveSheet();
             $sheet->setTitle('Stock disponible');
 
@@ -481,7 +517,7 @@ class StockService
                 $sheet->getColumnDimension($column)->setAutoSize(true);
             }
 
-            $sheet->getStyle('L2:M' . max(count($rows), 2))
+            $sheet->getStyle('L2:M'.max(count($rows), 2))
                 ->getNumberFormat()
                 ->setFormatCode('#,##0.00');
 

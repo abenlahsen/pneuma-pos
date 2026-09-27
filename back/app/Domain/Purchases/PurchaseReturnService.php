@@ -56,6 +56,14 @@ class PurchaseReturnService
             ]);
         }
 
+        // Le stock n'entre qu'à la réception : un achat attendu n'a rien mis
+        // en stock, il n'y a donc rien à renvoyer au fournisseur.
+        if (! $purchase->stock_applied) {
+            throw ValidationException::withMessages([
+                'purchase' => ["Cet achat n'est pas encore réceptionné : rien n'est en stock à retourner."],
+            ]);
+        }
+
         $purchase->loadMissing(['items', 'supplier']);
         $itemsById = $purchase->items->keyBy('id');
 

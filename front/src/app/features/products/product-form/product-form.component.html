@@ -283,7 +283,7 @@
       <section class="pf-block">
         <h2 class="pf-block-title">
           Stock par dépôt
-          <span class="pf-block-note">{{ stockItems().length }} lot(s) · {{ totalStock }} en stock</span>
+          <span class="pf-block-note">{{ stockItems().length }} lot(s) · {{ totalStock }} en stock<ng-container *ngIf="totalExpected"> · <span class="qty-expected qty-expected--inline">+{{ totalExpected }} attendus</span></ng-container></span>
         </h2>
 
         <p class="pf-note pf-note--strong">
@@ -306,7 +306,7 @@
                 <span class="pf-lot-depot">{{ item.depot || 'Sans dépôt' }}<ng-container *ngIf="item.zone"> · {{ item.zone }}</ng-container></span>
                 <span class="pf-lot-sub"><ng-container *ngIf="item.dot">DOT {{ item.dot }}</ng-container><ng-container *ngIf="item.dot && item.made_in"> · </ng-container><ng-container *ngIf="item.made_in">origine {{ item.made_in }}</ng-container><ng-container *ngIf="!item.dot && !item.made_in">—</ng-container></span>
               </span>
-              <span class="num pf-lot-qty" [class.pf-lot-qty--zero]="item.quantity === 0">{{ item.quantity }}</span>
+              <span class="num pf-lot-qty" [class.pf-lot-qty--zero]="item.quantity === 0">{{ item.quantity }}<span class="qty-expected" *ngIf="item.expected_quantity" title="Sur des achats pas encore réceptionnés : pas encore disponible">+{{ item.expected_quantity }} attendus</span></span>
               <span class="num">{{ item.purchase_price ? (item.purchase_price | number:'1.2-2') : '—' }}</span>
               <span class="pf-lot-actions">
                 <button type="button" class="btn-icon" (click)="editStock(item)" title="Modifier" *ngIf="authService.hasPermission('edit stock')"><app-icon name="edit" [size]="14" /></button>

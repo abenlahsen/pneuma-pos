@@ -468,15 +468,31 @@ class PurchaseCrudTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_patch_status_decrements_stock_when_moving_to_annule(): void
+    public function test_patch_status_to_annule_leaves_stock_of_an_expected_purchase_untouched(): void
     {
         Sanctum::actingAs($this->user, [], 'web');
 
-        // ANNULE is only reachable from EN COURS under the new workflow
-        // (RECU -> ANNULE is no longer a valid transition), but EN COURS
-        // already applies stock exactly like RECU did, so the reversal
-        // assertion below is unaffected.
+        // Le stock n'entre qu'à la réception : un achat attendu n'a rien mis
+        // en stock, son annulation n'a rien à retirer.
         $purchase = $this->createPurchase(['status' => 'EN COURS']);
+        $before = $this->stock->quantity;
+
+        $this->patchJson("/api/purchases/{$purchase->id}/status", ['status' => 'ANNULE'])
+            ->assertOk();
+
+        $this->stock->refresh();
+        $this->assertEquals($before, $this->stock->quantity);
+        $this->assertFalse($purchase->fresh()->stock_applied);
+    }
+
+    public function test_patch_status_decrements_stock_when_cancelling_an_expected_purchase_created_before_the_rule(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        // ANNULE is only reachable from EN COURS. An EN COURS purchase created
+        // before « le stock n'entre qu'à la réception » already holds stock
+        // (stock_applied) — cancelling it must still take that stock back out.
+        $purchase = $this->createPurchase(['status' => 'EN COURS', 'stock_applied' => true]);
         $before = $this->stock->quantity;
 
         $this->patchJson("/api/purchases/{$purchase->id}/status", ['status' => 'ANNULE'])
@@ -490,12 +506,13 @@ class PurchaseCrudTest extends TestCase
         ]);
     }
 
-    public function test_patch_status_increments_stock_when_reactivating_from_annule_to_en_cours(): void
+    public function test_patch_status_reactivating_from_annule_to_en_cours_leaves_stock_untouched(): void
     {
         Sanctum::actingAs($this->user, [], 'web');
 
         // ANNULE is a dead end: reactivation can only return to EN COURS,
-        // never advance straight to RECU.
+        // never advance straight to RECU. A reactivated purchase is expected
+        // again — its stock waits for the reception.
         $purchase = $this->createPurchase(['status' => 'ANNULE']);
         $before = $this->stock->quantity;
 
@@ -503,14 +520,11 @@ class PurchaseCrudTest extends TestCase
             ->assertOk();
 
         $this->stock->refresh();
-        $this->assertEquals($before + 4, $this->stock->quantity);
-        $this->assertDatabaseHas('stock_movements', [
-            'stock_id' => $this->stock->id,
-            'type' => StockMovement::TYPE_PURCHASE_IN,
-        ]);
+        $this->assertEquals($before, $this->stock->quantity);
+        $this->assertFalse($purchase->fresh()->stock_applied);
     }
 
-    public function test_patch_status_does_not_change_stock_between_active_statuses(): void
+    public function test_patch_status_from_en_cours_to_recu_puts_stock_in_like_a_reception(): void
     {
         Sanctum::actingAs($this->user, [], 'web');
 
@@ -518,6 +532,23 @@ class PurchaseCrudTest extends TestCase
         $before = $this->stock->quantity;
 
         $this->patchJson("/api/purchases/{$purchase->id}/status", ['status' => 'RECU'])
+            ->assertOk();
+
+        $this->stock->refresh();
+        $this->assertEquals($before + 4, $this->stock->quantity);
+        $fresh = $purchase->fresh();
+        $this->assertTrue($fresh->stock_applied);
+        $this->assertNotNull($fresh->received_at);
+    }
+
+    public function test_patch_status_between_received_statuses_does_not_change_stock(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $purchase = $this->createPurchase(['status' => 'RECU']);
+        $before = $this->stock->quantity;
+
+        $this->patchJson("/api/purchases/{$purchase->id}/status", ['status' => 'TERMINE'])
             ->assertOk();
 
         $this->stock->refresh();
@@ -789,6 +820,10 @@ class PurchaseCrudTest extends TestCase
 
     private function createPurchase(array $attributes = []): Purchase
     {
+        // Le stock n'entre qu'à la réception : un achat écrit directement en
+        // base est en stock s'il est reçu ou terminé, sauf mention contraire.
+        $attributes['stock_applied'] ??= in_array($attributes['status'] ?? 'EN COURS', ['RECU', 'TERMINE'], true);
+
         $purchase = Purchase::query()->create(array_merge([
             'date' => '2026-04-01',
             'supplier_id' => $this->supplier->id,

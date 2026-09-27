@@ -13,6 +13,7 @@
     [purchase]="purchase()!"
     [canEdit]="canEdit()"
     [canReturn]="canReturn()"
+    [canReceive]="canReceive()"
     [hasPrev]="!!neighbours().prev"
     [hasNext]="!!neighbours().next"
     [position]="neighbours().position"
@@ -22,6 +23,7 @@
     (edit)="editPurchase()"
     (settle)="settling.set(true)"
     (openReturn)="returning.set(true)"
+    (receive)="receiving.set(true)"
     (returnsChanged)="reload()" />
 </div>
 
@@ -30,6 +32,11 @@
   [purchase]="purchase()!"
   (closed)="closeSettle(false)"
   (statusChanged)="closeSettle(true)" />
+
+<!-- Le stock n'entre qu'à la réception : la confirmation liste quantités et dépôts. -->
+@if (receiving() && purchase()) {
+  <app-purchase-receive [purchaseId]="purchase()!.id" (received)="closeReceive(true)" (cancel)="closeReceive(false)" />
+}
 
 <app-purchase-return
   *ngIf="returning() && purchase()"

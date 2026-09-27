@@ -34,6 +34,10 @@ export interface Purchase {
   paid_amount?: number;
   items?: PurchaseItem[];
   status: PurchaseStatus;
+  /** Le stock de l'achat est-il entré ? Faux pour un achat attendu. */
+  stock_applied?: boolean;
+  /** Date de réception ; vide pour un achat attendu, et pour les achats reçus avant qu'elle existe. */
+  received_at?: string | null;
   payment_status: PaymentStatus;
   /** Distinct methods of the payments actually recorded against this purchase (derived, read-only). */
   payment_methods?: string[];

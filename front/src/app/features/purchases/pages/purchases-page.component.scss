@@ -220,3 +220,6 @@
     > .ret-object { flex: 1; }
   }
 }
+
+/* Maquette 8a : l'achat attendu, en ocre. */
+.pur-tag--expected { border-color: $warning-border; background: $warning-bg; color: $warning-ink; }

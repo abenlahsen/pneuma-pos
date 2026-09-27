@@ -593,3 +593,14 @@
     overflow-y: visible;
   }
 }
+
+/* Le stock n'entre qu'à la réception : l'attendu se lit à part, sous la
+   quantité disponible, et n'y est jamais ajouté. */
+.qty-expected {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: $warning-ink;
+  white-space: nowrap;
+}
+.qty-expected--inline { display: inline; font-size: inherit; }

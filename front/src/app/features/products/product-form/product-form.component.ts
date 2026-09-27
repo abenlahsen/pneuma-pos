@@ -234,6 +234,11 @@ export class ProductFormComponent implements OnInit {
     return !!this.product;
   }
 
+  /** Attendu sur des achats pas encore réceptionnés — jamais compté dans totalStock. */
+  get totalExpected(): number {
+    return this.stockItems().reduce((sum, s) => sum + (s.expected_quantity ?? 0), 0);
+  }
+
   get totalStock(): number {
     return this.stockItems().reduce((sum, s) => sum + s.quantity, 0);
   }

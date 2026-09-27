@@ -114,6 +114,11 @@ export class PurchaseService {
     return this.http.patch<{ status: PurchaseStatus }>(`${this.apiUrl}/${id}/status`, { status });
   }
 
+  /** Réceptionner un achat attendu : le stock entre, l'achat passe « Reçu ». */
+  receive(id: number, receivedAt: string | null): Observable<Purchase> {
+    return this.http.post<Purchase>(`${this.apiUrl}/${id}/receive`, { received_at: receivedAt });
+  }
+
   deletePurchase(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }

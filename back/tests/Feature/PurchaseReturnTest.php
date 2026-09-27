@@ -122,6 +122,7 @@ class PurchaseReturnTest extends TestCase
             'discount' => 0,
             'net_amount' => 1000.00,
             'status' => 'RECU',
+            'stock_applied' => true,
             'payment_status' => 'NON PAYE',
             'created_by' => $this->user->id,
         ]);

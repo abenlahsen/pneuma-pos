@@ -33,6 +33,7 @@ $warning-color:    #8a5a00;  // seuil, attente, risque légal       (était #ed8
 $warning-dark:     #8a5a00;  // aligné sur $warning-color          (était #c05621)
 $warning-border:   #d4a017;  // bord d'alerte, jauge sous seuil
 $alert-ink:        #8f1218;  // texte d'alerte sur fond rosé
+$warning-ink:      #7a4f00;  // texte ocre sur $warning-bg : attendu, en attente
 
 // ── Fonds teintés ─────────────────────────────────────────────────────────
 $overdue-bg:       #fdeff1;  // ligne en retard

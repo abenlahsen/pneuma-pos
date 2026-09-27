@@ -49,6 +49,8 @@ export interface StockLot {
   depot: string | null;
   zone: string | null;
   quantity: number;
+  /** Attendu sur des achats pas encore réceptionnés — jamais disponible. */
+  expected_quantity?: number;
   purchase_price: number;
   value: number;
 }
@@ -70,6 +72,8 @@ export interface StockGroup {
   runflat: boolean;
   marking: string | null;
   quantity: number;
+  /** Attendu sur des achats pas encore réceptionnés — jamais disponible. */
+  expected_quantity?: number;
   value: number;
   unit_price: number | null;
   lots_count: number;

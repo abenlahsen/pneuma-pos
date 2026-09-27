@@ -81,10 +81,18 @@
 
   &--ok { border-color: $income-color; color: $income-color; }
 
+  /* Le rouge est réservé à l'argent dû. */
   &--late {
     border-color: $expense-color;
     background: $overdue-bg;
     color: $expense-color;
+  }
+
+  /* Ce qu'on attend — une réception, une échéance — sans que rien ne soit dû : ocre. */
+  &--wait {
+    border-color: $warning-border;
+    background: $warning-bg;
+    color: $warning-ink;
   }
 }
 

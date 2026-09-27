@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Purchases\PurchaseCatalogService;
 use App\Domain\Purchases\PurchaseService;
 use App\Enums\PurchasePaymentStatus;
 use App\Enums\PurchaseStatus;
@@ -55,6 +56,9 @@ class PurchaseController extends Controller
             'commercial_id' => 'required|exists:users,id',
             'status' => ['required', Rule::in(PurchaseStatus::values())],
             'payment_status' => ['required', Rule::in(PurchasePaymentStatus::values())],
+            // Un achat créé « Reçu » peut porter sa date de réception ; sans
+            // elle, c'est le jour de l'enregistrement.
+            'received_at' => 'nullable|date',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.stock_id' => 'required|exists:stocks,id',
@@ -69,6 +73,22 @@ class PurchaseController extends Controller
         $purchase = $this->purchaseService->create($validated, $request->user()->id);
 
         return response()->json($purchase, 201);
+    }
+
+    /**
+     * Réceptionner un achat attendu : le stock entre, le statut passe à
+     * « Reçu », la date de réception est enregistrée. Refusé (422) si l'achat
+     * est déjà reçu, terminé ou annulé.
+     */
+    public function receive(Request $request, Purchase $purchase): JsonResponse
+    {
+        $validated = $request->validate([
+            'received_at' => 'nullable|date|before_or_equal:today',
+        ]);
+
+        $received = $this->purchaseService->receive($purchase, $validated['received_at'] ?? null, $request->user()->id);
+
+        return response()->json($received);
     }
 
     public function show(Purchase $purchase): JsonResponse
@@ -169,7 +189,7 @@ class PurchaseController extends Controller
      * dernier prix d'achat (général et chez le fournisseur), dernier prix de
      * vente. Voir PurchaseCatalogService.
      */
-    public function catalog(Request $request, \App\Domain\Purchases\PurchaseCatalogService $catalog): JsonResponse
+    public function catalog(Request $request, PurchaseCatalogService $catalog): JsonResponse
     {
         $validated = $request->validate([
             'q' => 'nullable|string|max:100',

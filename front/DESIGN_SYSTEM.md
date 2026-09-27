@@ -97,6 +97,7 @@ $invoice-color:    #2f4fb8;   // à facturer (Service Auto)
 $warning-color:    #8a5a00;   // seuil, attente, risque légal
 $warning-border:   #d4a017;   // bord d'alerte, jauge sous seuil
 $alert-ink:        #8f1218;   // texte d'alerte sur fond rosé
+$warning-ink:      #7a4f00;   // texte ocre sur $warning-bg (#fdf6e6) : attendu, en attente
 
 // CSS Custom Properties (defined in styles.scss :root — NOT app.scss, see below)
 // --app-primary, --app-accent, --app-background, --app-surface, --app-text,
@@ -219,6 +220,13 @@ not elevation. The `box-shadow` used by `:focus-visible` rings is
 .badge-success { background: rgba(#48bb78, 0.10); color: #276749; }  // PAYÉ
 .badge-warning { background: rgba(#ed8936, 0.10); color: #c05621; }  // PARTIEL
 .badge-danger  { background: rgba(#f56565, 0.10); color: #e53e3e; }  // NON PAYÉ
+
+// Refonte 2b — badge carré des fiches (.sd-badge, sale-detail.component.scss,
+// repris par la fiche d'achat). Le rouge est réservé à l'argent dû ; ce qu'on
+// attend sans que rien ne soit dû (achat attendu, échéance) est ocre.
+.sd-badge--ok   { border-color: $income-color;  color: $income-color; }                            // PAYÉ
+.sd-badge--late { border-color: $expense-color; background: $overdue-bg; color: $expense-color; }  // argent dû
+.sd-badge--wait { border-color: $warning-border; background: $warning-bg; color: $warning-ink; }   // ATTENDU
 
 // Sale status (inline <select> styled as pill)
 .status-select { appearance: none; border-radius: 999px; font-size: 0.75rem; font-weight: 600; border: 1px solid transparent; }

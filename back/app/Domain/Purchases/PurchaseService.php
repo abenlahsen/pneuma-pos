@@ -92,17 +92,27 @@ class PurchaseService
         $discount = (float) ($validated['discount'] ?? 0);
         $totals = $this->calculateTotals($itemsData, $discount);
 
-        $purchase = DB::transaction(function () use ($validated, $itemsData, $totals, $userId) {
+        // A new purchase is either expected (EN COURS) or already received
+        // (RECU) — any other status submitted at creation time falls back to
+        // EN COURS. Only a received purchase puts its quantities in stock.
+        $status = ($validated['status'] ?? null) === PurchaseStatus::RECU->value
+            ? PurchaseStatus::RECU->value
+            : PurchaseStatus::EN_COURS->value;
+        $received = $status === PurchaseStatus::RECU->value;
+
+        $purchase = DB::transaction(function () use ($validated, $itemsData, $totals, $userId, $status, $received) {
             $purchase = Purchase::create(array_merge(
                 $this->withoutItems($validated),
                 $totals,
-                // A new purchase always starts at the first step of the workflow —
-                // any other status submitted at creation time is ignored.
-                ['status' => PurchaseStatus::EN_COURS->value],
+                [
+                    'status' => $status,
+                    'stock_applied' => $received,
+                    'received_at' => $received ? ($validated['received_at'] ?? now()->toDateString()) : null,
+                ],
                 ['created_by' => $userId]
             ));
 
-            $this->createItemsAndApplyStock($purchase, $itemsData, $purchase->status, $userId);
+            $this->createItemsAndApplyStock($purchase, $itemsData, $received, $userId);
 
             return $purchase;
         });
@@ -141,8 +151,11 @@ class PurchaseService
         $purchase->loadMissing(['supplier', 'commercial']);
         $beforeSnapshot = $this->activityLog->buildPurchaseSnapshot($purchase);
 
-        DB::transaction(function () use ($purchase, $validated, $itemsData, $totals, $userId, $oldStatus) {
-            if ($this->statusAppliesStock($oldStatus)) {
+        DB::transaction(function () use ($purchase, $validated, $itemsData, $totals, $userId, $oldStatus, $newStatus) {
+            $wasApplied = (bool) $purchase->stock_applied;
+            $willApply = $this->stockShouldBeApplied($newStatus, $oldStatus, $wasApplied);
+
+            if ($wasApplied) {
                 $this->restoreStockForItems($purchase, $userId);
             }
 
@@ -151,12 +164,11 @@ class PurchaseService
             $purchase->update(array_merge(
                 $this->withoutItems($validated),
                 $totals,
+                $this->receptionFields($purchase, $newStatus, $willApply),
                 ['updated_by' => $userId]
             ));
 
-            $newStatus = $validated['status'] ?? $oldStatus;
-
-            $this->createItemsAndApplyStock($purchase, $itemsData, $newStatus, $userId);
+            $this->createItemsAndApplyStock($purchase, $itemsData, $willApply, $userId);
         });
 
         $loaded = $this->loadRelations($purchase->fresh());
@@ -179,8 +191,8 @@ class PurchaseService
         StatusTransitionGuard::assert($oldStatus, $status, PurchaseStatus::allowedTransitions(), $isAdmin, "l'achat");
 
         DB::transaction(function () use ($purchase, $status, $oldStatus, $userId) {
-            $wasApplied = $this->statusAppliesStock($oldStatus);
-            $willApply = $this->statusAppliesStock($status);
+            $wasApplied = (bool) $purchase->stock_applied;
+            $willApply = $this->stockShouldBeApplied($status, $oldStatus, $wasApplied);
 
             if ($wasApplied && ! $willApply) {
                 $this->restoreStockForItems($purchase, $userId);
@@ -188,7 +200,10 @@ class PurchaseService
                 $this->applyStockForItems($purchase, $userId);
             }
 
-            $purchase->update(['status' => $status]);
+            $purchase->update(array_merge(
+                ['status' => $status],
+                $this->receptionFields($purchase, $status, $willApply),
+            ));
         });
 
         $after = $this->activityLog->buildPurchaseSnapshot($purchase->fresh(['supplier', 'commercial']));
@@ -201,9 +216,100 @@ class PurchaseService
         );
     }
 
-    private function statusAppliesStock(?string $status): bool
+    /**
+     * Réceptionne un achat attendu : ses quantités entrent dans les dépôts de
+     * réception de chaque ligne, le statut passe à « Reçu », la date de
+     * réception est enregistrée — le tout dans une seule transaction.
+     *
+     * Refusée si l'achat est déjà reçu (ou terminé) ou annulé. La ligne de
+     * l'achat est verrouillée : deux réceptions simultanées ne peuvent pas
+     * faire entrer le stock deux fois.
+     *
+     * Un achat « En cours » créé avant la règle « le stock n'entre qu'à la
+     * réception » est déjà en stock (`stock_applied`) : sa réception change le
+     * statut et la date, sans rien ajouter.
+     */
+    public function receive(Purchase $purchase, ?string $receivedAt, $userId): Purchase
     {
-        return $status !== PurchaseStatus::ANNULE->value;
+        $purchase->loadMissing(['supplier', 'commercial']);
+        $before = $this->activityLog->buildPurchaseSnapshot($purchase);
+
+        DB::transaction(function () use ($purchase, $receivedAt, $userId) {
+            $locked = Purchase::whereKey($purchase->id)->lockForUpdate()->firstOrFail();
+
+            if (in_array($locked->status, [PurchaseStatus::RECU->value, PurchaseStatus::TERMINE->value], true)) {
+                throw ValidationException::withMessages([
+                    'status' => ['Cet achat est déjà reçu.'],
+                ]);
+            }
+            if ($locked->status === PurchaseStatus::ANNULE->value) {
+                throw ValidationException::withMessages([
+                    'status' => ['Un achat annulé ne peut pas être réceptionné.'],
+                ]);
+            }
+
+            $purchase->setRawAttributes($locked->getAttributes(), true);
+            $purchase->load(['items', 'supplier']);
+
+            if (! $purchase->stock_applied) {
+                $this->applyStockForItems($purchase, $userId);
+            }
+
+            $purchase->update([
+                'status' => PurchaseStatus::RECU->value,
+                'stock_applied' => true,
+                'received_at' => $receivedAt ?? now()->toDateString(),
+                'updated_by' => $userId,
+            ]);
+        });
+
+        $loaded = $this->loadRelations($purchase->fresh());
+
+        $this->activityLog->logPurchaseUpdated(
+            $loaded,
+            $before,
+            $this->activityLog->buildPurchaseSnapshot($loaded),
+            $userId,
+            ActivityLogService::resolveUserName($userId),
+        );
+
+        return $loaded;
+    }
+
+    /**
+     * Le stock de l'achat doit-il être compté après ce changement de statut ?
+     *
+     * Reçu et Terminé : oui. Annulé : non. En cours (attendu) : non — sauf un
+     * achat qui l'était déjà et le reste (une simple modification) : il garde
+     * l'état qu'il avait, pour ne pas toucher aux achats « En cours » créés
+     * avant la règle, déjà comptés en stock.
+     */
+    private function stockShouldBeApplied(string $newStatus, ?string $oldStatus, bool $applied): bool
+    {
+        return match ($newStatus) {
+            PurchaseStatus::RECU->value, PurchaseStatus::TERMINE->value => true,
+            PurchaseStatus::ANNULE->value => false,
+            default => $oldStatus === PurchaseStatus::EN_COURS->value ? $applied : false,
+        };
+    }
+
+    /**
+     * Le drapeau de stock, et la date de réception quand l'achat devient reçu
+     * sans en avoir une. Un achat qui redevient attendu perd sa date.
+     *
+     * @return array<string, mixed>
+     */
+    private function receptionFields(Purchase $purchase, string $status, bool $applied): array
+    {
+        $fields = ['stock_applied' => $applied];
+
+        if ($status === PurchaseStatus::RECU->value && ! $purchase->received_at) {
+            $fields['received_at'] = now()->toDateString();
+        } elseif ($status === PurchaseStatus::EN_COURS->value) {
+            $fields['received_at'] = null;
+        }
+
+        return $fields;
     }
 
     /**
@@ -222,7 +328,7 @@ class PurchaseService
         $beforeSnapshot = array_merge(['id' => $purchase->id], $this->activityLog->buildPurchaseSnapshot($purchase));
 
         DB::transaction(function () use ($purchase, $userId) {
-            if ($this->statusAppliesStock($purchase->status)) {
+            if ($purchase->stock_applied) {
                 $this->restoreStockForItems($purchase, $userId);
             }
 
@@ -503,6 +609,8 @@ class PurchaseService
             'items.linkedProduct.tyre',
             'items.linkedProduct.part',
             'items.linkedProduct.service',
+            // Le dépôt de réception de chaque ligne : la confirmation de réception le liste.
+            'items.stock:id,product_id,depot,zone,dot,quantity',
             'supplier',
             'commercial',
             'creator',
@@ -640,7 +748,7 @@ class PurchaseService
     /**
      * @param  array<int, array<string, mixed>>  $itemsData
      */
-    protected function createItemsAndApplyStock(Purchase $purchase, array $itemsData, $status, $userId)
+    protected function createItemsAndApplyStock(Purchase $purchase, array $itemsData, bool $applyStock, $userId)
     {
         foreach ($itemsData as $itemData) {
             $quantity = $itemData['quantity'] ?? 1;
@@ -653,7 +761,7 @@ class PurchaseService
                 'unit_price' => $unitPrice,
             ]);
 
-            if (! $this->statusAppliesStock($status)) {
+            if (! $applyStock) {
                 continue;
             }
 

@@ -32,6 +32,8 @@ class Purchase extends Model
         'supplier_id',
         'commercial_id',
         'status',
+        'stock_applied',
+        'received_at',
         'payment_status',
         'payment_date',
         'created_by',
@@ -41,6 +43,8 @@ class Purchase extends Model
     protected $casts = [
         'date' => 'date',
         'payment_date' => 'date',
+        'received_at' => 'date',
+        'stock_applied' => 'boolean',
         'with_invoice' => 'boolean',
         'total_quantity' => 'integer',
         'total_price' => 'decimal:2',

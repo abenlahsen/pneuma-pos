@@ -27,7 +27,7 @@
             [class.sd-badge--late]="!isSettled">
         {{ purchase.payment_status }}@if (settlementAgeDays; as d) { · {{ d }} J }
       </span>
-      <span class="sd-badge">{{ purchase.status }}</span>
+      <span class="sd-badge" [class.sd-badge--wait]="purchase.status === 'EN COURS'">{{ purchase.status === 'EN COURS' ? 'ATTENDU' : purchase.status }}</span>
     </span>
 
     <span class="sd-nav" *ngIf="hasPrev || hasNext">
@@ -44,8 +44,13 @@
       @if (canEdit) {
         <button type="button" class="sd-btn" (click)="edit.emit()">Modifier</button>
       }
+      <!-- Le stock n'entre qu'à la réception : un achat attendu se réceptionne
+           d'abord, c'est donc l'action solide ; le règlement reste possible. -->
+      @if (canReceive) {
+        <button type="button" class="sd-btn sd-btn--primary" (click)="receive.emit()">Réceptionner</button>
+      }
       @if (!isSettled && amountDue > 0 && authService.hasPermission('manage purchase-payments')) {
-        <button type="button" class="sd-btn sd-btn--primary" (click)="settle.emit()">
+        <button type="button" class="sd-btn" [class.sd-btn--primary]="!canReceive" (click)="settle.emit()">
           Régler {{ amountDue | number:'1.0-0' }} DH
         </button>
       }

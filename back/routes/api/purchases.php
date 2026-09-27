@@ -19,6 +19,8 @@ Route::middleware('permission:view purchases')->group(function () {
 Route::post('purchases', [PurchaseController::class, 'store'])->middleware('permission:create purchases');
 Route::put('purchases/{purchase}', [PurchaseController::class, 'update'])->middleware('permission:edit purchases');
 Route::patch('purchases/{purchase}/status', [PurchaseController::class, 'updateStatus'])->middleware('permission:edit purchases');
+// Le stock n'entre qu'à la réception : réceptionner un achat attendu.
+Route::post('purchases/{purchase}/receive', [PurchaseController::class, 'receive'])->middleware('permission:edit purchases');
 Route::delete('purchases/{purchase}', [PurchaseController::class, 'destroy'])->middleware('permission:delete purchases');
 
 // Purchase Payments

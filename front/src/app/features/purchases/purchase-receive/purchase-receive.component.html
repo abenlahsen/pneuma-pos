@@ -1,0 +1,62 @@
+<div class="rc-overlay" (click)="cancel.emit()">
+  <div class="rc-box" role="dialog" [attr.aria-label]="'Réceptionner l\'achat ' + purchaseId()" (click)="$event.stopPropagation()">
+    <header class="rc-head">
+      <span class="rc-kicker">Réception</span>
+      <h2 class="rc-title">
+        Réceptionner l'achat {{ purchaseId() }}@if (purchase()?.supplier?.name; as name) { · {{ name }}} ?
+      </h2>
+    </header>
+
+    <div class="rc-body">
+      @if (loading()) {
+        <p class="rc-detail">Chargement de l'achat…</p>
+      } @else if (purchase()) {
+        <!-- La conséquence, chiffrée, avant tout le reste. -->
+        <p class="rc-consequence">{{ consequence() }}</p>
+
+        <div class="rc-lines">
+          <div class="rc-line rc-line--head">
+            <span>Article</span>
+            <span>Dépôt de réception</span>
+            <span class="rc-num">Qté</span>
+          </div>
+          @for (line of lines(); track line.id) {
+            <div class="rc-line">
+              <span class="rc-article">
+                <span class="rc-name">{{ line.name }}</span>
+                @if (line.dimension) { <span class="rc-sub">{{ line.dimension }}</span> }
+              </span>
+              <span class="rc-depot">
+                {{ line.depot }}
+                @if (!purchase()!.stock_applied) {
+                  <span class="rc-sub">{{ line.before }} → {{ line.before + line.quantity }}</span>
+                }
+              </span>
+              <span class="rc-num rc-qty">+{{ line.quantity }}</span>
+            </div>
+          }
+        </div>
+
+        <label class="rc-date">
+          <span>Date de réception</span>
+          <input type="date" [max]="maxDate" [value]="date()" (input)="date.set($any($event.target).value)" />
+          @if (dateInvalid()) {
+            <em>La date de réception ne peut pas être dans le futur.</em>
+          }
+        </label>
+      }
+
+      @if (error()) {
+        <p class="rc-error">{{ error() }}</p>
+      }
+    </div>
+
+    <footer class="rc-foot">
+      <button type="button" class="rc-btn" (click)="cancel.emit()" [disabled]="submitting()">Annuler</button>
+      <button type="button" class="rc-btn rc-btn--solid" (click)="confirm()"
+              [disabled]="loading() || !purchase() || submitting() || dateInvalid()">
+        {{ submitting() ? 'Réception…' : 'Réceptionner' }}
+      </button>
+    </footer>
+  </div>
+</div>

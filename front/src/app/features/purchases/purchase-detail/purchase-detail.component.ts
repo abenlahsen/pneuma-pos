@@ -34,6 +34,9 @@ export class PurchaseDetailComponent implements OnInit, OnChanges {
   @Input({ required: true }) purchase!: Purchase;
   @Input() canEdit = false;
   @Input() canReturn = false;
+  /** Achat attendu et droit de modifier : « Réceptionner » dans la barre. */
+  @Input() canReceive = false;
+  @Output() receive = new EventEmitter<void>();
   /** Précédent / Suivant navigation, driven by the parent list page. */
   @Input() hasPrev = false;
   @Input() hasNext = false;

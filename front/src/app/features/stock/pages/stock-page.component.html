@@ -169,7 +169,7 @@
             </span>
             <span class="split-note" [class.split-note--low]="isLowStock(group)"><ng-container *ngIf="group.sold_30d > 0">{{ group.sold_30d }} vendus / 30 j<ng-container *ngIf="isLowStock(group)"> &middot; {{ group.sold_30d - group.quantity }} manquants</ng-container></ng-container><ng-container *ngIf="group.sold_30d === 0 && isDormant(group)">dormant &middot; rien vendu depuis 6 mois</ng-container><ng-container *ngIf="group.sold_30d === 0 && !isDormant(group)">aucune vente sur 30 j</ng-container></span>
           </span>
-          <span class="num ref-qty">{{ group.quantity | number:'1.0-0' }}</span>
+          <span class="num ref-qty">{{ group.quantity | number:'1.0-0' }}<span class="qty-expected" *ngIf="group.expected_quantity" title="Sur des achats pas encore réceptionnés : pas encore disponible">+{{ group.expected_quantity | number:'1.0-0' }} attendus</span></span>
           <span class="num ref-price">{{ group.unit_price !== null ? (group.unit_price | number:'1.2-2') : '&mdash;' }}</span>
           <span class="num ref-value">{{ group.value | number:'1.2-2' }}</span>
           <span class="num ref-actions">
@@ -183,7 +183,7 @@
           <span></span>
           <span class="lot-object">Lot {{ lot.id }}<ng-container *ngIf="lot.dot"> &middot; DOT {{ lot.dot }}</ng-container><ng-container *ngIf="lot.made_in"> &middot; {{ lot.made_in }}</ng-container><span class="lot-tag" *ngIf="lot.quantity <= 0">&Eacute;PUIS&Eacute;</span></span>
           <span class="lot-place">{{ lot.depot || '&mdash;' }}<ng-container *ngIf="lot.zone"> &middot; zone {{ lot.zone }}</ng-container></span>
-          <span class="num">{{ lot.quantity | number:'1.0-0' }}</span>
+          <span class="num">{{ lot.quantity | number:'1.0-0' }}<span class="qty-expected" *ngIf="lot.expected_quantity">+{{ lot.expected_quantity | number:'1.0-0' }} attendus</span></span>
           <span class="num">{{ lot.purchase_price | number:'1.2-2' }}</span>
           <span class="num">{{ lot.quantity > 0 ? (lot.value | number:'1.2-2') : '&mdash;' }}</span>
           <span class="num lot-actions">

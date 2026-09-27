@@ -242,7 +242,7 @@
             <span class="list-grid-name">
               <a [routerLink]="['/achats', row.id]">Achat {{ row.id }}</a>
               <span class="list-grid-tag" *ngIf="row.with_invoice">FACTURÉ</span>
-              <span class="list-grid-tag">{{ receptionLabel(row.status) }}</span>
+              <span class="list-grid-tag" [class.pur-tag--expected]="row.status === 'EN COURS'">{{ receptionLabel(row.status) }}</span>
             </span>
             <span class="list-grid-sub pur-sub"><ng-container *ngIf="row.bl_number">{{ row.bl_number }} · </ng-container><ng-container *ngIf="row.invoice_number">{{ row.invoice_number }} · </ng-container>{{ row.quantity }} article(s)<ng-container *ngFor="let m of row.payment_methods"> · {{ m }}</ng-container><button type="button" class="pur-returns-toggle" *ngIf="row.returns.length" (click)="toggleReturns(row.id)">{{ row.returns.length }} retour(s)</button></span>
             <!-- Refonte 2b, 8b : ce que les colonnes tombées portaient. -->
@@ -261,10 +261,12 @@
           </span>
 
           <span class="actions-cell list-cell--actions">
-            <button type="button" class="pur-settle" *ngIf="row.remaining > 0.004 && authService.hasPermission('manage purchase-payments')" (click)="openRowPayments(row)">Régler</button>
+            <!-- Maquette 8a : un achat attendu se réceptionne avant de se régler. -->
+            <button type="button" class="pur-settle" *ngIf="canReceiveRow(row)" (click)="receivingId.set(row.id)">Réceptionner</button>
+            <button type="button" class="pur-settle" *ngIf="!canReceiveRow(row) && row.remaining > 0.004 && authService.hasPermission('manage purchase-payments')" (click)="openRowPayments(row)">Régler</button>
             <!-- Refonte 2b, §14c état 4 : il reste à payer mais le rôle ne le
                  permet pas — un cadenas le dit, au lieu d'une case vide. -->
-            <app-row-lock *ngIf="row.remaining > 0.004 && !authService.hasPermission('manage purchase-payments')"
+            <app-row-lock *ngIf="!canReceiveRow(row) && row.remaining > 0.004 && !authService.hasPermission('manage purchase-payments')"
               reason="Votre rôle ne permet pas d'enregistrer un règlement fournisseur. Demandez à un administrateur." />
             <button type="button" class="btn-icon" title="Ouvrir" (click)="openRowDetail(row)"><app-icon name="view" [size]="15" /></button>
           </span>
@@ -308,6 +310,11 @@
   (closed)="closeReturn()"
   (saved)="onReturnSaved()">
 </app-purchase-return>
+
+<!-- Le stock n'entre qu'à la réception : la confirmation liste quantités et dépôts. -->
+@if (receivingId(); as id) {
+  <app-purchase-receive [purchaseId]="id" (received)="onReceived()" (cancel)="receivingId.set(null)" />
+}
 
 <!-- Refonte 2b, gabarit 15c : la confirmation remplace le confirm() natif. -->
 <app-confirm-delete

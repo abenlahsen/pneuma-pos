@@ -9,6 +9,8 @@ export interface Stock {
   depot: string | null;
   zone: string | null;
   quantity: number;
+  /** Attendu sur des achats pas encore réceptionnés — jamais compté dans `quantity`. */
+  expected_quantity?: number;
   purchase_price: number | null;
   user_id: number | null;
   created_at?: string;

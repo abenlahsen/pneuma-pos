@@ -259,7 +259,7 @@
       } @else if (missingHint()) {
         {{ missingHint() }}
       } @else {
-        Le stock entre à l'enregistrement, que la réception soit attendue ou reçue.
+        {{ reception() === 'expected' ? 'Le stock entrera à la réception.' : 'Le stock entre à l\'enregistrement.' }}
       }
     </span>
     <button type="button" class="pf-btn" (click)="cancel.emit()">Annuler</button>

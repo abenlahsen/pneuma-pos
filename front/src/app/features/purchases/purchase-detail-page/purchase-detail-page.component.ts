@@ -6,6 +6,7 @@ import { finalize } from 'rxjs/operators';
 import { PurchaseDetailComponent } from '../purchase-detail/purchase-detail.component';
 import { PurchasePaymentsComponent } from '../purchase-payments/purchase-payments.component';
 import { PurchaseReturnComponent } from '../purchase-return/purchase-return.component';
+import { PurchaseReceiveComponent } from '../purchase-receive/purchase-receive.component';
 import { PurchaseService } from '../data-access/purchase.service';
 import { Purchase } from '../../../core/models/purchase.model';
 import { AuthService } from '../../../core/services/auth.service';
@@ -21,7 +22,7 @@ import { ListErrorComponent, describeLoadError } from '../../../shared/list-stat
 @Component({
   selector: 'app-purchase-detail-page',
   standalone: true,
-  imports: [CommonModule, PurchaseDetailComponent, PurchasePaymentsComponent, PurchaseReturnComponent, ListErrorComponent],
+  imports: [CommonModule, PurchaseDetailComponent, PurchasePaymentsComponent, PurchaseReturnComponent, PurchaseReceiveComponent, ListErrorComponent],
   templateUrl: './purchase-detail-page.component.html',
   styleUrl: './purchase-detail-page.component.scss',
 })
@@ -85,6 +86,20 @@ export class PurchaseDetailPageComponent implements OnInit {
   canEdit(): boolean {
     const purchase = this.purchase();
     return !!purchase && this.authService.hasPermission('edit purchases') && purchase.status !== 'ANNULE';
+  }
+
+  /** Un achat attendu se réceptionne, avec le droit de modifier les achats. */
+  canReceive(): boolean {
+    const purchase = this.purchase();
+    return !!purchase && this.authService.hasPermission('edit purchases') && purchase.status === 'EN COURS';
+  }
+
+  /** La confirmation de réception ouverte par-dessus la fiche. */
+  readonly receiving = signal(false);
+
+  closeReceive(reload: boolean): void {
+    this.receiving.set(false);
+    if (reload) this.reload();
   }
 
   canReturn(): boolean {

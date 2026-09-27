@@ -1,8 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { of } from 'rxjs';
-import { catchError, switchMap } from 'rxjs/operators';
 import { PurchaseService } from '../data-access/purchase.service';
 import { Purchase } from '../models/purchase.model';
 import { PurchaseFormComponent, PurchaseSaveRequest } from '../purchase-form/purchase-form.component';
@@ -94,9 +92,9 @@ export class PurchaseFormPageComponent implements OnInit {
   }
 
   /**
-   * Enregistre. L'API crée toujours un achat « En cours » et ignore le statut
-   * envoyé : une réception « Reçue » passe donc par un second appel, le
-   * changement de statut, une fois l'achat créé.
+   * Enregistre. Le stock n'entre qu'à la réception : l'API crée l'achat
+   * « Reçu » (stock entré, daté du jour) ou « En cours » (attendu, le stock
+   * attend la réception), selon le statut envoyé.
    */
   onSave(request: PurchaseSaveRequest): void {
     if (this.saving()) return;
@@ -105,15 +103,7 @@ export class PurchaseFormPageComponent implements OnInit {
 
     const save$ = this.purchaseId
       ? this.service.updatePurchase(this.purchaseId, request.payload)
-      : this.service.createPurchase(request.payload).pipe(
-          switchMap(created => request.reception === 'received'
-            ? this.service.patchStatus(created.id, 'RECU').pipe(
-                switchMap(() => of(created)),
-                // L'achat existe : un échec du statut ne doit pas le faire oublier.
-                catchError(() => of(created)),
-              )
-            : of(created)),
-        );
+      : this.service.createPurchase(request.payload);
 
     save$.subscribe({
       next: (saved) => {
