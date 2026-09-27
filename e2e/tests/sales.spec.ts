@@ -218,21 +218,21 @@ test.describe.serial('Ventes - Créé par', () => {
     if (createdClientId) await request.delete(`/api/clients/${createdClientId}`, { headers });
   });
 
-  test('la vente créée garde son créateur (created_by)', async ({ request }) => {
+  test('la fiche de la vente créée affiche son créateur', async ({ page, request }) => {
     test.skip(!createdSaleId || !creatorName, 'Impossible de créer une vente de test (partenaire ou stock disponible manquant)');
-    const token = getStoredToken();
-    const headers = { Authorization: `Bearer ${token}`, Accept: 'application/json' };
 
-    // Refonte 2b : la colonne « Créé par » a quitté la liste, et la fiche
-    // n'affiche pas le créateur. Le défaut d'origine était côté serveur
-    // (created_by perdu à l'extraction de SaleService) : on le vérifie là
-    // où la donnée existe encore, dans la liste de l'API.
-    const res = await request.get(`/api/sales?search=${CLIENT_NAME}&per_page=20`, { headers });
+    // L'API d'abord : `creator` est la relation portée par created_by, vide si
+    // la colonne est perdue (le défaut d'origine, côté SaleService).
+    const token = getStoredToken();
+    const res = await request.get(`/api/sales/${createdSaleId}`, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } });
     expect(res.ok()).toBe(true);
-    const rows = (await res.json()).data as { id: number; creator?: { name: string } | null }[];
-    const sale = rows.find(r => r.id === createdSaleId);
-    expect(sale, 'la vente de test doit apparaître dans la liste').toBeTruthy();
-    // `creator` est la relation portée par created_by : vide si la colonne est perdue.
-    expect(sale!.creator?.name).toBe(creatorName);
+    expect((await res.json()).creator?.name).toBe(creatorName);
+
+    // Puis l'écran : la colonne « Créé par » a quitté la liste refaite ; le
+    // créateur se lit sur la fiche, dans le panneau Suivi.
+    await page.goto(`/sales/${createdSaleId}`, { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.sd-title')).toHaveText(`Vente ${createdSaleId}`, { timeout: 25_000 });
+    const creator = page.locator('.sd-kv', { hasText: 'Créée par' }).locator('.sd-creator');
+    await expect(creator).toHaveText(creatorName!);
   });
 });

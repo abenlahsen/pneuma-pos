@@ -217,6 +217,7 @@
             </strong>
           </span>
         }
+        <span class="sd-kv"><span>Créée par</span><strong class="sd-creator">{{ sale.creator?.name || '—' }}</strong></span>
         <span class="sd-kv"><span>Créée le</span><strong>{{ sale.created_at | date:'dd/MM/yyyy HH:mm' }}</strong></span>
         <span class="sd-kv"><span>Modifiée le</span><strong>{{ sale.updated_at | date:'dd/MM/yyyy HH:mm' }}</strong></span>
       </section>
