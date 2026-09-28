@@ -83,6 +83,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Business timezone
+    |--------------------------------------------------------------------------
+    |
+    | The shop's own day (App\Support\BusinessDate). Timestamps stay in UTC;
+    | a date the team enters as "today" — a purchase reception — is the day
+    | in Morocco.
+    |
+    */
+
+    'business_timezone' => env('BUSINESS_TIMEZONE', 'Africa/Casablanca'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |

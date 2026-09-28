@@ -1,6 +1,9 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { PurchaseService } from '../data-access/purchase.service';
+import { BusinessDateService } from '../../../core/services/business-date.service';
 import { Purchase, PurchaseItem } from '../models/purchase.model';
 
 /** Une ligne de la confirmation : ce qui entre, et où. */
@@ -44,7 +47,8 @@ export function receptionLines(purchase: Purchase): ReceptionLine[] {
   });
 }
 
-function today(): string {
+/** Le jour selon le navigateur — seulement si le serveur ne répond pas. */
+function browserToday(): string {
   const d = new Date();
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -56,7 +60,10 @@ function today(): string {
  * Même boîte que la confirmation 15c, mais le geste n'est pas destructeur :
  * « Réceptionner » est l'action solide. La conséquence est chiffrée avant le
  * bouton (« 6 pneus entrent en stock »), puis chaque ligne dit sa quantité et
- * son dépôt de réception. La date est celle du jour, modifiable, jamais future.
+ * son dépôt de réception. La date est celle du jour au Maroc, modifiable,
+ * jamais future — lue sur le serveur (GET /api/business-date) : le navigateur
+ * peut se tromper d'une heure sur le fuseau du Maroc et proposer demain entre
+ * minuit et 1 h, date que le serveur refuserait.
  */
 @Component({
   selector: 'app-purchase-receive',
@@ -68,6 +75,7 @@ function today(): string {
 })
 export class PurchaseReceiveComponent implements OnInit {
   private readonly service = inject(PurchaseService);
+  private readonly businessDate = inject(BusinessDateService);
 
   readonly purchaseId = input.required<number>();
   /** L'achat réceptionné, relu par l'API. */
@@ -78,8 +86,9 @@ export class PurchaseReceiveComponent implements OnInit {
   readonly loading = signal(true);
   readonly submitting = signal(false);
   readonly error = signal('');
-  readonly date = signal(today());
-  readonly maxDate = today();
+  /** Aujourd'hui au Maroc : la date proposée et la borne. */
+  readonly maxDate = signal(browserToday());
+  readonly date = signal(browserToday());
 
   readonly lines = computed(() => {
     const p = this.purchase();
@@ -99,12 +108,18 @@ export class PurchaseReceiveComponent implements OnInit {
     return `${n} ${noun}${plural} ${n > 1 ? 'entrent' : 'entre'} en stock.`;
   });
 
-  readonly dateInvalid = computed(() => !this.date() || this.date() > this.maxDate);
+  readonly dateInvalid = computed(() => !this.date() || this.date() > this.maxDate());
 
   ngOnInit(): void {
-    this.service.getPurchase(this.purchaseId()).subscribe({
-      next: (p) => {
-        this.purchase.set(p);
+    forkJoin({
+      purchase: this.service.getPurchase(this.purchaseId()),
+      // Sans réponse du serveur, le jour du navigateur ; le serveur tranchera.
+      today: this.businessDate.get().pipe(map(d => d.date), catchError(() => of(browserToday()))),
+    }).subscribe({
+      next: ({ purchase, today }) => {
+        this.maxDate.set(today);
+        this.date.set(today);
+        this.purchase.set(purchase);
         this.loading.set(false);
       },
       error: () => {

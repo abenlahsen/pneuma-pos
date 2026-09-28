@@ -126,11 +126,12 @@ test.describe.serial('Réception d\'un achat attendu', () => {
     await expect(line.locator('.rc-depot')).toContainText(`${lotBefore} → ${lotBefore + QUANTITY}`);
 
     // La date du jour par défaut ; une date passée est acceptée.
-    const today = new Date();
-    const pad = (n: number) => String(n).padStart(2, '0');
-    await expect(dialog.locator('input[type="date"]')).toHaveValue(`${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`);
-    const yesterday = new Date(Date.now() - 86_400_000);
-    const receivedAt = `${yesterday.getFullYear()}-${pad(yesterday.getMonth() + 1)}-${pad(yesterday.getDate())}`;
+    // Le jour au Maroc selon le serveur : ni Node ni le navigateur ne font foi,
+    // leurs règles de fuseau peuvent se tromper d'une heure sur le Maroc.
+    const today = (await (await request.get('/api/business-date', { headers })).json()).date as string;
+    await expect(dialog.locator('input[type="date"]')).toHaveValue(today);
+    await expect(dialog.locator('input[type="date"]')).toHaveAttribute('max', today);
+    const receivedAt = new Date(Date.parse(`${today}T12:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
     await dialog.locator('input[type="date"]').fill(receivedAt);
 
     const [response] = await Promise.all([

@@ -9,7 +9,9 @@ use App\Models\Stock;
 use App\Models\StockMovement;
 use App\Models\Supplier;
 use App\Models\User;
+use App\Support\BusinessDate;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\Sanctum;
@@ -169,7 +171,7 @@ class PurchaseReceptionTest extends TestCase
 
         $purchase = Purchase::find($response->json('id'));
         $this->assertTrue($purchase->stock_applied);
-        $this->assertSame(now()->toDateString(), $purchase->received_at->toDateString());
+        $this->assertSame(BusinessDate::today(), $purchase->received_at->toDateString());
     }
 
     // ── Les bords ──────────────────────────────────────────────────────────
@@ -180,14 +182,14 @@ class PurchaseReceptionTest extends TestCase
 
         $this->postJson("/api/purchases/{$id}/receive")->assertOk();
 
-        $this->assertSame(now()->toDateString(), Purchase::find($id)->received_at->toDateString());
+        $this->assertSame(BusinessDate::today(), Purchase::find($id)->received_at->toDateString());
     }
 
     public function test_reception_date_cannot_be_in_the_future(): void
     {
         $id = $this->postJson('/api/purchases', $this->payload('EN COURS'))->json('id');
 
-        $this->postJson("/api/purchases/{$id}/receive", ['received_at' => now()->addDay()->toDateString()])
+        $this->postJson("/api/purchases/{$id}/receive", ['received_at' => Carbon::parse(BusinessDate::today())->addDay()->toDateString()])
             ->assertStatus(422)
             ->assertJsonValidationErrors('received_at');
 
@@ -308,6 +310,55 @@ class PurchaseReceptionTest extends TestCase
 
         $lots = collect($this->getJson("/api/stocks?product_id={$this->product->id}&per_page=50")->json('data'))->keyBy('id');
         $this->assertSame(0, $lots[$this->stock->id]['expected_quantity']);
+    }
+
+    // ── L'heure du Maroc ───────────────────────────────────────────────────
+
+    /**
+     * 15 janvier 2026, 23 h 30 UTC : le Maroc est à UTC+1, il est déjà 0 h 30
+     * le 16. Une réception datée du 16 est d'aujourd'hui, pas du futur ; sans
+     * date, elle prend le 16.
+     */
+    public function test_reception_today_is_the_day_in_morocco_not_in_utc(): void
+    {
+        $this->travelTo(Carbon::parse('2026-01-15 23:30:00', 'UTC'));
+        $this->assertSame('2026-01-16', BusinessDate::today());
+
+        $dated = $this->postJson('/api/purchases', $this->payload('EN COURS'))->json('id');
+        $this->postJson("/api/purchases/{$dated}/receive", ['received_at' => '2026-01-16'])->assertOk();
+        $this->assertSame('2026-01-16', Purchase::find($dated)->received_at->toDateString());
+
+        $undated = $this->postJson('/api/purchases', $this->payload('EN COURS'))->json('id');
+        $this->postJson("/api/purchases/{$undated}/receive")->assertOk();
+        $this->assertSame('2026-01-16', Purchase::find($undated)->received_at->toDateString());
+    }
+
+    public function test_the_day_after_in_morocco_is_still_the_future(): void
+    {
+        $this->travelTo(Carbon::parse('2026-01-15 23:30:00', 'UTC'));
+        $id = $this->postJson('/api/purchases', $this->payload('EN COURS'))->json('id');
+
+        $this->postJson("/api/purchases/{$id}/receive", ['received_at' => '2026-01-17'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('received_at');
+        $this->assertSame(10, $this->stock->fresh()->quantity);
+    }
+
+    public function test_a_purchase_created_received_takes_the_day_in_morocco(): void
+    {
+        $this->travelTo(Carbon::parse('2026-01-15 23:30:00', 'UTC'));
+        $id = $this->postJson('/api/purchases', $this->payload('RECU'))->assertCreated()->json('id');
+
+        $this->assertSame('2026-01-16', Purchase::find($id)->received_at->toDateString());
+    }
+
+    public function test_business_date_endpoint_gives_the_day_in_morocco(): void
+    {
+        $this->travelTo(Carbon::parse('2026-01-15 23:30:00', 'UTC'));
+
+        $this->getJson('/api/business-date')
+            ->assertOk()
+            ->assertExactJson(['date' => '2026-01-16', 'timezone' => 'Africa/Casablanca']);
     }
 
     // ── Aides ──────────────────────────────────────────────────────────────

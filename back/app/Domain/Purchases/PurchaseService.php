@@ -15,6 +15,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Services\ActivityLogService;
 use App\Services\StockMovementService;
+use App\Support\BusinessDate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -107,7 +108,7 @@ class PurchaseService
                 [
                     'status' => $status,
                     'stock_applied' => $received,
-                    'received_at' => $received ? ($validated['received_at'] ?? now()->toDateString()) : null,
+                    'received_at' => $received ? ($validated['received_at'] ?? BusinessDate::today()) : null,
                 ],
                 ['created_by' => $userId]
             ));
@@ -258,7 +259,7 @@ class PurchaseService
             $purchase->update([
                 'status' => PurchaseStatus::RECU->value,
                 'stock_applied' => true,
-                'received_at' => $receivedAt ?? now()->toDateString(),
+                'received_at' => $receivedAt ?? BusinessDate::today(),
                 'updated_by' => $userId,
             ]);
         });
@@ -304,7 +305,7 @@ class PurchaseService
         $fields = ['stock_applied' => $applied];
 
         if ($status === PurchaseStatus::RECU->value && ! $purchase->received_at) {
-            $fields['received_at'] = now()->toDateString();
+            $fields['received_at'] = BusinessDate::today();
         } elseif ($status === PurchaseStatus::EN_COURS->value) {
             $fields['received_at'] = null;
         }

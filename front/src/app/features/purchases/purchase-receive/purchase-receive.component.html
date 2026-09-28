@@ -39,7 +39,7 @@
 
         <label class="rc-date">
           <span>Date de réception</span>
-          <input type="date" [max]="maxDate" [value]="date()" (input)="date.set($any($event.target).value)" />
+          <input type="date" [max]="maxDate()" [value]="date()" (input)="date.set($any($event.target).value)" />
           @if (dateInvalid()) {
             <em>La date de réception ne peut pas être dans le futur.</em>
           }

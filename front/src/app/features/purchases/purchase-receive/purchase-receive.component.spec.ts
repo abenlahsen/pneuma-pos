@@ -1,9 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
-import { of, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 
 import { PurchaseReceiveComponent, receptionLines } from './purchase-receive.component';
 import { PurchaseService } from '../data-access/purchase.service';
+import { BusinessDate, BusinessDateService } from '../../../core/services/business-date.service';
 import { Purchase } from '../models/purchase.model';
 
 /**
@@ -48,12 +49,19 @@ describe('receptionLines', () => {
 describe('PurchaseReceiveComponent', () => {
   let comp: PurchaseReceiveComponent;
   let service: { getPurchase: ReturnType<typeof vi.fn>; receive: ReturnType<typeof vi.fn> };
+  let businessDate: { get: ReturnType<typeof vi.fn> };
 
-  function create(p: Purchase = purchase()) {
+  /** Le serveur dit le 27 : c'est la date du Maroc, quoi qu'en pense le navigateur. */
+  function create(p: Purchase = purchase(), serverDate: Observable<BusinessDate> = of({ date: '2026-09-27', timezone: 'Africa/Casablanca' })) {
     service = { getPurchase: vi.fn(() => of(p)), receive: vi.fn(() => of({ ...p, status: 'RECU' })) };
+    businessDate = { get: vi.fn(() => serverDate) };
     TestBed.configureTestingModule({
       imports: [PurchaseReceiveComponent],
-      providers: [provideZonelessChangeDetection(), { provide: PurchaseService, useValue: service }],
+      providers: [
+        provideZonelessChangeDetection(),
+        { provide: PurchaseService, useValue: service },
+        { provide: BusinessDateService, useValue: businessDate },
+      ],
     });
     const fixture = TestBed.createComponent(PurchaseReceiveComponent);
     fixture.componentRef.setInput('purchaseId', 1031);
@@ -71,9 +79,25 @@ describe('PurchaseReceiveComponent', () => {
     expect(comp.consequence()).toBe('6 pneus déjà comptés en stock : la réception ne change que le statut.');
   });
 
+  it('propose le jour au Maroc lu sur le serveur, pas celui du navigateur', () => {
+    create();
+    expect(comp.date()).toBe('2026-09-27');
+    expect(comp.maxDate()).toBe('2026-09-27');
+    // Le lendemain au Maroc reste le futur, même si le navigateur y est déjà.
+    comp.date.set('2026-09-28');
+    expect(comp.dateInvalid()).toBe(true);
+  });
+
+  it('retombe sur le jour du navigateur si le serveur ne répond pas', () => {
+    create(purchase(), throwError(() => new Error('réseau')));
+    expect(comp.maxDate()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(comp.date()).toBe(comp.maxDate());
+    expect(comp.purchase()).not.toBeNull();
+  });
+
   it('part de la date du jour, modifiable, jamais future', () => {
     create();
-    expect(comp.date()).toBe(comp.maxDate);
+    expect(comp.date()).toBe(comp.maxDate());
     comp.date.set('2026-09-20');
     expect(comp.dateInvalid()).toBe(false);
     comp.date.set('2999-01-01');

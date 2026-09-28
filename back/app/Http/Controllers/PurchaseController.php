@@ -7,6 +7,7 @@ use App\Domain\Purchases\PurchaseService;
 use App\Enums\PurchasePaymentStatus;
 use App\Enums\PurchaseStatus;
 use App\Models\Purchase;
+use App\Support\BusinessDate;
 use App\Support\Helpers\ProductLabel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -58,7 +59,7 @@ class PurchaseController extends Controller
             'payment_status' => ['required', Rule::in(PurchasePaymentStatus::values())],
             // Un achat créé « Reçu » peut porter sa date de réception ; sans
             // elle, c'est le jour de l'enregistrement.
-            'received_at' => 'nullable|date',
+            'received_at' => ['nullable', 'date', 'before_or_equal:'.BusinessDate::today()],
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.stock_id' => 'required|exists:stocks,id',
@@ -83,7 +84,9 @@ class PurchaseController extends Controller
     public function receive(Request $request, Purchase $purchase): JsonResponse
     {
         $validated = $request->validate([
-            'received_at' => 'nullable|date|before_or_equal:today',
+            // « Aujourd'hui » au Maroc, pas en UTC : entre minuit et 1 h quand
+            // le Maroc est à UTC+1, UTC est encore la veille.
+            'received_at' => ['nullable', 'date', 'before_or_equal:'.BusinessDate::today()],
         ]);
 
         $received = $this->purchaseService->receive($purchase, $validated['received_at'] ?? null, $request->user()->id);

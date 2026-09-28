@@ -1,10 +1,14 @@
 <?php
 
+use App\Http\Controllers\BusinessDateController;
 use Illuminate\Support\Facades\Route;
 
 require __DIR__.'/api/auth.php';
 
 Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
+    // La date du jour au Maroc, selon le serveur (App\Support\BusinessDate).
+    Route::get('business-date', BusinessDateController::class);
+
     require __DIR__.'/api/accounts.php';
     require __DIR__.'/api/transaction_categories.php';
     require __DIR__.'/api/catalog.php';
