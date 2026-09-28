@@ -23,6 +23,7 @@ class UpdateSupplierRequest extends FormRequest
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
             'payment_terms_days' => 'nullable|integer|min:0|max:365',
+            'delivery_lead_days' => 'sometimes|integer|min:0|max:365',
         ];
     }
 }

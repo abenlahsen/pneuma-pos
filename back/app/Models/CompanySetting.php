@@ -34,6 +34,8 @@ class CompanySetting extends Model
         'navbar_variant',
         'content_width',
         'prime_threshold',
+        // Portail (étape 13.2) : à partir de ce stock, « Disponible ».
+        'portal_available_threshold',
         'closed_weekdays',
         'holidays',
         'vat_rate',

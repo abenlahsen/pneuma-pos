@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Portal\PortalAuthController;
+use App\Http\Controllers\Portal\PortalCatalogController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -24,5 +25,13 @@ Route::prefix('portal')->group(function () {
     Route::middleware(['auth:portal', 'portal.active', 'throttle:portal'])->group(function () {
         Route::get('me', [PortalAuthController::class, 'me']);
         Route::post('logout', [PortalAuthController::class, 'logout']);
+
+        // 13.2 : catalogue, compte, relevé, documents — du client du jeton.
+        Route::get('catalog', [PortalCatalogController::class, 'catalog']);
+        Route::get('catalog/filters', [PortalCatalogController::class, 'filters']);
+        Route::get('account', [PortalCatalogController::class, 'account']);
+        Route::get('statement', [PortalCatalogController::class, 'statement']);
+        Route::get('documents', [PortalCatalogController::class, 'documents']);
+        Route::get('documents/{document}', [PortalCatalogController::class, 'document']);
     });
 });

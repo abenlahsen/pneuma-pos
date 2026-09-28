@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources\Suppliers;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class SupplierResource extends JsonResource
@@ -20,6 +19,7 @@ class SupplierResource extends JsonResource
             'email' => $this->resource->email,
             'address' => $this->resource->address,
             'payment_terms_days' => $this->resource->payment_terms_days,
+            'delivery_lead_days' => (int) ($this->resource->delivery_lead_days ?? 7),
             'user_id' => $this->resource->user_id,
             'created_at' => $this->resource->created_at,
             'updated_at' => $this->resource->updated_at,

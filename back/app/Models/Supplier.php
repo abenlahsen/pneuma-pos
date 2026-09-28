@@ -16,11 +16,14 @@ class Supplier extends Model
         'email',
         'address',
         'payment_terms_days',
-        'user_id'
+        // Délai de livraison (étape 13.2) : « Sur commande · N j » sur le portail.
+        'delivery_lead_days',
+        'user_id',
     ];
 
     protected $casts = [
         'payment_terms_days' => 'integer',
+        'delivery_lead_days' => 'integer',
     ];
 
     public function user()

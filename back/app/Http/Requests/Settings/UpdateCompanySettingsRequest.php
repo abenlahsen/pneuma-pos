@@ -69,6 +69,7 @@ class UpdateCompanySettingsRequest extends FormRequest
             'navbar_variant' => ['nullable', 'in:default,compact,flat'],
             'content_width' => ['nullable', 'in:full,boxed,compact'],
             'prime_threshold' => ['nullable', 'integer', 'min:0'],
+            'portal_available_threshold' => ['sometimes', 'integer', 'min:1', 'max:999'],
 
             // Refonte 2b, 9b : quand la boutique est fermée. 0 = dimanche,
             // 6 = samedi, la numérotation de Date#getDay côté navigateur.
