@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
-use App\Models\ServiceOrder;
 
 class Client extends Model
 {
@@ -26,6 +25,7 @@ class Client extends Model
         'notes',
         'is_active',
         'credit_limit',
+        'discount_rate',
         'opening_balance',
         'payment_terms_days',
         'default_payment_method',
@@ -36,6 +36,8 @@ class Client extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'credit_limit' => 'float',
+        // Remise en % sur le prix catalogue (étape 13). Voir ClientPriceResolver.
+        'discount_rate' => 'float',
         'opening_balance' => 'float',
         'payment_terms_days' => 'integer',
         'created_at' => 'datetime',

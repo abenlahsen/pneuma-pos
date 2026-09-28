@@ -22,6 +22,7 @@ class ProductResource extends JsonResource
             'brand_id' => $this->brand_id,
             'description' => $this->description,
             'unit' => $this->unit,
+            'catalog_price' => $this->catalog_price !== null ? round((float) $this->catalog_price, 2) : null,
             'is_active' => (bool) $this->is_active,
             'brand' => $this->whenLoaded('brand'),
             'tyre' => $this->whenLoaded('tyre'),

@@ -13,9 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class ProductService
 {
-    public function __construct(private StockMovementService $movements)
-    {
-    }
+    public function __construct(private StockMovementService $movements) {}
 
     /**
      * @param  array<string, mixed>  $filters
@@ -44,6 +42,7 @@ class ProductService
                 'brand_id' => $validated['brand_id'] ?? null,
                 'description' => $validated['description'] ?? null,
                 'unit' => $validated['unit'] ?? 'piece',
+                'catalog_price' => $validated['catalog_price'] ?? null,
                 'is_active' => $validated['is_active'] ?? true,
             ]);
 
@@ -80,6 +79,12 @@ class ProductService
                 'unit' => $validated['unit'] ?? 'piece',
                 'is_active' => $validated['is_active'] ?? true,
             ]);
+
+            // Le prix catalogue n'est écrit que s'il est envoyé : un formulaire
+            // qui ne le connaît pas ne doit pas l'effacer.
+            if (array_key_exists('catalog_price', $validated)) {
+                $product->update(['catalog_price' => $validated['catalog_price']]);
+            }
 
             $this->upsertDetails($product, $validated);
         });

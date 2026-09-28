@@ -316,6 +316,7 @@ class StockService
                 'brand' => $product?->brand?->name,
                 'profile' => $product?->profile,
                 'reference' => $product?->reference,
+                'catalog_price' => $product?->catalog_price !== null ? round((float) $product->catalog_price, 2) : null,
                 'load_index' => $tyre?->tire_load_index,
                 'speed_index' => $tyre?->tire_speed_index,
                 'season' => $tyre?->tire_season,
@@ -627,8 +628,13 @@ class StockService
     {
         $query = Stock::with('product.brand', 'product.tyre');
 
-        $query->whereHas('product', function ($pq) {
+        $query->whereHas('product', function ($pq) use ($filters) {
             $pq->whereIn('type', ['tyre', 'part']);
+            // Étape 13 : les références sans prix catalogue n'apparaissent pas
+            // sur le portail ; ce filtre les retrouve pour les compléter.
+            if (! empty($filters['without_catalog_price'])) {
+                $pq->whereNull('catalog_price');
+            }
         });
 
         if (! empty($filters['search'])) {

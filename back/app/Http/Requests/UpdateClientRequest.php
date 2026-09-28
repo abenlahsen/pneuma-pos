@@ -32,6 +32,8 @@ class UpdateClientRequest extends FormRequest
             'notes' => ['nullable', 'string'],
             'is_active' => ['sometimes', 'boolean'],
             'credit_limit' => ['nullable', 'numeric', 'min:0'],
+            // Remise en % sur le prix catalogue (étape 13).
+            'discount_rate' => ['sometimes', 'numeric', 'min:0', 'max:100'],
             'opening_balance' => ['nullable', 'numeric'],
             'payment_terms_days' => ['nullable', 'integer', 'min:0'],
             'default_payment_method' => ['nullable', 'string', 'max:255'],

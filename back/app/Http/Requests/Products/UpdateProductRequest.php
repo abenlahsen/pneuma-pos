@@ -36,6 +36,8 @@ class UpdateProductRequest extends FormRequest
             'brand_id' => 'nullable|exists:brands,id',
             'description' => 'nullable|string',
             'unit' => 'nullable|string|max:50',
+            // Prix de vente HT de référence (étape 13) ; absent = inchangé.
+            'catalog_price' => 'nullable|numeric|min:0|max:9999999',
             'is_active' => 'nullable|boolean',
             'tire_width' => 'nullable|numeric|min:0',
             'tire_height' => 'nullable|numeric|min:0',

@@ -3,9 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Product extends Model
 {
@@ -16,11 +13,14 @@ class Product extends Model
         'brand_id',
         'description',
         'unit',
+        'catalog_price',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        // Prix de vente HT de référence ; vide = hors portail. Voir ClientPriceResolver.
+        'catalog_price' => 'float',
     ];
 
     public function brand()
