@@ -143,6 +143,12 @@ class RolesAndPermissionsSeeder extends Seeder
             // ne se montrent plus à quiconque peut voir la vente. Administrator
             // et Manager ; les commerciaux vendent, ils n'arbitrent pas la marge.
             'view margins',
+
+            // Portail client (étape 13) : ouvrir et suspendre les accès
+            // (Administrator, Manager) ; traiter les commandes portail
+            // (Administrator, Manager, Commercial).
+            'manage portal access',
+            'process portal orders',
         ];
 
         foreach ($permissions as $permission) {
@@ -195,6 +201,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit sales',
             'delete sales',
             'manage sale-payments',
+
+            // Portail client (étape 13) : confirmer les commandes de ses clients.
+            'process portal orders',
 
             // Marges : un vendeur qui négocie une remise doit voir son plancher.
             // C'est aussi ce qui lui laisse la colonne Marge de la liste Ventes

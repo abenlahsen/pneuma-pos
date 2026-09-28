@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientPaymentController;
+use App\Http\Controllers\ClientPortalAccessController;
 use App\Http\Controllers\VehicleController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,4 +28,15 @@ Route::middleware('auth:sanctum')->prefix('clients')->group(function () {
     Route::get('/{client}/unpaid-sales', [ClientPaymentController::class, 'unpaidSales'])->middleware('permission:view sales');
     Route::post('/{client}/payments', [ClientPaymentController::class, 'store'])->middleware('permission:manage sale-payments');
     Route::delete('/{client}/payments/{payment}', [ClientPaymentController::class, 'destroy'])->middleware('permission:manage sale-payments');
+
+    // Étape 13.1 — les accès portail du client. scopeBindings : un compte
+    // d'un autre client répond 404.
+    Route::middleware('permission:manage portal access')->scopeBindings()->group(function () {
+        Route::get('/{client}/portal-accounts', [ClientPortalAccessController::class, 'index']);
+        Route::post('/{client}/portal-accounts', [ClientPortalAccessController::class, 'store']);
+        Route::post('/{client}/portal-accounts/{portalAccount}/resend', [ClientPortalAccessController::class, 'resend']);
+        Route::post('/{client}/portal-accounts/{portalAccount}/activation-link', [ClientPortalAccessController::class, 'activationLink']);
+        Route::post('/{client}/portal-accounts/{portalAccount}/suspend', [ClientPortalAccessController::class, 'suspend']);
+        Route::post('/{client}/portal-accounts/{portalAccount}/reactivate', [ClientPortalAccessController::class, 'reactivate']);
+    });
 });

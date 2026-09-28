@@ -5,6 +5,9 @@ use Illuminate\Support\Facades\Route;
 
 require __DIR__.'/api/auth.php';
 
+// Le portail client : hors du groupe de l'agence, avec sa propre garde.
+require __DIR__.'/api/portal.php';
+
 Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     // La date du jour au Maroc, selon le serveur (App\Support\BusinessDate).
     Route::get('business-date', BusinessDateController::class);

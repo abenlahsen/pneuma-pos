@@ -20,6 +20,15 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     /**
+     * Les rôles et permissions de l'équipe sont sur la garde `web`. Depuis que
+     * la garde `sanctum` déclare le fournisseur `users` (étape 13.1, pour
+     * qu'un jeton du portail n'ouvre pas /api/*), Spatie verrait deux gardes
+     * possibles et choisirait celle de la requête (`sanctum`), où aucune
+     * permission n'existe. On la fixe.
+     */
+    protected string $guard_name = 'web';
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

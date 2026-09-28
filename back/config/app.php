@@ -94,6 +94,9 @@ return [
 
     'business_timezone' => env('BUSINESS_TIMEZONE', 'Africa/Casablanca'),
 
+    // L'adresse du front, pour les liens envoyés aux clients du portail.
+    'portal_url' => env('PORTAL_URL', env('APP_URL', 'http://localhost')),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration

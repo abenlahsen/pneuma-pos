@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ClientPortalAccount;
 use App\Models\User;
 
 return [
@@ -42,6 +43,20 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // L'équipe : un jeton Sanctum dont le propriétaire est un User. Sans
+        // fournisseur, Sanctum accepterait n'importe quel modèle à jetons —
+        // un jeton du portail ouvrirait alors /api/*.
+        'sanctum' => [
+            'driver' => 'sanctum',
+            'provider' => 'users',
+        ],
+
+        // Le portail client (étape 13.1) : seuls les ClientPortalAccount.
+        'portal' => [
+            'driver' => 'sanctum',
+            'provider' => 'portal_accounts',
+        ],
     ],
 
     /*
@@ -65,6 +80,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        'portal_accounts' => [
+            'driver' => 'eloquent',
+            'model' => ClientPortalAccount::class,
         ],
 
         // 'users' => [

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Portal\PortalAccessService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -62,6 +63,29 @@ class Client extends Model
                 return ['city_id' => $city?->id];
             }
         );
+    }
+
+    /**
+     * Étape 13.1 — un client archivé (is_active passé à faux) ou supprimé
+     * suspend tous ses accès portail et révoque leurs jetons. Le réactiver
+     * ne rouvre pas ses accès : l'agence les réactive un par un.
+     */
+    protected static function booted(): void
+    {
+        static::updated(function (Client $client) {
+            if ($client->wasChanged('is_active') && ! $client->is_active) {
+                app(PortalAccessService::class)->suspendAllFor($client);
+            }
+        });
+
+        static::deleting(function (Client $client) {
+            app(PortalAccessService::class)->suspendAllFor($client);
+        });
+    }
+
+    public function portalAccounts(): HasMany
+    {
+        return $this->hasMany(ClientPortalAccount::class);
     }
 
     public function vehicles(): HasMany
