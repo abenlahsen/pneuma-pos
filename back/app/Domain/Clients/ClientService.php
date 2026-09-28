@@ -128,8 +128,11 @@ class ClientService
             'serviceOrders' => fn ($query) => $query->with(['payments'])->latest('date')->latest('id'),
         ]);
 
-        $sales = $client->sales->values();
-        $serviceOrders = $client->serviceOrders->values();
+        // Une vente ou une intervention annulée n'est pas une dette : elle
+        // n'a pas sa place au relevé, que le portail (étape 13.2) reprend tel
+        // quel pour le client.
+        $sales = $client->sales->reject(fn (Sale $s) => $s->status === 'ANNULE')->values();
+        $serviceOrders = $client->serviceOrders->reject(fn (ServiceOrder $o) => $o->status === 'ANNULE')->values();
 
         $allDates = $sales->map(fn ($s) => $s->sale_date ?? $s->created_at)
             ->merge($serviceOrders->map(fn ($o) => $o->date ?? $o->created_at))
@@ -315,6 +318,8 @@ class ClientService
     protected function calculateOutstandingBalanceAll(Client $client, Collection $sales, Collection $serviceOrders): float
     {
         $openingBalance = (float) ($client->opening_balance ?? 0);
+        $sales = $sales->reject(fn (Sale $sale) => $sale->status === 'ANNULE');
+        $serviceOrders = $serviceOrders->reject(fn (ServiceOrder $order) => $order->status === 'ANNULE');
         $salesOutstanding = $sales->sum(fn (Sale $sale) => max((float) ($sale->total ?? 0) - $this->salePaidAmount($sale), 0));
         $ordersOutstanding = $serviceOrders->sum(function (ServiceOrder $order) {
             $paid = $order->payments ? (float) $order->payments->sum('amount') : 0;

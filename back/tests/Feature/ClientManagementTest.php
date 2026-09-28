@@ -132,6 +132,26 @@ class ClientManagementTest extends TestCase
         $this->assertGreaterThanOrEqual(2, count($response->json('data.entries')));
     }
 
+    public function test_a_cancelled_sale_is_neither_on_the_statement_nor_in_the_balance(): void
+    {
+        $this->authenticateWithPermissions(['view clients']);
+
+        $client = Client::create(['name' => 'Annulation Client', 'category' => 'Particulier', 'is_active' => true]);
+        Sale::create(['client_id' => $client->id, 'date' => '2026-02-01', 'total_sale' => 300, 'status' => 'LIVRE']);
+        Sale::create(['client_id' => $client->id, 'date' => '2026-02-02', 'total_sale' => 8800, 'status' => 'ANNULE']);
+
+        $this->getJson('/api/clients/'.$client->id.'/statement')
+            ->assertOk()
+            ->assertJsonPath('data.summary.outstanding_balance', 300)
+            ->assertJsonPath('data.summary.total_sales', 300)
+            ->assertJsonCount(1, 'data.entries')
+            ->assertJsonPath('data.entries.0.balance', 300);
+
+        $this->getJson('/api/clients/'.$client->id.'/profile')
+            ->assertOk()
+            ->assertJsonPath('data.outstanding_balance', 300);
+    }
+
     public function test_client_statement_orders_entries_by_date_descending(): void
     {
         $this->authenticateWithPermissions(['view clients']);
