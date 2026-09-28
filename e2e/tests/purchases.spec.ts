@@ -92,6 +92,11 @@ test.describe('Achats', () => {
 
   test('les flèches Précédent / Suivant naviguent entre les achats de la fiche', async ({ page }) => {
     test.slow();
+    // L'ordre de la liste arrive par une seconde requête (la liste plate) ;
+    // la fiche n'a de ‹ › qu'une fois cet ordre légué. L'attendre avant d'ouvrir.
+    const listOrder = page.waitForResponse(r => /\/api\/purchases\?/.test(r.url()) && r.request().method() === 'GET');
+    await page.reload();
+    await listOrder;
     const count = await waitForList(page);
     test.skip(count < 2, 'Au moins deux achats sont nécessaires');
 
