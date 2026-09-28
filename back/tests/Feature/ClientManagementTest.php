@@ -152,6 +152,31 @@ class ClientManagementTest extends TestCase
             ->assertJsonPath('data.outstanding_balance', 300);
     }
 
+    public function test_a_backdated_payment_is_on_the_statement_at_its_own_date(): void
+    {
+        $user = $this->authenticateWithPermissions(['view clients']);
+
+        $client = Client::create(['name' => 'Antidate Client', 'category' => 'Particulier', 'is_active' => true]);
+        $first = Sale::create(['client_id' => $client->id, 'date' => '2026-03-01', 'total_sale' => 500, 'status' => 'LIVRE']);
+        Sale::create(['client_id' => $client->id, 'date' => '2026-03-20', 'total_sale' => 200, 'status' => 'LIVRE']);
+
+        // Saisi aujourd'hui, payé le 10 mars : entre les deux ventes.
+        $payment = Payment::create(['sale_id' => $first->id, 'amount' => 500, 'date' => '2026-03-10', 'method' => 'Espèces', 'user_id' => $user->id]);
+        SalePaymentAllocation::create(['payment_id' => $payment->id, 'sale_id' => $first->id, 'amount' => 500]);
+
+        $response = $this->getJson('/api/clients/'.$client->id.'/statement')->assertOk();
+
+        $this->assertSame('2026-03-10', $response->json('data.payments.0.date'));
+        $entries = collect($response->json('data.entries'))
+            ->map(fn ($e) => [$e['type'], $e['date'], (float) $e['balance']])
+            ->all();
+        $this->assertSame([
+            ['sale', '2026-03-20', 200.0],
+            ['payment', '2026-03-10', 0.0],
+            ['sale', '2026-03-01', 500.0],
+        ], $entries);
+    }
+
     public function test_client_statement_orders_entries_by_date_descending(): void
     {
         $this->authenticateWithPermissions(['view clients']);

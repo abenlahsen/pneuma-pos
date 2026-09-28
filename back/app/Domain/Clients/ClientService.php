@@ -155,7 +155,7 @@ class ClientService
                     'allocation' => $allocation,
                 ]);
             })
-            ->sortBy(fn ($row) => ($row['allocation']->payment->payment_date ?? $row['allocation']->payment->paid_at ?? $row['allocation']->payment->created_at)?->timestamp ?? 0)
+            ->sortBy(fn ($row) => $this->paymentDate($row['allocation']->payment)?->timestamp ?? 0)
             ->values();
 
         $servicePayments = $serviceOrders
@@ -171,7 +171,7 @@ class ClientService
             return [
                 'id' => $payment->id,
                 'sale_id' => $row['sale']->id,
-                'date' => $this->formatDate($payment->payment_date ?? $payment->paid_at ?? $payment->created_at),
+                'date' => $this->formatDate($this->paymentDate($payment)),
                 'amount' => round((float) $row['allocation']->amount, 2),
                 'payment_method' => $payment->method ?? null,
                 'reference' => $payment->reference,
@@ -485,7 +485,19 @@ class ClientService
 
     protected function sortablePaymentDate(mixed $payment): int
     {
-        return ($payment->payment_date ?? $payment->paid_at ?? $payment->created_at)?->timestamp ?? 0;
+        return $this->paymentDate($payment)?->timestamp ?? 0;
+    }
+
+    /**
+     * La date du paiement, celle que l'équipe a saisie (`payments.date`) ;
+     * sa date d'enregistrement seulement à défaut. `payment_date` et
+     * `paid_at` ne sont pas des colonnes de `payments` : les lire rendait
+     * toujours la date d'enregistrement, et un paiement antidaté tombait au
+     * mauvais jour du relevé.
+     */
+    protected function paymentDate(mixed $payment): mixed
+    {
+        return $payment->date ?? $payment->created_at;
     }
 
     protected function formatDate(mixed $value): ?string
