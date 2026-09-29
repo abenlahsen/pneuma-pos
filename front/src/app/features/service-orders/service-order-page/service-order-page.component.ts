@@ -150,7 +150,7 @@ export class ServiceOrderPageComponent implements OnInit {
     this.pendingDelete.set({
       title: `Annuler l'intervention ${order.id} ?`,
       consequence: "Elle quitte les colonnes de l'atelier et ses pièces reviennent en stock.",
-      detail: 'Elle reste consultable dans la vue Liste, avec le filtre « Annulées », et peut être rétablie.',
+      detail: 'Elle reste consultable dans la vue Liste, en cochant le statut « Annulée », et peut être rétablie.',
       confirmLabel: "Annuler l'intervention",
       run: () => {
         this.form!.status.set('ANNULE');

@@ -7,10 +7,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../../core/services/auth.service';
 import { ListContextService } from '../../../core/services/list-context.service';
 import { RowOverflowComponent } from '../../../shared/row-overflow/row-overflow.component';
+import { FilterPillsComponent } from '../../../shared/filter-pills/filter-pills.component';
 import { PaymentPanelComponent } from '../payment-panel/payment-panel.component';
 import { Sale, SaleFilters, SaleSummary } from '../models/sale.model';
-import { SALE_STATUSES, SALE_STATUS_LABELS, SALE_STATUS_TRANSITIONS, SaleStatus } from '../../../core/constants/status.constants';
-import { PAYMENT_METHODS, paymentMethodClass } from '../../../core/constants/payment-method.constants';
+import { PAYMENT_STATUS_LABELS, PAYMENT_STATUS_OPTIONS, PaymentStatus, paymentStatusTag, SALE_STATUSES, SALE_STATUS_LABELS, SALE_STATUS_TRANSITIONS, SaleStatus } from '../../../core/constants/status.constants';
+import { PAYMENT_METHOD_OPTIONS, paymentMethodClass } from '../../../core/constants/payment-method.constants';
 import { SaleService } from '../data-access/sale.service';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { SortIconComponent } from '../../../shared/icon/sort-icon.component';
@@ -31,7 +32,7 @@ import { LatestRequest } from '../../../core/utils/latest-request';
 @Component({
   selector: 'app-sales-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, PaymentPanelComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, RowOverflowComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, FormsModule, RouterLink, PaymentPanelComponent, AutoRefreshControlComponent, SortIconComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, RowOverflowComponent, ConfirmDeleteComponent, FilterPillsComponent],
   templateUrl: './sales-page.component.html',
   styleUrl: './sales-page.component.scss',
 })
@@ -47,8 +48,8 @@ export class SalesPageComponent implements OnInit {
   }
   readonly SALE_STATUSES = SALE_STATUSES;
   readonly SALE_STATUS_LABELS = SALE_STATUS_LABELS;
-  readonly PAYMENT_METHODS = PAYMENT_METHODS;
   readonly paymentMethodClass = paymentMethodClass;
+  readonly paymentStatusTag = paymentStatusTag;
 
   sales = signal<Sale[]>([]);
   summary = signal<SaleSummary>({ tyres_this_month: 0, tyres_today: 0, tyres_period: null, tyres_en_cours: 0, sales_en_cours: 0, unpaid_en_cours: 0, unpaid_livre_monte: 0, ca_avec_facture: 0, ca_sans_facture: 0, filtered_count: 0, filtered_total: 0, filtered_margin: 0 });
@@ -64,9 +65,14 @@ export class SalesPageComponent implements OnInit {
   filterClient = signal('');
   filterCity = signal('');
   cities = signal<string[]>([]);
-  filterStatus = signal('');
-  filterPaymentStatus = signal('');
-  filterPaymentMethod = signal('');
+  /** Statuts cochés — plusieurs à la fois, aucun = tous. Envoyés joints par des virgules. */
+  filterStatuses = signal<string[]>([]);
+  readonly statusOptions = SALE_STATUSES.map((s) => ({ value: s, label: SALE_STATUS_LABELS[s] }));
+  /** Paiement et mode de paiement : même principe, plusieurs valeurs cochées à la fois. */
+  filterPaymentStatuses = signal<string[]>([]);
+  filterPaymentMethods = signal<string[]>([]);
+  readonly paymentStatusOptions = PAYMENT_STATUS_OPTIONS;
+  readonly paymentMethodOptions = PAYMENT_METHOD_OPTIONS;
   filterCarrier = signal('');
   filterPartner = signal('');
   filterCommercial = signal<string>('');
@@ -85,15 +91,19 @@ export class SalesPageComponent implements OnInit {
       const name = opts.commercials.find((c: any) => String(c.id) === this.filterCommercial())?.name || this.filterCommercial();
       chips.push({ label: name, remove: () => { this.filterCommercial.set(''); this.applyFilters(); } });
     }
-    if (this.filterStatus()) chips.push({ label: this.filterStatus(), remove: () => { this.filterStatus.set(''); this.applyFilters(); } });
-    if (this.filterPaymentStatus()) {
+    for (const status of this.filterStatuses()) {
+      chips.push({ label: this.statusLabel(status), remove: () => { this.removeValue(this.filterStatuses, status); this.applyFilters(); } });
+    }
+    for (const status of this.filterPaymentStatuses()) {
       chips.push({
-        label: this.filterPaymentStatus(),
-        alert: this.filterPaymentStatus() === 'NON PAYE',
-        remove: () => { this.filterPaymentStatus.set(''); this.applyFilters(); },
+        label: this.paymentStatusLabel(status),
+        alert: status === 'NON PAYE',
+        remove: () => { this.removeValue(this.filterPaymentStatuses, status); this.applyFilters(); },
       });
     }
-    if (this.filterPaymentMethod()) chips.push({ label: this.filterPaymentMethod(), remove: () => { this.filterPaymentMethod.set(''); this.applyFilters(); } });
+    for (const method of this.filterPaymentMethods()) {
+      chips.push({ label: method, remove: () => { this.removeValue(this.filterPaymentMethods, method); this.applyFilters(); } });
+    }
     if (this.filterCarrier()) {
       const name = opts.carriers.find((c: any) => String(c.id) === this.filterCarrier())?.name || this.filterCarrier();
       chips.push({ label: name, remove: () => { this.filterCarrier.set(''); this.applyFilters(); } });
@@ -153,13 +163,9 @@ export class SalesPageComponent implements OnInit {
       this.filterEntry(this.filterBrand(), `marque ${this.filterBrand()}`, this.filterBrand),
       this.filterEntry(this.filterClient(), `client ${this.filterClient()}`, this.filterClient),
       this.filterEntry(this.filterCity(), `ville ${this.filterCity()}`, this.filterCity),
-      this.filterEntry(
-        this.filterStatus(),
-        `statut ${(SALE_STATUS_LABELS[this.filterStatus() as SaleStatus] ?? this.filterStatus()).toLowerCase()}`,
-        this.filterStatus,
-      ),
-      this.filterEntry(this.filterPaymentStatus(), this.filterPaymentStatus().toLowerCase(), this.filterPaymentStatus),
-      this.filterEntry(this.filterPaymentMethod(), `règlement ${this.filterPaymentMethod().toLowerCase()}`, this.filterPaymentMethod),
+      ...this.valueEntries(this.filterStatuses, (s) => `statut ${this.statusLabel(s).toLowerCase()}`),
+      ...this.valueEntries(this.filterPaymentStatuses, (s) => this.paymentStatusLabel(s).toLowerCase()),
+      ...this.valueEntries(this.filterPaymentMethods, (m) => `règlement ${m.toLowerCase()}`),
       this.filterEntry(this.filterCarrier(), `transporteur ${this.filterCarrier()}`, this.filterCarrier),
       this.filterEntry(this.filterPartner(), `partenaire ${this.filterPartner()}`, this.filterPartner),
       this.filterEntry(this.filterCommercial(), `commercial ${this.filterCommercial()}`, this.filterCommercial),
@@ -187,6 +193,30 @@ export class SalesPageComponent implements OnInit {
         this.loadData();
       },
     };
+  }
+
+  /** Un filtre à choix multiple : une entrée retirable par valeur cochée. */
+  private valueEntries(target: WritableSignal<string[]>, label: (value: string) => string): ActiveFilter[] {
+    return target().map((value) => ({
+      label: label(value),
+      clear: () => {
+        this.removeValue(target, value);
+        this.currentPage.set(1);
+        this.loadData();
+      },
+    }));
+  }
+
+  private removeValue(target: WritableSignal<string[]>, value: string): void {
+    target.update((list) => list.filter((v) => v !== value));
+  }
+
+  private statusLabel(status: string): string {
+    return SALE_STATUS_LABELS[status as SaleStatus] ?? status;
+  }
+
+  private paymentStatusLabel(status: string): string {
+    return PAYMENT_STATUS_LABELS[status as PaymentStatus] ?? status;
   }
 
   isExporting = signal(false);
@@ -295,9 +325,9 @@ export class SalesPageComponent implements OnInit {
       brand: this.filterBrand(),
       client: this.filterClient(),
       city: this.filterCity(),
-      status: this.filterStatus(),
-      payment_status: this.filterPaymentStatus(),
-      payment_method: this.filterPaymentMethod(),
+      status: this.filterStatuses().join(','),
+      payment_status: this.filterPaymentStatuses().join(','),
+      payment_method: this.filterPaymentMethods().join(','),
       carrier_id: this.filterCarrier(),
       partner_id: this.filterPartner(),
       commercial_id: this.filterCommercial(),
@@ -332,9 +362,9 @@ export class SalesPageComponent implements OnInit {
     this.filterBrand.set('');
     this.filterClient.set('');
     this.filterCity.set('');
-    this.filterStatus.set('');
-    this.filterPaymentStatus.set('');
-    this.filterPaymentMethod.set('');
+    this.filterStatuses.set([]);
+    this.filterPaymentStatuses.set([]);
+    this.filterPaymentMethods.set([]);
     this.filterCarrier.set('');
     this.filterPartner.set('');
     this.filterCommercial.set('');

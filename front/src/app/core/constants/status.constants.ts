@@ -50,10 +50,20 @@ export const SERVICE_ORDER_STATUS_LABELS: Record<ServiceOrderStatus, string> = {
 export const PAYMENT_STATUSES = ['NON PAYE', 'PAYE', 'PARTIEL'] as const;
 export type PaymentStatus = typeof PAYMENT_STATUSES[number];
 export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
-  'NON PAYE': 'Non payé',
+  'NON PAYE': 'Impayé',
   'PAYE':     'Payé',
   'PARTIEL':  'Partiel',
 };
+/**
+ * Étiquette d'état de paiement en majuscules, sur les lignes et les fiches :
+ * « IMPAYÉ » pour NON PAYE (ou vide, que les listes ont toujours montré
+ * comme tel), la valeur sinon. La base et l'API gardent `NON PAYE`.
+ */
+export function paymentStatusTag(status: string | null | undefined): string {
+  return !status || status === 'NON PAYE' ? 'IMPAYÉ' : status;
+}
+/** Pastilles du filtre « Paiement » (app-filter-pills), communes aux trois listes. */
+export const PAYMENT_STATUS_OPTIONS = PAYMENT_STATUSES.map((value) => ({ value, label: PAYMENT_STATUS_LABELS[value] }));
 
 export const CLIENT_CATEGORIES = ['Particulier', 'Entreprise'] as const;
 export type ClientCategory = typeof CLIENT_CATEGORIES[number];

@@ -133,7 +133,7 @@ test.describe('Achats', () => {
     await openFilters(page);
     const [response] = await Promise.all([
       waitForGrouped(page, 'status=EN'),
-      page.locator('.filters-section label', { hasText: /^Statut$/ }).locator('..').locator('select').selectOption({ label: 'En cours' }),
+      page.locator('.filters-section').getByRole('group', { name: 'Statut' }).getByRole('button', { name: 'En cours' }).click(),
     ]);
     expect(response.ok()).toBe(true);
 
@@ -143,12 +143,12 @@ test.describe('Achats', () => {
     }
   });
 
-  test('filtrer par paiement « Non payé »', async ({ page }) => {
+  test('filtrer par paiement « Impayé »', async ({ page }) => {
     await waitForList(page);
     await openFilters(page);
     const [response] = await Promise.all([
       waitForGrouped(page, 'payment_status=NON'),
-      page.locator('.filters-section label').filter({ hasText: /^Paiement$/ }).locator('..').locator('select').selectOption({ label: 'Non payé' }),
+      page.locator('.filters-section').getByRole('group', { name: 'Paiement', exact: true }).getByRole('button', { name: 'Impayé' }).click(),
     ]);
     expect(response.ok()).toBe(true);
     await waitForList(page);

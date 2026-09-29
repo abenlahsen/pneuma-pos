@@ -192,7 +192,7 @@ export class DocumentPrintComponent {
     const remaining = this.remaining();
     if (remaining <= 0) return 'PAYÉ';
     if (round2(this.document.totals.paid) > 0) return `PARTIEL · RESTE DÛ ${formatMoney(remaining)}`;
-    return 'NON PAYÉ';
+    return 'IMPAYÉ';
   }
 
   amountInWords(): string {

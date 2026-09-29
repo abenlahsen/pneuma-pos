@@ -16,6 +16,8 @@ use App\Models\User;
 use App\Services\ActivityLogService;
 use App\Services\StockMovementService;
 use App\Support\BusinessDate;
+use App\Support\Helpers\PaymentMethods;
+use App\Support\MultiValueFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -408,7 +410,7 @@ class PurchaseService
         // Même convention que les cadrans : sans filtre de statut explicite, un
         // achat annulé ne compte pas — sinon cet écran annoncerait un dû
         // différent de l'Accueil et du Cash Flow.
-        if (empty($filters['status'])) {
+        if ($this->requestedStatuses($filters) === []) {
             $query->where('status', '!=', 'ANNULE');
         }
 
@@ -514,11 +516,12 @@ class PurchaseService
     {
         $query = Purchase::query();
 
-        if (! empty($filters['payment_status'])) {
-            $query->where('payment_status', $filters['payment_status']);
-        }
-        if (! empty($filters['status'])) {
-            $query->where('status', $filters['status']);
+        $this->applyPaymentStatusFilter($query, $filters);
+        // Same rows as the list: the cards follow the payment method too.
+        $this->applyPaymentMethodFilter($query, $filters);
+        $statuses = $this->requestedStatuses($filters);
+        if ($statuses !== []) {
+            MultiValueFilter::apply($query, $statuses);
         } else {
             // No explicit status filter: cancelled purchases must not inflate the KPI cards.
             $query->where('status', '!=', PurchaseStatus::ANNULE->value);
@@ -626,6 +629,38 @@ class PurchaseService
         return $purchase;
     }
 
+    /** Statuts cochés dans le filtre (`status=RECU,TERMINE`) ; vide = pas de filtre. */
+    private function requestedStatuses(array $filters): array
+    {
+        return MultiValueFilter::parse($filters['status'] ?? null, PurchaseStatus::values());
+    }
+
+    /** Statuts de paiement cochés (`payment_status=NON PAYE,PARTIEL`). */
+    private function applyPaymentStatusFilter(Builder $query, array $filters): void
+    {
+        MultiValueFilter::apply(
+            $query,
+            MultiValueFilter::parse($filters['payment_status'] ?? null, PurchasePaymentStatus::values(), 'payment_status', 'Paiement'),
+            'payment_status',
+        );
+    }
+
+    /**
+     * Modes de paiement cochés (`payment_method=Chèque,Effet`) : un achat est
+     * retenu si l'un de ses règlements utilise l'un d'eux.
+     *
+     * Repointed at the actual recorded payments — never the legacy `payments`
+     * relation, which misses multi-purchase supplier payments.
+     */
+    private function applyPaymentMethodFilter(Builder $query, array $filters): void
+    {
+        $methods = MultiValueFilter::parse($filters['payment_method'] ?? null, PaymentMethods::VOCABULARY, 'payment_method', 'Mode de paiement');
+
+        if ($methods !== []) {
+            $query->whereHas('allocations.payment', fn ($q) => $q->whereIn('method', $methods));
+        }
+    }
+
     /**
      * @param  array<string, mixed>  $filters
      */
@@ -672,18 +707,9 @@ class PurchaseService
             });
         }
 
-        if (! empty($filters['payment_status'])) {
-            $query->where('payment_status', $filters['payment_status']);
-        }
-        // Repointed at the actual recorded payments — never the legacy `payments`
-        // relation, which misses multi-purchase supplier payments.
-        if (! empty($filters['payment_method'])) {
-            $method = $filters['payment_method'];
-            $query->whereHas('allocations.payment', fn ($q) => $q->where('method', $method));
-        }
-        if (! empty($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
+        $this->applyPaymentStatusFilter($query, $filters);
+        $this->applyPaymentMethodFilter($query, $filters);
+        MultiValueFilter::apply($query, $this->requestedStatuses($filters));
         if (! empty($filters['supplier_id'])) {
             $query->where('supplier_id', $filters['supplier_id']);
         }

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Domain\ServiceOrders\ServiceOrderService;
+use App\Enums\ServiceOrderPaymentStatus;
+use App\Enums\ServiceOrderStatus;
 use App\Http\Requests\ServiceOrders\StoreServiceOrderRequest;
 use App\Http\Requests\ServiceOrders\UpdateServiceOrderRequest;
 use App\Http\Resources\ServiceOrders\ServiceOrderResource;
@@ -11,6 +13,8 @@ use App\Models\Client;
 use App\Models\Product;
 use App\Models\ServiceOrder;
 use App\Models\User;
+use App\Support\Helpers\PaymentMethods;
+use App\Support\MultiValueFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -260,9 +264,8 @@ class ServiceOrderController extends Controller
 
     private function applyFilters(Builder $query, Request $request): void
     {
-        if ($request->filled('status')) {
-            $query->where('status', (string) $request->string('status'));
-        }
+        // Plusieurs statuts cochés : `status=EN COURS,TERMINE`.
+        MultiValueFilter::apply($query, MultiValueFilter::parse($request->input('status'), ServiceOrderStatus::values()));
 
         // Refonte 2b, 12a : la vue Liste masque les interventions annulées par
         // défaut, derrière un filtre « Annulées ».
@@ -276,13 +279,18 @@ class ServiceOrderController extends Controller
             $query->where('vehicle_id', $request->integer('vehicle_id'));
         }
 
-        if ($request->filled('payment_status')) {
-            $query->where('payment_status', (string) $request->string('payment_status'));
-        }
+        // Plusieurs statuts de paiement cochés : `payment_status=NON PAYE,PARTIEL`.
+        MultiValueFilter::apply(
+            $query,
+            MultiValueFilter::parse($request->input('payment_status'), ServiceOrderPaymentStatus::values(), 'payment_status', 'Paiement'),
+            'payment_status',
+        );
 
-        if ($request->filled('payment_method')) {
-            $method = (string) $request->string('payment_method');
-            $query->whereHas('payments', fn ($q) => $q->where('method', $method));
+        // Plusieurs modes cochés : l'intervention est retenue si l'un de ses
+        // paiements utilise l'un d'eux.
+        $methods = MultiValueFilter::parse($request->input('payment_method'), PaymentMethods::VOCABULARY, 'payment_method', 'Mode de paiement');
+        if ($methods !== []) {
+            $query->whereHas('payments', fn ($q) => $q->whereIn('method', $methods));
         }
 
         if ($request->filled('product_id')) {

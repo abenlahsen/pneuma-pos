@@ -24,7 +24,7 @@
       <span class="sd-badge"
             [class.sd-badge--ok]="isSettled"
             [class.sd-badge--late]="!isSettled">
-        {{ sale.payment_status }}@if (unpaidDays; as d) { · {{ d }} J }
+        {{ paymentStatusTag(sale.payment_status) }}@if (unpaidDays; as d) { · {{ d }} J }
       </span>
       <span class="sd-badge">{{ sale.status }}</span>
     </span>

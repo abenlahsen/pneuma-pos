@@ -5,6 +5,7 @@ import { IconComponent } from '../../../shared/icon/icon.component';
 import { Purchase } from '../../../core/models/purchase.model';
 import { Product } from '../../../core/models/product.model';
 import { paymentMethodClass } from '../../../core/constants/payment-method.constants';
+import { paymentStatusTag } from '../../../core/constants/status.constants';
 import { AuthService } from '../../../core/services/auth.service';
 // Return-related calls live only on this (features/purchases) copy of PurchaseService —
 // the core/services copy this component otherwise has no need for is not extended with them.
@@ -59,6 +60,7 @@ export class PurchaseDetailComponent implements OnInit, OnChanges {
   returns = signal<PurchaseReturn[]>([]);
   loadingReturns = signal(false);
   readonly paymentMethodClass = paymentMethodClass;
+  readonly paymentStatusTag = paymentStatusTag;
 
   // Constructor injection (not inject()) so this component can still be
   // instantiated directly with plain mocks in specs, matching the rest of

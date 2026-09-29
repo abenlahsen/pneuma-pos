@@ -4,6 +4,7 @@ import { IconComponent } from '../../../../shared/icon/icon.component';
 import { Router } from '@angular/router';
 import { PurchaseService } from '../../../../core/services/purchase.service';
 import { PurchasePaymentDetail } from '../../../../core/models/purchase.model';
+import { paymentStatusTag } from '../../../../core/constants/status.constants';
 
 @Component({
   selector: 'app-purchase-payment-detail',
@@ -19,6 +20,7 @@ export class PurchasePaymentDetailComponent implements OnInit {
   loading = signal(true);
   errorMessage = signal('');
   detail = signal<PurchasePaymentDetail | null>(null);
+  readonly paymentStatusTag = paymentStatusTag;
 
   constructor(
     private purchaseService: PurchaseService,

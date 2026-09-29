@@ -128,6 +128,52 @@ class ServiceOrderApiTest extends TestCase
         $this->assertGreaterThanOrEqual(1, $response->json('total'));
     }
 
+    public function test_index_filters_by_several_payment_statuses(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+        $paid = $this->createOrder(['payment_status' => 'PAYE']);
+        $partial = $this->createOrder(['payment_status' => 'PARTIEL']);
+
+        $ids = collect($this->getJson('/api/service-orders?per_page=100&payment_status='.urlencode('NON PAYE,PAYE'))
+            ->assertOk()->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($this->order->id));
+        $this->assertTrue($ids->contains($paid->id));
+        $this->assertFalse($ids->contains($partial->id));
+    }
+
+    public function test_index_and_summary_filter_by_several_payment_methods(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+        $cash = $this->createOrder();
+        $this->createPayment(50, $cash, 'Espèces');
+        $transfer = $this->createOrder();
+        $this->createPayment(50, $transfer, 'Virement');
+        $cheque = $this->createOrder();
+        $this->createPayment(50, $cheque, 'Chèque');
+        // The service line recomputes net_amount: read back what was stored.
+        $expected = round((float) $cash->fresh()->net_amount + (float) $transfer->fresh()->net_amount, 2);
+
+        $query = 'payment_method='.urlencode('Espèces,Virement');
+        $ids = collect($this->getJson("/api/service-orders?per_page=100&{$query}")->assertOk()->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($cash->id));
+        $this->assertTrue($ids->contains($transfer->id));
+        $this->assertFalse($ids->contains($cheque->id));
+
+        $summary = $this->getJson("/api/service-orders-summary?{$query}")->assertOk();
+        $this->assertEquals($expected, $summary->json('total_revenue'));
+    }
+
+    public function test_index_rejects_unknown_payment_method(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $this->getJson('/api/service-orders?payment_method=TPE')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('payment_method');
+    }
+
     public function test_index_filters_by_commercial_id(): void
     {
         Sanctum::actingAs($this->user, [], 'web');
@@ -340,6 +386,28 @@ class ServiceOrderApiTest extends TestCase
 
         $this->assertTrue($ids->contains($this->order->id));
         $this->assertFalse($ids->contains($cancelled->id));
+    }
+
+    public function test_index_filters_by_several_statuses(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+        $termine = $this->createOrder(['status' => 'TERMINE']);
+        $cancelled = $this->createOrder(['status' => 'ANNULE']);
+
+        $ids = collect($this->getJson('/api/service-orders?per_page=100&status='.urlencode('TERMINE,ANNULE'))->assertOk()->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($termine->id));
+        $this->assertTrue($ids->contains($cancelled->id));
+        $this->assertFalse($ids->contains($this->order->id));
+    }
+
+    public function test_index_rejects_unknown_status(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $this->getJson('/api/service-orders?status=FOO')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('status');
     }
 
     public function test_index_filters_by_vehicle(): void
@@ -839,14 +907,16 @@ class ServiceOrderApiTest extends TestCase
         return $order;
     }
 
-    private function createPayment(float $amount = 100.00): ServicePayment
+    private function createPayment(float $amount = 100.00, ?ServiceOrder $order = null, string $method = 'Espèces'): ServicePayment
     {
+        $order ??= $this->order;
+
         $transaction = Transaction::query()->create([
             'date' => '2026-05-02',
             'amount' => $amount,
             'type' => 'income',
             'category' => 'Produit',
-            'method' => 'Espèces',
+            'method' => $method,
             'description' => 'Test',
             'person' => '',
             'partner' => '',
@@ -855,17 +925,17 @@ class ServiceOrderApiTest extends TestCase
         ]);
 
         $payment = ServicePayment::query()->create([
-            'service_order_id' => $this->order->id,
+            'service_order_id' => $order->id,
             'amount' => $amount,
             'date' => '2026-05-02',
-            'method' => 'Espèces',
+            'method' => $method,
             'account_id' => $this->account->id,
             'transaction_id' => $transaction->id,
             'user_id' => $this->user->id,
         ]);
 
         app(\App\Domain\ServiceOrders\ServicePaymentService::class)
-            ->refreshPaymentStatus($this->order->fresh());
+            ->refreshPaymentStatus($order->fresh());
 
         return $payment;
     }

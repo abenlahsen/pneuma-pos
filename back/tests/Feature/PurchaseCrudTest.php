@@ -145,6 +145,80 @@ class PurchaseCrudTest extends TestCase
             ->assertJsonPath('data.0.status', 'RECU');
     }
 
+    public function test_index_filters_by_several_statuses(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $this->createPurchase(['status' => 'EN COURS']);
+        $this->createPurchase(['status' => 'RECU']);
+        $this->createPurchase(['status' => 'ANNULE']);
+
+        $response = $this->getJson('/api/purchases?status='.urlencode('EN COURS,ANNULE'));
+
+        $response->assertOk()->assertJsonCount(2, 'data');
+        $this->assertEqualsCanonicalizing(
+            ['EN COURS', 'ANNULE'],
+            collect($response->json('data'))->pluck('status')->all()
+        );
+    }
+
+    public function test_index_rejects_unknown_status(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $this->getJson('/api/purchases?status=FOO')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('status');
+    }
+
+    public function test_index_filters_by_several_payment_statuses(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $unpaid = $this->createPurchase(['payment_status' => 'NON PAYE']);
+        $partial = $this->createPurchase(['payment_status' => 'PARTIEL']);
+        $paid = $this->createPurchase(['payment_status' => 'PAYE']);
+
+        $ids = collect($this->getJson('/api/purchases?per_page=100&payment_status='.urlencode('NON PAYE,PARTIEL'))
+            ->assertOk()->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($unpaid->id));
+        $this->assertTrue($ids->contains($partial->id));
+        $this->assertFalse($ids->contains($paid->id));
+    }
+
+    public function test_index_filters_by_several_payment_methods(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $cheque = $this->createPurchase();
+        $this->createPaymentForPurchase($cheque, 'Chèque');
+        $effet = $this->createPurchase();
+        $this->createPaymentForPurchase($effet, 'Effet');
+        $especes = $this->createPurchase();
+        $this->createPaymentForPurchase($especes, 'Espèces');
+
+        $ids = collect($this->getJson('/api/purchases?per_page=100&payment_method='.urlencode('Chèque,Effet'))
+            ->assertOk()->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($cheque->id));
+        $this->assertTrue($ids->contains($effet->id));
+        $this->assertFalse($ids->contains($especes->id));
+    }
+
+    public function test_index_rejects_unknown_payment_filters(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $this->getJson('/api/purchases?payment_method=TPE')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('payment_method');
+
+        $this->getJson('/api/purchases?payment_status=FOO')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('payment_status');
+    }
+
     public function test_index_filters_by_date_range(): void
     {
         Sanctum::actingAs($this->user, [], 'web');
@@ -197,6 +271,36 @@ class PurchaseCrudTest extends TestCase
         $filtered->assertOk()
             ->assertJsonPath('total_achats', 700)
             ->assertJsonPath('ca_avec_facture', 700);
+    }
+
+    public function test_summary_filters_by_several_statuses(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $this->createPurchase(['net_amount' => 1000, 'total_price' => 1000, 'status' => 'EN COURS']);
+        $this->createPurchase(['net_amount' => 300, 'total_price' => 300, 'status' => 'RECU']);
+        $this->createPurchase(['net_amount' => 700, 'total_price' => 700, 'status' => 'ANNULE']);
+
+        $this->getJson('/api/purchases-summary?status='.urlencode('RECU,ANNULE'))
+            ->assertOk()
+            ->assertJsonPath('total_achats', 1000);
+    }
+
+    public function test_summary_follows_the_payment_methods(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $cheque = $this->createPurchase(['net_amount' => 1000, 'total_price' => 1000]);
+        $this->createPaymentForPurchase($cheque, 'Chèque');
+        $virement = $this->createPurchase(['net_amount' => 300, 'total_price' => 300]);
+        $this->createPaymentForPurchase($virement, 'Virement');
+        $especes = $this->createPurchase(['net_amount' => 700, 'total_price' => 700]);
+        $this->createPaymentForPurchase($especes, 'Espèces');
+
+        // Same rows as the list: the cards used to ignore the payment method.
+        $this->getJson('/api/purchases-summary?payment_method='.urlencode('Chèque,Virement'))
+            ->assertOk()
+            ->assertJsonPath('total_achats', 1300);
     }
 
     // -------------------------------------------------------------------------

@@ -50,7 +50,7 @@
           [class.badge-warning]="paymentStatus() === 'PARTIEL'"
           [class.badge-success]="paymentStatus() === 'PAYE'"
         >
-          {{ paymentStatus() }}
+          {{ paymentStatusTag(paymentStatus()) }}
         </span>
       </div>
     </div>

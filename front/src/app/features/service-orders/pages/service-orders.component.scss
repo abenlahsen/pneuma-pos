@@ -28,20 +28,6 @@
   font-size: 12.5px;
 }
 
-/* « Annulées » : un interrupteur, à l'encre quand il est actif. */
-.filter-toggle {
-  height: 32px;
-  padding: 0 11px;
-  border: 1px solid $border-color;
-  background: $bg-card;
-  color: $text-secondary;
-  font: inherit;
-  font-size: 12.5px;
-  cursor: pointer;
-
-  &--on { border-color: $text-dark; background: $text-dark; color: $bg-card; font-weight: 600; }
-}
-
 /* La plaque en chasse fixe, comme sur la vue Atelier. Préfixée par
    `.list-grid-name` : le mixin y remet la police du lien à `inherit`. */
 .list-grid-name .so-plate {

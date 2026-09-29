@@ -77,26 +77,15 @@
       </option>
     </select>
 
-    <select class="filter-select" aria-label="Statut" *ngIf="viewMode() === 'list'" [class.filter-select--active]="!!filterStatus()"
-            [ngModel]="filterStatus()" (ngModelChange)="filterStatus.set($event); applyFilters()">
-      <option value="">Tous les statuts</option>
-      <option *ngFor="let s of SERVICE_ORDER_STATUSES" [value]="s">{{ SERVICE_ORDER_STATUS_LABELS[s] }}</option>
-    </select>
+    <!-- Plusieurs statuts à la fois ; aucun coché = tous sauf les annulées. -->
+    <app-filter-pills *ngIf="viewMode() === 'list'" [options]="statusOptions" [selected]="filterStatuses()"
+                      (selectedChange)="filterStatuses.set($event); applyFilters()" />
 
-    <select class="filter-select" aria-label="Paiement" [class.filter-select--active]="!!filterPaymentStatus()"
-            [ngModel]="filterPaymentStatus()" (ngModelChange)="filterPaymentStatus.set($event); applyFilters()">
-      <option value="">Tous les paiements</option>
-      <option *ngFor="let s of PAYMENT_STATUSES" [value]="s">{{ PAYMENT_STATUS_LABELS[s] }}</option>
-    </select>
+    <app-filter-pills label="Paiement" [options]="paymentStatusOptions" [selected]="filterPaymentStatuses()"
+                      (selectedChange)="filterPaymentStatuses.set($event); applyFilters()" />
 
-    <select class="filter-select" aria-label="Mode de paiement" [class.filter-select--active]="!!filterPaymentMethod()"
-            [ngModel]="filterPaymentMethod()" (ngModelChange)="filterPaymentMethod.set($event); applyFilters()">
-      <option value="">Tous les modes</option>
-      <option value="Espèces">Espèces</option>
-      <option value="Chèque">Chèque</option>
-      <option value="Virement">Virement</option>
-      <option value="Carte bancaire">Carte bancaire</option>
-    </select>
+    <app-filter-pills label="Mode de paiement" [options]="paymentMethodOptions" [selected]="filterPaymentMethods()"
+                      (selectedChange)="filterPaymentMethods.set($event); applyFilters()" />
 
     <select class="filter-select" aria-label="Fiche client" [class.filter-select--active]="filterClientId() !== null"
             [ngModel]="filterClientId()" (ngModelChange)="filterClientId.set($event ? +$event : null); applyFilters()">
@@ -108,12 +97,6 @@
            [ngModel]="filterDateFrom()" (ngModelChange)="filterDateFrom.set($event); applyFilters()" />
     <input type="date" class="filter-input" aria-label="Date au" title="Date au"
            [ngModel]="filterDateTo()" (ngModelChange)="filterDateTo.set($event); applyFilters()" />
-
-    <!-- Refonte 2b, 12a : une intervention annulée quitte l'atelier et, par
-         défaut, la liste. Ce bouton la fait revenir. -->
-    <button type="button" class="filter-toggle" *ngIf="viewMode() === 'list'"
-            [class.filter-toggle--on]="showCancelled()" [attr.aria-pressed]="showCancelled()"
-            (click)="toggleCancelled()">Annulées</button>
 
     <button type="button" class="btn btn-reset" (click)="resetFilters()">
       <app-icon name="close" [size]="13" /> Réinitialiser
@@ -308,7 +291,7 @@
             [class.list-grid-status--paid]="order.payment_status === 'PAYE'"
             [class.list-grid-status--unpaid]="order.payment_status === 'NON PAYE' || !order.payment_status"
             [class.list-grid-status--partial]="order.payment_status === 'PARTIEL'">
-        {{ order.payment_status || 'NON PAYE' }}
+        {{ paymentStatusTag(order.payment_status) }}
         <!-- Gabarit 14b : sous 900 px, la rangée du bas porte aussi l'état de
              l'intervention, en lecture — sa modification passe par le menu. -->
         <span class="so-order-status">{{ SERVICE_ORDER_STATUS_LABELS[order.status] || order.status }}</span>

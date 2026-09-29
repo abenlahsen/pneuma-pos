@@ -67,7 +67,7 @@
                 <td class="col-right num">{{ p.allocated_amount | number:'1.2-2' }} DH</td>
                 <td>
                   <span class="badge" [ngClass]="paymentStatusClass(p.payment_status)">
-                    {{ p.payment_status || '—' }}
+                    {{ p.payment_status ? paymentStatusTag(p.payment_status) : '—' }}
                   </span>
                 </td>
                 <td class="col-right">

@@ -14,6 +14,9 @@ use App\Models\Partner;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\User;
+use App\Support\Helpers\PaymentMethods;
+use App\Support\MultiValueFilter;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -88,21 +91,15 @@ class SaleController extends Controller
             }
         }
 
-        if ($request->filled('status') && Schema::hasColumn('sales', 'status')) {
-            $query->where('status', (string) $request->string('status'));
+        if (Schema::hasColumn('sales', 'status')) {
+            MultiValueFilter::apply($query, $this->requestedStatuses($request));
         }
 
-        if ($request->filled('payment_status') && Schema::hasColumn('sales', 'payment_status')) {
-            $query->where('payment_status', (string) $request->string('payment_status'));
+        if (Schema::hasColumn('sales', 'payment_status')) {
+            MultiValueFilter::apply($query, $this->requestedPaymentStatuses($request), 'payment_status');
         }
 
-        // Repointed at the actual recorded payments — never the legacy `payments`
-        // relation, which misses multi-sale client payments. Keep in sync with
-        // the identical block in export().
-        if ($request->filled('payment_method')) {
-            $method = (string) $request->string('payment_method');
-            $query->whereHas('allocations.payment', fn ($q) => $q->where('method', $method));
-        }
+        $this->applyPaymentMethodFilter($query, $request);
 
         if ($request->filled('brand') && Schema::hasColumn('sales', 'brand')) {
             $query->where('brand', (string) $request->string('brand'));
@@ -286,21 +283,15 @@ class SaleController extends Controller
             }
         }
 
-        if ($request->filled('status') && Schema::hasColumn('sales', 'status')) {
-            $query->where('status', (string) $request->string('status'));
+        if (Schema::hasColumn('sales', 'status')) {
+            MultiValueFilter::apply($query, $this->requestedStatuses($request));
         }
 
-        if ($request->filled('payment_status') && Schema::hasColumn('sales', 'payment_status')) {
-            $query->where('payment_status', (string) $request->string('payment_status'));
+        if (Schema::hasColumn('sales', 'payment_status')) {
+            MultiValueFilter::apply($query, $this->requestedPaymentStatuses($request), 'payment_status');
         }
 
-        // Repointed at the actual recorded payments — never the legacy `payments`
-        // relation, which misses multi-sale client payments. Keep in sync with
-        // the identical block in export().
-        if ($request->filled('payment_method')) {
-            $method = (string) $request->string('payment_method');
-            $query->whereHas('allocations.payment', fn ($q) => $q->where('method', $method));
-        }
+        $this->applyPaymentMethodFilter($query, $request);
 
         if ($request->filled('brand') && Schema::hasColumn('sales', 'brand')) {
             $query->where('brand', (string) $request->string('brand'));
@@ -534,16 +525,22 @@ class SaleController extends Controller
             }
         }
 
-        if ($request->filled('status') && Schema::hasColumn('sales', 'status')) {
-            $query->where('status', (string) $request->string('status'));
-        } elseif (Schema::hasColumn('sales', 'status')) {
-            // No explicit status filter: cancelled sales must not inflate the KPI cards.
-            $query->where('status', '!=', SaleStatus::ANNULE->value);
+        if (Schema::hasColumn('sales', 'status')) {
+            $statuses = $this->requestedStatuses($request);
+            if ($statuses !== []) {
+                MultiValueFilter::apply($query, $statuses);
+            } else {
+                // No explicit status filter: cancelled sales must not inflate the KPI cards.
+                $query->where('status', '!=', SaleStatus::ANNULE->value);
+            }
         }
 
-        if ($request->filled('payment_status') && Schema::hasColumn('sales', 'payment_status')) {
-            $query->where('payment_status', (string) $request->string('payment_status'));
+        if (Schema::hasColumn('sales', 'payment_status')) {
+            MultiValueFilter::apply($query, $this->requestedPaymentStatuses($request), 'payment_status');
         }
+
+        // Same rows as the list: the cards follow the payment method too.
+        $this->applyPaymentMethodFilter($query, $request);
 
         if ($request->filled('carrier_id')) {
             $query->where('carrier_id', $request->integer('carrier_id'));
@@ -692,5 +689,33 @@ class SaleController extends Controller
         }
 
         return 'id';
+    }
+
+    /** Statuts cochés dans le filtre (`status=LIVRE,MONTE`) ; vide = pas de filtre. */
+    protected function requestedStatuses(Request $request): array
+    {
+        return MultiValueFilter::parse($request->input('status'), SaleStatus::values());
+    }
+
+    /** Statuts de paiement cochés (`payment_status=NON PAYE,PARTIEL`). */
+    protected function requestedPaymentStatuses(Request $request): array
+    {
+        return MultiValueFilter::parse($request->input('payment_status'), SalePaymentStatus::values(), 'payment_status', 'Paiement');
+    }
+
+    /**
+     * Modes de paiement cochés (`payment_method=Chèque,Effet`) : une vente
+     * est retenue si l'un de ses paiements utilise l'un d'eux.
+     *
+     * Repointed at the actual recorded payments — never the legacy `payments`
+     * relation, which misses multi-sale client payments.
+     */
+    protected function applyPaymentMethodFilter(Builder $query, Request $request): void
+    {
+        $methods = MultiValueFilter::parse($request->input('payment_method'), PaymentMethods::VOCABULARY, 'payment_method', 'Mode de paiement');
+
+        if ($methods !== []) {
+            $query->whereHas('allocations.payment', fn ($q) => $q->whereIn('method', $methods));
+        }
     }
 }

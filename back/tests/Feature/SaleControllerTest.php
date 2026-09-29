@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\PersonalAccessToken;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -639,6 +640,42 @@ class SaleControllerTest extends TestCase
             ->assertJsonCount(1, 'data');
     }
 
+    public function test_index_filters_by_several_statuses()
+    {
+        $livre = $this->createSale(['status' => 'LIVRE']);
+        $monte = $this->createSale(['status' => 'MONTE']);
+        $enCours = $this->createSale(['status' => 'EN COURS']);
+        $annule = $this->createSale(['status' => 'ANNULE']);
+
+        $response = $this->getJson('/api/sales?per_page=100&status='.urlencode('LIVRE,MONTE'), $this->authHeaders());
+
+        $response->assertOk();
+        $ids = collect($response->json('data'))->pluck('id');
+        $this->assertTrue($ids->contains($livre->id));
+        $this->assertTrue($ids->contains($monte->id));
+        $this->assertFalse($ids->contains($enCours->id));
+        $this->assertFalse($ids->contains($annule->id));
+    }
+
+    public function test_index_single_status_keeps_working()
+    {
+        $enCours = $this->createSale(['status' => 'EN COURS']);
+        $livre = $this->createSale(['status' => 'LIVRE']);
+
+        $response = $this->getJson('/api/sales?per_page=100&status='.urlencode('EN COURS'), $this->authHeaders());
+
+        $ids = collect($response->assertOk()->json('data'))->pluck('id');
+        $this->assertTrue($ids->contains($enCours->id));
+        $this->assertFalse($ids->contains($livre->id));
+    }
+
+    public function test_index_rejects_unknown_status()
+    {
+        $this->getJson('/api/sales?status='.urlencode('LIVRE,FOO'), $this->authHeaders())
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('status');
+    }
+
     /**
      * L'adresse du client lié — refonte 2b. La ressource exposait le nom, le
      * téléphone et la ville, mais pas l'adresse : la demande de modification
@@ -839,6 +876,27 @@ class SaleControllerTest extends TestCase
 
         $filtered->assertOk()
             ->assertJsonPath('ca_avec_facture', 450);
+    }
+
+    public function test_summary_filters_by_several_statuses()
+    {
+        foreach (['EN COURS' => 600, 'LIVRE' => 300, 'ANNULE' => 450] as $status => $total) {
+            $this->createSale([
+                'date' => now()->toDateString(),
+                'total_sale' => $total,
+                'with_invoice' => true,
+                'status' => $status,
+            ]);
+        }
+
+        // Cancelled sales are only counted when the user picks them.
+        $this->getJson('/api/sales-summary?status='.urlencode('EN COURS,ANNULE'), $this->authHeaders())
+            ->assertOk()
+            ->assertJsonPath('ca_avec_facture', 1050);
+
+        $this->getJson('/api/sales-summary?status='.urlencode('EN COURS,LIVRE'), $this->authHeaders())
+            ->assertOk()
+            ->assertJsonPath('ca_avec_facture', 900);
     }
 
     public function test_summary_returns_tyres_period_when_date_filter_active()
@@ -2072,6 +2130,106 @@ class SaleControllerTest extends TestCase
 
         $this->get('/api/sales/export?payment_method=Chèque', $this->authHeaders())
             ->assertOk();
+    }
+
+    public function test_export_applies_several_statuses(): void
+    {
+        $this->createSale(['status' => 'LIVRE']);
+        $this->createSale(['status' => 'MONTE']);
+        $this->createSale(['status' => 'EN COURS']);
+
+        $this->assertSame(['LIVRE', 'MONTE'], $this->exportedValues('status='.urlencode('LIVRE,MONTE'), 'Statut'));
+    }
+
+    public function test_export_applies_several_payment_statuses(): void
+    {
+        $this->createSale(['payment_status' => 'NON PAYE']);
+        $this->createSale(['payment_status' => 'PARTIEL']);
+        $this->createSale(['payment_status' => 'PAYE']);
+
+        $this->assertSame(
+            ['NON PAYE', 'PARTIEL'],
+            $this->exportedValues('payment_status='.urlencode('NON PAYE,PARTIEL'), 'Paiement')
+        );
+    }
+
+    /**
+     * Distinct values of one column of the Excel export, read back from the
+     * streamed file.
+     *
+     * @return array<int, string>
+     */
+    private function exportedValues(string $query, string $header): array
+    {
+        $response = $this->get('/api/sales/export?'.$query, $this->authHeaders());
+        $response->assertOk();
+
+        $file = tempnam(sys_get_temp_dir(), 'sales-export');
+        file_put_contents($file, $response->streamedContent());
+        $rows = IOFactory::load($file)->getActiveSheet()->toArray();
+        unlink($file);
+
+        $column = array_search($header, $rows[0], true);
+        $this->assertNotFalse($column, "Column '{$header}' missing from the export");
+
+        return collect(array_slice($rows, 1))->pluck($column)->unique()->sort()->values()->all();
+    }
+
+    public function test_index_filters_by_several_payment_statuses(): void
+    {
+        $unpaid = $this->createSale(['payment_status' => 'NON PAYE']);
+        $partial = $this->createSale(['payment_status' => 'PARTIEL']);
+        $paid = $this->createSale(['payment_status' => 'PAYE']);
+
+        $ids = collect($this->getJson('/api/sales?per_page=100&payment_status='.urlencode('NON PAYE,PARTIEL'), $this->authHeaders())
+            ->assertOk()->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($unpaid->id));
+        $this->assertTrue($ids->contains($partial->id));
+        $this->assertFalse($ids->contains($paid->id));
+    }
+
+    public function test_index_filters_by_several_payment_methods(): void
+    {
+        $cheque = $this->createSale(['client' => 'Client Chèque']);
+        $this->createPaymentForSale($cheque, 'Chèque');
+        $effet = $this->createSale(['client' => 'Client Effet']);
+        $this->createPaymentForSale($effet, 'Effet');
+        $especes = $this->createSale(['client' => 'Client Espèces']);
+        $this->createPaymentForSale($especes, 'Espèces');
+
+        $ids = collect($this->getJson('/api/sales?per_page=100&payment_method='.urlencode('Chèque,Effet'), $this->authHeaders())
+            ->assertOk()->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($cheque->id));
+        $this->assertTrue($ids->contains($effet->id));
+        $this->assertFalse($ids->contains($especes->id));
+    }
+
+    public function test_index_rejects_unknown_payment_filters(): void
+    {
+        $this->getJson('/api/sales?payment_method=TPE', $this->authHeaders())
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('payment_method');
+
+        $this->getJson('/api/sales?payment_status='.urlencode('PAYÉ'), $this->authHeaders())
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('payment_status');
+    }
+
+    public function test_summary_follows_the_payment_methods(): void
+    {
+        $cheque = $this->createSale(['date' => now()->toDateString(), 'total_sale' => 600, 'with_invoice' => true]);
+        $this->createPaymentForSale($cheque, 'Chèque');
+        $effet = $this->createSale(['date' => now()->toDateString(), 'total_sale' => 300, 'with_invoice' => true]);
+        $this->createPaymentForSale($effet, 'Effet');
+        $especes = $this->createSale(['date' => now()->toDateString(), 'total_sale' => 450, 'with_invoice' => true]);
+        $this->createPaymentForSale($especes, 'Espèces');
+
+        // Same rows as the list: the cards used to ignore the payment method.
+        $this->getJson('/api/sales-summary?payment_method='.urlencode('Chèque,Effet'), $this->authHeaders())
+            ->assertOk()
+            ->assertJsonPath('ca_avec_facture', 900);
     }
 
     /**

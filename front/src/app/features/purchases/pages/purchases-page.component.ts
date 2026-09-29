@@ -8,13 +8,14 @@ import { PurchaseService } from '../data-access/purchase.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ListContextService } from '../../../core/services/list-context.service';
 import { Purchase, PurchaseGroupRow, PurchaseSummary, PurchaseSupplierGroup } from '../models/purchase.model';
-import { PURCHASE_STATUSES, PURCHASE_STATUS_LABELS, PURCHASE_STATUS_TRANSITIONS, PAYMENT_STATUSES, PAYMENT_STATUS_LABELS, PurchaseStatus } from '../../../core/constants/status.constants';
-import { PAYMENT_METHODS, paymentMethodClass } from '../../../core/constants/payment-method.constants';
+import { PURCHASE_STATUSES, PURCHASE_STATUS_LABELS, PURCHASE_STATUS_TRANSITIONS, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_OPTIONS, PaymentStatus, PurchaseStatus } from '../../../core/constants/status.constants';
+import { PAYMENT_METHOD_OPTIONS, paymentMethodClass } from '../../../core/constants/payment-method.constants';
 import { PurchasePaymentsComponent } from '../purchase-payments/purchase-payments.component';
 import { PurchaseReturnComponent } from '../purchase-return/purchase-return.component';
 import { PurchaseReceiveComponent } from '../purchase-receive/purchase-receive.component';
 import { AutoRefreshControlComponent } from '../../../shared/auto-refresh-control/auto-refresh-control.component';
 import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { FilterPillsComponent } from '../../../shared/filter-pills/filter-pills.component';
 import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 import {
   ActiveFilter,
@@ -30,7 +31,7 @@ import { LatestRequest } from '../../../core/utils/latest-request';
 @Component({
   selector: 'app-purchases-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, PurchasePaymentsComponent, PurchaseReturnComponent, PurchaseReceiveComponent, AutoRefreshControlComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ConfirmDeleteComponent],
+  imports: [CommonModule, FormsModule, RouterLink, PurchasePaymentsComponent, PurchaseReturnComponent, PurchaseReceiveComponent, AutoRefreshControlComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, ConfirmDeleteComponent, FilterPillsComponent],
   templateUrl: './purchases-page.component.html',
   styleUrls: ['./purchases-page.component.scss']
 })
@@ -46,9 +47,6 @@ export class PurchasesPageComponent implements OnInit {
   }
   readonly PURCHASE_STATUSES = PURCHASE_STATUSES;
   readonly PURCHASE_STATUS_LABELS = PURCHASE_STATUS_LABELS;
-  readonly PAYMENT_STATUSES = PAYMENT_STATUSES;
-  readonly PAYMENT_STATUS_LABELS = PAYMENT_STATUS_LABELS;
-  readonly PAYMENT_METHODS = PAYMENT_METHODS;
   readonly paymentMethodClass = paymentMethodClass;
 
   private purchaseService = inject(PurchaseService);
@@ -162,9 +160,14 @@ export class PurchasesPageComponent implements OnInit {
   perPage = signal<number>(100);
 
   filterSearch = signal('');
-  filterStatus = signal('');
-  filterPaymentStatus = signal('');
-  filterPaymentMethod = signal('');
+  /** Statuts cochés — plusieurs à la fois, aucun = tous. Envoyés joints par des virgules. */
+  filterStatuses = signal<string[]>([]);
+  readonly statusOptions = PURCHASE_STATUSES.map((s) => ({ value: s, label: PURCHASE_STATUS_LABELS[s] }));
+  /** Paiement et mode de paiement : même principe, plusieurs valeurs cochées à la fois. */
+  filterPaymentStatuses = signal<string[]>([]);
+  filterPaymentMethods = signal<string[]>([]);
+  readonly paymentStatusOptions = PAYMENT_STATUS_OPTIONS;
+  readonly paymentMethodOptions = PAYMENT_METHOD_OPTIONS;
   filterSupplier = signal('');
   filterCommercial = signal('');
   filterDateFrom = signal('');
@@ -209,12 +212,17 @@ export class PurchasesPageComponent implements OnInit {
     if (reception) drop(reception === 'expected' ? 'attendues' : 'reçues', () => this.receptionTab.set(''));
 
     if (this.filterSearch()) drop(`recherche « ${this.filterSearch()} »`, () => this.filterSearch.set(''));
-    if (this.filterStatus()) {
-      const label = PURCHASE_STATUS_LABELS[this.filterStatus() as PurchaseStatus] ?? this.filterStatus();
-      drop(`statut ${label.toLowerCase()}`, () => this.filterStatus.set(''));
+    for (const status of this.filterStatuses()) {
+      const label = PURCHASE_STATUS_LABELS[status as PurchaseStatus] ?? status;
+      drop(`statut ${label.toLowerCase()}`, () => this.filterStatuses.update((list) => list.filter((s) => s !== status)));
     }
-    if (this.filterPaymentStatus()) drop(this.filterPaymentStatus().toLowerCase(), () => this.filterPaymentStatus.set(''));
-    if (this.filterPaymentMethod()) drop(`règlement ${this.filterPaymentMethod().toLowerCase()}`, () => this.filterPaymentMethod.set(''));
+    for (const status of this.filterPaymentStatuses()) {
+      const label = PAYMENT_STATUS_LABELS[status as PaymentStatus] ?? status;
+      drop(label.toLowerCase(), () => this.filterPaymentStatuses.update((list) => list.filter((s) => s !== status)));
+    }
+    for (const method of this.filterPaymentMethods()) {
+      drop(`règlement ${method.toLowerCase()}`, () => this.filterPaymentMethods.update((list) => list.filter((m) => m !== method)));
+    }
     if (this.filterSupplier()) {
       const supplier = this.filterOptions().suppliers.find((s) => String(s.id) === this.filterSupplier());
       drop(`fournisseur ${supplier?.name ?? this.filterSupplier()}`, () => this.filterSupplier.set(''));
@@ -285,9 +293,9 @@ export class PurchasesPageComponent implements OnInit {
       page: this.currentPage().toString(),
       per_page: this.perPage().toString(),
       search: this.filterSearch(),
-      status: this.filterStatus(),
-      payment_status: this.filterPaymentStatus(),
-      payment_method: this.filterPaymentMethod(),
+      status: this.filterStatuses().join(','),
+      payment_status: this.filterPaymentStatuses().join(','),
+      payment_method: this.filterPaymentMethods().join(','),
       supplier_id: this.filterSupplier(),
       commercial_id: this.filterCommercial(),
       date_from: this.filterDateFrom(),
@@ -384,9 +392,9 @@ export class PurchasesPageComponent implements OnInit {
 
   resetFilters(): void {
     this.filterSearch.set('');
-    this.filterStatus.set('');
-    this.filterPaymentStatus.set('');
-    this.filterPaymentMethod.set('');
+    this.filterStatuses.set([]);
+    this.filterPaymentStatuses.set([]);
+    this.filterPaymentMethods.set([]);
     this.filterSupplier.set('');
     this.filterCommercial.set('');
     this.filterDateFrom.set('');

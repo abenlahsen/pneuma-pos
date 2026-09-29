@@ -5,13 +5,15 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ServiceOrder, ServiceOrderFilters, ServiceOrderPayload, ServiceOrderSummary } from '../../../core/models/service-order.model';
-import { PaymentStatus, ServiceOrderStatus, SERVICE_ORDER_STATUSES, SERVICE_ORDER_STATUS_LABELS, PAYMENT_STATUSES, PAYMENT_STATUS_LABELS } from '../../../core/constants/status.constants';
+import { PaymentStatus, ServiceOrderStatus, SERVICE_ORDER_STATUSES, SERVICE_ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_OPTIONS, paymentStatusTag } from '../../../core/constants/status.constants';
+import { PAYMENT_METHOD_OPTIONS } from '../../../core/constants/payment-method.constants';
 import { ServiceOrderService } from '../data-access/service-order.service';
 import { ServicePaymentPanelComponent } from '../service-payment-panel/service-payment-panel.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
 import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 import { RowOverflowComponent } from '../../../shared/row-overflow/row-overflow.component';
+import { FilterPillsComponent } from '../../../shared/filter-pills/filter-pills.component';
 import {
   ActiveFilter,
   ListEmptyComponent,
@@ -29,7 +31,7 @@ import { LatestRequest } from '../../../core/utils/latest-request';
   imports: [
     CommonModule,
     FormsModule,
-    ServicePaymentPanelComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, RowOverflowComponent, ConfirmDeleteComponent],
+    ServicePaymentPanelComponent, IconComponent, SkeletonRowComponent, ListEmptyComponent, ListErrorComponent, RowLockComponent, RowOverflowComponent, ConfirmDeleteComponent, FilterPillsComponent],
   templateUrl: './service-orders.component.html',
   styleUrls: ['./service-orders.component.scss'],
 })
@@ -45,8 +47,6 @@ export class ServiceOrdersComponent implements OnInit {
   }
   readonly SERVICE_ORDER_STATUSES = SERVICE_ORDER_STATUSES;
   readonly SERVICE_ORDER_STATUS_LABELS = SERVICE_ORDER_STATUS_LABELS;
-  readonly PAYMENT_STATUSES = PAYMENT_STATUSES;
-  readonly PAYMENT_STATUS_LABELS = PAYMENT_STATUS_LABELS;
 
   serviceOrders = signal<ServiceOrder[]>([]);
   summary = signal<ServiceOrderSummary>({ total_revenue: 0, total_purchase: 0, total_margin: 0, total_paid: 0, remaining: 0 });
@@ -60,9 +60,19 @@ export class ServiceOrdersComponent implements OnInit {
   filterSearch = signal('');
   filterClientId = signal<number | null>(null);
   filterProductId = signal<number | null>(null);
-  filterStatus = signal('');
-  filterPaymentStatus = signal('');
-  filterPaymentMethod = signal('');
+  /**
+   * Statuts cochés — plusieurs à la fois. Aucun coché : tous sauf les
+   * annulées (refonte 2b, 12a — une intervention annulée quitte la liste par
+   * défaut ; la pastille « Annulée » la fait revenir).
+   */
+  filterStatuses = signal<string[]>([]);
+  readonly statusOptions = SERVICE_ORDER_STATUSES.map((s) => ({ value: s, label: SERVICE_ORDER_STATUS_LABELS[s] }));
+  /** Paiement et mode de paiement : même principe, plusieurs valeurs cochées à la fois. */
+  filterPaymentStatuses = signal<string[]>([]);
+  filterPaymentMethods = signal<string[]>([]);
+  readonly paymentStatusOptions = PAYMENT_STATUS_OPTIONS;
+  readonly paymentStatusTag = paymentStatusTag;
+  readonly paymentMethodOptions = PAYMENT_METHOD_OPTIONS;
   filterCommercial = signal('');
   filterDateFrom = signal('');
   filterDateTo = signal('');
@@ -107,12 +117,17 @@ export class ServiceOrdersComponent implements OnInit {
       const label = product?.profile || product?.reference || String(this.filterProductId());
       drop(`prestation ${label}`, () => this.filterProductId.set(null));
     }
-    if (this.filterStatus()) {
-      const label = SERVICE_ORDER_STATUS_LABELS[this.filterStatus() as ServiceOrderStatus] ?? this.filterStatus();
-      drop(`statut ${label.toLowerCase()}`, () => this.filterStatus.set(''));
+    for (const status of this.filterStatuses()) {
+      const label = SERVICE_ORDER_STATUS_LABELS[status as ServiceOrderStatus] ?? status;
+      drop(`statut ${label.toLowerCase()}`, () => this.filterStatuses.update((list) => list.filter((s) => s !== status)));
     }
-    if (this.filterPaymentStatus()) drop(this.filterPaymentStatus().toLowerCase(), () => this.filterPaymentStatus.set(''));
-    if (this.filterPaymentMethod()) drop(`règlement ${this.filterPaymentMethod().toLowerCase()}`, () => this.filterPaymentMethod.set(''));
+    for (const status of this.filterPaymentStatuses()) {
+      const label = PAYMENT_STATUS_LABELS[status as PaymentStatus] ?? status;
+      drop(label.toLowerCase(), () => this.filterPaymentStatuses.update((list) => list.filter((s) => s !== status)));
+    }
+    for (const method of this.filterPaymentMethods()) {
+      drop(`règlement ${method.toLowerCase()}`, () => this.filterPaymentMethods.update((list) => list.filter((m) => m !== method)));
+    }
     if (this.filterCommercial()) drop(`commercial ${this.filterCommercial()}`, () => this.filterCommercial.set(''));
     if (this.filterDateFrom()) drop(`à partir du ${frenchDate(this.filterDateFrom())}`, () => this.filterDateFrom.set(''));
     if (this.filterDateTo()) drop(`jusqu'au ${frenchDate(this.filterDateTo())}`, () => this.filterDateTo.set(''));
@@ -123,12 +138,6 @@ export class ServiceOrdersComponent implements OnInit {
   isExporting = signal(false);
 
   exportError = signal('');
-  /**
-   * Refonte 2b, 12a : les interventions annulées sont masquées par défaut ;
-   * le filtre « Annulées » les fait revenir. Un filtre de statut explicite
-   * l'emporte.
-   */
-  readonly showCancelled = signal(false);
   private readonly router = inject(Router);
   paymentOrder = signal<ServiceOrder | null>(null);
   deletingId = signal<number | null>(null);
@@ -258,7 +267,7 @@ export class ServiceOrdersComponent implements OnInit {
         order,
         due,
         statusLabel: due
-          ? `Non payé · ${this.formatDays(now - new Date(order.updated_at ?? now).getTime())} j`
+          ? `Impayé · ${this.formatDays(now - new Date(order.updated_at ?? now).getTime())} j`
           : 'Payé',
         amount: due ? (order.remaining ?? 0) : Number(order.net_amount ?? 0),
       };
@@ -358,9 +367,9 @@ export class ServiceOrdersComponent implements OnInit {
     this.filterSearch.set('');
     this.filterClientId.set(null);
     this.filterProductId.set(null);
-    this.filterStatus.set('');
-    this.filterPaymentStatus.set('');
-    this.filterPaymentMethod.set('');
+    this.filterStatuses.set([]);
+    this.filterPaymentStatuses.set([]);
+    this.filterPaymentMethods.set([]);
     this.filterCommercial.set('');
     this.filterDateFrom.set('');
     this.filterDateTo.set('');
@@ -378,8 +387,8 @@ export class ServiceOrdersComponent implements OnInit {
 
   /** Lien « Voir en liste » des colonnes tronquées : bascule en liste avec les filtres du seau. */
   viewBucketInList(bucket: 'a-facturer' | 'facture'): void {
-    this.filterStatus.set('TERMINE');
-    this.filterPaymentStatus.set(bucket === 'a-facturer' ? 'NON PAYE' : '');
+    this.filterStatuses.set(['TERMINE']);
+    this.filterPaymentStatuses.set(bucket === 'a-facturer' ? ['NON PAYE'] : []);
     this.viewMode.set('list');
     this.applyFilters();
   }
@@ -429,11 +438,6 @@ export class ServiceOrdersComponent implements OnInit {
 
   openEditForm(order: ServiceOrder): void {
     this.openDetail(order);
-  }
-
-  toggleCancelled(): void {
-    this.showCancelled.update(v => !v);
-    this.applyFilters();
   }
 
   orderProductLabels(order: ServiceOrder): string[] {
@@ -494,10 +498,10 @@ export class ServiceOrdersComponent implements OnInit {
     if (this.filterSearch()) f['search'] = this.filterSearch();
     if (this.filterClientId()) f['client_id'] = String(this.filterClientId());
     if (this.filterProductId()) f['product_id'] = String(this.filterProductId());
-    if (this.filterStatus()) f['status'] = this.filterStatus();
-    else if (!this.showCancelled()) f['exclude_status'] = 'ANNULE';
-    if (this.filterPaymentStatus()) f['payment_status'] = this.filterPaymentStatus();
-    if (this.filterPaymentMethod()) f['payment_method'] = this.filterPaymentMethod();
+    if (this.filterStatuses().length) f['status'] = this.filterStatuses().join(',');
+    else f['exclude_status'] = 'ANNULE';
+    if (this.filterPaymentStatuses().length) f['payment_status'] = this.filterPaymentStatuses().join(',');
+    if (this.filterPaymentMethods().length) f['payment_method'] = this.filterPaymentMethods().join(',');
     if (this.filterCommercial()) f['commercial_id'] = this.filterCommercial();
     if (this.filterDateFrom()) f['date_from'] = this.filterDateFrom();
     if (this.filterDateTo()) f['date_to'] = this.filterDateTo();

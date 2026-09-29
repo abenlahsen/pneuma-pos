@@ -10,6 +10,7 @@ import { Account } from '../../../core/models/account.model';
 import { AccountService } from '../../../core/services/account.service';
 import { SalePaymentDetailComponent } from '../components/sale-payment-detail/sale-payment-detail.component';
 import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
+import { paymentStatusTag } from '../../../core/constants/status.constants';
 import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
 
 const PAYMENT_METHODS = ['Espèces', 'Chèque', 'Virement', 'Effet', 'Carte bancaire'];
@@ -46,6 +47,7 @@ export class PaymentPanelComponent implements OnInit {
   viewingPaymentId = signal<number | null>(null);
 
   readonly paymentMethods = PAYMENT_METHODS;
+  readonly paymentStatusTag = paymentStatusTag;
   showAddForm = false;
   formData: PaymentPayload = {
     amount: 0,

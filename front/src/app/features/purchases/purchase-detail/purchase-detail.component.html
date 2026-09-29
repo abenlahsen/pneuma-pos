@@ -25,7 +25,7 @@
       <span class="sd-badge"
             [class.sd-badge--ok]="isSettled"
             [class.sd-badge--late]="!isSettled">
-        {{ purchase.payment_status }}@if (settlementAgeDays; as d) { · {{ d }} J }
+        {{ paymentStatusTag(purchase.payment_status) }}@if (settlementAgeDays; as d) { · {{ d }} J }
       </span>
       <span class="sd-badge" [class.sd-badge--wait]="purchase.status === 'EN COURS'">{{ purchase.status === 'EN COURS' ? 'ATTENDU' : purchase.status }}</span>
     </span>

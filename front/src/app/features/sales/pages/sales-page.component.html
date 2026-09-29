@@ -113,26 +113,20 @@
 
         <div class="form-group">
           <label>Statut</label>
-          <select class="form-control" [ngModel]="filterStatus()" (ngModelChange)="filterStatus.set($event); applyFilters()">
-            <option value="">Tous</option>
-            <option *ngFor="let status of filterOptions().statuses" [value]="status">{{ status }}</option>
-          </select>
+          <app-filter-pills [options]="statusOptions" [selected]="filterStatuses()"
+                            (selectedChange)="filterStatuses.set($event); applyFilters()" />
         </div>
 
         <div class="form-group">
           <label>Paiement</label>
-          <select class="form-control" [ngModel]="filterPaymentStatus()" (ngModelChange)="filterPaymentStatus.set($event); applyFilters()">
-            <option value="">Tous</option>
-            <option *ngFor="let ps of filterOptions().payment_statuses" [value]="ps">{{ ps }}</option>
-          </select>
+          <app-filter-pills label="Paiement" [options]="paymentStatusOptions" [selected]="filterPaymentStatuses()"
+                            (selectedChange)="filterPaymentStatuses.set($event); applyFilters()" />
         </div>
 
         <div class="form-group">
           <label>Mode paiement</label>
-          <select class="form-control" [ngModel]="filterPaymentMethod()" (ngModelChange)="filterPaymentMethod.set($event); applyFilters()">
-            <option value="">Tous</option>
-            <option *ngFor="let m of PAYMENT_METHODS" [value]="m">{{ m }}</option>
-          </select>
+          <app-filter-pills label="Mode de paiement" [options]="paymentMethodOptions" [selected]="filterPaymentMethods()"
+                            (selectedChange)="filterPaymentMethods.set($event); applyFilters()" />
         </div>
 
         <div class="form-group">
@@ -255,7 +249,7 @@
             [class.list-grid-status--paid]="sale.payment_status === 'PAYE'"
             [class.list-grid-status--unpaid]="sale.payment_status === 'NON PAYE' || !sale.payment_status"
             [class.list-grid-status--partial]="sale.payment_status === 'PARTIEL'">
-        {{ sale.payment_status || 'NON PAYE' }}
+        {{ paymentStatusTag(sale.payment_status) }}
         <!-- Gabarit 14b : sous le seuil de changement de forme, la rangée du
              bas porte l'état. Le statut de livraison y rejoint celui du
              paiement, en lecture — sa modification reste dans le menu ⋯. -->

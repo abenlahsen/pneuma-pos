@@ -66,6 +66,49 @@ test.describe('Ventes', () => {
     }
   });
 
+  test('le filtre Statut accepte plusieurs statuts à la fois', async ({ page }) => {
+    await waitForList(page);
+    await page.locator('.filter-toggle').click();
+    const pills = page.locator('.filters-section').getByRole('group', { name: 'Statut' });
+
+    await pills.getByRole('button', { name: 'Livrée' }).click();
+    const listResponse = page.waitForResponse((r) =>
+      /\/api\/sales\?/.test(r.url()) && new URL(r.url()).searchParams.get('status') === 'LIVRE,MONTE');
+    await pills.getByRole('button', { name: 'Montée' }).click();
+
+    const body = await (await listResponse).json();
+    for (const sale of body.data) {
+      expect(['LIVRE', 'MONTE']).toContain(sale.status);
+    }
+    await expect(pills.getByRole('button', { name: 'Livrée' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('.filter-chip', { hasText: 'Livrée' })).toBeVisible();
+    await expect(page.locator('.filter-chip', { hasText: 'Montée' })).toBeVisible();
+  });
+
+  test('les filtres Paiement et Mode de paiement acceptent plusieurs valeurs', async ({ page }) => {
+    await waitForList(page);
+    await page.locator('.filter-toggle').click();
+    const panel = page.locator('.filters-section');
+    const payment = panel.getByRole('group', { name: 'Paiement', exact: true });
+    const methods = panel.getByRole('group', { name: 'Mode de paiement' });
+
+    await payment.getByRole('button', { name: 'Impayé' }).click();
+    const byStatus = page.waitForResponse((r) =>
+      /\/api\/sales\?/.test(r.url()) && new URL(r.url()).searchParams.get('payment_status') === 'NON PAYE,PARTIEL');
+    await payment.getByRole('button', { name: 'Partiel' }).click();
+    for (const sale of (await (await byStatus).json()).data) {
+      expect(['NON PAYE', 'PARTIEL']).toContain(sale.payment_status);
+    }
+    await expect(page.locator('.filter-chip--alert', { hasText: 'Impayé' })).toBeVisible();
+
+    await methods.getByRole('button', { name: 'Chèque' }).click();
+    const byMethod = page.waitForResponse((r) =>
+      /\/api\/sales\?/.test(r.url()) && new URL(r.url()).searchParams.get('payment_method') === 'Chèque,Effet');
+    await methods.getByRole('button', { name: 'Effet' }).click();
+    expect((await byMethod).ok()).toBe(true);
+    await expect(page.locator('.filter-chip', { hasText: 'Effet' })).toBeVisible();
+  });
+
   test('affiche les ventes ou un état vide', async ({ page }) => {
     const count = await waitForList(page);
     if (count > 0) {

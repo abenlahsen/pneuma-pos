@@ -41,23 +41,23 @@ describe('ListEmptyComponent', () => {
     const text = render([
       { label: 'septembre 2026', clear: vi.fn() },
       { label: 'K. Amrani', clear: vi.fn() },
-      { label: 'non payé', clear: vi.fn() },
+      { label: 'impayé', clear: vi.fn() },
     ]).nativeElement.textContent;
 
     expect(text).toContain('Aucune vente ne correspond');
     expect(text).toContain('3 filtres sont actifs');
-    expect(text).toContain('septembre 2026, K. Amrani, non payé');
+    expect(text).toContain('septembre 2026, K. Amrani, impayé');
   });
 
   it('accords the sentence for a single filter', () => {
-    const text = render([{ label: 'non payé', clear: vi.fn() }]).nativeElement.textContent;
+    const text = render([{ label: 'impayé', clear: vi.fn() }]).nativeElement.textContent;
 
     expect(text).toContain('1 filtre est actif');
   });
 
   it('offers one removal button per filter, plus "Tout effacer"', () => {
     const fixture = render([
-      { label: 'non payé', clear: vi.fn() },
+      { label: 'impayé', clear: vi.fn() },
       { label: 'K. Amrani', clear: vi.fn() },
     ]);
     const buttons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('button'));
@@ -79,7 +79,7 @@ describe('ListEmptyComponent', () => {
     const first = vi.fn();
     const second = vi.fn();
     const fixture = render([
-      { label: 'non payé', clear: first },
+      { label: 'impayé', clear: first },
       { label: 'K. Amrani', clear: second },
     ]);
 
@@ -90,7 +90,7 @@ describe('ListEmptyComponent', () => {
   });
 
   it('emits clearAll from the "Tout effacer" button', () => {
-    const fixture = render([{ label: 'non payé', clear: vi.fn() }]);
+    const fixture = render([{ label: 'impayé', clear: vi.fn() }]);
     const seen = vi.fn();
     fixture.componentInstance.clearAll.subscribe(seen);
 

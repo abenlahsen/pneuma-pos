@@ -20,9 +20,13 @@ test.describe('Service Auto', () => {
     await page.getByRole('button', { name: 'Liste' }).click();
     const bar = page.locator('.filter-bar');
     await expect(bar.getByRole('combobox', { name: 'Fiche client' })).toBeVisible();
-    await expect(bar.getByRole('combobox', { name: 'Statut' })).toBeVisible();
-    await expect(bar.getByRole('combobox', { name: 'Paiement', exact: true })).toBeVisible();
-    await expect(bar.getByRole('button', { name: 'Annulées' })).toBeVisible();
+    const statuses = bar.getByRole('group', { name: 'Statut' });
+    for (const label of ['En cours', 'Terminée', 'Annulée']) {
+      await expect(statuses.getByRole('button', { name: label })).toHaveAttribute('aria-pressed', 'false');
+    }
+    await expect(bar.getByRole('group', { name: 'Paiement', exact: true }).getByRole('button', { name: 'Impayé' })).toBeVisible();
+    // « Effet » manquait à la liste codée en dur : elle vient maintenant des constantes communes.
+    await expect(bar.getByRole('group', { name: 'Mode de paiement' }).getByRole('button', { name: 'Effet' })).toBeVisible();
   });
 
   // Refonte 2b, étape 11 : la vue Liste est passée au motif de ligne.

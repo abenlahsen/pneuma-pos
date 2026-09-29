@@ -11,7 +11,7 @@ import { ShipmentChangeService } from '../../shipment-changes/data-access/shipme
 import { ShipmentChangeListComponent } from '../../shipment-changes/components/shipment-change-list/shipment-change-list.component';
 import { ShipmentChangeFormComponent } from '../../shipment-changes/components/shipment-change-form/shipment-change-form.component';
 import { ShipmentChangeRequest, ShipmentChangeRequestPayload } from '../../shipment-changes/models/shipment-change.model';
-import { ShipmentChangeStatus } from '../../../core/constants/status.constants';
+import { ShipmentChangeStatus, paymentStatusTag } from '../../../core/constants/status.constants';
 import { isTypingTarget } from '../../../core/utils/detail-navigator';
 import { ConfirmDeleteComponent } from '../../../shared/confirm-delete/confirm-delete.component';
 import { PendingDelete } from '../../../shared/confirm-delete/pending-delete';
@@ -54,6 +54,7 @@ export class SaleDetailComponent implements OnInit, OnChanges {
   @Output() collect = new EventEmitter<void>();
 
   readonly paymentMethodClass = paymentMethodClass;
+  readonly paymentStatusTag = paymentStatusTag;
 
   shipmentRequests = signal<ShipmentChangeRequest[]>([]);
   loadingShipmentRequests = signal(false);

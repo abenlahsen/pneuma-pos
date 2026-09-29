@@ -123,9 +123,9 @@ describe('DocumentPrintComponent', () => {
       expect(comp.paymentState()).toBe(`PARTIEL · RESTE DÛ 15${NBSP}196,48`);
     });
 
-    it('dit NON PAYÉ sans aucun paiement', () => {
+    it('dit IMPAYÉ sans aucun paiement', () => {
       comp.document = makeDoc({ totals: { lines_total: 100, net: 100, paid: 0 } });
-      expect(comp.paymentState()).toBe('NON PAYÉ');
+      expect(comp.paymentState()).toBe('IMPAYÉ');
     });
   });
 

@@ -108,6 +108,107 @@ describe('SalesPageComponent', () => {
     });
   });
 
+  describe('filtre multi-statuts', () => {
+    const emptyPage = { data: [], current_page: 1, last_page: 1, total: 0 };
+
+    function build() {
+      const sent: Record<string, string>[] = [];
+      const saleService = {
+        getSales: (filters: Record<string, string>) => { sent.push(filters); return of(emptyPage); },
+        getSummary: () => EMPTY,
+        getFilters: () => EMPTY,
+      };
+
+      TestBed.configureTestingModule({
+        providers: [
+          provideZonelessChangeDetection(),
+          { provide: SaleService, useValue: saleService },
+          { provide: AuthService, useValue: { hasPermission: () => true, hasRole: () => true } },
+          { provide: CityService, useValue: { getCities: () => EMPTY } },
+          { provide: ActivatedRoute, useValue: { queryParamMap: EMPTY } },
+        ],
+      });
+
+      return { component: TestBed.createComponent(SalesPageComponent).componentInstance, sent };
+    }
+
+    it('sends the ticked statuses joined by commas', () => {
+      const { component, sent } = build();
+      component.filterStatuses.set(['LIVRE', 'MONTE']);
+      component.applyFilters();
+
+      expect(sent.at(-1)?.['status']).toBe('LIVRE,MONTE');
+    });
+
+    it('sends no status when none is ticked', () => {
+      const { component, sent } = build();
+      component.applyFilters();
+
+      expect(sent.at(-1)?.['status']).toBe('');
+    });
+
+    it('shows one removable chip per status, with its French label', () => {
+      const { component, sent } = build();
+      component.filterStatuses.set(['EN COURS', 'LIVRE']);
+
+      const chips = component.activeFilterChips();
+      expect(chips.map((c) => c.label)).toEqual(['En cours', 'Livrée']);
+
+      chips[0].remove();
+      expect(component.filterStatuses()).toEqual(['LIVRE']);
+      expect(sent.at(-1)?.['status']).toBe('LIVRE');
+    });
+
+    it('clears the statuses on reset', () => {
+      const { component } = build();
+      component.filterStatuses.set(['ANNULE']);
+      component.resetFilters();
+
+      expect(component.filterStatuses()).toEqual([]);
+    });
+
+    it('sends the ticked payment statuses and methods joined by commas', () => {
+      const { component, sent } = build();
+      component.filterPaymentStatuses.set(['NON PAYE', 'PARTIEL']);
+      component.filterPaymentMethods.set(['Chèque', 'Effet']);
+      component.applyFilters();
+
+      expect(sent.at(-1)?.['payment_status']).toBe('NON PAYE,PARTIEL');
+      expect(sent.at(-1)?.['payment_method']).toBe('Chèque,Effet');
+    });
+
+    it('labels payment chips in French and flags the unpaid one', () => {
+      const { component } = build();
+      component.filterPaymentStatuses.set(['NON PAYE', 'PAYE']);
+      component.filterPaymentMethods.set(['Virement']);
+
+      const chips = component.activeFilterChips();
+      expect(chips.map((c) => c.label)).toEqual(['Impayé', 'Payé', 'Virement']);
+      expect(chips.map((c) => !!c.alert)).toEqual([true, false, false]);
+      expect(component.activeFilters().map((f) => f.label)).toEqual(['impayé', 'payé', 'règlement virement']);
+    });
+
+    it('removes one payment method from its chip, keeping the others', () => {
+      const { component, sent } = build();
+      component.filterPaymentMethods.set(['Espèces', 'Chèque']);
+
+      component.activeFilterChips()[0].remove();
+
+      expect(component.filterPaymentMethods()).toEqual(['Chèque']);
+      expect(sent.at(-1)?.['payment_method']).toBe('Chèque');
+    });
+
+    it('clears the payment filters on reset', () => {
+      const { component } = build();
+      component.filterPaymentStatuses.set(['PAYE']);
+      component.filterPaymentMethods.set(['Effet']);
+      component.resetFilters();
+
+      expect(component.filterPaymentStatuses()).toEqual([]);
+      expect(component.filterPaymentMethods()).toEqual([]);
+    });
+  });
+
   /**
    * Refonte 2b, §14c état 4. Le grief du handoff n'est pas que les boutons
    * soient masqués — c'est que la colonne Actions change alors de largeur d'une

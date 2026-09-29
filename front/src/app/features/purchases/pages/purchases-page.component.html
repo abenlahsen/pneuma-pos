@@ -96,26 +96,20 @@
 
         <div class="form-group">
           <label>Statut</label>
-          <select class="form-control" [ngModel]="filterStatus()" (ngModelChange)="filterStatus.set($event); applyFilters()">
-            <option value="">Tous</option>
-            <option *ngFor="let s of PURCHASE_STATUSES" [value]="s">{{ PURCHASE_STATUS_LABELS[s] }}</option>
-          </select>
+          <app-filter-pills [options]="statusOptions" [selected]="filterStatuses()"
+                            (selectedChange)="filterStatuses.set($event); applyFilters()" />
         </div>
 
         <div class="form-group">
           <label>Paiement</label>
-          <select class="form-control" [ngModel]="filterPaymentStatus()" (ngModelChange)="filterPaymentStatus.set($event); applyFilters()">
-            <option value="">Tous</option>
-            <option *ngFor="let s of PAYMENT_STATUSES" [value]="s">{{ PAYMENT_STATUS_LABELS[s] }}</option>
-          </select>
+          <app-filter-pills label="Paiement" [options]="paymentStatusOptions" [selected]="filterPaymentStatuses()"
+                            (selectedChange)="filterPaymentStatuses.set($event); applyFilters()" />
         </div>
 
         <div class="form-group">
           <label>Mode paiement</label>
-          <select class="form-control" [ngModel]="filterPaymentMethod()" (ngModelChange)="filterPaymentMethod.set($event); applyFilters()">
-            <option value="">Tous</option>
-            <option *ngFor="let m of PAYMENT_METHODS" [value]="m">{{ m }}</option>
-          </select>
+          <app-filter-pills label="Mode de paiement" [options]="paymentMethodOptions" [selected]="filterPaymentMethods()"
+                            (selectedChange)="filterPaymentMethods.set($event); applyFilters()" />
         </div>
 
         <div class="form-group">

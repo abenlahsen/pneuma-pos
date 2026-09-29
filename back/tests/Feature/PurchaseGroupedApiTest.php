@@ -153,6 +153,42 @@ class PurchaseGroupedApiTest extends TestCase
         }
     }
 
+    public function test_cancelled_purchases_come_back_when_their_status_is_picked(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $received = $this->makePurchase(100, 5);
+        $cancelled = $this->makePurchase(9000, 20);
+        $cancelled->update(['status' => 'ANNULE']);
+
+        $group = $this->fetchGroup(['per_page' => 200, 'status' => 'RECU,ANNULE']);
+
+        $this->assertNotNull($group);
+        $ids = collect($group['purchases'])->pluck('id');
+        $this->assertContains($received->id, $ids);
+        $this->assertContains($cancelled->id, $ids);
+    }
+
+    public function test_grouped_view_filters_by_several_payment_methods(): void
+    {
+        Sanctum::actingAs($this->user, [], 'web');
+
+        $cheque = $this->makePurchase(500, 5);
+        $this->payPartially($cheque, 100, 'Chèque');
+        $virement = $this->makePurchase(500, 5);
+        $this->payPartially($virement, 100, 'Virement');
+        $especes = $this->makePurchase(500, 5);
+        $this->payPartially($especes, 100, 'Espèces');
+
+        $group = $this->fetchGroup(['per_page' => 200, 'payment_method' => 'Chèque,Virement']);
+
+        $this->assertNotNull($group);
+        $ids = collect($group['purchases'])->pluck('id');
+        $this->assertContains($cheque->id, $ids);
+        $this->assertContains($virement->id, $ids);
+        $this->assertNotContains($especes->id, $ids);
+    }
+
     /**
      * @param  array<string, mixed>  $query
      * @return array<string, mixed>|null
@@ -180,14 +216,14 @@ class PurchaseGroupedApiTest extends TestCase
         ]);
     }
 
-    private function payPartially(Purchase $purchase, float $amount): void
+    private function payPartially(Purchase $purchase, float $amount, string $method = 'Espèces'): void
     {
         $payment = PurchasePayment::query()->create([
             'purchase_id' => null,
             'supplier_id' => $this->supplier->id,
             'amount' => $amount,
             'date' => Carbon::today()->toDateString(),
-            'method' => 'Espèces',
+            'method' => $method,
         ]);
 
         PurchasePaymentAllocation::query()->create([

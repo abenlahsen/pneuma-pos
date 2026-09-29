@@ -1,0 +1,29 @@
+@use '../../features/variables' as *;
+
+// Même dessin que le `.pill-group` du filtre « Facture » (_page-layout.scss),
+// mais en pastilles séparées qui passent à la ligne : cinq statuts ou cinq
+// modes de paiement ne tiennent pas dans une cellule du panneau Filtres.
+:host { display: block; }
+
+.fp-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.fp-pill {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: $text-muted;
+  background: transparent;
+  border: 1px solid $border-color;
+  border-radius: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover:not(.active) { background: rgba(255, 45, 55, 0.05); }
+  &:focus-visible { outline: 2px solid $primary; outline-offset: 1px; }
+  &.active { background: $primary; border-color: $primary; color: #fff; }
+}
