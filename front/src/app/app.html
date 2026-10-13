@@ -16,6 +16,10 @@
     <!-- Montée ici et non dans la barre haute : elle doit rester atteignable
          au clavier (⌘K) depuis n'importe quel écran, et se superposer à tout. -->
     <app-command-palette />
+
+    <!-- Étape 14a : barre haute et bandeau « Toujours en cours… », pour toute
+         requête qui dure. Fixés au viewport, au-dessus des volets. -->
+    <app-pending-indicator />
   </div>
 } @else {
   <router-outlet />

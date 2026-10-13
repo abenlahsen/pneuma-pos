@@ -1,5 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 
+import { isRequestTimeout } from '../../core/interceptors/request-timeout.interceptor';
+
 /**
  * Traduit une erreur HTTP en une cause lisible et un détail technique —
  * refonte 2b, §14c état 3.
@@ -18,7 +20,12 @@ export function describeLoadError(error: unknown): LoadErrorInfo {
   const status = response?.status ?? 0;
 
   let cause: string;
-  if (response === null) {
+  if (isRequestTimeout(response)) {
+    // Étape 14a : abandonnée par le navigateur au bout du délai maximum. Le
+    // message dit lequel — « n'a pas répondu » tout court ferait croire à
+    // une panne franche, alors que le serveur est peut-être juste lent.
+    cause = response.error.message;
+  } else if (response === null) {
     // Ni le réseau ni le serveur : une erreur levée côté navigateur. Dire
     // « le serveur n'a pas répondu » enverrait chercher la panne au mauvais endroit.
     cause = 'La requête a échoué.';
