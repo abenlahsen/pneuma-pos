@@ -28,12 +28,6 @@ class CompanySettingsService
             'patente' => null,
             'logo_path' => null,
             'favicon_path' => null,
-            'theme_mode' => 'system',
-            'primary_color' => '#ff2d37',
-            'accent_color' => '#1e293b',
-            'surface_color' => '#ffffff',
-            'menu_layout' => 'vertical',
-            'navbar_variant' => 'default',
             'content_width' => 'full',
         ]);
     }
@@ -47,12 +41,6 @@ class CompanySettingsService
 
         if (! $settings) {
             $settings = new CompanySetting([
-                'theme_mode' => 'system',
-                'primary_color' => '#ff2d37',
-                'accent_color' => '#1e293b',
-                'surface_color' => '#ffffff',
-                'menu_layout' => 'vertical',
-                'navbar_variant' => 'default',
                 'content_width' => 'full',
             ]);
         }

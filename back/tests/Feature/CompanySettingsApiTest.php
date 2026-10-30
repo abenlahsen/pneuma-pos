@@ -20,6 +20,16 @@ class CompanySettingsApiTest extends TestCase
 
     protected string $baseUrl = '/api/settings/company';
 
+    /** Réglages de thème retirés — refonte 2b, étape 7a puis leur nettoyage. */
+    private const RETIRED_THEME_FIELDS = [
+        'theme_mode',
+        'primary_color',
+        'accent_color',
+        'surface_color',
+        'menu_layout',
+        'navbar_variant',
+    ];
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -148,12 +158,6 @@ class CompanySettingsApiTest extends TestCase
                 $table->string('patente')->nullable();
                 $table->string('logo_path')->nullable();
                 $table->string('favicon_path')->nullable();
-                $table->string('theme_mode')->default('system');
-                $table->string('primary_color', 7)->default('#ff2d37');
-                $table->string('accent_color', 7)->default('#1e293b');
-                $table->string('surface_color', 7)->default('#ffffff');
-                $table->string('menu_layout')->default('vertical');
-                $table->string('navbar_variant')->default('default');
                 $table->string('content_width')->default('full');
                 $table->timestamps();
             });
@@ -222,12 +226,6 @@ class CompanySettingsApiTest extends TestCase
                 'patente',
                 'logo_path',
                 'favicon_path',
-                'theme_mode',
-                'primary_color',
-                'accent_color',
-                'surface_color',
-                'menu_layout',
-                'navbar_variant',
                 'content_width',
                 'created_at',
                 'updated_at',
@@ -235,8 +233,54 @@ class CompanySettingsApiTest extends TestCase
             ->assertJsonPath('company_name', '')
             ->assertJsonPath('legal_name', null)
             ->assertJsonPath('ice', null)
-            ->assertJsonPath('theme_mode', 'system')
-            ->assertJsonPath('menu_layout', 'vertical');
+            ->assertJsonPath('content_width', 'full');
+    }
+
+    /**
+     * Le personnalisateur de thème a quitté l'écran à l'étape 7a, et ses
+     * couleurs ne pilotaient plus rien. Le mode sombre, lui, s'appliquait
+     * encore à moitié sur un poste réglé en sombre. Plus rien n'en reste.
+     */
+    public function test_the_retired_theme_settings_are_gone(): void
+    {
+        $this->authenticateWithPermissions(['view settings']);
+
+        $response = $this->getJson($this->baseUrl)->assertOk();
+
+        foreach (self::RETIRED_THEME_FIELDS as $field) {
+            $response->assertJsonMissingPath($field);
+            $this->assertFalse(Schema::hasColumn('company_settings', $field), "La colonne {$field} existe encore.");
+        }
+    }
+
+    public function test_update_ignores_retired_theme_settings(): void
+    {
+        $this->authenticateWithPermissions(['edit settings']);
+
+        // Une ancienne version de l'écran peut encore les envoyer : rien ne
+        // doit échouer, ni s'enregistrer.
+        $this->putJson($this->baseUrl, [
+            'company_name' => 'Pneuma',
+            'theme_mode' => 'dark',
+            'primary_color' => 'not-a-color',
+        ])
+            ->assertOk()
+            ->assertJsonMissingPath('theme_mode')
+            ->assertJsonMissingPath('primary_color');
+    }
+
+    public function test_update_persists_the_content_width(): void
+    {
+        $this->authenticateWithPermissions(['edit settings']);
+
+        $this->putJson($this->baseUrl, [
+            'company_name' => 'Pneuma',
+            'content_width' => 'compact',
+        ])
+            ->assertOk()
+            ->assertJsonPath('content_width', 'compact');
+
+        $this->assertDatabaseHas('company_settings', ['content_width' => 'compact']);
     }
 
     public function test_show_returns_persisted_settings(): void
@@ -260,12 +304,6 @@ class CompanySettingsApiTest extends TestCase
             'patente' => 'PAT654',
             'logo_path' => 'settings/company/logo.png',
             'favicon_path' => 'settings/company/favicon.ico',
-            'theme_mode' => 'dark',
-            'primary_color' => '#112233',
-            'accent_color' => '#334455',
-            'surface_color' => '#ffffff',
-            'menu_layout' => 'horizontal',
-            'navbar_variant' => 'compact',
             'content_width' => 'boxed',
         ]);
 
@@ -278,8 +316,7 @@ class CompanySettingsApiTest extends TestCase
             ->assertJsonPath('company_name', 'Pneuma SARL')
             ->assertJsonPath('city', 'Casablanca')
             ->assertJsonPath('ice', 'ICE789')
-            ->assertJsonPath('theme_mode', 'dark')
-            ->assertJsonPath('menu_layout', 'horizontal');
+            ->assertJsonPath('content_width', 'boxed');
     }
 
     public function test_update_requires_authentication(): void
@@ -356,12 +393,6 @@ class CompanySettingsApiTest extends TestCase
             'patente' => null,
             'logo_path' => null,
             'favicon_path' => null,
-            'theme_mode' => 'system',
-            'primary_color' => '#ff2d37',
-            'accent_color' => '#1e293b',
-            'surface_color' => '#ffffff',
-            'menu_layout' => 'vertical',
-            'navbar_variant' => 'default',
             'content_width' => 'full',
         ]);
 
@@ -392,7 +423,7 @@ class CompanySettingsApiTest extends TestCase
         $response = $this->putJson($this->baseUrl, [
             'company_name' => '',
             'email' => 'invalid-email',
-            'primary_color' => 'not-a-color',
+            'content_width' => 'immense',
         ]);
 
         $response
@@ -400,7 +431,7 @@ class CompanySettingsApiTest extends TestCase
             ->assertJsonValidationErrors([
                 'company_name',
                 'email',
-                'primary_color',
+                'content_width',
             ]);
     }
 

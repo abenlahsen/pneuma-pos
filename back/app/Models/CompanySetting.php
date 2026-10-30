@@ -26,12 +26,6 @@ class CompanySetting extends Model
         'patente',
         'logo_path',
         'favicon_path',
-        'theme_mode',
-        'primary_color',
-        'accent_color',
-        'surface_color',
-        'menu_layout',
-        'navbar_variant',
         'content_width',
         'prime_threshold',
         // Portail (étape 13.2) : à partir de ce stock, « Disponible ».

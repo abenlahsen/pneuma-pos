@@ -100,8 +100,9 @@ $alert-ink:        #8f1218;   // texte d'alerte sur fond rosé
 $warning-ink:      #7a4f00;   // texte ocre sur $warning-bg (#fdf6e6) : attendu, en attente
 
 // CSS Custom Properties (defined in styles.scss :root — NOT app.scss, see below)
-// --app-primary, --app-accent, --app-background, --app-surface, --app-text,
-// --app-text-muted, --app-border, --app-shadow (none)
+// --app-background, --app-text — the only two left, read by body and the shell.
+// Screen colours are the SCSS tokens above, fixed at build time: there is no
+// runtime colour setting (the theme customizer and its columns are gone).
 ```
 
 ### Typography
@@ -148,8 +149,7 @@ in `_variables.scss` are all `0`.
 
 ### Shadows
 
-**None.** `$shadow-sm`/`$shadow-md` in `_variables.scss` are `none`;
-`--app-shadow` in `styles.scss` is `none` in both light and dark. Separation
+**None.** `$shadow-sm`/`$shadow-md` in `_variables.scss` are `none`. Separation
 between elements comes from 1px rules (`$border-color`, `$border-subtle`),
 not elevation. The `box-shadow` used by `:focus-visible` rings is
 **not** touched — it's not an elevation shadow and stays for accessibility.
@@ -402,18 +402,12 @@ aucune palette de commandes n'est encore branchée dessus.
 
 ## DARK MODE
 
-Activated via `[data-theme-resolved='dark']` on `:root`.
-
-```scss
-:root[data-theme-resolved='dark'] {
-  --app-background: #0f172a;
-  --app-text:       #f8fafc;
-  --app-text-muted: #cbd5e1;
-  --app-border:     rgba(148, 163, 184, 0.24);
-  --app-surface:    #1e293b;
-  --app-shadow:     0 16px 40px rgba(2, 6, 23, 0.45);
-}
-```
+**None — the app is light only.** A `[data-theme-resolved='dark']` block used
+to repaint the shell's background and text when the OS was in dark mode, while
+every screen kept its hard-coded light surfaces: unreadable titles on dark
+navy, white cards. It was removed together with the theme settings. A real
+dark mode would mean moving every screen's colours to CSS custom properties —
+a redesign step of its own, not a toggle.
 
 ---
 

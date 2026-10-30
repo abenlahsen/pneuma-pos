@@ -1,6 +1,3 @@
-export type ThemeMode = 'light' | 'dark' | 'system';
-export type MenuLayout = 'horizontal' | 'vertical';
-export type NavbarVariant = 'default' | 'compact' | 'flat';
 export type ContentWidth = 'full' | 'boxed' | 'compact';
 
 export interface CompanySettings {
@@ -22,12 +19,6 @@ export interface CompanySettings {
   logo_url: string | null;
   favicon_path?: string | null;
   favicon_url: string | null;
-  theme_mode: ThemeMode;
-  primary_color: string;
-  accent_color: string;
-  surface_color: string;
-  menu_layout: MenuLayout;
-  navbar_variant: NavbarVariant;
   content_width: ContentWidth;
   prime_threshold: number;
   /**
@@ -65,33 +56,14 @@ export interface UpdateCompanySettingsPayload {
   remove_logo?: boolean;
   remove_favicon?: boolean;
   /**
-   * Thème et disposition — facultatifs depuis la refonte 2b, 7a : le
-   * personnalisateur a été retiré de l'écran et la page n'envoie plus aucun de
-   * ces champs. Les déclarer obligatoires obligeait `emptyPayload()` à mentir
-   * par un `as`, qui a fini par masquer une vraie erreur de type. L'API les
-   * accepte toujours, d'où leur maintien ici.
+   * Facultatif : aucun contrôle de l'écran ne le règle, mais l'API l'accepte
+   * et app.scss le lit. Les couleurs et le mode clair/sombre, retirés de
+   * l'écran à l'étape 7a, n'existent plus côté API.
    */
-  theme_mode?: ThemeMode;
-  primary_color?: string;
-  accent_color?: string;
-  surface_color?: string;
-  menu_layout?: MenuLayout;
-  navbar_variant?: NavbarVariant;
   content_width?: ContentWidth;
   prime_threshold?: number;
   closed_weekdays: number[];
   holidays: string[];
 }
 
-export const DEFAULT_COMPANY_THEME_SETTINGS: Pick<
-  CompanySettings,
-  'theme_mode' | 'primary_color' | 'accent_color' | 'surface_color' | 'menu_layout' | 'navbar_variant' | 'content_width'
-> = {
-  theme_mode: 'system',
-  primary_color: '#ff2d37',
-  accent_color: '#1e293b',
-  surface_color: '#ffffff',
-  menu_layout: 'vertical',
-  navbar_variant: 'default',
-  content_width: 'full',
-};
+export const DEFAULT_CONTENT_WIDTH: ContentWidth = 'full';

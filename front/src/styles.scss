@@ -34,32 +34,18 @@
    globale, et non dans app.scss : un bloc `:root { … }` écrit dans un
    composant Angular (app.component est un composant comme un autre) est
    réécrit par l'encapsulation de vues en `:root[_ngcontent-xxx]` — un
-   sélecteur qui ne correspond jamais à <html> et rendait donc tout ce bloc
-   mort depuis l'origine (seuls --app-primary/--app-accent/--app-surface
-   semblaient fonctionner, injectés à part en JS par ThemeService via
-   `style.setProperty`, ce qui masquait le problème). Tout le reste retombait
-   silencieusement sur les valeurs de repli ci-dessous. */
+   sélecteur qui ne correspond jamais à <html>.
+
+   Il n'en reste que deux, les seuls qu'une règle lise (ici et app.scss). Les
+   écrans tirent leurs couleurs des jetons SCSS de _variables.scss, fixés à la
+   compilation. L'application est claire uniquement : le bloc sombre qui
+   vivait ici ne repeignait que le fond et le texte du shell, si bien qu'un
+   poste réglé en sombre voyait des titres illisibles sur bleu nuit et des
+   cartes restées blanches. */
 :root {
-  --app-primary: #ff2d37;
-  --app-accent: #0c1e33;
-  --app-surface: #ffffff;
   --app-background: #e6edf7;
   --app-text: #0c1e33;
-  --app-text-muted: #4a5c75;
-  --app-border: #adc2da;
-  --app-navbar-text: #ffffff;
-  --app-shadow: none;
   color-scheme: light;
-}
-
-:root[data-theme-resolved='dark'] {
-  --app-background: #0f172a;
-  --app-text: #f8fafc;
-  --app-text-muted: #cbd5e1;
-  --app-border: rgba(148, 163, 184, 0.24);
-  --app-navbar-text: #f8fafc;
-  --app-shadow: none;
-  color-scheme: dark;
 }
 
 html,
