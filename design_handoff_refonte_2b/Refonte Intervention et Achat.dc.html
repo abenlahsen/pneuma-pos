@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"><style>body{margin:0;background:#dfe7f2;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}a{color:#c2181f}a:hover{color:#8f1218}code{font:500 11.5px ui-monospace,Menlo,monospace;background:#f4f8fd;border:1px solid #cfdcec;padding:1px 5px}</style></helmet>
+
+<section style="padding:36px 40px 52px;display:flex;flex-direction:column;gap:20px">
+
+<div style="display:flex;align-items:baseline;gap:10px">
+<span style="font:700 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#0c1e33;color:#fff;border-radius:4px;letter-spacing:.06em">20</span>
+<span style="font:700 13px/1.2 'Inter',sans-serif;color:#0c1e33">INTERVENTION, SAISIE D'ACHAT, RETOUR FOURNISSEUR</span>
+</div>
+
+<div style="max-width:940px;display:flex;flex-direction:column;gap:9px">
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e">Les trois surfaces restées dans leur modale d'origine. Elles reprennent les gabarits déjà posés : l'éditeur plein écran de la saisie de vente et de la fiche produit pour <a href="#20a">20a</a> et <a href="#20b">20b</a>, le volet 15d pour <a href="#20c">20c</a>.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">L'intervention fusionne fiche et formulaire.</strong> Aujourd'hui, la fiche est une modale de consultation et le formulaire une autre modale, avec trois sections empilées. Sur le pont, l'intervention se construit au fil du travail : on ajoute une pièce, on termine, on facture. C'est donc un seul écran éditable, dont l'état avance dans la barre de titre.</p>
+<p style="margin:0;font:400 13px/1.65 'Inter',sans-serif;color:#41546e"><strong style="font-weight:600;color:#0c1e33">L'achat reçoit le même traitement que la vente.</strong> Recherche par dimension à gauche, lignes au centre, fournisseur et totaux à droite. Le panneau fournisseur montre ce qu'on lui doit déjà et son délai contractuel avant d'ajouter une dette.</p>
+</div>
+
+<div id="20a" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter',sans-serif;color:#41546e"><a href="#20a" style="font:700 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(12,30,51,.1);color:#0c1e33;border-radius:5px;text-decoration:none">20a</a>Intervention — fiche et saisie en un écran, route /service-auto/:id</div>
+
+<div style="width:1440px;height:860px;display:grid;grid-template-rows:60px minmax(0,1fr) 64px;background:#e6edf7;color:#0c1e33;border:1px solid #adc2da;overflow:hidden;box-shadow:0 10px 25px rgba(12,30,51,.14)">
+
+  <div style="display:flex;align-items:center;gap:14px;padding:0 20px;background:#f4f8fd;border-bottom:1px solid #cfdcec">
+    <a href="#20a" style="display:flex;align-items:center;gap:7px;height:36px;padding:0 12px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-size:12.5px;font-weight:600;text-decoration:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>Atelier</a>
+    <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+      <span style="display:flex;align-items:baseline;gap:9px"><span style="font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.01em">44821-A-12</span><span style="font-size:13.5px;font-weight:600;color:#41546e">Dacia Logan</span></span>
+      <span style="font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">Intervention 612 · ouverte le 17/09 à 09:40 · M. Tazi</span>
+    </span>
+    <div style="margin-left:22px;display:flex;align-items:center">
+      <span style="display:flex;align-items:center;gap:6px;height:30px;padding:0 11px;background:#0c1e33;color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em">1 · EN COURS</span>
+      <span style="width:16px;height:1px;background:#adc2da"></span>
+      <span style="display:flex;align-items:center;height:30px;padding:0 11px;border:1px solid #cfdcec;background:#fff;color:#4a5c75;font-size:11px;font-weight:700;letter-spacing:.08em">2 · TERMINÉE</span>
+      <span style="width:16px;height:1px;background:#adc2da"></span>
+      <span style="display:flex;align-items:center;height:30px;padding:0 11px;border:1px solid #cfdcec;background:#fff;color:#4a5c75;font-size:11px;font-weight:700;letter-spacing:.08em">3 · FACTURÉE</span>
+    </div>
+    <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
+      <button type="button" style="height:36px;padding:0 13px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Imprimer</button>
+      <button type="button" title="Plus" style="width:36px;height:36px;border:1px solid #adc2da;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="#0c1e33"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>
+    </span>
+  </div>
+
+  <div style="min-height:0;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) 380px;background:#fff">
+
+    <div style="min-height:0;overflow:hidden;display:flex;flex-direction:column;border-right:1px solid #cfdcec">
+
+      <div style="display:flex;align-items:center;gap:8px;padding:12px 22px;border-bottom:1px solid #cfdcec;background:#f4f8fd">
+        <span style="font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase">Travaux</span>
+        <span style="font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">4 prestations · 3 pièces</span>
+        <span style="margin-left:auto;display:flex;gap:7px">
+          <button type="button" style="height:32px;padding:0 12px;border:1px solid #0c1e33;background:#fff;color:#0c1e33;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer">+ Prestation</button>
+          <button type="button" style="height:32px;padding:0 12px;border:1px solid #0c1e33;background:#fff;color:#0c1e33;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer">+ Pièce</button>
+        </span>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:7px;padding:10px 22px;border-bottom:1px solid #cfdcec">
+        <span style="font-size:11px;color:#4a5c75">Fréquentes</span>
+        <button type="button" style="height:28px;padding:0 10px;border:1px solid #cfdcec;background:#fff;color:#41546e;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">+ Vidange</button>
+        <button type="button" style="height:28px;padding:0 10px;border:1px solid #cfdcec;background:#fff;color:#41546e;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">+ Géométrie</button>
+        <button type="button" style="height:28px;padding:0 10px;border:1px solid #cfdcec;background:#fff;color:#41546e;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">+ Équilibrage</button>
+        <button type="button" style="height:28px;padding:0 10px;border:1px solid #cfdcec;background:#fff;color:#41546e;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">+ Plaquettes</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:30px minmax(0,1fr) 64px 104px 104px 112px 36px;align-items:center;gap:11px;padding:7px 22px;border-bottom:1px solid #0c1e33;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#4a5c75">
+        <span></span><span>Désignation</span><span style="text-align:right">Qté</span><span style="text-align:right">Coût DH</span><span style="text-align:right">Prix DH</span><span style="text-align:right">Total DH</span><span></span>
+      </div>
+
+      <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column">
+
+        <div style="display:grid;grid-template-columns:30px minmax(0,1fr) 64px 104px 104px 112px 36px;align-items:center;gap:11px;min-height:56px;padding:0 22px;border-bottom:1px solid #e7eef8">
+          <span title="Prestation" style="width:26px;height:26px;border:1px solid #cfdcec;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#41546e" stroke-width="1.6"><path d="M14.5 3.5a5 5 0 0 0-6.3 6.3L3 15v6h6l5.2-5.2a5 5 0 0 0 6.3-6.3l-3.2 3.2-3-3 3.2-3.2z"/></svg></span>
+          <span style="min-width:0"><span style="display:block;font-size:14px;font-weight:600">Vidange moteur</span><span style="display:block;font-size:11.5px;color:#4a5c75">Prestation · catalogue</span></span>
+          <input type="text" value="1" style="height:34px;width:100%;box-sizing:border-box;padding:0 8px;border:1px solid #cfdcec;font-family:inherit;font-size:13.5px;text-align:right;font-variant-numeric:tabular-nums;color:#0c1e33">
+          <input type="text" value="0,00" style="height:34px;width:100%;box-sizing:border-box;padding:0 8px;border:1px solid #cfdcec;font-family:inherit;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;color:#4a5c75">
+          <input type="text" value="250,00" style="height:34px;width:100%;box-sizing:border-box;padding:0 8px;border:1px solid #cfdcec;font-family:inherit;font-size:13.5px;text-align:right;font-variant-numeric:tabular-nums;color:#0c1e33">
+          <span style="text-align:right;font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums">250,00</span>
+          <button type="button" title="Retirer" style="width:32px;height:32px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8f1218" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:30px minmax(0,1fr) 64px 104px 104px 112px 36px;align-items:center;gap:11px;min-height:56px;padding:0 22px;border-bottom:1px solid #e7eef8">
+          <span title="Pièce" style="width:26px;height:26px;border:1px solid #0c1e33;background:#0c1e33;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9z"/></svg></span>
+          <span style="min-width:0"><span style="display:block;font-size:14px;font-weight:600">Huile 5W40 · 5 L</span><span style="display:block;font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">Pièce · réf. TOT-5W40-5 · <span style="color:#15616d;font-weight:600">14 en stock</span></span></span>
+          <input type="text" value="1" style="height:34px;width:100%;box-sizing:border-box;padding:0 8px;border:1px solid #cfdcec;font-family:inherit;font-size:13.5px;text-align:right;font-variant-numeric:tabular-nums;color:#0c1e33">
+          <input type="text" value="265,00" style="height:34px;width:100%;box-sizing:border-box;padding:0 8px;border:1px solid #cfdcec;font-family:inherit;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;color:#4a5c75">
+          <input type="text" value="420,00" style="height:34px;width:100%;box-sizing:border-box;padding:0 8px;border:1px solid #cfdcec;font-family:inherit;font-size:13.5px;text-align:right;font-variant-numeric:tabular-nums;color:#0c1e33">
+          <span style="text-align:right;font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums">420,00</span>
+          <button type="button" title="Retirer" style="width:32px;height:32px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8f1218" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:30px minmax(0,1fr) 64px 104px 104px 112px 36px;align-items:center;gap:11px;min-height:56px;padding:0 22px;border-bottom:1px solid #e7eef8">
+          <span title="Pièce" style="width:26px;height:26px;border:1px solid #0c1e33;background:#0c1e33;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9z"/></svg></span>
+          <span style="min-width:0"><span style="display:block;font-size:14px;font-weight:600">Filtre à huile Logan 1.5 dCi</span><span style="display:block;font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">Pièce · réf. PUR-LS933 · <span style="color:#15616d;font-weight:600">6 en stock</span></span></span>
+          <input type="text" value="1" style="height:34px;width:100%;box-sizing:border-box;padding:0 8px;border:1px solid #cfdcec;font-family:inherit;font-size:13.5px;text-align:right;font-variant-numeric:tabular-nums;color:#0c1e33">
+          <input type="text" value="58,00" style="height:34px;width:100%;box-sizing:border-box;padding:0 8px;border:1px solid #cfdcec;font-family:inherit;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;color:#4a5c75">
+          <input type="text" value="110,00" style="height:34px;width:100%;box-sizing:border-box;padding:0 8px;border:1px solid #cfdcec;font-family:inherit;font-size:13.5px;text-align:right;font-variant-numeric:tabular-nums;color:#0c1e33">
+          <span style="text-align:right;font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums">110,00</span>
+          <button type="button" title="Retirer" style="width:32px;height:32px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8f1218" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:30px minmax(0,1fr) 64px 104px 104px 112px 36px;align-items:center;gap:11px;min-height:56px;padding:0 22px;border-bottom:1px solid #e7eef8;background:#fdf6e6">
+          <span title="Pièce" style="width:26px;height:26px;border:1px solid #0c1e33;background:#0c1e33;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9z"/></svg></span>
+          <span style="min-width:0"><span style="display:block;font-size:14px;font-weight:600">Plaquettes avant Logan</span><span style="display:block;font-size:11.5px;color:#7a4f00;font-weight:600;font-variant-numeric:tabular-nums">Pièce · réf. BRE-P68050 · 1 en stock pour 2 demandées</span></span>
+          <input type="text" value="2" style="height:34px;width:100%;box-sizing:border-box;padding:0 8px;border:1px solid #d4a017;font-family:inherit;font-size:13.5px;text-align:right;font-variant-numeric:tabular-nums;color:#0c1e33">
+          <input type="text" value="310,00" style="height:34px;width:100%;box-sizing:border-box;padding:0 8px;border:1px solid #cfdcec;font-family:inherit;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;color:#4a5c75">
+          <input type="text" value="520,00" style="height:34px;width:100%;box-sizing:border-box;padding:0 8px;border:1px solid #cfdcec;font-family:inherit;font-size:13.5px;text-align:right;font-variant-numeric:tabular-nums;color:#0c1e33">
+          <span style="text-align:right;font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums">1 040,00</span>
+          <button type="button" title="Retirer" style="width:32px;height:32px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8f1218" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:30px minmax(0,1fr) 64px 104px 104px 112px 36px;align-items:center;gap:11px;min-height:56px;padding:0 22px;border-bottom:1px solid #e7eef8">
+          <span title="Prestation" style="width:26px;height:26px;border:1px solid #cfdcec;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#41546e" stroke-width="1.6"><path d="M14.5 3.5a5 5 0 0 0-6.3 6.3L3 15v6h6l5.2-5.2a5 5 0 0 0 6.3-6.3l-3.2 3.2-3-3 3.2-3.2z"/></svg></span>
+          <span style="min-width:0"><span style="display:block;font-size:14px;font-weight:600">Remplacement plaquettes avant</span><span style="display:block;font-size:11.5px;color:#4a5c75">Prestation · catalogue</span></span>
+          <input type="text" value="1" style="height:34px;width:100%;box-sizing:border-box;padding:0 8px;border:1px solid #cfdcec;font-family:inherit;font-size:13.5px;text-align:right;font-variant-numeric:tabular-nums;color:#0c1e33">
+          <input type="text" value="0,00" style="height:34px;width:100%;box-sizing:border-box;padding:0 8px;border:1px solid #cfdcec;font-family:inherit;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;color:#4a5c75">
+          <input type="text" value="350,00" style="height:34px;width:100%;box-sizing:border-box;padding:0 8px;border:1px solid #cfdcec;font-family:inherit;font-size:13.5px;text-align:right;font-variant-numeric:tabular-nums;color:#0c1e33">
+          <span style="text-align:right;font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums">350,00</span>
+          <button type="button" title="Retirer" style="width:32px;height:32px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8f1218" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:30px minmax(0,1fr) 64px 104px 104px 112px 36px;align-items:center;gap:11px;min-height:56px;padding:0 22px;border-bottom:1px dashed #adc2da">
+          <span style="width:26px;height:26px;border:1px dashed #adc2da"></span>
+          <label style="display:flex;align-items:center;gap:9px;height:36px;padding:0 11px;border:1px solid #0c1e33;background:#fff">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4a5c75" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+            <span style="font-size:13px;color:#4a5c75">Ajouter une pièce ou une prestation : nom, référence…</span>
+          </label>
+          <span style="grid-column:3/-1;font-size:11px;color:#4a5c75">Entrée pour ajouter · la ligne garde le type choisi</span>
+        </div>
+
+        <div style="flex:1;min-height:0;display:flex;align-items:flex-end;padding:14px 22px">
+          <p style="margin:0;font-size:11.5px;line-height:1.6;color:#41546e">Prestation et pièce partagent une seule grille : la colonne Coût porte le prix d'achat de la pièce, ou 0 pour la main-d'œuvre. Aujourd'hui les deux types de ligne ont chacun leur disposition, et le libellé de la cinquième colonne change (« PV » ou « main-d'œuvre »).</p>
+        </div>
+      </div>
+    </div>
+
+    <aside style="min-height:0;overflow:hidden;display:flex;flex-direction:column;background:#f4f8fd">
+      <div style="padding:14px 18px;border-bottom:1px solid #cfdcec">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Client et véhicule</span>
+        <a href="#20a" style="display:block;margin-top:8px;font-size:14px;font-weight:600;color:#0c1e33;text-decoration:none">Garage Atlas Pneus →</a>
+        <span style="display:block;margin-top:2px;font-size:11.5px;color:#4a5c75">0661 24 88 03 · solde dû <span style="color:#c2181f;font-weight:600">48 600 DH</span></span>
+        <label style="display:flex;align-items:center;gap:10px;margin-top:11px">
+          <span style="font-size:12px;color:#41546e;width:88px">Kilométrage</span>
+          <input type="text" value="148 200" style="flex:1;height:34px;padding:0 9px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13.5px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums;color:#0c1e33">
+          <span style="font-size:11.5px;color:#4a5c75">km</span>
+        </label>
+        <span style="display:block;margin-top:5px;font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">Dernière visite 141 900 km, le 12/03 — vidange</span>
+      </div>
+
+      <div style="padding:14px 18px;border-bottom:1px solid #cfdcec;display:flex;flex-direction:column;gap:10px">
+        <span style="font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Suivi</span>
+        <label style="display:flex;align-items:center;gap:10px"><span style="font-size:12px;color:#41546e;width:88px">Mécanicien</span><select style="flex:1;height:34px;padding:0 8px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13px;color:#0c1e33"><option>M. Tazi</option><option>H. Chraibi</option></select></label>
+        <label style="display:flex;align-items:center;gap:10px"><span style="font-size:12px;color:#41546e;width:88px">Remise</span><input type="text" value="0" style="flex:1;height:34px;padding:0 9px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;color:#0c1e33"><span style="font-size:11.5px;color:#4a5c75">%</span></label>
+        <label style="display:flex;flex-direction:column;gap:5px"><span style="font-size:12px;color:#41546e">Notes internes</span><textarea rows="2" style="padding:7px 9px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:12.5px;line-height:1.5;color:#0c1e33;resize:none">Client signale un bruit au freinage à l'avant.</textarea></label>
+      </div>
+
+      <div style="padding:14px 18px;border-bottom:1px solid #0c1e33;background:#fff">
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:5px 0"><span style="font-size:12.5px;color:#41546e">Prestations</span><span style="font-size:13px;font-variant-numeric:tabular-nums">600,00</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:5px 0"><span style="font-size:12.5px;color:#41546e">Pièces</span><span style="font-size:13px;font-variant-numeric:tabular-nums">1 570,00</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12.5px;color:#41546e">TVA 20 %</span><span style="font-size:13px;font-variant-numeric:tabular-nums">434,00</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:9px 0 4px"><span style="font-size:13.5px;font-weight:700">Total TTC</span><span style="font-size:21px;font-weight:700;font-variant-numeric:tabular-nums">2 604,00</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:4px 0"><span style="font-size:12px;color:#4a5c75">Marge</span><span style="font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;color:#41546e">1 227,00 · 56,5 %</span></span>
+      </div>
+
+      <div style="flex:1;min-height:0;overflow:hidden;padding:14px 18px">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Paiements</span>
+        <p style="margin:8px 0 0;font-size:12px;line-height:1.6;color:#41546e">Aucun paiement. L'encaissement s'ouvre une fois l'intervention terminée, dans le volet 15d, comme sur la vente.</p>
+      </div>
+    </aside>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:10px;padding:0 20px;background:#fff;border-top:1px solid #0c1e33">
+    <span style="display:flex;align-items:center;gap:7px;font-size:11.5px;color:#7a4f00;font-weight:600"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8a5a00" stroke-width="1.8" stroke-linecap="round"><path d="M12 4 2.5 20h19L12 4z"/><path d="M12 10v4.5M12 17.2v.3"/></svg>Une pièce manque (plaquettes, 1 sur 2)</span>
+    <button type="button" style="height:34px;padding:0 12px;border:1px solid #d4a017;background:#fdf6e6;color:#5f3e00;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Commander la pièce</button>
+    <span style="margin-left:auto;font-size:11.5px;color:#4a5c75">Enregistré automatiquement · 11:52</span>
+    <button type="button" style="height:40px;padding:0 16px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer">Annuler l'intervention</button>
+    <button type="button" style="height:40px;padding:0 18px;border:1px solid #ff2d37;background:#ff2d37;color:#fff;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer">Terminer l'intervention</button>
+  </div>
+</div>
+<p style="margin:2px 0 0;max-width:1440px;font:400 12px/1.6 'Inter',sans-serif;color:#4a5c75">L'action principale du pied suit l'état : « Terminer » en cours, « Facturer » une fois terminée (bouton bleu d'encre, comme dans la colonne À facturer de l'atelier), « Encaisser » une fois facturée. L'annulation mène au statut <code>ANNULE</code>, qui fait sortir l'intervention des colonnes de l'atelier. Elle reste visible dans la vue Liste, filtrée par défaut.</p>
+</div>
+
+<div id="20b" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px;margin-top:12px">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter',sans-serif;color:#41546e"><a href="#20b" style="font:700 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(12,30,51,.1);color:#0c1e33;border-radius:5px;text-decoration:none">20b</a>Saisie d'achat — écran plein, route /achats/nouveau et /achats/:id/modifier</div>
+
+<div style="width:1440px;height:860px;display:grid;grid-template-rows:60px minmax(0,1fr) 64px;background:#e6edf7;color:#0c1e33;border:1px solid #adc2da;overflow:hidden;box-shadow:0 10px 25px rgba(12,30,51,.14)">
+
+  <div style="display:flex;align-items:center;gap:14px;padding:0 20px;background:#f4f8fd;border-bottom:1px solid #cfdcec">
+    <a href="#20b" style="display:flex;align-items:center;gap:7px;height:36px;padding:0 12px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-size:12.5px;font-weight:600;text-decoration:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>Achats</a>
+    <span style="font-size:16px;font-weight:700;letter-spacing:-.01em">Nouvel achat</span>
+    <span style="font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">Brouillon · 17/09/2026 · Y. Benali</span>
+  </div>
+
+  <div style="min-height:0;overflow:hidden;display:grid;grid-template-columns:400px minmax(0,1fr) 360px;background:#fff">
+
+    <div style="min-height:0;overflow:hidden;display:flex;flex-direction:column;border-right:1px solid #0c1e33;background:#f4f8fd">
+      <div style="padding:14px 16px;border-bottom:1px solid #cfdcec">
+        <label style="display:flex;align-items:center;gap:10px;height:44px;padding:0 12px;background:#fff;border:2px solid #0c1e33">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+          <span style="font-size:15px;font-weight:600">2055516</span>
+          <span style="margin-left:auto;font-size:11.5px;color:#4a5c75">5 références</span>
+        </label>
+        <span style="display:block;margin-top:7px;font-size:11px;color:#4a5c75">Dimension, marque ou référence. Seuls les produits de ce fournisseur remontent en premier.</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column">
+        <div style="padding:11px 16px;border-bottom:1px solid #e7eef8;background:#fff;display:flex;align-items:center;gap:10px">
+          <span style="flex:1;min-width:0"><span style="display:block;font-size:13.5px;font-weight:600">MICHELIN PRIMACY 4</span><span style="display:block;font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">205/55R16 91V · stock 4 · dernier achat 812 DH</span></span>
+          <span style="padding:2px 6px;border:1px solid #0c1e33;font-size:9.5px;font-weight:700;letter-spacing:.06em">AJOUTÉ</span>
+        </div>
+        <div style="padding:11px 16px;border-bottom:1px solid #e7eef8;background:#fff;display:flex;align-items:center;gap:10px">
+          <span style="flex:1;min-width:0"><span style="display:block;font-size:13.5px;font-weight:600">MICHELIN E-PRIMACY</span><span style="display:block;font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">205/55R16 91V · stock 0 · dernier achat 865 DH</span></span>
+          <button type="button" style="height:32px;padding:0 11px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Ajouter</button>
+        </div>
+        <div style="padding:11px 16px;border-bottom:1px solid #e7eef8;background:#fff;display:flex;align-items:center;gap:10px">
+          <span style="flex:1;min-width:0"><span style="display:block;font-size:13.5px;font-weight:600">MICHELIN PILOT SPORT 5</span><span style="display:block;font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">205/55R16 94Y XL · stock 2 · dernier achat 1 040 DH</span></span>
+          <button type="button" style="height:32px;padding:0 11px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Ajouter</button>
+        </div>
+        <div style="padding:9px 16px;font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#4a5c75;border-bottom:1px solid #e7eef8">Autres fournisseurs</div>
+        <div style="padding:11px 16px;border-bottom:1px solid #e7eef8;display:flex;align-items:center;gap:10px">
+          <span style="flex:1;min-width:0"><span style="display:block;font-size:13.5px;font-weight:600;color:#41546e">BRIDGESTONE TURANZA T005</span><span style="display:block;font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">205/55R16 91W · stock 11</span></span>
+          <button type="button" style="height:32px;padding:0 11px;border:1px solid #cfdcec;background:#f4f8fd;color:#41546e;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Ajouter</button>
+        </div>
+      </div>
+      <div style="flex:1;min-height:0;display:flex;align-items:flex-end;padding:12px 16px">
+        <span style="font-size:11px;line-height:1.55;color:#4a5c75">Produit introuvable ? <a href="#20b" style="color:#41546e;font-weight:600">Créer un produit</a> sans quitter l'achat.</span>
+      </div>
+    </div>
+
+    <div style="min-height:0;overflow:hidden;display:flex;flex-direction:column;border-right:1px solid #cfdcec">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 140px 64px 104px 110px 36px;align-items:center;gap:11px;padding:7px 20px;border-bottom:1px solid #0c1e33;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#4a5c75">
+        <span>Produit</span><span>Dépôt de réception</span><span style="text-align:right">Qté</span><span style="text-align:right">PU achat</span><span style="text-align:right">Total HT</span><span></span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 140px 64px 104px 110px 36px;align-items:center;gap:11px;min-height:60px;padding:0 20px;border-bottom:1px solid #e7eef8">
+        <span style="min-width:0"><span style="display:block;font-size:14px;font-weight:600">MICHELIN PRIMACY 4</span><span style="display:block;font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">205/55R16 91V · <span style="color:#15616d;font-weight:600">PV 1 180 · marge 29,7 %</span></span></span>
+        <select style="height:34px;padding:0 7px;border:1px solid #cfdcec;background:#fff;font-family:inherit;font-size:12.5px;color:#0c1e33"><option>Casablanca A-12</option></select>
+        <input type="text" value="48" style="height:34px;width:100%;box-sizing:border-box;padding:0 8px;border:1px solid #cfdcec;font-family:inherit;font-size:13.5px;text-align:right;font-variant-numeric:tabular-nums;color:#0c1e33">
+        <input type="text" value="830,00" style="height:34px;width:100%;box-sizing:border-box;padding:0 8px;border:1px solid #d4a017;font-family:inherit;font-size:13.5px;text-align:right;font-variant-numeric:tabular-nums;color:#0c1e33">
+        <span style="text-align:right;font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums">39 840,00</span>
+        <button type="button" title="Retirer" style="width:32px;height:32px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8f1218" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </div>
+      <div style="padding:6px 20px 8px 20px;border-bottom:1px solid #e7eef8;background:#fdf6e6;font-size:11px;color:#7a4f00;font-weight:600;font-variant-numeric:tabular-nums">Prix supérieur de 2,2 % au dernier achat (812 DH le 14/05).</div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 140px 64px 104px 110px 36px;align-items:center;gap:11px;min-height:60px;padding:0 20px;border-bottom:1px solid #e7eef8">
+        <span style="min-width:0"><span style="display:block;font-size:14px;font-weight:600">MICHELIN CROSSCLIMATE 2</span><span style="display:block;font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">225/45R17 94W · <span style="color:#15616d;font-weight:600">PV 1 520 · marge 31,6 %</span></span></span>
+        <select style="height:34px;padding:0 7px;border:1px solid #cfdcec;background:#fff;font-family:inherit;font-size:12.5px;color:#0c1e33"><option>Casablanca A-08</option></select>
+        <input type="text" value="24" style="height:34px;width:100%;box-sizing:border-box;padding:0 8px;border:1px solid #cfdcec;font-family:inherit;font-size:13.5px;text-align:right;font-variant-numeric:tabular-nums;color:#0c1e33">
+        <input type="text" value="1 040,00" style="height:34px;width:100%;box-sizing:border-box;padding:0 8px;border:1px solid #cfdcec;font-family:inherit;font-size:13.5px;text-align:right;font-variant-numeric:tabular-nums;color:#0c1e33">
+        <span style="text-align:right;font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums">24 960,00</span>
+        <button type="button" title="Retirer" style="width:32px;height:32px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8f1218" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 140px 64px 104px 110px 36px;align-items:center;gap:11px;min-height:60px;padding:0 20px;border-bottom:1px solid #e7eef8">
+        <span style="min-width:0"><span style="display:block;font-size:14px;font-weight:600">MICHELIN AGILIS 3</span><span style="display:block;font-size:11.5px;color:#4a5c75;font-variant-numeric:tabular-nums">215/65R16C 109T · <span style="color:#15616d;font-weight:600">PV 1 290 · marge 28,1 %</span></span></span>
+        <select style="height:34px;padding:0 7px;border:1px solid #cfdcec;background:#fff;font-family:inherit;font-size:12.5px;color:#0c1e33"><option>Rabat B-02</option></select>
+        <input type="text" value="16" style="height:34px;width:100%;box-sizing:border-box;padding:0 8px;border:1px solid #cfdcec;font-family:inherit;font-size:13.5px;text-align:right;font-variant-numeric:tabular-nums;color:#0c1e33">
+        <input type="text" value="927,00" style="height:34px;width:100%;box-sizing:border-box;padding:0 8px;border:1px solid #cfdcec;font-family:inherit;font-size:13.5px;text-align:right;font-variant-numeric:tabular-nums;color:#0c1e33">
+        <span style="text-align:right;font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums">14 832,00</span>
+        <button type="button" title="Retirer" style="width:32px;height:32px;border:1px solid #cfdcec;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8f1218" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </div>
+
+      <div style="flex:1;min-height:0;display:flex;align-items:flex-end;padding:14px 20px">
+        <p style="margin:0;font-size:11.5px;line-height:1.6;color:#41546e">La sous-ligne montre le prix de vente courant et la marge qu'il laisse au prix d'achat saisi. Un prix d'achat plus élevé que le dernier connu est signalé tout de suite, pendant la saisie, pas une fois la facture enregistrée. La colonne Stock actuelle devient « Dépôt de réception » : c'est l'emplacement où le lot entrera.</p>
+      </div>
+    </div>
+
+    <aside style="min-height:0;overflow:hidden;display:flex;flex-direction:column;background:#f4f8fd">
+      <div style="padding:14px 18px;border-bottom:1px solid #cfdcec">
+        <span style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Fournisseur</span>
+        <select style="margin-top:8px;width:100%;height:38px;padding:0 9px;border:1px solid #0c1e33;background:#fff;font-family:inherit;font-size:14px;font-weight:600;color:#0c1e33"><option>Michelin Maroc</option></select>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;padding:6px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12px;color:#41546e">Déjà dû</span><span style="font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:#c2181f">180 500,00</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0"><span style="font-size:12px;color:#41546e">Délai contractuel</span><span style="font-size:13px;font-weight:700;font-variant-numeric:tabular-nums">60 jours</span></span>
+        <span style="display:block;margin-top:5px;font-size:11px;line-height:1.55;color:#7a4f00;font-weight:600">2 achats au-delà de 90 jours. Cet achat portera le total dû à 274 988 DH.</span>
+      </div>
+
+      <div style="padding:14px 18px;border-bottom:1px solid #cfdcec;display:flex;flex-direction:column;gap:10px">
+        <span style="font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Documents</span>
+        <div style="display:flex">
+          <button type="button" style="flex:1;height:32px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Avec facture</button>
+          <button type="button" style="flex:1;height:32px;border:1px solid #adc2da;border-left:0;background:#fff;color:#41546e;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">BL seul</button>
+        </div>
+        <label style="display:flex;align-items:center;gap:10px"><span style="font-size:12px;color:#41546e;width:80px">N° BL</span><input type="text" value="BL-2026-0633" style="flex:1;height:34px;padding:0 9px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13px;color:#0c1e33"></label>
+        <label style="display:flex;align-items:center;gap:10px"><span style="font-size:12px;color:#41546e;width:80px">N° facture</span><input type="text" value="FAC-2026-0219" style="flex:1;height:34px;padding:0 9px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13px;color:#0c1e33"></label>
+        <label style="display:flex;align-items:center;gap:10px"><span style="font-size:12px;color:#41546e;width:80px">Réception</span>
+          <span style="flex:1;display:flex"><button type="button" style="flex:1;height:32px;border:1px solid #adc2da;background:#fff;color:#41546e;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Attendue</button><button type="button" style="flex:1;height:32px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Reçue</button></span>
+        </label>
+      </div>
+
+      <div style="padding:14px 18px;background:#fff;border-bottom:1px solid #0c1e33">
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:5px 0"><span style="font-size:12.5px;color:#41546e">88 pneus · HT</span><span style="font-size:13px;font-variant-numeric:tabular-nums">79 632,00</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid #cfdcec"><span style="font-size:12.5px;color:#41546e">TVA 20 %</span><span style="font-size:13px;font-variant-numeric:tabular-nums">15 926,40</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:9px 0 4px"><span style="font-size:13.5px;font-weight:700">Total TTC</span><span style="font-size:21px;font-weight:700;font-variant-numeric:tabular-nums">95 558,40</span></span>
+        <span style="display:flex;justify-content:space-between;align-items:baseline;padding:4px 0"><span style="font-size:12px;color:#4a5c75">Échéance</span><span style="font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;color:#41546e">16/11/2026</span></span>
+      </div>
+
+      <div style="flex:1;min-height:0;overflow:hidden;padding:14px 18px;display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#4a5c75">Règlement</span>
+        <div style="display:flex">
+          <button type="button" style="flex:1;height:32px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">À crédit</button>
+          <button type="button" style="flex:1;height:32px;border:1px solid #adc2da;border-left:0;background:#fff;color:#41546e;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Payé maintenant</button>
+        </div>
+        <span style="font-size:11px;line-height:1.55;color:#4a5c75">« Payé maintenant » ouvre la saisie du paiement dans le volet 15d après enregistrement.</span>
+      </div>
+    </aside>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:10px;padding:0 20px;background:#fff;border-top:1px solid #0c1e33">
+    <span style="font-size:11.5px;color:#4a5c75">Commercial : Y. Benali</span>
+    <span style="margin-left:auto;font-size:11.5px;color:#4a5c75">Le stock entre à l'enregistrement si la réception est « Reçue »</span>
+    <button type="button" style="height:40px;padding:0 16px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer">Garder en brouillon</button>
+    <button type="button" style="height:40px;padding:0 18px;border:1px solid #ff2d37;background:#ff2d37;color:#fff;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer">Enregistrer l'achat</button>
+  </div>
+</div>
+<p style="margin:2px 0 0;max-width:1440px;font:400 12px/1.6 'Inter',sans-serif;color:#4a5c75">Les champs Statut et Statut paiement du formulaire actuel deviennent deux choix segmentés à deux valeurs, placés là où ils ont un sens : réception sous les documents, règlement sous les totaux. « Garder en brouillon » suppose un statut brouillon côté backend : à confirmer, sinon le bouton disparaît.</p>
+</div>
+
+<div id="20c" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px;margin-top:12px">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Inter',sans-serif;color:#41546e"><a href="#20c" style="font:700 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(12,30,51,.1);color:#0c1e33;border-radius:5px;text-decoration:none">20c</a>Retour fournisseur — volet 15d sur la fiche d'achat</div>
+
+<div style="width:1320px;height:760px;position:relative;background:#e6edf7;border:1px solid #adc2da;overflow:hidden;box-shadow:0 10px 25px rgba(12,30,51,.14)">
+  <div style="position:absolute;inset:0;background:#fff;opacity:.55;display:flex;flex-direction:column">
+    <div style="height:60px;background:#f4f8fd;border-bottom:1px solid #cfdcec;display:flex;align-items:center;padding:0 20px;gap:12px"><span style="font-size:15.5px;font-weight:700;color:#0c1e33">Achat 994</span><span style="font-size:11.5px;color:#4a5c75">Michelin Maroc · 02/06/2026</span></div>
+    <div style="padding:20px 22px;display:flex;flex-direction:column;gap:10px"><span style="height:14px;width:48%;background:#e7eef8"></span><span style="height:14px;width:62%;background:#e7eef8"></span><span style="height:14px;width:40%;background:#e7eef8"></span></div>
+  </div>
+  <div style="position:absolute;inset:0;background:rgba(8,22,39,.28)"></div>
+
+  <div style="position:absolute;top:0;right:0;bottom:0;width:640px;background:#fff;border-left:1px solid #0c1e33;display:flex;flex-direction:column;box-shadow:-10px 0 25px rgba(12,30,51,.16)">
+    <div style="padding:16px 22px;border-bottom:1px solid #cfdcec;display:flex;align-items:flex-start;gap:12px">
+      <span style="flex:1"><span style="display:block;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#4a5c75">Retour fournisseur</span><span style="display:block;margin-top:4px;font-size:17px;font-weight:700">Achat 994 · Michelin Maroc</span></span>
+      <button type="button" title="Fermer" style="width:34px;height:34px;border:1px solid #adc2da;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c1e33" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) 76px 128px 104px;align-items:center;gap:11px;padding:7px 22px;border-bottom:1px solid #0c1e33;background:#f4f8fd;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#4a5c75">
+      <span>Article</span><span style="text-align:right">Retournable</span><span style="text-align:center">À retourner</span><span style="text-align:right">Montant</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) 76px 128px 104px;align-items:center;gap:11px;min-height:60px;padding:0 22px;border-bottom:1px solid #e7eef8">
+      <span style="min-width:0"><span style="display:block;font-size:13.5px;font-weight:600">MICHELIN PRIMACY 4</span><span style="display:block;font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">205/55R16 · acheté 64 · déjà retourné 12 · 516 DH</span></span>
+      <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums;color:#41546e">52</span>
+      <span style="display:flex;justify-content:center"><span style="display:flex;border:1px solid #0c1e33"><button type="button" style="width:34px;height:34px;border:0;border-right:1px solid #cfdcec;background:#fff;font-family:inherit;font-size:16px;cursor:pointer">−</button><span style="width:44px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">4</span><button type="button" style="width:34px;height:34px;border:0;border-left:1px solid #cfdcec;background:#fff;font-family:inherit;font-size:16px;cursor:pointer">+</button></span></span>
+      <span style="text-align:right;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">2 064,00</span>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) 76px 128px 104px;align-items:center;gap:11px;min-height:60px;padding:0 22px;border-bottom:1px solid #e7eef8">
+      <span style="min-width:0"><span style="display:block;font-size:13.5px;font-weight:600">MICHELIN ALPIN 6</span><span style="display:block;font-size:11px;color:#4a5c75;font-variant-numeric:tabular-nums">195/65R15 · acheté 64 · 596 DH</span></span>
+      <span style="text-align:right;font-size:13px;font-variant-numeric:tabular-nums;color:#41546e">64</span>
+      <span style="display:flex;justify-content:center"><span style="display:flex;border:1px solid #cfdcec"><button type="button" style="width:34px;height:34px;border:0;border-right:1px solid #cfdcec;background:#f4f8fd;color:#adc2da;font-family:inherit;font-size:16px;cursor:not-allowed">−</button><span style="width:44px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#4a5c75;font-variant-numeric:tabular-nums">0</span><button type="button" style="width:34px;height:34px;border:0;border-left:1px solid #cfdcec;background:#fff;font-family:inherit;font-size:16px;cursor:pointer">+</button></span></span>
+      <span style="text-align:right;font-size:13px;color:#4a5c75">—</span>
+    </div>
+
+    <div style="padding:14px 22px;border-bottom:1px solid #cfdcec;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <label style="display:flex;flex-direction:column;gap:5px"><span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Date du retour</span><input type="text" value="17/09/2026" style="height:36px;padding:0 10px;border:1px solid #adc2da;font-family:inherit;font-size:13px;color:#0c1e33;font-variant-numeric:tabular-nums"></label>
+      <label style="display:flex;flex-direction:column;gap:5px"><span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Motif</span><select style="height:36px;padding:0 9px;border:1px solid #adc2da;background:#fff;font-family:inherit;font-size:13px;color:#0c1e33"><option>Défaut de fabrication</option><option>Erreur de livraison</option><option>Invendu</option></select></label>
+    </div>
+
+    <div style="padding:14px 22px;border-bottom:1px solid #cfdcec;display:flex;flex-direction:column;gap:11px">
+      <span style="font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4a5c75">Contrepartie</span>
+      <div style="display:flex">
+        <button type="button" style="flex:1;height:34px;border:1px solid #0c1e33;background:#0c1e33;color:#fff;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer">Déduire du dû</button>
+        <button type="button" style="flex:1;height:34px;border:1px solid #adc2da;border-left:0;background:#fff;color:#41546e;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Remboursement reçu</button>
+      </div>
+      <span style="font-size:11.5px;line-height:1.55;color:#41546e">Le dû à Michelin passe de <span style="font-variant-numeric:tabular-nums">180 500,00</span> à <strong style="font-weight:700;color:#0c1e33;font-variant-numeric:tabular-nums">178 436,00</strong> DH. « Remboursement reçu » demande le compte crédité, la date et la méthode.</span>
+    </div>
+
+    <div style="flex:1"></div>
+
+    <div style="padding:14px 22px;border-top:1px solid #0c1e33;display:flex;align-items:center;gap:10px">
+      <span><span style="display:block;font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#4a5c75">4 pneus retournés</span><span style="display:block;margin-top:2px;font-size:19px;font-weight:700;font-variant-numeric:tabular-nums">2 064,00 DH</span></span>
+      <button type="button" style="margin-left:auto;height:40px;padding:0 15px;border:1px solid #adc2da;background:#fff;color:#0c1e33;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer">Annuler</button>
+      <button type="button" style="height:40px;padding:0 17px;border:1px solid #ff2d37;background:#ff2d37;color:#fff;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer">Enregistrer le retour</button>
+    </div>
+  </div>
+</div>
+<p style="margin:2px 0 0;max-width:1320px;font:400 12px/1.6 'Inter',sans-serif;color:#4a5c75">Le tableau à six colonnes devient quatre : la quantité achetée et déjà retournée passent en sous-ligne, et seul le « retournable » reste en colonne, car c'est la borne du compteur. Le remboursement n'est plus une case à cocher : on choisit entre déduire du dû (le cas courant) et un remboursement reçu. « Déduire du dû » suppose que le backend sait imputer un retour sur le solde fournisseur : à vérifier.</p>
+</div>
+
+</section>
+
+</x-dc>
+</body>
+</html>
